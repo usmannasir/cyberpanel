@@ -1,0 +1,4 @@
+[cyberpanel]
+name=Cyber Panel
+baseurl=http://repo.cyberpersons.com
+gpgcheck=0

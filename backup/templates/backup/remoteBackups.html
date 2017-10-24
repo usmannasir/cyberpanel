@@ -1,0 +1,105 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}Backup Website{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>Remote Backups</h2>
+   <p>This feature can import website(s) from remote server</p>
+</div>
+
+<div ng-controller="remoteBackupControl" class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            Remote Backups <img ng-hide="backupLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+            <p ng-bind="transferStatus"></p>
+            <form  action="/" class="form-horizontal bordered-row">
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">IP Address</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="IPAddress" required>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Password</label>
+                    <div class="col-sm-6">
+                        <input ng-change="passwordEnter()" type="password" class="form-control" ng-model="password" required>
+                    </div>
+                </div>
+
+                <div ng-hide="backupButton" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-disabled="submitDisable" ng-click="fetchAccountsFromRemoteServer()" class="btn btn-primary btn-lg btn-block">Fetch Accounts</button>
+                    </div>
+            </div>
+
+
+                <!------ List of Accounts in remote server --------------->
+
+                <div ng-hide="accountsInRemoteServerTable" class="form-group">
+
+                    <div  class="col-sm-12">
+
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Website" %}</th>
+                                <th>{% trans "PHP" %}</th>
+                                <th>{% trans "Package" %}</th>
+                                <th>{% trans "Email" %}</th>
+                                <th>{% trans "Transfer" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="record in records track by $index">
+                                <td ng-bind="record.website"></td>
+                                <td ng-bind="record.php"></td>
+                                <td ng-bind="record.package"></td>
+                                <td ng-bind="record.email"></td>
+                                <td ng-click=""><input ng-model="sslCheck" type="checkbox" value=""></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            <!------ List of Accounts in remote server --------------->
+
+            </form>
+            <div ng-hide="status_danger" class="alert alert-danger">
+                <p>{$ error_message $}</p>
+            </div>
+            <div ng-hide="status_info" class="alert alert-info">
+                <p>{$ statusBox $}</p>
+            </div>
+
+            <div ng-hide="request" class="form-group">
+                <div class="col-sm-12">
+                    <button ng-disabled="startRestore" style="margin-bottom: 1%" type="button" ng-click="submitBackupRestore()" class="btn ra-100 btn-blue-alt">Start Restore</button>
+                    <textarea ng-model="requestData" rows="15" class="form-control" readonly>{{ requestData }}</textarea>
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

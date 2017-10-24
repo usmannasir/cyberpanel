@@ -1,0 +1,386 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block content %}
+
+
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Home" %}</h2>
+   <p>{% trans "Use the tabs to navigate through the control panel." %}</p>
+</div>
+
+
+
+    {% if type < 3 %}
+
+    <div ng-controller="homePageStatus" class="panel">
+        <div class="panel-body">
+            <h3 class="title-hero">
+            {% trans "Usage" %}
+            </h3>
+
+             <div class="example-box-wrapper">
+
+                 <div class="row">
+
+                     <div class="col-md-4">
+
+                        <div class="content-box border-top border-red">
+                            <h3 class="content-box-header clearfix text-center">
+                                {% trans "CPU Usage" %}
+                            </h3>
+                            <div class="content-box-wrapper">
+                                <div  class="row progress-center">
+                                        <div  id="redcircle" class="c100 red cpu">
+                                            <span>{$ cpuUsage $}%</span>
+                                            <div class="slice">
+                                                <div class="bar"></div>
+                                                <div class="fill"></div>
+                                            </div>
+                                        </div>
+
+                                </div>
+                            </div>
+                        </div>
+                     </div>
+
+                     <div class="col-md-4">
+
+                        <div class="content-box border-top border-green">
+                            <h3 class="content-box-header clearfix text-center">
+                                {% trans "Ram Usage" %}
+                            </h3>
+                            <div class="content-box-wrapper">
+                                <div class="row progress-center">
+                                    <div id="greencircle" class="c100 p0 green ram">
+                                        <span>{$ ramUsage $}%</span>
+                                        <div class="slice">
+                                            <div class="bar"></div>
+                                            <div class="fill"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                     </div>
+
+                     <div class="col-md-4">
+                        <div class="content-box border-top border-red">
+                            <h3 class="content-box-header clearfix text-center">
+                                {% trans "Disk Usage '/'" %}
+                            </h3>
+                            <div class="content-box-wrapper">
+                                <div class="row progress-center">
+                                    <div id="pinkcircle" class="c100 pink disk">
+                                        <span>{$ diskUsage $}%</span>
+                                        <div class="slice">
+                                            <div class="bar"></div>
+                                            <div class="fill"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                     </div>
+
+                 </div>
+
+                 <div class="row">
+
+                     <div class="col-md-12">
+
+                         <div class="content-box border-top border-red">
+                            <h3 class="content-box-header clearfix text-center">
+                                {% trans "HTTP Statistics" %}
+                            </h3>
+
+
+                            <div style="padding-left: 7%;padding-bottom: 2%;" class="custom-padding">
+                                <div class="box">
+                                <div class="container">
+                                  <span class="number">{$ Avail $}/{$ MAXCONN $}</span>
+                                  <br />
+                                  {% trans "Available/Max Connections" %}
+                                </div>
+                                <div class="fill speed1" style="background : #81c784; "></div>
+                              </div>
+
+
+
+                              <div class="box">
+                                <div class="container">
+                                  <span class="number">{$ AvailSSL $}/{$ MAXSSL $}</span>
+                                  <br />
+                                  {% trans "Available/Max SSL Connections" %}
+                                </div>
+                                <div class="fill speed2" style="background : #f69679;"></div>
+                              </div>
+
+                              <div class="box">
+                                <div class="container">
+                                  <span class="number">{$ RequestProcessing $}</span>
+                                  <br />
+                                  {% trans "Requests Processing" %}
+                                </div>
+                                <div class="fill speed3" style="background : #92bafb;"></div>
+                              </div>
+
+                              <div class="box">
+                                <div class="container">
+                                  <span class="number">{$ TotalRequests $}</span>
+                                  <br />
+                                  {% trans "Total Requests" %}
+                                </div>
+                                <div class="fill speed4" style="background : #9b92fb;"></div>
+                              </div>
+
+                            </div>
+
+
+                        </div>
+                     </div>
+
+
+
+
+
+                 </div>
+
+
+
+
+             </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="panel">
+        <div class="panel-body">
+            <h3 class="title-hero">
+            {% trans "Available Functions" %}
+            </h3>
+
+             <div class="example-box-wrapper">
+
+
+                 <div class="row">
+
+                     <div class="col-md-4">
+                            <a href="{% url 'loadUsersHome' %}" title="{% trans 'User Functions' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">4</span>
+                                <div class="tile-header">
+                                    {% trans "Users" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                        </div>
+
+
+                        <div class="col-md-4">
+                            <a href="{% url 'loadWebsitesHome' %}" title="{% trans 'Website Functions' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">5</span>
+                                <div class="tile-header">
+                                    {% trans "Websites" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                        </div>
+
+
+                     <div class="col-md-4">
+                            <a href="{% url 'packagesHome' %}" title="{% trans 'Add/Modify Packages' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">3</span>
+                                <div class="tile-header">
+                                    {% trans "Packages" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                     </div>
+
+
+
+
+            </div>
+
+
+
+
+
+                 <div class="row">
+
+
+                     <div class="col-md-4">
+                            <a href="{% url 'loadDatabaseHome' %}" title="{% trans 'Database Functions' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">3</span>
+                                <div class="tile-header">
+                                    {% trans "Databases" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                 </div>
+
+                 <div class="col-md-4">
+                            <a href="{% url 'dnsHome' %}" title="{% trans 'Control DNS' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">4</span>
+                                <div class="tile-header">
+                                    {% trans "DNS" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                 </div>
+
+
+                        <div class="col-md-4">
+                            <a href="{% url 'loadFTPHome' %}" title="{% trans 'FTP Functions' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">2</span>
+                                <div class="tile-header">
+                                    {% trans "FTP" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                        </div>
+
+
+            </div>
+
+                 <div class="row">
+
+
+                 <div class="col-md-4">
+                            <a href="{% url 'loadBackupHome' %}" title="{% trans 'Back up' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">2</span>
+                                <div class="tile-header">
+                                    {% trans "Back up" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                     </div>
+
+                 <div class="col-md-4">
+                            <a href="{% url 'loadEmailHome' %}" title="{% trans 'Emails' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">4</span>
+                                <div class="tile-header">
+                                    {% trans "Emails" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                     </div>
+
+                {% if type == 1 %}
+                     <div class="col-md-4">
+                            <a href="{% url 'loadTuningHome' %}" title="{% trans 'Server Tuning' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">2</span>
+                                <div class="tile-header">
+                                    {% trans "Server Tuning" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                     </div>
+
+                {% endif %}
+
+
+
+                 </div>
+
+
+
+                <div class="row">
+
+                {% if type == 1 %}
+
+                    <div class="col-md-4">
+                            <a href="{% url 'serverStatusHome' %}" title="{% trans 'Server Status' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">2</span>
+                                <div class="tile-header">
+                                    {% trans "Server Status" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                     </div>
+
+
+                    <div class="col-md-4">
+                            <a href="{% url 'loadPHPHome' %}" title="{% trans 'PHP Configurations' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">2</span>
+                                <div class="tile-header">
+                                    {% trans "PHP" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                     </div>
+
+                     <div class="col-md-4">
+                            <a href="{% url 'logsHome' %}" title="{% trans 'Logs' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">4</span>
+                                <div class="tile-header">
+                                    {% trans "Logs" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                     </div>
+
+                {% endif %}
+
+
+
+                 </div>
+
+
+             <div class="row">
+
+                {% if type == 1 %}
+
+                 <div class="col-md-4">
+                            <a href="{% url 'securityHome' %}" title="{% trans 'Security' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">4</span>
+                                <div class="tile-header">
+                                    {% trans "Security" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                     </div>
+
+
+                {% endif %}
+
+
+
+             </div>
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,12 @@
+[Unit]
+Description = LSCPD Daemon
+
+[Service]
+Type=forking
+ExecStart = /usr/local/lscp/bin/lscpdctrl start
+ExecStop = /usr/local/lscp/bin/lscpdctrl stop
+Restart= /usr/local/lscp/bin/lscpdctrl restart
+Restart=on-abnormal
+
+[Install]
+WantedBy=default.target

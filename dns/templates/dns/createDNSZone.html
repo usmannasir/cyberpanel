@@ -1,0 +1,85 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Create DNS Zone - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Create DNS Zone" %}</h2>
+   <p>{% trans "This page is used to create DNS zone, to edit dns zone you can visit Modify DNS Zone Page." %}</p>
+</div>
+<div ng-controller="createDNSZone" class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Details" %} <img ng-hide="createDNSZoneLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div class="example-box-wrapper">
+
+
+            <form  action="/" class="form-horizontal bordered-row">
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
+                    <div class="col-sm-6">
+                        <input name="dom"  type="text" class="form-control" ng-model="zoneDomain" required>
+                    </div>
+
+
+                    <div class="current-pack">example.com</div>
+
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="createDNSZone()" class="btn btn-primary btn-lg btn-block">{% trans "Create DNS Zone" %}</button>
+
+                    </div>
+                </div>
+
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div ng-hide="dnsZoneCreationFailed" class="alert alert-danger">
+                                <p>{% trans "Cannot create DNS Zone. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="dnsZoneCreated" class="alert alert-success">
+                                <p>{% trans "DNS Zone for domain:" %} <strong>{$ zoneDomain $}</strong> created<br>
+                                </p>
+                            </div>
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+
+
+                    </div>
+
+
+
+                </div>
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+</div>
+
+
+{% endblock %}

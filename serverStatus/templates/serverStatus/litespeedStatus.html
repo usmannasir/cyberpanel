@@ -1,0 +1,140 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "LiteSpeed Status - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+
+
+<div class="container">
+
+            <div id="page-title">
+                <h2>{% trans "LiteSpeed Status:" %} <img src="{% static 'images/lsON.png' %}"></h2>
+                <p>{% trans "On this page you can get information regarding your LiteSpeed processes." %}</p>
+            </div>
+
+
+            <div class="row">
+                <div class="panel">
+                <div class="panel-body">
+                    <div ng-controller="litespeedStatus" class="col-md-6">
+
+
+                                <div class="example-box-wrapper">
+
+                                {% if processList %}
+
+                                    <h3 class="content-box-header bg-black">
+                                         {% trans "LiteSpeed Processes" %}
+                                     </h3>
+
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>{% trans "Process ID" %}</th>
+                                            <th>{% trans "Name" %}</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for items in processList %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+
+                                            <td> {{ items }}</td>
+
+                                            {% if forloop.counter == 1 %}
+                                                <td>{% trans "Main Process" %}</td>
+
+                                            {% elif forloop.counter == 2 %}
+                                                <td>{% trans "lscgid Process" %}</td>
+
+                                            {% else %}
+                                                <td>{% trans "Worker Process" %}</td>
+
+                                            {% endif %}
+
+                                            {% endfor %}
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                {% else %}
+                                    <div class="alert alert-danger">
+                                            <p>{% trans "Could not fetch details, either LiteSpeed is not running or some error occurred, please see CyberPanel Main log file." %}</p>
+                                    </div>
+                                {% endif %}
+
+                                <button ng-click="restartLitespeed()" ng-disabled="disableReboot" class="btn btn-alt btn-hover btn-blue-alt">
+                                    <span>{% trans "Reboot Litespeed" %}</span>
+                                    <i class="glyph-icon icon-arrow-right"></i>
+                                </button>
+
+                                <button ng-click="stopLitespeed()" ng-disable="disableStop" class="btn btn-alt btn-hover btn-danger">
+                                    <span>{% trans "Stop LiteSpeed" %}</span>
+                                    <i class="glyph-icon icon-arrow-right"></i>
+                                </button>
+
+                                <img ng-hide="restartorStopLoading" src="{% static 'images/loading.gif' %}">
+
+
+                                <div ng-hide="actionResult" class="alert alert-success">
+                                    <p>{% trans "Action successful." %}</p>
+                                </div>
+
+
+                                <div ng-hide="actionResultBad" class="alert alert-danger">
+                                    <p>{% trans "Error Occurred. See CyberPanel main log file." %}</p>
+                                </div>
+
+
+                                <div ng-hide="serverStatusCouldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server." %}</p>
+                                </div>
+
+
+
+
+                                </div>
+
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                                <div class="example-box-wrapper">
+                                    <h3 class="content-box-header bg-black">
+                                        Version: {{ lsversion }}
+                                    </h3>
+                                    <div class="content-box-wrapper">
+                                        <table class="table">
+                                                <thead>
+                                                <tr>
+                                                    <th>{{ modules }}</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for items in loadedModules %}
+                                                <tr>
+                                                    <td>{{ items }}</td>
+
+                                                </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                    </div>
+                                </div>
+
+                    </div>
+                </div>
+                </div>
+            </div>
+
+
+</div>
+
+
+{% endblock %}

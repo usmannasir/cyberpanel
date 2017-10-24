@@ -1,0 +1,201 @@
+  /* CSS3 basic */
+  
+  .loading-spinner {
+      position: relative;
+      width: 65px;
+      height: 65px;
+      margin: 0 auto;
+  }
+  .loading-spinner i {
+      position: absolute;
+      top: 25px;
+      left: 52px;
+      display: block;
+      -webkit-transform-origin: -20px;
+      border-radius: 50%;
+  }
+  .loading-spinner i:nth-child(1) {
+      width: 14px;
+      height: 14px;
+      -webkit-animation: spin 1.8s .1s infinite;
+  }
+  .loading-spinner i:nth-child(2) {
+      width: 12px;
+      height: 12px;
+      -webkit-animation: spin 1.8s .2s infinite;
+  }
+  .loading-spinner i:nth-child(3) {
+      width: 10px;
+      height: 10px;
+      -webkit-animation: spin 1.8s .3s infinite;
+  }
+  .loading-spinner i:nth-child(4) {
+      width: 8px;
+      height: 8px;
+      -webkit-animation: spin 1.8s .4s infinite;
+  }
+  .loading-spinner i:nth-child(5) {
+      width: 6px;
+      height: 6px;
+      -webkit-animation: spin 1.8s .5s infinite;
+  }
+  .loading-spinner i:nth-child(6) {
+      width: 4px;
+      height: 4px;
+      -webkit-animation: spin 1.8s .6s infinite;
+  }
+  /* CSS3 alternate */
+  
+  .loading-stick {
+      width: 180px;
+      margin: auto;
+      text-align: center;
+      vertical-align: middle;
+  }
+  .loading-stick h1 {
+      font-size: 12px;
+      margin: 10px 0 0;
+      text-transform: uppercase;
+  }
+  .stick {
+      display: inline-block;
+      width: 30px;
+      height: 3px;
+      margin-left: -7px;
+  }
+  .stick:nth-child(n) {
+      /* IE 9 */
+      
+      -webkit-transform: rotate(30deg);
+      /* Safari and Chrome */
+      
+      -moz-transform: rotate(30deg);
+      -ms-transform: rotate(30deg);
+      transform: rotate(30deg);
+      -webkit-animation: fall 2s infinite;
+      -moz-animation: fall 2s infinite;
+  }
+  .stick:nth-child(2n) {
+      /* IE 9 */
+      
+      -webkit-transform: rotate(-30deg);
+      /* Safari and Chrome */
+      
+      -moz-transform: rotate(-30deg);
+      -ms-transform: rotate(-30deg);
+      transform: rotate(-30deg);
+      -webkit-animation: rise 2s infinite;
+      -moz-animation: rise 2s infinite;
+  }
+  @-webkit-keyframes rise {
+      50% {
+          /* IE 9 */
+          
+          -webkit-transform: rotate(30deg);
+          -moz-transform: rotate(30deg);
+          -ms-transform: rotate(30deg);
+          transform: rotate(30deg);
+      }
+  }
+  @-moz-keyframes rise {
+      50% {
+          /* IE 9 */
+          
+          -webkit-transform: rotate(30deg);
+          -moz-transform: rotate(30deg);
+          -ms-transform: rotate(30deg);
+          transform: rotate(30deg);
+      }
+  }
+  @-o-keyframes rise {
+      50% {
+          /* IE 9 */
+          
+          -webkit-transform: rotate(30deg);
+          -moz-transform: rotate(30deg);
+          -ms-transform: rotate(30deg);
+          transform: rotate(30deg);
+      }
+      @keyframes rise {
+          50% {
+              /* IE 9 */
+              
+              -webkit-transform: rotate(30deg);
+              -moz-transform: rotate(30deg);
+              -ms-transform: rotate(30deg);
+              transform: rotate(30deg);
+          }
+      }
+  }
+  @-webkit-keyframes fall {
+      50% {
+          /* IE 9 */
+          
+          -webkit-transform: rotate(-30deg);
+          -moz-transform: rotate(30deg);
+          -ms-transform: rotate(-30deg);
+          transform: rotate(-30deg);
+      }
+  }
+  @-moz-keyframes fall {
+      50% {
+          /* IE 9 */
+          
+          -webkit-transform: rotate(-30deg);
+          -moz-transform: rotate(-30deg);
+          -ms-transform: rotate(-30deg);
+          transform: rotate(-30deg);
+      }
+  }
+  @-o-keyframes fall {
+      50% {
+          /* IE 9 */
+          
+          -webkit-transform: rotate(-30deg);
+          -moz-transform: rotate(30deg);
+          -ms-transform: rotate(-30deg);
+          transform: rotate(-30deg);
+      }
+      @keyframes fall {
+          50% {
+              /* IE 9 */
+              
+              -webkit-transform: rotate(-30deg);
+              -moz-transform: rotate(30deg);
+              -ms-transform: rotate(-30deg);
+              transform: rotate(-30deg);
+          }
+      }
+  }
+  @-webkit-keyframes fade {
+      50% {
+          opacity: .5;
+      }
+      100% {
+          opacity: 1;
+      }
+  }
+  @-moz-keyframes fade {
+      50% {
+          opacity: .5;
+      }
+      100% {
+          opacity: 1;
+      }
+  }
+  @-o-keyframes fade {
+      50% {
+          opacity: .5;
+      }
+      100% {
+          opacity: 1;
+      }
+      @keyframes fade {
+          50% {
+              opacity: .5;
+          }
+          100% {
+              opacity: 1;
+          }
+      }
+  }

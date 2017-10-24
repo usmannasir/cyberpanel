@@ -1,0 +1,219 @@
+.minicolors {
+    position: relative;
+}
+.minicolors-swatch {
+    position: absolute;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    cursor: text;
+    vertical-align: middle;
+    border: solid 1px #ccc;
+    background: url(../../images/colorpicker.png) -80px 0;
+}
+.minicolors-swatch-color {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+.minicolors input[type=hidden] + .minicolors-swatch {
+    position: static;
+    width: 28px;
+    cursor: pointer;
+}
+/* Panel */
+
+.minicolors-panel {
+    position: absolute;
+    z-index: 99999;
+    display: none;
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+    width: 173px;
+    height: 152px;
+    border: solid 1px #ccc;
+    background: white;
+    box-shadow: 0 0 20px rgba(0, 0, 0, .2);
+}
+.minicolors-panel.minicolors-visible {
+    display: block;
+}
+/* Panel positioning */
+
+.minicolors-position-top .minicolors-panel {
+    top: -180px;
+}
+.minicolors-position-right .minicolors-panel {
+    right: 0;
+    left: auto;
+}
+.minicolors-position-bottom .minicolors-panel {
+    top: 36px;
+    bottom: auto;
+}
+.minicolors-position-left .minicolors-panel {
+    right: auto;
+    left: 0;
+}
+.minicolors-with-opacity .minicolors-panel {
+    width: 200px;
+}
+.minicolors .minicolors-grid {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 150px;
+    height: 150px;
+    cursor: crosshair;
+    background: url(../../images/colorpicker.png) -120px 0;
+}
+.minicolors .minicolors-grid-inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 150px;
+    height: 150px;
+    background: none;
+}
+.minicolors-slider-saturation .minicolors-grid {
+    background-position: -420px 0;
+}
+.minicolors-slider-saturation .minicolors-grid-inner {
+    background: url(../../images/colorpicker.png) -270px 0;
+}
+.minicolors-slider-brightness .minicolors-grid {
+    background-position: -570px 0;
+}
+.minicolors-slider-brightness .minicolors-grid-inner {
+    background: black;
+}
+.minicolors-slider-wheel .minicolors-grid {
+    background-position: -720px 0;
+}
+.minicolors-slider,
+.minicolors-opacity-slider {
+    position: absolute;
+    top: 6px;
+    left: 160px;
+    width: 20px;
+    height: 150px;
+    cursor: row-resize;
+    background: white url(../../images/colorpicker.png) 0 0;
+}
+.minicolors-slider-saturation .minicolors-slider {
+    background-position: -60px 0;
+}
+.minicolors-slider-brightness .minicolors-slider {
+    background-position: -20px 0;
+}
+.minicolors-slider-wheel .minicolors-slider {
+    background-position: -20px 0;
+}
+.minicolors-opacity-slider {
+    left: 184px;
+    display: none;
+    background-position: -40px 0;
+}
+.minicolors-with-opacity .minicolors-opacity-slider {
+    display: block;
+}
+/* Pickers */
+
+.minicolors-grid .minicolors-picker {
+    position: absolute;
+    top: 70px;
+    left: 70px;
+    width: 12px;
+    height: 12px;
+    margin-top: -6px;
+    margin-left: -6px;
+    border: solid 1px black;
+    border-radius: 10px;
+    background: none;
+}
+.minicolors-grid .minicolors-picker > div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+    width: 8px;
+    height: 8px;
+    border: solid 2px white;
+    border-radius: 8px;
+}
+.minicolors-picker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+    width: 18px;
+    height: 2px;
+    margin-top: -2px;
+    border: solid 1px black;
+    background: white;
+}
+/* Inline controls */
+
+.minicolors-inline {
+    display: inline-block;
+}
+.minicolors-inline .minicolors-input {
+    display: none !important;
+}
+.minicolors-inline .minicolors-panel {
+    position: relative;
+    z-index: auto;
+    top: auto;
+    left: auto;
+    display: inline-block;
+    box-shadow: none;
+}
+/* Default theme */
+
+.minicolors-theme-default .minicolors-swatch {
+    top: 5px;
+    left: 5px;
+    width: 24px;
+    height: 24px;
+}
+.minicolors-theme-default.minicolors-position-right .minicolors-swatch {
+    right: 5px;
+    left: auto;
+}
+.minicolors-theme-default.minicolors {
+    display: inline-block;
+    width: 100%;
+}
+.minicolors-theme-default.minicolors-position-right .minicolors-input {
+    padding-right: 34px;
+}
+.minicolors-theme-default.minicolors-position-left .minicolors-input {
+    padding-left: 34px;
+}
+/* Bootstrap theme */
+
+.minicolors-theme-bootstrap .minicolors-swatch {
+    top: 3px;
+    left: 3px;
+    width: 28px;
+    height: 28px;
+    border-radius: 3px;
+}
+.minicolors-theme-bootstrap.minicolors-position-right .minicolors-swatch {
+    right: 3px;
+    left: auto;
+}
+.minicolors-theme-bootstrap .minicolors-input {
+    padding-left: 44px;
+}
+.minicolors-theme-bootstrap.minicolors-position-right .minicolors-input {
+    padding-right: 44px;
+    padding-left: 12px;
+}

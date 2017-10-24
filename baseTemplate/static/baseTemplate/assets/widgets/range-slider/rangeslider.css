@@ -1,0 +1,105 @@
+/* RangeSlider */
+
+.ui-rangeSlider {
+    height: 50px;
+    padding-top: 30px;
+}
+.ui-rangeSlider-withArrows .ui-rangeSlider-container {
+    margin: 0 15px;
+}
+.ui-rangeSlider-disabled.ui-rangeSlider-noArrow .ui-rangeSlider-container {
+    border-color: #8490a3;
+}
+.ui-rangeSlider-container,
+.ui-rangeSlider-arrow {
+    height: 20px;
+}
+.ui-rangeSlider-arrow {
+    width: 14px;
+    cursor: pointer;
+}
+.ui-rangeSlider-leftArrow {
+    border-radius: 4px 0 0 4px;
+}
+.ui-rangeSlider-rightArrow {
+    border-radius: 0 4px 4px 0;
+}
+.ui-rangeSlider-arrow-inner {
+    position: absolute;
+    top: 50%;
+    width: 0;
+    height: 0;
+    margin-top: -5px;
+    border: 5px solid transparent;
+}
+.ui-rangeSlider-leftArrow .ui-rangeSlider-arrow-inner {
+    left: 0;
+    margin-left: -1px;
+    border-right: 5px solid #666;
+}
+.ui-rangeSlider-leftArrow:hover .ui-rangeSlider-arrow-inner {
+    border-right: 5px solid #333;
+}
+.ui-rangeSlider-rightArrow .ui-rangeSlider-arrow-inner {
+    right: 0;
+    margin-right: -1px;
+    border-left: 5px solid #666;
+}
+.ui-rangeSlider-rightArrow:hover .ui-rangeSlider-arrow-inner {
+    border-left: 5px solid #333;
+}
+.ui-rangeSlider-innerBar {
+    left: -10px;
+    overflow: hidden;
+    width: 110%;
+    height: 100%;
+}
+.ui-rangeSlider-bar {
+    height: 18px;
+    margin: 1px 0;
+    cursor: move;
+    cursor: grab;
+    cursor: -moz-grab;
+}
+.ui-rangeSlider-disabled .ui-rangeSlider-bar {
+    background: #93aeca;
+}
+.ui-rangeSlider-handle {
+    width: 10px;
+    height: 30px;
+    cursor: col-resize;
+    background: transparent;
+}
+.ui-rangeSlider-label {
+    font-size: 15px;
+    bottom: 27px;
+    padding: 5px 10px;
+    cursor: col-resize;
+    color: #fff;
+    background-color: rgba(0, 0, 0, .7);
+}
+.ui-rangeSlider-label:hover,
+.ui-rangeSlider-label:active {
+    background: #000;
+}
+.ui-rangeSlider-label-inner {
+    position: absolute;
+    z-index: 99;
+    top: 100%;
+    left: 50%;
+    display: block;
+    margin-left: -5px;
+    border-top: 5px solid rgba(0, 0, 0, .7);
+    border-right: 5px solid transparent;
+    border-left: 5px solid transparent;
+}
+.ui-rangeSlider-label:hover .ui-rangeSlider-label-inner,
+.ui-rangeSlider-label:active .ui-rangeSlider-label-inner {
+    border-top: 5px solid #000;
+}
+.ui-editRangeSlider-inputValue {
+    font-size: 15px;
+    width: 2em;
+    text-align: center;
+    border: 0;
+}

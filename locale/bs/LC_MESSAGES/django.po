@@ -1,0 +1,2461 @@
+# CyberPanel Translation File.
+# Copyright (C) 2017 LiteSpeedTech
+# This file is distributed under the same license as the CyberPanel package.
+# FIRST AUTHOR <unasir@litespeedtech.com>, 2017.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CyberPanel\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-10-19 17:34+0500\n"
+"PO-Revision-Date: 2017-10-22 23:56+0200\n"
+"Language-Team: LANGUAGE <info@reuhost.net>\n"
+"Language: bs_BA\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Last-Translator: \n"
+"X-Generator: Poedit 2.0.4\n"
+
+#: CyberCP/settings.py:167
+msgid "English"
+msgstr "Engleski"
+
+#: CyberCP/settings.py:168
+msgid "Chinese"
+msgstr "Kineski"
+
+#: backup/templates/backup/backup.html:3 backup/templates/backup/backup.html:14
+#: backup/templates/backup/backup.html:21
+msgid "Back up Website"
+msgstr "Nazad na sajt"
+
+#: backup/templates/backup/backup.html:15
+msgid "This page can be used to Back up your websites"
+msgstr "Ova stranica može poslužiti da napravite Backup vašeg sajta"
+
+#: backup/templates/backup/backup.html:30
+#: databases/templates/databases/createDatabase.html:28
+#: databases/templates/databases/deleteDatabase.html:28
+#: ftp/templates/ftp/createFTPAccount.html:28
+#: mailServer/templates/mailServer/changeEmailPassword.html:28
+#: mailServer/templates/mailServer/createEmailAccount.html:28
+#: mailServer/templates/mailServer/deleteEmailAccount.html:28
+#: manageSSL/templates/manageSSL/manageSSL.html:29
+#: manageSSL/templates/manageSSL/sslForHostName.html:29
+#: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:28
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:28
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:29
+msgid "Select Website"
+msgstr "Odabir sajta"
+
+#: backup/templates/backup/backup.html:41
+#: backup/templates/backup/backupSchedule.html:90
+msgid "Destination"
+msgstr "Odredište"
+
+#: backup/templates/backup/backup.html:44
+#: baseTemplate/templates/baseTemplate/homePage.html:13
+msgid "Home"
+msgstr "Početna"
+
+#: backup/templates/backup/backup.html:60
+#: backup/templates/backup/restore.html:62
+msgid "File Name"
+msgstr "Ime datoteke"
+
+#: backup/templates/backup/backup.html:61
+#: backup/templates/backup/backup.html:100
+#: backup/templates/backup/restore.html:63
+#: baseTemplate/templates/baseTemplate/index.html:390
+#: firewall/templates/firewall/firewall.html:36
+#: managePHP/templates/managePHP/installExtensions.html:65
+msgid "Status"
+msgstr "Status"
+
+#: backup/templates/backup/backup.html:66
+msgid "Running"
+msgstr "Pokrenuto"
+
+#: backup/templates/backup/backup.html:81
+#: baseTemplate/templates/baseTemplate/index.html:561
+msgid "Create Back up"
+msgstr "Kreiraj backup"
+
+#: backup/templates/backup/backup.html:96
+#: backup/templates/backup/backupDestinations.html:90
+#: backup/templates/backup/backupSchedule.html:89
+#: databases/templates/databases/listDataBases.html:86
+#: dns/templates/dns/addDeleteDNSRecords.html:129
+#: firewall/templates/firewall/firewall.html:127
+#: ftp/templates/ftp/listFTPAccounts.html:87
+#: managePHP/templates/managePHP/installExtensions.html:61
+msgid "ID"
+msgstr "ID"
+
+#: backup/templates/backup/backup.html:97
+msgid "File"
+msgstr "Datoteka"
+
+#: backup/templates/backup/backup.html:98
+msgid "Date"
+msgstr "Datum"
+
+#: backup/templates/backup/backup.html:99
+#: ftp/templates/ftp/listFTPAccounts.html:90
+msgid "Size"
+msgstr "Veličina"
+
+#: backup/templates/backup/backup.html:101
+#: backup/templates/backup/backupDestinations.html:93
+#: backup/templates/backup/backupSchedule.html:92
+#: dns/templates/dns/addDeleteDNSRecords.html:134
+#: firewall/templates/firewall/firewall.html:131
+#: firewall/templates/firewall/secureSSH.html:122
+msgid "Delete"
+msgstr "Briši"
+
+#: backup/templates/backup/backup.html:125
+msgid "Cannot delete website, Error message:  "
+msgstr "Nije moguće izbisati web sajti, greška: "
+
+#: backup/templates/backup/backup.html:129
+msgid "Successfully Deleted"
+msgstr "Uspješno izbrisan"
+
+#: backup/templates/backup/backupDestinations.html:3
+#: backup/templates/backup/backupDestinations.html:14
+#: backup/templates/backup/backupDestinations.html:21
+msgid "Set up Back up Destinations"
+msgstr "Destinacija Backupa"
+
+#: backup/templates/backup/backupDestinations.html:15
+msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgstr "Na ovoj stranici možete podesiti Backup destinacije (SFTP)"
+
+#: backup/templates/backup/backupDestinations.html:30
+#: dns/templates/dns/createNameServer.html:48
+#: dns/templates/dns/createNameServer.html:65
+msgid "IP Address"
+msgstr "IP adresa"
+
+#: backup/templates/backup/backupDestinations.html:38
+#: databases/templates/databases/createDatabase.html:58
+#: databases/templates/databases/listDataBases.html:89
+#: ftp/templates/ftp/listFTPAccounts.html:91
+#: mailServer/templates/mailServer/changeEmailPassword.html:52
+#: mailServer/templates/mailServer/createEmailAccount.html:51
+#: userManagment/templates/userManagment/createUser.html:123
+#: userManagment/templates/userManagment/modifyUser.html:107
+msgid "Password"
+msgstr "Šifra"
+
+#: backup/templates/backup/backupDestinations.html:48
+#: backup/templates/backup/backupSchedule.html:54
+msgid "Add Destination"
+msgstr "Dodaj destinaciju"
+
+#: backup/templates/backup/backupDestinations.html:62
+#: backup/templates/backup/backupDestinations.html:66
+msgid "Connection to"
+msgstr "Povezivanje na "
+
+#: backup/templates/backup/backupDestinations.html:62
+msgid "failed. Please delete and re-add."
+msgstr "nije uspjelo. Molimo da radnju izbrišete i ponovno dodate."
+
+#: backup/templates/backup/backupDestinations.html:66
+msgid "successful."
+msgstr "uspješno."
+
+#: backup/templates/backup/backupDestinations.html:70
+msgid "Cannot add destination. Error message:"
+msgstr "Nije moguće dodati destinaciju. Greška je:"
+
+#: backup/templates/backup/backupDestinations.html:74
+msgid "Destination Added."
+msgstr "Destinacija je dodana."
+
+#: backup/templates/backup/backupDestinations.html:78
+#: backup/templates/backup/backupSchedule.html:77
+#: backup/templates/backup/restore.html:95
+#: databases/templates/databases/createDatabase.html:88
+#: databases/templates/databases/deleteDatabase.html:73
+#: dns/templates/dns/addDeleteDNSRecords.html:185
+#: dns/templates/dns/createDNSZone.html:60
+#: dns/templates/dns/createNameServer.html:100
+#: dns/templates/dns/deleteDNSZone.html:67
+#: mailServer/templates/mailServer/changeEmailPassword.html:80
+#: mailServer/templates/mailServer/createEmailAccount.html:79
+#: mailServer/templates/mailServer/deleteEmailAccount.html:79
+#: manageSSL/templates/manageSSL/manageSSL.html:60
+#: userManagment/templates/userManagment/createUser.html:162
+#: userManagment/templates/userManagment/modifyUser.html:139
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:77
+#: websiteFunctions/templates/websiteFunctions/website.html:157
+#: websiteFunctions/templates/websiteFunctions/website.html:284
+#: websiteFunctions/templates/websiteFunctions/website.html:339
+#: websiteFunctions/templates/websiteFunctions/website.html:394
+#: websiteFunctions/templates/websiteFunctions/website.html:542
+msgid "Could not connect to server. Please refresh this page."
+msgstr "Ne mogu se spojiti na udaljeni računar. Molimo da refreshujete "
+
+#: backup/templates/backup/backupDestinations.html:91
+msgid "IP"
+msgstr "IP"
+
+#: backup/templates/backup/backupDestinations.html:92
+#: backup/templates/backup/backupDestinations.html:100
+msgid "Check Connection"
+msgstr "Provjerite vašu Internet konekciju."
+
+#: backup/templates/backup/backupSchedule.html:3
+msgid "Schedule Back up - CyberPanel"
+msgstr "Zakazivanje Backupa - CyberPanel"
+
+#: backup/templates/backup/backupSchedule.html:13
+#: backup/templates/backup/backupSchedule.html:20
+#: baseTemplate/templates/baseTemplate/index.html:564
+msgid "Schedule Back up"
+msgstr "Zakazivanje backupa"
+
+#: backup/templates/backup/backupSchedule.html:14
+msgid ""
+"On this page you can schedule Back ups to localhost or remote server (If you "
+"have added one)."
+msgstr ""
+"Ovdje možete zakazati backupe na localhost ili remote server (ako ste dodali "
+"neki)"
+
+#: backup/templates/backup/backupSchedule.html:29
+msgid "Select Destination"
+msgstr "Odabir destinacije"
+
+#: backup/templates/backup/backupSchedule.html:40
+msgid "Select Frequency"
+msgstr "Koliko često"
+
+#: backup/templates/backup/backupSchedule.html:43
+msgid "Daily"
+msgstr "Dnevno"
+
+#: backup/templates/backup/backupSchedule.html:44
+msgid "Weekly"
+msgstr "Sedmično"
+
+#: backup/templates/backup/backupSchedule.html:69
+msgid "Cannot add schedule. Error message:"
+msgstr "Nije moguće dodati zakazivanje backupa. Greška je:"
+
+#: backup/templates/backup/backupSchedule.html:73
+msgid "Schedule Added"
+msgstr "Uspješno ste zakazali backup"
+
+#: backup/templates/backup/backupSchedule.html:91
+msgid "Frequency"
+msgstr "Učestalost"
+
+#: backup/templates/backup/index.html:3
+msgid "Back up Home - CyberPanel"
+msgstr "Backup naslovna "
+
+#: backup/templates/backup/index.html:13 backup/templates/backup/index.html:29
+#: backup/templates/backup/index.html:45
+#: baseTemplate/templates/baseTemplate/homePage.html:270
+#: baseTemplate/templates/baseTemplate/index.html:556
+msgid "Back up"
+msgstr "Backup"
+
+#: backup/templates/backup/index.html:14
+msgid "Back up and restore sites."
+msgstr "Backup i vrati sajtove"
+
+#: backup/templates/backup/index.html:19
+#: baseTemplate/templates/baseTemplate/homePage.html:165
+#: databases/templates/databases/index.html:19 dns/templates/dns/index.html:19
+#: firewall/templates/firewall/index.html:19 ftp/templates/ftp/index.html:19
+#: mailServer/templates/mailServer/index.html:19
+#: managePHP/templates/managePHP/index.html:18
+#: manageSSL/templates/manageSSL/index.html:20
+#: packages/templates/packages/index.html:19
+#: serverLogs/templates/serverLogs/index.html:19
+#: serverStatus/templates/serverStatus/index.html:19
+#: tuning/templates/tuning/index.html:18
+#: userManagment/templates/userManagment/index.html:20
+#: websiteFunctions/templates/websiteFunctions/index.html:20
+msgid "Available Functions"
+msgstr "Dostupne funkcije"
+
+#: backup/templates/backup/index.html:57
+#: backup/templates/backup/restore.html:45
+msgid "Restore"
+msgstr "Povrat"
+
+#: backup/templates/backup/restore.html:3
+msgid "Restore Website - CyberPanel"
+msgstr "Povrat sajta"
+
+#: backup/templates/backup/restore.html:14
+#: backup/templates/backup/restore.html:21
+msgid "Restore Website"
+msgstr "Povrat sajta"
+
+#: backup/templates/backup/restore.html:15
+msgid ""
+"This page can be used to restore your websites, Back up should be generated "
+"from CyberPanel Back up generation tool, it will detect all Back ups under "
+"<strong>/home/backup</strong>."
+msgstr ""
+"Ovdje možete izvršiti povrat sajta nakon backupa, backupovanje je generisano "
+"preko alata i vaši backupi se mogu naći pod folderom <strong>/home/backup</"
+"strong>"
+
+#: backup/templates/backup/restore.html:30
+msgid "Select Back up"
+msgstr "Odabir backupa"
+
+#: backup/templates/backup/restore.html:86
+#: databases/templates/databases/deleteDatabase.html:64
+#: firewall/templates/firewall/firewall.html:156
+#: managePHP/templates/managePHP/editPHPConfig.html:212
+msgid "Error message:"
+msgstr "Greška: "
+
+#: backup/templates/backup/restore.html:90
+msgid "Site related to this Back up already exists."
+msgstr "Sajt povezan sa backupom već psotoji"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:3
+msgid "Home - CyberPanel"
+msgstr "Početna - CyberPanel"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:14
+msgid "Use the tabs to navigate through the control panel."
+msgstr "Koristi tabove da te vode do kontrolnog panela"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:24
+#: websiteFunctions/templates/websiteFunctions/website.html:33
+msgid "Usage"
+msgstr "Upotreba"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:35
+#: baseTemplate/templates/baseTemplate/index.html:221
+msgid "CPU Usage"
+msgstr "CPU Upotreba"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:56
+#: baseTemplate/templates/baseTemplate/index.html:232
+msgid "Ram Usage"
+msgstr "RAM Upotreba"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:75
+msgid "Disk Usage '/'"
+msgstr "Upotreba diska '/'"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:99
+msgid "HTTP Statistics"
+msgstr "HTTP Statistika"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:108
+msgid "Available/Max Connections"
+msgstr "Dostupno/Max konekcija"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:119
+msgid "Available/Max SSL Connections"
+msgstr "Dostupno/Max ssl konekcija"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:128
+msgid "Requests Processing"
+msgstr "Obrada zahteva"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:137
+msgid "Total Requests"
+msgstr "Ukupno zahtijeva"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:177
+#: baseTemplate/templates/baseTemplate/index.html:428
+msgid "Users"
+msgstr "Korisnici"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:190
+#: baseTemplate/templates/baseTemplate/index.html:360
+#: baseTemplate/templates/baseTemplate/index.html:446
+#: websiteFunctions/templates/websiteFunctions/listWebsites.html:21
+msgid "Websites"
+msgstr "Sajtovi"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:203
+#: baseTemplate/templates/baseTemplate/index.html:366
+#: baseTemplate/templates/baseTemplate/index.html:463
+#: packages/templates/packages/index.html:13
+msgid "Packages"
+msgstr "Pakti"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:227
+#: baseTemplate/templates/baseTemplate/index.html:479
+#: packages/templates/packages/createPackage.html:59
+#: packages/templates/packages/modifyPackage.html:63
+#: websiteFunctions/templates/websiteFunctions/website.html:44
+msgid "Databases"
+msgstr "Baze podataka"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:239
+#: baseTemplate/templates/baseTemplate/index.html:372
+#: baseTemplate/templates/baseTemplate/index.html:497
+msgid "DNS"
+msgstr "DNS"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:252
+#: baseTemplate/templates/baseTemplate/index.html:378
+#: baseTemplate/templates/baseTemplate/index.html:538
+#: websiteFunctions/templates/websiteFunctions/website.html:39
+msgid "FTP"
+msgstr "FTP"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:282
+#: packages/templates/packages/createPackage.html:67
+#: packages/templates/packages/modifyPackage.html:70
+msgid "Emails"
+msgstr "Emailovi"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:295
+#: tuning/templates/tuning/index.html:12
+msgid "Server Tuning"
+msgstr "Server tuning"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:319
+#: baseTemplate/templates/baseTemplate/index.html:608
+#: serverStatus/templates/serverStatus/index.html:13
+msgid "Server Status"
+msgstr "Status servera"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:332
+#: baseTemplate/templates/baseTemplate/index.html:627
+#: managePHP/templates/managePHP/installExtensions.html:62
+msgid "PHP"
+msgstr "PHP"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:344
+#: baseTemplate/templates/baseTemplate/index.html:643
+#: websiteFunctions/templates/websiteFunctions/website.html:113
+msgid "Logs"
+msgstr "Logovi"
+
+#: baseTemplate/templates/baseTemplate/homePage.html:367
+#: baseTemplate/templates/baseTemplate/index.html:661
+msgid "Security"
+msgstr "Sigurnost"
+
+#: baseTemplate/templates/baseTemplate/index.html:212
+msgid "CPU Status"
+msgstr "Status CPU-a"
+
+#: baseTemplate/templates/baseTemplate/index.html:241
+#: websiteFunctions/templates/websiteFunctions/website.html:51
+#: websiteFunctions/templates/websiteFunctions/website.html:72
+msgid "Disk Usage"
+msgstr "Upotreba diska "
+
+#: baseTemplate/templates/baseTemplate/index.html:280
+#: baseTemplate/templates/baseTemplate/index.html:284
+msgid "Web Hosting Control Panel"
+msgstr "Web hosting Kontrolni panel"
+
+#: baseTemplate/templates/baseTemplate/index.html:309
+msgid "Edit profile"
+msgstr "Uredi profil"
+
+#: baseTemplate/templates/baseTemplate/index.html:310
+#: baseTemplate/templates/baseTemplate/index.html:433
+#: userManagment/templates/userManagment/index.html:28
+msgid "View Profile"
+msgstr "Pogledaj Profil"
+
+#: baseTemplate/templates/baseTemplate/index.html:317
+msgid "Logout"
+msgstr "Odjavi se"
+
+#: baseTemplate/templates/baseTemplate/index.html:384
+#: baseTemplate/templates/baseTemplate/index.html:592
+msgid "Tuning"
+msgstr "Tuning"
+
+#: baseTemplate/templates/baseTemplate/index.html:411
+msgid "Overview"
+msgstr "Pregled"
+
+#: baseTemplate/templates/baseTemplate/index.html:415
+msgid "Dashboard"
+msgstr "Kontrolna ploča"
+
+#: baseTemplate/templates/baseTemplate/index.html:419
+#: baseTemplate/templates/baseTemplate/versionManagment.html:10
+msgid "Version Management"
+msgstr "Upravljanje verzijama"
+
+#: baseTemplate/templates/baseTemplate/index.html:423
+msgid "Main"
+msgstr "Glavna"
+
+#: baseTemplate/templates/baseTemplate/index.html:434
+#: userManagment/templates/userManagment/createUser.html:12
+msgid "Create New User"
+msgstr "Novi korisnik"
+
+#: baseTemplate/templates/baseTemplate/index.html:435
+#: userManagment/templates/userManagment/index.html:54
+#: userManagment/templates/userManagment/modifyUser.html:12
+#: userManagment/templates/userManagment/modifyUser.html:120
+msgid "Modify User"
+msgstr "Promjena korisnika"
+
+#: baseTemplate/templates/baseTemplate/index.html:436
+#: userManagment/templates/userManagment/deleteUser.html:13
+#: userManagment/templates/userManagment/deleteUser.html:20
+#: userManagment/templates/userManagment/deleteUser.html:42
+#: userManagment/templates/userManagment/index.html:76
+msgid "Delete User"
+msgstr "Brisanje korisnika"
+
+#: baseTemplate/templates/baseTemplate/index.html:451
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:12
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:102
+#: websiteFunctions/templates/websiteFunctions/index.html:28
+msgid "Create Website"
+msgstr "Kreiranje sajta"
+
+#: baseTemplate/templates/baseTemplate/index.html:452
+#: websiteFunctions/templates/websiteFunctions/index.html:40
+#: websiteFunctions/templates/websiteFunctions/listWebsites.html:14
+msgid "List Websites"
+msgstr "Lista sajtova"
+
+#: baseTemplate/templates/baseTemplate/index.html:453
+#: websiteFunctions/templates/websiteFunctions/index.html:52
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:12
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:19
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:95
+msgid "Modify Website"
+msgstr "Promjena sajta"
+
+#: baseTemplate/templates/baseTemplate/index.html:454
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:41
+msgid "Suspend/Unsuspend"
+msgstr "Suspend/Unsuspend"
+
+#: baseTemplate/templates/baseTemplate/index.html:455
+#: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:12
+#: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:19
+#: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:42
+#: websiteFunctions/templates/websiteFunctions/index.html:86
+msgid "Delete Website"
+msgstr "Izbriši sajt"
+
+#: baseTemplate/templates/baseTemplate/index.html:468
+#: packages/templates/packages/createPackage.html:13
+#: packages/templates/packages/createPackage.html:76
+#: packages/templates/packages/index.html:27
+msgid "Create Package"
+msgstr "Kreiraj paket"
+
+#: baseTemplate/templates/baseTemplate/index.html:469
+#: packages/templates/packages/deletePackage.html:12
+#: packages/templates/packages/deletePackage.html:18
+#: packages/templates/packages/deletePackage.html:40
+#: packages/templates/packages/index.html:39
+msgid "Delete Package"
+msgstr "Izbriši paket"
+
+#: baseTemplate/templates/baseTemplate/index.html:470
+#: packages/templates/packages/index.html:51
+#: packages/templates/packages/modifyPackage.html:9
+#: packages/templates/packages/modifyPackage.html:15
+#: packages/templates/packages/modifyPackage.html:85
+msgid "Modify Package"
+msgstr "Promijeni paket"
+
+#: baseTemplate/templates/baseTemplate/index.html:484
+#: databases/templates/databases/createDatabase.html:12
+#: databases/templates/databases/createDatabase.html:19
+#: databases/templates/databases/createDatabase.html:68
+#: databases/templates/databases/index.html:27
+msgid "Create Database"
+msgstr "Kreiranje baze"
+
+#: baseTemplate/templates/baseTemplate/index.html:485
+#: databases/templates/databases/deleteDatabase.html:12
+#: databases/templates/databases/deleteDatabase.html:19
+#: databases/templates/databases/deleteDatabase.html:53
+#: databases/templates/databases/index.html:39
+msgid "Delete Database"
+msgstr "Brisanje baze"
+
+#: baseTemplate/templates/baseTemplate/index.html:486
+#: databases/templates/databases/index.html:55
+#: databases/templates/databases/listDataBases.html:13
+#: databases/templates/databases/listDataBases.html:19
+msgid "List Databases"
+msgstr "Lista baza"
+
+#: baseTemplate/templates/baseTemplate/index.html:487
+#: databases/templates/databases/index.html:67
+msgid "PHPMYAdmin"
+msgstr "PHPMYAdmin"
+
+#: baseTemplate/templates/baseTemplate/index.html:502
+#: dns/templates/dns/createNameServer.html:12
+#: dns/templates/dns/createNameServer.html:76 dns/templates/dns/index.html:74
+msgid "Create Nameserver"
+msgstr "Kreiranje name servera"
+
+#: baseTemplate/templates/baseTemplate/index.html:503
+#: dns/templates/dns/createDNSZone.html:12
+#: dns/templates/dns/createDNSZone.html:40 dns/templates/dns/index.html:31
+#: dns/templates/dns/index.html:86
+msgid "Create DNS Zone"
+msgstr "Kreiranje DNS zone"
+
+#: baseTemplate/templates/baseTemplate/index.html:504
+#: dns/templates/dns/deleteDNSZone.html:40 dns/templates/dns/index.html:43
+#: dns/templates/dns/index.html:98
+msgid "Delete Zone"
+msgstr "Briši zonu"
+
+#: baseTemplate/templates/baseTemplate/index.html:505
+msgid "Add/Delete Records"
+msgstr "Dodaj / izbriši unose"
+
+#: baseTemplate/templates/baseTemplate/index.html:516
+#: userManagment/templates/userManagment/createUser.html:47
+#: userManagment/templates/userManagment/modifyUser.html:54
+#: userManagment/templates/userManagment/userProfile.html:50
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:60
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:67
+msgid "Email"
+msgstr "Email"
+
+#: baseTemplate/templates/baseTemplate/index.html:521
+#: mailServer/templates/mailServer/createEmailAccount.html:64
+#: mailServer/templates/mailServer/index.html:27
+msgid "Create Email"
+msgstr "Kreiraj email"
+
+#: baseTemplate/templates/baseTemplate/index.html:522
+#: mailServer/templates/mailServer/deleteEmailAccount.html:56
+#: mailServer/templates/mailServer/index.html:39
+msgid "Delete Email"
+msgstr "Izbriši email"
+
+#: baseTemplate/templates/baseTemplate/index.html:523
+#: databases/templates/databases/listDataBases.html:72
+#: ftp/templates/ftp/listFTPAccounts.html:73
+#: mailServer/templates/mailServer/changeEmailPassword.html:64
+#: mailServer/templates/mailServer/index.html:51
+msgid "Change Password"
+msgstr "Promijeni šifru"
+
+#: baseTemplate/templates/baseTemplate/index.html:524
+msgid "Access Webmail"
+msgstr "Pristup webmailu"
+
+#: baseTemplate/templates/baseTemplate/index.html:543
+#: ftp/templates/ftp/createFTPAccount.html:12
+#: ftp/templates/ftp/createFTPAccount.html:19 ftp/templates/ftp/index.html:27
+#: websiteFunctions/templates/websiteFunctions/website.html:461
+msgid "Create FTP Account"
+msgstr "Kreiranje FTP računa"
+
+#: baseTemplate/templates/baseTemplate/index.html:544
+#: ftp/templates/ftp/deleteFTPAccount.html:12
+#: ftp/templates/ftp/deleteFTPAccount.html:18
+#: ftp/templates/ftp/deleteFTPAccount.html:52 ftp/templates/ftp/index.html:39
+#: websiteFunctions/templates/websiteFunctions/website.html:473
+msgid "Delete FTP Account"
+msgstr "Briši FTP račun"
+
+#: baseTemplate/templates/baseTemplate/index.html:545
+#: ftp/templates/ftp/index.html:51 ftp/templates/ftp/listFTPAccounts.html:13
+#: ftp/templates/ftp/listFTPAccounts.html:19
+msgid "List FTP Accounts"
+msgstr "Lista FTP računa"
+
+#: baseTemplate/templates/baseTemplate/index.html:562
+msgid "Restore Back up"
+msgstr "Vrati backup"
+
+#: baseTemplate/templates/baseTemplate/index.html:563
+msgid "Add/Delete Destination"
+msgstr "Dodaj / izbriši destinaciju"
+
+#: baseTemplate/templates/baseTemplate/index.html:574
+msgid "SSL"
+msgstr "SSL"
+
+#: baseTemplate/templates/baseTemplate/index.html:579
+#: manageSSL/templates/manageSSL/index.html:28
+#: manageSSL/templates/manageSSL/manageSSL.html:13
+#: manageSSL/templates/manageSSL/manageSSL.html:20
+msgid "Manage SSL"
+msgstr "Upravljanje SSL-om"
+
+#: baseTemplate/templates/baseTemplate/index.html:580
+#: manageSSL/templates/manageSSL/index.html:40
+msgid "Hostname SSL"
+msgstr "Hostname ssl"
+
+#: baseTemplate/templates/baseTemplate/index.html:588
+msgid "Server"
+msgstr "Server"
+
+#: baseTemplate/templates/baseTemplate/index.html:593
+msgid "NEW"
+msgstr "Novi"
+
+#: baseTemplate/templates/baseTemplate/index.html:598
+#: tuning/templates/tuning/index.html:26
+#: tuning/templates/tuning/liteSpeedTuning.html:12
+msgid "LiteSpeed Tuning"
+msgstr "LiteSpeed  tuning"
+
+#: baseTemplate/templates/baseTemplate/index.html:599
+#: tuning/templates/tuning/index.html:38
+#: tuning/templates/tuning/phpTuning.html:13
+msgid "PHP Tuning"
+msgstr "PHP tuning"
+
+#: baseTemplate/templates/baseTemplate/index.html:614
+#: serverStatus/templates/serverStatus/index.html:27
+msgid "LiteSpeed Status"
+msgstr "LiteSpeed status"
+
+#: baseTemplate/templates/baseTemplate/index.html:615
+#: serverStatus/templates/serverStatus/cybercpmainlogfile.html:15
+#: serverStatus/templates/serverStatus/index.html:39
+msgid "CyberPanel Main Log File"
+msgstr "Glavni log fajl"
+
+#: baseTemplate/templates/baseTemplate/index.html:632
+#: managePHP/templates/managePHP/index.html:26
+msgid "Install Extensions"
+msgstr "Instalacija extenzija"
+
+#: baseTemplate/templates/baseTemplate/index.html:633
+#: managePHP/templates/managePHP/index.html:38
+msgid "Edit PHP Configs"
+msgstr "Promjena php konfiguracije"
+
+#: baseTemplate/templates/baseTemplate/index.html:648
+msgid "Access Log"
+msgstr "Pristupni log"
+
+#: baseTemplate/templates/baseTemplate/index.html:649
+#: serverLogs/templates/serverLogs/errorLogs.html:14
+#: serverLogs/templates/serverLogs/index.html:39
+#: websiteFunctions/templates/websiteFunctions/website.html:133
+msgid "Error Logs"
+msgstr "Log grešaka"
+
+#: baseTemplate/templates/baseTemplate/index.html:650
+msgid "Email Log"
+msgstr "Email log"
+
+#: baseTemplate/templates/baseTemplate/index.html:651
+#: serverLogs/templates/serverLogs/ftplogs.html:14
+#: serverLogs/templates/serverLogs/index.html:63
+msgid "FTP Logs"
+msgstr "FTP logovi"
+
+#: baseTemplate/templates/baseTemplate/index.html:666
+#: firewall/templates/firewall/index.html:27
+msgid "Firewall"
+msgstr "Firewall  "
+
+#: baseTemplate/templates/baseTemplate/index.html:667
+#: firewall/templates/firewall/index.html:38
+#: firewall/templates/firewall/secureSSH.html:13
+#: firewall/templates/firewall/secureSSH.html:20
+msgid "Secure SSH"
+msgstr "Siguran SSH"
+
+#: baseTemplate/templates/baseTemplate/versionManagment.html:3
+msgid "Version Management - CyberPanel"
+msgstr "Upravljanje verzijama"
+
+#: baseTemplate/templates/baseTemplate/versionManagment.html:11
+msgid ""
+"On this page you can manage versions and or upgrade to latest version of "
+"CyberPanel"
+msgstr ""
+"Na ovoj strani možete manipulisati verzijama ili izvršiti nadogradnju na "
+"zadnju verziju panela"
+
+#: baseTemplate/templates/baseTemplate/versionManagment.html:25
+msgid "Current Version"
+msgstr "Sadašnja verzija"
+
+#: baseTemplate/templates/baseTemplate/versionManagment.html:33
+msgid "Build"
+msgstr "Verzija"
+
+#: baseTemplate/templates/baseTemplate/versionManagment.html:42
+msgid "Latest Version"
+msgstr "Najnovija verzija"
+
+#: baseTemplate/templates/baseTemplate/versionManagment.html:50
+msgid "Latest Build"
+msgstr "Zadnja izmjena"
+
+#: baseTemplate/templates/baseTemplate/versionManagment.html:66
+#: firewall/templates/firewall/secureSSH.html:78
+#: managePHP/templates/managePHP/editPHPConfig.html:140
+msgid "Error message: "
+msgstr "Greška: "
+
+#: baseTemplate/templates/baseTemplate/versionManagment.html:70
+msgid "Update started..."
+msgstr "Ažuriranje je pokrenuto ..."
+
+#: baseTemplate/templates/baseTemplate/versionManagment.html:74
+msgid "Update finished..."
+msgstr "Ažuriranje je završeno ..."
+
+#: baseTemplate/templates/baseTemplate/versionManagment.html:79
+#: firewall/templates/firewall/secureSSH.html:87
+#: firewall/templates/firewall/secureSSH.html:172
+#: managePHP/templates/managePHP/editPHPConfig.html:149
+#: managePHP/templates/managePHP/editPHPConfig.html:221
+#: managePHP/templates/managePHP/installExtensions.html:113
+msgid "Could not connect. Please refresh this page."
+msgstr "Ne mogu se spojiti na udaljeni računar. Molimo da refreshujete"
+
+#: databases/templates/databases/createDatabase.html:3
+msgid "Create New Database - CyberPanel"
+msgstr "Kreiranje nove baze podataka"
+
+#: databases/templates/databases/createDatabase.html:13
+msgid "Create a new database on this page."
+msgstr "Kreiraj novu bazu podataka na ovoj stranici"
+
+#: databases/templates/databases/createDatabase.html:42
+#: databases/templates/databases/listDataBases.html:87
+msgid "Database Name"
+msgstr "Naziv baze"
+
+#: databases/templates/databases/createDatabase.html:50
+#: firewall/templates/firewall/secureSSH.html:120
+#: ftp/templates/ftp/createFTPAccount.html:43
+#: ftp/templates/ftp/listFTPAccounts.html:88
+#: mailServer/templates/mailServer/createEmailAccount.html:43
+msgid "User Name"
+msgstr "Korisničko ime"
+
+#: databases/templates/databases/createDatabase.html:79
+msgid "Cannot create database. Error message:"
+msgstr "Nije moguće kreirati bazu podataka. Greška:"
+
+#: databases/templates/databases/createDatabase.html:83
+msgid "Database created successfully."
+msgstr "Baza podataka je uspješno kreirana."
+
+#: databases/templates/databases/deleteDatabase.html:3
+msgid "Delete Database - CyberPanel"
+msgstr "Brisanje baze podataka"
+
+#: databases/templates/databases/deleteDatabase.html:13
+msgid "Delete an existing database on this page."
+msgstr "Obrišite postojeću bazu podataka na ovoj stranici."
+
+#: databases/templates/databases/deleteDatabase.html:40
+msgid "Select Database"
+msgstr "Odabir baze"
+
+#: databases/templates/databases/deleteDatabase.html:68
+msgid "Database deleted successfully."
+msgstr "Baza podataka uspješno izbrisana."
+
+#: databases/templates/databases/index.html:3
+msgid "Database Functions - CyberPanel"
+msgstr "Funkcije baze podataka - CyberPanel"
+
+#: databases/templates/databases/index.html:12
+msgid "Database Functions"
+msgstr "Funkcije za bazu podataka"
+
+#: databases/templates/databases/index.html:13
+msgid "Create, edit and delete databases on this page."
+msgstr "Kreirajte, uređujte i izbrišite baze podataka na ovoj stranici."
+
+#: databases/templates/databases/listDataBases.html:3
+msgid "List Databases  - CyberPanel"
+msgstr "Lista baza podataka - CyberPanel"
+
+#: databases/templates/databases/listDataBases.html:14
+msgid "List Databases or change their passwords."
+msgstr "Izlistajte baze podataka ili promijenite njihove šifre."
+
+#: databases/templates/databases/listDataBases.html:28
+#: dns/templates/dns/addDeleteDNSRecords.html:28
+#: ftp/templates/ftp/deleteFTPAccount.html:27
+#: ftp/templates/ftp/listFTPAccounts.html:28
+msgid "Select Domain"
+msgstr "Odaberite domene"
+
+#: databases/templates/databases/listDataBases.html:46
+#: dns/templates/dns/addDeleteDNSRecords.html:168
+#: ftp/templates/ftp/listFTPAccounts.html:46
+msgid "Records successfully fetched for"
+msgstr "Zapisnici su uspješno dohvaćeni za"
+
+#: databases/templates/databases/listDataBases.html:53
+msgid "Cannot change password for "
+msgstr "Ne može se promijeniti šifra za "
+
+#: databases/templates/databases/listDataBases.html:58
+#: firewall/templates/firewall/firewall.html:166
+#: ftp/templates/ftp/listFTPAccounts.html:59
+msgid "Could Not Connect to server. Please refresh this page"
+msgstr "Ne mogu se spojiti na server. Molimo da refreshujete "
+
+#: databases/templates/databases/listDataBases.html:88
+msgid "Database User"
+msgstr "Korisničko ime baze podataka"
+
+#: databases/templates/databases/listDataBases.html:97
+#: ftp/templates/ftp/listFTPAccounts.html:100
+msgid "Change"
+msgstr "Promjena"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:3
+msgid "Add/Modify DNS Records - CyberPanel"
+msgstr "Dodaj / izmijeni DNS zapise - CyberPanel"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:13
+msgid "Add/Modify DNS Zone"
+msgstr "Dodaj / izmijeni DNS zonu"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:14
+msgid ""
+"On this page you can add/modify dns records for domains whose dns zone is "
+"already created."
+msgstr ""
+"Na ovoj stranici možete dodati / modifikovati DNS zapise za domene čije je "
+"DNS zona već kreirana."
+
+#: dns/templates/dns/addDeleteDNSRecords.html:19
+msgid "Add Records"
+msgstr "Dodajte zapise"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:111
+#: firewall/templates/firewall/firewall.html:109
+msgid "Add"
+msgstr "Dodati"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:130
+msgid "Type"
+msgstr "Tip"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:131
+#: firewall/templates/firewall/firewall.html:128
+#: serverStatus/templates/serverStatus/litespeedStatus.html:40
+msgid "Name"
+msgstr "Ime"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:132
+msgid "Value"
+msgstr "Vrijednost"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:133
+msgid "Priority"
+msgstr "Prioritet"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:160
+msgid "Cannot fetch records. Error message:"
+msgstr "Ne mogu preuzeti podatke. Poruka o grešci:"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:164
+msgid "Cannot add record. Error message: "
+msgstr "Ne mogu dodati zapis. Poruka o grešci:"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:172
+msgid "Record Successfully Deleted"
+msgstr "Uspješno izbrisan"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:176
+msgid "Cannot delete record. Error message:"
+msgstr "Nije moguće izbrisati zapis. Poruka o grešci:"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:180
+msgid "Record Successfully Added."
+msgstr "Zapis uspješno dodan."
+
+#: dns/templates/dns/createDNSZone.html:3
+msgid "Create DNS Zone - CyberPanel"
+msgstr "Kreirajte DNS zonu - CyberPanel"
+
+#: dns/templates/dns/createDNSZone.html:13
+msgid ""
+"This page is used to create DNS zone, to edit dns zone you can visit Modify "
+"DNS Zone Page."
+msgstr ""
+"Ova stranica se koristi za kreiranje DNS zone, da biste uredili DNS zonu "
+"koju možete posjetiti na stranici Promjena DNS Zone."
+
+#: dns/templates/dns/createDNSZone.html:18
+#: dns/templates/dns/createNameServer.html:18
+#: userManagment/templates/userManagment/modifyUser.html:19
+msgid "Details"
+msgstr "Detalji"
+
+#: dns/templates/dns/createDNSZone.html:27
+#: dns/templates/dns/createNameServer.html:27
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:52
+msgid "Domain Name"
+msgstr "Naziv domene"
+
+#: dns/templates/dns/createDNSZone.html:51
+msgid "Cannot create DNS Zone. Error message:"
+msgstr "Ne mogu napraviti DNS zonu. Poruka o grešci:"
+
+#: dns/templates/dns/createDNSZone.html:55
+msgid "DNS Zone for domain:"
+msgstr "DNS zona za domenu:"
+
+#: dns/templates/dns/createNameServer.html:3
+msgid "Create Nameserver - CyberPanel"
+msgstr "Kreiraj Nameserver - CyberPanel"
+
+#: dns/templates/dns/createNameServer.html:13
+msgid ""
+"You can use this page to setup nameservers using which people on the "
+"internet can resolve websites hosted on this server."
+msgstr ""
+"Ovu stranicu možete koristiti za podešavanje nameservera pomoću kojih ljudi "
+"na internetu mogu rješavati web stranice hostirane na ovom serveru."
+
+#: dns/templates/dns/createNameServer.html:39
+msgid "First Nameserver"
+msgstr "Prvi nameserver"
+
+#: dns/templates/dns/createNameServer.html:55
+msgid "Second Nameserver (Back up)"
+msgstr "Drugi Nameserver (Back up)"
+
+#: dns/templates/dns/createNameServer.html:87
+msgid "Nameserver cannot be created. Error message:"
+msgstr "Namserver nije moguće kreirati. Poruka o grešci:"
+
+#: dns/templates/dns/createNameServer.html:91
+msgid "The following nameservers were successfully created:"
+msgstr "Sljedeći namserveri su uspješno stvoreni:"
+
+#: dns/templates/dns/deleteDNSZone.html:3
+msgid "Delete DNS Zone - CyberPanel"
+msgstr "Obrišite DNS zonu - CyberPanel"
+
+#: dns/templates/dns/deleteDNSZone.html:12
+#: dns/templates/dns/deleteDNSZone.html:18
+msgid "Delete DNS Zone"
+msgstr "Obrišite DNS zonu"
+
+#: dns/templates/dns/deleteDNSZone.html:13
+msgid ""
+"This page can be used to delete DNS Zone. Deleting the DNS zone will remove "
+"all its related records as well."
+msgstr ""
+"Ova stranica se može koristiti za brisanje DNS zone. Brisanje DNS zone će "
+"ukloniti sve povezane zapise."
+
+#: dns/templates/dns/deleteDNSZone.html:27
+msgid "Select Zone"
+msgstr "Izaberi zonu"
+
+#: dns/templates/dns/deleteDNSZone.html:49
+#: ftp/templates/ftp/deleteFTPAccount.html:61
+#: mailServer/templates/mailServer/deleteEmailAccount.html:64
+#: packages/templates/packages/deletePackage.html:49
+#: userManagment/templates/userManagment/deleteUser.html:51
+#: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:51
+msgid "Are you sure?"
+msgstr "Da li ste sigurni?"
+
+#: dns/templates/dns/deleteDNSZone.html:59
+msgid "Cannot delete zone. Error message: "
+msgstr "Nije moguće izbisati zonu, greška: "
+
+#: dns/templates/dns/deleteDNSZone.html:63
+msgid "Zone for domain:"
+msgstr "DNS zona za domenu:"
+
+#: dns/templates/dns/deleteDNSZone.html:63
+msgid "is successfully erased."
+msgstr "  je uspješno uklonjena."
+
+#: dns/templates/dns/index.html:3
+msgid "DNS Functions - CyberPanel"
+msgstr "DNS funkcije"
+
+#: dns/templates/dns/index.html:12
+msgid "DNS Functions"
+msgstr "Funkcije dns-a"
+
+#: dns/templates/dns/index.html:13
+msgid "Create, edit and delete DNS zones on this page."
+msgstr "Kreiranje, uređivanje i brisanje DNS zona na ovoj stranici."
+
+#: dns/templates/dns/index.html:55 dns/templates/dns/index.html:110
+msgid "Add Delete/Records"
+msgstr "Dodaj / izbriši unose"
+
+#: firewall/templates/firewall/firewall.html:3
+msgid "Firewall - CyberPanel"
+msgstr "Firewall"
+
+#: firewall/templates/firewall/firewall.html:13
+msgid "Add/Delete Firewall Rules"
+msgstr "Dodavanje / brisanje pravila (firewall) zaštitnog zida"
+
+#: firewall/templates/firewall/firewall.html:14
+msgid ""
+"On this page you can add/delete firewall rules. (By default all ports are "
+"blocked, except mentioned below)"
+msgstr ""
+"Na ovoj stranici možete dodati / izbrisati pravila firewalla. (Podrazumevano "
+"su svi portovi blokirani, osim što je navedeno ispod)"
+
+#: firewall/templates/firewall/firewall.html:19
+msgid "Add/Delete Rules"
+msgstr "Dodavanje / brisanje pravila"
+
+#: firewall/templates/firewall/firewall.html:45
+msgid "Start"
+msgstr "Početak"
+
+#: firewall/templates/firewall/firewall.html:51
+msgid "Stop"
+msgstr "Stop"
+
+#: firewall/templates/firewall/firewall.html:58
+msgid "Reload"
+msgstr "Učitaj ponovo"
+
+#: firewall/templates/firewall/firewall.html:63
+msgid "Action failed. Error message:"
+msgstr "Nije uspjelo. Greška:"
+
+#: firewall/templates/firewall/firewall.html:67
+#: serverStatus/templates/serverStatus/litespeedStatus.html:85
+msgid "Action successful."
+msgstr "Uspješno je radnja obavljena."
+
+#: firewall/templates/firewall/firewall.html:129
+msgid "Protocol"
+msgstr "Protokol"
+
+#: firewall/templates/firewall/firewall.html:130
+msgid "Port"
+msgstr "Port"
+
+#: firewall/templates/firewall/firewall.html:162
+msgid "Rule successfully added."
+msgstr "Pravilo je uspješno dodano."
+
+#: firewall/templates/firewall/index.html:3
+msgid "Security - CyberPanel"
+msgstr "Bezbijednost - CyberPanel"
+
+#: firewall/templates/firewall/index.html:12
+msgid "Security Functions"
+msgstr "Sigurnosne funkcije"
+
+#: firewall/templates/firewall/index.html:13
+msgid "Manage the security of the server on this page."
+msgstr "Upravljajte bezbijednošću servera na ovoj stranici."
+
+#: firewall/templates/firewall/secureSSH.html:3
+msgid "Secure SSH - CyberPanel"
+msgstr "Siguran SSH"
+
+#: firewall/templates/firewall/secureSSH.html:14
+#: managePHP/templates/managePHP/editPHPConfig.html:15
+msgid "Edit PHP Configurations on this page."
+msgstr "Izmijenite PHP konfiguracije na ovoj stranici."
+
+#: firewall/templates/firewall/secureSSH.html:28
+#: managePHP/templates/managePHP/editPHPConfig.html:29
+msgid "Basic"
+msgstr "Osnovno"
+
+#: firewall/templates/firewall/secureSSH.html:34
+msgid "SSH Keys"
+msgstr "SSH ključevi"
+
+#: firewall/templates/firewall/secureSSH.html:47
+msgid "SSH Port"
+msgstr "SSH port"
+
+#: firewall/templates/firewall/secureSSH.html:56
+msgid "Permit Root Login"
+msgstr "Dozvola za ROOT login"
+
+#: firewall/templates/firewall/secureSSH.html:60
+msgid ""
+"Before disabling root login, make sure you have another account with sudo "
+"priviliges on server."
+msgstr ""
+"Pre nego što onemogućite prijavljivanje root-a, uvjerite se da imate drugi "
+"nalog sa sudo privilegijama na serveru."
+
+#: firewall/templates/firewall/secureSSH.html:68
+#: managePHP/templates/managePHP/editPHPConfig.html:130
+#: managePHP/templates/managePHP/editPHPConfig.html:203
+msgid "Save Changes"
+msgstr "Sačuvaj promjene"
+
+#: firewall/templates/firewall/secureSSH.html:82
+msgid "SSH Configurations Saved."
+msgstr "SSH konfiguracije su sačuvane."
+
+#: firewall/templates/firewall/secureSSH.html:121
+msgid "Key"
+msgstr "Ključ"
+
+#: firewall/templates/firewall/secureSSH.html:150
+msgid "Add Key"
+msgstr "Dodaj ključ"
+
+#: firewall/templates/firewall/secureSSH.html:158
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:55
+#: websiteFunctions/templates/websiteFunctions/website.html:303
+#: websiteFunctions/templates/websiteFunctions/website.html:363
+msgid "Save"
+msgstr "Sačuvaj"
+
+#: firewall/templates/firewall/secureSSH.html:167
+msgid "SSH Key Deleted"
+msgstr "SSH ključ je izbrisan"
+
+#: ftp/templates/ftp/createFTPAccount.html:3
+msgid "Create FTP Account - CyberPanel"
+msgstr "Kreiranje ftp računa"
+
+#: ftp/templates/ftp/createFTPAccount.html:13
+msgid ""
+"Select the website from list, and its home directory will be set as the path "
+"to ftp account."
+msgstr ""
+"Izaberite sajt sa liste, a njen početni direktorijum će biti postavljen kao "
+"put do ftp naloga."
+
+#: ftp/templates/ftp/createFTPAccount.html:52
+msgid "FTP Password"
+msgstr "FTP šifra"
+
+#: ftp/templates/ftp/createFTPAccount.html:59
+msgid "Path (Relative)"
+msgstr "Putanja (Relativno)"
+
+#: ftp/templates/ftp/createFTPAccount.html:72
+msgid "Create FTP"
+msgstr "Kreiraj FTP"
+
+#: ftp/templates/ftp/createFTPAccount.html:80
+msgid "Cannot create FTP account. Error message:"
+msgstr "Ne mogu napraviti FTP nalog. Poruka o grešci:"
+
+#: ftp/templates/ftp/createFTPAccount.html:84
+#: ftp/templates/ftp/createFTPAccount.html:87
+#: ftp/templates/ftp/deleteFTPAccount.html:75
+msgid "FTP Account with username:"
+msgstr "FTP nalog sa korisničkim imenom:"
+
+#: ftp/templates/ftp/createFTPAccount.html:84
+#: ftp/templates/ftp/createFTPAccount.html:87
+#: userManagment/templates/userManagment/createUser.html:154
+msgid "is successfully created."
+msgstr "  je spješno kreiran. "
+
+#: ftp/templates/ftp/deleteFTPAccount.html:3
+msgid "Delete FTP Account - CyberPanel"
+msgstr "Briši FTP račun"
+
+#: ftp/templates/ftp/deleteFTPAccount.html:13
+msgid "Select domain and delete its related FTP accounts."
+msgstr "Izaberite domen i obrišite njegove povezane FTP naloge."
+
+#: ftp/templates/ftp/deleteFTPAccount.html:40
+msgid "Select FTP Account"
+msgstr "Izaberite FTP nalog"
+
+#: ftp/templates/ftp/deleteFTPAccount.html:71
+msgid "Cannot delete account. Error message:"
+msgstr "Ne mogu da izbrišem nalog. Poruka o grešci:"
+
+#: ftp/templates/ftp/deleteFTPAccount.html:75
+msgid " is successfully deleted."
+msgstr "  uspješno izbrisan. "
+
+#: ftp/templates/ftp/deleteFTPAccount.html:79
+#: userManagment/templates/userManagment/deleteUser.html:70
+msgid "Could not connect to the server. Please refresh this page."
+msgstr ""
+"Ne mogu se spojiti na udaljeni računar. Molimo da refreshujete stranicu. "
+
+#: ftp/templates/ftp/index.html:3
+msgid "FTP Functions - CyberPanel"
+msgstr "FTP funkcije"
+
+#: ftp/templates/ftp/index.html:12
+msgid "FTP Functions"
+msgstr "FTP funkcije"
+
+#: ftp/templates/ftp/index.html:13
+msgid "Delete and create FTP accounts on this page."
+msgstr "Obrišite i kreirajte FTP naloge na ovoj stranici."
+
+#: ftp/templates/ftp/listFTPAccounts.html:3
+msgid "List FTP Accounts - CyberPanel"
+msgstr "Lista FTP naloga - CyberPanel"
+
+#: ftp/templates/ftp/listFTPAccounts.html:14
+msgid "List FTP Accounts or change their passwords."
+msgstr "Navedite FTP naloge ili promijenite njihove šifre."
+
+#: ftp/templates/ftp/listFTPAccounts.html:50
+msgid "Password changed for"
+msgstr "Šifra je promenjena za "
+
+#: ftp/templates/ftp/listFTPAccounts.html:54
+msgid ""
+"Cannot change password for <strong>{$ ftpUsername $}</strong>. Error message:"
+msgstr ""
+"Ne možete promijeniti šifru za <strong>{$ ftpUsername $}</strong> . Poruka o "
+"grešci:"
+
+#: ftp/templates/ftp/listFTPAccounts.html:89
+msgid "Directory"
+msgstr "Direktorij"
+
+#: mailServer/templates/mailServer/changeEmailPassword.html:3
+msgid "Change Email Password - CyberPanel"
+msgstr "Promijeni Email šifru - CyberPanel"
+
+#: mailServer/templates/mailServer/changeEmailPassword.html:12
+#: mailServer/templates/mailServer/changeEmailPassword.html:19
+msgid "Change Email Password"
+msgstr "Promijeni Email šifru"
+
+#: mailServer/templates/mailServer/changeEmailPassword.html:13
+msgid "Select a website from the list, to change its password."
+msgstr "Izaberite web stranicu sa liste, da biste promijenili njegovu lozinku."
+
+#: mailServer/templates/mailServer/changeEmailPassword.html:42
+#: mailServer/templates/mailServer/deleteEmailAccount.html:42
+msgid "Select Email"
+msgstr "Izaberite Email"
+
+#: mailServer/templates/mailServer/changeEmailPassword.html:73
+#: mailServer/templates/mailServer/deleteEmailAccount.html:72
+msgid "Cannot delete email account. Error message:"
+msgstr "Nije moguće izbrisati e-mail nalog. Poruka o grešci:"
+
+#: mailServer/templates/mailServer/changeEmailPassword.html:77
+msgid "Password successfully changed for :"
+msgstr "Šifra je uspješno promijenjena za:"
+
+#: mailServer/templates/mailServer/changeEmailPassword.html:84
+#: mailServer/templates/mailServer/deleteEmailAccount.html:83
+msgid "Currently no email accounts exist for this domain."
+msgstr "Trenutno za ovaj domen ne postoje email računi."
+
+#: mailServer/templates/mailServer/createEmailAccount.html:3
+msgid "Create Email Account - CyberPanel"
+msgstr "Kreiranje email računa"
+
+#: mailServer/templates/mailServer/createEmailAccount.html:12
+#: mailServer/templates/mailServer/createEmailAccount.html:19
+msgid "Create Email Account"
+msgstr "Kreiraj email račun"
+
+#: mailServer/templates/mailServer/createEmailAccount.html:13
+msgid "Select a website from the list, to create an email account."
+msgstr "Izaberite web stranicu sa liste da biste kreirali nalog e-pošte."
+
+#: mailServer/templates/mailServer/createEmailAccount.html:72
+msgid "Cannot create email account. Error message:"
+msgstr "Ne mogu napraviti nalog e-mail. Poruka o grešci:"
+
+#: mailServer/templates/mailServer/createEmailAccount.html:76
+msgid "Email with id :"
+msgstr "E-mail sa id:"
+
+#: mailServer/templates/mailServer/createEmailAccount.html:76
+msgid " is successfully created."
+msgstr " uspješno je kreiran."
+
+#: mailServer/templates/mailServer/deleteEmailAccount.html:3
+msgid "Delete Email Account - CyberPanel"
+msgstr "Izbriši e-poštu - CyberPanel"
+
+#: mailServer/templates/mailServer/deleteEmailAccount.html:12
+#: mailServer/templates/mailServer/deleteEmailAccount.html:19
+msgid "Delete Email Account"
+msgstr "Izbriši email račun"
+
+#: mailServer/templates/mailServer/deleteEmailAccount.html:13
+msgid "Select a website from the list, to delete an email account."
+msgstr "Izaberite web stranicu sa liste da biste izbrisali nalog e-pošte."
+
+#: mailServer/templates/mailServer/deleteEmailAccount.html:76
+msgid "Email with id : {$ deletedID $} is successfully deleted."
+msgstr "E-pošta sa id: {$ deletedID $} je uspješno obrisana."
+
+#: mailServer/templates/mailServer/index.html:3
+msgid "Mail Functions - CyberPanel"
+msgstr "Mail  funkcije"
+
+#: mailServer/templates/mailServer/index.html:12
+msgid "Mail Functions"
+msgstr "Funkcije maila"
+
+#: mailServer/templates/mailServer/index.html:13
+msgid "Manage email accounts on this page."
+msgstr "Upravljajte naloge e-pošte na ovoj stranici."
+
+#: managePHP/templates/managePHP/editPHPConfig.html:3
+msgid "Edit PHP Configurations - CyberPanel"
+msgstr "Izmijena PHP konfiguracije - CyberPanel"
+
+#: managePHP/templates/managePHP/editPHPConfig.html:14
+#: managePHP/templates/managePHP/editPHPConfig.html:21
+msgid "Edit PHP Configurations"
+msgstr "Izmijeni PHP konfiguracije"
+
+#: managePHP/templates/managePHP/editPHPConfig.html:35
+msgid "Advanced"
+msgstr "Napredno"
+
+#: managePHP/templates/managePHP/editPHPConfig.html:48
+#: managePHP/templates/managePHP/editPHPConfig.html:174
+#: managePHP/templates/managePHP/installExtensions.html:28
+#: tuning/templates/tuning/phpTuning.html:28
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:68
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:74
+msgid "Select PHP"
+msgstr "Izaberi PHP"
+
+#: managePHP/templates/managePHP/editPHPConfig.html:66
+msgid "display_errors"
+msgstr "display_errors"
+
+#: managePHP/templates/managePHP/editPHPConfig.html:73
+msgid "file_uploads"
+msgstr "file_uploads  "
+
+#: managePHP/templates/managePHP/editPHPConfig.html:81
+msgid "allow_url_fopen"
+msgstr "allow_url_fopen"
+
+#: managePHP/templates/managePHP/editPHPConfig.html:89
+msgid "allow_url_include"
+msgstr "allow_url_include"
+
+#: managePHP/templates/managePHP/editPHPConfig.html:97
+msgid "memory_limit"
+msgstr "memory_limit  "
+
+#: managePHP/templates/managePHP/editPHPConfig.html:104
+msgid "max_execution_time"
+msgstr "max_execution_time"
+
+#: managePHP/templates/managePHP/editPHPConfig.html:111
+msgid "upload_max_filesize"
+msgstr "upload_max_filesize"
+
+#: managePHP/templates/managePHP/editPHPConfig.html:118
+msgid "max_input_time"
+msgstr "max_input_time"
+
+#: managePHP/templates/managePHP/editPHPConfig.html:144
+#: managePHP/templates/managePHP/editPHPConfig.html:216
+msgid "PHP Configs Saved."
+msgstr "PHP konfiguracija je sačuvana."
+
+#: managePHP/templates/managePHP/index.html:3
+msgid "Manage PHP Installations - CyberPanel"
+msgstr "Upravljanje PHP instalacijama - CyberPanel"
+
+#: managePHP/templates/managePHP/index.html:12
+msgid "Manage PHP Installations"
+msgstr "Upravljajte PHP instalacijama"
+
+#: managePHP/templates/managePHP/index.html:13
+msgid "Edit your PHP Configurations to suit your needs."
+msgstr ""
+"Izmijenite svoje PHP konfiguracije kako biste odgovarali vašim potrebama."
+
+#: managePHP/templates/managePHP/installExtensions.html:3
+msgid "Install PHP Extensions - CyberPanel"
+msgstr "Instalacija extenzija za php"
+
+#: managePHP/templates/managePHP/installExtensions.html:13
+msgid "Install PHP Extensions"
+msgstr "Instalacija extenzija za php"
+
+#: managePHP/templates/managePHP/installExtensions.html:14
+msgid "Install/uninstall php extensions on this page."
+msgstr "Instalacija/deintalacija php extenzija na ovo strani."
+
+#: managePHP/templates/managePHP/installExtensions.html:19
+#: tuning/templates/tuning/phpTuning.html:19
+msgid "Select PHP Version"
+msgstr "PHP verzija"
+
+#: managePHP/templates/managePHP/installExtensions.html:63
+msgid "Extension Name"
+msgstr "Ime proširenja (extenzije)"
+
+#: managePHP/templates/managePHP/installExtensions.html:64
+msgid "Description"
+msgstr "Opis"
+
+#: managePHP/templates/managePHP/installExtensions.html:66
+#: managePHP/templates/managePHP/installExtensions.html:77
+msgid "Install"
+msgstr "Instaliraj"
+
+#: managePHP/templates/managePHP/installExtensions.html:67
+#: managePHP/templates/managePHP/installExtensions.html:78
+msgid "Uninstall"
+msgstr "Ukloni"
+
+#: managePHP/templates/managePHP/installExtensions.html:93
+msgid "Go Back"
+msgstr "Idi nazad"
+
+#: managePHP/templates/managePHP/installExtensions.html:104
+#: tuning/templates/tuning/phpTuning.html:114
+#: userManagment/templates/userManagment/modifyUser.html:144
+msgid "Cannot fetch details. Error message:"
+msgstr "Ne mogu da prikupim detalje. Poruka o grešci:"
+
+#: managePHP/templates/managePHP/installExtensions.html:108
+msgid "Cannot perform operation. Error message:"
+msgstr "Ne može izvršiti operaciju. Poruka o grešci:"
+
+#: manageSSL/templates/manageSSL/index.html:3
+msgid "SSL Functions - CyberPanel"
+msgstr "SSL  funkcije"
+
+#: manageSSL/templates/manageSSL/index.html:13
+msgid "SSL Functions"
+msgstr "Funkcije ssl-a"
+
+#: manageSSL/templates/manageSSL/index.html:14
+msgid "Issue Let’s Encrypt SSLs for websites and hostname."
+msgstr "Issue Let's Encrypt SSLs za web stranice i ime hosta."
+
+#: manageSSL/templates/manageSSL/manageSSL.html:3
+msgid "Manage SSL - CyberPanel"
+msgstr "Upravljajte SSL-om - CyberPanel"
+
+#: manageSSL/templates/manageSSL/manageSSL.html:14
+msgid ""
+"This page can be used to issue Let’s Encrypt SSL for existing websites on "
+"server."
+msgstr ""
+"Ova stranica može se koristiti za izdavanje Let's Encrypt SSL za postojeće "
+"web stranice na serveru."
+
+#: manageSSL/templates/manageSSL/manageSSL.html:42
+#: manageSSL/templates/manageSSL/sslForHostName.html:42
+msgid "Issue SSL"
+msgstr "Izdavanje  SSL"
+
+#: manageSSL/templates/manageSSL/manageSSL.html:52
+#: manageSSL/templates/manageSSL/sslForHostName.html:52
+msgid "Cannot issue SSL. Error message:"
+msgstr "Ne mogu da izdam SSL. Poruka o grešci:"
+
+#: manageSSL/templates/manageSSL/manageSSL.html:56
+msgid "SSL Issued for"
+msgstr "SSL izdat za "
+
+#: manageSSL/templates/manageSSL/sslForHostName.html:3
+msgid "Issue SSL For Hostname - CyberPanel"
+msgstr "Izdati  SSL za hostname - CyberPanel"
+
+#: manageSSL/templates/manageSSL/sslForHostName.html:13
+#: manageSSL/templates/manageSSL/sslForHostName.html:20
+msgid "Issue SSL For Hostname"
+msgstr "Izdajte SSL za hostname"
+
+#: manageSSL/templates/manageSSL/sslForHostName.html:14
+msgid "Let’s Encrypt SSL for hostname to access CyberPanel on verified SSL."
+msgstr ""
+"Let’s Encrypt SSL za hostname da pristupimo CyberPanel-u na potvrđenom SSL-u."
+
+#: manageSSL/templates/manageSSL/sslForHostName.html:56
+#: manageSSL/templates/manageSSL/sslForHostName.html:60
+msgid "SSL Issued. You can now access CyberPanel at:"
+msgstr "Dobiven SSL. Sada možete pristupiti CyberPanel-u na:"
+
+#: packages/templates/packages/createPackage.html:3
+msgid "Create Package - CyberPanel"
+msgstr "Kreiraj paket - CyberPanel"
+
+#: packages/templates/packages/createPackage.html:14
+#: packages/templates/packages/deletePackage.html:13
+#: packages/templates/packages/index.html:14
+#: packages/templates/packages/modifyPackage.html:10
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:13
+msgid ""
+"Packages define resources for your websites, you need to add package before "
+"creating a website."
+msgstr ""
+"Paketi definišu  resurse za vaše web stranice, potrebno je dodati paket "
+"prije kreiranja web stranice."
+
+#: packages/templates/packages/createPackage.html:19
+msgid "Package Details"
+msgstr "Detalji paketa"
+
+#: packages/templates/packages/createPackage.html:26
+msgid "Package Name"
+msgstr "Naziv paketa"
+
+#: packages/templates/packages/createPackage.html:35
+#: packages/templates/packages/modifyPackage.html:39
+msgid "Disk Space"
+msgstr "Prostor na disku"
+
+#: packages/templates/packages/createPackage.html:39
+#: packages/templates/packages/createPackage.html:47
+#: packages/templates/packages/modifyPackage.html:43
+#: packages/templates/packages/modifyPackage.html:51
+msgid "MB (0 = Unlimited)"
+msgstr "MB (0=neograničeno)"
+
+#: packages/templates/packages/createPackage.html:43
+#: packages/templates/packages/modifyPackage.html:47
+msgid "Bandwidth"
+msgstr "Mjesečni protok"
+
+#: packages/templates/packages/createPackage.html:52
+#: packages/templates/packages/modifyPackage.html:56
+msgid "FTP Accounts"
+msgstr "FTP računa"
+
+#: packages/templates/packages/createPackage.html:87
+msgid "Cannot create package. Error message:"
+msgstr "Ne mogu napraviti paket. Poruka o grešci:"
+
+#: packages/templates/packages/createPackage.html:91
+#: packages/templates/packages/deletePackage.html:63
+#: packages/templates/packages/modifyPackage.html:102
+msgid "Package"
+msgstr "Paket"
+
+#: packages/templates/packages/createPackage.html:91
+msgid "Successfully Created"
+msgstr "Uspješno kreiran"
+
+#: packages/templates/packages/deletePackage.html:3
+msgid "Delete Package - CyberPanel"
+msgstr "Brisanje paketa"
+
+#: packages/templates/packages/deletePackage.html:27
+#: packages/templates/packages/modifyPackage.html:24
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:29
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:45
+msgid "Select Package"
+msgstr "Odabir paketa"
+
+#: packages/templates/packages/deletePackage.html:59
+msgid "Cannot delete package. Error message:"
+msgstr "Ne mogu da obrišem paket. Poruka o grešci:"
+
+#: packages/templates/packages/deletePackage.html:63
+#: userManagment/templates/userManagment/deleteUser.html:65
+msgid " Successfully Deleted"
+msgstr " Uspješno izbrisan"
+
+#: packages/templates/packages/index.html:3
+msgid "Packages - CyberPanel"
+msgstr "Paketi"
+
+#: packages/templates/packages/modifyPackage.html:3
+msgid "Modify Package - CyberPanel"
+msgstr "Izmijeni paket - CyberPanel"
+
+#: packages/templates/packages/modifyPackage.html:94
+msgid "Cannot fetch package details. Error message:"
+msgstr "Ne mogu preuzeti podatke o paketu. Poruka o grešci:"
+
+#: packages/templates/packages/modifyPackage.html:98
+msgid "Package Details Successfully Fetched"
+msgstr "Detalji paketa su uspješno izvedeni"
+
+#: packages/templates/packages/modifyPackage.html:102
+msgid "Successfully Modified"
+msgstr "Uspješno je izmijenjen"
+
+#: serverLogs/templates/serverLogs/accessLogs.html:3
+msgid "Access Logs - CyberPanel"
+msgstr "Pristupni logovi - CyberPanel"
+
+#: serverLogs/templates/serverLogs/accessLogs.html:17
+#: serverLogs/templates/serverLogs/index.html:27
+#: websiteFunctions/templates/websiteFunctions/website.html:121
+msgid "Access Logs"
+msgstr "Pristupni logovi"
+
+#: serverLogs/templates/serverLogs/accessLogs.html:18
+msgid "Access Logs for main web server."
+msgstr "Access logovi  za glavni web server."
+
+#: serverLogs/templates/serverLogs/accessLogs.html:26
+#: serverLogs/templates/serverLogs/emailLogs.html:23
+#: serverLogs/templates/serverLogs/errorLogs.html:23
+#: serverLogs/templates/serverLogs/ftplogs.html:23
+#: serverStatus/templates/serverStatus/cybercpmainlogfile.html:24
+msgid "Last 50 Lines"
+msgstr "Zadnjih 50 linija"
+
+#: serverLogs/templates/serverLogs/accessLogs.html:42
+#: serverLogs/templates/serverLogs/emailLogs.html:39
+#: serverLogs/templates/serverLogs/errorLogs.html:39
+#: serverLogs/templates/serverLogs/ftplogs.html:39
+#: serverStatus/templates/serverStatus/cybercpmainlogfile.html:40
+msgid "Refresh"
+msgstr "Osvježi"
+
+#: serverLogs/templates/serverLogs/accessLogs.html:49
+#: serverLogs/templates/serverLogs/emailLogs.html:46
+#: serverLogs/templates/serverLogs/errorLogs.html:46
+#: serverLogs/templates/serverLogs/ftplogs.html:46
+#: serverStatus/templates/serverStatus/cybercpmainlogfile.html:47
+msgid "Last 50 Lines Fetched"
+msgstr "Zadnjih 50 linija dohvaćeno"
+
+#: serverLogs/templates/serverLogs/accessLogs.html:54
+#: serverLogs/templates/serverLogs/emailLogs.html:51
+#: serverLogs/templates/serverLogs/errorLogs.html:51
+#: serverLogs/templates/serverLogs/ftplogs.html:51
+#: serverStatus/templates/serverStatus/cybercpmainlogfile.html:52
+msgid "Could not fetch logs. Use the command line to view the log file."
+msgstr ""
+"Nije moguće izvaditi logove. Koristite komandnu liniju da biste pogledali "
+"datoteku loga."
+
+#: serverLogs/templates/serverLogs/emailLogs.html:3
+#: serverLogs/templates/serverLogs/errorLogs.html:3
+msgid "Error Logs - CyberPanel"
+msgstr "Logovi grešaka - CyberPanel"
+
+#: serverLogs/templates/serverLogs/emailLogs.html:14
+#: serverLogs/templates/serverLogs/index.html:51
+msgid "Email Logs"
+msgstr "Email logovi"
+
+#: serverLogs/templates/serverLogs/emailLogs.html:15
+msgid "Email Logs for main web server."
+msgstr "Evidencija email logova  za glavni web server."
+
+#: serverLogs/templates/serverLogs/errorLogs.html:15
+msgid "Error Logs for main web server."
+msgstr "Evidencije grešaka za glavni web server."
+
+#: serverLogs/templates/serverLogs/ftplogs.html:3
+msgid "FTP Logs - CyberPanel"
+msgstr "FTP logovi - CyberPanel"
+
+#: serverLogs/templates/serverLogs/ftplogs.html:15
+msgid "FTP Logs for main web server."
+msgstr "FTP logovi  za glavni web server."
+
+#: serverLogs/templates/serverLogs/index.html:3
+msgid "Server Logs - CyberPanel"
+msgstr "Server logovi"
+
+#: serverLogs/templates/serverLogs/index.html:13
+msgid "Server Logs"
+msgstr "Server logovi"
+
+#: serverLogs/templates/serverLogs/index.html:14
+msgid ""
+"These are the logs from main server, to see logs for your website navigate "
+"to: Websites -> List Websites -> Select Website -> View Logs."
+msgstr ""
+"Ovo su logovi glavnog servera, da biste ih vidjeli idite na: Sajtove -> "
+"Lista sajtova -> Odabir sajta -> Pregled logova."
+
+#: serverStatus/templates/serverStatus/cybercpmainlogfile.html:3
+msgid "CyberPanel Main Log File - CyberPanel"
+msgstr "Glavni log fajl"
+
+#: serverStatus/templates/serverStatus/cybercpmainlogfile.html:16
+msgid ""
+"This log file corresponds to errors generated by CyberPanel for your domain "
+"errors log you can look into /home/domain/logs."
+msgstr ""
+"Ovaj log fajl odgovara greškama generisanim od strane sistema za vašu domenu "
+"i mogu se pogledati na /home/domain/logs."
+
+#: serverStatus/templates/serverStatus/index.html:3
+msgid "Server Status - CyberPanel"
+msgstr "Status servera"
+
+#: serverStatus/templates/serverStatus/index.html:14
+msgid "View LiteSpeed status and log files."
+msgstr "Pregled LiteSpeed statusa i log fajlova."
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:3
+msgid "LiteSpeed Status - CyberPanel"
+msgstr "LiteSpeed status"
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:16
+msgid "LiteSpeed Status:"
+msgstr "LiteSpeed status:"
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:17
+msgid ""
+"On this page you can get information regarding your LiteSpeed processes."
+msgstr "Na ovoj stranici možete vidjeti informacije vaših LiteSpeed procesa."
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:32
+msgid "LiteSpeed Processes"
+msgstr "LiteSpeed procesi"
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:39
+msgid "Process ID"
+msgstr "ID procesa"
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:51
+msgid "Main Process"
+msgstr "Glavni proces"
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:54
+msgid "lscgid Process"
+msgstr "lscgid proces"
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:57
+msgid "Worker Process"
+msgstr "Radni procesi"
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:67
+msgid ""
+"Could not fetch details, either LiteSpeed is not running or some error "
+"occurred, please see CyberPanel Main log file."
+msgstr ""
+"Nije bilo moguće dohvatiti detalje, ili LiteSpeed nije pokrenut ili se "
+"pojavila neka greška. Molimo da pogledate glavni log fajl sa greškama."
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:72
+msgid "Reboot LiteSpeed"
+msgstr "Ponovo pokreni LiteSpeed"
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:77
+msgid "Stop LiteSpeed"
+msgstr "Zaustavi LiteSpeed"
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:90
+msgid "Error Occurred. See CyberPanel main log file."
+msgstr "Dogodila se greška. Pogledajte glavni log fajl."
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:95
+msgid "Could not connect to server."
+msgstr "Ne mogu se spojiti na udaljeni računar."
+
+#: tuning/templates/tuning/index.html:3
+msgid "Server Tuning - CyberPanel"
+msgstr "Server tuning"
+
+#: tuning/templates/tuning/index.html:13
+msgid ""
+"On this page you can set runing parameters for your webserver depending on "
+"your hardware."
+msgstr ""
+
+#: tuning/templates/tuning/liteSpeedTuning.html:3
+msgid "LiteSpeed Tuning - CyberPanel"
+msgstr "LiteSpeed  tuning"
+
+#: tuning/templates/tuning/liteSpeedTuning.html:13
+msgid ""
+"You can use this page to tweak your server according to your website "
+"requirments."
+msgstr ""
+
+#: tuning/templates/tuning/liteSpeedTuning.html:18
+msgid "Tuning Details"
+msgstr "Tuning detalji"
+
+#: tuning/templates/tuning/liteSpeedTuning.html:28
+#: tuning/templates/tuning/phpTuning.html:52
+msgid "Max Connections"
+msgstr "Mrežne konekcije"
+
+#: tuning/templates/tuning/liteSpeedTuning.html:36
+msgid "Max SSL Connections"
+msgstr "Max ssl konekcija"
+
+#: tuning/templates/tuning/liteSpeedTuning.html:44
+msgid "Connection Timeout"
+msgstr ""
+
+#: tuning/templates/tuning/liteSpeedTuning.html:52
+msgid "Keep Alive Timeout"
+msgstr ""
+
+#: tuning/templates/tuning/liteSpeedTuning.html:60
+msgid "Cache Size in memory"
+msgstr "Veličina Chachea u memoriji"
+
+#: tuning/templates/tuning/liteSpeedTuning.html:67
+msgid "Enable GZIP Compression"
+msgstr ""
+
+#: tuning/templates/tuning/liteSpeedTuning.html:70
+#: tuning/templates/tuning/phpTuning.html:93
+msgid "Enable"
+msgstr "Uključi"
+
+#: tuning/templates/tuning/liteSpeedTuning.html:71
+#: tuning/templates/tuning/phpTuning.html:94
+msgid "Disable"
+msgstr "Isključi"
+
+#: tuning/templates/tuning/liteSpeedTuning.html:74
+#: tuning/templates/tuning/phpTuning.html:97
+#: userManagment/templates/userManagment/modifyUser.html:78
+msgid "Currently:"
+msgstr "Trenutno:"
+
+#: tuning/templates/tuning/liteSpeedTuning.html:82
+msgid "Tune Web Server"
+msgstr ""
+
+#: tuning/templates/tuning/liteSpeedTuning.html:93
+msgid ""
+"Cannot fetch Current Value, but you can still submit new changes, error "
+"reported from server:"
+msgstr ""
+
+#: tuning/templates/tuning/liteSpeedTuning.html:97
+msgid "Cannot save details, Error Message: "
+msgstr "Ne mogu da prikupim detalje. Poruka o grešci: "
+
+#: tuning/templates/tuning/liteSpeedTuning.html:102
+msgid "Web Server Successfully tuned."
+msgstr ""
+
+#: tuning/templates/tuning/phpTuning.html:3
+msgid "PHP Tuning - CyberPanel"
+msgstr "PHP modifikacije"
+
+#: tuning/templates/tuning/phpTuning.html:14
+msgid "Set how each version of PHP behaves in your server here."
+msgstr ""
+
+#: tuning/templates/tuning/phpTuning.html:45
+msgid "Initial Request Timeout (secs)"
+msgstr ""
+
+#: tuning/templates/tuning/phpTuning.html:60
+msgid "Memory Soft Limit"
+msgstr ""
+
+#: tuning/templates/tuning/phpTuning.html:67
+msgid "Memory Hard Limit"
+msgstr ""
+
+#: tuning/templates/tuning/phpTuning.html:75
+msgid "Process Soft Limit"
+msgstr ""
+
+#: tuning/templates/tuning/phpTuning.html:82
+msgid "Process Hard Limit"
+msgstr ""
+
+#: tuning/templates/tuning/phpTuning.html:90
+msgid "Persistent Connection"
+msgstr "Mrežne konekcije"
+
+#: tuning/templates/tuning/phpTuning.html:105
+msgid "Tune PHP"
+msgstr "PHP"
+
+#: tuning/templates/tuning/phpTuning.html:118
+msgid "Cannot tune. Error message:"
+msgstr "Ne mogu izvršiti operaciju. Poruka o grešci:"
+
+#: tuning/templates/tuning/phpTuning.html:123
+msgid "Details Successfully fetched."
+msgstr "Detalji su uspješno izvedeni."
+
+#: tuning/templates/tuning/phpTuning.html:127
+msgid "PHP version "
+msgstr "PHP verzija "
+
+#: tuning/templates/tuning/phpTuning.html:127
+msgid "Successfully tuned."
+msgstr "Uspješno izmijenjeno."
+
+#: userManagment/templates/userManagment/createUser.html:3
+msgid "Create New User - CyberPanel"
+msgstr "Novi korisnik"
+
+#: userManagment/templates/userManagment/createUser.html:13
+msgid "Create root, reseller or normal users on this page."
+msgstr "Kreirajte, uređujte i izbrišite korisnike na ovoj stranici."
+
+#: userManagment/templates/userManagment/createUser.html:19
+msgid "User Details"
+msgstr "Detalji"
+
+#: userManagment/templates/userManagment/createUser.html:28
+#: userManagment/templates/userManagment/modifyUser.html:39
+#: userManagment/templates/userManagment/userProfile.html:25
+msgid "First Name"
+msgstr "Ime"
+
+#: userManagment/templates/userManagment/createUser.html:32
+msgid "First Name should contain only alphabetic characters."
+msgstr "Ime mora sadržavati samo karaktere  slova."
+
+#: userManagment/templates/userManagment/createUser.html:37
+#: userManagment/templates/userManagment/modifyUser.html:46
+#: userManagment/templates/userManagment/userProfile.html:33
+msgid "Last Name"
+msgstr "Prezime"
+
+#: userManagment/templates/userManagment/createUser.html:41
+msgid "Last Name should contain only alphabetic characters."
+msgstr "Prezime  mora sadržavati samo karaktere  slova."
+
+#: userManagment/templates/userManagment/createUser.html:51
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:64
+msgid "Invalid Email"
+msgstr "Neispravan email"
+
+#: userManagment/templates/userManagment/createUser.html:64
+#: userManagment/templates/userManagment/createUser.html:76
+#: userManagment/templates/userManagment/modifyUser.html:69
+msgid "Account Type"
+msgstr "Tip računa"
+
+#: userManagment/templates/userManagment/createUser.html:67
+#: userManagment/templates/userManagment/modifyUser.html:73
+msgid "Reseller"
+msgstr "Reseller"
+
+#: userManagment/templates/userManagment/createUser.html:68
+#: userManagment/templates/userManagment/createUser.html:79
+#: userManagment/templates/userManagment/modifyUser.html:74
+msgid "Normal User"
+msgstr "Obični korisnik"
+
+#: userManagment/templates/userManagment/createUser.html:92
+#: userManagment/templates/userManagment/modifyUser.html:89
+#: userManagment/templates/userManagment/userProfile.html:67
+#: userManagment/templates/userManagment/userProfile.html:74
+msgid "User Accounts Limit"
+msgstr "Limit po računu"
+
+#: userManagment/templates/userManagment/createUser.html:96
+#: userManagment/templates/userManagment/createUser.html:107
+msgid "Only Numbers"
+msgstr "Samo brojevi"
+
+#: userManagment/templates/userManagment/createUser.html:103
+#: userManagment/templates/userManagment/modifyUser.html:99
+#: userManagment/templates/userManagment/userProfile.html:82
+msgid "Websites Limit"
+msgstr "Limit sajtova"
+
+#: userManagment/templates/userManagment/createUser.html:113
+#: userManagment/templates/userManagment/userProfile.html:42
+msgid "Username"
+msgstr "Korisničko ime"
+
+#: userManagment/templates/userManagment/createUser.html:117
+msgid "Username should be lowercase alphanumeric."
+msgstr ""
+
+#: userManagment/templates/userManagment/createUser.html:127
+msgid "Must contain one number and one special character."
+msgstr ""
+
+#: userManagment/templates/userManagment/createUser.html:143
+#: userManagment/templates/userManagment/index.html:42
+msgid "Create User"
+msgstr "Novi korisnik"
+
+#: userManagment/templates/userManagment/createUser.html:154
+#: userManagment/templates/userManagment/modifyUser.html:131
+msgid "Account with username:"
+msgstr "Nalog sa korisničkim imenom:"
+
+#: userManagment/templates/userManagment/createUser.html:158
+msgid "Cannot create user. Error message:"
+msgstr "Ne mogu napraviti korisnika. Poruka o grešci:"
+
+#: userManagment/templates/userManagment/createUser.html:166
+msgid ""
+"Length of first and last name combined should be less than or equal to 20 "
+"characters"
+msgstr ""
+"Dužina imena i prezimena kombinovano ne smije da prekorači dužinu od 20 "
+"karaktera"
+
+#: userManagment/templates/userManagment/deleteUser.html:3
+msgid "Delete User - CyberPanel"
+msgstr "Brisanje korisnika"
+
+#: userManagment/templates/userManagment/deleteUser.html:14
+msgid "Websites owned by this user will automatically transfer to the root."
+msgstr ""
+
+#: userManagment/templates/userManagment/deleteUser.html:29
+msgid "Select User"
+msgstr "Odaberite korisnika"
+
+#: userManagment/templates/userManagment/deleteUser.html:61
+msgid "Cannot delete user. Error message:"
+msgstr "Nije moguće izbisati web korisnika, greška:"
+
+#: userManagment/templates/userManagment/deleteUser.html:65
+msgid "User "
+msgstr "Korisnik "
+
+#: userManagment/templates/userManagment/index.html:3
+msgid "User Functions - CyberPanel"
+msgstr "Korisničke funkcije"
+
+#: userManagment/templates/userManagment/index.html:13
+msgid "User Functions"
+msgstr "Korisničke funkcije"
+
+#: userManagment/templates/userManagment/index.html:14
+msgid "Create, edit and delete users on this page."
+msgstr "Kreirajte, uređujte i izbrišite korisnike na ovoj stranici."
+
+#: userManagment/templates/userManagment/modifyUser.html:3
+msgid "Modify User - CyberPanel"
+msgstr "Promjena korisnika"
+
+#: userManagment/templates/userManagment/modifyUser.html:13
+msgid "Modify existing user settings on this page."
+msgstr ""
+
+#: userManagment/templates/userManagment/modifyUser.html:26
+msgid "Select Account"
+msgstr "Odaberite račun"
+
+#: userManagment/templates/userManagment/modifyUser.html:72
+msgid "Admin"
+msgstr "Administrator"
+
+#: userManagment/templates/userManagment/modifyUser.html:131
+msgid " is successfully modified."
+msgstr " uspješno je izmijenjen."
+
+#: userManagment/templates/userManagment/modifyUser.html:135
+msgid "Cannot modify user. Error message:"
+msgstr ""
+
+#: userManagment/templates/userManagment/modifyUser.html:148
+msgid "Details fetched."
+msgstr ""
+
+#: userManagment/templates/userManagment/userProfile.html:3
+msgid "Account Details - CyberPanel"
+msgstr "Detalji računa"
+
+#: userManagment/templates/userManagment/userProfile.html:12
+#: userManagment/templates/userManagment/userProfile.html:18
+msgid "Account Details"
+msgstr "Detalji računa"
+
+#: userManagment/templates/userManagment/userProfile.html:13
+msgid "List the account details for the currently logged in user."
+msgstr ""
+
+#: userManagment/templates/userManagment/userProfile.html:58
+msgid "Account Level"
+msgstr "Odaberite level računa"
+
+#: userManagment/templates/userManagment/userProfile.html:69
+#: userManagment/templates/userManagment/userProfile.html:76
+#: userManagment/templates/userManagment/userProfile.html:84
+msgid "( 0 = Unlimited )"
+msgstr "(0=Neograničeno)"
+
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:3
+msgid "Create New Website - CyberPanel"
+msgstr "Kreiranje novog sajta"
+
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:13
+#: websiteFunctions/templates/websiteFunctions/index.html:14
+#: websiteFunctions/templates/websiteFunctions/listWebsites.html:15
+msgid ""
+"On this page you can launch, list, modify and delete websites from your "
+"server."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:20
+msgid "Website Details"
+msgstr "Detalji sajta"
+
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:40
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:56
+msgid "Select Owner"
+msgstr "Vlasnik"
+
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:56
+msgid "Invalid Domain (Note: You don't need to add 'http' or 'https')"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:84
+msgid "Additional Features"
+msgstr "Dodatne informacije"
+
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:91
+msgid ""
+"For SSL to work DNS of domain should point to server, otherwise self signed "
+"SSL will be issued, you can add your own SSL later."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:113
+msgid "Cannot create website. Error message:"
+msgstr "Ne mogu napraviti sajt. Poruka o grešci:"
+
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:117
+msgid "Website with domain"
+msgstr "Sajt sa domenom"
+
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:117
+msgid " is Successfully Created"
+msgstr "  je spješno kreiran"
+
+#: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:3
+msgid "Delete Website - CyberPanel"
+msgstr "Izbriši sajt"
+
+#: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:13
+msgid ""
+"This page can be used to delete website, once deleted it can not be "
+"recovered."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:61
+msgid "Cannot delete website, Error message: "
+msgstr "Nije moguće izbisati web sajti, greška: "
+
+#: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:65
+msgid "Website"
+msgstr "Sajt"
+
+#: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:65
+msgid "Successfully Deleted."
+msgstr "Uspješno izbrisan."
+
+#: websiteFunctions/templates/websiteFunctions/index.html:3
+msgid "Website Functions - CyberPanel"
+msgstr "Funkcije za sajtove"
+
+#: websiteFunctions/templates/websiteFunctions/index.html:13
+msgid "Website Functions"
+msgstr "Funkcije za sajtove"
+
+#: websiteFunctions/templates/websiteFunctions/index.html:72
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:13
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:20
+msgid "Suspend/Unsuspend Website"
+msgstr "Suspend/Unsuspend sajt"
+
+#: websiteFunctions/templates/websiteFunctions/listWebsites.html:3
+msgid "Websites Hosted - CyberPanel"
+msgstr "Sajtovi"
+
+#: websiteFunctions/templates/websiteFunctions/listWebsites.html:51
+msgid "Cannot list websites. Error message:"
+msgstr "Nije moguće izlistati sajtove. Greška je:"
+
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:3
+msgid "Modify Website - CyberPanel"
+msgstr "Promjena sajta"
+
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:51
+msgid "Current Package:"
+msgstr "Sadašnji paket:"
+
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:62
+msgid "Current Owner:"
+msgstr "Sadašnji vlasnik:"
+
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:104
+msgid "Cannot fetch website details. Error message:"
+msgstr "Ne mogu da prikupim detalje. Poruka o grešci:"
+
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:108
+msgid "Cannot modify website. Error message:"
+msgstr "Nije moguće izmijeniti sajt. Poruka greške:"
+
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:112
+msgid "Website Details Successfully fetched"
+msgstr "Detalji sajta su uspješno izvedeni"
+
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:3
+msgid "Suspend/Unsuspend Website - CyberPanel"
+msgstr "Suspend/Unsuspend sajt"
+
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:14
+msgid "This page can be used to suspend/unsuspend website."
+msgstr "Ova stranica može poslužiti da suspendujete ili desuspendujete sajt"
+
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:44
+msgid "Suspend"
+msgstr "Suspenzija"
+
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:45
+msgid "Un-Suspend"
+msgstr "De-suspenzija"
+
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:65
+msgid "Cannot suspend website, Error message: "
+msgstr "Nije moguće suspendovati web sajt, greška: "
+
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:69
+msgid "Cannot unsuspend website. Error message:"
+msgstr "Nije moguće unsuspendirati web sajt, greška: "
+
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:73
+msgid "Website "
+msgstr "Sajt "
+
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:73
+msgid "Successfully "
+msgstr "Uspješno "
+
+#: websiteFunctions/templates/websiteFunctions/website.html:15
+msgid "All functions related to a particular site."
+msgstr "Sve funkcije su povezane sa specifičnim sajtom."
+
+#: websiteFunctions/templates/websiteFunctions/website.html:23
+msgid "Resource Usage"
+msgstr "Upotreba resursa"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:32
+msgid "Resource"
+msgstr "Resurs"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:34
+msgid "Allowed"
+msgstr "Dopušteno"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:56
+#: websiteFunctions/templates/websiteFunctions/website.html:83
+msgid "Bandwidth Usage"
+msgstr "Upotreba jesečnog protoka"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:147
+msgid "Logs Fetched"
+msgstr "Logovi"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:152
+msgid ""
+"Could not fetch logs, see the logs file through command line. Error message:"
+msgstr ""
+"Nije moguće izvaditi logove. Koristite komandnu liniju da biste pogledali "
+"datoteku loga."
+
+#: websiteFunctions/templates/websiteFunctions/website.html:173
+msgid "Next"
+msgstr "Sljedeće"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:174
+msgid "Previous"
+msgstr "Prethodno"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:227
+msgid "Configurations"
+msgstr "Upravljajte postavkama"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:235
+msgid "Edit vHost Main Configurations"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:247
+msgid "Add Rewrite Rules (.htaccess)"
+msgstr "Dodaj rewrite pravila (.htaccess)"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:259
+msgid "Add SSL"
+msgstr "Dodaj SSL"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:274
+msgid "SSL Saved"
+msgstr "SLL spremljen"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:279
+msgid "Could not save SSL. Error message:"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:329
+msgid "Current configuration in the file fetched."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:334
+#: websiteFunctions/templates/websiteFunctions/website.html:347
+msgid "Could not fetch current configuration. Error message:"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:343
+#: websiteFunctions/templates/websiteFunctions/website.html:398
+msgid "Configuration saved. Restart LiteSpeed put them in effect."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:384
+msgid "Current rewrite rules in the file fetched."
+msgstr "Trenutno rewrite pravilo je dohvaćeno."
+
+#: websiteFunctions/templates/websiteFunctions/website.html:389
+msgid "Could not fetch current rewrite rules. Error message:"
+msgstr "Nisam mogao dohvatiti trenutno rewrite pravilo. Poruka s greškom:"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:402
+msgid "Could not save rewrite rules. Error message:"
+msgstr "Nisam mogao promijeniti vrijednost rewrite pravila. Poruka s greškom:"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:418
+msgid "Save Rewrite Rules"
+msgstr "Sačuvaj promjene"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:441
+msgid "Files"
+msgstr "Datoteke"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:450
+msgid "File Manager"
+msgstr "Upravljač datotekama"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:490
+msgid "Application Installer"
+msgstr "Instalacija aplikacija"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:498
+msgid "Wordpress with LSCache"
+msgstr "Wordpress sa LSCache"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:510
+msgid "Path"
+msgstr "Putanja"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:532
+msgid "Installation failed. Error message:"
+msgstr "Nije uspjela instalacija. Greška:"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:536
+msgid "Installation successful. To complete the setup visit:"
+msgstr "Instalacija je uspjela. Do završetka je ostalo samo da posjetite:"

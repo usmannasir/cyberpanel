@@ -1,0 +1,46 @@
+/* Mobile navigation */
+
+#nav-toggle {
+    cursor: pointer;
+    background: none;
+    border: 0;
+    padding: 10px 35px 16px 0px;
+}
+#nav-toggle span,
+#nav-toggle span:before,
+#nav-toggle span:after {
+    cursor: pointer;
+    border-radius: 2px;
+    height: 5px;
+    width: 35px;
+    position: absolute;
+    display: block;
+    content: '';
+}
+#nav-toggle.collapsed span:before {
+    top: -10px;
+    transform: rotate(0deg);
+}
+#nav-toggle.collapsed span:after {
+    bottom: -10px;
+    transform: rotate(0deg);
+}
+
+#nav-toggle span:before,
+#nav-toggle span:after {
+    transition: all 500ms ease-in-out;
+}
+
+#nav-toggle span {
+    background: transparent;
+}
+#nav-toggle span:before,
+#nav-toggle span:after {
+
+}
+#nav-toggle span:before {
+    transform: rotate(45deg);
+}
+#nav-toggle span:after {
+    transform: rotate(-45deg);
+}

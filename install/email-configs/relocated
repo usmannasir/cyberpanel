@@ -1,0 +1,171 @@
+# RELOCATED(5)                                                      RELOCATED(5)
+# 
+# NAME
+#        relocated - Postfix relocated table format
+# 
+# SYNOPSIS
+#        postmap /etc/postfix/relocated
+# 
+# DESCRIPTION
+#        The  optional  relocated(5) table provides the information
+#        that is used in "user has moved  to  new_location"  bounce
+#        messages.
+# 
+#        Normally,  the  relocated(5)  table is specified as a text
+#        file that serves as input to the postmap(1) command.   The
+#        result,  an  indexed file in dbm or db format, is used for
+#        fast searching by the mail  system.  Execute  the  command
+#        "postmap  /etc/postfix/relocated"  to  rebuild  an indexed
+#        file after changing the corresponding relocated table.
+# 
+#        When the table is provided via other means  such  as  NIS,
+#        LDAP  or  SQL,  the  same lookups are done as for ordinary
+#        indexed files.
+# 
+#        Alternatively, the table can be  provided  as  a  regular-
+#        expression map where patterns are given as regular expres-
+#        sions, or lookups can be directed to TCP-based server.  In
+#        those  case,  the lookups are done in a slightly different
+#        way as described below under "REGULAR  EXPRESSION  TABLES"
+#        or "TCP-BASED TABLES".
+# 
+#        Table lookups are case insensitive.
+# 
+# CASE FOLDING
+#        The  search  string is folded to lowercase before database
+#        lookup. As of Postfix 2.3, the search string is  not  case
+#        folded  with database types such as regexp: or pcre: whose
+#        lookup fields can match both upper and lower case.
+# 
+# TABLE FORMAT
+#        The input format for the postmap(1) command is as follows:
+# 
+#        o      An entry has one of the following form:
+# 
+#                    pattern      new_location
+# 
+#               Where  new_location  specifies  contact information
+#               such as an  email  address,  or  perhaps  a  street
+#               address or telephone number.
+# 
+#        o      Empty  lines and whitespace-only lines are ignored,
+#               as are lines whose first  non-whitespace  character
+#               is a `#'.
+# 
+#        o      A  logical  line starts with non-whitespace text. A
+#               line that starts with whitespace continues a  logi-
+#               cal line.
+# 
+# TABLE SEARCH ORDER
+#        With lookups from indexed files such as DB or DBM, or from
+#        networked tables such as NIS, LDAP or  SQL,  patterns  are
+#        tried in the order as listed below:
+# 
+#        user@domain
+#               Matches  user@domain. This form has precedence over
+#               all other forms.
+# 
+#        user   Matches user@site when site is $myorigin, when site
+#               is listed in $mydestination, or when site is listed
+#               in $inet_interfaces or $proxy_interfaces.
+# 
+#        @domain
+#               Matches other addresses in domain.  This  form  has
+#               the lowest precedence.
+# 
+# ADDRESS EXTENSION
+#        When a mail address localpart contains the optional recip-
+#        ient delimiter (e.g., user+foo@domain), the  lookup  order
+#        becomes: user+foo@domain, user@domain, user+foo, user, and
+#        @domain.
+# 
+# REGULAR EXPRESSION TABLES
+#        This section describes how the table lookups  change  when
+#        the  table  is given in the form of regular expressions or
+#        when lookups are directed to a  TCP-based  server.  For  a
+#        description of regular expression lookup table syntax, see
+#        regexp_table(5) or pcre_table(5). For a description of the
+#        TCP client/server table lookup protocol, see tcp_table(5).
+#        This feature is not available up to and including  Postfix
+#        version 2.4.
+# 
+#        Each  pattern  is  a regular expression that is applied to
+#        the entire address being looked up. Thus, user@domain mail
+#        addresses  are  not  broken up into their user and @domain
+#        constituent parts, nor is user+foo broken up into user and
+#        foo.
+# 
+#        Patterns  are applied in the order as specified in the ta-
+#        ble, until a pattern is  found  that  matches  the  search
+#        string.
+# 
+#        Results  are  the  same as with indexed file lookups, with
+#        the additional feature that parenthesized substrings  from
+#        the pattern can be interpolated as $1, $2 and so on.
+# 
+# TCP-BASED TABLES
+#        This  section  describes how the table lookups change when
+#        lookups are directed to a TCP-based server. For a descrip-
+#        tion of the TCP client/server lookup protocol, see tcp_ta-
+#        ble(5).  This feature is not available up to and including
+#        Postfix version 2.4.
+# 
+#        Each lookup operation uses the entire address once.  Thus,
+#        user@domain mail addresses are not broken  up  into  their
+#        user and @domain constituent parts, nor is user+foo broken
+#        up into user and foo.
+# 
+#        Results are the same as with indexed file lookups.
+# 
+# BUGS
+#        The table format does not understand quoting  conventions.
+# 
+# CONFIGURATION PARAMETERS
+#        The  following main.cf parameters are especially relevant.
+#        The text below provides  only  a  parameter  summary.  See
+#        postconf(5) for more details including examples.
+# 
+#        relocated_maps
+#               List of lookup tables for relocated users or sites.
+# 
+#        Other parameters of interest:
+# 
+#        inet_interfaces
+#               The network interface addresses  that  this  system
+#               receives mail on.  You need to stop and start Post-
+#               fix when this parameter changes.
+# 
+#        mydestination
+#               List of domains that  this  mail  system  considers
+#               local.
+# 
+#        myorigin
+#               The domain that is appended to locally-posted mail.
+# 
+#        proxy_interfaces
+#               Other interfaces that this machine receives mail on
+#               by way of a proxy agent or network address transla-
+#               tor.
+# 
+# SEE ALSO
+#        trivial-rewrite(8), address resolver
+#        postmap(1), Postfix lookup table manager
+#        postconf(5), configuration parameters
+# 
+# README FILES
+#        Use "postconf readme_directory" or  "postconf  html_direc-
+#        tory" to locate this information.
+#        DATABASE_README, Postfix lookup table overview
+#        ADDRESS_REWRITING_README, address rewriting guide
+# 
+# LICENSE
+#        The  Secure  Mailer  license must be distributed with this
+#        software.
+# 
+# AUTHOR(S)
+#        Wietse Venema
+#        IBM T.J. Watson Research
+#        P.O. Box 704
+#        Yorktown Heights, NY 10598, USA
+# 
+#                                                                   RELOCATED(5)

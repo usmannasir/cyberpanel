@@ -1,0 +1,70 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Packages - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Packages" %}</h2>
+   <p>{% trans "Packages define resources for your websites, you need to add package before creating a website." %}</p>
+</div>
+<div class="panel">
+        <div class="panel-body">
+            <h3 class="title-hero">
+            {% trans "Available Functions" %}
+            </h3>
+           <div class="example-box-wrapper">
+
+                <div class="row">
+        <div class="col-md-4">
+                        <a href="{% url 'createPackage' %}" title="{% trans 'Create Package' %}" class="tile-box tile-box-shortcut btn-primary">
+                            <div class="tile-header">
+                                {% trans "Create Package" %}
+                            </div>
+                            <div class="tile-content-wrapper">
+                                <i class="glyph-icon icon-dashboard"></i>
+                            </div>
+                        </a>
+        </div>
+
+
+        <div class="col-md-4">
+                        <a href="{% url 'deletePackage' %}" title="{% trans 'Delete Package' %}" class="tile-box tile-box-shortcut btn-primary">
+                            <div class="tile-header">
+                                {% trans "Delete Package" %}
+                            </div>
+                            <div class="tile-content-wrapper">
+                                <i class="glyph-icon icon-dashboard"></i>
+                            </div>
+                        </a>
+        </div>
+
+
+        <div class="col-md-4">
+                        <a href="{% url 'modifyPackage' %}" title="{% trans 'Modify Package' %}" class="tile-box tile-box-shortcut btn-primary">
+                            <div class="tile-header">
+                                {% trans "Modify Package" %}
+                            </div>
+                            <div class="tile-content-wrapper">
+                                <i class="glyph-icon icon-dashboard"></i>
+                            </div>
+                        </a>
+        </div>
+
+
+    </div>
+
+           </div>
+        </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

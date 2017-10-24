@@ -1,0 +1,16 @@
+[Unit]
+Description=MySQL Multi Server for instance %i
+After=syslog.target
+After=network.target
+
+[Service]
+User=mysql
+Group=mysql
+Type=forking
+ExecStart=/usr/bin/mysqld_multi start %i
+ExecStop=/usr/bin/mysqld_multi stop %i
+Restart=always
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

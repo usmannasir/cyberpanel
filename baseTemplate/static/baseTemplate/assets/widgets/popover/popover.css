@@ -1,0 +1,115 @@
+/* Popovers */
+
+.popover {
+    z-index: 1049;
+    top: 0;
+    left: 0;
+    display: none;
+    min-width: 250px;
+    margin: 0;
+    padding: 0;
+}
+.popover .popover-content {
+    padding: 15px;
+}
+.display-block.popover {
+    box-shadow: 0 0 0 transparent;
+}
+.popover.top {
+    margin-top: -10px;
+}
+.popover.right {
+    margin-left: 10px;
+}
+.popover.bottom {
+    margin-top: 10px;
+}
+.popover.left {
+    margin-left: -10px;
+}
+.popover-title {
+    font-size: 12px;
+    font-weight: bold;
+    margin: 0;
+    padding: 10px 15px;
+    text-transform: uppercase;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+}
+.popover-title:empty {
+    display: none;
+}
+.popover .arrow,
+.popover .arrow:after {
+    position: absolute;
+    display: block;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-color: transparent;
+}
+.popover .arrow {
+    border-width: 10px;
+}
+.popover .arrow:after {
+    content: '';
+    border-width: 10px;
+}
+.popover.top .arrow {
+    bottom: -22px;
+    left: 50%;
+    margin-left: -11px;
+}
+.popover.top .arrow:after {
+    bottom: 1px;
+    margin-left: -10px;
+    border-top-color: rgba(0, 0, 0, .2);
+    border-bottom-width: 0;
+}
+.popover.right .arrow {
+    top: 50%;
+    left: -22px;
+    margin-top: -11px;
+}
+.popover.right .arrow:after {
+    bottom: -10px;
+    left: 1px;
+    border-right-color: rgba(0, 0, 0, .2);
+    border-left-width: 0;
+}
+.popover.bottom .arrow {
+    top: -22px;
+    left: 50%;
+    margin-left: -11px;
+}
+.popover.bottom .arrow:after {
+    top: 1px;
+    margin-left: -10px;
+    border-top-width: 0;
+    border-bottom-color: rgba(0, 0, 0, .2);
+}
+.popover.left .arrow {
+    top: 50%;
+    right: -22px;
+    margin-top: -11px;
+}
+.popover.left .arrow:after {
+    right: 1px;
+    bottom: -10px;
+    border-right-width: 0;
+    border-left-color: rgba(0, 0, 0, .2);
+}
+.popover .nav-list,
+.popover .dropdown-menu {
+    margin: 0;
+    border: 0;
+}
+.display-block.popover {
+    float: none;
+    width: auto;
+    margin: 15px;
+}
+.fixed-header .popover {
+    position: fixed;
+    -webkit-transform: translate3d(0, 0, 0);
+}

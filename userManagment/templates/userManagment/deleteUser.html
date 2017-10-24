@@ -1,0 +1,95 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Delete User - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Delete User" %}</h2>
+   <p>{% trans "Websites owned by this user will automatically transfer to the root." %}</p>
+</div>
+
+<div class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Delete User" %}
+        </h3>
+        <div ng-controller="deleteUser" class="example-box-wrapper">
+
+
+            <form  action="/" class="form-horizontal bordered-row">
+
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select User" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-model="accountUsername" class="form-control">
+                            {% for items in acctNames %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+            <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="deleteUser()" class="btn btn-primary btn-lg btn-block">{% trans "Delete User" %}</button>
+
+                    </div>
+            </div>
+
+
+            <div ng-hide="deleteUserButton" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="deleteUserFinal()" class="btn btn-primary btn-lg btn-block">{% trans "Are you sure?" %}</button>
+
+                    </div>
+            </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div ng-hide="deleteFailure" class="alert alert-danger">
+                                        <p>{% trans "Cannot delete user. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="deleteSuccess" class="alert alert-success">
+                                <p>{% trans "User " %}<strong>{$ deletedUser $}</strong>{% trans " Successfully Deleted" %}</p>
+                            </div>
+
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <p>{% trans "Could not connect to the server. Please refresh this page." %}</p>
+                            </div>
+
+
+
+                    </div>
+
+
+
+                </div>
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

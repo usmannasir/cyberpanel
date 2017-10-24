@@ -1,0 +1,126 @@
+/* === Mobile devices - Portrait (320px wide) === */
+
+@media only screen and (min-width: 20em) {
+
+}
+/* === Mobile devices - Landscape (480px wide) === */
+
+@media only screen and (min-width: 30em) {
+
+}
+/* === Tablet devices - Portrait (768px wide) === */
+
+@media only screen and (min-width: 48em) {
+
+}
+/* === Tablet devices - Landscape (900px wide) === */
+
+@media only screen and (min-width: 56.25em) {
+
+}
+/* === Netbook devices (1100px wide) === */
+
+@media only screen and (min-width: 68.75em) {
+
+}
+/* === Desktop devices (1300px wide) === */
+
+@media only screen and (min-width: 81.25em) {
+
+
+}
+/* === Desktop devices (1600px wide) === */
+
+@media only screen and (min-width: 81.25em) {
+
+}
+
+
+
+
+/* Responsive elements */
+
+@media (max-width: 1050px) {
+    /* Information Boxes */
+
+    .info-box.icon-wrapper {
+        padding-left: 50px;
+    }
+    .info-box.icon-wrapper .icon-large {
+        font-size: 70px;
+    }
+    .info-box .stats {
+        font-size: 20px;
+    }
+    .info-box b {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+}
+@media screen and (max-width: 650px) {
+    .mobile-hidden {
+        display: none !important;
+    }
+    .mobile-buttons a.btn {
+        display: block;
+        float: none;
+        min-width: 1px;
+        max-width: 100%;
+        margin: 0 0 5px;
+    }
+    .heading-1 .heading-content {
+        width: 80%;
+    }
+    .heading-1 small {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .content-box .content-box-wrapper {
+        padding: 5px;
+    }
+    .popover {
+        min-width: 100px !important;
+    }
+    .medium-box,
+    .scrollable-small {
+        width: 300px !important;
+    }
+    /* Chats */
+
+    .chat-box li {
+        padding-right: 50px;
+    }
+    .chat-box li.float-left {
+        padding-left: 50px;
+    }
+    .chat-box .popover .popover-content {
+        font-size: 11px;
+        line-height: 1.5em;
+        padding: 5px;
+    }
+    .chat-box .chat-author img {
+        width: 34px;
+        min-width: 34px;
+    }
+    /* Notifications */
+
+    .notifications-box li .notification-text {
+        display: block;
+        overflow: hidden;
+        width: 44%;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    .notifications-box li .notification-time {
+        margin: 0;
+    }
+    /* Messages */
+
+    .messages-box li .messages-text {
+        overflow: hidden;
+        width: 100%;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+}

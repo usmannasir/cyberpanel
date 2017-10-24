@@ -1,0 +1,36 @@
+/* Iphone */
+
+.iphone-wrapper,
+.iphone-screen {
+    position: relative;
+    width: 366px;
+    height: 768px;
+}
+.iphone-screen {
+    position: absolute;
+    z-index: 6;
+    top: 0;
+    left: 0;
+    background-image: url('../image-resources/objects/iphone-screen.png');
+}
+.iphone-content {
+    position: absolute;
+    z-index: 7;
+    top: 112px;
+    left: 30px;
+    width: 310px;
+    height: 541px;
+}
+.iphone-content .owl-pagination {
+    display: none !important;
+}
+.iphone-content .slider-wrapper .owl-controls .owl-buttons .owl-prev {
+    font-size: 95px;
+    right: auto;
+    left: -65px;
+}
+.iphone-content .slider-wrapper .owl-controls .owl-buttons .owl-next {
+    font-size: 95px;
+    right: -65px;
+    left: auto;
+}

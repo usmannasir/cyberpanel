@@ -1,0 +1,86 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Delete Website - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Delete Website" %}</h2>
+   <p>{% trans "This page can be used to delete website, once deleted it can not be recovered." %}</p>
+</div>
+
+<div class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Delete Website" %} <img id="deleteLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+
+            <form ng-controller="deleteWebsiteControl"  action="/" class="form-horizontal bordered-row">
+
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
+                    <div class="col-sm-6">
+                        <select ng-change="fetchDetails()" ng-model="websiteToBeDeleted" class="form-control">
+                            {% for items in websiteList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+
+            <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="deleteWebsite()" class="btn btn-primary btn-lg btn-block">{% trans "Delete Website" %}</button>
+
+                    </div>
+            </div>
+
+
+            <div id="deleteWebsiteButton" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="deleteWebsiteFinal()" class="btn btn-primary btn-lg btn-block">{% trans "Are you sure?" %}</button>
+
+                    </div>
+            </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div id="websiteDeleteFailure" class="alert alert-danger">
+                                        <p>{% trans "Cannot delete website, Error message: " %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div id="websiteDeleteSuccess" class="alert alert-success">
+                                <p>{% trans "Website" %} <strong>{$ deletedWebsite $}</strong> {% trans "Successfully Deleted." %} </p>
+                            </div>
+                    </div>
+
+
+
+                </div>
+
+
+            </form>
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

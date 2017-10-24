@@ -1,0 +1,100 @@
+/* Default color schemes */
+
+@import url(https://fonts.googleapis.com/css?family=Raleway:300);
+@import url(https://fonts.googleapis.com/css?family=Open+Sans);
+
+/* General */
+
+body {
+    font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #3e4855;
+    background-color: #fff;
+    line-height: 1.42857143;
+    overflow-x: hidden;
+}
+
+#page-wrapper {
+    background: #fff;
+}
+
+/* Fonts weight */
+.tabs-nav li a,
+.main-header .header-nav > li > a,
+.hero-heading,
+.hero-text,
+h1, h2, h3, h4, h5, h6,
+.main-header .header-nav > li > a,
+.hero-heading,
+.hero-text {
+    font-family: "Raleway", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 300;
+}
+
+/* Top bar menu */
+
+.bg-topbar {
+    background: #fff;
+    border-bottom-color: #eee;
+}
+/* Main header */
+
+.bg-header {
+    background: #fff;
+}
+.sticky-active .main-header {
+    box-shadow: 0 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+/* Header subnav menu */
+
+.main-header .header-nav > li > ul {
+    background: #253035;
+}
+.main-header .header-nav > li > ul li a:hover {
+    background: rgba(255,255,255,0.05);
+    color: #dce4e8;
+}
+
+/* Inverse font color */
+
+.hero-box.font-inverse,
+.top-bar.font-inverse .float-left > a,
+.top-bar.font-inverse .user-profile,
+.main-header.font-inverse .header-logo,
+.main-header.font-inverse .header-nav > li > a,
+.main-header.font-inverse .right-header-btn .search-btn a {
+    color: rgba(255,255,255,0.7);
+}
+.top-bar.font-inverse .user-profile:hover,
+.top-bar.font-inverse .float-left > a:hover,
+.main-header.font-inverse .right-header-btn .search-btn a:hover,
+.main-header.font-inverse .header-nav > li > a:hover {
+    color: rgba(255,255,255,0.9);
+}
+.top-bar.font-inverse .user-info span,
+.thumb-heading.font-inverse {
+    color: #000;
+}
+.main-header.transparent {
+    margin-bottom: -74px;
+}
+/* Responsive */
+
+@media only screen and (max-width: 56.25em) {
+    .main-header .header-nav > li > ul li a:hover {
+        color: #1c82e1;
+    }
+    .main-header .header-nav .header {
+        color: #fff;
+        background: #00bca4;
+    }
+    .main-header .header-nav {
+        border-color: #dfe8f1;
+    }
+    .main-header .header-nav > li > ul {
+        background: rgba(37, 48, 53, 0.03);
+    }
+    .main-header .header-nav > li > ul li a:hover {
+        background: #fff;
+    }
+}

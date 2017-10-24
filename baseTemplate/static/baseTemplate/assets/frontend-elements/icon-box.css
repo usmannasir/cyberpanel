@@ -1,0 +1,121 @@
+/* Icon box */
+
+.icon-box {
+    text-align: center;
+}
+.icon-small {
+    font-size: 28px;
+    line-height: 56px;
+    width: 56px;
+    height: 56px;
+}
+.icon-medium {
+    font-size: 38px;
+    line-height: 76px;
+    width: 76px;
+    height: 76px;
+}
+.icon-large {
+    font-size: 48px;
+    line-height: 96px;
+    width: 96px;
+    height: 96px;
+}
+.icon-box.icon-box-left .icon-alt {
+    font-size: 44px;
+    margin-top: -10px;
+    margin-right: 25px;
+    width: 40px;
+}
+.icon-content-wrapper {
+    overflow: hidden;
+}
+.icon-box.icon-box-offset-small .glyph-icon {
+    margin-top: -48px;
+}
+.icon-box.icon-box-offset-medium .glyph-icon {
+    margin-top: -58px;
+}
+.icon-box.icon-box-offset-large .glyph-icon {
+    margin-top: -68px;
+}
+.icon-box.icon-box-offset-small {
+    margin-top: 24px;
+}
+.icon-box.icon-box-offset-medium {
+    margin-top: 29px;
+}
+.icon-box.icon-box-offset-large {
+    margin-top: 34px;
+}
+.icon-box .glyph-icon {
+    font-weight: normal;
+    display: block;
+    margin: 0 auto 20px;
+    border-radius: 100%;
+}
+.icon-border {
+    border: transparent solid 2px;
+}
+.icon-box .icon-title {
+    font-size: 17px;
+    margin: 0;
+    color: rgba(0, 0, 0, .9);
+}
+.icon-box.inverse .icon-title {
+    color: rgba(255, 255, 255, .9);
+}
+.icon-box .icon-content {
+    line-height: 1.6em;
+    margin: 0;
+    padding: 10px;
+    color: rgba(0, 0, 0, .45);
+    overflow: hidden;
+    font-size: 15px;
+}
+.icon-box.inverse .icon-content {
+    color: rgba(255, 255, 255, .6);
+}
+/* Boxed style */
+
+.icon-boxed {
+    padding: 20px 0;
+}
+/* Left icons */
+
+.icon-box-left {
+    text-align: left;
+}
+.icon-box-left .glyph-icon {
+    float: left;
+    margin-right: 15px;
+    text-align: center;
+}
+.icon-box-left .icon-content {
+    padding: 10px 0;
+}
+.icon-box .read-more {
+    margin: 5px 0 0 63px;
+    color: rgba(255, 255, 255, .9);
+    display: inline-block;
+    padding: 5px 15px;
+    font-weight: 700;
+    font-size: 11px;
+    border: 1px solid rgba(255, 255, 255, .2);
+    text-transform: uppercase;
+    border-radius: 50px;
+}
+.icon-box .read-more:hover {
+    color: #fff;
+    border-color: rgba(255,255,255,.4);
+    background: rgba(255,255,255,.07);
+}
+.hero-box .icon-box .icon-alt {
+    color: rgba(255,255,255,.3);
+}
+.hero-box .icon-box .icon-content {
+    color: rgba(255,255,255,.7);
+}
+.hero-box .icon-box .icon-title {
+    color: rgba(255,255,255,.9);
+}

@@ -1,0 +1,96 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Delete Database - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Delete Database" %}</h2>
+   <p>{% trans "Delete an existing database on this page." %}</p>
+</div>
+
+<div ng-controller="deleteDatabase" class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Delete Database" %} <img ng-hide="deleteDatabaseLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+
+            <form  action="/" class="form-horizontal bordered-row">
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Website" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-change="fetchDatabases()" ng-model="databaseWebsite" class="form-control">
+                            {% for items in websitesList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+
+                <div ng-hide="fetchedDatabases" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Database" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-model="selectedDB" class="form-control">
+                                <option ng-repeat="db in dbnames track by $index">{$ db.dbName $}</option>
+                        </select>
+                    </div>
+                </div>
+
+
+
+                <div ng-hide="fetchedDatabases" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="deleteDatabase()" class="btn btn-primary btn-lg btn-block">{% trans "Delete Database" %}</button>
+
+                    </div>
+                </div>
+
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div ng-hide="databaseDeletionFailed" class="alert alert-danger">
+                                <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="databaseDeleted" class="alert alert-success">
+                                <p>{% trans "Database deleted successfully." %}</p>
+                            </div>
+
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+                    </div>
+
+
+
+                </div>
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+</div>
+
+
+{% endblock %}

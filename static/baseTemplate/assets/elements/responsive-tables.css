@@ -1,0 +1,138 @@
+/* Hide columns */
+
+@media only screen and (max-width: 1000px) {
+    .hide-columns table td:nth-child(2),
+    .hide-columns table th:nth-child(2) {
+        display: none;
+    }
+}
+@media only screen and (max-width: 810px) {
+    .hide-columns table td:nth-child(4),
+    .hide-columns table th:nth-child(4),
+    .hide-columns table td:nth-child(7),
+    .hide-columns table th:nth-child(7),
+    .hide-columns table td:nth-child(8),
+    .hide-columns table th:nth-child(8) {
+        display: none;
+    }
+}
+/* Scroll columns */
+
+@media only screen and (max-width: 1000px) {
+    .scroll-columns .cf:after {
+        visibility: hidden;
+        display: block;
+        font-size: 0;
+        content: " ";
+        clear: both;
+        height: 0;
+    }
+    .scroll-columns * html .cf {
+        zoom: 1;
+    }
+    .scroll-columns *:first-child+html .cf {
+        zoom: 1;
+    }
+    .scroll-columns table {
+        width: 100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+    }
+    .scroll-columns th,
+    .scroll-columns td {
+        margin: 0;
+        vertical-align: top;
+    }
+    .scroll-columns th {
+        text-align: left;
+    }
+    .scroll-columns table {
+        display: block;
+        position: relative;
+        width: 100%;
+    }
+    .scroll-columns thead {
+        display: block;
+        float: left;
+    }
+    .scroll-columns tbody {
+        display: block;
+        width: auto;
+        position: relative;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    .scroll-columns thead tr {
+        display: block;
+    }
+    .scroll-columns th {
+        display: block;
+        text-align: right;
+    }
+    .scroll-columns tbody tr {
+        display: inline-block;
+        vertical-align: top;
+    }
+    .scroll-columns td {
+        display: block;
+        min-height: 1.25em;
+        text-align: left;
+    }
+    .scroll-columns th {
+        border-bottom: 0;
+        border-left: 0;
+    }
+    .scroll-columns td {
+        border-left: 0;
+        border-right: 0;
+        border-bottom: 0;
+    }
+    .scroll-columns tbody tr {
+        border-left: 1px solid #dfe8f1;
+    }
+    .scroll-columns th:last-child,
+    .scroll-columns td:last-child {
+        border-bottom: 1px solid #dfe8f1;
+    }
+}
+/* Remove columns */
+
+@media only screen and (max-width: 1000px) {
+    .remove-columns table,
+    .remove-columns thead,
+    .remove-columns tbody,
+    .remove-columns .table th,
+    .remove-columns .table td,
+    .remove-columns .table tr {
+        display: block;
+    }
+    .remove-columns thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    .remove-columns .table tr {
+        border: 1px solid #dfe8f1;
+    }
+    .remove-columns .table td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%;
+        white-space: normal;
+        text-align: left;
+    }
+    .remove-columns .table td:before {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+    }
+    .remove-columns .table td:before {
+        content: attr(data-title);
+    }
+}
