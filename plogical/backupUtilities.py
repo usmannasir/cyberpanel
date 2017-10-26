@@ -76,18 +76,24 @@ class backupUtilities:
             p.start()
             pid = open(backupPath + 'pid', "w")
             pid.write(str(p.pid))
-
             pid.close()
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateBackup]")
 
     @staticmethod
-    def startRestore(backupName, backupNames):
+    def startRestore(backupName, dir):
         try:
-            backupFileName = backupName.strip(".tar.gz")
 
-            completPath = "/home/backup/" + backupFileName
-            originalFile = "/home/backup/" + backupName
+            if dir == None:
+                backupFileName = backupName.strip(".tar.gz")
+                completPath = "/home/backup/" + backupFileName ## without extension
+                originalFile = "/home/backup/" + backupName ## with extension
+            else:
+                backupFileName = backupName.strip(".tar.gz")
+                completPath = "/home/backup/transfer-"+str(dir)+"/"+backupFileName ## without extension
+                originalFile = "/home/backup/transfer-"+str(dir)+"/"+backupName ## with extension
+
+
 
             pathToCompressedHome = completPath + "/public_html.tar.gz"
 
@@ -115,7 +121,7 @@ class backupUtilities:
             ## creating website and its dabases
 
             try:
-                finalData = json.dumps({'backupFile': backupName})
+                finalData = json.dumps({'backupFile': backupName,"dir":dir})
                 r = requests.post("http://localhost:5003/websites/CreateWebsiteFromBackup", data=finalData)
                 data = json.loads(r.text)
 
@@ -183,9 +189,9 @@ class backupUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
 
     @staticmethod
-    def initiateRestore(backupName):
+    def initiateRestore(backupName,dir):
         try:
-            p = Process(target=backupUtilities.startRestore, args=(backupName, backupName,))
+            p = Process(target=backupUtilities.startRestore, args=(backupName, dir,))
             p.start()
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateRestore]")
@@ -379,15 +385,14 @@ class backupUtilities:
             verifyHostKey.sendline("yes")
 
         except pexpect.TIMEOUT, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [verifyHostKey]")
+            logging.CyberCPLogFileWriter.writeToFile("Timeout [verifyHostKey]")
             return 0
         except pexpect.EOF, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [verifyHostKey]")
+            logging.CyberCPLogFileWriter.writeToFile("EOF [verifyHostKey]")
             return 0
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [verifyHostKey]")
             return 0
-
 
 
     @staticmethod

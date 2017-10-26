@@ -39,11 +39,12 @@ urlpatterns = [
 
     url(r'^remoteBackups', views.remoteBackups, name='remoteBackups'),
     url(r'^submitRemoteBackups', views.submitRemoteBackups, name='submitRemoteBackups'),
-    url(r'^remoteTransferStatus', views.remoteTransferStatus, name='remoteTransferStatus'),
     url(r'^getRemoteTransferStatus', views.getRemoteTransferStatus, name='getRemoteTransferStatus'),
     url(r'^remoteBackupRestore', views.remoteBackupRestore, name='remoteBackupRestore'),
-    url(r'^remoteRestoreStatus', views.remoteRestoreStatus, name='remoteRestoreStatus'),
+    url(r'^starRemoteTransfer', views.starRemoteTransfer, name='starRemoteTransfer'),
+    url(r'^localRestoreStatus', views.localRestoreStatus, name='localRestoreStatus'),
 
+    url(r'^cancelRemoteBackup', views.cancelRemoteBackup, name='cancelRemoteBackup'),
 
 
 

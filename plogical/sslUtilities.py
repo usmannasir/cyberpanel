@@ -55,6 +55,7 @@ class sslUtilities:
                 data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
                 writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
                 sslCheck = 0
+
                 for items in data:
                     if (items.find("listener SSL")>-1):
                         sslCheck = 1

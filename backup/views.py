@@ -160,61 +160,55 @@ def getCurrentBackups(request):
 
 def submitBackupCreation(request):
     try:
-        try:
-            if request.method == 'POST':
+        if request.method == 'POST':
 
-                data = json.loads(request.body)
-                backupDomain = data['websiteToBeBacked']
+            data = json.loads(request.body)
+            backupDomain = data['websiteToBeBacked']
 
-                website = Websites.objects.get(domain=backupDomain)
+            website = Websites.objects.get(domain=backupDomain)
 
-                backupPath = "/home/"+backupDomain+"/backup/"
+            backupPath = "/home/" + backupDomain + "/backup/"
 
-                if not os.path.exists(backupPath):
-                    os.mkdir(backupPath)
+            if not os.path.exists(backupPath):
+                os.mkdir(backupPath)
 
-                domainUser = backupDomain.split('.')
+            domainUser = backupDomain.split('.')
 
-                backupName = 'backup-'+domainUser[0]+"-"+time.strftime("%I-%M-%S-%a-%b-%Y")
+            backupName = 'backup-' + domainUser[0] + "-" + time.strftime("%I-%M-%S-%a-%b-%Y")
 
-                tempStoragePath = backupPath+backupName
+            tempStoragePath = backupPath + backupName
 
-                if not os.path.exists(tempStoragePath):
-                    os.mkdir(tempStoragePath)
+            if not os.path.exists(tempStoragePath):
+                os.mkdir(tempStoragePath)
 
-                ## Generating meta
+            ## Generating meta
 
-                meta = tempStoragePath+"/meta"
+            meta = tempStoragePath + "/meta"
 
-                metaFile = open(meta,'w')
+            metaFile = open(meta, 'w')
 
-                metaFile.write(backupDomain+"\n")
+            metaFile.write(backupDomain + "\n")
 
-                databases = website.databases_set.all()
+            databases = website.databases_set.all()
 
-                for items in databases:
-                    dbuser = DBUsers.objects.get(user=items.dbUser)
-                    metaFile.write(items.dbName + "-" + items.dbUser + "-"+dbuser.password + "\n")
-                metaFile.close()
+            for items in databases:
+                dbuser = DBUsers.objects.get(user=items.dbUser)
+                metaFile.write(items.dbName + "-" + items.dbUser + "-" + dbuser.password + "\n")
+            metaFile.close()
 
-                backupUtil.backupUtilities.initiateBackup(tempStoragePath,backupName,backupPath)
+            backupUtil.backupUtilities.initiateBackup(tempStoragePath, backupName, backupPath)
 
-                newBackup = Backups(website=website,fileName=backupName,date=time.strftime("%I-%M-%S-%a-%b-%Y"),
-                                    size=0,status=0)
-                newBackup.save()
+            newBackup = Backups(website=website, fileName=backupName, date=time.strftime("%I-%M-%S-%a-%b-%Y"),
+                                size=0, status=0)
+            newBackup.save()
 
-
-                final_json = json.dumps({'metaStatus': 1, 'error_message': "None",'tempStorage':tempStoragePath})
-                return HttpResponse(final_json)
-
-        except BaseException,msg:
-            final_dic = {'metaStatus': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-
+            final_json = json.dumps({'metaStatus': 1, 'error_message': "None", 'tempStorage': tempStoragePath})
             return HttpResponse(final_json)
-    except KeyError:
-        final_dic = {'metaStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+
+    except BaseException, msg:
+        final_dic = {'metaStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
+
         return HttpResponse(final_json)
 
 def backupStatus(request):
@@ -397,79 +391,78 @@ def deleteBackup(request):
 
 def submitRestore(request):
     try:
-        val = request.session['userID']
-        try:
-            if request.method == 'POST':
+        if request.method == 'POST':
 
+            data = json.loads(request.body)
+            backupFile = data['backupFile']
 
-                data = json.loads(request.body)
-                backupFile = data['backupFile']
+            originalFile = "/home/backup/" + backupFile
 
-                backupUtil.backupUtilities.initiateRestore(backupFile)
+            if not os.path.exists(originalFile):
+                dir = data['dir']
+            else:
+                dir = None
 
-                final_dic = {'restoreStatus': 1, 'error_message': "None"}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
+            backupUtil.backupUtilities.initiateRestore(backupFile, dir)
 
-        except BaseException,msg:
-            final_dic = {'restoreStatus': 0, 'error_message': str(msg)}
+            final_dic = {'restoreStatus': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-    except KeyError:
-        final_dic = {'restoreStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+
+    except BaseException, msg:
+        final_dic = {'restoreStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
 
 def restoreStatus(request):
     try:
-        val = request.session['userID']
-        try:
-            if request.method == 'POST':
+        if request.method == 'POST':
 
+            data = json.loads(request.body)
+            backupFile = data['backupFile'].strip(".tar.gz")
 
-                data = json.loads(request.body)
-                backupFile = data['backupFile'].strip(".tar.gz")
+            path = "/home/backup/" + backupFile
 
-                path = "/home/backup/"+backupFile
+            if os.path.exists(path):
+                pass
+            else:
+                dir = data['dir']
+                path = "/home/backup/transfer-" + str(dir) + "/" + backupFile
 
+            if os.path.exists(path):
+                try:
+                    status = open(path + '/status', 'r').readlines()[0]
+                except:
+                    status = "Just Started"
 
-                if os.path.exists(path):
-                    try:
-                        status = open(path+'/status','r').readlines()[0]
-                    except:
-                        status = "Just Started"
-
-                    if status == "Done":
-                        rmtree(path)
-                        final_json = json.dumps({'restoreStatus': 1, 'error_message': "None", "status": "Done"})
-                        return HttpResponse(final_json)
-
-                    if status == "Website already exists":
-                        rmtree(path)
-                        final_json = json.dumps({'restoreStatus': 1, 'error_message': "Website already exists", "status": "Website already exists"})
-                        return HttpResponse(final_json)
-
-                    if status.find("Not able to create Account and databases") > -1:
-                        rmtree(path)
-                        final_json = json.dumps({'restoreStatus': 1, 'error_message': "Not able to create Account and databases, aborting.",
-                                                 "status": "Not able to create Account and databases, aborting."})
-                        return HttpResponse(final_json)
-
-
-                    final_json = json.dumps({'restoreStatus': 1, 'error_message': "None", "status": status})
-                    return HttpResponse(final_json)
-                else:
-                    final_json = json.dumps({'restoreStatus': 1, 'error_message': "None", "status": 0})
+                if status == "Done":
+                    rmtree(path)
+                    final_json = json.dumps({'restoreStatus': 1, 'error_message': "None", "status": "Done"})
                     return HttpResponse(final_json)
 
+                if status == "Website already exists":
+                    rmtree(path)
+                    final_json = json.dumps({'restoreStatus': 1, 'error_message': "Website already exists",
+                                             "status": "Website already exists"})
+                    return HttpResponse(final_json)
 
-        except BaseException,msg:
-            final_dic = {'restoreStatus': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
-    except KeyError:
-        final_dic = {'restoreStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+                if status.find("Not able to create Account and databases") > -1:
+                    rmtree(path)
+                    final_json = json.dumps(
+                        {'restoreStatus': 1, 'error_message': "Not able to create Account and databases, aborting.",
+                         "status": "Not able to create Account and databases, aborting."})
+                    return HttpResponse(final_json)
+
+                final_json = json.dumps({'restoreStatus': 1, 'error_message': "None", "status": status})
+                return HttpResponse(final_json)
+            else:
+                final_json = json.dumps({'restoreStatus': 1, 'error_message': "None", "status": 0})
+                return HttpResponse(final_json)
+
+
+    except BaseException, msg:
+        final_dic = {'restoreStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
@@ -1063,10 +1056,6 @@ def submitRemoteBackups(request):
             pathToSSH = "/root/.ssh/authorized_keys"
 
 
-            sshFile = open(pathToSSH, 'a')
-            sshFile.writelines("#Added by CyberPanel\n")
-            sshFile.close()
-
 
             presenseCheck = 0
 
@@ -1078,6 +1067,7 @@ def submitRemoteBackups(request):
 
             if presenseCheck == 0:
                 writeToFile = open(pathToSSH, 'a')
+                writeToFile.writelines("#Added by CyberPanel\n")
                 writeToFile.writelines("\n")
                 writeToFile.writelines(sshkey)
                 writeToFile.writelines("\n")
@@ -1090,8 +1080,6 @@ def submitRemoteBackups(request):
             url = "https://" + ipAddress + ":8090/api/fetchAccountsFromRemoteServer"
 
             r = requests.post(url, data=finalData, verify=False)
-
-            logging.CyberCPLogFileWriter.writeToFile(r.text)
 
             data = json.loads(r.text)
 
@@ -1127,72 +1115,91 @@ def submitRemoteBackups(request):
         final_json = json.dumps({'status': 0, 'type':'exception', 'error_message': str(msg)})
         return HttpResponse(final_json)
 
-
-
-def remoteTransferStatus(request):
+def starRemoteTransfer(request):
     try:
-        if request.method == "POST":
-            data = json.loads(request.body)
-            backupDir = data['backupDir']
-            seek = data['seek']
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+                data = json.loads(request.body)
 
-            #admin = Administrator.objects.get(userName=username)
-            if 1==1:
-                backupLogPath = "/home/backup/transfer-"+ backupDir +"/" + "backup_log"
-                print backupLogPath
+                ipAddress = data['ipAddress']
+                password = data['password']
 
-                if os.path.isfile(backupLogPath):
-                    pass
+                ownIP = requests.get('https://api.ipify.org').text
+
+                finalData = json.dumps({'username': "admin", "password": password,"ipAddress": ownIP})
+
+                url = "https://" + ipAddress + ":8090/api/remoteTransfer"
+
+                r = requests.post(url, data=finalData, verify=False)
+
+                data = json.loads(r.text)
+
+                localStoragePath = "/home/backup/transfer-"+str(data['dir'])
+
+                if not os.path.exists(localStoragePath):
+                    os.makedirs(localStoragePath)
+
+                if data['transferStatus'] == 1:
+                    final_json = json.dumps({'remoteTransferStatus': 1, 'error_message': "None","dir":data['dir']})
+                    return HttpResponse(final_json)
                 else:
-                    data_ret = {'remoteTransferStatus': 0, 'error_message': "No such log found"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                    final_json = json.dumps({'remoteTransferStatus': 0, 'error_message': data['error_message']})
+                    return HttpResponse(final_json)
 
-                last_line = ""
-                with open(backupLogPath, 'r') as logfile:
-                    last_line = logfile.readlines()[-1]
-                    logfile.seek(seek)
-                    data = logfile.read()
-                    where = logfile.tell()
-
-                if 'success' in last_line:
-                    data_ret = {'remoteTransferStatus': 1, "complete":1, 'error_message': "None","logs":data,"where":where}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-                else:
-
-                    data_ret = {'remoteTransferStatus': 1, "complete":0, 'error_message': "Backup In Progress","logs":data,"where":where}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-            else:
-                data_ret = {'remoteTransferStatus': 0, "complete":0, 'error_message': "Invalid Credentials"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-
-    except BaseException, msg:
-        data = {'remoteTransferStatus': 0, 'error_message': str(msg)}
-        json_data = json.dumps(data)
-        return HttpResponse(json_data)
+        except BaseException,msg:
+            final_json = json.dumps({'remoteTransferStatus': 0, 'error_message': str(msg)})
+            return HttpResponse(final_json)
+    except KeyError:
+        final_json = json.dumps({'remoteTransferStatus': 0, 'error_message': str(msg)})
+        return HttpResponse(final_json)
 
 def getRemoteTransferStatus(request):
     try:
         if request.method == "POST":
             data = json.loads(request.body)
             ipAddress = data['ipAddress']
-            backupDir = data['backupDir']
-            seek = data['seek']
+            password = data['password']
+            dir = data['dir']
+            username = "admin"
 
-            finalData = json.dumps({'backupDir': backupDir, "seek":seek})
-            r = requests.post("https://"+ipAddress+":8090/backup/remoteTransferStatus", data=finalData)
+            finalData = json.dumps({'dir': dir, "username":username,"password":password})
+            r = requests.post("https://"+ipAddress+":8090/api/FetchRemoteTransferStatus", data=finalData)
 
-            return HttpResponse(r.text)
+            data = json.loads(r.text)
+
+            if data['fetchStatus'] == 1:
+                if data['status'].find("Backups are successfully generated and received on") > -1:
+
+                    #try:
+                        #finalData = json.dumps({"backupDir": dir})
+                        #r = requests.post("http://localhost:5003/backup/remoteBackupRestore", data=finalData)
+                        #logging.CyberCPLogFileWriter.writeToFile(r.text)
+                    #except BaseException,msg:
+                    #    logging.CyberCPLogFileWriter.writeToFile("Something happened here:" +str(msg))
+
+
+
+                    data = {'remoteTransferStatus': 1, 'error_message': "None", "status": data['status'],'backupsSent': 1}
+                    json_data = json.dumps(data)
+                    return HttpResponse(json_data)
+                else:
+                    data = {'remoteTransferStatus': 1, 'error_message': "None", "status": data['status'],
+                            'backupsSent': 0}
+                    json_data = json.dumps(data)
+                    return HttpResponse(json_data)
+            else:
+                data = {'remoteTransferStatus': 0, 'error_message': data['error_message'],
+                        'backupsSent': 0}
+                json_data = json.dumps(data)
+                return HttpResponse(json_data)
+
 
     except BaseException, msg:
-        data = {'remoteTransferStatus': 0, 'error_message': str(msg)}
+        data = {'remoteTransferStatus': 0, 'error_message': str(msg),'backupsSent': 0}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
+
 
 def remoteBackupRestore(request):
     try:
@@ -1202,11 +1209,10 @@ def remoteBackupRestore(request):
                 data = json.loads(request.body)
                 backupDir = data['backupDir']
 
-                backupDir = "/home/backup/transfer-"+str(backupDir)
-                admin = Administrator.objects.get(pk=val)
+                backupDirComplete = "/home/backup/transfer-"+str(backupDir)
                 #adminEmail = admin.email
 
-                restoreRequest = rBackup.remoteBackup.remoteRestore(backupDir, admin)
+                restoreRequest = rBackup.remoteBackup.remoteRestore(backupDirComplete,str(backupDir))
 
                 if restoreRequest[0] == 1:
                     data = {'remoteRestoreStatus': 1, 'error_message': 'None'}
@@ -1227,50 +1233,93 @@ def remoteBackupRestore(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
-
-
-def remoteRestoreStatus(request):
+def localRestoreStatus(request):
     try:
         if request.method == "POST":
+
             data = json.loads(request.body)
             backupDir = data['backupDir']
-            seek = data['seek']
 
             #admin = Administrator.objects.get(userName=username)
-            if 1==1:
-                backupLogPath = "/home/backup/transfer-"+ backupDir +"/" + "backup_log"
+            backupLogPath = "/home/backup/transfer-"+ backupDir +"/" + "backup_log"
 
-                if os.path.isfile(backupLogPath):
-                    pass
-                else:
-                    data_ret = {'remoteRestoreStatus': 0, 'error_message': "No such log found"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+            removalPath = "/home/backup/transfer-"+ str(backupDir)
 
-                last_line = ""
-                with open(backupLogPath, 'r') as logfile:
-                    last_line = logfile.readlines()[-1]
-                    logfile.seek(seek)
-                    data = logfile.read()
-                    where = logfile.tell()
+            if os.path.isfile(backupLogPath):
 
-                if 'success' in last_line:
-                    data_ret = {'remoteRestoreStatus': 1, "complete":1, 'error_message': "None","logs":data,"where":where}
+                statusFile = open(backupLogPath,"r")
+                status = statusFile.read()
+                statusFile.close()
+
+                if status.find("completed[success]")>-1:
+                    rmtree(removalPath)
+                    data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 1}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
                 else:
-
-                    data_ret = {'remoteRestoreStatus': 1, "complete":0, 'error_message': "Backup In Progress","logs":data,"where":where}
+                    data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 0}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
-
             else:
-                data_ret = {'remoteRestoreStatus': 0, "complete":0, 'error_message': "Invalid Credentials"}
+                data_ret = {'remoteTransferStatus': 0, 'error_message': "No such log found","status":"None","complete":0}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
+
     except BaseException, msg:
-        data = {'remoteRestoreStatus': 0, "complete":0, 'error_message': str(msg)}
+        data = {'remoteTransferStatus': 0,'error_message': str(msg),"status":"None","complete":0}
+        json_data = json.dumps(data)
+        return HttpResponse(json_data)
+
+def cancelRemoteBackup(request):
+    try:
+
+        if request.method == "POST":
+
+            data = json.loads(request.body)
+            ipAddress = data['ipAddress']
+            password = data['password']
+            dir = data['dir']
+            username = "admin"
+
+
+            finalData = json.dumps({'dir': dir, "username":username,"password":password})
+            r = requests.post("https://"+ipAddress+":8090/api/cancelRemoteTransfer", data=finalData)
+
+            data = json.loads(r.text)
+
+            if data['cancelStatus'] == 1:
+                pass
+            else:
+                logging.CyberCPLogFileWriter.writeToFile("Some error cancelling at remote server, see the log file for remote server.")
+
+            path = "/home/backup/transfer-" + str(dir)
+
+            if os.path.exists(path):
+                try:
+                    pathpid = path + "/pid"
+
+                    pid = open(pathpid, "r").readlines()[0]
+
+                    try:
+                        os.kill(int(pid), signal.SIGKILL)
+                    except BaseException, msg:
+                        logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelRemoteBackup]")
+
+                    rmtree(path)
+                except:
+                    rmtree(path)
+
+                data = {'cancelStatus': 1, 'error_message': "None"}
+                json_data = json.dumps(data)
+                return HttpResponse(json_data)
+            else:
+                data = {'cancelStatus': 1, 'error_message': "None"}
+                json_data = json.dumps(data)
+                return HttpResponse(json_data)
+
+
+    except BaseException, msg:
+        data = {'cancelStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)

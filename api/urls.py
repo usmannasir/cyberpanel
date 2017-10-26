@@ -15,4 +15,8 @@ urlpatterns = [
     url(r'^fetchSSHkey', views.fetchSSHkey, name='fetchSSHkey'),
     url(r'^remoteTransfer', views.remoteTransfer, name='remoteTransfer'),
     url(r'^fetchAccountsFromRemoteServer', views.fetchAccountsFromRemoteServer, name='fetchAccountsFromRemoteServer'),
+    url(r'^FetchRemoteTransferStatus', views.FetchRemoteTransferStatus, name='FetchRemoteTransferStatus'),
+
+    url(r'^cancelRemoteTransfer', views.cancelRemoteTransfer, name='cancelRemoteTransfer'),
+
 ]

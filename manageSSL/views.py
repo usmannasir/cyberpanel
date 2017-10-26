@@ -127,6 +127,9 @@ def issueSSL(request):
                     website.ssl = 1
                     website.save()
 
+                    sslUtilities.installSSLForDomain(virtualHost)
+                    installUtilities.reStartLiteSpeed()
+
                     data_ret = {"SSL": 1,
                                 'error_message': "None"}
                     json_data = json.dumps(data_ret)

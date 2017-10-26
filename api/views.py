@@ -16,6 +16,10 @@ from baseTemplate.views import renderBase
 from random import randint
 import plogical.remoteBackup as rBackup
 from websiteFunctions.models import Websites
+import os
+import signal
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from shutil import rmtree
 # Create your views here.
 
 
@@ -422,6 +426,80 @@ def fetchAccountsFromRemoteServer(request):
                 return HttpResponse(json_data)
 
     except BaseException, msg:
-        data = {'transferStatus': 0,'error_message': str(msg)}
+        data = {'fetchStatus': 0,'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
+
+
+def FetchRemoteTransferStatus(request):
+    try:
+        if request.method == "POST":
+            data = json.loads(request.body)
+            username = data['username']
+            password = data['password']
+            dir = "/home/backup/transfer-"+str(data['dir'])+"/backup_log"
+
+            statusFile = open(dir,'r')
+            status = statusFile.read()
+            statusFile.close()
+
+            admin = Administrator.objects.get(userName=username)
+            if hashPassword.check_password(admin.password, password):
+
+                final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "status": status})
+
+                return HttpResponse(final_json)
+            else:
+                data_ret = {'fetchStatus': 0, 'error_message': "Invalid Credentials"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+    except BaseException, msg:
+        data = {'fetchStatus': 0,'error_message': str(msg)}
+        json_data = json.dumps(data)
+        return HttpResponse(json_data)
+
+def cancelRemoteTransfer(request):
+    try:
+        if request.method == "POST":
+            data = json.loads(request.body)
+            username = data['username']
+            password = data['password']
+            dir = "/home/backup/transfer-"+str(data['dir'])
+
+            admin = Administrator.objects.get(userName=username)
+
+            if hashPassword.check_password(admin.password, password):
+
+                if os.path.exists(dir):
+
+                    path = dir+"/pid"
+
+                    pid = open(path, "r").readlines()[0]
+
+                    try:
+                        os.kill(int(pid), signal.SIGKILL)
+                    except BaseException, msg:
+                        logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelRemoteTransfer]")
+
+                    rmtree(dir)
+
+                    data = {'cancelStatus': 1, 'error_message': "None"}
+                    json_data = json.dumps(data)
+                    return HttpResponse(json_data)
+
+                else:
+                    data = {'cancelStatus': 1, 'error_message': "None"}
+                    json_data = json.dumps(data)
+                    return HttpResponse(json_data)
+            else:
+                data_ret = {'cancelStatus': 0, 'error_message': "Invalid Credentials"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+    except BaseException, msg:
+        data = {'cancelStatus': 1, 'error_message': str(msg)}
+        json_data = json.dumps(data)
+        return HttpResponse(json_data)
+

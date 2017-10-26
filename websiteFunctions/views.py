@@ -1268,6 +1268,14 @@ def CreateWebsiteFromBackup(request):
             data = json.loads(request.body)
             backupFile = data['backupFile'].strip(".tar.gz")
 
+            originalFile = "/home/backup/" + data['backupFile']
+
+            if not os.path.exists(originalFile):
+                dir = data['dir']
+                path = "/home/backup/transfer-"+str(dir)+"/"+backupFile
+            else:
+                path = "/home/backup/" + backupFile
+
             admin = Administrator.objects.get(pk=1)
             websiteOwner = admin.userName
 
@@ -1276,7 +1284,6 @@ def CreateWebsiteFromBackup(request):
 
             ## open meta file to read data
 
-            path = "/home/backup/" + backupFile
 
             data = open(path + "/meta", 'r').readlines()
             domain = data[0].strip('\n')
