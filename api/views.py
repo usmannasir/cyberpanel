@@ -360,11 +360,12 @@ def remoteTransfer(request):
             username = data['username']
             password = data['password']
             ipAddress = data['ipAddress']
+            accountsToTransfer = data['accountsToTransfer']
 
             admin = Administrator.objects.get(userName=username)
             if hashPassword.check_password(admin.password, password):
                 dir = str(randint(1000, 9999))
-                transferRequest = rBackup.remoteBackup.remoteTransfer(ipAddress, dir)
+                transferRequest = rBackup.remoteBackup.remoteTransfer(ipAddress, dir,accountsToTransfer)
 
                 if transferRequest[0] == 1:
                     pass

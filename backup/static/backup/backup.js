@@ -1228,6 +1228,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
         var data = {
             ipAddress: IPAddress,
             password: password,
+            accountsToTransfer:websitesToBeBacked,
         };
 
         var config = {

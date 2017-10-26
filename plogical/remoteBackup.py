@@ -211,8 +211,6 @@ class remoteBackup:
                     r = requests.post("http://localhost:5003/backup/submitRestore", data=finalData)
                     data = json.loads(r.text)
 
-                    logging.CyberCPLogFileWriter.writeToFile(r.text)
-
                     if data['restoreStatus'] == 1:
 
                         while (1):
@@ -411,12 +409,12 @@ class remoteBackup:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
     @staticmethod
-    def backupProcess(ipAddress, dir, backupLogPath,folderNumber):
+    def backupProcess(ipAddress, dir, backupLogPath,folderNumber,accountsToTransfer):
         try:
             ## dir is without forward slash
 
 
-            for virtualHost in os.listdir("/home"):
+            for virtualHost in accountsToTransfer:
 
                 try:
 
@@ -497,7 +495,7 @@ class remoteBackup:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupProcess]")
 
     @staticmethod
-    def remoteTransfer(ipAddress, dir):
+    def remoteTransfer(ipAddress, dir,accountsToTransfer):
         try:
             destination = "/home/backup/transfer-" + dir
             backupLogPath = destination + "/backup_log"
@@ -535,7 +533,7 @@ class remoteBackup:
                 return [0, "Host is down"]
 
 
-            p = Process(target=remoteBackup.backupProcess, args=(ipAddress, destination, backupLogPath,dir,))
+            p = Process(target=remoteBackup.backupProcess, args=(ipAddress, destination, backupLogPath,dir,accountsToTransfer))
             p.start()
 
             pid = open(destination + '/pid', "w")

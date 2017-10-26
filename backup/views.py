@@ -1096,18 +1096,6 @@ def submitRemoteBackups(request):
                 return HttpResponse(data_ret)
 
 
-            #transferRequest = rBackup.remoteBackup.postRemoteTransfer(ipAddress, ownIP, password, sshkey)
-
-            #if transferRequest[0] == 1:
-            #    pass
-            #else:
-            #    final_json = json.dumps({'status': 0, 'error_message': transferRequest[1]})
-            #    return HttpResponse(final_json)
-
-            #data_ret = {'status': 1, 'error_message': "None", "dir":transferRequest[1]}
-            #json_data = json.dumps(data_ret)
-            #return HttpResponse(json_data)
-
         else:
             return HttpResponse("This URL only accepts POST requests")
 
@@ -1124,10 +1112,12 @@ def starRemoteTransfer(request):
 
                 ipAddress = data['ipAddress']
                 password = data['password']
+                accountsToTransfer = data['accountsToTransfer']
+
 
                 ownIP = requests.get('https://api.ipify.org').text
 
-                finalData = json.dumps({'username': "admin", "password": password,"ipAddress": ownIP})
+                finalData = json.dumps({'username': "admin", "password": password,"ipAddress": ownIP,"accountsToTransfer":accountsToTransfer})
 
                 url = "https://" + ipAddress + ":8090/api/remoteTransfer"
 
@@ -1170,15 +1160,6 @@ def getRemoteTransferStatus(request):
 
             if data['fetchStatus'] == 1:
                 if data['status'].find("Backups are successfully generated and received on") > -1:
-
-                    #try:
-                        #finalData = json.dumps({"backupDir": dir})
-                        #r = requests.post("http://localhost:5003/backup/remoteBackupRestore", data=finalData)
-                        #logging.CyberCPLogFileWriter.writeToFile(r.text)
-                    #except BaseException,msg:
-                    #    logging.CyberCPLogFileWriter.writeToFile("Something happened here:" +str(msg))
-
-
 
                     data = {'remoteTransferStatus': 1, 'error_message': "None", "status": data['status'],'backupsSent': 1}
                     json_data = json.dumps(data)
