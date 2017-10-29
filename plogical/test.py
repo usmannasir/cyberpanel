@@ -1,29 +1,77 @@
 import requests
 import json
-def editWPFile():
+import pexpect
+from CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+import time
+from backupUtilities import backupUtilities
+import signal
 
-    finalData = json.dumps({'adminUser': "admin",
-                            'adminPass': "1234567",
-                            'domainName': "usmannasir.me",
-                            'ownerEmail': "admin",
-                            'packageName': "Default",
-                            'websiteOwner': "usman",
-                            'ownerPassword': "9xvps",
-                            })
-    r = requests.post("http://147.135.165.44:8090/api/createWebsite", data=finalData)
-    print r.text
+def verifyHostKey(IPAddress):
+        try:
+            backupUtilities.host_key_verification(IPAddress)
 
-def delwebsite():
+            password = "hello"
 
-    finalData = json.dumps({'adminUser': "admin",
-                            'adminPass': "9njZ9Hw6QuJvw4AS6w",
-                            })
-    r = requests.post("https://cyberpanel.extravm.com:8090/api/verifyConn", data=finalData)
-    print r.text
+            expectation = []
+
+            expectation.append("continue connecting (yes/no)?")
+            expectation.append("password:")
+
+            setupSSHKeys = pexpect.spawn("ssh root@" + IPAddress)
+
+            index = setupSSHKeys.expect(expectation)
+
+            if index == 0:
+                setupSSHKeys.sendline("yes")
+
+                setupSSHKeys.expect("password:")
+                setupSSHKeys.sendline(password)
+
+                expectation = []
+
+                expectation.append("password:")
+                expectation.append(pexpect.EOF)
 
 
-def getKey(ipAddress, password):
-    return requests.get('https://api.ipify.org').text
+                innerIndex = setupSSHKeys.expect(expectation)
+
+                if innerIndex == 0:
+                    setupSSHKeys.kill(signal.SIGTERM)
+                    return [1, "None"]
+                elif innerIndex == 1:
+                    setupSSHKeys.kill(signal.SIGTERM)
+                    return [1, "None"]
+
+            elif index == 1:
+
+                setupSSHKeys.expect("password:")
+                setupSSHKeys.sendline(password)
+
+                expectation = []
+
+                expectation.append("password:")
+                expectation.append(pexpect.EOF)
+
+                innerIndex = setupSSHKeys.expect(expectation)
+
+                if innerIndex == 0:
+                    setupSSHKeys.kill(signal.SIGTERM)
+                    return [1, "None"]
+                elif innerIndex == 1:
+                    setupSSHKeys.kill(signal.SIGTERM)
+                    return [1, "None"]
 
 
-print getKey("147.135.165.44","1234567")
+        except pexpect.TIMEOUT, msg:
+            logging.writeToFile("Timeout [verifyHostKey]")
+            return [0,"Timeout [verifyHostKey]"]
+        except pexpect.EOF, msg:
+            logging.writeToFile("EOF [verifyHostKey]")
+            return [0,"EOF [verifyHostKey]"]
+        except BaseException, msg:
+            logging.writeToFile(str(msg) + " [verifyHostKey]")
+            return [0,str(msg)+" [verifyHostKey]"]
+
+
+
+print verifyHostKey("23.95.216.56")

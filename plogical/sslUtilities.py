@@ -134,11 +134,9 @@ class sslUtilities:
 
 
     @staticmethod
-    def obtainSSLForADomain(virtualHostName,adminEmail):
+    def obtainSSLForADomain(virtualHostName,adminEmail,sslpath):
 
         try:
-
-            sslpath = "/home/" + virtualHostName + "/public_html"
 
             #if virtualHostName.count(".")==1:
             #    command = "certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName

@@ -32,6 +32,14 @@
                 </div>
 
                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Domains" %}</label>
+                    <div class="col-sm-6">
+                        <input name="dspace"  type="number" class="form-control" ng-model="allowedDomains" required>
+                    </div>
+                    <div class="current-pack"> {% trans "(0 = Unlimited)" %} </div>
+                </div>
+
+                <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Disk Space" %}</label>
                     <div class="col-sm-6">
                         <input name="dspace"  type="number" class="form-control" ng-model="diskSpace" required>

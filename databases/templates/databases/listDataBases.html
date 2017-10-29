@@ -47,10 +47,11 @@
                             </div>
 
                             <div ng-hide="passwordChanged" class="alert alert-success">
+                                {% trans "Password changed for: " %} <strong>{$ dbUsername $}</strong>
                             </div>
 
                             <div ng-hide="canNotChangePassword" class="alert alert-danger">
-                                <p>{% trans "Cannot change password for " %}<strong>{$ dbUsername $}</strong>, Error message: {$ errorMessage $}</p>
+                                <p>{% trans "Cannot change password for " %}<strong>{$ dbUsername $}</strong>, {% trans "Error message:" %} {$ errorMessage $}</p>
                             </div>
 
 

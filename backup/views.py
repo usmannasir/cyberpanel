@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from .models import DBUsers
 from loginSystem.models import Administrator
 import json
-from websiteFunctions.models import Websites,Backups,dest,backupSchedules
+from websiteFunctions.models import Websites,Backups,dest,backupSchedules,ChildDomains
 import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 import os
@@ -187,9 +187,18 @@ def submitBackupCreation(request):
 
             metaFile = open(meta, 'w')
 
-            metaFile.write(backupDomain + "\n")
+            metaFile.write(backupDomain + "-" + website.phpSelection + "\n")
+
+            childDomains = website.childdomains_set.all()
 
             databases = website.databases_set.all()
+
+            metaFile.write("Child Domains\n")
+
+            for items in childDomains:
+                metaFile.write(items.domain + "-" + items.phpSelection + "-" + items.path + "\n")
+
+            metaFile.write("Databases\n")
 
             for items in databases:
                 dbuser = DBUsers.objects.get(user=items.dbUser)
@@ -422,10 +431,10 @@ def restoreStatus(request):
             data = json.loads(request.body)
             backupFile = data['backupFile'].strip(".tar.gz")
 
-            path = "/home/backup/" + backupFile
+            path = "/home/backup/" + data['backupFile']
 
             if os.path.exists(path):
-                pass
+                path = "/home/backup/" + backupFile
             else:
                 dir = data['dir']
                 path = "/home/backup/transfer-" + str(dir) + "/" + backupFile
@@ -1055,6 +1064,15 @@ def submitRemoteBackups(request):
 
             pathToSSH = "/root/.ssh/authorized_keys"
 
+            if not os.path.exists("/root/.ssh"):
+                os.makedirs("/root/.ssh")
+                if not os.path.exists(pathToSSH):
+                    f = open(pathToSSH,"w")
+                    f.close()
+            else:
+                if not os.path.exists(pathToSSH):
+                    f = open(pathToSSH,"w")
+                    f.close()
 
 
             presenseCheck = 0
@@ -1091,7 +1109,7 @@ def submitRemoteBackups(request):
                 data_ret = json.dumps(data_ret)
                 return HttpResponse(data_ret)
             else:
-                data_ret = {'status': 0, 'error_message': "Not able to fetch accounts from remote server.", "dir": "Null"}
+                data_ret = {'status': 0, 'error_message': "Not able to fetch accounts from remote server. Error Message: "+data['error_message'], "dir": "Null"}
                 data_ret = json.dumps(data_ret)
                 return HttpResponse(data_ret)
 
@@ -1125,16 +1143,20 @@ def starRemoteTransfer(request):
 
                 data = json.loads(r.text)
 
-                localStoragePath = "/home/backup/transfer-"+str(data['dir'])
-
-                if not os.path.exists(localStoragePath):
-                    os.makedirs(localStoragePath)
 
                 if data['transferStatus'] == 1:
+
+                    ## create local directory that will host backups
+
+                    localStoragePath = "/home/backup/transfer-" + str(data['dir'])
+
+                    if not os.path.exists(localStoragePath):
+                        os.makedirs(localStoragePath)
+
                     final_json = json.dumps({'remoteTransferStatus': 1, 'error_message': "None","dir":data['dir']})
                     return HttpResponse(final_json)
                 else:
-                    final_json = json.dumps({'remoteTransferStatus': 0, 'error_message': data['error_message']})
+                    final_json = json.dumps({'remoteTransferStatus': 0, 'error_message':"Can not initiate remote transfer. Error message: "+ data['error_message']})
                     return HttpResponse(final_json)
 
         except BaseException,msg:
@@ -1154,7 +1176,7 @@ def getRemoteTransferStatus(request):
             username = "admin"
 
             finalData = json.dumps({'dir': dir, "username":username,"password":password})
-            r = requests.post("https://"+ipAddress+":8090/api/FetchRemoteTransferStatus", data=finalData)
+            r = requests.post("https://"+ipAddress+":8090/api/FetchRemoteTransferStatus", data=finalData,verify=False)
 
             data = json.loads(r.text)
 
@@ -1265,7 +1287,7 @@ def cancelRemoteBackup(request):
 
 
             finalData = json.dumps({'dir': dir, "username":username,"password":password})
-            r = requests.post("https://"+ipAddress+":8090/api/cancelRemoteTransfer", data=finalData)
+            r = requests.post("https://"+ipAddress+":8090/api/cancelRemoteTransfer", data=finalData,verify=False)
 
             data = json.loads(r.text)
 

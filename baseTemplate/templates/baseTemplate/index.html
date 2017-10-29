@@ -448,7 +448,7 @@
         <div class="sidebar-submenu">
 
             <ul>
-                <li><a href="{% url 'createWebsite' %}" title="{% trans 'Create Website' %}"><span>{% trans "Create Website" %}</span></a></li>
+                <li id="createWebsite"><a href="{% url 'createWebsite' %}" title="{% trans 'Create Website' %}"><span>{% trans "Create Website" %}</span></a></li>
                 <li><a href="{% url 'listWebsites' %}" title="{% trans 'List Websites' %}"><span>{% trans "List Websites" %}</span></a></li>
                 <li><a href="{% url 'modifyWebsite' %}" title="{% trans 'Modify Website' %}"><span>{% trans "Modify Website" %}</span></a></li>
                 <li id="siteState"><a href="{% url 'siteState' %}" title="{% trans 'Suspend/Unsuspend' %}"><span>{% trans "Suspend/Unsuspend" %}</span></a></li>
@@ -458,16 +458,16 @@
         </div><!-- .sidebar-submenu -->
     </li>
     <li>
-        <a href="{% url 'packagesHome' %}" title="{% trans 'Packages' %}">
+        <a id="packageHome" href="{% url 'packagesHome' %}" title="{% trans 'Packages' %}">
             <i class="glyph-icon icon-cubes"></i>
             <span>{% trans "Packages" %}</span>
         </a>
-        <div class="sidebar-submenu">
+        <div id="packageSub" class="sidebar-submenu">
 
             <ul>
-                <li><a href="{% url 'createPackage' %}" title="{% trans 'Create Package' %}"><span>{% trans "Create Package" %}</span></a></li>
-                <li><a href="{% url 'deletePackage' %}" title="{% trans 'Delete Package' %}"><span>{% trans "Delete Package" %}</span></a></li>
-                <li><a href="{% url 'modifyPackage' %}" title="{% trans 'Modify Package' %}"><span>{% trans "Modify Package" %}</span></a></li>
+                <li id="createPackage"><a href="{% url 'createPackage' %}" title="{% trans 'Create Package' %}"><span>{% trans "Create Package" %}</span></a></li>
+                <li id="deletePackage"><a href="{% url 'deletePackage' %}" title="{% trans 'Delete Package' %}"><span>{% trans "Delete Package" %}</span></a></li>
+                <li id="modifyPackage"><a href="{% url 'modifyPackage' %}" title="{% trans 'Modify Package' %}"><span>{% trans "Modify Package" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
@@ -562,6 +562,7 @@
                 <li id="restoreSite"><a href="{% url 'restoreSite' %}" title="{% trans 'Restore Back up' %}"><span>{% trans "Restore Back up" %}</span></a></li>
                 <li id="backupDestinations"><a href="{% url 'backupDestinations' %}" title="{% trans 'Add Destination' %}"><span>{% trans "Add/Delete Destination" %}</span></a></li>
                 <li id="scheduleBackup"><a href="{% url 'scheduleBackup' %}" title="{% trans 'Schedule Back up' %}"><span>{% trans "Schedule Back up" %}</span></a></li>
+                <li id="remoteBackups"><a href="{% url 'remoteBackups' %}" title="{% trans 'Remote Back ups' %}"><span>{% trans "Remote Back ups" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->

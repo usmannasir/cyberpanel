@@ -7,7 +7,7 @@ from loginSystem.models import Administrator
 from packages.models import Package
 from loginSystem.views import loadLoginPage
 import plogical.CyberCPLogFileWriter as logging
-from .models import Websites
+from .models import Websites,ChildDomains
 import json
 from math import ceil
 from plogical.mysqlUtilities import mysqlUtilities
@@ -275,7 +275,7 @@ def submitWebsiteCreation(request):
                     return HttpResponse(json_data)
 
                 if virtualHostUtilities.createDirectoryForVirtualHost(domain, adminEmail, phpSelection) != 1:
-                    numberOfWebsites = Websites.objects.count()
+                    numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
                     virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
                     data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
                                 'error_message': "Can not create configurations, see CyberCP main log file."}
@@ -283,7 +283,7 @@ def submitWebsiteCreation(request):
                     return HttpResponse(json_data)
 
                 if virtualHostUtilities.createConfigInMainVirtualHostFile(domain) != 1:
-                    numberOfWebsites = Websites.objects.count()
+                    numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
                     virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
                     data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
                                 'error_message': "Can not create configurations, see CyberCP main log file."}
@@ -297,12 +297,13 @@ def submitWebsiteCreation(request):
                     installUtilities.reStartLiteSpeed()
 
                 if ssl == 1:
-                    ssl_responce = sslUtilities.obtainSSLForADomain(domain, adminEmail)
+                    sslpath = "/home/" + domain + "/public_html"
+                    ssl_responce = sslUtilities.obtainSSLForADomain(domain, adminEmail,sslpath)
                     if ssl_responce == 1:
                         sslUtilities.installSSLForDomain(domain)
                         installUtilities.reStartLiteSpeed()
                     else:
-                        numberOfWebsites = Websites.objects.count()
+                        numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
                         virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
 
                         data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
@@ -325,7 +326,7 @@ def submitWebsiteCreation(request):
                 return HttpResponse(json_data)
 
         except BaseException,msg:
-            numberOfWebsites = Websites.objects.count()
+            numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
             virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
             data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg),"existsStatus":0}
             json_data = json.dumps(data_ret)
@@ -334,6 +335,158 @@ def submitWebsiteCreation(request):
         data_ret = {'createWebSiteStatus': 0, 'error_message': "not logged in as admin","existsStatus":0}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+def submitDomainCreation(request):
+    try:
+        if request.method == 'POST':
+
+            data = json.loads(request.body)
+            masterDomain = data['masterDomain']
+            domain = data['domainName']
+            phpSelection = data['phpSelection']
+
+            try:
+                website = Websites.objects.get(domain=domain)
+                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
+                            'error_message': "Website Already Exists"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except:
+                pass
+
+            try:
+                website = ChildDomains.objects.get(domain=domain)
+                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
+                            'error_message': "Website Already Exists"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except:
+                pass
+
+            ####### Limitations check
+
+            master = Websites.objects.get(domain=masterDomain)
+
+            if master.package.allowedDomains > master.childdomains_set.all().count():
+                pass
+            else:
+                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
+                            'error_message': "Exceeded maximum number of domains for this package"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            ####### Limitations Check End
+
+            ssl = data['ssl']
+            path = data['path']
+
+            ####### Creation
+            try:
+                restore = data['restore']
+            except:
+                if len(path) > 0:
+                    path = path.lstrip("/")
+                    path = "/home/" + masterDomain + "/public_html/" + path
+                else:
+                    path = "/home/" + masterDomain + "/public_html/" + domain
+
+            if virtualHostUtilities.createDirectoryForDomain(masterDomain, domain, phpSelection, path,
+                                                             master.adminEmail) != 1:
+                numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
+                virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
+                data_ret = {"existsStatus": 1, 'createWebSiteStatus': 0,
+                            'error_message': "Can not create configurations, see CyberCP main log file."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            if virtualHostUtilities.createConfigInMainDomainHostFile(domain, masterDomain) != 1:
+                numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
+                virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
+                data_ret = {"existsStatus": 1, 'createWebSiteStatus': 0,
+                            'error_message': "Can not create configurations, see CyberCP main log file."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            if ssl == 1:
+                installUtilities.reStartOpenLiteSpeed("restart", "ols")
+            else:
+                installUtilities.reStartLiteSpeed()
+
+            if ssl == 1:
+                ssl_responce = sslUtilities.obtainSSLForADomain(domain, master.adminEmail, path)
+                if ssl_responce == 1:
+                    sslUtilities.installSSLForDomain(domain)
+                    installUtilities.reStartLiteSpeed()
+                else:
+                    numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
+                    virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
+
+                    data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
+                                'error_message': str(
+                                    ssl_responce) + ", for more information see CyberCP main log file."}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+            website = ChildDomains(master=master, domain=domain, path=path, phpSelection=phpSelection, ssl=ssl)
+
+            website.save()
+
+            shutil.copy("/usr/local/CyberCP/index.html", path + "/index.html")
+
+            data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except BaseException, msg:
+        numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
+        virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
+        data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def fetchDomains(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+
+                data = json.loads(request.body)
+                masterDomain = data['masterDomain']
+
+                master = Websites.objects.get(domain=masterDomain)
+
+                childDomains = master.childdomains_set.all()
+
+                json_data = "["
+                checker = 0
+
+                for items in childDomains:
+                    dic = {
+                           'childDomain': items.domain,
+                           'path': items.path,
+                           }
+
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
+
+
+                json_data = json_data + ']'
+                final_json = json.dumps({'fetchStatus': 1, 'error_message': "None","data":json_data})
+                return HttpResponse(final_json)
+
+        except BaseException,msg:
+            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'fetchStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
 
 
 
@@ -448,12 +601,20 @@ def submitWebsiteDeletion(request):
                 data = json.loads(request.body)
                 websiteName = data['websiteName']
 
-                numberOfWebsites = Websites.objects.count()
+                numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
 
                 virtualHostUtilities.deleteVirtualHostConfigurations(websiteName,numberOfWebsites)
 
+
                 delWebsite = Websites.objects.get(domain=websiteName)
                 databases = Databases.objects.filter(website=delWebsite)
+
+                childDomains = delWebsite.childdomains_set.all()
+
+                for items in childDomains:
+                    numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
+                    virtualHostUtilities.deleteVirtualHostConfigurations(items.domain, numberOfWebsites)
+
 
                 for items in databases:
                     mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
@@ -461,6 +622,39 @@ def submitWebsiteDeletion(request):
 
                 delWebsite.delete()
 
+
+
+                installUtilities.reStartLiteSpeed()
+
+                data_ret = {'websiteDeleteStatus': 1,'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException,msg:
+            data_ret = {'websiteDeleteStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+    except KeyError,msg:
+        data_ret = {'websiteDeleteStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def submitDomainDeletion(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+                data = json.loads(request.body)
+                websiteName = data['websiteName']
+
+                numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
+
+                virtualHostUtilities.deleteVirtualHostConfigurations(websiteName,numberOfWebsites)
+
+
+                delWebsite = ChildDomains.objects.get(domain=websiteName)
+
+                delWebsite.delete()
 
 
                 installUtilities.reStartLiteSpeed()
@@ -1280,13 +1474,13 @@ def CreateWebsiteFromBackup(request):
             websiteOwner = admin.userName
 
             adminEmail = admin.email
-            phpSelection = "PHP 7.0"
 
             ## open meta file to read data
 
 
             data = open(path + "/meta", 'r').readlines()
-            domain = data[0].strip('\n')
+            domain = data[0].split('-')[0]
+            phpSelection = data[0].split("-")[1].strip("\n")
 
             try:
                 website = Websites.objects.get(domain=domain)
@@ -1303,11 +1497,12 @@ def CreateWebsiteFromBackup(request):
                 pass
 
             check = 0
+            dbCheck = 0
 
             for items in data:
                 if check == 0:
                     if virtualHostUtilities.createDirectoryForVirtualHost(domain, adminEmail, phpSelection) != 1:
-                        numberOfWebsites = Websites.objects.count()
+                        numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
                         virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
                         data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
                                     'error_message': "Can not create configurations, see CyberCP main log file."}
@@ -1315,7 +1510,7 @@ def CreateWebsiteFromBackup(request):
                         return HttpResponse(json_data)
 
                     if virtualHostUtilities.createConfigInMainVirtualHostFile(domain) != 1:
-                        numberOfWebsites = Websites.objects.count()
+                        numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
                         virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
                         data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
                                     'error_message': "Can not create configurations, see CyberCP main log file."}
@@ -1331,14 +1526,19 @@ def CreateWebsiteFromBackup(request):
 
                     website.save()
 
-                    shutil.copy("/usr/local/CyberCP/index.html", "/home/" + domain + "/public_html/index.html")
+                    #shutil.copy("/usr/local/CyberCP/index.html", "/home/" + domain + "/public_html/index.html")
 
                     check = check + 1
                 else:
-                    dbData = items.split('-')
-                    mysqlUtilities.createDatabase(dbData[0], dbData[1], "cyberpanel")
-                    newDB = Databases(website=website, dbName=dbData[0], dbUser=dbData[1])
-                    newDB.save()
+                    if items.find("Databases") > -1:
+                        dbCheck = 1
+                        continue
+
+                    if dbCheck == 1:
+                        dbData = items.split('-')
+                        mysqlUtilities.createDatabase(dbData[0], dbData[1], "cyberpanel")
+                        newDB = Databases(website=website, dbName=dbData[0], dbUser=dbData[1])
+                        newDB.save()
 
             status = open(path + '/status', "w")
             status.write("Accounts and DBs Created")
@@ -1349,8 +1549,41 @@ def CreateWebsiteFromBackup(request):
             return HttpResponse(json_data)
 
     except BaseException, msg:
-        numberOfWebsites = Websites.objects.count()
+        numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
         virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
         data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+
+def changePHP(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                data = json.loads(request.body)
+                childDomain = data['childDomain']
+                phpVersion = data['phpSelection']
+
+
+                confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + childDomain
+                completePathToConfigFile = confPath + "/vhost.conf"
+
+                virtualHostUtilities.changePHP(completePathToConfigFile,phpVersion)
+                installUtilities.reStartLiteSpeed()
+
+
+                data_ret = {'changePHP': 1,'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException,msg:
+            data_ret = {'changePHP': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError,msg:
+        data_ret = {'changePHP': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.shortcuts import render,redirect
 from loginSystem.views import loadLoginPage
-from websiteFunctions.models import Websites
+from websiteFunctions.models import Websites,ChildDomains
 from loginSystem.models import Administrator
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.sslUtilities import sslUtilities
@@ -73,7 +73,7 @@ def issueSSL(request):
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
 
-                website = Websites.objects.get(domain=virtualHost)
+                website = ChildDomains.objects.get(domain=virtualHost)
 
                 srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
                 srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
@@ -92,7 +92,13 @@ def issueSSL(request):
 
 
                 if not (os.path.exists(srcPrivKey) and os.path.exists(srcFullChain)):
-                    ssl_responce = sslUtilities.obtainSSLForADomain(virtualHost, adminEmail)
+                    path = ''
+                    try:
+                        path = data['path']
+                    except:
+                        path = "/home/"+virtualHost+"/public_html"
+
+                    ssl_responce = sslUtilities.obtainSSLForADomain(virtualHost, adminEmail,path)
                     if ssl_responce == 1:
                         sslUtilities.installSSLForDomain(virtualHost)
                         installUtilities.reStartLiteSpeed()
@@ -136,12 +142,12 @@ def issueSSL(request):
                     return HttpResponse(json_data)
 
         except BaseException,msg:
-            data_ret = {"SSL": 1,
+            data_ret = {"SSL": 0,
                         'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
     except KeyError:
-        data_ret = {"SSL": 1,
+        data_ret = {"SSL": 0,
                     'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -229,7 +235,8 @@ def obtainHostNameSSL(request):
 
 
                 if not (os.path.exists(srcPrivKey) and os.path.exists(srcFullChain)):
-                    ssl_responce = sslUtilities.obtainSSLForADomain(virtualHost, adminEmail)
+                    path = "/home/" + virtualHost + "/public_html"
+                    ssl_responce = sslUtilities.obtainSSLForADomain(virtualHost, adminEmail,path)
                     if ssl_responce == 1:
                         sslUtilities.installSSLForDomain(virtualHost)
                         installUtilities.reStartLiteSpeed()
@@ -291,12 +298,12 @@ def obtainHostNameSSL(request):
                     return HttpResponse(json_data)
 
         except BaseException,msg:
-            data_ret = {"SSL": 1,
+            data_ret = {"SSL": 0,
                         'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
     except KeyError:
-        data_ret = {"SSL": 1,
+        data_ret = {"SSL": 0,
                     'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

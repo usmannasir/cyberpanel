@@ -62,7 +62,8 @@ app.controller('createPackage', function($scope,$http) {
                     bandwidth: bandwidth,
                     ftpAccounts: ftpAccounts,
                     dataBases: dataBases,
-                    emails:emails
+                    emails:emails,
+                    allowedDomains:$scope.allowedDomains
                 };
 
                 var config = {
@@ -238,6 +239,7 @@ app.controller('modifyPackages', function($scope,$http) {
                         $scope.ftpAccounts = response.data.ftpAccounts;
                         $scope.dataBases = response.data.dataBases;
                         $scope.emails = response.data.emails;
+                        $scope.allowedDomains = response.data.allowedDomains;
 
                         $scope.modifyButton = "Save Details"
 
@@ -285,7 +287,8 @@ app.controller('modifyPackages', function($scope,$http) {
                     bandwidth:bandwidth,
                     ftpAccounts:ftpAccounts,
                     dataBases:dataBases,
-                    emails:emails
+                    emails:emails,
+                    allowedDomains:$scope.allowedDomains,
                 };
 
                 var config = {

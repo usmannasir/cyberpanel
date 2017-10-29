@@ -69,4 +69,15 @@ urlpatterns = [
     url(r'^filemanager/upload', fm.upload),
 
 
+    ## sub/add/park domains
+
+    url(r'^submitDomainCreation', views.submitDomainCreation, name='submitDomainCreation'),
+
+    ## fetch domains
+
+    url(r'^fetchDomains', views.fetchDomains, name='submitDomainCreation'),
+    url(r'^changePHP', views.changePHP, name='changePHP'),
+    url(r'^submitDomainDeletion', views.submitDomainDeletion, name='submitDomainDeletion'),
+
+
 ]

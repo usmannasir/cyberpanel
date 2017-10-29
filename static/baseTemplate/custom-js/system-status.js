@@ -124,6 +124,11 @@ app.controller('adminController', function($scope,$http,$timeout) {
                     $("#backupDestinations").hide();
                     $("#scheduleBackup").hide();
 
+                    $("#remoteBackups").hide();
+                    $("#packageHome").hide();
+                    $("#packageSub").hide();
+                    $("#createWebsite").hide();
+
             }
         }
 

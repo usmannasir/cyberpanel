@@ -10,7 +10,7 @@ import tarfile
 from multiprocessing import Process
 import json
 import requests
-
+import signal
 
 
 class backupUtilities:
@@ -27,18 +27,25 @@ class backupUtilities:
             status.close()
 
             count = 0
+            dbCheck = 0
             for items in meta:
                 if count==0:
-                    domainName = items.strip('\n')
+                    domainName = items.split('-')[0]
                     make_archive(tempStoragePath+"/public_html", 'gztar', "/home/"+domainName+"/public_html")
                     count = count + 1
                 else:
-                    dbName = items.split('-')[0]
-                    status = open(backupPath + 'status', "w")
-                    status.write(backupName + "\n")
-                    status.write("Backing up database: "+dbName)
-                    status.close()
-                    mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName,tempStoragePath)
+                    if items.find("Databases")>-1:
+                        dbCheck = 1
+                        continue
+
+                    if dbCheck == 1:
+                        dbName = items.split('-')[0]
+                        status = open(backupPath + 'status', "w")
+                        status.write(backupName + "\n")
+                        status.write("Backing up database: " + dbName)
+                        status.close()
+                        mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, tempStoragePath)
+
 
             make_archive(backupPath+"/"+backupName, 'gztar', tempStoragePath)
             rmtree(tempStoragePath)
@@ -122,7 +129,7 @@ class backupUtilities:
 
             try:
                 finalData = json.dumps({'backupFile': backupName,"dir":dir})
-                r = requests.post("http://localhost:5003/websites/CreateWebsiteFromBackup", data=finalData)
+                r = requests.post("http://localhost:5003/websites/CreateWebsiteFromBackup", data=finalData,verify=False)
                 data = json.loads(r.text)
 
                 if data['createWebSiteStatus'] == 1:
@@ -140,9 +147,6 @@ class backupUtilities:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
                 return 0
 
-
-
-
             f = open(completPath + '/status')
             data = f.read()
             status = data.split('\n', 1)[0]
@@ -152,23 +156,80 @@ class backupUtilities:
             elif (status == "Website already exists"):
                 return 0
 
-            ## reading meta file to create databases
+            ########### creating sub/addon/parked domains
+
+            status = open(completPath + '/status', "w")
+            status.write("Creating Child Domains")
+            status.close()
+
+            ## reading meta file to create subdomains
 
             data = open(completPath + "/meta", 'r').readlines()
-            domain = data[0].strip('\n')
-            websiteHome = "/home/" + domain + "/public_html"
 
-            check = 0
+            ## extracting master domain for later use
+
+            masterDomain = data[0].split('-')[0]
+            websiteHome = "/home/" + masterDomain + "/public_html"
+
+
+            try:
+                childDomainsCheck = 0
+                for items in data:
+                    if items.find("Child Domains") > -1:
+                        childDomainsCheck = 1
+                        continue
+                    if items.find("Databases") > -1:
+                        break
+
+                    if childDomainsCheck == 1:
+                        domain = items.split('-')[0]
+                        phpSelection = items.split('-')[1]
+                        path = items.split('-')[2].strip("\n")
+
+
+                        finalData = json.dumps({'masterDomain': masterDomain, 'domainName': domain,'phpSelection': phpSelection,'path': path,'ssl':0,'restore':1})
+                        r = requests.post("http://localhost:5003/websites/submitDomainCreation", data=finalData,
+                                          verify=False)
+
+                        data = json.loads(r.text)
+
+                        if data['createWebSiteStatus'] == 1:
+                            rmtree(path)
+                            continue
+                        else:
+                            status = open(completPath + '/status', "w")
+                            status.write("Not able to create Account and databases, aborting.")
+                            status.close()
+                            logging.CyberCPLogFileWriter.writeToFile(r.text)
+                            return 0
+
+
+            except BaseException, msg:
+                status = open(completPath + '/status', "w")
+                status.write("[201] Not able to create Account and databases, aborting.")
+                status.close()
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
+                return 0
+
+
+
+
+            ## restoring databases
+
+            data = open(completPath + "/meta", 'r').readlines()
+
 
             status = open(completPath + '/status', "w")
             status.write("Restoring Databases")
             status.close()
 
+            dbCheck = 0
+
             for items in data:
-                if check == 0:
-                    check = check + 1
+                if items.find("Databases") > -1:
+                    dbCheck = 1
                     continue
-                else:
+                if dbCheck == 1:
                     dbData = items.split('-')
                     mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbData[0], completPath, dbData[2].strip('\n'))
 
@@ -338,12 +399,15 @@ class backupUtilities:
             else:
                 return 0
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[checkIfPostIsUp]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[checkIfHostIsUp]")
 
     @staticmethod
     def checkConnection(IPAddress):
 
+
         try:
+
+            backupUtilities.verifyHostKey(IPAddress)
 
             expectation = []
             expectation.append("password:")
@@ -355,44 +419,90 @@ class backupUtilities:
 
             if index == 0:
                 subprocess.call(['kill', str(checkConn.pid)])
-                return 0
+                return [0,"Remote Server is not able to authenticate for transfer to initiate."]
             elif index == 1:
                 subprocess.call(['kill', str(checkConn.pid)])
-                return 1
+                return [1, "None"]
             else:
                 subprocess.call(['kill', str(checkConn.pid)])
-                return 0
+                return [0, "Remote Server is not able to authenticate for transfer to initiate."]
 
         except pexpect.TIMEOUT, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [checkConnection]")
-            return 0
+            logging.CyberCPLogFileWriter.writeToFile("Timeout "+IPAddress+ " [checkConnection]")
+            return [0, "371 Timeout while making connection to this server [checkConnection]"]
         except pexpect.EOF, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [checkConnection]")
-            return 0
+            logging.CyberCPLogFileWriter.writeToFile("EOF "+IPAddress+ "[checkConnection]")
+            return [0, "374 Remote Server is not able to authenticate for transfer to initiate. [checkConnection]"]
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [checkConnection]")
-            return 0
+            logging.CyberCPLogFileWriter.writeToFile(str(msg)+" " +IPAddress+ " [checkConnection]")
+            return [0, "377 Remote Server is not able to authenticate for transfer to initiate. [checkConnection]"]
 
     @staticmethod
     def verifyHostKey(IPAddress):
-
         try:
+            backupUtilities.host_key_verification(IPAddress)
 
-            expectation = "continue connecting (yes/no)?"
+            password = "hello" ## dumb password, not used anywhere.
 
-            verifyHostKey = pexpect.spawn("ssh -i /root/.ssh/cyberpanel root@" + IPAddress, timeout=3)
-            verifyHostKey.expect(expectation)
-            verifyHostKey.sendline("yes")
+            expectation = []
+
+            expectation.append("continue connecting (yes/no)?")
+            expectation.append("password:")
+
+            setupSSHKeys = pexpect.spawn("ssh root@" + IPAddress)
+
+            index = setupSSHKeys.expect(expectation)
+
+            if index == 0:
+                setupSSHKeys.sendline("yes")
+
+                setupSSHKeys.expect("password:")
+                setupSSHKeys.sendline(password)
+
+                expectation = []
+
+                expectation.append("password:")
+                expectation.append(pexpect.EOF)
+
+
+                innerIndex = setupSSHKeys.expect(expectation)
+
+                if innerIndex == 0:
+                    setupSSHKeys.kill(signal.SIGTERM)
+                    return [1, "None"]
+                elif innerIndex == 1:
+                    setupSSHKeys.kill(signal.SIGTERM)
+                    return [1, "None"]
+
+            elif index == 1:
+
+                setupSSHKeys.expect("password:")
+                setupSSHKeys.sendline(password)
+
+                expectation = []
+
+                expectation.append("password:")
+                expectation.append(pexpect.EOF)
+
+                innerIndex = setupSSHKeys.expect(expectation)
+
+                if innerIndex == 0:
+                    setupSSHKeys.kill(signal.SIGTERM)
+                    return [1, "None"]
+                elif innerIndex == 1:
+                    setupSSHKeys.kill(signal.SIGTERM)
+                    return [1, "None"]
+
 
         except pexpect.TIMEOUT, msg:
             logging.CyberCPLogFileWriter.writeToFile("Timeout [verifyHostKey]")
-            return 0
+            return [0,"Timeout [verifyHostKey]"]
         except pexpect.EOF, msg:
             logging.CyberCPLogFileWriter.writeToFile("EOF [verifyHostKey]")
-            return 0
+            return [0,"EOF [verifyHostKey]"]
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [verifyHostKey]")
-            return 0
+            return [0,str(msg)+" [verifyHostKey]"]
 
 
     @staticmethod

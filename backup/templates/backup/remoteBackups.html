@@ -1,22 +1,24 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}Backup Website{% endblock %}
+{% block title %}{% trans "Transfer Websites from Remote Server - CyberPanel" %}{% endblock %}
 {% block content %}
 
 {% load static %}
+
+
 {% get_current_language as LANGUAGE_CODE %}
 <!-- Current language: {{ LANGUAGE_CODE }} -->
 
 <div class="container">
 <div id="page-title">
-   <h2>Remote Backups</h2>
-   <p>This feature can import website(s) from remote server</p>
+   <h2>{% trans "Remote Backups" %}</h2>
+   <p>{% trans "This feature can import website(s) from remote server" %}</p>
 </div>
 
 <div ng-controller="remoteBackupControl" class="panel">
     <div class="panel-body">
         <h3 class="title-hero">
-            Remote Backups <img ng-hide="backupLoading" src="{% static 'images/loading.gif' %}">
+            {% trans "Remote Backups" %} <img ng-hide="backupLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
@@ -24,7 +26,7 @@
             <form  action="/" class="form-horizontal bordered-row">
 
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">IP Address</label>
+                    <label class="col-sm-3 control-label">{% trans "IP Address" %}</label>
                     <div class="col-sm-6">
                         <input  type="text" class="form-control" ng-model="IPAddress" required>
                     </div>
@@ -32,7 +34,7 @@
 
 
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Password</label>
+                    <label class="col-sm-3 control-label">{% trans "Password" %}</label>
                     <div class="col-sm-6">
                         <input ng-change="passwordEnter()" type="password" class="form-control" ng-model="password" required>
                     </div>
@@ -41,7 +43,7 @@
                 <div ng-hide="backupButton" class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-disabled="fetchAccountsBtn" ng-click="fetchAccountsFromRemoteServer()" class="btn btn-primary btn-lg btn-block">Fetch Accounts</button>
+                         <button type="button" ng-disabled="fetchAccountsBtn" ng-click="fetchAccountsFromRemoteServer()" class="btn btn-primary btn-lg btn-block">{% trans "Fetch Accounts" %}</button>
                     </div>
                 </div>
 
@@ -50,11 +52,11 @@
 
                     <label class="col-sm-1 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-disabled="startTransferbtn" ng-click="startTransfer()" class="btn btn-primary btn-lg btn-block">Start Transfer</button>
+                         <button type="button" ng-disabled="startTransferbtn" ng-click="startTransfer()" class="btn btn-primary btn-lg btn-block">{% trans "Start Transfer" %}</button>
                     </div>
 
                     <div class="col-sm-4">
-                         <button type="button" ng-disabled="stopTransferbtn" ng-click="cancelRemoteBackup()" class="btn btn-primary btn-lg btn-block">Cancel</button>
+                         <button type="button" ng-disabled="stopTransferbtn" ng-click="cancelRemoteBackup()" class="btn btn-primary btn-lg btn-block">{% trans "Cancel" %}</button>
                     </div>
 
                 </div>
@@ -67,19 +69,19 @@
                             <p>{$ error_message $}</p>
                         </div>
                         <div ng-hide="couldNotConnect" class="alert alert-danger">
-                            <p>Could not connect, please refresh this page.</p>
+                            <p>{% trans "Could not connect, please refresh this page." %}</p>
                         </div>
 
                         <div ng-hide="accountsFetched" class="alert alert-success">
-                            <p>Accounts Successfully Fetched from remote server.</p>
+                            <p>{% trans "Accounts Successfully Fetched from remote server." %}</p>
                         </div>
 
                         <div ng-hide="backupProcessStarted" class="alert alert-success">
-                            <p>Backup Process successfully started.</p>
+                            <p>{% trans "Backup Process successfully started." %}</p>
                         </div>
 
                         <div ng-hide="backupCancelled" class="alert alert-success">
-                            <p>Backup successfully cancelled.</p>
+                            <p>{% trans "Backup successfully cancelled." %}</p>
                         </div>
 
                     </div>

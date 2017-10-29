@@ -197,87 +197,88 @@ class remoteBackup:
 
             for backup in os.listdir(backupDir):
 
-                writeToFile = open(backupLogPath, "a")
-
-                writeToFile.writelines("\n")
-                writeToFile.writelines("\n")
-                writeToFile.writelines("[" + time.strftime(
-                    "%I-%M-%S-%a-%b-%Y") + "]" + " Starting restore for: "+backup+".\n")
-
-                writeToFile.close()
-
                 if backup.endswith(ext):
-                    finalData = json.dumps({'backupFile': backup,"dir":dir})
-                    r = requests.post("http://localhost:5003/backup/submitRestore", data=finalData)
-                    data = json.loads(r.text)
+                    writeToFile = open(backupLogPath, "a")
 
-                    if data['restoreStatus'] == 1:
+                    writeToFile.writelines("\n")
+                    writeToFile.writelines("\n")
+                    writeToFile.writelines("[" + time.strftime(
+                        "%I-%M-%S-%a-%b-%Y") + "]" + " Starting restore for: "+backup+".\n")
 
-                        while (1):
-                            finalData = json.dumps({'backupFile': backup, "dir": dir})
-                            r = requests.post("http://localhost:5003/backup/restoreStatus", data=finalData)
-                            data = json.loads(r.text)
+                    writeToFile.close()
 
-                            logging.CyberCPLogFileWriter.writeToFile(r.text)
+                    if backup.endswith(ext):
+                        finalData = json.dumps({'backupFile': backup,"dir":dir})
+                        r = requests.post("http://localhost:5003/backup/submitRestore", data=finalData,verify=False)
+                        data = json.loads(r.text)
 
-                            if data['status'] == "Done":
-                                writeToFile = open(backupLogPath, "a")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " Restore Completed.\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " #########################################\n")
-                                writeToFile.close()
-                                break
-                            elif data['status'] == "Website already exists":
-                                writeToFile = open(backupLogPath, "a")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " Website associated with this backup already exists.\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " #########################################\n")
-                                writeToFile.close()
-                                logging.CyberCPLogFileWriter.writeToFile(
-                                    "Website associated with this backup already exists")
-                                break
-                            elif data['status'] == 0:
-                                time.sleep(2)
+                        if data['restoreStatus'] == 1:
 
-                                writeToFile = open(backupLogPath, "a")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " Waiting for restore to complete.\n")
-                                writeToFile.close()
+                            while (1):
+                                finalData = json.dumps({'backupFile': backup, "dir": dir})
+                                r = requests.post("http://localhost:5003/backup/restoreStatus", data=finalData,verify=False)
+                                data = json.loads(r.text)
 
-                                pass
-                            elif data['status'] == "Not able to create Account and databases, aborting.":
-                                writeToFile = open(backupLogPath, "a")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " Not able to create Account and databases, aborting.\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " #########################################\n")
-                                writeToFile.close()
-                                logging.CyberCPLogFileWriter.writeToFile(
-                                    "Not able to create Account and databases, aborting.")
-                                break
-                            else:
-                                time.sleep(3)
+                                logging.CyberCPLogFileWriter.writeToFile(r.text)
 
-                                writeToFile = open(backupLogPath, "a")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " Waiting for restore to complete.\n")
-                                writeToFile.close()
+                                if data['status'] == "Done":
+                                    writeToFile = open(backupLogPath, "a")
+                                    writeToFile.writelines("\n")
+                                    writeToFile.writelines("\n")
+                                    writeToFile.writelines("[" + time.strftime(
+                                        "%I-%M-%S-%a-%b-%Y") + "]" + " Restore Completed.\n")
+                                    writeToFile.writelines("[" + time.strftime(
+                                        "%I-%M-%S-%a-%b-%Y") + "]" + " #########################################\n")
+                                    writeToFile.close()
+                                    break
+                                elif data['status'] == "Website already exists":
+                                    writeToFile = open(backupLogPath, "a")
+                                    writeToFile.writelines("\n")
+                                    writeToFile.writelines("\n")
+                                    writeToFile.writelines("[" + time.strftime(
+                                        "%I-%M-%S-%a-%b-%Y") + "]" + " Website associated with this backup already exists.\n")
+                                    writeToFile.writelines("[" + time.strftime(
+                                        "%I-%M-%S-%a-%b-%Y") + "]" + " #########################################\n")
+                                    writeToFile.close()
+                                    logging.CyberCPLogFileWriter.writeToFile(
+                                        "Website associated with this backup already exists")
+                                    break
+                                elif data['status'] == 0:
+                                    time.sleep(2)
 
-                                pass
-                    else:
-                        logging.CyberCPLogFileWriter.writeToFile("Could not start restore process for: "+backup)
+                                    writeToFile = open(backupLogPath, "a")
+                                    writeToFile.writelines("\n")
+                                    writeToFile.writelines("\n")
+                                    writeToFile.writelines("[" + time.strftime(
+                                        "%I-%M-%S-%a-%b-%Y") + "]" + " Waiting for restore to complete.\n")
+                                    writeToFile.close()
+
+                                    pass
+                                elif data['status'] == "Not able to create Account and databases, aborting.":
+                                    writeToFile = open(backupLogPath, "a")
+                                    writeToFile.writelines("\n")
+                                    writeToFile.writelines("\n")
+                                    writeToFile.writelines("[" + time.strftime(
+                                        "%I-%M-%S-%a-%b-%Y") + "]" + " Not able to create Account and databases, aborting.\n")
+                                    writeToFile.writelines("[" + time.strftime(
+                                        "%I-%M-%S-%a-%b-%Y") + "]" + " #########################################\n")
+                                    writeToFile.close()
+                                    logging.CyberCPLogFileWriter.writeToFile(
+                                        "Not able to create Account and databases, aborting.")
+                                    break
+                                else:
+                                    time.sleep(3)
+
+                                    writeToFile = open(backupLogPath, "a")
+                                    writeToFile.writelines("\n")
+                                    writeToFile.writelines("\n")
+                                    writeToFile.writelines("[" + time.strftime(
+                                        "%I-%M-%S-%a-%b-%Y") + "]" + " Waiting for restore to complete.\n")
+                                    writeToFile.close()
+
+                                    pass
+                        else:
+                            logging.CyberCPLogFileWriter.writeToFile("Could not start restore process for: "+backup)
 
             writeToFile = open(backupLogPath, "a")
 
@@ -360,13 +361,13 @@ class remoteBackup:
                 "%I-%M-%S-%a-%b-%Y") + "]" + " Backup started for: " + virtualHost + "\n")
 
             finalData = json.dumps({'websiteToBeBacked': virtualHost})
-            r = requests.post("http://localhost:5003/backup/submitBackupCreation", data=finalData)
+            r = requests.post("http://localhost:5003/backup/submitBackupCreation", data=finalData,verify=False)
             data = json.loads(r.text)
             backupPath = data['tempStorage']
 
 
             while (1):
-                r = requests.post("http://localhost:5003/backup/backupStatus", data= finalData)
+                r = requests.post("http://localhost:5003/backup/backupStatus", data= finalData,verify=False)
                 time.sleep(2)
                 data = json.loads(r.text)
 
@@ -428,7 +429,7 @@ class remoteBackup:
 
 
                     finalData = json.dumps({'websiteToBeBacked': virtualHost})
-                    r = requests.post("http://localhost:5003/backup/submitBackupCreation", data=finalData)
+                    r = requests.post("http://localhost:5003/backup/submitBackupCreation", data=finalData,verify=False)
 
                     data = json.loads(r.text)
 
@@ -438,7 +439,7 @@ class remoteBackup:
 
 
                     while (1):
-                        r = requests.post("http://localhost:5003/backup/backupStatus", data= finalData)
+                        r = requests.post("http://localhost:5003/backup/backupStatus", data= finalData,verify=False)
                         time.sleep(2)
                         data = json.loads(r.text)
 
@@ -513,24 +514,33 @@ class remoteBackup:
             writeToFile.writelines("\n")
             writeToFile.writelines("\n")
 
-            writeToFile.close()
 
             ## fix yes/no
 
-            backupUtil.backupUtilities.verifyHostKey(ipAddress)
+            verify = backupUtil.backupUtilities.verifyHostKey(ipAddress)
+
+            ## if verification failed, return with error message
+
+            if verify[0] == 1:
+                pass
+            else:
+                return [0,verify[1]]
 
 
             if backupUtil.backupUtilities.checkIfHostIsUp(ipAddress) == 1:
-                if backupUtil.backupUtilities.checkConnection(ipAddress) != 1:
+                checkConn = backupUtil.backupUtilities.checkConnection(ipAddress)
+                if checkConn[0] == 0:
                     writeToFile.writelines("[" + time.strftime(
                         "%I-%M-%S-%a-%b-%Y") + "]" + " Connection to:" + ipAddress + " Failed, please resetup this destination from CyberPanel, aborting." + "\n")
-                    return [0, "Connection check failed"]
+                    return [0, checkConn[1]]
                 else:
                     pass
             else:
                 writeToFile.writelines("[" + time.strftime(
                     "%I-%M-%S-%a-%b-%Y") + "]" + " Host:" + ipAddress + " is down, aborting." + "\n")
                 return [0, "Host is down"]
+
+            writeToFile.close()
 
 
             p = Process(target=remoteBackup.backupProcess, args=(ipAddress, destination, backupLogPath,dir,accountsToTransfer))
@@ -543,6 +553,6 @@ class remoteBackup:
             return [1, None]
 
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [postRemoteTransfer]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransfer]")
             return [0, msg]
 

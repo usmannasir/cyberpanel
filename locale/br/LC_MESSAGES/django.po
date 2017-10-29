@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-10-25 01:02+0500\n"
+"POT-Creation-Date: 2017-10-29 20:47+0500\n"
 "PO-Revision-Date: 2017-10-24 22:23+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -30,26 +30,22 @@ msgid "English"
 msgstr ""
 
 #: CyberCP/settings.py:168
-msgid "Urdu"
-msgstr ""
-
-#: CyberCP/settings.py:169
 msgid "Chinese"
 msgstr ""
 
-#: CyberCP/settings.py:170
+#: CyberCP/settings.py:169
 msgid "Bulgarian"
 msgstr ""
 
-#: CyberCP/settings.py:171
+#: CyberCP/settings.py:170
 msgid "Portuguese"
 msgstr ""
 
-#: CyberCP/settings.py:172
+#: CyberCP/settings.py:171
 msgid "Japanese"
 msgstr ""
 
-#: CyberCP/settings.py:173
+#: CyberCP/settings.py:172
 msgid "Bosnian"
 msgstr ""
 
@@ -117,7 +113,7 @@ msgstr "Откажи Архив"
 #: backup/templates/backup/backup.html:101
 #: backup/templates/backup/backupDestinations.html:90
 #: backup/templates/backup/backupSchedule.html:89
-#: databases/templates/databases/listDataBases.html:86
+#: databases/templates/databases/listDataBases.html:87
 #: dns/templates/dns/addDeleteDNSRecords.html:129
 #: firewall/templates/firewall/firewall.html:127
 #: ftp/templates/ftp/listFTPAccounts.html:87
@@ -144,6 +140,7 @@ msgstr "Размер"
 #: dns/templates/dns/addDeleteDNSRecords.html:134
 #: firewall/templates/firewall/firewall.html:131
 #: firewall/templates/firewall/secureSSH.html:122
+#: websiteFunctions/templates/websiteFunctions/website.html:424
 msgid "Delete"
 msgstr "Изтрий"
 
@@ -166,6 +163,7 @@ msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgstr "От тази страница може да настройте дестинацията за архивите (SFTP)"
 
 #: backup/templates/backup/backupDestinations.html:30
+#: backup/templates/backup/remoteBackups.html:29
 #: dns/templates/dns/addDeleteDNSRecords.html:60
 #: dns/templates/dns/createNameServer.html:48
 #: dns/templates/dns/createNameServer.html:65
@@ -173,8 +171,9 @@ msgid "IP Address"
 msgstr "IP Адрес"
 
 #: backup/templates/backup/backupDestinations.html:38
+#: backup/templates/backup/remoteBackups.html:37
 #: databases/templates/databases/createDatabase.html:58
-#: databases/templates/databases/listDataBases.html:89
+#: databases/templates/databases/listDataBases.html:90
 #: ftp/templates/ftp/listFTPAccounts.html:91
 #: mailServer/templates/mailServer/changeEmailPassword.html:52
 #: mailServer/templates/mailServer/createEmailAccount.html:51
@@ -227,10 +226,12 @@ msgstr "Дестинацията е добавена"
 #: userManagment/templates/userManagment/modifyUser.html:139
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:77
 #: websiteFunctions/templates/websiteFunctions/website.html:157
-#: websiteFunctions/templates/websiteFunctions/website.html:284
-#: websiteFunctions/templates/websiteFunctions/website.html:339
-#: websiteFunctions/templates/websiteFunctions/website.html:394
-#: websiteFunctions/templates/websiteFunctions/website.html:542
+#: websiteFunctions/templates/websiteFunctions/website.html:336
+#: websiteFunctions/templates/websiteFunctions/website.html:378
+#: websiteFunctions/templates/websiteFunctions/website.html:508
+#: websiteFunctions/templates/websiteFunctions/website.html:563
+#: websiteFunctions/templates/websiteFunctions/website.html:618
+#: websiteFunctions/templates/websiteFunctions/website.html:765
 msgid "Could not connect to server. Please refresh this page."
 msgstr ""
 
@@ -335,12 +336,74 @@ msgstr "Възстанови Архив"
 msgid "Restore"
 msgstr "Възстанови"
 
-#: backup/templates/backup/remoteBackups.html:75
+#: backup/templates/backup/remoteBackups.html:3
+#, fuzzy
+#| msgid "Create Nameserver - CyberPanel"
+msgid "Transfer Websites from Remote Server - CyberPanel"
+msgstr "Създай Nameserver - CyberPanel"
+
+#: backup/templates/backup/remoteBackups.html:14
+#: backup/templates/backup/remoteBackups.html:21
+#, fuzzy
+#| msgid "Restore Back up"
+msgid "Remote Backups"
+msgstr "Възстанови Архив"
+
+#: backup/templates/backup/remoteBackups.html:15
+msgid "This feature can import website(s) from remote server"
+msgstr ""
+
+#: backup/templates/backup/remoteBackups.html:46
+#, fuzzy
+#| msgid "FTP Accounts"
+msgid "Fetch Accounts"
+msgstr "FTP Акаунти"
+
+#: backup/templates/backup/remoteBackups.html:55
+msgid "Start Transfer"
+msgstr ""
+
+#: backup/templates/backup/remoteBackups.html:59
+#: websiteFunctions/templates/websiteFunctions/website.html:269
+#, fuzzy
+#| msgid "Cancel Backup"
+msgid "Cancel"
+msgstr "Откажи Архив"
+
+#: backup/templates/backup/remoteBackups.html:72
+#, fuzzy
+#| msgid "Could not connect. Please refresh this page."
+msgid "Could not connect, please refresh this page."
+msgstr "Не можем да се свържем, моля презаредете страницата."
+
+#: backup/templates/backup/remoteBackups.html:76
+msgid "Accounts Successfully Fetched from remote server."
+msgstr ""
+
+#: backup/templates/backup/remoteBackups.html:80
+#, fuzzy
+#| msgid " is successfully created."
+msgid "Backup Process successfully started."
+msgstr "е успешно създаден."
+
+#: backup/templates/backup/remoteBackups.html:84
+#, fuzzy
+#| msgid "Rule successfully added."
+msgid "Backup successfully cancelled."
+msgstr "Правилата са успешно добавени."
+
+#: backup/templates/backup/remoteBackups.html:96
+#, fuzzy
+#| msgid "Select Account"
+msgid "Search Accounts.."
+msgstr "Избери Акаунт"
+
+#: backup/templates/backup/remoteBackups.html:107
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:65
 msgid "Website"
 msgstr "Страница"
 
-#: backup/templates/backup/remoteBackups.html:76
+#: backup/templates/backup/remoteBackups.html:108
 #: baseTemplate/templates/baseTemplate/homePage.html:331
 #: baseTemplate/templates/baseTemplate/index.html:625
 #: baseTemplate/templates/baseTemplate/index.html:627
@@ -348,14 +411,14 @@ msgstr "Страница"
 msgid "PHP"
 msgstr "PHP"
 
-#: backup/templates/backup/remoteBackups.html:77
-#: packages/templates/packages/createPackage.html:91
+#: backup/templates/backup/remoteBackups.html:109
+#: packages/templates/packages/createPackage.html:99
 #: packages/templates/packages/deletePackage.html:63
-#: packages/templates/packages/modifyPackage.html:102
+#: packages/templates/packages/modifyPackage.html:112
 msgid "Package"
 msgstr "Пакети"
 
-#: backup/templates/backup/remoteBackups.html:78
+#: backup/templates/backup/remoteBackups.html:110
 #: baseTemplate/templates/baseTemplate/index.html:514
 #: baseTemplate/templates/baseTemplate/index.html:516
 #: userManagment/templates/userManagment/createUser.html:47
@@ -365,10 +428,6 @@ msgstr "Пакети"
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:67
 msgid "Email"
 msgstr "Email"
-
-#: backup/templates/backup/remoteBackups.html:79
-msgid "Transfer"
-msgstr ""
 
 #: backup/templates/backup/restore.html:3
 msgid "Restore Website - CyberPanel"
@@ -392,6 +451,7 @@ msgstr "Избери Архив"
 
 #: backup/templates/backup/restore.html:86
 #: databases/templates/databases/deleteDatabase.html:64
+#: databases/templates/databases/listDataBases.html:54
 #: firewall/templates/firewall/firewall.html:156
 #: managePHP/templates/managePHP/editPHPConfig.html:212
 msgid "Error message:"
@@ -495,8 +555,8 @@ msgstr "Функции на Бази от Данни"
 #: baseTemplate/templates/baseTemplate/index.html:477
 #: baseTemplate/templates/baseTemplate/index.html:478
 #: baseTemplate/templates/baseTemplate/index.html:479
-#: packages/templates/packages/createPackage.html:59
-#: packages/templates/packages/modifyPackage.html:63
+#: packages/templates/packages/createPackage.html:67
+#: packages/templates/packages/modifyPackage.html:73
 #: websiteFunctions/templates/websiteFunctions/website.html:44
 msgid "Databases"
 msgstr "База от Данни"
@@ -527,8 +587,8 @@ msgstr "FTP"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:278
 #: baseTemplate/templates/baseTemplate/homePage.html:281
-#: packages/templates/packages/createPackage.html:67
-#: packages/templates/packages/modifyPackage.html:70
+#: packages/templates/packages/createPackage.html:75
+#: packages/templates/packages/modifyPackage.html:80
 msgid "Emails"
 msgstr "Emails"
 
@@ -716,7 +776,7 @@ msgstr "Изтрий Страница"
 
 #: baseTemplate/templates/baseTemplate/index.html:468
 #: packages/templates/packages/createPackage.html:13
-#: packages/templates/packages/createPackage.html:76
+#: packages/templates/packages/createPackage.html:84
 #: packages/templates/packages/index.html:25
 #: packages/templates/packages/index.html:27
 msgid "Create Package"
@@ -736,7 +796,7 @@ msgstr "Изтрий Пакет"
 #: packages/templates/packages/index.html:51
 #: packages/templates/packages/modifyPackage.html:9
 #: packages/templates/packages/modifyPackage.html:15
-#: packages/templates/packages/modifyPackage.html:85
+#: packages/templates/packages/modifyPackage.html:95
 msgid "Modify Package"
 msgstr "Промени Пакет"
 
@@ -827,7 +887,7 @@ msgid "Delete Email"
 msgstr "Изтрий Email"
 
 #: baseTemplate/templates/baseTemplate/index.html:523
-#: databases/templates/databases/listDataBases.html:72
+#: databases/templates/databases/listDataBases.html:73
 #: ftp/templates/ftp/listFTPAccounts.html:73
 #: mailServer/templates/mailServer/changeEmailPassword.html:64
 #: mailServer/templates/mailServer/index.html:49
@@ -843,7 +903,8 @@ msgstr "Webmail"
 #: ftp/templates/ftp/createFTPAccount.html:12
 #: ftp/templates/ftp/createFTPAccount.html:19 ftp/templates/ftp/index.html:25
 #: ftp/templates/ftp/index.html:27
-#: websiteFunctions/templates/websiteFunctions/website.html:461
+#: websiteFunctions/templates/websiteFunctions/website.html:683
+#: websiteFunctions/templates/websiteFunctions/website.html:685
 msgid "Create FTP Account"
 msgstr "Създай FTP Акаунт"
 
@@ -852,7 +913,8 @@ msgstr "Създай FTP Акаунт"
 #: ftp/templates/ftp/deleteFTPAccount.html:18
 #: ftp/templates/ftp/deleteFTPAccount.html:52 ftp/templates/ftp/index.html:37
 #: ftp/templates/ftp/index.html:39
-#: websiteFunctions/templates/websiteFunctions/website.html:473
+#: websiteFunctions/templates/websiteFunctions/website.html:695
+#: websiteFunctions/templates/websiteFunctions/website.html:697
 msgid "Delete FTP Account"
 msgstr "Изтрий FTP Акаунт"
 
@@ -1042,7 +1104,7 @@ msgid "Create a new database on this page."
 msgstr "Създай нова база от данни от тази страница."
 
 #: databases/templates/databases/createDatabase.html:42
-#: databases/templates/databases/listDataBases.html:87
+#: databases/templates/databases/listDataBases.html:88
 msgid "Database Name"
 msgstr "Име на База от Данни"
 
@@ -1107,21 +1169,25 @@ msgstr "Избери Домейн"
 msgid "Records successfully fetched for"
 msgstr ""
 
-#: databases/templates/databases/listDataBases.html:53
+#: databases/templates/databases/listDataBases.html:50
+msgid "Password changed for: "
+msgstr ""
+
+#: databases/templates/databases/listDataBases.html:54
 msgid "Cannot change password for "
 msgstr ""
 
-#: databases/templates/databases/listDataBases.html:58
+#: databases/templates/databases/listDataBases.html:59
 #: firewall/templates/firewall/firewall.html:166
 #: ftp/templates/ftp/listFTPAccounts.html:59
 msgid "Could Not Connect to server. Please refresh this page"
 msgstr ""
 
-#: databases/templates/databases/listDataBases.html:88
+#: databases/templates/databases/listDataBases.html:89
 msgid "Database User"
 msgstr ""
 
-#: databases/templates/databases/listDataBases.html:97
+#: databases/templates/databases/listDataBases.html:98
 #: ftp/templates/ftp/listFTPAccounts.html:100
 msgid "Change"
 msgstr "Промени"
@@ -1164,6 +1230,7 @@ msgstr "Приоритет"
 #: dns/templates/dns/createDNSZone.html:27
 #: dns/templates/dns/createNameServer.html:27
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:52
+#: websiteFunctions/templates/websiteFunctions/website.html:263
 msgid "Domain Name"
 msgstr "Домейн Име"
 
@@ -1386,9 +1453,10 @@ msgid "Secure SSH - CyberPanel"
 msgstr ""
 
 #: firewall/templates/firewall/secureSSH.html:14
-#: managePHP/templates/managePHP/editPHPConfig.html:15
-msgid "Edit PHP Configurations on this page."
-msgstr ""
+#, fuzzy
+#| msgid "SSH Configurations Saved."
+msgid "Secure or harden SSH Configurations."
+msgstr "SSH Конфигурацията е запаметена."
 
 #: firewall/templates/firewall/secureSSH.html:28
 #: managePHP/templates/managePHP/editPHPConfig.html:29
@@ -1433,8 +1501,8 @@ msgstr "Добави Ключ"
 
 #: firewall/templates/firewall/secureSSH.html:158
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:55
-#: websiteFunctions/templates/websiteFunctions/website.html:303
-#: websiteFunctions/templates/websiteFunctions/website.html:363
+#: websiteFunctions/templates/websiteFunctions/website.html:527
+#: websiteFunctions/templates/websiteFunctions/website.html:587
 msgid "Save"
 msgstr "Запази"
 
@@ -1623,6 +1691,10 @@ msgstr "Редактирай PHP Конфигурация - CyberPanel"
 msgid "Edit PHP Configurations"
 msgstr "Редактирай PHP Конфигурация"
 
+#: managePHP/templates/managePHP/editPHPConfig.html:15
+msgid "Edit PHP Configurations on this page."
+msgstr ""
+
 #: managePHP/templates/managePHP/editPHPConfig.html:35
 msgid "Advanced"
 msgstr "За Напреднали"
@@ -1633,6 +1705,7 @@ msgstr "За Напреднали"
 #: tuning/templates/tuning/phpTuning.html:28
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:68
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:74
+#: websiteFunctions/templates/websiteFunctions/website.html:283
 msgid "Select PHP"
 msgstr "Избери PHP"
 
@@ -1811,32 +1884,47 @@ msgid "Package Name"
 msgstr "Име на Пакет"
 
 #: packages/templates/packages/createPackage.html:35
-#: packages/templates/packages/modifyPackage.html:39
+#: packages/templates/packages/modifyPackage.html:40
+#: websiteFunctions/templates/websiteFunctions/website.html:223
+#, fuzzy
+#| msgid "Domain Name"
+msgid "Domains"
+msgstr "Домейн Име"
+
+#: packages/templates/packages/createPackage.html:39
+#: packages/templates/packages/modifyPackage.html:44
+#, fuzzy
+#| msgid "( 0 = Unlimited )"
+msgid "(0 = Unlimited)"
+msgstr "( 0 = Без Лимит )"
+
+#: packages/templates/packages/createPackage.html:43
+#: packages/templates/packages/modifyPackage.html:49
 msgid "Disk Space"
 msgstr "Дисково Място"
 
-#: packages/templates/packages/createPackage.html:39
 #: packages/templates/packages/createPackage.html:47
-#: packages/templates/packages/modifyPackage.html:43
-#: packages/templates/packages/modifyPackage.html:51
+#: packages/templates/packages/createPackage.html:55
+#: packages/templates/packages/modifyPackage.html:53
+#: packages/templates/packages/modifyPackage.html:61
 msgid "MB (0 = Unlimited)"
 msgstr "MB (0 = Без лимит)"
 
-#: packages/templates/packages/createPackage.html:43
-#: packages/templates/packages/modifyPackage.html:47
+#: packages/templates/packages/createPackage.html:51
+#: packages/templates/packages/modifyPackage.html:57
 msgid "Bandwidth"
 msgstr "Трафик"
 
-#: packages/templates/packages/createPackage.html:52
-#: packages/templates/packages/modifyPackage.html:56
+#: packages/templates/packages/createPackage.html:60
+#: packages/templates/packages/modifyPackage.html:66
 msgid "FTP Accounts"
 msgstr "FTP Акаунти"
 
-#: packages/templates/packages/createPackage.html:87
+#: packages/templates/packages/createPackage.html:95
 msgid "Cannot create package. Error message:"
 msgstr "Пакета не е създаден, защото:"
 
-#: packages/templates/packages/createPackage.html:91
+#: packages/templates/packages/createPackage.html:99
 msgid "Successfully Created"
 msgstr "Успешно е създаден"
 
@@ -1868,15 +1956,15 @@ msgstr "Пакети - CyberPanel"
 msgid "Modify Package - CyberPanel"
 msgstr "Промени Пакет - CyberPanel"
 
-#: packages/templates/packages/modifyPackage.html:94
+#: packages/templates/packages/modifyPackage.html:104
 msgid "Cannot fetch package details. Error message:"
 msgstr "Детайлите за пакета не са извлечени, защото:"
 
-#: packages/templates/packages/modifyPackage.html:98
+#: packages/templates/packages/modifyPackage.html:108
 msgid "Package Details Successfully Fetched"
 msgstr "Детайлите за пакета са успешно извлечени"
 
-#: packages/templates/packages/modifyPackage.html:102
+#: packages/templates/packages/modifyPackage.html:112
 msgid "Successfully Modified"
 msgstr "Успешно Променено"
 
@@ -2377,29 +2465,36 @@ msgid "Select Owner"
 msgstr "Избери Собственик"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:56
+#: websiteFunctions/templates/websiteFunctions/website.html:267
+#: websiteFunctions/templates/websiteFunctions/website.html:278
 msgid "Invalid Domain (Note: You don't need to add 'http' or 'https')"
 msgstr ""
 "Невалиден домейн (Забележка: Не е необходимо да поставяте 'http' или 'https')"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:84
+#: websiteFunctions/templates/websiteFunctions/website.html:299
 msgid "Additional Features"
 msgstr "Допълнителни функции"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:91
+#: websiteFunctions/templates/websiteFunctions/website.html:306
 msgid ""
 "For SSL to work DNS of domain should point to server, otherwise self signed "
 "SSL will be issued, you can add your own SSL later."
 msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:113
+#: websiteFunctions/templates/websiteFunctions/website.html:328
 msgid "Cannot create website. Error message:"
 msgstr "Страницата не е създадена, защото:"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:117
+#: websiteFunctions/templates/websiteFunctions/website.html:332
 msgid "Website with domain"
 msgstr "Страница с домейн"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:117
+#: websiteFunctions/templates/websiteFunctions/website.html:332
 msgid " is Successfully Created"
 msgstr "е Успешно Създаден"
 
@@ -2542,95 +2637,159 @@ msgstr "Следваща"
 msgid "Previous"
 msgstr "Минала"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:227
+#: websiteFunctions/templates/websiteFunctions/website.html:230
+#: websiteFunctions/templates/websiteFunctions/website.html:232
+#, fuzzy
+#| msgid "Add Destination"
+msgid "Add Domains"
+msgstr "Добави дестинация"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:242
+#: websiteFunctions/templates/websiteFunctions/website.html:244
+#, fuzzy
+#| msgid "Select Domain"
+msgid "List Domains"
+msgstr "Избери Домейн"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:274
+#: websiteFunctions/templates/websiteFunctions/website.html:733
+msgid "Path"
+msgstr "Път"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:276
+msgid "This path is relative to: "
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:276
+msgid "Leave empty to set default."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:317
+#, fuzzy
+#| msgid "Create Email"
+msgid "Create Domain"
+msgstr "Създай Email"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:360
+#, fuzzy
+#| msgid "Version Management"
+msgid "PHP Version Changed to:"
+msgstr "Мениджър на Версия"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:364
+#, fuzzy
+#| msgid "Delete"
+msgid "Deleted:"
+msgstr "Изтрий"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:368
+#, fuzzy
+#| msgid "SSL Issued for"
+msgid "SSL Issued:"
+msgstr "SSL издаден за"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:391
+msgid "Close"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:423
+#, fuzzy
+#| msgid "Issue SSL"
+msgid "Issue"
+msgstr "Издаване на SSL"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:451
 msgid "Configurations"
 msgstr "Конфигурация"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:233
+#: websiteFunctions/templates/websiteFunctions/website.html:457
 msgid "Edit Virtual Host Main Configurations"
 msgstr "Редактирай Virtual Host Main Configurations"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:235
+#: websiteFunctions/templates/websiteFunctions/website.html:459
 msgid "Edit vHost Main Configurations"
 msgstr "Редактирай vHost Main Configurations"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:245
-#: websiteFunctions/templates/websiteFunctions/website.html:247
+#: websiteFunctions/templates/websiteFunctions/website.html:469
+#: websiteFunctions/templates/websiteFunctions/website.html:471
 msgid "Add Rewrite Rules (.htaccess)"
 msgstr "Добави Rewrite Rules (.htaccess)"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:257
+#: websiteFunctions/templates/websiteFunctions/website.html:481
 msgid "Add Your Own SSL"
 msgstr "Добави свой SSL"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:259
+#: websiteFunctions/templates/websiteFunctions/website.html:483
 msgid "Add SSL"
 msgstr "Добави SSL"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:274
+#: websiteFunctions/templates/websiteFunctions/website.html:498
 msgid "SSL Saved"
 msgstr "SSL Запазен"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:279
+#: websiteFunctions/templates/websiteFunctions/website.html:503
 msgid "Could not save SSL. Error message:"
 msgstr "SSL не е запазен, защото:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:329
+#: websiteFunctions/templates/websiteFunctions/website.html:553
 msgid "Current configuration in the file fetched."
 msgstr "Текущата конфигурация във файла е изтеглена"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:334
-#: websiteFunctions/templates/websiteFunctions/website.html:347
+#: websiteFunctions/templates/websiteFunctions/website.html:558
+#: websiteFunctions/templates/websiteFunctions/website.html:571
 msgid "Could not fetch current configuration. Error message:"
 msgstr "Текущата конфигурация не е изтеглена, защото:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:343
-#: websiteFunctions/templates/websiteFunctions/website.html:398
+#: websiteFunctions/templates/websiteFunctions/website.html:567
+#: websiteFunctions/templates/websiteFunctions/website.html:622
 msgid "Configuration saved. Restart LiteSpeed put them in effect."
 msgstr ""
 "Конфигурацията е запазена. Рестартирайте LiteSpeed, за да влезнат в сила "
 "промените."
 
-#: websiteFunctions/templates/websiteFunctions/website.html:384
+#: websiteFunctions/templates/websiteFunctions/website.html:608
 msgid "Current rewrite rules in the file fetched."
 msgstr "Наличните  rewrite rules са изтеглени."
 
-#: websiteFunctions/templates/websiteFunctions/website.html:389
+#: websiteFunctions/templates/websiteFunctions/website.html:613
 msgid "Could not fetch current rewrite rules. Error message:"
 msgstr "Наличните  rewrite rules не са изтеглени, защото:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:402
+#: websiteFunctions/templates/websiteFunctions/website.html:626
 msgid "Could not save rewrite rules. Error message:"
 msgstr "Новите  rewrite rules не са запаметени, защото:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:418
+#: websiteFunctions/templates/websiteFunctions/website.html:642
 msgid "Save Rewrite Rules"
 msgstr "Запази Rewrite Rules"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:441
+#: websiteFunctions/templates/websiteFunctions/website.html:665
 msgid "Files"
 msgstr "Файлове"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:450
+#: websiteFunctions/templates/websiteFunctions/website.html:672
+#: websiteFunctions/templates/websiteFunctions/website.html:674
 msgid "File Manager"
 msgstr "Файл Мениджър"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:490
+#: websiteFunctions/templates/websiteFunctions/website.html:713
 msgid "Application Installer"
 msgstr "Инсталатор на Приложения"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:498
+#: websiteFunctions/templates/websiteFunctions/website.html:719
+#, fuzzy
+#| msgid "Wordpress with LSCache"
+msgid "Install wordpress with LSCache"
+msgstr "Wordpress с LSCache"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:721
 msgid "Wordpress with LSCache"
 msgstr "Wordpress с LSCache"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:510
-msgid "Path"
-msgstr "Път"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:532
+#: websiteFunctions/templates/websiteFunctions/website.html:755
 msgid "Installation failed. Error message:"
 msgstr "Инсталацията Не завърши, защото:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:536
+#: websiteFunctions/templates/websiteFunctions/website.html:759
 msgid "Installation successful. To complete the setup visit:"
 msgstr "Инсталацията завърши успешно. "

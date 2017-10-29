@@ -14,7 +14,5 @@ class Administrator(models.Model):
    type = models.IntegerField()
    owner = models.IntegerField(default=1)
 
-   userAccountsLimit = models.IntegerField(default=0)
-   websitesLimit = models.IntegerField(default=0)
-   initUserAccountsLimit = models.IntegerField(default=1)
-   initWebsitesLimit = models.IntegerField(default=1)
+   initUserAccountsLimit = models.IntegerField(default=0)
+   initWebsitesLimit = models.IntegerField(default=0)

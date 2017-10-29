@@ -14,3 +14,4 @@ class Package(models.Model):
     emailAccounts = models.IntegerField(null=True)
     dataBases = models.IntegerField(default=0)
     ftpAccounts = models.IntegerField(default=0)
+    allowedDomains = models.IntegerField(default=0)

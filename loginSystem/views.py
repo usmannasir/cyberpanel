@@ -121,7 +121,7 @@ def loadLoginPage(request):
 
             package = Package(admin=admin, packageName="Default", diskSpace=1000,
                                   bandwidth=1000, ftpAccounts=1000, dataBases=1000,
-                                  emailAccounts=1000)
+                                  emailAccounts=1000,allowedDomains=20)
             package.save()
 
             newFWRule = FirewallRules(name="panel", proto="tcp", port="8090")

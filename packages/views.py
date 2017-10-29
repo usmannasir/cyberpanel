@@ -74,6 +74,7 @@ def submitPackage(request):
                 packageDatabases = int(data['dataBases'])
                 ftpAccounts = int(data['ftpAccounts'])
                 emails = int(data['emails'])
+                allowedDomains = int(data['allowedDomains'])
 
 
                 admin = Administrator.objects.get(pk=request.session['userID'])
@@ -81,7 +82,7 @@ def submitPackage(request):
                 packageName = admin.userName+"_"+packageName
 
                 package = Package(admin=admin, packageName=packageName, diskSpace=packageSpace,
-                                  bandwidth=packageBandwidth, ftpAccounts=ftpAccounts, dataBases=packageDatabases,emailAccounts=emails)
+                                  bandwidth=packageBandwidth, ftpAccounts=ftpAccounts, dataBases=packageDatabases,emailAccounts=emails,allowedDomains=allowedDomains)
 
                 package.save()
 
@@ -171,7 +172,7 @@ def submitModify(request):
                 emails = modifyPack.emailAccounts
 
                 data_ret = {'emails':emails,'modifyStatus': 1,'error_message': "None",
-                            "diskSpace":diskSpace,"bandwidth":bandwidth,"ftpAccounts":ftpAccounts,"dataBases":dataBases}
+                            "diskSpace":diskSpace,"bandwidth":bandwidth,"ftpAccounts":ftpAccounts,"dataBases":dataBases,"allowedDomains":modifyPack.allowedDomains}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -201,6 +202,7 @@ def saveChanges(request):
                 modifyPack.ftpAccounts = data['ftpAccounts']
                 modifyPack.dataBases = data['dataBases']
                 modifyPack.emailAccounts = data['emails']
+                modifyPack.allowedDomains = data['allowedDomains']
                 modifyPack.save()
 
                 data_ret = {'saveStatus': 1,'error_message': "None"}

@@ -1200,7 +1200,434 @@ app.controller('websitePages', function($scope,$http) {
 
                 }
 
+    };
+
+
+    ////// create domain part
+
+    $("#domainCreationForm").hide();
+
+    $scope.showCreateDomainForm = function () {
+        $("#domainCreationForm").fadeIn();
+    };
+
+    $scope.hideDomainCreationForm = function () {
+        $("#domainCreationForm").fadeOut();
+    };
+
+    $scope.masterDomain = $("#domainNamePage").text();
+
+    // notifcations settings
+    $scope.domainLoading = true;
+    $scope.websiteCreationFailed = true;
+    $scope.domainCreated = true;
+    $scope.couldNotConnect = true;
+
+    $scope.createDomain = function(){
+
+                // notifcations settings
+                $scope.domainLoading = false;
+                $scope.websiteCreationFailed = true;
+                $scope.domainCreated = true;
+                $scope.couldNotConnect = true;
+
+                if ($scope.sslCheck === true){
+                    var ssl = 1;
+                }
+                else{
+                    var ssl = 0
+                }
+
+
+                url = "/websites/submitDomainCreation";
+                var domainName = $scope.domainNameCreate;
+                var phpSelection = $scope.phpSelection;
+
+                var path = $scope.docRootPath;
+
+                if (typeof path === 'undefined'){
+                    path = "";
+                }
+
+
+                var data = {
+                    domainName: domainName,
+                    phpSelection: phpSelection,
+                    ssl:ssl,
+                    path:path,
+                    masterDomain:$("#domainNamePage").text(),
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.createWebSiteStatus === 1){
+
+                        $scope.websiteDomain = domainName;
+
+                        // notifcations settings
+                        $scope.domainLoading = true;
+                        $scope.websiteCreationFailed = true;
+                        $scope.domainCreated = false;
+                        $scope.couldNotConnect = true
+
+
+                    }
+                    else{
+
+                        $scope.errorMessage = response.data.error_message;
+
+                        // notifcations settings
+                        $scope.domainLoading = true;
+                        $scope.websiteCreationFailed = false;
+                        $scope.domainCreated = true;
+                        $scope.couldNotConnect = true;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        // notifcations settings
+                        $scope.domainLoading = true;
+                        $scope.websiteCreationFailed = true;
+                        $scope.domainCreated = true;
+                        $scope.couldNotConnect = false;
+
+                }
+
+
+
+
+
+    };
+
+
+    ////// List Domains Part
+
+    ////////////////////////
+
+    // notifcations
+
+    $scope.phpChanged = true;
+    $scope.domainError = true;
+    $scope.couldNotConnect = true;
+    $scope.domainDeleted = true;
+    $scope.sslIssued = true;
+
+    $("#listDomains").hide();
+
+
+    $scope.showListDomains = function () {
+        fetchDomains();
+        $("#listDomains").fadeIn();
+    };
+
+    $scope.hideListDomains = function () {
+        $("#listDomains").fadeOut();
+    };
+
+    function fetchDomains(){
+                $scope.domainLoading = false;
+
+                var url = "/websites/fetchDomains";
+
+                var data = {
+                    masterDomain:$("#domainNamePage").text(),
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.fetchStatus === 1){
+
+                        $scope.childDomains = JSON.parse(response.data.data);
+                        $scope.domainLoading = true;
+
+
+                    }
+                    else{
+                        $scope.domainError = false;
+                        $scope.errorMessage = response.data.error_message;
+                        $scope.domainLoading = true;
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                $scope.couldNotConnect = false;
+
+                }
+
     }
+
+
+    $scope.changePHP = function(childDomain,phpSelection){
+
+                // notifcations
+
+                $scope.phpChanged = true;
+                $scope.domainError = true;
+                $scope.couldNotConnect = true;
+                $scope.domainDeleted = true;
+                $scope.sslIssued = true;
+                $scope.domainLoading = false;
+
+                var url = "/websites/changePHP";
+
+                var data = {
+                    childDomain:childDomain,
+                    phpSelection:phpSelection,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.changePHP === 1){
+
+                        $scope.domainLoading = true;
+
+                        $scope.changedPHPVersion = phpSelection;
+
+
+                        // notifcations
+
+                        $scope.phpChanged = false;
+                        $scope.domainError = true;
+                        $scope.couldNotConnect = true;
+                        $scope.domainDeleted = true;
+                        $scope.sslIssued = true;
+
+
+                    }
+                    else{
+                        $scope.errorMessage = response.data.error_message;
+                        $scope.domainLoading = true;
+
+                        // notifcations
+
+                        $scope.phpChanged = true;
+                        $scope.domainError = false;
+                        $scope.couldNotConnect = true;
+                        $scope.domainDeleted = true;
+                        $scope.sslIssued = true;
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.domainLoading = true;
+
+                         // notifcations
+
+                        $scope.phpChanged = true;
+                        $scope.domainError = false;
+                        $scope.couldNotConnect = true;
+                        $scope.domainDeleted = true;
+                        $scope.sslIssued = true;
+
+                }
+
+    }
+
+    $scope.deleteChildDomain = function(childDomain){
+                $scope.domainLoading = false;
+
+                // notifcations
+
+                $scope.phpChanged = true;
+                $scope.domainError = true;
+                $scope.couldNotConnect = true;
+                $scope.domainDeleted = true;
+                $scope.sslIssued = true;
+
+                url = "/websites/submitDomainDeletion";
+
+                var data = {
+                    websiteName: childDomain,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.websiteDeleteStatus === 1){
+
+                        $scope.domainLoading = true;
+                        $scope.deletedDomain = childDomain;
+
+                        fetchDomains();
+
+
+                        // notifications
+
+                        $scope.phpChanged = true;
+                        $scope.domainError = true;
+                        $scope.couldNotConnect = true;
+                        $scope.domainDeleted = false;
+                        $scope.sslIssued = true;
+
+
+
+                    }
+                    else{
+                        $scope.errorMessage = response.data.error_message;
+                        $scope.domainLoading = true;
+
+                        // notifcations
+
+                        $scope.phpChanged = true;
+                        $scope.domainError = false;
+                        $scope.couldNotConnect = true;
+                        $scope.domainDeleted = true;
+                        $scope.sslIssued = true;
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.domainLoading = true;
+
+                         // notifcations
+
+                        $scope.phpChanged = true;
+                        $scope.domainError = true;
+                        $scope.couldNotConnect = false;
+                        $scope.domainDeleted = true;
+                        $scope.sslIssued = true;
+
+                }
+
+    }
+
+    $scope.issueSSL = function(childDomain,path){
+                $scope.domainLoading = false;
+
+                // notifcations
+
+                $scope.phpChanged = true;
+                $scope.domainError = true;
+                $scope.couldNotConnect = true;
+                $scope.domainDeleted = true;
+                $scope.sslIssued = true;
+
+                var url = "/manageSSL/issueSSL";
+
+
+                var data = {
+                    virtualHost:childDomain,
+                    path:path,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.SSL == 1){
+
+                        $scope.domainLoading = true;
+
+                        // notifcations
+
+                        $scope.phpChanged = true;
+                        $scope.domainError = true;
+                        $scope.couldNotConnect = true;
+                        $scope.domainDeleted = true;
+                        $scope.sslIssued = false;
+
+
+
+                        $scope.sslDomainIssued = childDomain;
+
+
+                    }
+
+                    else
+                    {
+                        $scope.domainLoading = true;
+
+                        $scope.errorMessage = response.data.error_message;
+
+                        // notifcations
+
+                        $scope.phpChanged = true;
+                        $scope.domainError = false;
+                        $scope.couldNotConnect = true;
+                        $scope.domainDeleted = true;
+                        $scope.sslIssued = true;
+
+                    }
+
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    // notifcations
+
+                    $scope.phpChanged = true;
+                    $scope.domainError = true;
+                    $scope.couldNotConnect = false;
+                    $scope.domainDeleted = true;
+                    $scope.sslIssued = true;
+
+
+                }
+
+
+
+
+
+    };
+
+
 
 
 });
