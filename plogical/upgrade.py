@@ -100,6 +100,8 @@ class Upgrade:
         upgradeLog.close()
 
 
+
+
         print("Upgrade Completed.")
 
     @staticmethod

@@ -38,8 +38,8 @@ python install.py [IP Address]
 
 # Resources
 
-* [Official Site.](http://cyberpanel.net)
-* [Documentation.](http://docs.cyberpanel.net)
+* [Official Site.](https://cyberpanel.net)
+* [Documentation.](https://docs.cyberpanel.net)
 * [Forums.](https://forums.cyberpanel.net)
 
 

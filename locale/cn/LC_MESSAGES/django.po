@@ -11,19 +11,20 @@
 #: baseTemplate/templates/baseTemplate/index.html:374
 #: baseTemplate/templates/baseTemplate/index.html:380
 #: baseTemplate/templates/baseTemplate/index.html:386
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-10-29 20:47+0500\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2017-10-30 10:05+0500\n"
+"PO-Revision-Date: 2017-10-29 19:32+0100\n"
+"Last-Translator: \n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
-"Language: \n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 2.0.4\n"
 
 #: CyberCP/settings.py:167
 msgid "English"
@@ -47,7 +48,7 @@ msgstr "日语"
 
 #: CyberCP/settings.py:172
 msgid "Bosnian"
-msgstr ""
+msgstr "波斯尼亚语"
 
 #: backup/templates/backup/backup.html:3 backup/templates/backup/backup.html:13
 #: backup/templates/backup/backup.html:20
@@ -107,10 +108,8 @@ msgid "Create Back up"
 msgstr "创建备份"
 
 #: backup/templates/backup/backup.html:87
-#, fuzzy
-#| msgid "Create Back up"
 msgid "Cancel Backup"
-msgstr "创建备份"
+msgstr "取消备份"
 
 #: backup/templates/backup/backup.html:101
 #: backup/templates/backup/backupDestinations.html:90
@@ -302,7 +301,7 @@ msgstr "备份 - CyberPanel"
 #: baseTemplate/templates/baseTemplate/homePage.html:269
 #: baseTemplate/templates/baseTemplate/index.html:554
 #: baseTemplate/templates/baseTemplate/index.html:556
-#: baseTemplate/templates/baseTemplate/index.html:572
+#: baseTemplate/templates/baseTemplate/index.html:573
 msgid "Back up"
 msgstr "备份"
 
@@ -327,8 +326,6 @@ msgid "Available Functions"
 msgstr "可用功能"
 
 #: backup/templates/backup/index.html:27 backup/templates/backup/index.html:43
-#, fuzzy
-#| msgid "Back up Website"
 msgid "Back up Site"
 msgstr "备份网站"
 
@@ -343,68 +340,50 @@ msgid "Restore"
 msgstr "还原"
 
 #: backup/templates/backup/remoteBackups.html:3
-#, fuzzy
-#| msgid "Websites Hosted - CyberPanel"
 msgid "Transfer Websites from Remote Server - CyberPanel"
-msgstr "当前已创建的网站 - CyberPanel"
+msgstr "从远程服务器恢复网站 - CyberPanel"
 
 #: backup/templates/backup/remoteBackups.html:14
 #: backup/templates/backup/remoteBackups.html:21
-#, fuzzy
-#| msgid "Restore Back up"
 msgid "Remote Backups"
-msgstr "还原备份"
+msgstr "远程备份"
 
 #: backup/templates/backup/remoteBackups.html:15
 msgid "This feature can import website(s) from remote server"
-msgstr ""
+msgstr "此功能可以从远程服务器导入网站"
 
 #: backup/templates/backup/remoteBackups.html:46
-#, fuzzy
-#| msgid "FTP Accounts"
 msgid "Fetch Accounts"
-msgstr "FTP用户数量"
+msgstr "读取"
 
 #: backup/templates/backup/remoteBackups.html:55
 msgid "Start Transfer"
-msgstr ""
+msgstr "开始迁移"
 
 #: backup/templates/backup/remoteBackups.html:59
 #: websiteFunctions/templates/websiteFunctions/website.html:269
-#, fuzzy
-#| msgid "Create Back up"
 msgid "Cancel"
-msgstr "创建备份"
+msgstr "取消"
 
 #: backup/templates/backup/remoteBackups.html:72
-#, fuzzy
-#| msgid "Could not connect. Please refresh this page."
 msgid "Could not connect, please refresh this page."
-msgstr "无法连接, 请刷新此页面"
+msgstr "无法连接, 请刷新此页面."
 
 #: backup/templates/backup/remoteBackups.html:76
-#, fuzzy
-#| msgid "Records successfully fetched for"
 msgid "Accounts Successfully Fetched from remote server."
-msgstr "成功读取记录"
+msgstr "成功读取记录."
 
 #: backup/templates/backup/remoteBackups.html:80
-#, fuzzy
-#| msgid " is successfully created."
 msgid "Backup Process successfully started."
-msgstr " 已成功创建"
+msgstr " 已成功创建."
 
 #: backup/templates/backup/remoteBackups.html:84
-#, fuzzy
-#| msgid "is successfully created."
 msgid "Backup successfully cancelled."
-msgstr "已成功添加"
+msgstr "已成功添加."
 
 #: backup/templates/backup/remoteBackups.html:96
-#, fuzzy
-#| msgid "Select Account"
 msgid "Search Accounts.."
-msgstr "选择用户"
+msgstr "搜索用户..."
 
 #: backup/templates/backup/remoteBackups.html:107
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:65
@@ -413,8 +392,8 @@ msgstr "网站"
 
 #: backup/templates/backup/remoteBackups.html:108
 #: baseTemplate/templates/baseTemplate/homePage.html:331
-#: baseTemplate/templates/baseTemplate/index.html:625
-#: baseTemplate/templates/baseTemplate/index.html:627
+#: baseTemplate/templates/baseTemplate/index.html:626
+#: baseTemplate/templates/baseTemplate/index.html:628
 #: managePHP/templates/managePHP/installExtensions.html:62
 msgid "PHP"
 msgstr "PHP"
@@ -545,10 +524,8 @@ msgid "Websites"
 msgstr "网站"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:199
-#, fuzzy
-#| msgid "Modify Package"
 msgid "Add/Modify Packages"
-msgstr "修改套餐"
+msgstr "创建/修改套餐"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:202
 #: baseTemplate/templates/baseTemplate/index.html:366
@@ -612,30 +589,28 @@ msgstr "服务器设置"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:315
 #: baseTemplate/templates/baseTemplate/homePage.html:318
-#: baseTemplate/templates/baseTemplate/index.html:606
-#: baseTemplate/templates/baseTemplate/index.html:608
-#: baseTemplate/templates/baseTemplate/index.html:641
+#: baseTemplate/templates/baseTemplate/index.html:607
+#: baseTemplate/templates/baseTemplate/index.html:609
+#: baseTemplate/templates/baseTemplate/index.html:642
 #: serverStatus/templates/serverStatus/index.html:13
 msgid "Server Status"
 msgstr "服务器状态"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:328
-#, fuzzy
-#| msgid "Edit PHP Configurations"
 msgid "PHP Configurations"
 msgstr "设置PHP参数"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:340
 #: baseTemplate/templates/baseTemplate/homePage.html:343
-#: baseTemplate/templates/baseTemplate/index.html:643
+#: baseTemplate/templates/baseTemplate/index.html:644
 #: websiteFunctions/templates/websiteFunctions/website.html:113
 msgid "Logs"
 msgstr "日志"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:363
 #: baseTemplate/templates/baseTemplate/homePage.html:366
-#: baseTemplate/templates/baseTemplate/index.html:659
-#: baseTemplate/templates/baseTemplate/index.html:661
+#: baseTemplate/templates/baseTemplate/index.html:660
+#: baseTemplate/templates/baseTemplate/index.html:662
 msgid "Security"
 msgstr "安全"
 
@@ -652,10 +627,8 @@ msgstr "硬盘使用量"
 #: baseTemplate/templates/baseTemplate/index.html:275
 #: baseTemplate/templates/baseTemplate/index.html:278
 #: baseTemplate/templates/baseTemplate/index.html:282
-#, fuzzy
-#| msgid "Home - CyberPanel"
 msgid "CyberPanel"
-msgstr "主页 - Cyberpanel"
+msgstr "CyberPanel"
 
 #: baseTemplate/templates/baseTemplate/index.html:280
 #: baseTemplate/templates/baseTemplate/index.html:284
@@ -667,10 +640,8 @@ msgid "Close sidebar"
 msgstr "关闭侧边栏"
 
 #: baseTemplate/templates/baseTemplate/index.html:292
-#, fuzzy
-#| msgid "FTP Accounts"
 msgid "My Account"
-msgstr "FTP用户数量"
+msgstr "我的账号"
 
 #: baseTemplate/templates/baseTemplate/index.html:309
 msgid "Edit profile"
@@ -699,20 +670,16 @@ msgid "Fullscreen"
 msgstr "全屏模式"
 
 #: baseTemplate/templates/baseTemplate/index.html:345
-#, fuzzy
-#| msgid "Server Status"
 msgid "System Status"
-msgstr "服务器状态"
+msgstr "系统状态"
 
 #: baseTemplate/templates/baseTemplate/index.html:350
-#, fuzzy
-#| msgid "Dashboard"
 msgid "Dashboard Quick Menu"
 msgstr "仪表盘"
 
 #: baseTemplate/templates/baseTemplate/index.html:384
-#: baseTemplate/templates/baseTemplate/index.html:590
-#: baseTemplate/templates/baseTemplate/index.html:592
+#: baseTemplate/templates/baseTemplate/index.html:591
+#: baseTemplate/templates/baseTemplate/index.html:593
 msgid "Tuning"
 msgstr "服务器设置"
 
@@ -951,78 +918,84 @@ msgstr "查看FTP用户"
 msgid "Add/Delete Destination"
 msgstr "添加/删除远程目录"
 
-#: baseTemplate/templates/baseTemplate/index.html:573
+#: baseTemplate/templates/baseTemplate/index.html:565
+#, fuzzy
+#| msgid "Remote Backups"
+msgid "Remote Back ups"
+msgstr "远程备份"
+
 #: baseTemplate/templates/baseTemplate/index.html:574
+#: baseTemplate/templates/baseTemplate/index.html:575
 msgid "SSL"
 msgstr "SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:579
+#: baseTemplate/templates/baseTemplate/index.html:580
 #: manageSSL/templates/manageSSL/index.html:28
 #: manageSSL/templates/manageSSL/manageSSL.html:13
 #: manageSSL/templates/manageSSL/manageSSL.html:20
 msgid "Manage SSL"
 msgstr "管理SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:580
+#: baseTemplate/templates/baseTemplate/index.html:581
 #: manageSSL/templates/manageSSL/index.html:40
 msgid "Hostname SSL"
 msgstr "面板SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:588
+#: baseTemplate/templates/baseTemplate/index.html:589
 msgid "Server"
 msgstr "服务器设置"
 
-#: baseTemplate/templates/baseTemplate/index.html:593
+#: baseTemplate/templates/baseTemplate/index.html:594
 msgid "NEW"
 msgstr "新功能"
 
-#: baseTemplate/templates/baseTemplate/index.html:598
+#: baseTemplate/templates/baseTemplate/index.html:599
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
 #: tuning/templates/tuning/liteSpeedTuning.html:12
 msgid "LiteSpeed Tuning"
 msgstr "LiteSpeed设置"
 
-#: baseTemplate/templates/baseTemplate/index.html:599
+#: baseTemplate/templates/baseTemplate/index.html:600
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13
 msgid "PHP Tuning"
 msgstr "PHP设置"
 
-#: baseTemplate/templates/baseTemplate/index.html:614
+#: baseTemplate/templates/baseTemplate/index.html:615
 #: serverStatus/templates/serverStatus/index.html:25
 #: serverStatus/templates/serverStatus/index.html:27
 msgid "LiteSpeed Status"
 msgstr "LiteSpeed状态"
 
-#: baseTemplate/templates/baseTemplate/index.html:615
+#: baseTemplate/templates/baseTemplate/index.html:616
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:15
 #: serverStatus/templates/serverStatus/index.html:37
 #: serverStatus/templates/serverStatus/index.html:39
 msgid "CyberPanel Main Log File"
 msgstr "Cybapenl主日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:632
+#: baseTemplate/templates/baseTemplate/index.html:633
 #: managePHP/templates/managePHP/installExtensions.html:13
 msgid "Install PHP Extensions"
 msgstr "安装PHP扩展"
 
-#: baseTemplate/templates/baseTemplate/index.html:632
+#: baseTemplate/templates/baseTemplate/index.html:633
 #: managePHP/templates/managePHP/index.html:24
 #: managePHP/templates/managePHP/index.html:26
 msgid "Install Extensions"
 msgstr "安装扩展"
 
-#: baseTemplate/templates/baseTemplate/index.html:633
+#: baseTemplate/templates/baseTemplate/index.html:634
 #: managePHP/templates/managePHP/index.html:36
 #: managePHP/templates/managePHP/index.html:38
 msgid "Edit PHP Configs"
 msgstr "编辑PHP配置"
 
-#: baseTemplate/templates/baseTemplate/index.html:648
+#: baseTemplate/templates/baseTemplate/index.html:649
 msgid "Access Log"
 msgstr "访问日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:649
+#: baseTemplate/templates/baseTemplate/index.html:650
 #: serverLogs/templates/serverLogs/errorLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:37
 #: serverLogs/templates/serverLogs/index.html:39
@@ -1030,37 +1003,35 @@ msgstr "访问日志"
 msgid "Error Logs"
 msgstr "错误日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:650
+#: baseTemplate/templates/baseTemplate/index.html:651
 #: serverLogs/templates/serverLogs/emailLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:49
 #: serverLogs/templates/serverLogs/index.html:51
 msgid "Email Logs"
 msgstr "Email日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:650
+#: baseTemplate/templates/baseTemplate/index.html:651
 msgid "Email Log"
 msgstr "Email日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:651
+#: baseTemplate/templates/baseTemplate/index.html:652
 #: serverLogs/templates/serverLogs/ftplogs.html:14
 #: serverLogs/templates/serverLogs/index.html:61
 #: serverLogs/templates/serverLogs/index.html:63
 msgid "FTP Logs"
 msgstr "FTP日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:666
-#, fuzzy
-#| msgid "Firewall"
+#: baseTemplate/templates/baseTemplate/index.html:667
 msgid "Firewall Home"
 msgstr "防火墙"
 
-#: baseTemplate/templates/baseTemplate/index.html:666
+#: baseTemplate/templates/baseTemplate/index.html:667
 #: firewall/templates/firewall/index.html:25
 #: firewall/templates/firewall/index.html:27
 msgid "Firewall"
 msgstr "防火墙"
 
-#: baseTemplate/templates/baseTemplate/index.html:667
+#: baseTemplate/templates/baseTemplate/index.html:668
 #: firewall/templates/firewall/index.html:36
 #: firewall/templates/firewall/index.html:38
 #: firewall/templates/firewall/secureSSH.html:13
@@ -1192,10 +1163,8 @@ msgid "Records successfully fetched for"
 msgstr "成功读取记录"
 
 #: databases/templates/databases/listDataBases.html:50
-#, fuzzy
-#| msgid "Password changed for"
 msgid "Password changed for: "
-msgstr "已为修改密码"
+msgstr "已为修改密码 "
 
 #: databases/templates/databases/listDataBases.html:54
 msgid "Cannot change password for "
@@ -1402,8 +1371,6 @@ msgid "Create, edit and delete DNS zones on this page."
 msgstr "在此页面添加, 修改, 删除DNS区域"
 
 #: dns/templates/dns/index.html:53 dns/templates/dns/index.html:108
-#, fuzzy
-#| msgid "Add/Delete Records"
 msgid "Add Delete Records"
 msgstr "添加/删除记录"
 
@@ -1479,10 +1446,8 @@ msgid "Secure SSH - CyberPanel"
 msgstr "SSH加固 - CyberPanel"
 
 #: firewall/templates/firewall/secureSSH.html:14
-#, fuzzy
-#| msgid "SSH Configurations Saved."
 msgid "Secure or harden SSH Configurations."
-msgstr "SSH设置已保存"
+msgstr "SSH设置已保存."
 
 #: firewall/templates/firewall/secureSSH.html:28
 #: managePHP/templates/managePHP/editPHPConfig.html:29
@@ -1798,10 +1763,8 @@ msgid "Select PHP Version"
 msgstr "选择PHP版本"
 
 #: managePHP/templates/managePHP/installExtensions.html:48
-#, fuzzy
-#| msgid "Install Extensions"
 msgid "Search Extensions.."
-msgstr "安装扩展"
+msgstr "搜索扩展..."
 
 #: managePHP/templates/managePHP/installExtensions.html:63
 msgid "Extension Name"
@@ -1914,15 +1877,11 @@ msgstr "套餐名称"
 #: packages/templates/packages/createPackage.html:35
 #: packages/templates/packages/modifyPackage.html:40
 #: websiteFunctions/templates/websiteFunctions/website.html:223
-#, fuzzy
-#| msgid "Domain Name"
 msgid "Domains"
 msgstr "域名"
 
 #: packages/templates/packages/createPackage.html:39
 #: packages/templates/packages/modifyPackage.html:44
-#, fuzzy
-#| msgid "( 0 = Unlimited )"
 msgid "(0 = Unlimited)"
 msgstr "(0为无限制 )"
 
@@ -2103,12 +2062,12 @@ msgstr "LiteSpeed状态 - CyberPanel"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:16
 msgid "LiteSpeed Status:"
-msgstr "LiteSpeed状态: "
+msgstr "LiteSpeed状态:"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:17
 msgid ""
 "On this page you can get information regarding your LiteSpeed processes."
-msgstr "此页面可以查看LiteSpeed进程信息"
+msgstr "此页面可以查看LiteSpeed进程信息."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:32
 msgid "LiteSpeed Processes"
@@ -2134,11 +2093,9 @@ msgstr "工作进程"
 msgid ""
 "Could not fetch details, either LiteSpeed is not running or some error "
 "occurred, please see CyberPanel Main log file."
-msgstr "无法获取详情, LiteSpeed没有运行或者有错误发生 请检查CyberPnael日志"
+msgstr "无法获取详情, LiteSpeed没有运行或者有错误发生 请检查CyberPnael日志."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:72
-#, fuzzy
-#| msgid "Reboot LiteSpeed"
 msgid "Reboot Litespeed"
 msgstr "重启LiteSpeed"
 
@@ -2148,11 +2105,11 @@ msgstr "停止LiteSpeed"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:90
 msgid "Error Occurred. See CyberPanel main log file."
-msgstr "发生错误, 请查看CyberPanel主日志"
+msgstr "发生错误, 请查看CyberPanel主日志."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:95
 msgid "Could not connect to server."
-msgstr "无法连接到服务器"
+msgstr "无法连接到服务器."
 
 #: tuning/templates/tuning/index.html:3
 msgid "Server Tuning - CyberPanel"
@@ -2162,7 +2119,7 @@ msgstr "服务器设置 - CyberPanel"
 msgid ""
 "On this page you can set runing parameters for your webserver depending on "
 "your hardware."
-msgstr "此页面您可以根据您的服务器硬件调整Web服务器参数 "
+msgstr "此页面您可以根据您的服务器硬件调整Web服务器参数 ."
 
 #: tuning/templates/tuning/liteSpeedTuning.html:3
 msgid "LiteSpeed Tuning - CyberPanel"
@@ -2172,7 +2129,7 @@ msgstr "LiteSpeed设置 - CyberPanel"
 msgid ""
 "You can use this page to tweak your server according to your website "
 "requirments."
-msgstr "此页面您可以根据您的网站要求调整服务器参数 "
+msgstr "此页面您可以根据您的网站要求调整服务器参数."
 
 #: tuning/templates/tuning/liteSpeedTuning.html:18
 msgid "Tuning Details"
@@ -2217,7 +2174,7 @@ msgstr "关闭"
 #: tuning/templates/tuning/phpTuning.html:97
 #: userManagment/templates/userManagment/modifyUser.html:78
 msgid "Currently:"
-msgstr "当前: "
+msgstr "当前:"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:82
 msgid "Tune Web Server"
@@ -2237,7 +2194,7 @@ msgstr "无法保存设置, 错误信息: "
 
 #: tuning/templates/tuning/liteSpeedTuning.html:102
 msgid "Web Server Successfully tuned."
-msgstr "Web服务器设置成功保存"
+msgstr "Web服务器设置成功保存."
 
 #: tuning/templates/tuning/phpTuning.html:3
 msgid "PHP Tuning - CyberPanel"
@@ -2245,7 +2202,7 @@ msgstr "PHP设置 - CyberPanel"
 
 #: tuning/templates/tuning/phpTuning.html:14
 msgid "Set how each version of PHP behaves in your server here."
-msgstr "在此调整每个PHP版本"
+msgstr "在此调整每个PHP版本."
 
 #: tuning/templates/tuning/phpTuning.html:45
 msgid "Initial Request Timeout (secs)"
@@ -2277,19 +2234,19 @@ msgstr "设置PHP"
 
 #: tuning/templates/tuning/phpTuning.html:118
 msgid "Cannot tune. Error message:"
-msgstr "无法保存设置, 错误信息: "
+msgstr "无法保存设置, 错误信息:"
 
 #: tuning/templates/tuning/phpTuning.html:123
 msgid "Details Successfully fetched."
-msgstr "详情读取成功"
+msgstr "详情读取成功."
 
 #: tuning/templates/tuning/phpTuning.html:127
 msgid "PHP version "
-msgstr "PHP版本"
+msgstr "PHP版本 "
 
 #: tuning/templates/tuning/phpTuning.html:127
 msgid "Successfully tuned."
-msgstr "已成功保存"
+msgstr "已成功保存."
 
 #: userManagment/templates/userManagment/createUser.html:3
 msgid "Create New User - CyberPanel"
@@ -2297,7 +2254,7 @@ msgstr "创建新用户 - CyberPanel"
 
 #: userManagment/templates/userManagment/createUser.html:13
 msgid "Create root, reseller or normal users on this page."
-msgstr "在此页面创建管理员, 分销商以及普通用户"
+msgstr "在此页面创建管理员, 分销商以及普通用户."
 
 #: userManagment/templates/userManagment/createUser.html:19
 msgid "User Details"
@@ -2311,7 +2268,7 @@ msgstr "名"
 
 #: userManagment/templates/userManagment/createUser.html:32
 msgid "First Name should contain only alphabetic characters."
-msgstr "名 中只能包含字母"
+msgstr "名 中只能包含字母."
 
 #: userManagment/templates/userManagment/createUser.html:37
 #: userManagment/templates/userManagment/modifyUser.html:46
@@ -2321,7 +2278,7 @@ msgstr "姓"
 
 #: userManagment/templates/userManagment/createUser.html:41
 msgid "Last Name should contain only alphabetic characters."
-msgstr "姓 中只能包含字母"
+msgstr "姓 中只能包含字母."
 
 #: userManagment/templates/userManagment/createUser.html:51
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:64
@@ -2370,11 +2327,11 @@ msgstr "用户名"
 
 #: userManagment/templates/userManagment/createUser.html:117
 msgid "Username should be lowercase alphanumeric."
-msgstr "用户名应当为小写字母"
+msgstr "用户名应当为小写字母."
 
 #: userManagment/templates/userManagment/createUser.html:127
 msgid "Must contain one number and one special character."
-msgstr "必须一个数字和一个特殊符号"
+msgstr "必须一个数字和一个字母."
 
 #: userManagment/templates/userManagment/createUser.html:143
 #: userManagment/templates/userManagment/index.html:40
@@ -2385,17 +2342,17 @@ msgstr "创建用户"
 #: userManagment/templates/userManagment/createUser.html:154
 #: userManagment/templates/userManagment/modifyUser.html:131
 msgid "Account with username:"
-msgstr "用户名为: "
+msgstr "用户名为:"
 
 #: userManagment/templates/userManagment/createUser.html:158
 msgid "Cannot create user. Error message:"
-msgstr "无法创建用户, 错误信息: "
+msgstr "无法创建用户, 错误信息:"
 
 #: userManagment/templates/userManagment/createUser.html:166
 msgid ""
 "Length of first and last name combined should be less than or equal to 20 "
 "characters"
-msgstr "姓名总和的长度应该小于或等于20 "
+msgstr "姓名总和的长度应该小于或等于20"
 
 #: userManagment/templates/userManagment/deleteUser.html:3
 msgid "Delete User - CyberPanel"
@@ -2403,7 +2360,7 @@ msgstr "删除用户 - CyberPanel"
 
 #: userManagment/templates/userManagment/deleteUser.html:14
 msgid "Websites owned by this user will automatically transfer to the root."
-msgstr "此用户拥有的网站将自动移动到根目录"
+msgstr "此用户拥有的网站将自动移动到根目录."
 
 #: userManagment/templates/userManagment/deleteUser.html:29
 msgid "Select User"
@@ -2411,11 +2368,11 @@ msgstr "选择用户"
 
 #: userManagment/templates/userManagment/deleteUser.html:61
 msgid "Cannot delete user. Error message:"
-msgstr "无法删除用户, 错误信息: "
+msgstr "无法删除用户, 错误信息:"
 
 #: userManagment/templates/userManagment/deleteUser.html:65
 msgid "User "
-msgstr "用户"
+msgstr "用户 "
 
 #: userManagment/templates/userManagment/index.html:3
 msgid "User Functions - CyberPanel"
@@ -2423,7 +2380,7 @@ msgstr "用户功能 - CyberPanel"
 
 #: userManagment/templates/userManagment/index.html:14
 msgid "Create, edit and delete users on this page."
-msgstr "在此页面创建, 编辑和删除用户"
+msgstr "在此页面创建, 编辑和删除用户."
 
 #: userManagment/templates/userManagment/modifyUser.html:3
 msgid "Modify User - CyberPanel"
@@ -2431,7 +2388,7 @@ msgstr "编辑用户 - CyberPanel"
 
 #: userManagment/templates/userManagment/modifyUser.html:13
 msgid "Modify existing user settings on this page."
-msgstr "在此页面编辑已存在用户"
+msgstr "在此页面编辑已存在用户."
 
 #: userManagment/templates/userManagment/modifyUser.html:26
 msgid "Select Account"
@@ -2443,15 +2400,15 @@ msgstr "Admin"
 
 #: userManagment/templates/userManagment/modifyUser.html:131
 msgid " is successfully modified."
-msgstr "已成功修改"
+msgstr "已成功修改."
 
 #: userManagment/templates/userManagment/modifyUser.html:135
 msgid "Cannot modify user. Error message:"
-msgstr "无法编辑用户, 错误信息: "
+msgstr "无法编辑用户, 错误信息:"
 
 #: userManagment/templates/userManagment/modifyUser.html:148
 msgid "Details fetched."
-msgstr "详情已更新"
+msgstr "详情已更新."
 
 #: userManagment/templates/userManagment/userProfile.html:3
 msgid "Account Details - CyberPanel"
@@ -2464,7 +2421,7 @@ msgstr "用户详情"
 
 #: userManagment/templates/userManagment/userProfile.html:13
 msgid "List the account details for the currently logged in user."
-msgstr "查看当前用户详情"
+msgstr "查看当前用户详情."
 
 #: userManagment/templates/userManagment/userProfile.html:58
 msgid "Account Level"
@@ -2486,7 +2443,7 @@ msgstr "创建新网站 - CyberPanel"
 msgid ""
 "On this page you can launch, list, modify and delete websites from your "
 "server."
-msgstr "在此页面可以创建,查看,修改和删除您服务器上的网站 "
+msgstr "在此页面可以创建,查看,修改和删除您服务器上的网站."
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:20
 msgid "Website Details"
@@ -2515,12 +2472,12 @@ msgid ""
 "SSL will be issued, you can add your own SSL later."
 msgstr ""
 "为确定SSL证书的正确签发,域名必须指向此服务器,否则将会签发自签名证书 您可以在"
-"之后添加自有证书或重新申请签发Let's Encrypt证书"
+"之后添加自有证书或重新申请签发Let's Encrypt证书."
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:113
 #: websiteFunctions/templates/websiteFunctions/website.html:328
 msgid "Cannot create website. Error message:"
-msgstr "无法创建网站, 错误信息: "
+msgstr "无法创建网站, 错误信息:"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:117
 #: websiteFunctions/templates/websiteFunctions/website.html:332
@@ -2540,7 +2497,7 @@ msgstr "删除网站 - CyberPanel"
 msgid ""
 "This page can be used to delete website, once deleted it can not be "
 "recovered."
-msgstr "在此页面可以删除网站,此操作不可逆 "
+msgstr "在此页面可以删除网站,此操作不可逆."
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:61
 msgid "Cannot delete website, Error message: "
@@ -2548,7 +2505,7 @@ msgstr "无法删除网站, 错误信息: "
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:65
 msgid "Successfully Deleted."
-msgstr "成功删除"
+msgstr "成功删除."
 
 #: websiteFunctions/templates/websiteFunctions/index.html:3
 msgid "Website Functions - CyberPanel"
@@ -2567,7 +2524,7 @@ msgstr "当前已创建的网站 - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:51
 msgid "Cannot list websites. Error message:"
-msgstr "无法查看网站, 错误信息: "
+msgstr "无法查看网站, 错误信息:"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:3
 msgid "Modify Website - CyberPanel"
@@ -2575,19 +2532,19 @@ msgstr "修改网站 - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:51
 msgid "Current Package:"
-msgstr "当前套餐: "
+msgstr "当前套餐:"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:62
 msgid "Current Owner:"
-msgstr "当前拥有者: "
+msgstr "当前拥有者:"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:104
 msgid "Cannot fetch website details. Error message:"
-msgstr "无法更新网站详情, 错误信息: "
+msgstr "无法更新网站详情, 错误信息:"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:108
 msgid "Cannot modify website. Error message:"
-msgstr "无法修改网站, 错误信息: "
+msgstr "无法修改网站, 错误信息:"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:112
 msgid "Website Details Successfully fetched"
@@ -2599,7 +2556,7 @@ msgstr "禁用/启用网站 - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:14
 msgid "This page can be used to suspend/unsuspend website."
-msgstr "此页面可以禁用/启用网站"
+msgstr "此页面可以禁用/启用网站."
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:44
 msgid "Suspend"
@@ -2615,19 +2572,19 @@ msgstr "无法禁用网站, 错误信息: "
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:69
 msgid "Cannot unsuspend website. Error message:"
-msgstr "无法启用网站, 错误信息: "
+msgstr "无法启用网站, 错误信息:"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:73
 msgid "Website "
-msgstr "网站"
+msgstr "网站 "
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:73
 msgid "Successfully "
-msgstr "成功"
+msgstr "成功 "
 
 #: websiteFunctions/templates/websiteFunctions/website.html:15
 msgid "All functions related to a particular site."
-msgstr "所有与网站相关的功能"
+msgstr "所有与网站相关的功能."
 
 #: websiteFunctions/templates/websiteFunctions/website.html:23
 msgid "Resource Usage"
@@ -2647,16 +2604,12 @@ msgid "Bandwidth Usage"
 msgstr "流量使用量"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:119
-#, fuzzy
-#| msgid "Access Logs"
 msgid "Load Access Logs"
-msgstr "访问日志"
+msgstr "读取访问日志"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:131
-#, fuzzy
-#| msgid "Error Logs"
 msgid "Load Error Logs"
-msgstr "错误日志"
+msgstr "读取错误日志"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:147
 msgid "Logs Fetched"
@@ -2677,17 +2630,13 @@ msgstr "上一个"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:230
 #: websiteFunctions/templates/websiteFunctions/website.html:232
-#, fuzzy
-#| msgid "Add Destination"
 msgid "Add Domains"
-msgstr "添加远程目录"
+msgstr "添加域名"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:242
 #: websiteFunctions/templates/websiteFunctions/website.html:244
-#, fuzzy
-#| msgid "Select Domain"
 msgid "List Domains"
-msgstr "选择域名"
+msgstr "查看域名"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:274
 #: websiteFunctions/templates/websiteFunctions/website.html:733
@@ -2696,45 +2645,33 @@ msgstr "路径"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:276
 msgid "This path is relative to: "
-msgstr ""
+msgstr "此目录相对与:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:276
-#, fuzzy
-#| msgid "Leave empty to select default home directory."
 msgid "Leave empty to set default."
-msgstr "留空则设置为默认根目录"
+msgstr "留空则设置为默认根目录."
 
 #: websiteFunctions/templates/websiteFunctions/website.html:317
-#, fuzzy
-#| msgid "Create Email"
 msgid "Create Domain"
-msgstr "创建Email"
+msgstr "创建域名"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:360
-#, fuzzy
-#| msgid "Version Management"
 msgid "PHP Version Changed to:"
-msgstr "版本管理"
+msgstr "版本管理:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:364
-#, fuzzy
-#| msgid "Delete"
 msgid "Deleted:"
-msgstr "删除"
+msgstr "删除:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:368
-#, fuzzy
-#| msgid "SSL Issued for"
 msgid "SSL Issued:"
-msgstr "已为签发证书"
+msgstr "已为签发证书:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:391
 msgid "Close"
-msgstr ""
+msgstr "关闭"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:423
-#, fuzzy
-#| msgid "Issue SSL"
 msgid "Issue"
 msgstr "签发SSL证书"
 
@@ -2743,8 +2680,6 @@ msgid "Configurations"
 msgstr "配置"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:457
-#, fuzzy
-#| msgid "Edit vHost Main Configurations"
 msgid "Edit Virtual Host Main Configurations"
 msgstr "编辑vHost主配置"
 
@@ -2758,8 +2693,6 @@ msgid "Add Rewrite Rules (.htaccess)"
 msgstr "添加Rewrite Rules (.htaccess)"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:481
-#, fuzzy
-#| msgid "Add SSL"
 msgid "Add Your Own SSL"
 msgstr "添加SSL证书"
 
@@ -2773,33 +2706,33 @@ msgstr "SSL证书已保存"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:503
 msgid "Could not save SSL. Error message:"
-msgstr "无法保存SSL证书, 错误信息: "
+msgstr "无法保存SSL证书, 错误信息:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:553
 msgid "Current configuration in the file fetched."
-msgstr "当前配置读取成功"
+msgstr "当前配置读取成功."
 
 #: websiteFunctions/templates/websiteFunctions/website.html:558
 #: websiteFunctions/templates/websiteFunctions/website.html:571
 msgid "Could not fetch current configuration. Error message:"
-msgstr "无法读取当前配置, 错误信息: "
+msgstr "无法读取当前配置, 错误信息:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:567
 #: websiteFunctions/templates/websiteFunctions/website.html:622
 msgid "Configuration saved. Restart LiteSpeed put them in effect."
-msgstr "配置已保存, 重启LiteSpeed以生效"
+msgstr "配置已保存, 重启LiteSpeed以生效."
 
 #: websiteFunctions/templates/websiteFunctions/website.html:608
 msgid "Current rewrite rules in the file fetched."
-msgstr "当前Rewrite rules读取成功"
+msgstr "当前Rewrite rules读取成功."
 
 #: websiteFunctions/templates/websiteFunctions/website.html:613
 msgid "Could not fetch current rewrite rules. Error message:"
-msgstr "无法读取当前Rewrite rules, 错误信息: "
+msgstr "无法读取当前Rewrite rules, 错误信息:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:626
 msgid "Could not save rewrite rules. Error message:"
-msgstr "无法保存Rewrite rules, 错误信息: "
+msgstr "无法保存Rewrite rules, 错误信息:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:642
 msgid "Save Rewrite Rules"
@@ -2819,10 +2752,8 @@ msgid "Application Installer"
 msgstr "应用安装器"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:719
-#, fuzzy
-#| msgid "Wordpress with LSCache"
 msgid "Install wordpress with LSCache"
-msgstr "Wordpress和LS Cache"
+msgstr "安装Wordpress和LS Cache"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:721
 msgid "Wordpress with LSCache"
@@ -2830,11 +2761,11 @@ msgstr "Wordpress和LS Cache"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:755
 msgid "Installation failed. Error message:"
-msgstr "安装失败, 错误信息: "
+msgstr "安装失败, 错误信息:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:759
 msgid "Installation successful. To complete the setup visit:"
-msgstr "安装成功, 请访问网站以完成设置"
+msgstr "安装成功, 请访问网站以完成设置:"
 
 #~ msgid "Urdu"
 #~ msgstr "乌尔都语"

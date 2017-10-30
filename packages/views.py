@@ -26,7 +26,11 @@ def createPacakge(request):
 
     try:
         val = request.session['userID']
+
         admin = Administrator.objects.get(pk=val)
+
+        if admin.type == 3:
+            return HttpResponse("You don't have enough privileges to access this page.")
 
     except KeyError:
         return redirect(loadLoginPage)
@@ -41,6 +45,9 @@ def deletePacakge(request):
         try:
 
             admin = Administrator.objects.get(pk=val)
+
+            if admin.type == 3:
+                return HttpResponse("You don't have enough privileges to access this page.")
 
             if admin.type == 1:
                 packages = Package.objects.all()
@@ -129,6 +136,9 @@ def modifyPackage(request):
         val = request.session['userID']
         try:
             admin = Administrator.objects.get(pk=val)
+
+            if admin.type == 3:
+                return HttpResponse("You don't have enough privileges to access this page.")
 
             if admin.type == 1:
                 packages = Package.objects.all()

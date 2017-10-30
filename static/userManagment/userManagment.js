@@ -22,9 +22,13 @@ app.controller('createUserCtr', function($scope,$http) {
             $scope.webLimits = false;
             $scope.acctsLimit = true;
         }
-        else{
+        else if($scope.accountType == "Reseller"){
             $scope.webLimits = false;
             $scope.acctsLimit = false;
+        }
+        else{
+            $scope.webLimits = true;
+            $scope.acctsLimit = true;
         }
 
     }

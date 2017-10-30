@@ -25,6 +25,8 @@ from os import listdir, rmdir
 from shutil import move
 from filemanager_app import views as fileManage
 from plogical.findBWUsage import findBWUsage
+from dns.models import Domains,Records
+import requests
 # Create your views here.
 
 
@@ -226,6 +228,15 @@ def submitWebsiteCreation(request):
                 except:
                     pass
 
+                try:
+                    website = ChildDomains.objects.get(domain=domain)
+                    data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
+                                'error_message': "Website Already Exists"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                except:
+                    pass
+
 
                 ####### Limitations check
 
@@ -311,6 +322,63 @@ def submitWebsiteCreation(request):
                                         ssl_responce) + ", for more information see CyberCP main log file."}
                         json_data = json.dumps(data_ret)
                         return HttpResponse(json_data)
+
+
+                ## zone creation and
+                try:
+
+                    newZone = Domains(admin=admin, name=domain, type="NATIVE")
+                    newZone.save()
+
+                    content = "ns1." + domain + " hostmaster." + domain + " 1 10800 3600 604800 3600"
+
+                    soaRecord = Records(domainOwner=newZone,
+                                        domain_id=newZone.id,
+                                        name=domain,
+                                        type="SOA",
+                                        content=content,
+                                        ttl=3600,
+                                        prio=0,
+                                        disabled=0,
+                                        auth=1)
+                    soaRecord.save()
+
+                    try:
+                        recordContentA = requests.get('https://api.ipify.org').text
+                        zone = Domains.objects.get(name=domain)
+                        record = Records(domainOwner=zone,
+                                         domain_id=zone.id,
+                                         name=domain,
+                                         type="A",
+                                         content=recordContentA,
+                                         ttl=3600,
+                                         prio=0,
+                                         disabled=0,
+                                         auth=1)
+                        record.save()
+                    except:
+                        pass
+
+                except:
+                    try:
+                        recordContentA = requests.get('https://api.ipify.org').text
+                        zone = Domains.objects.get(name=domain)
+                        record = Records(domainOwner=zone,
+                                         domain_id=zone.id,
+                                         name=domain,
+                                         type="A",
+                                         content=recordContentA,
+                                         ttl=3600,
+                                         prio=0,
+                                         disabled=0,
+                                         auth=1)
+                        record.save()
+                    except:
+                        pass
+
+                ## zone creation
+
+
 
                 selectedPackage = Package.objects.get(packageName=packageName)
 

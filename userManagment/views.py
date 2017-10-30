@@ -88,21 +88,24 @@ def submitUserCreation(request):
 
             currentAdmin = Administrator.objects.get(pk=val)
 
+            childUsers = Administrator.objects.filter(owner=currentAdmin.pk).count()
+
             if currentAdmin.type == 1:
                 pass
 
             else:
                 if currentAdmin.initWebsitesLimit == 0:
-                    currentAdmin.userAccountsLimit = currentAdmin.userAccountsLimit + 1
+                    pass
 
-                elif currentAdmin.userAccountsLimit != currentAdmin.initUserAccountsLimit:
-                    currentAdmin.userAccountsLimit = currentAdmin.userAccountsLimit + 1
-                else:
+                elif currentAdmin.initUserAccountsLimit == childUsers:
                     data_ret = {'createStatus': 0,
                                 'error_message': "Reached Maximum User Creation Limit"}
 
                     final_json = json.dumps(data_ret)
                     return HttpResponse(final_json)
+                else:
+                    pass
+
 
             if request.method == 'POST':
                 data = json.loads(request.body)
@@ -116,7 +119,27 @@ def submitUserCreation(request):
 
                 accountType = data['accountType']
 
-                if accountType == "Normal User":
+                if accountType == "Admin":
+
+                    newAdmin = Administrator(firstName=firstName,
+                                            lastName=lastName,
+                                            email=email,
+                                            type=1,
+                                            userName=userName,
+                                            password=password,
+                                            initWebsitesLimit=0,
+                                            owner=currentAdmin.pk
+                                            )
+                    newAdmin.save()
+                    currentAdmin.save()
+
+                    data_ret = {'createStatus': 1,
+                                'error_message': "None"}
+
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+
+                elif accountType == "Normal User":
                     websitesLimit = data['websitesLimit']
 
                     newAdmin = Administrator(firstName=firstName,
@@ -136,7 +159,6 @@ def submitUserCreation(request):
 
                     final_json = json.dumps(data_ret)
                     return HttpResponse(final_json)
-
                 else:
                     websitesLimit = data['websitesLimit']
                     userAccountsLimit = data['userAccountsLimit']
@@ -357,7 +379,7 @@ def deleteUser(request):
             admins = Administrator.objects.all()
             adminNames = []
             for items in admins:
-                if not items.type == 1:
+                if not items.userName == "admin":
                     adminNames.append(items.userName)
         else:
             admins = Administrator.objects.filter(owner=admin.pk)
