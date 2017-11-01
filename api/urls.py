@@ -19,4 +19,7 @@ urlpatterns = [
 
     url(r'^cancelRemoteTransfer', views.cancelRemoteTransfer, name='cancelRemoteTransfer'),
 
+
+    url(r'^cyberPanelVersion', views.cyberPanelVersion, name='cyberPanelVersion'),
+
 ]

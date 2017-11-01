@@ -53,6 +53,7 @@ def getCurrentRules(request):
                            'name': items.name,
                            'proto': items.proto,
                            'port': items.port,
+                           'ipAddress':items.ipAddress,
                            }
 
                     if checker == 0:
@@ -87,12 +88,12 @@ def addRule(request):
                 ruleName = data['ruleName']
                 ruleProtocol = data['ruleProtocol']
                 rulePort = data['rulePort']
+                ruleIP = data['ruleIP']
 
-                FirewallUtilities.addRule(ruleProtocol,rulePort)
+                FirewallUtilities.addRule(ruleProtocol,rulePort,ruleIP)
 
-                newFWRule = FirewallRules(name=ruleName,proto=ruleProtocol,port=rulePort)
+                newFWRule = FirewallRules(name=ruleName,proto=ruleProtocol,port=rulePort,ipAddress=ruleIP)
                 newFWRule.save()
-
 
                 final_dic = {'add_status': 1, 'error_message': "None"}
                 final_json = json.dumps(final_dic)
@@ -120,8 +121,9 @@ def deleteRule(request):
                 ruleID = data['id']
                 ruleProtocol = data['proto']
                 rulePort = data['port']
+                ruleIP = data['ruleIP']
 
-                FirewallUtilities.deleteRule(ruleProtocol, rulePort)
+                FirewallUtilities.deleteRule(ruleProtocol, rulePort,ruleIP)
 
                 delRule = FirewallRules.objects.get(id=ruleID)
                 delRule.delete()

@@ -1216,6 +1216,8 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
             return;
         }
 
+        // disable fetch accounts button
+
         $scope.fetchAccountsBtn = true;
 
         $scope.backupLoading = false;

@@ -403,10 +403,7 @@ class backupUtilities:
 
     @staticmethod
     def checkConnection(IPAddress):
-
-
         try:
-
             backupUtilities.verifyHostKey(IPAddress)
 
             expectation = []
@@ -419,12 +416,15 @@ class backupUtilities:
 
             if index == 0:
                 subprocess.call(['kill', str(checkConn.pid)])
+                logging.CyberCPLogFileWriter.writeToFile("Remote Server is not able to authenticate for transfer to initiate, IP Address:" + IPAddress)
                 return [0,"Remote Server is not able to authenticate for transfer to initiate."]
             elif index == 1:
                 subprocess.call(['kill', str(checkConn.pid)])
                 return [1, "None"]
             else:
                 subprocess.call(['kill', str(checkConn.pid)])
+                logging.CyberCPLogFileWriter.writeToFile(
+                    "Remote Server is not able to authenticate for transfer to initiate, IP Address:" + IPAddress)
                 return [0, "Remote Server is not able to authenticate for transfer to initiate."]
 
         except pexpect.TIMEOUT, msg:

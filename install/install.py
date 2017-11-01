@@ -39,7 +39,7 @@ class preFlightsChecks:
                     print("###############################################")
                     logging.InstallLog.writeToFile("Could not install unzip")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count)+"\n")
                     if count == 3:
                         break
                 else:
@@ -50,10 +50,10 @@ class preFlightsChecks:
 
 
         except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [download_install_phpmyadmin]")
+            logging.InstallLog.writeToFile(str(msg) + " [yum_update]")
             return 0
         except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [download_install_phpmyadmin]")
+            logging.InstallLog.writeToFile(str(msg) + " [yum_update]")
             return 0
 
         return 1
@@ -84,7 +84,7 @@ class preFlightsChecks:
                 print("###############################################")
                 logging.InstallLog.writeToFile("[installCyberPanelRepo]")
                 count = count + 1
-                print("Trying again, try number: "+str(count))
+                print("Trying again, try number: " + str(count) + "\n")
                 if count == 3:
                     break
             else:
@@ -115,7 +115,7 @@ class preFlightsChecks:
                 print("###############################################")
                 logging.InstallLog.writeToFile("Can not install PIP [install_pip]")
                 count = count + 1
-                print("Trying again, try number: " + str(count))
+                print("Trying again, try number: " + str(count) + "\n")
                 if count == 3:
                     break
             else:
@@ -144,7 +144,7 @@ class preFlightsChecks:
                 print("###############################################")
                 logging.InstallLog.writeToFile("Can not install python setup tool")
                 count = count + 1
-                print("Trying again, try number: " + str(count))
+                print("Trying again, try number: " + str(count) + "\n")
                 if count == 3:
                     break
             else:
@@ -173,7 +173,7 @@ class preFlightsChecks:
                 print("###############################################")
                 logging.InstallLog.writeToFile("Can not install Python Development Package")
                 count = count + 1
-                print("Trying again, try number: " + str(count))
+                print("Trying again, try number: " + str(count) + "\n")
                 if count == 3:
                     break
             else:
@@ -183,7 +183,6 @@ class preFlightsChecks:
                 break
 
     def install_python_requests(self):
-
         try:
             import requests
         except:
@@ -205,7 +204,7 @@ class preFlightsChecks:
                     print("###############################################")
                     logging.InstallLog.writeToFile("Can not install  Python Requests")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count) + "\n")
                     if count == 3:
                         break
                 else:
@@ -238,7 +237,7 @@ class preFlightsChecks:
                 print("###############################################")
                 logging.InstallLog.writeToFile("Can not install GCC")
                 count = count + 1
-                print("Trying again, try number: " + str(count))
+                print("Trying again, try number: " + str(count) + "\n")
                 if count == 3:
                     break
             else:
@@ -270,7 +269,7 @@ class preFlightsChecks:
                     print("###############################################")
                     logging.InstallLog.writeToFile("Can not install PEXPECT")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count) + "\n")
                     if count == 3:
                         break
                 else:
@@ -280,7 +279,6 @@ class preFlightsChecks:
                     break
 
     def install_django(self):
-
         cmd = []
 
         count = 0
@@ -299,7 +297,7 @@ class preFlightsChecks:
                 print("###############################################")
                 logging.InstallLog.writeToFile("Can not install DJANGO")
                 count = count + 1
-                print("Trying again, try number: " + str(count))
+                print("Trying again, try number: " + str(count) + "\n")
                 if count == 3:
                     break
             else:
@@ -330,7 +328,7 @@ class preFlightsChecks:
                 print("###############################################")
                 logging.InstallLog.writeToFile("Can not install MYSQL Library")
                 count = count + 1
-                print("Trying again, try number: " + str(count))
+                print("Trying again, try number: " + str(count) + "\n")
                 if count == 3:
                     break
             else:
@@ -360,7 +358,7 @@ class preFlightsChecks:
                 print("###############################################")
                 logging.InstallLog.writeToFile("Can not install wget")
                 count = count + 1
-                print("Trying again, try number: " + str(count))
+                print("Trying again, try number: " + str(count) + "\n")
                 if count == 3:
                     break
             else:
@@ -388,7 +386,7 @@ class preFlightsChecks:
                 print("###############################################")
                 logging.InstallLog.writeToFile("Can not install gunicorn")
                 count = count + 1
-                print("Trying again, try number: " + str(count))
+                print("Trying again, try number: " + str(count) + "\n")
                 if count == 3:
                     break
             else:
@@ -479,7 +477,7 @@ class preFlightsChecks:
                     print("###############################################")
                     logging.InstallLog.writeToFile("Can not install psutil")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count) + "\n")
                     if count == 3:
                         break
                 else:
@@ -513,7 +511,7 @@ class preFlightsChecks:
                     print("###############################################")
                     logging.InstallLog.writeToFile("Can not install argparse")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count) + "\n")
                     if count == 3:
                         break
                 else:
@@ -560,7 +558,7 @@ class preFlightsChecks:
                 print("###############################################")
                 logging.InstallLog.writeToFile("install_psmisc")
                 count = count + 1
-                print("Trying again, try number: " + str(count))
+                print("Trying again, try number: " + str(count) + "\n")
                 if count == 3:
                     break
             else:
@@ -590,7 +588,7 @@ class preFlightsChecks:
                     logging.InstallLog.writeToFile("Can not upgrade  Python Requests")
                 else:
                     print("###############################################")
-                    print("   Python Requests Upgraded        ")
+                    print("     Python Requests Upgraded        ")
                     print("###############################################")
         except:
             pass
@@ -609,7 +607,7 @@ class preFlightsChecks:
             print("###############################################")
             print("           Could Not Download CyberCP          ")
             print("###############################################")
-            logging.InstallLog.writeToFile("Could Not Download CyberCP")
+            logging.InstallLog.writeToFile("Could Not Download CyberPanel")
         else:
             print("###############################################")
             print("              CyberCP Downloaded               ")
@@ -694,10 +692,6 @@ class preFlightsChecks:
         res = subprocess.call(cmd)
 
 
-
-
-
-
         if res == 1:
 
             print("###################################################################")
@@ -712,9 +706,8 @@ class preFlightsChecks:
 
             print("                                                                   ")
             print("                                                                   ")
-            print("                                                                   ")
 
-            print("                Visit: https://"+self.ipAddr+":8090                  ")
+            print("                Visit: https://"+self.ipAddr+":8090                ")
             print("                Username: admin                                    ")
             print("                Password: 1234567                                  ")
 
@@ -741,7 +734,7 @@ class preFlightsChecks:
                     print("###############################################")
                     logging.InstallLog.writeToFile("Not able to add epel repo")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count) + "\n")
                     if count == 3:
                         break
                 else:
@@ -783,7 +776,7 @@ class preFlightsChecks:
                     print("###############################################")
                     logging.InstallLog.writeToFile("Could not install unzip")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count) + "\n")
                     if count == 3:
                         break
                 else:
@@ -794,10 +787,10 @@ class preFlightsChecks:
 
 
         except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [download_install_phpmyadmin]")
+            logging.InstallLog.writeToFile(str(msg) + " [install_unzip]")
             return 0
         except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [download_install_phpmyadmin]")
+            logging.InstallLog.writeToFile(str(msg) + " [install_unzip]")
             return 0
 
         return 1
@@ -809,7 +802,7 @@ class preFlightsChecks:
 
             os.chdir("/usr/local/lscp/cyberpanel/")
 
-            command = 'wget https://files.phpmyadmin.net/phpMyAdmin/4.7.3/phpMyAdmin-4.7.3-all-languages.zip'
+            command = 'wget https://files.phpmyadmin.net/phpMyAdmin/4.7.5/phpMyAdmin-4.7.5-all-languages.zip'
 
             cmd = shlex.split(command)
 
@@ -825,7 +818,7 @@ class preFlightsChecks:
                 print("          PHPMYAdmin Downloaded                ")
                 print("###############################################")
 
-            command = 'unzip phpMyAdmin-4.7.3-all-languages.zip'
+            command = 'unzip phpMyAdmin-4.7.5-all-languages.zip'
 
             cmd = shlex.split(command)
 
@@ -836,9 +829,9 @@ class preFlightsChecks:
             else:
                 pass
 
-            os.remove("phpMyAdmin-4.7.3-all-languages.zip")
+            os.remove("phpMyAdmin-4.7.5-all-languages.zip")
 
-            command = 'mv phpMyAdmin-4.7.3-all-languages phpmyadmin'
+            command = 'mv phpMyAdmin-4.7.5-all-languages phpmyadmin'
 
             cmd = shlex.split(command)
 
@@ -900,10 +893,10 @@ class preFlightsChecks:
 
 
         except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [download_install_phpmyadmin]")
+            logging.InstallLog.writeToFile(str(msg) + " [install_postfix_davecot]")
             return 0
         except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [download_install_phpmyadmin]")
+            logging.InstallLog.writeToFile(str(msg) + " [install_postfix_davecot]")
             return 0
 
         return 1
@@ -1003,10 +996,10 @@ class preFlightsChecks:
 
 
         except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [setup_postfix_davecot_config]")
+            logging.InstallLog.writeToFile(str(msg) + " [setup_email_Passwords]")
             return 0
         except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [setup_postfix_davecot_config]")
+            logging.InstallLog.writeToFile(str(msg) + " [setup_email_Passwords]")
             return 0
 
         return 1
@@ -1069,6 +1062,17 @@ class preFlightsChecks:
            else:
                pass
 
+           command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/dovecot/key.pem -out /etc/dovecot/cert.pem'
+
+           cmd = shlex.split(command)
+
+           res = subprocess.call(cmd)
+
+           if res == 1:
+              logging.InstallLog.writeToFile("1072 [setup_postfix_davecot_config]")
+           else:
+               pass
+
 
 
                ########### Copy config files
@@ -1107,7 +1111,7 @@ class preFlightsChecks:
            res = subprocess.call(cmd)
 
            if res == 1:
-               logging.InstallLog.writeToFile("872 [setup_postfix_davecot_config]")
+               logging.InstallLog.writeToFile("1114 [setup_postfix_davecot_config]")
            else:
                pass
 
@@ -1134,7 +1138,7 @@ class preFlightsChecks:
            res = subprocess.call(cmd)
 
            if res == 1:
-               logging.InstallLog.writeToFile("899 [setup_postfix_davecot_config]")
+               logging.InstallLog.writeToFile("1141 [setup_postfix_davecot_config]")
            else:
                pass
 
@@ -1378,7 +1382,7 @@ class preFlightsChecks:
             res = subprocess.call(cmd)
 
             if res == 1:
-                logging.InstallLog.writeToFile("[downoad_and_install_raindloop]")
+                logging.InstallLog.writeToFile("[downoad_and_install_rainloop]")
             else:
                 pass
 
@@ -1393,7 +1397,7 @@ class preFlightsChecks:
             res = subprocess.call(cmd)
 
             if res == 1:
-                logging.InstallLog.writeToFile("[downoad_and_install_raindloop]")
+                logging.InstallLog.writeToFile("[downoad_and_install_rainloop]")
             else:
                 pass
 
@@ -1405,7 +1409,7 @@ class preFlightsChecks:
             res = subprocess.call(cmd)
 
             if res == 1:
-                logging.InstallLog.writeToFile("[downoad_and_install_raindloop]")
+                logging.InstallLog.writeToFile("[downoad_and_install_rainloop]")
             else:
                 pass
 
@@ -1421,7 +1425,7 @@ class preFlightsChecks:
             res = subprocess.call(cmd)
 
             if res == 1:
-                logging.InstallLog.writeToFile("permissions [downoad_and_install_raindloop]")
+                logging.InstallLog.writeToFile("permissions [downoad_and_install_rainloop]")
             else:
                 pass
 
@@ -1432,7 +1436,7 @@ class preFlightsChecks:
             res = subprocess.call(cmd)
 
             if res == 1:
-                logging.InstallLog.writeToFile("permissions [downoad_and_install_raindloop]")
+                logging.InstallLog.writeToFile("permissions [downoad_and_install_rainloop]")
             else:
                 pass
 
@@ -1443,7 +1447,7 @@ class preFlightsChecks:
             res = subprocess.call(cmd)
 
             if res == 1:
-                logging.InstallLog.writeToFile("permissions [downoad_and_install_raindloop]")
+                logging.InstallLog.writeToFile("permissions [downoad_and_install_rainloop]")
             else:
                 pass
 
@@ -1451,10 +1455,10 @@ class preFlightsChecks:
 
 
         except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [downoad_and_install_raindloop]")
+            logging.InstallLog.writeToFile(str(msg) + " [downoad_and_install_rainloop]")
             return 0
         except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [downoad_and_install_raindloop]")
+            logging.InstallLog.writeToFile(str(msg) + " [downoad_and_install_rainloop]")
             return 0
 
         return 1
@@ -1475,7 +1479,7 @@ class preFlightsChecks:
                 print("###############################################")
                 print("         Could not restart Litespeed server    ")
                 print("###############################################")
-                logging.InstallLog.writeToFile("Could not restart Litespeed server 1239")
+                logging.InstallLog.writeToFile("Could not restart Litespeed server 1428")
             else:
                 pass
 
@@ -1579,7 +1583,7 @@ class preFlightsChecks:
             res = subprocess.call(cmd)
 
             if res == 1:
-                logging.InstallLog.writeToFile("1343 [setupLSCPDDaemon]")
+                logging.InstallLog.writeToFile("1586 [setupLSCPDDaemon]")
             else:
                 pass
 
@@ -1591,7 +1595,7 @@ class preFlightsChecks:
             res = subprocess.call(cmd)
 
             if res == 1:
-                logging.InstallLog.writeToFile("1355 [setupLSCPDDaemon]")
+                logging.InstallLog.writeToFile("1598 [setupLSCPDDaemon]")
             else:
                 pass
 
@@ -1602,7 +1606,7 @@ class preFlightsChecks:
             res = subprocess.call(cmd)
 
             if res == 1:
-                logging.InstallLog.writeToFile("1366 [setupLSCPDDaemon]")
+                logging.InstallLog.writeToFile("1609 [setupLSCPDDaemon]")
             else:
                 pass
 
@@ -1614,10 +1618,10 @@ class preFlightsChecks:
 
 
         except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [installFirewalld]")
+            logging.InstallLog.writeToFile(str(msg) + " [setupLSCPDDaemon]")
             return 0
         except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [installFirewalld]")
+            logging.InstallLog.writeToFile(str(msg) + " [setupLSCPDDaemon]")
             return 0
 
         return 1
@@ -1636,7 +1640,9 @@ class preFlightsChecks:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd)
+            file = open("installLogs.txt", 'a')
+            res = subprocess.call(cmd,stdout=file)
+            file.close()
 
             if res == 1:
                 logging.InstallLog.writeToFile("1428 [setup_cron]")
@@ -1681,7 +1687,7 @@ class preFlightsChecks:
             res = subprocess.call(cmd)
 
             if res == 1:
-                logging.InstallLog.writeToFile("1440 [setup_cron]")
+                logging.InstallLog.writeToFile("1690 [changeSystemLanguage]")
             else:
                 pass
 
@@ -1722,9 +1728,9 @@ class preFlightsChecks:
                     print("###############################################")
                     print("          Can not add default Keys                ")
                     print("###############################################")
-                    logging.InstallLog.writeToFile("Could not install unzip")
+                    logging.InstallLog.writeToFile("install_default_keys")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count)+"\n")
                     if count == 3:
                         break
                 else:
@@ -1761,7 +1767,7 @@ class preFlightsChecks:
                     print("###############################################")
                     print("          Can not install rsync                ")
                     print("###############################################")
-                    logging.InstallLog.writeToFile("Could not install unzip")
+                    logging.InstallLog.writeToFile("Could not install rsync")
                     count = count + 1
                     print("Trying again, try number: " + str(count))
                     if count == 3:
@@ -1774,10 +1780,10 @@ class preFlightsChecks:
 
 
         except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [download_install_phpmyadmin]")
+            logging.InstallLog.writeToFile(str(msg) + " [install_rsync]")
             return 0
         except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [download_install_phpmyadmin]")
+            logging.InstallLog.writeToFile(str(msg) + " [install_rsync]")
             return 0
 
         return 1
@@ -1789,7 +1795,7 @@ class preFlightsChecks:
 
             while (1):
 
-                command = 'chown -R nobody:nobody /usr/local/lsws/admin/conf/'
+                command = 'chown -R nobody:nobody /usr/local/lsws'
 
                 cmd = shlex.split(command)
 
@@ -1801,7 +1807,7 @@ class preFlightsChecks:
                     print("###############################################")
                     logging.InstallLog.writeToFile("fix_admin_permissions")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count)+"\n")
                     if count == 3:
                         break
                 else:
@@ -1883,13 +1889,13 @@ def Main():
 
     checks.setupLSCPDDaemon()
     checks.install_python_requests()
-    checks.setup_cron()
     checks.install_default_keys()
-    checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword)
 
     checks.fix_permissions()
-
     checks.reStartLiteSpeed()
+
+    checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword)
+    checks.setup_cron()
 
 
 

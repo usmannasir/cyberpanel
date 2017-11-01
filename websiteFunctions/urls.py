@@ -28,6 +28,7 @@ urlpatterns = [
 
     url(r'^(?P<domain>([\da-z\.-]+\.[a-z\.]{2,6}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)$', views.domain, name='domain'),
     url(r'^getDataFromLogFile', views.getDataFromLogFile, name='getDataFromLogFile'),
+    url(r'^fetchErrorLogs', views.fetchErrorLogs, name='fetchErrorLogs'),
 
 
     url(r'^installWordpress', views.installWordpress, name='installWordpress'),

@@ -1063,6 +1063,46 @@ def getDataFromLogFile(request):
     final_json = json.dumps({'logstatus': 1, 'error_message': "None", "data": json_data})
     return HttpResponse(final_json)
 
+def fetchErrorLogs(request):
+    try:
+        data = json.loads(request.body)
+        virtualHost = data['virtualHost']
+        page = data['page']
+
+        fileName = "/home/" + virtualHost + "/logs/" + virtualHost + ".error_log"
+
+        numberOfTotalLines = int(subprocess.check_output(["wc", "-l", fileName]).split(" ")[0])
+
+        if numberOfTotalLines < 25:
+            data = subprocess.check_output(["cat", fileName])
+        else:
+            if page == 1:
+                end = numberOfTotalLines
+                start = end - 24
+                if start <= 0:
+                    start = 1
+                startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
+                command = "sed -n " + startingAndEnding + " " + fileName
+                proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
+                data = proc.stdout.read()
+            else:
+                end = numberOfTotalLines - ((page - 1) * 25)
+                start = end - 24
+                if start <= 0:
+                    start = 1
+                startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
+                command = "sed -n " + startingAndEnding + " " + fileName
+                proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
+                data = proc.stdout.read()
+
+        final_json = json.dumps({'logstatus': 1, 'error_message': "None", "data": data})
+        return HttpResponse(final_json)
+
+    except BaseException,msg:
+        final_json = json.dumps({'logstatus': 0, 'error_message': str(msg)})
+        return HttpResponse(final_json)
+
+
 
 def installWordpress(request):
     try:

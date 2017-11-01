@@ -19,8 +19,14 @@ class FirewallUtilities:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
+            ipAddress = "0.0.0.0/0"
 
-            command = 'firewall-cmd --add-port=' + port +'/' + proto +' --permanent'
+            ruleFamily = 'rule family="ipv4"'
+            sourceAddress = 'source address="' + ipAddress + '"'
+            ruleProtocol = 'port protocol="' + proto + '"'
+            rulePort = 'port="' + port + '"'
+
+            command = "firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
             cmd = shlex.split(command)
 
@@ -49,8 +55,14 @@ class FirewallUtilities:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
+            ipAddress = "0.0.0.0/0"
 
-            command = 'firewall-cmd --remove-port=' + port + '/' + proto +' --permanent'
+            ruleFamily = 'rule family="ipv4"'
+            sourceAddress = 'source address="' + ipAddress + '"'
+            ruleProtocol = 'port protocol="' + proto + '"'
+            rulePort = 'port="' + port + '"'
+
+            command = "firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
             cmd = shlex.split(command)
 

@@ -19,6 +19,7 @@ import subprocess
 import signal
 import plogical.remoteBackup as rBackup
 import requests
+from baseTemplate.models import version
 
 def loadBackupHome(request):
     try:
@@ -1053,6 +1054,44 @@ def submitRemoteBackups(request):
             ipAddress = data['ipAddress']
             password = data['password']
 
+            ## ask for remote version
+
+            try:
+                finalData = json.dumps({'username': "admin","password": password})
+
+                url = "https://" + ipAddress + ":8090/api/cyberPanelVersion"
+
+                r = requests.post(url, data=finalData, verify=False)
+
+                data = json.loads(r.text)
+
+
+                if data['getVersion'] == 1:
+
+                    Version = version.objects.get(pk=1)
+
+                    if data['currentVersion'] == Version.currentVersion and data['build'] == Version.build:
+                        pass
+                    else:
+                        json_data = data['data']
+                        data_ret = {'status': 0, 'error_message': "Your version does not match with version of remote server.",
+                                    "dir": "Null", }
+                        data_ret = json.dumps(data_ret)
+                        return HttpResponse(data_ret)
+
+                else:
+                    data_ret = {'status': 0, 'error_message': "Not able to fetch version of remote server. Error Message: "+data['error_message'], "dir": "Null"}
+                    data_ret = json.dumps(data_ret)
+                    return HttpResponse(data_ret)
+            except BaseException,msg:
+                data_ret = {'status': 0,
+                            'error_message': "Not able to fetch version of remote server. Error Message: " + str(msg), "dir": "Null"}
+                data_ret = json.dumps(data_ret)
+                return HttpResponse(data_ret)
+
+
+            ## setup ssh key
+
             sshkey = rBackup.remoteBackup.getKey(ipAddress, password)
 
             if sshkey[0] == 1:
@@ -1091,29 +1130,31 @@ def submitRemoteBackups(request):
                 writeToFile.writelines("\n")
                 writeToFile.close()
 
-            #ownIP = requests.get('https://api.ipify.org').text
+            try:
+                finalData = json.dumps({'username': "admin","password": password})
 
-            finalData = json.dumps({'username': "admin","password": password})
+                url = "https://" + ipAddress + ":8090/api/fetchAccountsFromRemoteServer"
 
-            url = "https://" + ipAddress + ":8090/api/fetchAccountsFromRemoteServer"
+                r = requests.post(url, data=finalData, verify=False)
 
-            r = requests.post(url, data=finalData, verify=False)
-
-            data = json.loads(r.text)
+                data = json.loads(r.text)
 
 
-            if data['fetchStatus'] == 1:
-                json_data = data['data']
-                data_ret = {'status': 1, 'error_message': "None",
-                            "dir": "Null",'data':json_data}
+                if data['fetchStatus'] == 1:
+                    json_data = data['data']
+                    data_ret = {'status': 1, 'error_message': "None",
+                                "dir": "Null",'data':json_data}
+                    data_ret = json.dumps(data_ret)
+                    return HttpResponse(data_ret)
+                else:
+                    data_ret = {'status': 0, 'error_message': "Not able to fetch accounts from remote server. Error Message: "+data['error_message'], "dir": "Null"}
+                    data_ret = json.dumps(data_ret)
+                    return HttpResponse(data_ret)
+            except BaseException,msg:
+                data_ret = {'status': 0,
+                            'error_message': "Not able to fetch accounts from remote server. Error Message: " + str(msg), "dir": "Null"}
                 data_ret = json.dumps(data_ret)
                 return HttpResponse(data_ret)
-            else:
-                data_ret = {'status': 0, 'error_message': "Not able to fetch accounts from remote server. Error Message: "+data['error_message'], "dir": "Null"}
-                data_ret = json.dumps(data_ret)
-                return HttpResponse(data_ret)
-
-
         else:
             return HttpResponse("This URL only accepts POST requests")
 
@@ -1132,32 +1173,40 @@ def starRemoteTransfer(request):
                 password = data['password']
                 accountsToTransfer = data['accountsToTransfer']
 
+                try:
+                    ownIP = requests.get('https://api.ipify.org').text
 
-                ownIP = requests.get('https://api.ipify.org').text
+                    finalData = json.dumps({'username': "admin", "password": password,"ipAddress": ownIP,"accountsToTransfer":accountsToTransfer})
 
-                finalData = json.dumps({'username': "admin", "password": password,"ipAddress": ownIP,"accountsToTransfer":accountsToTransfer})
+                    url = "https://" + ipAddress + ":8090/api/remoteTransfer"
 
-                url = "https://" + ipAddress + ":8090/api/remoteTransfer"
+                    r = requests.post(url, data=finalData, verify=False)
 
-                r = requests.post(url, data=finalData, verify=False)
-
-                data = json.loads(r.text)
+                    data = json.loads(r.text)
 
 
-                if data['transferStatus'] == 1:
+                    if data['transferStatus'] == 1:
 
-                    ## create local directory that will host backups
+                        ## create local directory that will host backups
 
-                    localStoragePath = "/home/backup/transfer-" + str(data['dir'])
+                        localStoragePath = "/home/backup/transfer-" + str(data['dir'])
 
-                    if not os.path.exists(localStoragePath):
-                        os.makedirs(localStoragePath)
+                        if not os.path.exists(localStoragePath):
+                            os.makedirs(localStoragePath)
 
-                    final_json = json.dumps({'remoteTransferStatus': 1, 'error_message': "None","dir":data['dir']})
+                        final_json = json.dumps({'remoteTransferStatus': 1, 'error_message': "None","dir":data['dir']})
+                        return HttpResponse(final_json)
+                    else:
+                        final_json = json.dumps({'remoteTransferStatus': 0, 'error_message':"Can not initiate remote transfer. Error message: "+ data['error_message']})
+                        return HttpResponse(final_json)
+
+                except BaseException,msg:
+                    final_json = json.dumps({'remoteTransferStatus': 0,
+                                             'error_message': "Can not initiate remote transfer. Error message: " +
+                                                              str(msg)})
                     return HttpResponse(final_json)
-                else:
-                    final_json = json.dumps({'remoteTransferStatus': 0, 'error_message':"Can not initiate remote transfer. Error message: "+ data['error_message']})
-                    return HttpResponse(final_json)
+
+
 
         except BaseException,msg:
             final_json = json.dumps({'remoteTransferStatus': 0, 'error_message': str(msg)})

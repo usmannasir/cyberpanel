@@ -28,12 +28,13 @@ class InstallCyberPanel:
             count = 0
 
             while (1):
-                cmd.append("yum")
-                cmd.append("install")
-                cmd.append("-y")
-                cmd.append("openlitespeed")
+
+                command = 'yum install -y openlitespeed'
+
+                cmd = shlex.split(command)
 
                 res = subprocess.call(cmd)
+
 
                 if res == 1:
                     print("###############################################")
@@ -41,7 +42,7 @@ class InstallCyberPanel:
                     print("###############################################")
                     logging.InstallLog.writeToFile("Openlitespeed is not installed from repo" + " [installLiteSpeed]")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count)+"\n")
                     if count == 3:
                         break
                 else:
@@ -168,19 +169,19 @@ class InstallCyberPanel:
 
             while (1):
 
-                cmd = []
-                cmd.append("yum")
-                cmd.append("-y")
-                cmd.append("groupinstall")
-                cmd.append("lsphp-all")
+                command = 'yum -y groupinstall lsphp-all'
+
+                cmd = shlex.split(command)
+
                 res = subprocess.call(cmd)
+
                 if res == 1:
                     print("###############################################")
                     print("         Could not install PHP Binaries        ")
                     print("###############################################")
                     logging.InstallLog.writeToFile("initial PHP Binaries not installed properly [installAllPHPVersions]")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count)+"\n")
                     if count == 3:
                         break
                 else:
@@ -263,10 +264,9 @@ class InstallCyberPanel:
 
             while (1):
 
-                cmd.append("yum")
-                cmd.append("-y")
-                cmd.append("install")
-                cmd.append("mariadb-server")
+                command = 'yum -y install mariadb-server'
+
+                cmd = shlex.split(command)
 
                 res = subprocess.call(cmd)
 
@@ -276,7 +276,7 @@ class InstallCyberPanel:
                     print("###############################################")
                     logging.InstallLog.writeToFile("Could not install MYSQL [installMySQL]")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count)+"\n")
                     if count == 3:
                         break
                 else:
@@ -539,7 +539,7 @@ class InstallCyberPanel:
                     print("###############################################")
                     logging.InstallLog.writeToFile("Could not install PureFTPD [installPureFTPD]")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count)+"\n")
                     if count == 3:
                         break
                 else:
@@ -766,9 +766,8 @@ class InstallCyberPanel:
                     print("          Can not install PowerDNS                ")
                     print("###############################################")
                     logging.InstallLog.writeToFile("Can not install PowerDNS [installPowerDNS]")
-                    logging.InstallLog.writeToFile("Could not install PureFTPD [installPureFTPD]")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count)+"\n")
                     if count == 3:
                         break
                 else:
@@ -860,10 +859,10 @@ class InstallCyberPanel:
 
 
         except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [startPureFTPD]")
+            logging.InstallLog.writeToFile(str(msg) + " [startPowerDNS]")
             return 0
         except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [startPureFTPD]")
+            logging.InstallLog.writeToFile(str(msg) + " [startPowerDNS]")
             return 0
 
         return 1
@@ -887,16 +886,16 @@ class InstallCyberPanel:
 
                 if res == 1:
                     print("###############################################")
-                    print("         Could not install CertBot             ")
+                    print("         Could not install yum utils             ")
                     print("###############################################")
                     logging.InstallLog.writeToFile("yum utils not installed" + " [installCertBot]")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count)+"\n")
                     if count == 3:
                         break
                 else:
                     print("###############################################")
-                    print("            Certbot Installed                  ")
+                    print("            yum utils Installed                  ")
                     print("###############################################")
                     break
 
@@ -915,16 +914,16 @@ class InstallCyberPanel:
 
                 if res == 1:
                     print("###############################################")
-                    print("         Could not install CertBot             ")
+                    print("         Could not install yum-config-manager             ")
                     print("###############################################")
                     logging.InstallLog.writeToFile("yum-config-manager --enable failed" + " [installCertBot]")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count)+"\n")
                     if count == 3:
                         break
                 else:
                     print("###############################################")
-                    print("            Certbot Installed                  ")
+                    print("            yum-config-manager Installed                  ")
                     print("###############################################")
                     break
 
@@ -947,7 +946,7 @@ class InstallCyberPanel:
                     print("###############################################")
                     logging.InstallLog.writeToFile("Certbot not installed" + " [installCertBot]")
                     count = count + 1
-                    print("Trying again, try number: " + str(count))
+                    print("Trying again, try number: " + str(count)+"\n")
                     if count == 3:
                         break
                 else:

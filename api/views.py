@@ -15,11 +15,12 @@ from databases.models import Databases
 from baseTemplate.views import renderBase
 from random import randint
 import plogical.remoteBackup as rBackup
-from websiteFunctions.models import Websites
+from websiteFunctions.models import Websites,ChildDomains
 import os
 import signal
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from shutil import rmtree
+from baseTemplate.models import version
 # Create your views here.
 
 
@@ -103,7 +104,7 @@ def createWebsite(request):
                 return HttpResponse(json_data)
 
             if virtualHostUtilities.createDirectoryForVirtualHost(domain, adminEmail, phpSelection) != 1:
-                numberOfWebsites = Websites.objects.count()
+                numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
                 virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
                 data_ret = {"existsStatus": 1, 'createWebSiteStatus': 0,
                             'error_message': "Can not create configurations, see CyberCP main log file."}
@@ -111,7 +112,7 @@ def createWebsite(request):
                 return HttpResponse(json_data)
 
             if virtualHostUtilities.createConfigInMainVirtualHostFile(domain) != 1:
-                numberOfWebsites = Websites.objects.count()
+                numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
                 virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
                 data_ret = {"existsStatus": 1, 'createWebSiteStatus': 0,
                             'error_message': "Can not create configurations, see CyberCP main log file."}
@@ -136,7 +137,7 @@ def createWebsite(request):
             return HttpResponse(json_data)
 
     except BaseException, msg:
-        numberOfWebsites = Websites.objects.count()
+        numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
         virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
         data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
         json_data = json.dumps(data_ret)
@@ -356,6 +357,7 @@ def fetchSSHkey(request):
 def remoteTransfer(request):
     try:
         if request.method == "POST":
+
             data = json.loads(request.body)
             username = data['username']
             password = data['password']
@@ -368,15 +370,11 @@ def remoteTransfer(request):
                 transferRequest = rBackup.remoteBackup.remoteTransfer(ipAddress, dir,accountsToTransfer)
 
                 if transferRequest[0] == 1:
-                    pass
+                    return HttpResponse(json.dumps({"transferStatus": 1, "dir": dir}))
                 else:
                     data_ret = {'transferStatus': 0, 'error_message': transferRequest[1]}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
-
-                return HttpResponse(json.dumps({"transferStatus": 1, "dir":dir}))
-
-
             else:
                 data_ret = {'transferStatus': 0, 'error_message': "Invalid Credentials"}
                 json_data = json.dumps(data_ret)
@@ -502,5 +500,41 @@ def cancelRemoteTransfer(request):
     except BaseException, msg:
         data = {'cancelStatus': 1, 'error_message': str(msg)}
         json_data = json.dumps(data)
+        return HttpResponse(json_data)
+
+
+def cyberPanelVersion(request):
+    try:
+        if request.method == 'POST':
+
+            data = json.loads(request.body)
+
+            adminUser = data['username']
+            adminPass = data['password']
+
+
+            admin = Administrator.objects.get(userName=adminUser)
+
+            if hashPassword.check_password(admin.password, adminPass):
+
+                Version = version.objects.get(pk=1)
+
+                data_ret = {"getVersion": 1,
+                            'error_message': "Could not authorize access to API",
+                            'currentVersion':Version.currentVersion,
+                            'build':Version.build}
+
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {"getVersion": 0,
+                            'error_message': "Could not authorize access to API"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+    except BaseException, msg:
+        data_ret = {"getVersion": 0,
+                    'error_message': "Could not authorize access to API"}
+        json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 

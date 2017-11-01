@@ -15,8 +15,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-10-29 20:47+0500\n"
-"PO-Revision-Date: 2017-10-26 02:15+0900\n"
+"POT-Creation-Date: 2017-11-02 02:08+0500\n"
+"PO-Revision-Date: 2017-10-31 23:38+0900\n"
 "Last-Translator: @ kazuo210 <kazu.nito@gmail.com>\n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
 "Language: ja\n"
@@ -24,7 +24,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 2.0.4\n"
+"X-Generator: Poedit 1.8.7.1\n"
 
 #: CyberCP/settings.py:167
 msgid "English"
@@ -48,7 +48,7 @@ msgstr "日本語"
 
 #: CyberCP/settings.py:172
 msgid "Bosnian"
-msgstr ""
+msgstr "ボスニア語"
 
 #: backup/templates/backup/backup.html:3 backup/templates/backup/backup.html:13
 #: backup/templates/backup/backup.html:20
@@ -116,7 +116,7 @@ msgstr "バックアップを中止"
 #: backup/templates/backup/backupSchedule.html:89
 #: databases/templates/databases/listDataBases.html:87
 #: dns/templates/dns/addDeleteDNSRecords.html:129
-#: firewall/templates/firewall/firewall.html:127
+#: firewall/templates/firewall/firewall.html:135
 #: ftp/templates/ftp/listFTPAccounts.html:87
 #: managePHP/templates/managePHP/installExtensions.html:61
 msgid "ID"
@@ -139,9 +139,9 @@ msgstr "サイズ"
 #: backup/templates/backup/backupDestinations.html:93
 #: backup/templates/backup/backupSchedule.html:92
 #: dns/templates/dns/addDeleteDNSRecords.html:134
-#: firewall/templates/firewall/firewall.html:131
+#: firewall/templates/firewall/firewall.html:140
 #: firewall/templates/firewall/secureSSH.html:122
-#: websiteFunctions/templates/websiteFunctions/website.html:424
+#: websiteFunctions/templates/websiteFunctions/website.html:451
 msgid "Delete"
 msgstr "削除"
 
@@ -168,6 +168,7 @@ msgstr "このページでは、バックアップ先を設定できます。 �
 #: dns/templates/dns/addDeleteDNSRecords.html:60
 #: dns/templates/dns/createNameServer.html:48
 #: dns/templates/dns/createNameServer.html:65
+#: firewall/templates/firewall/firewall.html:138
 msgid "IP Address"
 msgstr "IP アドレス"
 
@@ -179,7 +180,7 @@ msgstr "IP アドレス"
 #: mailServer/templates/mailServer/changeEmailPassword.html:52
 #: mailServer/templates/mailServer/createEmailAccount.html:51
 #: userManagment/templates/userManagment/createUser.html:123
-#: userManagment/templates/userManagment/modifyUser.html:107
+#: userManagment/templates/userManagment/modifyUser.html:106
 msgid "Password"
 msgstr "パスワード"
 
@@ -224,15 +225,15 @@ msgstr "追加された宛先。"
 #: mailServer/templates/mailServer/deleteEmailAccount.html:79
 #: manageSSL/templates/manageSSL/manageSSL.html:60
 #: userManagment/templates/userManagment/createUser.html:162
-#: userManagment/templates/userManagment/modifyUser.html:139
+#: userManagment/templates/userManagment/modifyUser.html:138
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:77
 #: websiteFunctions/templates/websiteFunctions/website.html:157
-#: websiteFunctions/templates/websiteFunctions/website.html:336
-#: websiteFunctions/templates/websiteFunctions/website.html:378
-#: websiteFunctions/templates/websiteFunctions/website.html:508
-#: websiteFunctions/templates/websiteFunctions/website.html:563
-#: websiteFunctions/templates/websiteFunctions/website.html:618
-#: websiteFunctions/templates/websiteFunctions/website.html:765
+#: websiteFunctions/templates/websiteFunctions/website.html:363
+#: websiteFunctions/templates/websiteFunctions/website.html:405
+#: websiteFunctions/templates/websiteFunctions/website.html:535
+#: websiteFunctions/templates/websiteFunctions/website.html:590
+#: websiteFunctions/templates/websiteFunctions/website.html:645
+#: websiteFunctions/templates/websiteFunctions/website.html:792
 msgid "Could not connect to server. Please refresh this page."
 msgstr "サーバーに接続できませんでした。 このページを更新してください。"
 
@@ -297,11 +298,13 @@ msgstr "バックアップ ホーム - CyberPanel"
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:29
 #: backup/templates/backup/index.html:45
-#: baseTemplate/templates/baseTemplate/homePage.html:266
-#: baseTemplate/templates/baseTemplate/homePage.html:269
+#: baseTemplate/templates/baseTemplate/homePage.html:268
+#: baseTemplate/templates/baseTemplate/homePage.html:271
+#: baseTemplate/templates/baseTemplate/homePage.html:463
+#: baseTemplate/templates/baseTemplate/homePage.html:466
 #: baseTemplate/templates/baseTemplate/index.html:554
 #: baseTemplate/templates/baseTemplate/index.html:556
-#: baseTemplate/templates/baseTemplate/index.html:572
+#: baseTemplate/templates/baseTemplate/index.html:573
 msgid "Back up"
 msgstr "バックアップ"
 
@@ -340,68 +343,50 @@ msgid "Restore"
 msgstr "復元"
 
 #: backup/templates/backup/remoteBackups.html:3
-#, fuzzy
-#| msgid "Websites Hosted - CyberPanel"
 msgid "Transfer Websites from Remote Server - CyberPanel"
-msgstr "ホストされているWebサイト -  Cyber​​Panel"
+msgstr "リモートサーバーからWebサイトを転送 -  Cyber​​Panel"
 
 #: backup/templates/backup/remoteBackups.html:14
 #: backup/templates/backup/remoteBackups.html:21
-#, fuzzy
-#| msgid "Restore Back up"
 msgid "Remote Backups"
-msgstr "バックアップの復元"
+msgstr "リモートバックアップ"
 
 #: backup/templates/backup/remoteBackups.html:15
 msgid "This feature can import website(s) from remote server"
-msgstr ""
+msgstr "この機能は、リモート サーバーからウェブサイトをインポートします"
 
 #: backup/templates/backup/remoteBackups.html:46
-#, fuzzy
-#| msgid "FTP Accounts"
 msgid "Fetch Accounts"
-msgstr "FTP アカウント"
+msgstr "アカウントの取得"
 
 #: backup/templates/backup/remoteBackups.html:55
 msgid "Start Transfer"
-msgstr ""
+msgstr "転送を開始"
 
 #: backup/templates/backup/remoteBackups.html:59
-#: websiteFunctions/templates/websiteFunctions/website.html:269
-#, fuzzy
-#| msgid "Cancel Backup"
+#: websiteFunctions/templates/websiteFunctions/website.html:296
 msgid "Cancel"
-msgstr "バックアップを中止"
+msgstr "キャンセル"
 
 #: backup/templates/backup/remoteBackups.html:72
-#, fuzzy
-#| msgid "Could not connect. Please refresh this page."
 msgid "Could not connect, please refresh this page."
 msgstr "接続できませんでした。このページを更新してください。"
 
 #: backup/templates/backup/remoteBackups.html:76
-#, fuzzy
-#| msgid "Records successfully fetched for"
 msgid "Accounts Successfully Fetched from remote server."
-msgstr "レコードが取得されました"
+msgstr "アカウントはリモートサーバーから取得されました。"
 
 #: backup/templates/backup/remoteBackups.html:80
-#, fuzzy
-#| msgid " is successfully created."
 msgid "Backup Process successfully started."
-msgstr " 作成されました。"
+msgstr "バックアップ処理が開始されました。"
 
 #: backup/templates/backup/remoteBackups.html:84
-#, fuzzy
-#| msgid "is successfully created."
 msgid "Backup successfully cancelled."
-msgstr "作成されました。"
+msgstr "バックアップはキャンセルされました。"
 
 #: backup/templates/backup/remoteBackups.html:96
-#, fuzzy
-#| msgid "Select Account"
 msgid "Search Accounts.."
-msgstr "アカウントを選択"
+msgstr "アカウントを検索。"
 
 #: backup/templates/backup/remoteBackups.html:107
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:65
@@ -409,9 +394,9 @@ msgid "Website"
 msgstr "Web サイト"
 
 #: backup/templates/backup/remoteBackups.html:108
-#: baseTemplate/templates/baseTemplate/homePage.html:331
-#: baseTemplate/templates/baseTemplate/index.html:625
-#: baseTemplate/templates/baseTemplate/index.html:627
+#: baseTemplate/templates/baseTemplate/homePage.html:333
+#: baseTemplate/templates/baseTemplate/index.html:626
+#: baseTemplate/templates/baseTemplate/index.html:628
 #: managePHP/templates/managePHP/installExtensions.html:62
 msgid "PHP"
 msgstr "PHP"
@@ -460,7 +445,7 @@ msgstr "バックアップを選択"
 #: backup/templates/backup/restore.html:86
 #: databases/templates/databases/deleteDatabase.html:64
 #: databases/templates/databases/listDataBases.html:54
-#: firewall/templates/firewall/firewall.html:156
+#: firewall/templates/firewall/firewall.html:166
 #: managePHP/templates/managePHP/editPHPConfig.html:212
 msgid "Error message:"
 msgstr "エラーメッセージ:"
@@ -516,24 +501,28 @@ msgstr "リクエスト処理数"
 msgid "Total Requests"
 msgstr "合計リクエスト数"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:173
+#: baseTemplate/templates/baseTemplate/homePage.html:175
+#: baseTemplate/templates/baseTemplate/homePage.html:389
 #: userManagment/templates/userManagment/index.html:13
 msgid "User Functions"
 msgstr "ユーザ機能"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:176
+#: baseTemplate/templates/baseTemplate/homePage.html:178
+#: baseTemplate/templates/baseTemplate/homePage.html:392
 #: baseTemplate/templates/baseTemplate/index.html:426
 #: baseTemplate/templates/baseTemplate/index.html:427
 #: baseTemplate/templates/baseTemplate/index.html:428
 msgid "Users"
 msgstr "ユーザー"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:186
+#: baseTemplate/templates/baseTemplate/homePage.html:188
+#: baseTemplate/templates/baseTemplate/homePage.html:402
 #: websiteFunctions/templates/websiteFunctions/index.html:13
 msgid "Website Functions"
 msgstr "Web サイト機能"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:189
+#: baseTemplate/templates/baseTemplate/homePage.html:191
+#: baseTemplate/templates/baseTemplate/homePage.html:405
 #: baseTemplate/templates/baseTemplate/index.html:360
 #: baseTemplate/templates/baseTemplate/index.html:444
 #: baseTemplate/templates/baseTemplate/index.html:445
@@ -542,11 +531,11 @@ msgstr "Web サイト機能"
 msgid "Websites"
 msgstr "Web サイト"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:199
+#: baseTemplate/templates/baseTemplate/homePage.html:201
 msgid "Add/Modify Packages"
 msgstr "パッケージの追加/変更"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:202
+#: baseTemplate/templates/baseTemplate/homePage.html:204
 #: baseTemplate/templates/baseTemplate/index.html:366
 #: baseTemplate/templates/baseTemplate/index.html:461
 #: baseTemplate/templates/baseTemplate/index.html:463
@@ -554,12 +543,14 @@ msgstr "パッケージの追加/変更"
 msgid "Packages"
 msgstr "パッケージ"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:223
+#: baseTemplate/templates/baseTemplate/homePage.html:225
+#: baseTemplate/templates/baseTemplate/homePage.html:415
 #: databases/templates/databases/index.html:12
 msgid "Database Functions"
 msgstr "データベース機能"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:226
+#: baseTemplate/templates/baseTemplate/homePage.html:228
+#: baseTemplate/templates/baseTemplate/homePage.html:418
 #: baseTemplate/templates/baseTemplate/index.html:477
 #: baseTemplate/templates/baseTemplate/index.html:478
 #: baseTemplate/templates/baseTemplate/index.html:479
@@ -569,23 +560,27 @@ msgstr "データベース機能"
 msgid "Databases"
 msgstr "データベース"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:235
+#: baseTemplate/templates/baseTemplate/homePage.html:237
+#: baseTemplate/templates/baseTemplate/homePage.html:438
 msgid "Control DNS"
 msgstr "DNS制御"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:238
+#: baseTemplate/templates/baseTemplate/homePage.html:240
+#: baseTemplate/templates/baseTemplate/homePage.html:441
 #: baseTemplate/templates/baseTemplate/index.html:372
 #: baseTemplate/templates/baseTemplate/index.html:495
 #: baseTemplate/templates/baseTemplate/index.html:497
 msgid "DNS"
 msgstr "DNS"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:248
+#: baseTemplate/templates/baseTemplate/homePage.html:250
+#: baseTemplate/templates/baseTemplate/homePage.html:451
 #: ftp/templates/ftp/index.html:12
 msgid "FTP Functions"
 msgstr "FTP 機能"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:251
+#: baseTemplate/templates/baseTemplate/homePage.html:253
+#: baseTemplate/templates/baseTemplate/homePage.html:454
 #: baseTemplate/templates/baseTemplate/index.html:378
 #: baseTemplate/templates/baseTemplate/index.html:536
 #: baseTemplate/templates/baseTemplate/index.html:538
@@ -593,43 +588,45 @@ msgstr "FTP 機能"
 msgid "FTP"
 msgstr "FTP"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:278
-#: baseTemplate/templates/baseTemplate/homePage.html:281
+#: baseTemplate/templates/baseTemplate/homePage.html:280
+#: baseTemplate/templates/baseTemplate/homePage.html:283
+#: baseTemplate/templates/baseTemplate/homePage.html:483
+#: baseTemplate/templates/baseTemplate/homePage.html:486
 #: packages/templates/packages/createPackage.html:75
 #: packages/templates/packages/modifyPackage.html:80
 msgid "Emails"
 msgstr "メール"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:291
-#: baseTemplate/templates/baseTemplate/homePage.html:294
+#: baseTemplate/templates/baseTemplate/homePage.html:293
+#: baseTemplate/templates/baseTemplate/homePage.html:296
 #: tuning/templates/tuning/index.html:12
 msgid "Server Tuning"
 msgstr "サーバーのチューニング"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:315
-#: baseTemplate/templates/baseTemplate/homePage.html:318
-#: baseTemplate/templates/baseTemplate/index.html:606
-#: baseTemplate/templates/baseTemplate/index.html:608
-#: baseTemplate/templates/baseTemplate/index.html:641
+#: baseTemplate/templates/baseTemplate/homePage.html:317
+#: baseTemplate/templates/baseTemplate/homePage.html:320
+#: baseTemplate/templates/baseTemplate/index.html:607
+#: baseTemplate/templates/baseTemplate/index.html:609
+#: baseTemplate/templates/baseTemplate/index.html:642
 #: serverStatus/templates/serverStatus/index.html:13
 msgid "Server Status"
 msgstr "サーバーの状態"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:328
+#: baseTemplate/templates/baseTemplate/homePage.html:330
 msgid "PHP Configurations"
 msgstr "PHPの設定"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:340
-#: baseTemplate/templates/baseTemplate/homePage.html:343
-#: baseTemplate/templates/baseTemplate/index.html:643
+#: baseTemplate/templates/baseTemplate/homePage.html:342
+#: baseTemplate/templates/baseTemplate/homePage.html:345
+#: baseTemplate/templates/baseTemplate/index.html:644
 #: websiteFunctions/templates/websiteFunctions/website.html:113
 msgid "Logs"
 msgstr "ログ"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:363
-#: baseTemplate/templates/baseTemplate/homePage.html:366
-#: baseTemplate/templates/baseTemplate/index.html:659
-#: baseTemplate/templates/baseTemplate/index.html:661
+#: baseTemplate/templates/baseTemplate/homePage.html:365
+#: baseTemplate/templates/baseTemplate/homePage.html:368
+#: baseTemplate/templates/baseTemplate/index.html:660
+#: baseTemplate/templates/baseTemplate/index.html:662
 msgid "Security"
 msgstr "セキュリティ"
 
@@ -697,8 +694,8 @@ msgid "Dashboard Quick Menu"
 msgstr "ダッシュボードクイックメニュー"
 
 #: baseTemplate/templates/baseTemplate/index.html:384
-#: baseTemplate/templates/baseTemplate/index.html:590
-#: baseTemplate/templates/baseTemplate/index.html:592
+#: baseTemplate/templates/baseTemplate/index.html:591
+#: baseTemplate/templates/baseTemplate/index.html:593
 msgid "Tuning"
 msgstr "チューニング"
 
@@ -731,7 +728,7 @@ msgstr "新しいユーザーの作成"
 #: userManagment/templates/userManagment/index.html:52
 #: userManagment/templates/userManagment/index.html:54
 #: userManagment/templates/userManagment/modifyUser.html:12
-#: userManagment/templates/userManagment/modifyUser.html:120
+#: userManagment/templates/userManagment/modifyUser.html:119
 msgid "Modify User"
 msgstr "ユーザーの変更"
 
@@ -879,7 +876,7 @@ msgstr "メールアカウントの作成"
 #: mailServer/templates/mailServer/index.html:25
 #: mailServer/templates/mailServer/index.html:27
 msgid "Create Email"
-msgstr "メールアカウントの作成"
+msgstr "メールの作成"
 
 #: baseTemplate/templates/baseTemplate/index.html:522
 #: mailServer/templates/mailServer/deleteEmailAccount.html:12
@@ -892,7 +889,7 @@ msgstr "メールアカウントの削除"
 #: mailServer/templates/mailServer/index.html:37
 #: mailServer/templates/mailServer/index.html:39
 msgid "Delete Email"
-msgstr "メールアカウントの削除"
+msgstr "メールの削除"
 
 #: baseTemplate/templates/baseTemplate/index.html:523
 #: databases/templates/databases/listDataBases.html:73
@@ -911,8 +908,8 @@ msgstr "Webメール アクセス"
 #: ftp/templates/ftp/createFTPAccount.html:12
 #: ftp/templates/ftp/createFTPAccount.html:19 ftp/templates/ftp/index.html:25
 #: ftp/templates/ftp/index.html:27
-#: websiteFunctions/templates/websiteFunctions/website.html:683
-#: websiteFunctions/templates/websiteFunctions/website.html:685
+#: websiteFunctions/templates/websiteFunctions/website.html:710
+#: websiteFunctions/templates/websiteFunctions/website.html:712
 msgid "Create FTP Account"
 msgstr "FTP アカウントの作成"
 
@@ -921,8 +918,8 @@ msgstr "FTP アカウントの作成"
 #: ftp/templates/ftp/deleteFTPAccount.html:18
 #: ftp/templates/ftp/deleteFTPAccount.html:52 ftp/templates/ftp/index.html:37
 #: ftp/templates/ftp/index.html:39
-#: websiteFunctions/templates/websiteFunctions/website.html:695
-#: websiteFunctions/templates/websiteFunctions/website.html:697
+#: websiteFunctions/templates/websiteFunctions/website.html:722
+#: websiteFunctions/templates/websiteFunctions/website.html:724
 msgid "Delete FTP Account"
 msgstr "FTP アカウントの削除"
 
@@ -937,78 +934,84 @@ msgstr "FTP アカウントの一覧"
 msgid "Add/Delete Destination"
 msgstr "バックアップ先の追加/削除"
 
-#: baseTemplate/templates/baseTemplate/index.html:573
+#: baseTemplate/templates/baseTemplate/index.html:565
+#, fuzzy
+#| msgid "Remote Backups"
+msgid "Remote Back ups"
+msgstr "リモートバックアップ"
+
 #: baseTemplate/templates/baseTemplate/index.html:574
+#: baseTemplate/templates/baseTemplate/index.html:575
 msgid "SSL"
 msgstr "SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:579
+#: baseTemplate/templates/baseTemplate/index.html:580
 #: manageSSL/templates/manageSSL/index.html:28
 #: manageSSL/templates/manageSSL/manageSSL.html:13
 #: manageSSL/templates/manageSSL/manageSSL.html:20
 msgid "Manage SSL"
 msgstr "SSL の管理"
 
-#: baseTemplate/templates/baseTemplate/index.html:580
+#: baseTemplate/templates/baseTemplate/index.html:581
 #: manageSSL/templates/manageSSL/index.html:40
 msgid "Hostname SSL"
 msgstr "ホスト名 SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:588
+#: baseTemplate/templates/baseTemplate/index.html:589
 msgid "Server"
 msgstr "サーバー"
 
-#: baseTemplate/templates/baseTemplate/index.html:593
+#: baseTemplate/templates/baseTemplate/index.html:594
 msgid "NEW"
 msgstr "新規"
 
-#: baseTemplate/templates/baseTemplate/index.html:598
+#: baseTemplate/templates/baseTemplate/index.html:599
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
 #: tuning/templates/tuning/liteSpeedTuning.html:12
 msgid "LiteSpeed Tuning"
 msgstr "LiteSpeed チューニング"
 
-#: baseTemplate/templates/baseTemplate/index.html:599
+#: baseTemplate/templates/baseTemplate/index.html:600
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13
 msgid "PHP Tuning"
 msgstr "PHP チューニング"
 
-#: baseTemplate/templates/baseTemplate/index.html:614
+#: baseTemplate/templates/baseTemplate/index.html:615
 #: serverStatus/templates/serverStatus/index.html:25
 #: serverStatus/templates/serverStatus/index.html:27
 msgid "LiteSpeed Status"
 msgstr "LiteSpeed の状態"
 
-#: baseTemplate/templates/baseTemplate/index.html:615
+#: baseTemplate/templates/baseTemplate/index.html:616
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:15
 #: serverStatus/templates/serverStatus/index.html:37
 #: serverStatus/templates/serverStatus/index.html:39
 msgid "CyberPanel Main Log File"
 msgstr "Cyber​​Panel メインログファイル"
 
-#: baseTemplate/templates/baseTemplate/index.html:632
+#: baseTemplate/templates/baseTemplate/index.html:633
 #: managePHP/templates/managePHP/installExtensions.html:13
 msgid "Install PHP Extensions"
 msgstr "PHP拡張機能のインストール"
 
-#: baseTemplate/templates/baseTemplate/index.html:632
+#: baseTemplate/templates/baseTemplate/index.html:633
 #: managePHP/templates/managePHP/index.html:24
 #: managePHP/templates/managePHP/index.html:26
 msgid "Install Extensions"
 msgstr "拡張機能のインストール"
 
-#: baseTemplate/templates/baseTemplate/index.html:633
+#: baseTemplate/templates/baseTemplate/index.html:634
 #: managePHP/templates/managePHP/index.html:36
 #: managePHP/templates/managePHP/index.html:38
 msgid "Edit PHP Configs"
 msgstr "PHP 設定の編集"
 
-#: baseTemplate/templates/baseTemplate/index.html:648
+#: baseTemplate/templates/baseTemplate/index.html:649
 msgid "Access Log"
 msgstr "アクセスログ"
 
-#: baseTemplate/templates/baseTemplate/index.html:649
+#: baseTemplate/templates/baseTemplate/index.html:650
 #: serverLogs/templates/serverLogs/errorLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:37
 #: serverLogs/templates/serverLogs/index.html:39
@@ -1016,35 +1019,35 @@ msgstr "アクセスログ"
 msgid "Error Logs"
 msgstr "エラーログ"
 
-#: baseTemplate/templates/baseTemplate/index.html:650
+#: baseTemplate/templates/baseTemplate/index.html:651
 #: serverLogs/templates/serverLogs/emailLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:49
 #: serverLogs/templates/serverLogs/index.html:51
 msgid "Email Logs"
 msgstr "メールログ"
 
-#: baseTemplate/templates/baseTemplate/index.html:650
+#: baseTemplate/templates/baseTemplate/index.html:651
 msgid "Email Log"
 msgstr "メールログ"
 
-#: baseTemplate/templates/baseTemplate/index.html:651
+#: baseTemplate/templates/baseTemplate/index.html:652
 #: serverLogs/templates/serverLogs/ftplogs.html:14
 #: serverLogs/templates/serverLogs/index.html:61
 #: serverLogs/templates/serverLogs/index.html:63
 msgid "FTP Logs"
 msgstr "FTP ログ"
 
-#: baseTemplate/templates/baseTemplate/index.html:666
+#: baseTemplate/templates/baseTemplate/index.html:667
 msgid "Firewall Home"
 msgstr "ファイアウォールホーム"
 
-#: baseTemplate/templates/baseTemplate/index.html:666
+#: baseTemplate/templates/baseTemplate/index.html:667
 #: firewall/templates/firewall/index.html:25
 #: firewall/templates/firewall/index.html:27
 msgid "Firewall"
 msgstr "ファイアウォール"
 
-#: baseTemplate/templates/baseTemplate/index.html:667
+#: baseTemplate/templates/baseTemplate/index.html:668
 #: firewall/templates/firewall/index.html:36
 #: firewall/templates/firewall/index.html:38
 #: firewall/templates/firewall/secureSSH.html:13
@@ -1178,17 +1181,15 @@ msgid "Records successfully fetched for"
 msgstr "レコードが取得されました"
 
 #: databases/templates/databases/listDataBases.html:50
-#, fuzzy
-#| msgid "Password changed for"
 msgid "Password changed for: "
-msgstr "パスワードが変更されました"
+msgstr "パスワードを変更: "
 
 #: databases/templates/databases/listDataBases.html:54
 msgid "Cannot change password for "
 msgstr "パスワードを変更できません "
 
 #: databases/templates/databases/listDataBases.html:59
-#: firewall/templates/firewall/firewall.html:166
+#: firewall/templates/firewall/firewall.html:176
 #: ftp/templates/ftp/listFTPAccounts.html:59
 msgid "Could Not Connect to server. Please refresh this page"
 msgstr "サーバーに接続できませんでした。 このページを更新してください"
@@ -1224,7 +1225,7 @@ msgstr "レコードを追加"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:53
 #: dns/templates/dns/addDeleteDNSRecords.html:131
-#: firewall/templates/firewall/firewall.html:128
+#: firewall/templates/firewall/firewall.html:136
 #: serverStatus/templates/serverStatus/litespeedStatus.html:40
 msgid "Name"
 msgstr "名称"
@@ -1242,7 +1243,7 @@ msgstr "優先度"
 #: dns/templates/dns/createDNSZone.html:27
 #: dns/templates/dns/createNameServer.html:27
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:52
-#: websiteFunctions/templates/websiteFunctions/website.html:263
+#: websiteFunctions/templates/websiteFunctions/website.html:290
 msgid "Domain Name"
 msgstr "ドメイン名"
 
@@ -1255,7 +1256,7 @@ msgid "Text"
 msgstr "テキスト"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:111
-#: firewall/templates/firewall/firewall.html:109
+#: firewall/templates/firewall/firewall.html:117
 msgid "Add"
 msgstr "追加"
 
@@ -1444,15 +1445,15 @@ msgstr "操作が失敗しました。エラーメッセージ:"
 msgid "Action successful."
 msgstr "操作は終了しました。"
 
-#: firewall/templates/firewall/firewall.html:129
+#: firewall/templates/firewall/firewall.html:137
 msgid "Protocol"
 msgstr "プロトコル"
 
-#: firewall/templates/firewall/firewall.html:130
+#: firewall/templates/firewall/firewall.html:139
 msgid "Port"
 msgstr "ポート"
 
-#: firewall/templates/firewall/firewall.html:162
+#: firewall/templates/firewall/firewall.html:172
 msgid "Rule successfully added."
 msgstr "ルールが追加されました。"
 
@@ -1473,10 +1474,8 @@ msgid "Secure SSH - CyberPanel"
 msgstr "SSH のセキュリティ - Cyber​​Panel"
 
 #: firewall/templates/firewall/secureSSH.html:14
-#, fuzzy
-#| msgid "SSH Configurations Saved."
 msgid "Secure or harden SSH Configurations."
-msgstr "SSH の設定が保存されました。"
+msgstr "SSHの設定をより安全にするか強化します。"
 
 #: firewall/templates/firewall/secureSSH.html:28
 #: managePHP/templates/managePHP/editPHPConfig.html:29
@@ -1523,8 +1522,8 @@ msgstr "キーを追加"
 
 #: firewall/templates/firewall/secureSSH.html:158
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:55
-#: websiteFunctions/templates/websiteFunctions/website.html:527
-#: websiteFunctions/templates/websiteFunctions/website.html:587
+#: websiteFunctions/templates/websiteFunctions/website.html:554
+#: websiteFunctions/templates/websiteFunctions/website.html:614
 msgid "Save"
 msgstr "保存"
 
@@ -1733,7 +1732,7 @@ msgstr "高度"
 #: tuning/templates/tuning/phpTuning.html:28
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:68
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:74
-#: websiteFunctions/templates/websiteFunctions/website.html:283
+#: websiteFunctions/templates/websiteFunctions/website.html:310
 msgid "Select PHP"
 msgstr "PHP の選択"
 
@@ -1827,7 +1826,7 @@ msgstr "前に戻る"
 
 #: managePHP/templates/managePHP/installExtensions.html:104
 #: tuning/templates/tuning/phpTuning.html:114
-#: userManagment/templates/userManagment/modifyUser.html:144
+#: userManagment/templates/userManagment/modifyUser.html:143
 msgid "Cannot fetch details. Error message:"
 msgstr "詳細を取得できません。エラーメッセージ:"
 
@@ -1919,16 +1918,12 @@ msgstr "パッケージ名"
 
 #: packages/templates/packages/createPackage.html:35
 #: packages/templates/packages/modifyPackage.html:40
-#: websiteFunctions/templates/websiteFunctions/website.html:223
-#, fuzzy
-#| msgid "Domain Name"
+#: websiteFunctions/templates/websiteFunctions/website.html:250
 msgid "Domains"
-msgstr "ドメイン名"
+msgstr "ドメイン"
 
 #: packages/templates/packages/createPackage.html:39
 #: packages/templates/packages/modifyPackage.html:44
-#, fuzzy
-#| msgid "( 0 = Unlimited )"
 msgid "(0 = Unlimited)"
 msgstr "( 0 = 無制限 )"
 
@@ -2231,7 +2226,7 @@ msgstr "無効化"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:74
 #: tuning/templates/tuning/phpTuning.html:97
-#: userManagment/templates/userManagment/modifyUser.html:78
+#: userManagment/templates/userManagment/modifyUser.html:77
 msgid "Currently:"
 msgstr "現在:"
 
@@ -2350,18 +2345,18 @@ msgid "Account Type"
 msgstr "アカウント種別"
 
 #: userManagment/templates/userManagment/createUser.html:67
-#: userManagment/templates/userManagment/modifyUser.html:73
-msgid "Reseller"
-msgstr "代理店"
+#: userManagment/templates/userManagment/modifyUser.html:72
+msgid "Admin"
+msgstr "管理者"
 
 #: userManagment/templates/userManagment/createUser.html:68
 #: userManagment/templates/userManagment/createUser.html:79
-#: userManagment/templates/userManagment/modifyUser.html:74
+#: userManagment/templates/userManagment/modifyUser.html:73
 msgid "Normal User"
 msgstr "通常のユーザー"
 
 #: userManagment/templates/userManagment/createUser.html:92
-#: userManagment/templates/userManagment/modifyUser.html:89
+#: userManagment/templates/userManagment/modifyUser.html:88
 #: userManagment/templates/userManagment/userProfile.html:67
 #: userManagment/templates/userManagment/userProfile.html:74
 msgid "User Accounts Limit"
@@ -2373,7 +2368,7 @@ msgid "Only Numbers"
 msgstr "数字のみ"
 
 #: userManagment/templates/userManagment/createUser.html:103
-#: userManagment/templates/userManagment/modifyUser.html:99
+#: userManagment/templates/userManagment/modifyUser.html:98
 #: userManagment/templates/userManagment/userProfile.html:82
 msgid "Websites Limit"
 msgstr "Web サイトの制限"
@@ -2398,7 +2393,7 @@ msgid "Create User"
 msgstr "ユーザーを作成"
 
 #: userManagment/templates/userManagment/createUser.html:154
-#: userManagment/templates/userManagment/modifyUser.html:131
+#: userManagment/templates/userManagment/modifyUser.html:130
 msgid "Account with username:"
 msgstr "ユーザー名を持つアカウント:"
 
@@ -2452,19 +2447,15 @@ msgstr "このページで既存のユーザー設定を変更します。"
 msgid "Select Account"
 msgstr "アカウントを選択"
 
-#: userManagment/templates/userManagment/modifyUser.html:72
-msgid "Admin"
-msgstr "管理者"
-
-#: userManagment/templates/userManagment/modifyUser.html:131
+#: userManagment/templates/userManagment/modifyUser.html:130
 msgid " is successfully modified."
 msgstr " 更新されました。"
 
-#: userManagment/templates/userManagment/modifyUser.html:135
+#: userManagment/templates/userManagment/modifyUser.html:134
 msgid "Cannot modify user. Error message:"
 msgstr "ユーザーを変更できません。エラー メッセージ:"
 
-#: userManagment/templates/userManagment/modifyUser.html:148
+#: userManagment/templates/userManagment/modifyUser.html:147
 msgid "Details fetched."
 msgstr "詳細が取得されました。"
 
@@ -2515,19 +2506,19 @@ msgid "Select Owner"
 msgstr "所有者を選択"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:56
-#: websiteFunctions/templates/websiteFunctions/website.html:267
-#: websiteFunctions/templates/websiteFunctions/website.html:278
+#: websiteFunctions/templates/websiteFunctions/website.html:294
+#: websiteFunctions/templates/websiteFunctions/website.html:305
 msgid "Invalid Domain (Note: You don't need to add 'http' or 'https')"
 msgstr ""
 "無効なドメイン（注： 'http' または  'https' を追加する必要はありません）"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:84
-#: websiteFunctions/templates/websiteFunctions/website.html:299
+#: websiteFunctions/templates/websiteFunctions/website.html:326
 msgid "Additional Features"
 msgstr "その他の機能"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:91
-#: websiteFunctions/templates/websiteFunctions/website.html:306
+#: websiteFunctions/templates/websiteFunctions/website.html:333
 msgid ""
 "For SSL to work DNS of domain should point to server, otherwise self signed "
 "SSL will be issued, you can add your own SSL later."
@@ -2536,17 +2527,17 @@ msgstr ""
 "署名された SSL が発行されます。後で独自の SSL を追加できます。"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:113
-#: websiteFunctions/templates/websiteFunctions/website.html:328
+#: websiteFunctions/templates/websiteFunctions/website.html:355
 msgid "Cannot create website. Error message:"
 msgstr "Web サイトを作成できません。エラーメッセージ："
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:117
-#: websiteFunctions/templates/websiteFunctions/website.html:332
+#: websiteFunctions/templates/websiteFunctions/website.html:359
 msgid "Website with domain"
 msgstr "ドメインを持つ Web サイト"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:117
-#: websiteFunctions/templates/websiteFunctions/website.html:332
+#: websiteFunctions/templates/websiteFunctions/website.html:359
 msgid " is Successfully Created"
 msgstr " 作成されました"
 
@@ -2686,169 +2677,156 @@ msgstr ""
 "い。 エラーメッセージ:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:173
+#: websiteFunctions/templates/websiteFunctions/website.html:212
 msgid "Next"
 msgstr "次へ"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:174
+#: websiteFunctions/templates/websiteFunctions/website.html:213
 msgid "Previous"
 msgstr "前へ"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:230
-#: websiteFunctions/templates/websiteFunctions/website.html:232
-#, fuzzy
-#| msgid "Add Destination"
+#: websiteFunctions/templates/websiteFunctions/website.html:257
+#: websiteFunctions/templates/websiteFunctions/website.html:259
 msgid "Add Domains"
-msgstr "バックアップ先の追加"
+msgstr "ドメインの追加"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:242
-#: websiteFunctions/templates/websiteFunctions/website.html:244
-#, fuzzy
-#| msgid "Select Domain"
+#: websiteFunctions/templates/websiteFunctions/website.html:269
+#: websiteFunctions/templates/websiteFunctions/website.html:271
 msgid "List Domains"
-msgstr "ドメインタイプの選択"
+msgstr "ドメインの一覧"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:274
-#: websiteFunctions/templates/websiteFunctions/website.html:733
+#: websiteFunctions/templates/websiteFunctions/website.html:301
+#: websiteFunctions/templates/websiteFunctions/website.html:760
 msgid "Path"
 msgstr "パス"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:276
+#: websiteFunctions/templates/websiteFunctions/website.html:303
 msgid "This path is relative to: "
-msgstr ""
+msgstr "このパスからの相対: "
 
-#: websiteFunctions/templates/websiteFunctions/website.html:276
-#, fuzzy
-#| msgid "Leave empty to select default home directory."
+#: websiteFunctions/templates/websiteFunctions/website.html:303
 msgid "Leave empty to set default."
-msgstr "デフォルトのホームディレクトリを選択するには、空のままにします。"
+msgstr "デフォルトを設定するには、空のままにします。"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:317
-#, fuzzy
-#| msgid "Create Email"
+#: websiteFunctions/templates/websiteFunctions/website.html:344
 msgid "Create Domain"
-msgstr "メールアカウントの作成"
+msgstr "ドメインの作成"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:360
-#, fuzzy
-#| msgid "Version Management"
+#: websiteFunctions/templates/websiteFunctions/website.html:387
 msgid "PHP Version Changed to:"
-msgstr "バージョン管理"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:364
-#, fuzzy
-#| msgid "Delete"
-msgid "Deleted:"
-msgstr "削除"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:368
-#, fuzzy
-#| msgid "SSL Issued for"
-msgid "SSL Issued:"
-msgstr "SSLが発行されました"
+msgstr "PHP のバージョンを変更:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:391
+msgid "Deleted:"
+msgstr "削除済み:"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:395
+msgid "SSL Issued:"
+msgstr "SSLの発行:"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:418
 msgid "Close"
-msgstr ""
+msgstr "閉じる"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:423
-#, fuzzy
-#| msgid "Issue SSL"
+#: websiteFunctions/templates/websiteFunctions/website.html:450
 msgid "Issue"
-msgstr "SSLを発行する"
+msgstr "発行"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:451
+#: websiteFunctions/templates/websiteFunctions/website.html:478
 msgid "Configurations"
 msgstr "設定"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:457
+#: websiteFunctions/templates/websiteFunctions/website.html:484
 msgid "Edit Virtual Host Main Configurations"
 msgstr "仮想ホストのメイン設定の編集"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:459
+#: websiteFunctions/templates/websiteFunctions/website.html:486
 msgid "Edit vHost Main Configurations"
 msgstr "メイン vHost 設定の編集"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:469
-#: websiteFunctions/templates/websiteFunctions/website.html:471
+#: websiteFunctions/templates/websiteFunctions/website.html:496
+#: websiteFunctions/templates/websiteFunctions/website.html:498
 msgid "Add Rewrite Rules (.htaccess)"
 msgstr "Rewrite ルールを追加 (.htaccess)"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:481
+#: websiteFunctions/templates/websiteFunctions/website.html:508
 msgid "Add Your Own SSL"
 msgstr "独自のSSLを追加"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:483
+#: websiteFunctions/templates/websiteFunctions/website.html:510
 msgid "Add SSL"
 msgstr "SSL を追加"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:498
+#: websiteFunctions/templates/websiteFunctions/website.html:525
 msgid "SSL Saved"
 msgstr "SSL を保存しました"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:503
+#: websiteFunctions/templates/websiteFunctions/website.html:530
 msgid "Could not save SSL. Error message:"
 msgstr "SSL を保存できませんでした。エラー メッセージ:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:553
+#: websiteFunctions/templates/websiteFunctions/website.html:580
 msgid "Current configuration in the file fetched."
 msgstr "取得されたファイル内にある現在の設定。"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:558
-#: websiteFunctions/templates/websiteFunctions/website.html:571
+#: websiteFunctions/templates/websiteFunctions/website.html:585
+#: websiteFunctions/templates/websiteFunctions/website.html:598
 msgid "Could not fetch current configuration. Error message:"
 msgstr "現在の設定を取得できませんでした。エラー メッセージ:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:567
-#: websiteFunctions/templates/websiteFunctions/website.html:622
+#: websiteFunctions/templates/websiteFunctions/website.html:594
+#: websiteFunctions/templates/websiteFunctions/website.html:649
 msgid "Configuration saved. Restart LiteSpeed put them in effect."
 msgstr "設定が保存されました。 LiteSpeed を再起動して有効にします。"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:608
+#: websiteFunctions/templates/websiteFunctions/website.html:635
 msgid "Current rewrite rules in the file fetched."
 msgstr "取得されたファイル内にある現在の rewrite ルール。"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:613
+#: websiteFunctions/templates/websiteFunctions/website.html:640
 msgid "Could not fetch current rewrite rules. Error message:"
 msgstr "現在の rewrite ルールを取得できませんでした。エラー メッセージ:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:626
+#: websiteFunctions/templates/websiteFunctions/website.html:653
 msgid "Could not save rewrite rules. Error message:"
 msgstr "rewrite ルールを保存できませんでした。エラー メッセージ:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:642
+#: websiteFunctions/templates/websiteFunctions/website.html:669
 msgid "Save Rewrite Rules"
 msgstr "Rewrite ルールを保存"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:665
+#: websiteFunctions/templates/websiteFunctions/website.html:692
 msgid "Files"
 msgstr "ファイル"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:672
-#: websiteFunctions/templates/websiteFunctions/website.html:674
+#: websiteFunctions/templates/websiteFunctions/website.html:699
+#: websiteFunctions/templates/websiteFunctions/website.html:701
 msgid "File Manager"
 msgstr "ファイル 管理"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:713
+#: websiteFunctions/templates/websiteFunctions/website.html:740
 msgid "Application Installer"
 msgstr "アプリケーションインストーラー"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:719
-#, fuzzy
-#| msgid "Wordpress with LSCache"
+#: websiteFunctions/templates/websiteFunctions/website.html:746
 msgid "Install wordpress with LSCache"
-msgstr "Wordpress の LSCache"
+msgstr "LSCache で Wordpress をインストールする"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:721
+#: websiteFunctions/templates/websiteFunctions/website.html:748
 msgid "Wordpress with LSCache"
 msgstr "Wordpress の LSCache"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:755
+#: websiteFunctions/templates/websiteFunctions/website.html:782
 msgid "Installation failed. Error message:"
 msgstr "インストールに失敗しました。エラー メッセージ:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:759
+#: websiteFunctions/templates/websiteFunctions/website.html:786
 msgid "Installation successful. To complete the setup visit:"
 msgstr "インストールに成功しました。 セットアップを完了するには:"
+
+#~ msgid "Reseller"
+#~ msgstr "代理店"
 
 #~ msgid "Urdu"
 #~ msgstr "ウルドゥー語"

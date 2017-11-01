@@ -73,7 +73,10 @@ def issueSSL(request):
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
 
-                website = ChildDomains.objects.get(domain=virtualHost)
+                try:
+                    website = ChildDomains.objects.get(domain=virtualHost)
+                except:
+                    website = Websites.objects.get(domain=virtualHost)
 
                 srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
                 srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"

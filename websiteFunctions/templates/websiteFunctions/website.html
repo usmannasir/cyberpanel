@@ -128,7 +128,7 @@
 
 
                     <div class="col-md-6">
-                                    <a ng-click="fetchLogs(2)" href="" title="{% trans 'Load Error Logs' %}" class="tile-box tile-box-shortcut btn-primary">
+                                    <a ng-click="fetchErrorLogs(1)" href="" title="{% trans 'Load Error Logs' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Error Logs" %}
                                         </div>
@@ -200,6 +200,33 @@
                                     </table>
                                 </div>
                             </div>
+
+
+                            <div ng-hide="hideErrorLogs" class="form-group">
+
+                                <div class="col-sm-2">
+                                    <input placeholder="Page Number"    type="number" class="form-control" ng-model="errorPageNumber" required>
+                                </div>
+
+                                <div class="col-sm-9">
+                                    <button ng-click="fetchErrorLogs(3)" type="button" class="btn ra-100 btn-purple">{% trans "Next" %}</button>
+                                    <button ng-click="fetchErrorLogs(4)" type="button" class="btn ra-100 btn-purple">{% trans "Previous" %}</button>
+                                </div>
+
+                                <div style="margin-bottom: 1%;"  class=" col-sm-1">
+                                    <a ng-click="hideErrorLogsbtn()" href=""><img src="/static/images/close-32.png"></a>
+                                </div>
+
+                                <div class="col-sm-12">
+                                    <textarea ng-model="errorLogsData" rows="25" class="form-control"></textarea>
+                                </div>
+                            </div>
+
+
+
+
+
+
 
 
                         </form>

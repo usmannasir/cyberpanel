@@ -446,14 +446,14 @@ class virtualHostUtilities:
         try:
             shutil.rmtree(virtualHostPath)
         except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to remove virtual host directory from /home]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to remove virtual host directory from /home continuing..]")
 
 
         try:
             confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + virtualHostName
             shutil.rmtree(confPath)
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to remove virtual host configuration directory from /conf]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to remove virtual host configuration directory from /conf ]")
 
         try:
             data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()

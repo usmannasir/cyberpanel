@@ -54,6 +54,7 @@ app.controller('firewallController', function($scope,$http) {
                             ruleName:ruleName,
                             ruleProtocol:ruleProtocol,
                             rulePort:rulePort,
+                            ruleIP:$scope.ruleIP,
                         };
 
                         var config = {
@@ -165,7 +166,7 @@ app.controller('firewallController', function($scope,$http) {
 
 
 
-           $scope.deleteRule = function(id,proto,port){
+           $scope.deleteRule = function(id,proto,port,ruleIP){
 
 
 
@@ -178,6 +179,7 @@ app.controller('firewallController', function($scope,$http) {
                             id:id,
                             proto:proto,
                             port:port,
+                            ruleIP:ruleIP,
                         };
 
                         var config = {
