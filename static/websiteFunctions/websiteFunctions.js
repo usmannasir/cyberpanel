@@ -429,8 +429,13 @@ app.controller('websitePages', function($scope,$http) {
     $scope.couldNotConnect = true;
     $scope.fetchedData = true;
     $scope.hideLogs = true;
+    $scope.hideErrorLogs = true;
 
     $scope.hidelogsbtn = function(){
+        $scope.hideLogs = true;
+    };
+
+    $scope.hideErrorLogsbtn = function(){
         $scope.hideLogs = true;
     };
 
@@ -441,7 +446,7 @@ app.controller('websitePages', function($scope,$http) {
 
     $scope.fetchLogs = function(type){
 
-                pageNumber = $scope.pageNumber;
+                var pageNumber = $scope.pageNumber;
 
 
                 if(type==3){
@@ -462,15 +467,13 @@ app.controller('websitePages', function($scope,$http) {
                 $scope.couldNotFetchLogs = true;
                 $scope.couldNotConnect = true;
                 $scope.fetchedData = false;
+                $scope.hideErrorLogs = true;
 
 
 
                 url = "/websites/getDataFromLogFile";
 
                 var domainNamePage = $("#domainNamePage").text();
-
-
-
 
 
                 var data = {
@@ -538,6 +541,114 @@ app.controller('websitePages', function($scope,$http) {
 
     };
 
+    $scope.errorPageNumber = 1;
+
+
+    $scope.fetchErrorLogs = function(type){
+
+                var errorPageNumber = $scope.errorPageNumber;
+
+
+                if(type==3){
+                    errorPageNumber = $scope.errorPageNumber+1;
+                    $scope.errorPageNumber = errorPageNumber;
+                }
+                else if(type==4){
+                    errorPageNumber = $scope.errorPageNumber-1;
+                    $scope.errorPageNumber = errorPageNumber;
+                }
+                else{
+                    logType = type;
+                }
+
+                // notifications
+
+                $scope.logFileLoading = false;
+                $scope.logsFeteched = true;
+                $scope.couldNotFetchLogs = true;
+                $scope.couldNotConnect = true;
+                $scope.fetchedData = true;
+                $scope.hideErrorLogs = true;
+                $scope.hideLogs = false;
+
+
+
+                url = "/websites/fetchErrorLogs";
+
+                var domainNamePage = $("#domainNamePage").text();
+
+
+                var data = {
+                    virtualHost:domainNamePage,
+                    page:errorPageNumber,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.logstatus == 1){
+
+
+                        // notifications
+
+                        $scope.logFileLoading = true;
+                        $scope.logsFeteched = false;
+                        $scope.couldNotFetchLogs = true;
+                        $scope.couldNotConnect = true;
+                        $scope.fetchedData = true;
+                        $scope.hideLogs = false;
+                        $scope.hideErrorLogs = false;
+
+
+                        $scope.errorLogsData = response.data.data;
+
+                    }
+
+                    else
+                    {
+
+                        // notifications
+
+                        $scope.logFileLoading = true;
+                        $scope.logsFeteched = true;
+                        $scope.couldNotFetchLogs = false;
+                        $scope.couldNotConnect = true;
+                        $scope.fetchedData = true;
+                        $scope.hideLogs = true;
+                        $scope.hideErrorLogs = true;
+
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    // notifications
+
+                    $scope.logFileLoading = true;
+                    $scope.logsFeteched = true;
+                    $scope.couldNotFetchLogs = true;
+                    $scope.couldNotConnect = false;
+                    $scope.fetchedData = true;
+                    $scope.hideLogs = true;
+                    $scope.hideErrorLogs = true;
+
+                }
+
+
+
+    };
 
     ///////// Configurations Part
 
