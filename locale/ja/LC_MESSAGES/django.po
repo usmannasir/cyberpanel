@@ -3,20 +3,12 @@
 # This file is distributed under the same license as the CyberPanel package.
 # FIRST AUTHOR <unasir@litespeedtech.com>, 2017.
 #
-#: baseTemplate/templates/baseTemplate/index.html:211
-#: baseTemplate/templates/baseTemplate/index.html:301
-#: baseTemplate/templates/baseTemplate/index.html:356
-#: baseTemplate/templates/baseTemplate/index.html:362
-#: baseTemplate/templates/baseTemplate/index.html:368
-#: baseTemplate/templates/baseTemplate/index.html:374
-#: baseTemplate/templates/baseTemplate/index.html:380
-#: baseTemplate/templates/baseTemplate/index.html:386
 msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-10-29 20:47+0500\n"
-"PO-Revision-Date: 2017-10-26 02:15+0900\n"
+"PO-Revision-Date: 2017-10-31 23:38+0900\n"
 "Last-Translator: @ kazuo210 <kazu.nito@gmail.com>\n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
 "Language: ja\n"
@@ -24,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 2.0.4\n"
+"X-Generator: Poedit 1.8.7.1\n"
 
 #: CyberCP/settings.py:167
 msgid "English"
@@ -48,7 +40,7 @@ msgstr "日本語"
 
 #: CyberCP/settings.py:172
 msgid "Bosnian"
-msgstr ""
+msgstr "ボスニア語"
 
 #: backup/templates/backup/backup.html:3 backup/templates/backup/backup.html:13
 #: backup/templates/backup/backup.html:20
@@ -340,68 +332,50 @@ msgid "Restore"
 msgstr "復元"
 
 #: backup/templates/backup/remoteBackups.html:3
-#, fuzzy
-#| msgid "Websites Hosted - CyberPanel"
 msgid "Transfer Websites from Remote Server - CyberPanel"
-msgstr "ホストされているWebサイト -  Cyber​​Panel"
+msgstr "リモートサーバーからWebサイトを転送 -  Cyber​​Panel"
 
 #: backup/templates/backup/remoteBackups.html:14
 #: backup/templates/backup/remoteBackups.html:21
-#, fuzzy
-#| msgid "Restore Back up"
 msgid "Remote Backups"
-msgstr "バックアップの復元"
+msgstr "リモートバックアップ"
 
 #: backup/templates/backup/remoteBackups.html:15
 msgid "This feature can import website(s) from remote server"
-msgstr ""
+msgstr "この機能は、リモート サーバーからウェブサイトをインポートします"
 
 #: backup/templates/backup/remoteBackups.html:46
-#, fuzzy
-#| msgid "FTP Accounts"
 msgid "Fetch Accounts"
-msgstr "FTP アカウント"
+msgstr "アカウントの取得"
 
 #: backup/templates/backup/remoteBackups.html:55
 msgid "Start Transfer"
-msgstr ""
+msgstr "転送を開始"
 
 #: backup/templates/backup/remoteBackups.html:59
 #: websiteFunctions/templates/websiteFunctions/website.html:269
-#, fuzzy
-#| msgid "Cancel Backup"
 msgid "Cancel"
-msgstr "バックアップを中止"
+msgstr "キャンセル"
 
 #: backup/templates/backup/remoteBackups.html:72
-#, fuzzy
-#| msgid "Could not connect. Please refresh this page."
 msgid "Could not connect, please refresh this page."
 msgstr "接続できませんでした。このページを更新してください。"
 
 #: backup/templates/backup/remoteBackups.html:76
-#, fuzzy
-#| msgid "Records successfully fetched for"
 msgid "Accounts Successfully Fetched from remote server."
-msgstr "レコードが取得されました"
+msgstr "アカウントはリモートサーバーから取得されました。"
 
 #: backup/templates/backup/remoteBackups.html:80
-#, fuzzy
-#| msgid " is successfully created."
 msgid "Backup Process successfully started."
-msgstr " 作成されました。"
+msgstr "バックアップ処理が開始されました。"
 
 #: backup/templates/backup/remoteBackups.html:84
-#, fuzzy
-#| msgid "is successfully created."
 msgid "Backup successfully cancelled."
-msgstr "作成されました。"
+msgstr "バックアップはキャンセルされました。"
 
 #: backup/templates/backup/remoteBackups.html:96
-#, fuzzy
-#| msgid "Select Account"
 msgid "Search Accounts.."
-msgstr "アカウントを選択"
+msgstr "アカウントを検索。"
 
 #: backup/templates/backup/remoteBackups.html:107
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:65
@@ -879,7 +853,7 @@ msgstr "メールアカウントの作成"
 #: mailServer/templates/mailServer/index.html:25
 #: mailServer/templates/mailServer/index.html:27
 msgid "Create Email"
-msgstr "メールアカウントの作成"
+msgstr "メールの作成"
 
 #: baseTemplate/templates/baseTemplate/index.html:522
 #: mailServer/templates/mailServer/deleteEmailAccount.html:12
@@ -892,7 +866,7 @@ msgstr "メールアカウントの削除"
 #: mailServer/templates/mailServer/index.html:37
 #: mailServer/templates/mailServer/index.html:39
 msgid "Delete Email"
-msgstr "メールアカウントの削除"
+msgstr "メールの削除"
 
 #: baseTemplate/templates/baseTemplate/index.html:523
 #: databases/templates/databases/listDataBases.html:73
@@ -1178,10 +1152,8 @@ msgid "Records successfully fetched for"
 msgstr "レコードが取得されました"
 
 #: databases/templates/databases/listDataBases.html:50
-#, fuzzy
-#| msgid "Password changed for"
 msgid "Password changed for: "
-msgstr "パスワードが変更されました"
+msgstr "パスワードを変更: "
 
 #: databases/templates/databases/listDataBases.html:54
 msgid "Cannot change password for "
@@ -1473,10 +1445,8 @@ msgid "Secure SSH - CyberPanel"
 msgstr "SSH のセキュリティ - Cyber​​Panel"
 
 #: firewall/templates/firewall/secureSSH.html:14
-#, fuzzy
-#| msgid "SSH Configurations Saved."
 msgid "Secure or harden SSH Configurations."
-msgstr "SSH の設定が保存されました。"
+msgstr "SSHの設定をより安全にするか強化します。"
 
 #: firewall/templates/firewall/secureSSH.html:28
 #: managePHP/templates/managePHP/editPHPConfig.html:29
@@ -1920,15 +1890,11 @@ msgstr "パッケージ名"
 #: packages/templates/packages/createPackage.html:35
 #: packages/templates/packages/modifyPackage.html:40
 #: websiteFunctions/templates/websiteFunctions/website.html:223
-#, fuzzy
-#| msgid "Domain Name"
 msgid "Domains"
-msgstr "ドメイン名"
+msgstr "ドメイン"
 
 #: packages/templates/packages/createPackage.html:39
 #: packages/templates/packages/modifyPackage.html:44
-#, fuzzy
-#| msgid "( 0 = Unlimited )"
 msgid "(0 = Unlimited)"
 msgstr "( 0 = 無制限 )"
 
@@ -2695,17 +2661,13 @@ msgstr "前へ"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:230
 #: websiteFunctions/templates/websiteFunctions/website.html:232
-#, fuzzy
-#| msgid "Add Destination"
 msgid "Add Domains"
-msgstr "バックアップ先の追加"
+msgstr "ドメインの追加"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:242
 #: websiteFunctions/templates/websiteFunctions/website.html:244
-#, fuzzy
-#| msgid "Select Domain"
 msgid "List Domains"
-msgstr "ドメインタイプの選択"
+msgstr "ドメインの一覧"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:274
 #: websiteFunctions/templates/websiteFunctions/website.html:733
@@ -2714,47 +2676,35 @@ msgstr "パス"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:276
 msgid "This path is relative to: "
-msgstr ""
+msgstr "このパスからの相対: "
 
 #: websiteFunctions/templates/websiteFunctions/website.html:276
-#, fuzzy
-#| msgid "Leave empty to select default home directory."
 msgid "Leave empty to set default."
-msgstr "デフォルトのホームディレクトリを選択するには、空のままにします。"
+msgstr "デフォルトを設定するには、空のままにします。"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:317
-#, fuzzy
-#| msgid "Create Email"
 msgid "Create Domain"
-msgstr "メールアカウントの作成"
+msgstr "ドメインの作成"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:360
-#, fuzzy
-#| msgid "Version Management"
 msgid "PHP Version Changed to:"
-msgstr "バージョン管理"
+msgstr "PHP のバージョンを変更:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:364
-#, fuzzy
-#| msgid "Delete"
 msgid "Deleted:"
-msgstr "削除"
+msgstr "削除済み:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:368
-#, fuzzy
-#| msgid "SSL Issued for"
 msgid "SSL Issued:"
-msgstr "SSLが発行されました"
+msgstr "SSLの発行:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:391
 msgid "Close"
-msgstr ""
+msgstr "閉じる"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:423
-#, fuzzy
-#| msgid "Issue SSL"
 msgid "Issue"
-msgstr "SSLを発行する"
+msgstr "発行"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:451
 msgid "Configurations"
@@ -2833,10 +2783,8 @@ msgid "Application Installer"
 msgstr "アプリケーションインストーラー"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:719
-#, fuzzy
-#| msgid "Wordpress with LSCache"
 msgid "Install wordpress with LSCache"
-msgstr "Wordpress の LSCache"
+msgstr "LSCache で Wordpress をインストールする"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:721
 msgid "Wordpress with LSCache"
