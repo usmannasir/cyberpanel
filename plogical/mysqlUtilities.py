@@ -146,7 +146,7 @@ class mysqlUtilities:
             data = f.read()
             password = data.split('\n', 1)[0]
 
-            command = 'mysqldump -u root -p'+password+' '+databaseName
+            command = 'sudo mysqldump -u root -p'+password+' '+databaseName
 
             cmd = shlex.split(command)
 
@@ -170,7 +170,7 @@ class mysqlUtilities:
             password = data.split('\n', 1)[0]
 
 
-            command = 'mysql -u root -p' + password + ' ' + databaseName
+            command = 'sudo mysql -u root -p' + password + ' ' + databaseName
 
             cmd = shlex.split(command)
 
@@ -184,7 +184,7 @@ class mysqlUtilities:
 
             passwordCMD = "use mysql;SET PASSWORD FOR '"+databaseName+"'@'localhost' = '"+dbPassword+"';FLUSH PRIVILEGES;"
 
-            command = 'mysql -u root -p'+password+' -e "'+passwordCMD+'"'
+            command = 'sudo mysql -u root -p'+password+' -e "'+passwordCMD+'"'
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
 

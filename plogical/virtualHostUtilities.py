@@ -5,6 +5,7 @@ import shutil
 import logging
 import CyberCPLogFileWriter as logging
 import subprocess
+import shlex
 
 
 class virtualHostUtilities:
@@ -21,13 +22,29 @@ class virtualHostUtilities:
         confPath = virtualHostUtilities.Server_root + "/conf/vhosts/"+virtualHostName
         completePathToConfigFile = confPath +"/vhost.conf"
 
+
         try:
             os.makedirs(path)
+        except OSError,msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to create directories for virtual host: "+ path+" [createDirectoryForVirtualHost]]")
+            return 0
+
+        try:
             os.makedirs(pathHTML)
+        except OSError,msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to create  directories for virtual host "+ pathHTML+"  [createDirectoryForVirtualHost]]")
+            return 0
+
+        try:
             os.makedirs(pathLogs)
+        except OSError,msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able create to directories for virtual host "+ pathLogs+"  [createDirectoryForVirtualHost]]")
+            return 0
+
+        try:
             os.makedirs(confPath)
         except OSError,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to directories for virtual host [createDirectoryForVirtualHost]]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able create to directories for virtual host "+ confPath+"  [createDirectoryForVirtualHost]]")
             return 0
 
 
@@ -38,25 +55,24 @@ class virtualHostUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForVirtualHost]]")
             return 0
 
-        try:
-            uid = pwd.getpwnam("lsadm").pw_uid
-            gid = grp.getgrnam("lsadm").gr_gid
-            os.chown(confPath, uid, gid)
-            os.chown(completePathToConfigFile, uid, gid)
+        #try:
 
-            uid = pwd.getpwnam("nobody").pw_uid
-            gid = grp.getgrnam("nobody").gr_gid
+            #command = "sudo chown -R nobody:cyberpanel " + completePathToConfigFile
 
-            os.chown("/home",uid,gid)
-            os.chown(path, uid, gid)
-            os.chown(pathHTML, uid, gid)
-            os.chown(pathLogs, uid, gid)
+            #cmd = shlex.split(command)
+
+            #res = subprocess.call(cmd)
 
 
+            #command = "sudo chown -R nobody:cyberpanel /home"
+
+            #cmd = shlex.split(command)
+
+            #res = subprocess.call(cmd)
 
 
-        except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForVirtualHost]]")
+        #except BaseException,msg:
+        #    logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForVirtualHost]]")
 
 
         if virtualHostUtilities.perHostVirtualConf(completePathToConfigFile,administratorEmail,phpVersion) == 1:
@@ -237,13 +253,13 @@ class virtualHostUtilities:
             os.makedirs(path)
         except OSError, msg:
             logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + " [Not able to directories for virtual host [createDirectoryForDomain]]")
+                str(msg) + " [Not able create to directories for virtual host [createDirectoryForDomain]]")
 
         try:
             os.makedirs(confPath)
         except OSError, msg:
             logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + " [Not able to directories for virtual host [createDirectoryForDomain]]")
+                str(msg) + " [Not able create to directories for virtual host [createDirectoryForDomain]]")
 
         try:
             file = open(completePathToConfigFile, "w+")
@@ -251,20 +267,20 @@ class virtualHostUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForDomain]]")
             return 0
 
-        try:
-            uid = pwd.getpwnam("lsadm").pw_uid
-            gid = grp.getgrnam("lsadm").gr_gid
-            os.chown(confPath, uid, gid)
-            os.chown(completePathToConfigFile, uid, gid)
+        #try:
+         #   uid = pwd.getpwnam("lsadm").pw_uid
+        #    gid = grp.getgrnam("lsadm").gr_gid
+         #   os.chown(confPath, uid, gid)
+        #    os.chown(completePathToConfigFile, uid, gid)
 
-            uid = pwd.getpwnam("nobody").pw_uid
-            gid = grp.getgrnam("nobody").gr_gid
+         #   uid = pwd.getpwnam("nobody").pw_uid
+         #   gid = grp.getgrnam("nobody").gr_gid
 
-            os.chown("/home", uid, gid)
-            os.chown(path, uid, gid)
+         #   os.chown("/home", uid, gid)
+         #   os.chown(path, uid, gid)
 
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForDomain]]")
+        #except BaseException, msg:
+            #logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForDomain]]")
 
         if virtualHostUtilities.perHostDomainConf(path, masterDomain, domain, completePathToConfigFile,
                                                   administratorEmail, phpVersion) == 1:
@@ -447,7 +463,6 @@ class virtualHostUtilities:
             shutil.rmtree(virtualHostPath)
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to remove virtual host directory from /home continuing..]")
-
 
         try:
             confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + virtualHostName
@@ -640,3 +655,27 @@ class virtualHostUtilities:
                 str(msg) + "  [UnsuspendVirtualHost]")
             return 0
         return 1
+
+    @staticmethod
+    def permissionControl(path):
+        try:
+            command = 'sudo chown -R  cyberpanel:cyberpanel '+path
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
+
+        except BaseException,msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
+    @staticmethod
+    def leaveControl(path):
+        try:
+            command = 'sudo chown -R  root:root ' + path
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))

@@ -135,17 +135,16 @@ class sslUtilities:
 
     @staticmethod
     def obtainSSLForADomain(virtualHostName,adminEmail,sslpath):
-
         try:
-
             #if virtualHostName.count(".")==1:
-            #    command = "certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName
+            #    command = "sudo certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName
             #else:
-            #    command = "certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
+            #    command = "sudo certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
 
 
-            command = "certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
 
+
+            command = "sudo certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
 
 
             expectation = []
@@ -187,7 +186,7 @@ class sslUtilities:
                     pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
 
 
-                    command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
+                    command = 'sudo openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
 
                     cmd = shlex.split(command)
 
@@ -207,7 +206,7 @@ class sslUtilities:
                     pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
                     pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
 
-                    command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
+                    command = 'sudo openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
 
                     cmd = shlex.split(command)
 
@@ -267,7 +266,7 @@ class sslUtilities:
                 pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
                 pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
 
-                command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
+                command = 'sudo openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
 
                 cmd = shlex.split(command)
 
@@ -294,13 +293,21 @@ class sslUtilities:
                 pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
                 pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
 
-                command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
+                command = 'sudo openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
 
                 cmd = shlex.split(command)
 
                 res = subprocess.call(cmd)
 
                 return 1
+
+            ## fix permissions
+
+            command = 'sudo chown -R  cyberpanel:cyberpanel /etc/letsencrypt'
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
 
 
 

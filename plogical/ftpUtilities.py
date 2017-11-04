@@ -2,6 +2,7 @@ import mysqlUtilities as sql
 import subprocess
 import CyberCPLogFileWriter as logging
 import os
+import shlex
 
 
 class FTPUtilities:
@@ -182,31 +183,29 @@ class FTPUtilities:
 
         try:
 
-            cmd = []
-            cmd.append("chmod")
-            cmd.append("-R")
-            cmd.append("774")
-            cmd.append(directory)
+            command = "sudo chmod -R 775 " + directory
+
+            cmd = shlex.split(command)
 
             res = subprocess.call(cmd)
+
             if res == 1:
                 print "Permissions not changed."
                 return 0
             else:
                 print "User permissions setted."
 
-            cmd = []
-            cmd.append("chown")
-            cmd.append("-R")
-            cmd.append("nobody:nobody")
-            cmd.append(directory)
+
+
+            command = "sudo chown -R nobody:cyberpanel " + directory
+
+            cmd = shlex.split(command)
 
             res = subprocess.call(cmd)
+
             if res == 1:
-                print "Permissions not changed."
                 return 0
             else:
-                print "User permissions setted."
                 return 1
 
         except BaseException, msg:

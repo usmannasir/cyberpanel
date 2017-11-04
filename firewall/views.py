@@ -150,7 +150,7 @@ def reloadFirewall(request):
             if request.method == 'POST':
 
 
-                command = 'firewall-cmd --reload'
+                command = 'sudo firewall-cmd --reload'
 
                 cmd = shlex.split(command)
 
@@ -185,7 +185,7 @@ def startFirewall(request):
             if request.method == 'POST':
 
 
-                command = 'systemctl start firewalld'
+                command = 'sudo systemctl start firewalld'
 
                 cmd = shlex.split(command)
 
@@ -220,7 +220,7 @@ def stopFirewall(request):
             if request.method == 'POST':
 
 
-                command = 'systemctl stop firewalld'
+                command = 'sudo systemctl stop firewalld'
 
                 cmd = shlex.split(command)
 
@@ -302,6 +302,14 @@ def getSSHConfigs(request):
 
                 if type=="1":
 
+                    ## temporarily changing permission for sshd files
+
+                    command = 'sudo chown -R  cyberpanel:cyberpanel /etc/ssh/sshd_config'
+
+                    cmd = shlex.split(command)
+
+                    res = subprocess.call(cmd)
+
 
                     pathToSSH = "/etc/ssh/sshd_config"
 
@@ -318,10 +326,27 @@ def getSSHConfigs(request):
                         if items.find("Port") > -1 and not items.find("GatewayPorts") > -1:
                             sshPort = items.split(" ")[1].strip("\n")
 
+                    ## changing permission back
+
+                    command = 'sudo chown -R  root:root /etc/ssh/sshd_config'
+
+                    cmd = shlex.split(command)
+
+                    res = subprocess.call(cmd)
+
                     final_dic = {'permitRootLogin': permitRootLogin, 'sshPort': sshPort}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
                 else:
+
+                    ## temporarily changing permission for sshd files
+
+                    command = 'sudo chown -R  cyberpanel:cyberpanel /root'
+
+                    cmd = shlex.split(command)
+
+                    res = subprocess.call(cmd)
+
                     pathToKeyFile = "/root/.ssh/authorized_keys"
 
                     json_data = "["
@@ -352,6 +377,14 @@ def getSSHConfigs(request):
 
                     json_data = json_data + ']'
 
+                    ## changing permission back
+
+                    command = 'sudo chown -R  root:root /root'
+
+                    cmd = shlex.split(command)
+
+                    res = subprocess.call(cmd)
+
                     final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
                     return HttpResponse(final_json)
 
@@ -381,11 +414,12 @@ def saveSSHConfigs(request):
                     sshPort = data['sshPort']
                     rootLogin = data['rootLogin']
 
-                    command = 'semanage port -a -t ssh_port_t -p tcp ' +sshPort
+                    command = 'sudo semanage port -a -t ssh_port_t -p tcp ' +sshPort
 
                     cmd = shlex.split(command)
 
                     res = subprocess.call(cmd)
+
 
                     FirewallUtilities.addRule('tcp',sshPort)
 
@@ -397,6 +431,17 @@ def saveSSHConfigs(request):
                     except:
                         newFireWallRule = FirewallRules(name="SSHCustom",port=sshPort,proto="tcp")
                         newFireWallRule.save()
+
+
+                    ## temporarily changing permission for sshd files
+
+                    command = 'sudo chown -R  cyberpanel:cyberpanel /etc/ssh/sshd_config'
+
+                    cmd = shlex.split(command)
+
+                    res = subprocess.call(cmd)
+
+                    ##
 
 
                     if rootLogin == True:
@@ -425,11 +470,21 @@ def saveSSHConfigs(request):
                             writeToFile.writelines(items)
                     writeToFile.close()
 
-                    command = 'systemctl restart sshd'
+                    command = 'sudo systemctl restart sshd'
 
                     cmd = shlex.split(command)
 
                     res = subprocess.call(cmd)
+
+                    ## changin back permissions
+
+                    command = 'sudo chown -R  root:root /etc/ssh/sshd_config'
+
+                    cmd = shlex.split(command)
+
+                    res = subprocess.call(cmd)
+
+                    ##
 
 
                     final_dic = {'saveStatus': 1}
@@ -454,6 +509,16 @@ def deleteSSHKey(request):
                 data = json.loads(request.body)
                 key = data['key']
 
+                # temp change of permissions
+
+                command = 'sudo chown -R  cyberpanel:cyberpanel /root'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                ##
+
                 keyPart = key.split(" ")[1]
 
                 pathToSSH = "/root/.ssh/authorized_keys"
@@ -468,6 +533,16 @@ def deleteSSHKey(request):
                     else:
                         writeToFile.writelines(items)
                 writeToFile.close()
+
+                # change back permissions
+
+                command = 'sudo chown -R  root:root /root'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                ##
 
 
                 final_dic = {'delete_status': 1}
@@ -492,6 +567,16 @@ def addSSHKey(request):
                 data = json.loads(request.body)
                 key = data['key']
 
+                # temp change of permissions
+
+                command = 'sudo chown -R  cyberpanel:cyberpanel /root'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                ##
+
                 sshDir = "/root/.ssh"
 
                 pathToSSH = "/root/.ssh/authorized_keys"
@@ -515,6 +600,16 @@ def addSSHKey(request):
                 writeToFile.writelines(key)
                 writeToFile.writelines("\n")
                 writeToFile.close()
+
+                # change back permissions
+
+                command = 'sudo chown -R  root:root /root'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                ##
 
 
                 final_dic = {'add_status': 1}

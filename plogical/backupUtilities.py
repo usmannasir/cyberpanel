@@ -11,9 +11,12 @@ from multiprocessing import Process
 import json
 import requests
 import signal
-
+from installUtilities import installUtilities
 
 class backupUtilities:
+
+    completeKeyPath  = "/home/cyberpanel/.ssh"
+
 
     @staticmethod
     def startBackup(tempStoragePath,backupName,backupPath):
@@ -24,6 +27,7 @@ class backupUtilities:
             status = open(backupPath+'status',"w")
             status.write(backupName+"\n")
             status.write("Making archive of home directory\n")
+            logging.CyberCPLogFileWriter.writeToFile("Making archive of home directory")
             status.close()
 
             count = 0
@@ -42,6 +46,7 @@ class backupUtilities:
                         dbName = items.split('-')[0]
                         status = open(backupPath + 'status', "w")
                         status.write(backupName + "\n")
+                        logging.CyberCPLogFileWriter.writeToFile("Backing up database: " + dbName)
                         status.write("Backing up database: " + dbName)
                         status.close()
                         mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, tempStoragePath)
@@ -52,6 +57,7 @@ class backupUtilities:
 
             status = open(backupPath + 'status', "w")
             status.write(backupName + "\n")
+            logging.CyberCPLogFileWriter.writeToFile("completed")
             status.write("completed\n")
             status.close()
 
@@ -244,6 +250,14 @@ class backupUtilities:
             status = open(completPath + '/status', "w")
             status.write("Done")
             status.close()
+            installUtilities.reStartLiteSpeed()
+
+            command = "sudo chown -R nobody:cyberpanel "+websiteHome
+
+            cmd = shlex.split(command)
+
+            subprocess.call(cmd)
+
 
 
         except BaseException, msg:
@@ -260,8 +274,12 @@ class backupUtilities:
     @staticmethod
     def sendKey(IPAddress,password):
         try:
+            if not os.path.exists(backupUtilities.completeKeyPath+"/cyberpanel"):
+                command = "ssh-keygen -f "+backupUtilities.completeKeyPath+"/cyberpanel -t rsa -N ''"
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
 
-            sendKeyProc = pexpect.spawn("scp /root/.ssh/cyberpanel.pub root@"+IPAddress+":/root/.ssh/authorized_keys")
+            sendKeyProc = pexpect.spawn("scp "+backupUtilities.completeKeyPath+"/cyberpanel.pub root@"+IPAddress+":"+backupUtilities.completeKeyPath+"/authorized_keys")
             sendKeyProc.expect("password:")
 
             sendKeyProc.sendline(password)
@@ -284,7 +302,6 @@ class backupUtilities:
     @staticmethod
     def setupSSHKeys(IPAddress, password):
         try:
-
             ## Checking for host verification
 
             backupUtilities.host_key_verification(IPAddress)
@@ -299,7 +316,7 @@ class backupUtilities:
             expectation.append("continue connecting (yes/no)?")
             expectation.append("password:")
 
-            setupSSHKeys = pexpect.spawn("ssh root@"+IPAddress+" mkdir /root/.ssh")
+            setupSSHKeys = pexpect.spawn("ssh cyberpanel@"+IPAddress+" mkdir "+backupUtilities.keyPath)
 
             index = setupSSHKeys.expect(expectation)
 
@@ -323,7 +340,7 @@ class backupUtilities:
                     ## setting up keys.
 
                     if backupUtilities.sendKey(IPAddress,password) == 0:
-                        return "Can't setup connection, check CyberCP Main log file."
+                        return "Can't setup connection, check CyberPanel Main log file."
                     else:
                         return 1
 
@@ -335,11 +352,9 @@ class backupUtilities:
                     ## setting up keys.
 
                     if backupUtilities.sendKey(IPAddress,password) == 0:
-                        return "Can't setup connection, check CyberCP Main log file."
+                        return "Can't setup connection, check CyberPanel Main log file."
                     else:
                         return 1
-
-                    print "keysInstalled"
 
                 else:
                     return "Wrong Password"
@@ -362,12 +377,11 @@ class backupUtilities:
                     ## setting up keys.
 
                     if backupUtilities.sendKey(IPAddress,password) == 0:
-                        return "Can't setup connection, check CyberCP Main log file."
+                        return "Can't setup connection, check CyberPanel Main log file."
                     else:
                         return 1
 
                 elif innerIndex == 1:
-                    print "Created"
                     setupSSHKeys.wait()
 
                     ## setting up keys.
@@ -375,7 +389,7 @@ class backupUtilities:
                     ## setting up keys.
 
                     if backupUtilities.sendKey(IPAddress,password) == 0:
-                        return "Can't setup connection, check CyberCP Main log file."
+                        return "Can't setup connection, check CyberPanel Main log file."
                     else:
                         return 1
 
@@ -404,14 +418,12 @@ class backupUtilities:
     @staticmethod
     def checkConnection(IPAddress):
         try:
-            backupUtilities.verifyHostKey(IPAddress)
-
             expectation = []
             expectation.append("password:")
             expectation.append("Last login")
             expectation.append(pexpect.EOF)
 
-            checkConn = pexpect.spawn("ssh -i /root/.ssh/cyberpanel root@"+IPAddress, timeout=3)
+            checkConn = pexpect.spawn("ssh -i /home/cyberpanel/.ssh/cyberpanel -o StrictHostKeyChecking=no cyberpanel@"+IPAddress, timeout=3)
             index = checkConn.expect(expectation)
 
             if index == 0:
@@ -425,7 +437,7 @@ class backupUtilities:
                 subprocess.call(['kill', str(checkConn.pid)])
                 logging.CyberCPLogFileWriter.writeToFile(
                     "Remote Server is not able to authenticate for transfer to initiate, IP Address:" + IPAddress)
-                return [0, "Remote Server is not able to authenticate for transfer to initiate."]
+                return [0, "Remote Server is not able to authenticate for transfer to initiate, IP Address:" + IPAddress]
 
         except pexpect.TIMEOUT, msg:
             logging.CyberCPLogFileWriter.writeToFile("Timeout "+IPAddress+ " [checkConnection]")
@@ -449,7 +461,7 @@ class backupUtilities:
             expectation.append("continue connecting (yes/no)?")
             expectation.append("password:")
 
-            setupSSHKeys = pexpect.spawn("ssh root@" + IPAddress)
+            setupSSHKeys = pexpect.spawn("ssh cyberpanel@" + IPAddress, timeout=3)
 
             index = setupSSHKeys.expect(expectation)
 
@@ -509,7 +521,7 @@ class backupUtilities:
     def createBackupDir(IPAddress,IPAddressA):
 
         try:
-            command = "ssh -i /root/.ssh/cyberpanel root@"+IPAddress+" mkdir /home/backup"
+            command = "ssh -i /home/cyberpanel/.ssh/cyberpanel cyberpanel@"+IPAddress+" mkdir /home/backup"
 
             shlex.split(command)
 
@@ -522,6 +534,7 @@ class backupUtilities:
     @staticmethod
     def initiateBackupDirCreation(IPAddress):
         try:
+            backupUtilities.verifyHostKey(IPAddress)
             thread.start_new_thread(backupUtilities.createBackupDir, (IPAddress,IPAddress))
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateBackupDirCreation]")
@@ -529,7 +542,7 @@ class backupUtilities:
     @staticmethod
     def host_key_verification(IPAddress):
         try:
-            command = 'ssh-keygen -R '+IPAddress
+            command = 'sudo ssh-keygen -R '+IPAddress
 
             shlex.split(command)
 

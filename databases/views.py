@@ -324,7 +324,7 @@ def changePassword(request):
 
                 passwordCMD = "use mysql;SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "');FLUSH PRIVILEGES;"
 
-                command = 'mysql -u root -p' + password + ' -e "' + passwordCMD + '"'
+                command = 'sudo mysql -u root -p' + password + ' -e "' + passwordCMD + '"'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 

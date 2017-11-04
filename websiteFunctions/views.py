@@ -279,25 +279,40 @@ def submitWebsiteCreation(request):
 
                 ssl = data['ssl']
 
+                ## tmp change of permissions
+
+
+
                 if virtualHostUtilities.checkIfVirtualHostExists(domain) == 1:
+
+
                     data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
                                 'error_message': "This domain already exists in Litespeed Configurations, first delete the domain to perform sweap."}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
                 if virtualHostUtilities.createDirectoryForVirtualHost(domain, adminEmail, phpSelection) != 1:
+
                     numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
                     virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
+
+
+
+
                     data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
-                                'error_message': "Can not create configurations, see CyberCP main log file."}
+                                'error_message': "Can not create configurations, see CyberPanel main log file. [createDirectoryForVirtualHost]"}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
                 if virtualHostUtilities.createConfigInMainVirtualHostFile(domain) != 1:
                     numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
                     virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
+
+
+
+
                     data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
-                                'error_message': "Can not create configurations, see CyberCP main log file."}
+                                'error_message': "Can not create configurations, see CyberPanel main log file."}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
@@ -317,14 +332,17 @@ def submitWebsiteCreation(request):
                         numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
                         virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
 
+
+
+
                         data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
                                     'error_message': str(
-                                        ssl_responce) + ", for more information see CyberCP main log file."}
+                                        ssl_responce) + ", for more information see CyberPanel main log file."}
                         json_data = json.dumps(data_ret)
                         return HttpResponse(json_data)
 
 
-                ## zone creation and
+                ## zone creation
                 try:
 
                     newZone = Domains(admin=admin, name=domain, type="NATIVE")
@@ -389,6 +407,9 @@ def submitWebsiteCreation(request):
 
                 shutil.copy("/usr/local/CyberCP/index.html", "/home/" + domain + "/public_html/index.html")
 
+
+
+
                 data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -396,6 +417,9 @@ def submitWebsiteCreation(request):
         except BaseException,msg:
             numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
             virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
+
+
+
             data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg),"existsStatus":0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -448,9 +472,13 @@ def submitDomainCreation(request):
             ssl = data['ssl']
             path = data['path']
 
+            restart = 1
+
+
             ####### Creation
             try:
                 restore = data['restore']
+                restart = 0
             except:
                 if len(path) > 0:
                     path = path.lstrip("/")
@@ -462,6 +490,8 @@ def submitDomainCreation(request):
                                                              master.adminEmail) != 1:
                 numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
                 virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
+
+
                 data_ret = {"existsStatus": 1, 'createWebSiteStatus': 0,
                             'error_message': "Can not create configurations, see CyberCP main log file."}
                 json_data = json.dumps(data_ret)
@@ -470,26 +500,28 @@ def submitDomainCreation(request):
             if virtualHostUtilities.createConfigInMainDomainHostFile(domain, masterDomain) != 1:
                 numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
                 virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
+
+
                 data_ret = {"existsStatus": 1, 'createWebSiteStatus': 0,
                             'error_message': "Can not create configurations, see CyberCP main log file."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            if ssl == 1:
-                installUtilities.reStartOpenLiteSpeed("restart", "ols")
-            else:
+            if restart == 1:
                 installUtilities.reStartLiteSpeed()
 
             if ssl == 1:
                 ssl_responce = sslUtilities.obtainSSLForADomain(domain, master.adminEmail, path)
                 if ssl_responce == 1:
                     sslUtilities.installSSLForDomain(domain)
-                    installUtilities.reStartLiteSpeed()
+                    if restart == 1:
+                        installUtilities.reStartLiteSpeed()
                 else:
                     numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
                     virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
 
-                    data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
+
+                    data_ret = {"existsStatus": 1, 'createWebSiteStatus': 0,
                                 'error_message': str(
                                     ssl_responce) + ", for more information see CyberCP main log file."}
                     json_data = json.dumps(data_ret)
@@ -501,6 +533,9 @@ def submitDomainCreation(request):
 
             shutil.copy("/usr/local/CyberCP/index.html", path + "/index.html")
 
+
+
+
             data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -508,6 +543,8 @@ def submitDomainCreation(request):
     except BaseException, msg:
         numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
         virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
+
+
         data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -671,7 +708,9 @@ def submitWebsiteDeletion(request):
 
                 numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
 
+
                 virtualHostUtilities.deleteVirtualHostConfigurations(websiteName,numberOfWebsites)
+
 
 
                 delWebsite = Websites.objects.get(domain=websiteName)
@@ -694,11 +733,16 @@ def submitWebsiteDeletion(request):
 
                 installUtilities.reStartLiteSpeed()
 
+
+
+
                 data_ret = {'websiteDeleteStatus': 1,'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
         except BaseException,msg:
+
+
             data_ret = {'websiteDeleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -727,11 +771,16 @@ def submitDomainDeletion(request):
 
                 installUtilities.reStartLiteSpeed()
 
+
+
+
                 data_ret = {'websiteDeleteStatus': 1,'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
         except BaseException,msg:
+
+
             data_ret = {'websiteDeleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -751,6 +800,9 @@ def submitWebsiteStatus(request):
 
                 website = Websites.objects.get(domain=websiteName)
 
+
+
+
                 if state == "Suspend":
                     virtualHostUtilities.suspendVirtualHost(websiteName)
                     installUtilities.reStartLiteSpeed()
@@ -763,11 +815,16 @@ def submitWebsiteStatus(request):
 
                 website.save()
 
+
+
+
                 data_ret = {'websiteStatus': 1,'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
         except BaseException,msg:
+
+
             data_ret = {'websiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1018,7 +1075,7 @@ def getDataFromLogFile(request):
             if start <= 0:
                 start = 1
             startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
-            command = "sed -n " + startingAndEnding + " " + fileName
+            command = "sudo sed -n " + startingAndEnding + " " + fileName
             proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
             data = proc.stdout.read()
         else:
@@ -1027,7 +1084,7 @@ def getDataFromLogFile(request):
             if start <= 0:
                 start = 1
             startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
-            command = "sed -n " + startingAndEnding + " " + fileName
+            command = "sudo sed -n " + startingAndEnding + " " + fileName
             proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
             data = proc.stdout.read()
 
@@ -1082,7 +1139,7 @@ def fetchErrorLogs(request):
                 if start <= 0:
                     start = 1
                 startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
-                command = "sed -n " + startingAndEnding + " " + fileName
+                command = "sudo sed -n " + startingAndEnding + " " + fileName
                 proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
                 data = proc.stdout.read()
             else:
@@ -1091,7 +1148,7 @@ def fetchErrorLogs(request):
                 if start <= 0:
                     start = 1
                 startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
-                command = "sed -n " + startingAndEnding + " " + fileName
+                command = "sudo sed -n " + startingAndEnding + " " + fileName
                 proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
                 data = proc.stdout.read()
 
@@ -1101,7 +1158,6 @@ def fetchErrorLogs(request):
     except BaseException,msg:
         final_json = json.dumps({'logstatus': 0, 'error_message': str(msg)})
         return HttpResponse(final_json)
-
 
 
 def installWordpress(request):
@@ -1116,12 +1172,16 @@ def installWordpress(request):
 
                 finalPath = ""
 
+                ## temporarily changing permission for sshd files
+
+
+                virtualHostUtilities.permissionControl("/home/"+domainName+"/public_html")
+
                 if home == '0':
                     path = data['path']
                     finalPath = "/home/" + domainName + "/public_html/" + path + "/"
                 else:
                     finalPath = "/home/" + domainName + "/public_html/"
-
 
                 if not os.path.exists(finalPath):
                     os.makedirs(finalPath)
@@ -1137,8 +1197,9 @@ def installWordpress(request):
 
                 ## Get wordpress
 
+
                 if not os.path.exists("latest.tar.gz"):
-                    command = 'wget --no-check-certificate http://wordpress.org/latest.tar.gz'
+                    command = 'wget --no-check-certificate http://wordpress.org/latest.tar.gz -O latest.tar.gz'
 
                     cmd = shlex.split(command)
 
@@ -1149,6 +1210,7 @@ def installWordpress(request):
                 cmd = shlex.split(command)
 
                 res = subprocess.call(cmd)
+
 
                 ## Get plugin
 
@@ -1196,7 +1258,7 @@ def installWordpress(request):
 
                     if not os.path.exists(homeDir):
                         os.mkdir(homeDir)
-                        command = 'chown -R nobody:nobody '+homeDir
+                        command = 'chown -R nobody:cyberpanel '+homeDir
                         cmd = shlex.split(command)
                         res = subprocess.call(cmd)
 
@@ -1213,7 +1275,7 @@ def installWordpress(request):
 
                     if not os.path.exists(homeDir):
                         os.mkdir(homeDir)
-                        command = 'chown -R nobody:nobody ' + homeDir
+                        command = 'chown -R nobody:cyberpanel ' + homeDir
                         cmd = shlex.split(command)
                         res = subprocess.call(cmd)
                     data_ret = {'installStatus': 0,
@@ -1232,7 +1294,7 @@ def installWordpress(request):
 
                     if not os.path.exists(homeDir):
                         os.mkdir(homeDir)
-                        command = 'chown -R nobody:nobody ' + homeDir
+                        command = 'chown -R nobody:cyberpanel ' + homeDir
                         cmd = shlex.split(command)
                         res = subprocess.call(cmd)
 
@@ -1260,11 +1322,9 @@ def installWordpress(request):
                     if items.find("DB_NAME") > -1:
                         if items.find("database_name_here") > -1:
                             writeDataToFile.writelines(defDBName)
-                            print ("database_name_here")
                     elif items.find("DB_USER") > -1:
                         if items.find("username_here") > -1:
                             writeDataToFile.writelines(defDBUser)
-                            print ("username_here")
                     elif items.find("DB_PASSWORD") > -1:
                         writeDataToFile.writelines(defDBPassword)
                     else:
@@ -1274,7 +1334,7 @@ def installWordpress(request):
 
                 os.rename(wpconfigfile, finalPath + 'wp-config.php')
 
-                command = 'chown -R nobody:nobody ' + finalPath
+                command = 'sudo chown -R  nobody:cyberpanel ' + "/home/" + domainName + "/public_html/"
 
                 cmd = shlex.split(command)
 
@@ -1291,12 +1351,16 @@ def installWordpress(request):
 
             except BaseException, msg:
                 # remove the downloaded files
-                shutil.rmtree(finalPath)
+                try:
+                    shutil.rmtree(finalPath)
+                except:
+                    logging.CyberCPLogFileWriter.writeToFile("shutil.rmtree(finalPath)")
+
                 homeDir = "/home/" + domainName + "/public_html"
 
                 if not os.path.exists(homeDir):
                     os.mkdir(homeDir)
-                    command = 'chown -R nobody:nobody ' + homeDir
+                    command = 'chown -R nobody:cyberpanel ' + homeDir
                     cmd = shlex.split(command)
                     res = subprocess.call(cmd)
                 data_ret = {'installStatus': 0, 'error_message': str(msg)}
@@ -1306,8 +1370,10 @@ def installWordpress(request):
 
     except KeyError, msg:
         status = {"installStatus":0,"error":str(msg)}
-        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[getDataFromLogFile]")
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
         return HttpResponse("Not Logged in as admin")
+
+
 
 def getDataFromConfigFile(request):
     try:
@@ -1318,6 +1384,8 @@ def getDataFromConfigFile(request):
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
 
+
+
                 filePath = installUtilities.Server_root_path + "/conf/vhosts/"+virtualHost+"/vhost.conf"
 
                 configData = open(filePath,"r").read()
@@ -1327,6 +1395,7 @@ def getDataFromConfigFile(request):
 
                     final_json = json.dumps(status)
                     return HttpResponse(final_json)
+
 
 
 
@@ -1357,6 +1426,8 @@ def saveConfigsToFile(request):
                 virtualHost = data['virtualHost']
                 configData = data['configData']
 
+
+
                 filePath = installUtilities.Server_root_path + "/conf/vhosts/"+virtualHost+"/vhost.conf"
 
                 vhost = open(filePath,"w")
@@ -1364,6 +1435,9 @@ def saveConfigsToFile(request):
                 vhost.write(configData)
 
                 vhost.close()
+
+
+
 
 
                 status = {"configstatus":1,"configData":configData}
@@ -1393,26 +1467,37 @@ def getRewriteRules(request):
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
 
+
+
+
                 filePath = "/home/"+virtualHost+"/public_html/.htaccess"
 
                 try:
                     rewriteRules = open(filePath,"r").read()
 
                     if len(rewriteRules) == 0:
-                        status = {"rewriteStatus": 1, "error_message": "Rules file is currently empty"}
 
+
+
+
+                        status = {"rewriteStatus": 1, "error_message": "Rules file is currently empty"}
                         final_json = json.dumps(status)
                         return HttpResponse(final_json)
+
+
+
 
                     status = {"rewriteStatus": 1, "rewriteRules": rewriteRules}
 
                     final_json = json.dumps(status)
                     return HttpResponse(final_json)
                 except IOError:
+
+
+
                     status = {"rewriteStatus": 1, "error_message": "none","rewriteRules":""}
                     final_json = json.dumps(status)
                     return HttpResponse(final_json)
-
 
             except BaseException, msg:
                 data_ret = {'rewriteStatus': 0, 'error_message': str(msg)}
@@ -1436,6 +1521,9 @@ def saveRewriteRules(request):
                 virtualHost = data['virtualHost']
                 rewriteRules = data['rewriteRules']
 
+
+
+
                 virtualHostUtilities.addRewriteRules(virtualHost)
 
                 filePath = "/home/" + virtualHost + "/public_html/.htaccess"
@@ -1445,6 +1533,9 @@ def saveRewriteRules(request):
                 vhost.write(rewriteRules)
 
                 vhost.close()
+
+
+
 
 
                 status = {"rewriteStatus":1}
@@ -1477,6 +1568,9 @@ def saveSSL(request):
                 cert = data['cert']
                 key = data['key']
 
+
+
+
                 pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + domain
 
                 website = Websites.objects.get(domain=domain)
@@ -1503,6 +1597,9 @@ def saveSSL(request):
 
                         website.ssl = 1
                         website.save()
+
+
+
 
                         data_ret = {'sslStatus': 1, 'error_message': "None"}
                         json_data = json.dumps(data_ret)
@@ -1531,6 +1628,9 @@ def saveSSL(request):
 
                     website.ssl = 1
                     website.save()
+
+
+
 
                     data_ret = {'sslStatus': 1, 'error_message': "None"}
                     json_data = json.dumps(data_ret)
@@ -1572,6 +1672,8 @@ def CreateWebsiteFromBackup(request):
 
             originalFile = "/home/backup/" + data['backupFile']
 
+
+
             if not os.path.exists(originalFile):
                 dir = data['dir']
                 path = "/home/backup/transfer-"+str(dir)+"/"+backupFile
@@ -1607,11 +1709,16 @@ def CreateWebsiteFromBackup(request):
             check = 0
             dbCheck = 0
 
+
+
+
             for items in data:
                 if check == 0:
                     if virtualHostUtilities.createDirectoryForVirtualHost(domain, adminEmail, phpSelection) != 1:
                         numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
                         virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
+
+
                         data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
                                     'error_message': "Can not create configurations, see CyberCP main log file."}
                         json_data = json.dumps(data_ret)
@@ -1620,12 +1727,12 @@ def CreateWebsiteFromBackup(request):
                     if virtualHostUtilities.createConfigInMainVirtualHostFile(domain) != 1:
                         numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
                         virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
+
+
                         data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
                                     'error_message': "Can not create configurations, see CyberCP main log file."}
                         json_data = json.dumps(data_ret)
                         return HttpResponse(json_data)
-
-                    installUtilities.reStartLiteSpeed()
 
                     selectedPackage = Package.objects.get(packageName="Default")
 
@@ -1651,6 +1758,9 @@ def CreateWebsiteFromBackup(request):
             status = open(path + '/status', "w")
             status.write("Accounts and DBs Created")
             status.close()
+
+
+
 
             data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
             json_data = json.dumps(data_ret)
@@ -1680,6 +1790,7 @@ def changePHP(request):
 
                 virtualHostUtilities.changePHP(completePathToConfigFile,phpVersion)
                 installUtilities.reStartLiteSpeed()
+
 
 
                 data_ret = {'changePHP': 1,'error_message': "None"}

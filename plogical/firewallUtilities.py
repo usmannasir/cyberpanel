@@ -20,13 +20,13 @@ class FirewallUtilities:
             ruleProtocol = 'port protocol="' + proto + '"'
             rulePort = 'port="' + port + '"'
 
-            command = "firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
+            command = "sudo firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
             cmd = shlex.split(command)
 
             res = subprocess.call(cmd)
 
-            command = 'firewall-cmd --reload'
+            command = 'sudo firewall-cmd --reload'
 
             cmd = shlex.split(command)
 
@@ -49,13 +49,13 @@ class FirewallUtilities:
             ruleProtocol = 'port protocol="' + proto + '"'
             rulePort = 'port="' + port + '"'
 
-            command = "firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
+            command = "sudo firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
             cmd = shlex.split(command)
 
             res = subprocess.call(cmd)
 
-            command = 'firewall-cmd --reload'
+            command = 'sudo firewall-cmd --reload'
 
             cmd = shlex.split(command)
 

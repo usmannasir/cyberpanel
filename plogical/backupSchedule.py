@@ -59,11 +59,10 @@ class backupSchedule:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
 
-
     @staticmethod
     def sendBackup(backupPath,IPAddress,writeToFile):
         try:
-            command ='rsync -avz -e "ssh  -i /root/.ssh/cyberpanel" '+ backupPath+ ' root@'+IPAddress+':/home/backup/'+time.strftime("%a-%b")+"/"
+            command ='rsync -avz -e "ssh  -i /home/cyberpanel/.ssh/cyberpanel -o StrictHostKeyChecking=no" '+ backupPath+ ' cyberpanel@'+IPAddress+':/home/backup/'+time.strftime("%a-%b")+"/"
 
             subprocess.call(shlex.split(command),stdout=writeToFile)
 

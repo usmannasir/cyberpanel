@@ -20,6 +20,7 @@ import signal
 import plogical.remoteBackup as rBackup
 import requests
 from baseTemplate.models import version
+from plogical.virtualHostUtilities import virtualHostUtilities
 
 def loadBackupHome(request):
     try:
@@ -50,6 +51,12 @@ def restoreSite(request):
                 else:
                     all_files = []
                     ext = ".tar.gz"
+
+                    command = 'sudo chown -R  cyberpanel:cyberpanel '+path
+
+                    cmd = shlex.split(command)
+
+                    res = subprocess.call(cmd)
 
                     files = os.listdir(path)
                     for filename in files:
@@ -513,22 +520,43 @@ def submitDestinationCreation(request):
 
 
                 try:
-                    dest.objects.get(destLoc=ipAddress)
+                    d = dest.objects.get(destLoc=ipAddress)
                     final_dic = {'destStatus': 0, 'error_message': "This destination already exists."}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
 
                 except:
-                    status = backupUtil.backupUtilities.setupSSHKeys(ipAddress,password)
 
-                    if status == 1:
+                    keyPath = "/home/cyberpanel/.ssh"
+
+                    if not os.path.exists(keyPath):
+                        os.makedirs(keyPath)
+                        command = "ssh-keygen -f "+keyPath+"/cyberpanel -t rsa -N ''"
+                        cmd = shlex.split(command)
+                        res = subprocess.call(cmd)
+
+                    pubKey = keyPath+"/cyberpanel.pub"
+
+                    f = open(pubKey)
+                    data = f.read()
+
+                    finalData = json.dumps({'username': "admin", "password": password,"putSSHKey":data})
+
+                    url = "https://" + ipAddress + ":8090/api/putSSHkey"
+
+                    r = requests.post(url, data=finalData, verify=False)
+
+                    data = json.loads(r.text)
+
+                    if data['putSSHKey'] == 1:
+
                         newDest = dest(destLoc=ipAddress)
                         newDest.save()
 
-
-                        writeToFile = open(destinations,"w")
-                        writeToFile.writelines(ipAddress+"\n")
+                        writeToFile = open(destinations, "w")
+                        writeToFile.writelines(ipAddress + "\n")
                         writeToFile.close()
+
 
                         backupUtil.backupUtilities.initiateBackupDirCreation(ipAddress)
 
@@ -536,7 +564,7 @@ def submitDestinationCreation(request):
                         final_json = json.dumps(final_dic)
                         return HttpResponse(final_json)
                     else:
-                        final_dic = {'destStatus': 0, 'error_message': status}
+                        final_dic = {'destStatus': 0, 'error_message': data['error_message']}
                         final_json = json.dumps(final_dic)
                         return HttpResponse(final_json)
 
@@ -599,15 +627,16 @@ def getConnectionStatus(request):
                 data = json.loads(request.body)
                 ipAddress = data['IPAddress']
 
-                if backupUtil.backupUtilities.checkConnection(ipAddress)==1:
+                checkCon = backupUtil.backupUtilities.checkConnection(ipAddress)
+
+                if checkCon[0]==1:
                     final_dic = {'connStatus': 1, 'error_message': "None"}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
                 else:
-                    final_dic = {'connStatus': 0, 'error_message': "None"}
+                    final_dic = {'connStatus': 0, 'error_message': checkCon[1]}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
-
 
 
         except BaseException,msg:
@@ -764,11 +793,15 @@ def submitBackupSchedule(request):
                         if backupDest == "Home" and backupFreq == "Daily":
                             cronJob = "0 3 * * 0-6 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
 
+                            virtualHostUtilities.permissionControl(path)
+
                             writeToFile = open(path,'a')
                             writeToFile.writelines(cronJob+"\n")
                             writeToFile.close()
 
-                            command = "systemctl restart crond"
+                            virtualHostUtilities.leaveControl(path)
+
+                            command = "sudo systemctl restart crond"
 
                             subprocess.call(shlex.split(command))
 
@@ -782,11 +815,15 @@ def submitBackupSchedule(request):
                         elif backupDest == "Home" and backupFreq == "Weekly":
                             cronJob = "0 3 * * 3 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py "
 
+                            virtualHostUtilities.permissionControl(path)
+
                             writeToFile = open(path, 'a')
                             writeToFile.writelines(cronJob + "\n")
                             writeToFile.close()
 
-                            command = "systemctl restart crond"
+                            virtualHostUtilities.leaveControl(path)
+
+                            command = "sudo systemctl restart crond"
 
                             subprocess.call(shlex.split(command))
 
@@ -800,11 +837,15 @@ def submitBackupSchedule(request):
                         elif backupDest != "Home" and backupFreq == "Daily":
                             cronJob = "0 3 * * 0-6 root python /usr/local/CyberCP/plogical/backupSchedule.py"
 
+                            virtualHostUtilities.permissionControl(path)
+
                             writeToFile = open(path, 'a')
                             writeToFile.writelines(cronJob + "\n")
                             writeToFile.close()
 
-                            command = "systemctl restart crond"
+                            virtualHostUtilities.leaveControl(path)
+
+                            command = "sudo systemctl restart crond"
 
                             subprocess.call(shlex.split(command))
 
@@ -818,11 +859,15 @@ def submitBackupSchedule(request):
                         elif backupDest != "Home" and backupFreq == "Weekly":
                             cronJob = "0 3 * * 3 root python /usr/local/CyberCP/plogical/backupSchedule.py "
 
+                            virtualHostUtilities.permissionControl(path)
+
                             writeToFile = open(path, 'a')
                             writeToFile.writelines(cronJob + "\n")
                             writeToFile.close()
 
-                            command = "systemctl restart crond"
+                            virtualHostUtilities.leaveControl(path)
+
+                            command = "sudo systemctl restart crond"
 
                             subprocess.call(shlex.split(command))
 
@@ -836,11 +881,15 @@ def submitBackupSchedule(request):
                     if backupDest == "Home" and backupFreq == "Daily":
                         cronJob = "0 3 * * 0-6 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
 
+                        virtualHostUtilities.permissionControl(path)
+
                         writeToFile = open(path, 'a')
                         writeToFile.writelines(cronJob + "\n")
                         writeToFile.close()
 
-                        command = "systemctl restart crond"
+                        virtualHostUtilities.leaveControl(path)
+
+                        command = "sudo systemctl restart crond"
 
                         subprocess.call(shlex.split(command))
 
@@ -854,11 +903,15 @@ def submitBackupSchedule(request):
                     elif backupDest == "Home" and backupFreq == "Weekly":
                         cronJob = "0 3 * * 3 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py "
 
+                        virtualHostUtilities.permissionControl(path)
+
                         writeToFile = open(path, 'a')
                         writeToFile.writelines(cronJob + "\n")
                         writeToFile.close()
 
-                        command = "systemctl restart crond"
+                        virtualHostUtilities.leaveControl(path)
+
+                        command = "sudo systemctl restart crond"
 
                         subprocess.call(shlex.split(command))
 
@@ -872,11 +925,15 @@ def submitBackupSchedule(request):
                     elif backupDest != "Home" and backupFreq == "Daily":
                         cronJob = "0 3 * * 0-6 root python /usr/local/CyberCP/plogical/backupSchedule.py"
 
+                        virtualHostUtilities.permissionControl(path)
+
                         writeToFile = open(path, 'a')
                         writeToFile.writelines(cronJob + "\n")
                         writeToFile.close()
 
-                        command = "systemctl restart crond"
+                        virtualHostUtilities.leaveControl(path)
+
+                        command = "sudo systemctl restart crond"
 
                         subprocess.call(shlex.split(command))
 
@@ -890,11 +947,15 @@ def submitBackupSchedule(request):
                     elif backupDest != "Home" and backupFreq == "Weekly":
                         cronJob = "0 3 * * 3 root python /usr/local/CyberCP/plogical/backupSchedule.py "
 
+                        virtualHostUtilities.permissionControl(path)
+
                         writeToFile = open(path, 'a')
                         writeToFile.writelines(cronJob + "\n")
                         writeToFile.close()
 
-                        command = "systemctl restart crond"
+                        virtualHostUtilities.leaveControl(path)
+
+                        command = "sudo systemctl restart crond"
 
                         subprocess.call(shlex.split(command))
 
@@ -929,6 +990,8 @@ def scheduleDelete(request):
 
                 if backupDest == "Home" and backupFreq == "Daily":
 
+                    virtualHostUtilities.permissionControl(path)
+
                     data = open(path, "r").readlines()
                     writeToFile = open(path, 'w')
 
@@ -940,7 +1003,9 @@ def scheduleDelete(request):
 
                     writeToFile.close()
 
-                    command = "systemctl restart crond"
+                    virtualHostUtilities.leaveControl(path)
+
+                    command = "sudo systemctl restart crond"
 
                     subprocess.call(shlex.split(command))
 
@@ -953,6 +1018,8 @@ def scheduleDelete(request):
 
                 elif backupDest == "Home" and backupFreq == "Weekly":
 
+                    virtualHostUtilities.permissionControl(path)
+
                     data = open(path, "r").readlines()
                     writeToFile = open(path, 'w')
 
@@ -964,7 +1031,9 @@ def scheduleDelete(request):
 
                     writeToFile.close()
 
-                    command = "systemctl restart crond"
+                    virtualHostUtilities.leaveControl(path)
+
+                    command = "sudo systemctl restart crond"
 
                     subprocess.call(shlex.split(command))
 
@@ -977,6 +1046,8 @@ def scheduleDelete(request):
 
                 elif backupDest != "Home" and backupFreq == "Daily":
 
+                    virtualHostUtilities.permissionControl(path)
+
                     data = open(path, "r").readlines()
                     writeToFile = open(path, 'w')
 
@@ -988,7 +1059,9 @@ def scheduleDelete(request):
 
                     writeToFile.close()
 
-                    command = "systemctl restart crond"
+                    virtualHostUtilities.leaveControl(path)
+
+                    command = "sudo systemctl restart crond"
 
                     subprocess.call(shlex.split(command))
 
@@ -1001,6 +1074,8 @@ def scheduleDelete(request):
 
                 elif backupDest != "Home" and backupFreq == "Weekly":
 
+                    virtualHostUtilities.permissionControl(path)
+
                     data = open(path, "r").readlines()
                     writeToFile = open(path, 'w')
 
@@ -1012,7 +1087,9 @@ def scheduleDelete(request):
 
                     writeToFile.close()
 
-                    command = "systemctl restart crond"
+                    virtualHostUtilities.leaveControl(path)
+
+                    command = "sudo systemctl restart crond"
 
                     subprocess.call(shlex.split(command))
 
@@ -1099,36 +1176,50 @@ def submitRemoteBackups(request):
             else:
                 final_json = json.dumps({'status': 0, 'error_message': sshkey[1]})
                 return HttpResponse(final_json)
-            sshkey = sshkey[1]
 
-            pathToSSH = "/root/.ssh/authorized_keys"
+            pubKey = sshkey[1]
 
-            if not os.path.exists("/root/.ssh"):
-                os.makedirs("/root/.ssh")
-                if not os.path.exists(pathToSSH):
-                    f = open(pathToSSH,"w")
-                    f.close()
-            else:
-                if not os.path.exists(pathToSSH):
-                    f = open(pathToSSH,"w")
-                    f.close()
+            keyPath = "/home/cyberpanel/.ssh"
+
+            if not os.path.exists(keyPath):
+                os.makedirs(keyPath)
 
 
+
+            ## writeKey
+
+            authorized_keys = keyPath + "/authorized_keys"
             presenseCheck = 0
-
-            data = open(pathToSSH,"r").readlines()
-
-            for items in data:
-                if items.find(sshkey)>-1:
-                    presenseCheck = 1
+            try:
+                data = open(authorized_keys, "r").readlines()
+                for items in data:
+                    if items.find(pubKey) > -1:
+                        presenseCheck = 1
+            except:
+                pass
 
             if presenseCheck == 0:
-                writeToFile = open(pathToSSH, 'a')
+                writeToFile = open(authorized_keys, 'a')
                 writeToFile.writelines("#Added by CyberPanel\n")
                 writeToFile.writelines("\n")
-                writeToFile.writelines(sshkey)
+                writeToFile.writelines(pubKey)
                 writeToFile.writelines("\n")
                 writeToFile.close()
+
+            ##
+
+            command = "sudo chown cyberpanel:cyberpanel /home/cyberpanel"
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+
+            command = "sudo chmod g-w /home/cyberpanel"
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+
+            os.chmod(keyPath, 0700)
+            os.chmod(authorized_keys, 0600)
+
+            ##
 
             try:
                 finalData = json.dumps({'username': "admin","password": password})

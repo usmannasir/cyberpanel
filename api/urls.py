@@ -21,5 +21,6 @@ urlpatterns = [
 
 
     url(r'^cyberPanelVersion', views.cyberPanelVersion, name='cyberPanelVersion'),
+    url(r'^putSSHkey', views.putSSHkey, name='putSSHkey'),
 
 ]

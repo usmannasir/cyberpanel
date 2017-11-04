@@ -18,7 +18,7 @@
 <div ng-controller="backupDestinations" class="panel">
     <div class="panel-body">
         <h3 class="title-hero">
-            {% trans "Set up Back up Destinations" %} <img ng-hide="destinationLoading" src="{% static 'images/loading.gif' %}">
+            {% trans "Set up Back up Destinations (SSH port should be 22 on backup server)" %} <img ng-hide="destinationLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
@@ -37,7 +37,7 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Password" %}</label>
                     <div class="col-sm-6">
-                        <input  type="password" class="form-control" ng-model="password" required>
+                        <input placeholder="{% trans "Remote server password for CyberPanel" %}" type="password" class="form-control" ng-model="password" required>
                     </div>
                 </div>
 
@@ -59,7 +59,7 @@
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
                             <div ng-hide="connectionFailed" class="alert alert-danger">
-                                        <p>{% trans "Connection to" %} {$ IPAddress $} {% trans "failed. Please delete and re-add." %}</p>
+                                        <p>{% trans "Connection to" %} {$ IPAddress $} {% trans "failed. Please delete and re-add. " %} {$ errorMessage $}  </p>
                             </div>
 
                             <div ng-hide="connectionSuccess" class="alert alert-success">

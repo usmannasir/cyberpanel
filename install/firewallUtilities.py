@@ -15,7 +15,7 @@ class FirewallUtilities:
     def addRule(proto,port):
         try:
             if port == "21":
-                command = "firewall-cmd --add-service=ftp --permanent"
+                command = "sudo firewall-cmd --add-service=ftp --permanent"
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -26,7 +26,7 @@ class FirewallUtilities:
             ruleProtocol = 'port protocol="' + proto + '"'
             rulePort = 'port="' + port + '"'
 
-            command = "firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
+            command = "sudo firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
             cmd = shlex.split(command)
 
@@ -51,7 +51,7 @@ class FirewallUtilities:
     def deleteRule(proto, port):
         try:
             if port=="21":
-                command = "firewall-cmd --remove-service=ftp --permanent"
+                command = "sudo firewall-cmd --remove-service=ftp --permanent"
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -62,7 +62,7 @@ class FirewallUtilities:
             ruleProtocol = 'port protocol="' + proto + '"'
             rulePort = 'port="' + port + '"'
 
-            command = "firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
+            command = "sudo firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
             cmd = shlex.split(command)
 

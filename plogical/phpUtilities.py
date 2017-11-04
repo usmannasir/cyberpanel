@@ -10,7 +10,7 @@ class phpUtilities:
     def installPHPExtension(extension,extensions):
         try:
 
-            command = 'yum install '+extension +' -y'
+            command = 'sudo yum install '+extension +' -y'
 
             cmd = shlex.split(command)
 
@@ -36,7 +36,7 @@ class phpUtilities:
     def unInstallPHPExtension(extension,extensions):
         try:
 
-            command = 'rpm --nodeps -e  ' + extension + ' -v'
+            command = 'sudo rpm --nodeps -e  ' + extension + ' -v'
 
             cmd = shlex.split(command)
 

@@ -644,7 +644,11 @@ class InstallCyberPanel:
                 print("###############################################")
 
 
+            commad = "usermod -a -G cyberpanel ftpuser"
 
+            cmd = shlex.split(commad)
+
+            subprocess.call(cmd)
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [installPureFTPD]")
@@ -933,27 +937,58 @@ class InstallCyberPanel:
 
             while (1):
 
-                cmd.append("yum")
-                cmd.append("-y")
-                cmd.append("install")
-                cmd.append("certbot")
+                if subprocess.check_output('systemd-detect-virt').find("openvz") > -1:
 
-                res = subprocess.call(cmd)
+                    command = "pip install pyOpenSSL==16.2.0"
 
-                if res == 1:
-                    print("###############################################")
-                    print("         Could not install CertBot             ")
-                    print("###############################################")
-                    logging.InstallLog.writeToFile("Certbot not installed" + " [installCertBot]")
-                    count = count + 1
-                    print("Trying again, try number: " + str(count)+"\n")
-                    if count == 3:
+                    cmd = shlex.split(command)
+
+                    subprocess.call(cmd)
+
+                    command = "pip install certbot"
+
+                    cmd = shlex.split(command)
+
+                    subprocess.call(cmd)
+
+                    if res == 1:
+                        print("###############################################")
+                        print("         Could not install CertBot             ")
+                        print("###############################################")
+                        logging.InstallLog.writeToFile("Certbot not installed" + " [installCertBot]")
+                        count = count + 1
+                        print("Trying again, try number: " + str(count)+"\n")
+                        if count == 3:
+                            break
+                    else:
+                        print("###############################################")
+                        print("            Certbot Installed                  ")
+                        print("###############################################")
                         break
+
                 else:
-                    print("###############################################")
-                    print("            Certbot Installed                  ")
-                    print("###############################################")
-                    break
+
+                    cmd.append("yum")
+                    cmd.append("-y")
+                    cmd.append("install")
+                    cmd.append("certbot")
+
+                    res = subprocess.call(cmd)
+
+                    if res == 1:
+                        print("###############################################")
+                        print("         Could not install CertBot             ")
+                        print("###############################################")
+                        logging.InstallLog.writeToFile("Certbot not installed" + " [installCertBot]")
+                        count = count + 1
+                        print("Trying again, try number: " + str(count)+"\n")
+                        if count == 3:
+                            break
+                    else:
+                        print("###############################################")
+                        print("            Certbot Installed                  ")
+                        print("###############################################")
+                        break
 
 
 

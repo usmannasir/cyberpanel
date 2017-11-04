@@ -21,6 +21,8 @@ import signal
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from shutil import rmtree
 from baseTemplate.models import version
+import subprocess
+import shlex
 # Create your views here.
 
 
@@ -336,10 +338,25 @@ def fetchSSHkey(request):
             admin = Administrator.objects.get(userName=username)
 
             if hashPassword.check_password(admin.password, password):
-                pubKey = "/root/.ssh/cyberpanel.pub"
+                keyPath = "/home/cyberpanel/.ssh"
+
+                if not os.path.exists(keyPath):
+                    os.makedirs(keyPath)
+                    command = "ssh-keygen -f " + keyPath + "/cyberpanel -t rsa -N ''"
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
+                else:
+                    if not os.path.exists(keyPath+"/cyberpanel"):
+                        command = "ssh-keygen -f " + keyPath + "/cyberpanel -t rsa -N ''"
+                        cmd = shlex.split(command)
+                        res = subprocess.call(cmd)
+
+                pubKey = keyPath + "/cyberpanel.pub"
 
                 f = open(pubKey)
                 data = f.read()
+
+
                 data_ret = {'pubKeyStatus': 1, 'error_message': "None", "pubKey":data}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -367,6 +384,8 @@ def remoteTransfer(request):
             admin = Administrator.objects.get(userName=username)
             if hashPassword.check_password(admin.password, password):
                 dir = str(randint(1000, 9999))
+
+
                 transferRequest = rBackup.remoteBackup.remoteTransfer(ipAddress, dir,accountsToTransfer)
 
                 if transferRequest[0] == 1:
@@ -537,4 +556,72 @@ def cyberPanelVersion(request):
                     'error_message': "Could not authorize access to API"}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+def putSSHkey(request):
+    try:
+        if request.method == 'POST':
+
+            data = json.loads(request.body)
+
+            adminUser = data['username']
+            adminPass = data['password']
+            pubKey = data['putSSHKey']
+
+
+            admin = Administrator.objects.get(userName=adminUser)
+
+            if hashPassword.check_password(admin.password, adminPass):
+                keyPath = "/home/cyberpanel/.ssh"
+
+                if not os.path.exists(keyPath):
+                    os.makedirs(keyPath)
+
+
+                ## writeKey
+
+                authorized_keys = keyPath+"/authorized_keys"
+                presenseCheck = 0
+                try:
+                    data = open(authorized_keys, "r").readlines()
+                    for items in data:
+                        if items.find(pubKey) > -1:
+                            presenseCheck = 1
+                except:
+                    pass
+
+                if presenseCheck == 0:
+                    writeToFile = open(authorized_keys, 'a')
+                    writeToFile.writelines("#Added by CyberPanel\n")
+                    writeToFile.writelines("\n")
+                    writeToFile.writelines(pubKey)
+                    writeToFile.writelines("\n")
+                    writeToFile.close()
+
+                ##
+
+                command = "sudo chmod g-w /home/cyberpanel"
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                os.chmod(keyPath,0700)
+                os.chmod(authorized_keys, 0600)
+
+
+                data_ret = {"putSSHKey": 1,
+                            'error_message': "None",}
+
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {"putSSHKey": 0,
+                            'error_message': "Could not authorize access to API"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+    except BaseException, msg:
+        data_ret = {"putSSHKey": 0,
+                    'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
 

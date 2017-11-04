@@ -95,7 +95,13 @@ class FileManager:
         if not os.path.exists(path) or not path.startswith(self.root):
             return {'result': ''}
 
-        command = 'chown -R nobody:nobody '+path
+        command = 'sudo chmod -R 775 '+path
+
+        cmd = shlex.split(command)
+
+        res = subprocess.call(cmd)
+
+        command = 'sudo chown -R nobody:cyberpanel ' + path
 
         cmd = shlex.split(command)
 

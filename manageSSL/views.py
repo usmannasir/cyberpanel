@@ -251,7 +251,7 @@ def obtainHostNameSSL(request):
                         shutil.copy(srcPrivKey, destPrivKey)
                         shutil.copy(srcFullChain, destCert)
 
-                        command = 'systemctl restart lscpd'
+                        command = 'sudo systemctl restart lscpd'
 
                         cmd = shlex.split(command)
 
@@ -287,7 +287,7 @@ def obtainHostNameSSL(request):
                     shutil.copy(srcPrivKey, destPrivKey)
                     shutil.copy(srcFullChain, destCert)
 
-                    command = 'systemctl restart lscpd'
+                    command = 'sudo systemctl restart lscpd'
 
                     cmd = shlex.split(command)
 

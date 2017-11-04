@@ -18,6 +18,85 @@ class preFlightsChecks:
         self.cwd = cwd
         self.server_root_path = rootPath
 
+
+    def setup_account_cyberpanel(self):
+        try:
+            command = "yum install sudo -y"
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
+
+            ##
+
+            command = "adduser cyberpanel"
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
+
+            ##
+
+            command = "usermod -aG wheel cyberpanel"
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
+
+            ###############################
+
+            path = "/etc/sudoers"
+
+            data = open(path,'r').readlines()
+
+            writeToFile = open(path,'w')
+
+            for items in data:
+                if items.find("wheel	ALL=(ALL)	NOPASSWD: ALL")>-1:
+                    writeToFile.writelines("%wheel	ALL=(ALL)	NOPASSWD: ALL")
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+
+            ###############################
+
+            command = "mkdir /etc/letsencrypt"
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
+
+            ##
+
+
+            command = "chown cyberpanel:cyberpanel /etc/letsencrypt"
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
+
+            ##
+
+
+            command = "usermod -a -G root cyberpanel"
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
+
+            ##
+
+            command = "usermod -a -G nobody cyberpanel"
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
+
+        except:
+            logging.InstallLog.writeToFile("[116] setup_account_cyberpanel")
+
+
     def yum_update(self):
         try:
 
@@ -522,19 +601,23 @@ class preFlightsChecks:
 
     def fix_selinux_issue(self):
 
-        cmd = []
+        try:
 
-        cmd.append("setsebool")
-        cmd.append("-P")
-        cmd.append("httpd_can_network_connect")
-        cmd.append("1")
+            cmd = []
 
-        res = subprocess.call(cmd)
+            cmd.append("setsebool")
+            cmd.append("-P")
+            cmd.append("httpd_can_network_connect")
+            cmd.append("1")
 
-        if res == 1:
+            res = subprocess.call(cmd)
+
+            if res == 1:
+                logging.InstallLog.writeToFile("fix_selinux_issue problem")
+            else:
+                pass
+        except BaseException,msg:
             logging.InstallLog.writeToFile("fix_selinux_issue problem")
-        else:
-            pass
 
     def install_psmisc(self):
 
@@ -599,7 +682,7 @@ class preFlightsChecks:
         cmd = []
 
         cmd.append("wget")
-        cmd.append("http://cyberpanel.net/CyberPanel.1.5.tar.gz")
+        cmd.append("http://cyberpanel.net/CyberPanelTemp.tar.gz")
 
         res = subprocess.call(cmd)
 
@@ -618,7 +701,7 @@ class preFlightsChecks:
 
         cmd.append("tar")
         cmd.append("zxf")
-        cmd.append("CyberPanel.1.5.tar.gz")
+        cmd.append("CyberPanelTemp.tar.gz")
 
         res = subprocess.call(cmd)
 
@@ -1375,7 +1458,7 @@ class preFlightsChecks:
     def downoad_and_install_raindloop(self):
         try:
 
-            command = 'chown -R nobody:nobody /usr/local/lscp/cyberpanel/'
+            command = 'chown -R nobody:cyberpanel /usr/local/lscp/cyberpanel/'
 
             cmd = shlex.split(command)
 
@@ -1795,7 +1878,48 @@ class preFlightsChecks:
 
             while (1):
 
-                command = 'chown -R nobody:nobody /usr/local/lsws'
+                command = 'chown -R nobody:cyberpanel /usr/local/lsws'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                ##
+
+                command = 'chown -R nobody:cyberpanel /home'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                ##
+
+
+                command = "chown cyberpanel:cyberpanel /usr/local/lscp"
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                ##
+
+                command = "sudo chmod -R 775 /home"
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                ##
+
+                command = "sudo chmod -R 775 /usr/local/lsws"
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                ##
+
+                command = "sudo chmod -R 775 /etc/postfix"
 
                 cmd = shlex.split(command)
 
@@ -1842,7 +1966,6 @@ def Main():
 
     checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd)
 
-
     checks.checkPythonVersion()
     checks.yum_update()
     checks.installCyberPanelRepo()
@@ -1857,11 +1980,9 @@ def Main():
     checks.install_pexpect()
     checks.install_python_mysql_library()
     checks.install_wget()
+    checks.setup_account_cyberpanel()
     checks.install_gunicorn()
     checks.install_psutil()
-
-
-
     checks.setup_gunicorn()
 
     import installCyberPanel

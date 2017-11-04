@@ -5,6 +5,7 @@ import shutil
 import pexpect
 import os
 import thread
+import shlex
 
 class installUtilities:
 
@@ -135,20 +136,39 @@ class installUtilities:
     @staticmethod
     def reStartLiteSpeed():
         try:
-            thread.start_new_thread(installUtilities.reStartOpenLiteSpeed, ("restart","restart"))
-        except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [restartLiteSpeed]")
+            command = "sudo systemctl restart lsws"
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
+
+            if res == 1:
+                print("###############################################")
+                print("         Could not restart Litespeed serve     ")
+                print("###############################################")
+                sys.exit()
+            else:
+                print("###############################################")
+                print("          Litespeed Re-Started                 ")
+                print("###############################################")
+
+
+        except OSError, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")
+            return 0
+        except ValueError, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")
+            return 0
+        return 1
 
 
     @staticmethod
     def reStartOpenLiteSpeed(restart,orestart):
-
         try:
 
-            cmd = []
+            command = "sudo systemctl restart lsws"
 
-            cmd.append("/usr/local/lsws/bin/lswsctrl")
-            cmd.append("restart")
+            cmd = shlex.split(command)
 
             res = subprocess.call(cmd)
 

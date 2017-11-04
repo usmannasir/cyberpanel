@@ -63,22 +63,34 @@ def submitEmailCreation(request):
                 path = "/usr/local/CyberCP/install/rainloop/cyberpanel.net.ini"
 
                 if not os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/"):
-                    os.makedirs("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/")
+                    command = 'sudo mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains'
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
 
 
 
                 finalPath = "/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/" + domain + ".ini"
 
                 if not os.path.exists(finalPath):
-                    shutil.copy(path,finalPath)
+                    command = 'sudo cp '+path +" "+finalPath
 
-                command = 'chown -R nobody:nobody /usr/local/lscp/rainloop'
+                    cmd = shlex.split(command)
+
+                    res = subprocess.call(cmd)
+
+                command = 'sudo chown -R nobody:nobody /usr/local/lscp/rainloop'
 
                 cmd = shlex.split(command)
 
                 res = subprocess.call(cmd)
 
-                command = 'chown -R nobody:nobody /usr/local/lscp/cyberpanel/rainloop/data/_data_'
+                command = 'sudo chown -R nobody:nobody /usr/local/lscp/cyberpanel/rainloop/data/_data_'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                command = 'sudo chown -R vmail:vmail /home/vmail'
 
                 cmd = shlex.split(command)
 

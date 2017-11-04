@@ -252,7 +252,7 @@ class remoteBackup:
         try:
             ## complete path is a path to the file need to send
 
-            command = 'rsync -avz -e "ssh  -i /root/.ssh/cyberpanel" ' + completedPathToSend + ' root@' + IPAddress + ':/home/backup/transfer-'+folderNumber
+            command = 'sudo rsync -avz -e "ssh  -i /home/cyberpanel/.ssh/cyberpanel -o StrictHostKeyChecking=no" ' + completedPathToSend + ' cyberpanel@' + IPAddress + ':/home/backup/transfer-'+folderNumber
             subprocess.call(shlex.split(command), stdout=writeToFile)
 
         except BaseException, msg:
@@ -322,6 +322,9 @@ class remoteBackup:
                             remoteBackup.sendBackup(completedPathToSend,ipAddress,str(folderNumber),writeToFile)
 
                             writeToFile.writelines("[" + time.strftime(
+                                "%I-%M-%S-%a-%b-%Y") + "]" + " Sent " + completedPathToSend + " to " + ipAddress + ".\n")
+
+                            writeToFile.writelines("[" + time.strftime(
                                 "%I-%M-%S-%a-%b-%Y") + "]" + " #############################################" + "\n")
 
                             writeToFile.close()
@@ -347,18 +350,6 @@ class remoteBackup:
     @staticmethod
     def remoteTransfer(ipAddress, dir,accountsToTransfer):
         try:
-            ## fix yes/no
-
-            verify = backupUtil.backupUtilities.verifyHostKey(ipAddress)
-
-            ## if verification failed, return with error message
-
-            if verify[0] == 1:
-                pass
-            else:
-                return [0,verify[1]]
-
-            ####
 
             destination = "/home/backup/transfer-" + dir
             backupLogPath = destination + "/backup_log"
