@@ -1714,6 +1714,45 @@ class preFlightsChecks:
 
         try:
 
+            ## first install crontab
+
+            file = open("installLogs.txt", 'a')
+
+            command = 'yum install cronie -y'
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd,stdout=file)
+
+            if res == 1:
+                logging.InstallLog.writeToFile("1725 [Cron is not installed]")
+            else:
+                pass
+
+            command = 'systemctl enable crond'
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd,stdout=file)
+
+            if res == 1:
+                logging.InstallLog.writeToFile("1737 [Cron is not enabled]")
+            else:
+                pass
+
+            command = 'systemctl start crond'
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd,stdout=file)
+
+            if res == 1:
+                logging.InstallLog.writeToFile("1748 [Cron is not started]")
+            else:
+                pass
+
+            ##
+
             cronFile = open("/etc/crontab","a")
             cronFile.writelines("0 * * * * root python /usr/local/CyberCP/plogical/findBWUsage.py"+"\n")
             cronFile.close()
@@ -1723,9 +1762,8 @@ class preFlightsChecks:
 
             cmd = shlex.split(command)
 
-            file = open("installLogs.txt", 'a')
             res = subprocess.call(cmd,stdout=file)
-            file.close()
+
 
             if res == 1:
                 logging.InstallLog.writeToFile("1428 [setup_cron]")
@@ -1737,17 +1775,15 @@ class preFlightsChecks:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd)
+            res = subprocess.call(cmd,stdout=file)
 
             if res == 1:
                 logging.InstallLog.writeToFile("1440 [setup_cron]")
             else:
                 pass
 
+            file.close()
 
-            print("###############################################")
-            print("          Cron Enabled                ")
-            print("###############################################")
 
 
         except OSError, msg:

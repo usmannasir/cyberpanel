@@ -513,6 +513,13 @@ def submitDestinationCreation(request):
                 ipAddress = data['IPAddress']
                 password = data['password']
 
+                port = "22"
+
+                try:
+                    port = data['backupSSHPort']
+                except:
+                    pass
+
                 if dest.objects.all().count() == 2:
                     final_dic = {'destStatus': 0, 'error_message': "Currently only one remote destination is allowed."}
                     final_json = json.dumps(final_dic)
@@ -527,44 +534,36 @@ def submitDestinationCreation(request):
 
                 except:
 
-                    keyPath = "/home/cyberpanel/.ssh"
 
-                    if not os.path.exists(keyPath):
-                        os.makedirs(keyPath)
-                        command = "ssh-keygen -f "+keyPath+"/cyberpanel -t rsa -N ''"
-                        cmd = shlex.split(command)
-                        res = subprocess.call(cmd)
+                    setupKeys = backupUtil.backupUtilities.setupSSHKeys(ipAddress,password,port)
 
-                    pubKey = keyPath+"/cyberpanel.pub"
-
-                    f = open(pubKey)
-                    data = f.read()
-
-                    finalData = json.dumps({'username': "admin", "password": password,"putSSHKey":data})
-
-                    url = "https://" + ipAddress + ":8090/api/putSSHkey"
-
-                    r = requests.post(url, data=finalData, verify=False)
-
-                    data = json.loads(r.text)
-
-                    if data['putSSHKey'] == 1:
-
-                        newDest = dest(destLoc=ipAddress)
-                        newDest.save()
-
-                        writeToFile = open(destinations, "w")
-                        writeToFile.writelines(ipAddress + "\n")
-                        writeToFile.close()
+                    if setupKeys[0] == 1:
 
 
-                        backupUtil.backupUtilities.initiateBackupDirCreation(ipAddress)
+
+                        backupUtil.backupUtilities.initiateBackupDirCreation(ipAddress,port)
+
+                        try:
+                            writeToFile = open(destinations, "w")
+                            writeToFile.writelines(ipAddress + "\n")
+                            writeToFile.writelines(data['backupSSHPort'] + "\n")
+                            writeToFile.close()
+                            newDest = dest(destLoc=ipAddress)
+                            newDest.save()
+                        except:
+                            writeToFile = open(destinations, "w")
+                            writeToFile.writelines(ipAddress + "\n")
+                            writeToFile.writelines("22"+"\n")
+                            writeToFile.close()
+                            newDest = dest(destLoc=ipAddress)
+                            newDest.save()
+
 
                         final_dic = {'destStatus': 1, 'error_message': "None"}
                         final_json = json.dumps(final_dic)
                         return HttpResponse(final_json)
                     else:
-                        final_dic = {'destStatus': 0, 'error_message': data['error_message']}
+                        final_dic = {'destStatus': 0, 'error_message': setupKeys[1]}
                         final_json = json.dumps(final_dic)
                         return HttpResponse(final_json)
 

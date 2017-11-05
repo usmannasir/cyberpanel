@@ -46,9 +46,16 @@ def getAdminStatus(request):
         else:
             admin_type = "Normal User"
 
+        serverIPAddress = "192.168.100.1"
+
+        try:
+            serverIPAddress = requests.get('https://api.ipify.org').text
+        except:
+            pass
+
         adminName = administrator.firstName + " " + administrator.lastName
 
-        adminData = {"admin_type":admin_type,"user_name":adminName}
+        adminData = {"admin_type":admin_type,"user_name":adminName,"serverIPAddress":serverIPAddress}
 
         json_data = json.dumps(adminData)
 

@@ -527,6 +527,7 @@ app.controller('backupDestinations', function($scope,$http,$timeout) {
                         var data = {
                             IPAddress : $scope.IPAddress,
                             password : $scope.password,
+                            backupSSHPort:$scope.backupSSHPort,
                         };
 
                         var config = {

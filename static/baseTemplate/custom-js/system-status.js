@@ -99,6 +99,9 @@ app.controller('adminController', function($scope,$http,$timeout) {
             $scope.currentAdmin = response.data.user_name;
             $scope.admin_type = response.data.admin_type;
 
+
+            $("#serverIPAddress").text(response.data.serverIPAddress);
+
              if (response.data.admin_type != "Administrator")
             {
 

@@ -272,14 +272,12 @@ class backupUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateRestore]")
 
     @staticmethod
-    def sendKey(IPAddress,password):
+    def sendKey(IPAddress, password,port):
         try:
-            if not os.path.exists(backupUtilities.completeKeyPath+"/cyberpanel"):
-                command = "ssh-keygen -f "+backupUtilities.completeKeyPath+"/cyberpanel -t rsa -N ''"
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
 
-            sendKeyProc = pexpect.spawn("scp "+backupUtilities.completeKeyPath+"/cyberpanel.pub root@"+IPAddress+":"+backupUtilities.completeKeyPath+"/authorized_keys")
+            command = "sudo scp -o StrictHostKeyChecking=no -P "+ port +" /root/.ssh/cyberpanel.pub root@" + IPAddress + ":/root/.ssh/authorized_keys"
+
+            sendKeyProc = pexpect.spawn(command,timeout=3)
             sendKeyProc.expect("password:")
 
             sendKeyProc.sendline(password)
@@ -287,20 +285,20 @@ class backupUtilities:
 
             sendKeyProc.wait()
 
-            return 1
+            return [1, "None"]
 
-        except pexpect.TIMEOUT,msg:
+        except pexpect.TIMEOUT, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendKey]")
-            return 0
-        except pexpect.EOF,msg:
+            return [0, "TIMEOUT [sendKey]"]
+        except pexpect.EOF, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendKey]")
-            return 0
+            return [0,  "EOF [sendKey]"]
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendKey]")
-            return 0
+            return [0, str(msg) + " [sendKey]"]
 
     @staticmethod
-    def setupSSHKeys(IPAddress, password):
+    def setupSSHKeys(IPAddress, password,port):
         try:
             ## Checking for host verification
 
@@ -309,101 +307,48 @@ class backupUtilities:
             if backupUtilities.checkIfHostIsUp(IPAddress) == 1:
                 pass
             else:
-                return "Host is Down."
+                return [0,"Host is Down."]
+
+            expectation = "password:"
+
+
+            command = "ssh -o StrictHostKeyChecking=no -p "+ port +" root@"+IPAddress+" mkdir /root/.ssh"
+
+            setupKeys = pexpect.spawn(command,timeout=3)
+
+            setupKeys.expect(expectation)
+
+            ## on first login attempt send password
+
+            setupKeys.sendline(password)
+
+            ## if it again give you password, than provided password is wrong
 
             expectation = []
+            expectation.append("please try again.")
+            expectation.append(pexpect.EOF)
 
-            expectation.append("continue connecting (yes/no)?")
-            expectation.append("password:")
-
-            setupSSHKeys = pexpect.spawn("ssh cyberpanel@"+IPAddress+" mkdir "+backupUtilities.keyPath)
-
-            index = setupSSHKeys.expect(expectation)
+            index = setupKeys.expect(expectation)
 
             if index == 0:
-                setupSSHKeys.sendline("yes")
-                setupSSHKeys.expect("password:")
-                setupSSHKeys.sendline(password)
-
-                expectation = []
-
-                expectation.append("File exists")
-                expectation.append(pexpect.EOF)
-                expectation.append("please try again.")
-
-                innerIndex = setupSSHKeys.expect(expectation)
-
-                if innerIndex == 0:
-                    print "Exists"
-                    setupSSHKeys.wait()
-
-                    ## setting up keys.
-
-                    if backupUtilities.sendKey(IPAddress,password) == 0:
-                        return "Can't setup connection, check CyberPanel Main log file."
-                    else:
-                        return 1
-
-                elif innerIndex == 1:
-
-                    print "Created"
-                    setupSSHKeys.wait()
-
-                    ## setting up keys.
-
-                    if backupUtilities.sendKey(IPAddress,password) == 0:
-                        return "Can't setup connection, check CyberPanel Main log file."
-                    else:
-                        return 1
-
-                else:
-                    return "Wrong Password"
-
+                return [0,"Wrong Password"]
             elif index == 1:
-                setupSSHKeys.sendline(password)
+                setupKeys.wait()
 
-                expectation = []
+                sendKey = backupUtilities.sendKey(IPAddress,password,port)
 
-                expectation.append("File exists")
-                expectation.append(pexpect.EOF)
-                expectation.append("please try again.")
-
-                innerIndex = setupSSHKeys.expect(expectation)
-
-                if innerIndex == 0:
-                    print "Exists"
-                    setupSSHKeys.wait()
-
-                    ## setting up keys.
-
-                    if backupUtilities.sendKey(IPAddress,password) == 0:
-                        return "Can't setup connection, check CyberPanel Main log file."
-                    else:
-                        return 1
-
-                elif innerIndex == 1:
-                    setupSSHKeys.wait()
-
-                    ## setting up keys.
-
-                    ## setting up keys.
-
-                    if backupUtilities.sendKey(IPAddress,password) == 0:
-                        return "Can't setup connection, check CyberPanel Main log file."
-                    else:
-                        return 1
-
+                if sendKey[0] == 1:
+                    return [1, "None"]
                 else:
-                    return "Wrong Password"
+                    return [0,sendKey[1]]
+
+
         except pexpect.TIMEOUT, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [setupSSHKeys]")
-            return 0
-        except pexpect.EOF, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [setupSSHKeys]")
-            return 0
+            logging.CyberCPLogFileWriter.writeToFile(setupKeys.before + " " + str(msg) + " [setupSSHKeys]")
+            return [0, str(msg) + " [TIMEOUT setupSSHKeys]"]
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [setupSSHKeys]")
-            return 0
+            return [0, str(msg) + " [setupSSHKeys]"]
 
     @staticmethod
     def checkIfHostIsUp(IPAddress):
@@ -418,12 +363,19 @@ class backupUtilities:
     @staticmethod
     def checkConnection(IPAddress):
         try:
+
+            path = "/usr/local/CyberCP/backup/"
+            destinations = path + "destinations"
+
+            data = open(destinations, 'r').readlines()
+            port = data[1].strip("\n")
+
             expectation = []
             expectation.append("password:")
             expectation.append("Last login")
             expectation.append(pexpect.EOF)
 
-            checkConn = pexpect.spawn("ssh -i /home/cyberpanel/.ssh/cyberpanel -o StrictHostKeyChecking=no cyberpanel@"+IPAddress, timeout=3)
+            checkConn = pexpect.spawn("sudo ssh -i /root/.ssh/cyberpanel -o StrictHostKeyChecking=no -p "+ port+" root@"+IPAddress, timeout=3)
             index = checkConn.expect(expectation)
 
             if index == 0:
@@ -518,10 +470,10 @@ class backupUtilities:
 
 
     @staticmethod
-    def createBackupDir(IPAddress,IPAddressA):
+    def createBackupDir(IPAddress,port):
 
         try:
-            command = "ssh -i /home/cyberpanel/.ssh/cyberpanel cyberpanel@"+IPAddress+" mkdir /home/backup"
+            command = "ssh -o StrictHostKeyChecking=no -p "+ port +" -i /home/cyberpanel/.ssh/cyberpanel cyberpanel@"+IPAddress+" mkdir /home/backup"
 
             shlex.split(command)
 
@@ -532,10 +484,9 @@ class backupUtilities:
             return 0
 
     @staticmethod
-    def initiateBackupDirCreation(IPAddress):
+    def initiateBackupDirCreation(IPAddress,port):
         try:
-            backupUtilities.verifyHostKey(IPAddress)
-            thread.start_new_thread(backupUtilities.createBackupDir, (IPAddress,IPAddress))
+            thread.start_new_thread(backupUtilities.createBackupDir, (IPAddress,port))
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateBackupDirCreation]")
 

@@ -10,6 +10,7 @@ from plogical.firewallUtilities import FirewallUtilities
 from .models import FirewallRules
 import os
 from loginSystem.models import Administrator
+import plogical.CyberCPLogFileWriter as logging
 # Create your views here.
 
 
@@ -395,7 +396,7 @@ def getSSHConfigs(request):
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
     except KeyError,msg:
-        final_dic = {'v': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_dic = {'status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
@@ -421,7 +422,7 @@ def saveSSHConfigs(request):
                     res = subprocess.call(cmd)
 
 
-                    FirewallUtilities.addRule('tcp',sshPort)
+                    FirewallUtilities.addRule('tcp',sshPort,"0.0.0.0/0")
 
                     try:
                         updateFW = FirewallRules.objects.get(name="SSHCustom")
@@ -429,8 +430,11 @@ def saveSSHConfigs(request):
                         updateFW.port = sshPort
                         updateFW.save()
                     except:
-                        newFireWallRule = FirewallRules(name="SSHCustom",port=sshPort,proto="tcp")
-                        newFireWallRule.save()
+                        try:
+                            newFireWallRule = FirewallRules(name="SSHCustom",port=sshPort,proto="tcp")
+                            newFireWallRule.save()
+                        except BaseException,msg:
+                            logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
 
                     ## temporarily changing permission for sshd files
@@ -492,11 +496,11 @@ def saveSSHConfigs(request):
                     return HttpResponse(final_json)
 
         except BaseException,msg:
-            final_dic = {'saveStatus': 0}
+            final_dic = {'saveStatus': 0,'error_message':str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
     except KeyError,msg:
-        final_dic = {'saveStatus': 0}
+        final_dic = {'saveStatus': 0,'error_message':str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 

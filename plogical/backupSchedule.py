@@ -14,7 +14,7 @@ class backupSchedule:
 
 
     @staticmethod
-    def createBackup(virtualHost, ipAddress,writeToFile):
+    def createBackup(virtualHost, ipAddress,writeToFile,port):
         try:
 
             writeToFile.writelines("["+time.strftime("%I-%M-%S-%a-%b-%Y")+"]"+" Preparing to create backup for: "+virtualHost+"\n")
@@ -42,7 +42,7 @@ class backupSchedule:
                 "%I-%M-%S-%a-%b-%Y") + "]" + " Preparing to send backup for: " + virtualHost +" to "+ipAddress+ "\n")
             writeToFile.flush()
 
-            backupSchedule.sendBackup(backupPath+".tar.gz", ipAddress,writeToFile)
+            backupSchedule.sendBackup(backupPath+".tar.gz", ipAddress,writeToFile,port)
 
             writeToFile.writelines("[" + time.strftime(
                 "%I-%M-%S-%a-%b-%Y") + "]" + "  Backup for: " + virtualHost + " is sent to " + ipAddress + "\n")
@@ -56,17 +56,16 @@ class backupSchedule:
             writeToFile.writelines("\n")
 
         except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
-
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createBackup]")
 
     @staticmethod
-    def sendBackup(backupPath,IPAddress,writeToFile):
+    def sendBackup(backupPath, IPAddress, writeToFile,port):
         try:
-            command ='rsync -avz -e "ssh  -i /home/cyberpanel/.ssh/cyberpanel -o StrictHostKeyChecking=no" '+ backupPath+ ' cyberpanel@'+IPAddress+':/home/backup/'+time.strftime("%a-%b")+"/"
+            command = 'rsync -avz -e "ssh  -i /root/.ssh/cyberpanel -o StrictHostKeyChecking=no -p '+port+'" ' + backupPath + ' root@' + IPAddress + ':/home/backup/' + time.strftime(
+                "%a-%b") + "/"
+            subprocess.call(shlex.split(command), stdout=writeToFile)
 
-            subprocess.call(shlex.split(command),stdout=writeToFile)
-
-        except BaseException,msg:
+        except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
     @staticmethod
@@ -88,12 +87,15 @@ class backupSchedule:
             writeToFile.writelines("\n")
             writeToFile.writelines("\n")
 
-            ipAddress = open(destinations,'r').readlines()[0].strip("\n")
+            data = open(destinations,'r').readlines()
+            ipAddress = data[0].strip("\n")
+            port = data[1].strip("\n")
 
 
 
             if backupUtilities.checkIfHostIsUp(ipAddress) == 1:
-                if backupUtilities.checkConnection(ipAddress) != 1:
+                checkConn = backupUtilities.checkConnection(ipAddress)
+                if checkConn[0] == 0:
                     writeToFile.writelines("[" + time.strftime(
                         "%I-%M-%S-%a-%b-%Y") + "]" + " Connection to:" + ipAddress+" Failed, please resetup this destination from CyberPanel, aborting." + "\n")
                     return 0
@@ -101,14 +103,16 @@ class backupSchedule:
                     pass
             else:
                 writeToFile.writelines("[" + time.strftime(
-                    "%I-%M-%S-%a-%b-%Y") + "]" + " Host:" + ipAddress + " is down, aborting." + "\n")
+                    "%I-%M-%S-%a-%b-%Y") + "]" + " Host: " + ipAddress + " is down, aborting." + "\n")
                 return 0
 
             for virtualHost in os.listdir("/home"):
-                backupSchedule.createBackup(virtualHost,ipAddress,writeToFile)
+                if virtualHost == "vmail" or virtualHost == "cyberpanel" or virtualHost =="backup":
+                    continue
+                backupSchedule.createBackup(virtualHost,ipAddress,writeToFile,port)
 
         except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [prepare]")
 
 
 backupSchedule.prepare()
