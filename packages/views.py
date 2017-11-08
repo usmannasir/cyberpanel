@@ -83,6 +83,12 @@ def submitPackage(request):
                 emails = int(data['emails'])
                 allowedDomains = int(data['allowedDomains'])
 
+                if packageSpace < 0 or packageBandwidth < 0 or packageDatabases < 0 or ftpAccounts < 0 or emails < 0 or allowedDomains < 0:
+                    data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+
 
                 admin = Administrator.objects.get(pk=request.session['userID'])
 
@@ -204,6 +210,11 @@ def saveChanges(request):
 
                 data = json.loads(request.body)
                 packageName = data['packageName']
+
+                if data['diskSpace'] < 0 or data['bandwidth'] < 0 or data['ftpAccounts'] < 0 or data['dataBases'] < 0 or data['emails'] < 0 or data['allowedDomains'] < 0:
+                    data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
 
                 modifyPack = Package.objects.get(packageName=packageName)
 

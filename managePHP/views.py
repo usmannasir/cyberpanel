@@ -1836,7 +1836,7 @@ def getRequestStatus(request):
                 size = data['size']
                 extensionName = data['extensionName']
 
-                path = "/usr/local/lscp/logs/phpExtensionRequestLog"
+                path = "/usr/local/CyberCP/managePHP/phpExtensionRequestLog"
 
                 requestStatus = unicode(open(path, "r").read())
                 requestStatusSize = len(requestStatus)

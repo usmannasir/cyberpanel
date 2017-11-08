@@ -75,7 +75,7 @@ class mysqlUtilities:
 
                 return 0
             else:
-                
+
                 dropDB = "GRANT ALL PRIVILEGES ON " +dbname+ ".* TO '" +dbuser+ "'@'localhost'"
                 command = 'sudo mysql -u root -p' + password + ' -e "' + dropDB + '"'
                 cmd = shlex.split(command)

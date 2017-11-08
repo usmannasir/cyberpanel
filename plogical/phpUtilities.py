@@ -14,17 +14,17 @@ class phpUtilities:
 
             cmd = shlex.split(command)
 
-            with open('/usr/local/lscp/logs/phpExtensionRequestLog', 'w') as f:
+            with open('/usr/local/CyberCP/managePHP/phpExtensionRequestLog', 'w') as f:
                 res = subprocess.call(cmd, stdout=f)
 
             if res == 1:
-                writeToFile = open('/usr/local/lscp/logs/phpExtensionRequestLog', 'a')
+                writeToFile = open('/usr/local/CyberCP/managePHP/phpExtensionRequestLog', 'a')
                 writeToFile.writelines("Can not be installed.\n")
                 writeToFile.close()
                 logging.CyberCPLogFileWriter.writeToFile("[Could not Install]")
                 return 0
             else:
-                writeToFile = open('/usr/local/lscp/logs/phpExtensionRequestLog', 'a')
+                writeToFile = open('/usr/local/CyberCP/managePHP/phpExtensionRequestLog', 'a')
                 writeToFile.writelines("PHP Extension Installed.\n")
                 writeToFile.close()
 
@@ -40,17 +40,17 @@ class phpUtilities:
 
             cmd = shlex.split(command)
 
-            with open('/usr/local/lscp/logs/phpExtensionRequestLog', 'w') as f:
+            with open('/usr/local/CyberCP/managePHP/phpExtensionRequestLog', 'w') as f:
                 res = subprocess.call(cmd, stdout=f)
 
             if res == 1:
-                writeToFile = open('/usr/local/lscp/logs/phpExtensionRequestLog', 'a')
+                writeToFile = open('/usr/local/CyberCP/managePHP/phpExtensionRequestLog', 'a')
                 writeToFile.writelines("Can not un-install Extension.\n")
                 writeToFile.close()
                 logging.CyberCPLogFileWriter.writeToFile("[Could not Install]")
                 return 0
             else:
-                writeToFile = open('/usr/local/lscp/logs/phpExtensionRequestLog', 'a')
+                writeToFile = open('/usr/local/CyberCP/managePHP/phpExtensionRequestLog', 'a')
                 writeToFile.writelines("PHP Extension Removed.\n")
                 writeToFile.close()
 

@@ -17,7 +17,7 @@ class ProcessUtilities:
                     finalListOfProcesses.append(proc.pid)
 
         except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(
+            logging.writeToFile(
                 str(msg) + " [getLitespeedProcessNumber]")
             return 0
 
