@@ -350,7 +350,7 @@ msgstr "RAM"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:75
 msgid "Disk Usage '/'"
-msgstr "Diska '/'"
+msgstr "Disk '/'"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:99
 msgid "HTTP Statistics"
