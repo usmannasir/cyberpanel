@@ -1,0 +1,76 @@
+###########################################
+EXTENSION_NAME="__extension_name__"
+EXTENSION_SRC=__extension_src__
+EXTRACT_METHOD="__extract_method__"
+EXTENSION_DIR="__extension_dir__"
+EXTENSION_DOWNLOAD_URL="__extension_download_url__"
+###########################################
+
+echo "============================================================="
+main_msg "Preparing source code for building ${EXTENSION_NAME} Extension"
+echo "============================================================="
+echo ""
+
+echo "Changing to build directory ${PHP_BUILD_DIR}" 
+cd ${PHP_BUILD_DIR}
+check_errs $? "Could not get into build directory"
+
+if [ -e "${EXTENSION_SRC}" ] ; then
+	main_msg "${EXTENSION_SRC} already downloaded, use the saved copy."
+	NEW_DOWNLOAD=N
+else
+	main_msg "Retrieving ${EXTENSION_NAME} extension source archive ${EXTENSION_DOWNLOAD_URL}" 
+	${DL_METHOD} ${EXTENSION_SRC} ${EXTENSION_DOWNLOAD_URL}
+	check_errs $? "Fail to retrieve ${EXTENSION_NAME} extension source archive"
+	echo ""
+	NEW_DOWNLOAD=Y
+fi
+
+echo "Changing to build directory php-${PHP_VERSION}" 
+cd php-${PHP_VERSION}
+check_errs $? "Could not get into build directory"
+
+echo "Copying ${EXTENSION_NAME} extension source archive" 
+cp ../${EXTENSION_SRC} .
+check_errs $? "Could not copy"
+
+main_msg "Extracting ${EXTENSION_NAME} extension source archive: ${EXTRACT_METHOD} ${EXTENSION_SRC}" 
+${EXTRACT_METHOD} ${EXTENSION_SRC}
+
+if [ "$?" -ne "0" ] ; then
+	# remove bad copy
+	rm -f ${EXTENSION_SRC} ../${EXTENSION_SRC}
+	check_errs $? "Fail to remove bad copy ${EXTENSION_SRC}"
+
+	if [ "${NEW_DOWNLOAD}" = "Y" ] ; then
+		check_errs 1 "Could not extract ${EXTENSION_NAME} extension source archive"
+	else
+		main_msg "Failed to extract existing copy. try download again."
+	
+		main_msg "Retrieving ${EXTENSION_NAME} extension source archive ${EXTENSION_DOWNLOAD_URL}" 
+		${DL_METHOD} ../${EXTENSION_SRC} ${EXTENSION_DOWNLOAD_URL}
+		check_errs $? "Fail to retrieve ${EXTENSION_NAME} extension source archive"
+		NEW_DOWNLOAD=Y
+	
+		cp ../${EXTENSION_SRC} .
+		check_errs $? "Could not copy"
+	
+		main_msg "Extracting ${EXTENSION_NAME} extension source archive: ${EXTRACT_METHOD} ${EXTENSION_SRC}" 
+		${EXTRACT_METHOD} ${EXTENSION_SRC}
+		
+		if [ "$?" -ne "0" ] ; then
+			# remove bad copy
+			rm -f ${EXTENSION_SRC} ../${EXTENSION_SRC}
+			check_errs $? "Fail to remove bad copy ${EXTENSION_SRC}"
+
+			check_errs 1 "Could not extract ${EXTENSION_NAME} extension source archive"
+		fi
+		
+	fi
+	
+fi
+
+
+echo "============================================================="
+main_msg "Finished gathering source code for building ${EXTENSION_NAME} extension"
+echo "============================================================="

@@ -164,13 +164,10 @@ app.controller('tunePHP', function($scope,$http) {
 
                     url = "/tuning/tunePHP";
 
-                    var phpvers = $scope.phpSelection;
-
-
 
                     var data = {
                         status: "fetch",
-                        finalPHP: phpvers
+                        domainSelection: $scope.domainSelection,
                     };
 
                     var config = {
@@ -238,12 +235,10 @@ app.controller('tunePHP', function($scope,$http) {
 
                     url = "/tuning/tunePHP";
 
-                    var phpvers = $scope.phpSelection;
-
 
                     var data = {
                         status: "fetch",
-                        finalPHP: phpvers,
+                        domainSelection: $scope.domainSelection,
                     };
 
                     var config = {
@@ -322,12 +317,10 @@ app.controller('tunePHP', function($scope,$http) {
 
                     url = "/tuning/tunePHP";
 
-                    var phpvers = $scope.phpSelection;
-
 
                     var data = {
                         status: "save",
-                        finalPHP:phpvers,
+                        domainSelection: $scope.domainSelection,
                         initTimeout: initTimeout,
                         maxConns: maxConns,
                         memSoftLimit: memSoftLimit,
@@ -351,7 +344,7 @@ app.controller('tunePHP', function($scope,$http) {
 
                         if (response.data.tuneStatus == 1) {
 
-                            $scope.phpVersionTuned = phpvers;
+                            $scope.phpVersionTuned = $scope.domainSelection;
 
                             $("#tunePHPLoading").hide();
                             $('#canNotFetch').hide();

@@ -105,7 +105,6 @@ def stopOrRestartLitespeed(request):
         return HttpResponse(final_json)
 
     except KeyError, msg:
-        status = {"reboot": 0, "shutdown": 0, "error_message": "Not logged in as admin"}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[stopOrRestartLitespeed]")
         return HttpResponse("Not Logged in as admin")
 

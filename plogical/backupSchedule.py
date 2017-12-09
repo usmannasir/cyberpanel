@@ -71,8 +71,7 @@ class backupSchedule:
     @staticmethod
     def prepare():
         try:
-            path = "/usr/local/CyberCP/backup/"
-            destinations = path + "destinations"
+            destinations = backupUtilities.destinationsPath
 
             backupLogPath = "/usr/local/lscp/logs/backup_log."+time.strftime("%I-%M-%S-%a-%b-%Y")
 

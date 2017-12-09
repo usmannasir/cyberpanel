@@ -2,7 +2,7 @@ import subprocess
 import time
 
 class CyberCPLogFileWriter:
-    fileName = "error-logs.txt"
+    fileName = "/home/cyberpanel/error-logs.txt"
 
     @staticmethod
     def writeToFile(message):

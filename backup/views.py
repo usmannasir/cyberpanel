@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from .models import DBUsers
 from loginSystem.models import Administrator
 import json
-from websiteFunctions.models import Websites,Backups,dest,backupSchedules,ChildDomains
+from websiteFunctions.models import Websites,Backups,dest,backupSchedules
 import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 import os
@@ -17,10 +17,10 @@ from shutil import rmtree
 import shlex
 import subprocess
 import signal
-import plogical.remoteBackup as rBackup
 import requests
 from baseTemplate.models import version
 from plogical.virtualHostUtilities import virtualHostUtilities
+from random import randint
 
 def loadBackupHome(request):
     try:
@@ -175,10 +175,9 @@ def submitBackupCreation(request):
 
             website = Websites.objects.get(domain=backupDomain)
 
-            backupPath = "/home/" + backupDomain + "/backup/"
+            ## defining paths
 
-            if not os.path.exists(backupPath):
-                os.mkdir(backupPath)
+            backupPath = "/home/" + backupDomain + "/backup/"
 
             domainUser = backupDomain.split('.')
 
@@ -186,16 +185,13 @@ def submitBackupCreation(request):
 
             tempStoragePath = backupPath + backupName
 
-            if not os.path.exists(tempStoragePath):
-                os.mkdir(tempStoragePath)
-
             ## Generating meta
 
-            meta = tempStoragePath + "/meta"
+            metaPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-            metaFile = open(meta, 'w')
+            metaFile = open(metaPath, "w")
 
-            metaFile.write(backupDomain + "-" + website.phpSelection + "\n")
+            metaFile.write(backupDomain + "--" + website.phpSelection + "--" + website.externalApp + "\n")
 
             childDomains = website.childdomains_set.all()
 
@@ -204,16 +200,25 @@ def submitBackupCreation(request):
             metaFile.write("Child Domains\n")
 
             for items in childDomains:
-                metaFile.write(items.domain + "-" + items.phpSelection + "-" + items.path + "\n")
+                metaFile.write(items.domain + "--" + items.phpSelection + "--" + items.path + "\n")
 
             metaFile.write("Databases\n")
 
             for items in databases:
                 dbuser = DBUsers.objects.get(user=items.dbUser)
-                metaFile.write(items.dbName + "-" + items.dbUser + "-" + dbuser.password + "\n")
+                metaFile.write(items.dbName + "--" + items.dbUser + "--" + dbuser.password + "\n")
+
             metaFile.close()
 
-            backupUtil.backupUtilities.initiateBackup(tempStoragePath, backupName, backupPath)
+            ## meta generated
+
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+
+            execPath = execPath + " submitBackupCreation --tempStoragePath " + tempStoragePath + " --backupName " + backupName + " --backupPath " + backupPath + " --metaPath " + metaPath
+
+
+
+            subprocess.Popen(shlex.split(execPath))
 
             newBackup = Backups(website=website, fileName=backupName, date=time.strftime("%I-%M-%S-%a-%b-%Y"),
                                 size=0, status=0)
@@ -221,6 +226,7 @@ def submitBackupCreation(request):
 
             final_json = json.dumps({'metaStatus': 1, 'error_message': "None", 'tempStorage': tempStoragePath})
             return HttpResponse(final_json)
+
 
     except BaseException, msg:
         final_dic = {'metaStatus': 0, 'error_message': str(msg)}
@@ -233,64 +239,67 @@ def backupStatus(request):
         try:
             if request.method == 'POST':
 
-
                 data = json.loads(request.body)
                 backupDomain = data['websiteToBeBacked']
 
                 status = "/home/"+backupDomain+"/backup/status"
 
-                if os.path.exists(status):
+                ## read file name
 
-                    readStatus = open(status,'r').readlines()
-                    readStatus[0] = readStatus[0].strip('\n')
-                    readStatus[1] = readStatus[1].strip('\n')
-                    if readStatus[1] == "completed":
-                        os.remove(status)
-                        backupOb = Backups.objects.get(fileName=readStatus[0])
+                try:
+                    backupFileNamePath = "/home/" + backupDomain + "/backup/backupFileName"
+                    command = "sudo cat " + backupFileNamePath
+                    fileName = subprocess.check_output(shlex.split(command))
+                except:
+                    fileName = "Fetching.."
+
+                ## file name read ends
+
+                if os.path.exists(status):
+                    command = "sudo cat " + status
+                    status = subprocess.check_output(shlex.split(command))
+
+                    if status.find("completed")> -1:
+
+                        command = 'sudo rm -f ' + status
+                        cmd = shlex.split(command)
+                        res = subprocess.call(cmd)
+
+                        backupOb = Backups.objects.get(fileName=fileName)
 
                         backupOb.status = 1
 
                         ## adding backup data to database.
                         try:
-                            backupOb.size = str(int(float(os.path.getsize("/home/"+backupDomain+"/backup/"+readStatus[0]+".tar.gz"))/(1024.0 * 1024.0)))+"MB"
+                            backupOb.size = str(int(float(os.path.getsize("/home/"+backupDomain+"/backup/"+fileName+".tar.gz"))/(1024.0 * 1024.0)))+"MB"
                             backupOb.save()
                         except:
-                            backupOb.size = str(int(os.path.getsize("/home/"+backupDomain+"/backup/"+readStatus[0]+".tar.gz")))
+                            backupOb.size = str(int(os.path.getsize("/home/"+backupDomain+"/backup/"+fileName+".tar.gz")))
                             backupOb.save()
 
-                        final_json = json.dumps({'backupStatus': 1, 'error_message': "None", "status": 0})
+                        final_json = json.dumps({'backupStatus': 1, 'error_message': "None", "status": status,"abort": 1,'fileName': fileName,})
                         return HttpResponse(final_json)
 
-                    elif readStatus[1] == "Aborted, please check CyberPanel main log file.":
+                    elif status.find("[5009]")> -1:
                         ## removing status file, so that backup can re-run
                         try:
-                            os.remove(status)
-                            backupOb = Backups.objects.get(fileName=readStatus[0])
+                            command = 'sudo rm -f ' + status
+                            cmd = shlex.split(command)
+                            res = subprocess.call(cmd)
+
+                            backupOb = Backups.objects.get(fileName=fileName)
                             backupOb.delete()
                         except BaseException,msg:
                             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupStatus]")
 
-                        final_json = json.dumps({'backupStatus': 1, 'error_message': "None",'fileName':readStatus[0], "status": "Aborted, please check CyberPanel main log file."})
+                        final_json = json.dumps({'backupStatus': 1,'fileName': fileName, 'error_message': "None", "status": status, "abort": 1})
                         return HttpResponse(final_json)
-
-                    elif readStatus[1] == "Aborted manually.":
-                        ## removing status file, so that backup can re-run
-                        try:
-                            os.remove(status)
-                            backupOb = Backups.objects.get(fileName=readStatus[0])
-                            backupOb.delete()
-                        except BaseException, msg:
-                            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupStatus]")
-
-                        final_json = json.dumps({'backupStatus': 1, 'error_message': "None", 'fileName': readStatus[0],
-                                                 "status": "Aborted manually."})
+                    else:
+                        final_json = json.dumps(
+                            {'backupStatus': 1, 'error_message': "None", 'fileName': fileName, "status": status,"abort": 0})
                         return HttpResponse(final_json)
-
-
-                    final_json = json.dumps({'backupStatus': 1, 'error_message': "None",'fileName':readStatus[0], "status": readStatus[1]})
-                    return HttpResponse(final_json)
                 else:
-                    final_json = json.dumps({'backupStatus': 0, 'error_message': "None", "status": 0})
+                    final_json = json.dumps({'backupStatus': 0, 'error_message': "None", "status": 0,"abort": 0})
                     return HttpResponse(final_json)
 
 
@@ -317,42 +326,20 @@ def cancelBackupCreation(request):
                 backupCancellationDomain = data['backupCancellationDomain']
                 fileName = data['fileName']
 
-                path = "/home/"+backupCancellationDomain+"/backup/pid"
 
-                pid = open(path,"r").readlines()[0]
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
 
-                try:
-                    os.kill(int(pid),signal.SIGKILL)
-                except BaseException,msg:
-                    logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
+                execPath = execPath + " cancelBackupCreation --backupCancellationDomain " + backupCancellationDomain + " --fileName " + fileName
 
 
-                backupPath = "/home/" + backupCancellationDomain + "/backup/"
 
-                tempStoragePath = backupPath + fileName
+                subprocess.call(shlex.split(execPath))
 
                 try:
-
                     backupOb = Backups.objects.get(fileName=fileName)
                     backupOb.delete()
                 except BaseException, msg:
                     logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
-
-                try:
-                    os.remove(tempStoragePath + ".tar.gz")
-                except BaseException, msg:
-                    logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
-
-                try:
-                    rmtree(tempStoragePath)
-                except BaseException, msg:
-                    logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
-
-                status = open(backupPath + 'status', "w")
-                status.write(fileName + "\n")
-                status.write("Aborted manually.")
-                status.close()
-
 
                 final_json = json.dumps({'abortStatus': 1, 'error_message': "None", "status": 0})
                 return HttpResponse(final_json)
@@ -384,8 +371,9 @@ def deleteBackup(request):
 
                 path = "/home/"+domainName+"/backup/"+backup.fileName+".tar.gz"
 
-                if os.path.exists(path):
-                    os.remove(path)
+                command = 'sudo rm -f ' + path
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
 
                 backup.delete()
 
@@ -418,9 +406,15 @@ def submitRestore(request):
             if not os.path.exists(originalFile):
                 dir = data['dir']
             else:
-                dir = None
+                dir = "CyberPanelRestore"
 
-            backupUtil.backupUtilities.initiateRestore(backupFile, dir)
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+
+            execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
+
+
+
+            subprocess.Popen(shlex.split(execPath))
 
             final_dic = {'restoreStatus': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
@@ -449,32 +443,38 @@ def restoreStatus(request):
 
             if os.path.exists(path):
                 try:
-                    status = open(path + '/status', 'r').readlines()[0]
-                except:
+                    execPath = "sudo cat " + path+"/status"
+
+
+
+                    status = subprocess.check_output(shlex.split(execPath))
+
+                    if status.find("Done") > -1:
+
+                        command = "sudo rm -rf " + path
+                        subprocess.call(shlex.split(command))
+
+                        final_json = json.dumps(
+                            {'restoreStatus': 1, 'error_message': "None", "status": status, 'abort': 1,'running': 'Completed'})
+                        return HttpResponse(final_json)
+                    elif status.find("[5009]") > -1:
+                        ## removing temporarily generated files while restoring
+                        command = "sudo rm -rf " + path
+                        subprocess.call(shlex.split(command))
+                        final_json = json.dumps({'restoreStatus': 1, 'error_message': "None",
+                                                 "status": status, 'abort': 1,'alreadyRunning': 0,'running': 'Error'})
+                        return HttpResponse(final_json)
+                    else:
+                        final_json = json.dumps({'restoreStatus': 1, 'error_message': "None", "status": status, 'abort': 0,'running': 'Running..'})
+                        return HttpResponse(final_json)
+
+                except BaseException,msg:
+                    logging.CyberCPLogFileWriter.writeToFile(str(msg))
                     status = "Just Started"
-
-                if status == "Done":
-                    rmtree(path)
-                    final_json = json.dumps({'restoreStatus': 1, 'error_message': "None", "status": "Done"})
+                    final_json = json.dumps({'restoreStatus': 1, 'error_message': "None", "status": status, 'abort': 0,'running': 'Running..'})
                     return HttpResponse(final_json)
-
-                if status == "Website already exists":
-                    rmtree(path)
-                    final_json = json.dumps({'restoreStatus': 1, 'error_message': "Website already exists",
-                                             "status": "Website already exists"})
-                    return HttpResponse(final_json)
-
-                if status.find("Not able to create Account and databases") > -1:
-                    rmtree(path)
-                    final_json = json.dumps(
-                        {'restoreStatus': 1, 'error_message': "Not able to create Account and databases, aborting.",
-                         "status": "Not able to create Account and databases, aborting."})
-                    return HttpResponse(final_json)
-
-                final_json = json.dumps({'restoreStatus': 1, 'error_message': "None", "status": status})
-                return HttpResponse(final_json)
             else:
-                final_json = json.dumps({'restoreStatus': 1, 'error_message': "None", "status": 0})
+                final_json = json.dumps({'restoreStatus': 1, 'error_message': "None", "status": "OK To Run",'running': 'Halted','abort': 1})
                 return HttpResponse(final_json)
 
 
@@ -502,19 +502,13 @@ def submitDestinationCreation(request):
         try:
             if request.method == 'POST':
 
-                path = "/usr/local/CyberCP/backup/"
-                destinations = path+"destinations"
 
-                if not os.path.exists(path):
-                    os.mkdir(path)
-
+                destinations = backupUtil.backupUtilities.destinationsPath
 
                 data = json.loads(request.body)
                 ipAddress = data['IPAddress']
                 password = data['password']
-
                 port = "22"
-
                 try:
                     port = data['backupSSHPort']
                 except:
@@ -524,25 +518,15 @@ def submitDestinationCreation(request):
                     final_dic = {'destStatus': 0, 'error_message': "Currently only one remote destination is allowed."}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
-
-
                 try:
                     d = dest.objects.get(destLoc=ipAddress)
                     final_dic = {'destStatus': 0, 'error_message': "This destination already exists."}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
-
                 except:
-
-
                     setupKeys = backupUtil.backupUtilities.setupSSHKeys(ipAddress,password,port)
-
                     if setupKeys[0] == 1:
-
-
-
                         backupUtil.backupUtilities.initiateBackupDirCreation(ipAddress,port)
-
                         try:
                             writeToFile = open(destinations, "w")
                             writeToFile.writelines(ipAddress + "\n")
@@ -558,7 +542,6 @@ def submitDestinationCreation(request):
                             newDest = dest(destLoc=ipAddress)
                             newDest.save()
 
-
                         final_dic = {'destStatus': 1, 'error_message': "None"}
                         final_json = json.dumps(final_dic)
                         return HttpResponse(final_json)
@@ -566,8 +549,6 @@ def submitDestinationCreation(request):
                         final_dic = {'destStatus': 0, 'error_message': setupKeys[1]}
                         final_json = json.dumps(final_dic)
                         return HttpResponse(final_json)
-
-
         except BaseException,msg:
             final_dic = {'destStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -1149,9 +1130,8 @@ def submitRemoteBackups(request):
                     if data['currentVersion'] == Version.currentVersion and data['build'] == Version.build:
                         pass
                     else:
-                        json_data = data['data']
                         data_ret = {'status': 0, 'error_message': "Your version does not match with version of remote server.",
-                                    "dir": "Null", }
+                                    "dir": "Null" }
                         data_ret = json.dumps(data_ret)
                         return HttpResponse(data_ret)
 
@@ -1168,55 +1148,49 @@ def submitRemoteBackups(request):
 
             ## setup ssh key
 
-            sshkey = rBackup.remoteBackup.getKey(ipAddress, password)
 
-            if sshkey[0] == 1:
-                pass
+            finalData = json.dumps({'username': "admin", "password": password})
+
+
+            url = "https://" + ipAddress + ":8090/api/fetchSSHkey"
+            r = requests.post(url, data=finalData, verify=False)
+            data = json.loads(r.text)
+
+            if data['pubKeyStatus'] == 1:
+                pubKey = data["pubKey"].strip("\n")
             else:
-                final_json = json.dumps({'status': 0, 'error_message': sshkey[1]})
+                final_json = json.dumps({'status': 0, 'error_message': "I am sorry, I could not fetch key from remote server. Error Message: "+data['error_message']})
                 return HttpResponse(final_json)
 
-            pubKey = sshkey[1]
 
-            keyPath = "/home/cyberpanel/.ssh"
-
-            if not os.path.exists(keyPath):
-                os.makedirs(keyPath)
-
-
-
-            ## writeKey
-
-            authorized_keys = keyPath + "/authorized_keys"
-            presenseCheck = 0
-            try:
-                data = open(authorized_keys, "r").readlines()
-                for items in data:
-                    if items.find(pubKey) > -1:
-                        presenseCheck = 1
-            except:
-                pass
-
-            if presenseCheck == 0:
-                writeToFile = open(authorized_keys, 'a')
-                writeToFile.writelines("#Added by CyberPanel\n")
-                writeToFile.writelines("\n")
-                writeToFile.writelines(pubKey)
-                writeToFile.writelines("\n")
-                writeToFile.close()
+            ## write key
 
             ##
 
-            command = "sudo chown cyberpanel:cyberpanel /home/cyberpanel"
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            pathToKey = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-            command = "sudo chmod g-w /home/cyberpanel"
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            vhost = open(pathToKey, "w")
 
-            os.chmod(keyPath, 0700)
-            os.chmod(authorized_keys, 0600)
+            vhost.write(pubKey)
+
+            vhost.close()
+
+            ##
+
+
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
+
+            execPath = execPath + " writeAuthKey --pathToKey " + pathToKey
+
+
+
+            output = subprocess.check_output(shlex.split(execPath))
+
+            if output.find("1,None") > -1:
+                pass
+            else:
+                final_json = json.dumps({'status': 0, 'type': 'exception', 'error_message': output})
+                return HttpResponse(final_json)
 
             ##
 
@@ -1281,8 +1255,10 @@ def starRemoteTransfer(request):
 
                         localStoragePath = "/home/backup/transfer-" + str(data['dir'])
 
-                        if not os.path.exists(localStoragePath):
-                            os.makedirs(localStoragePath)
+                        ## making local storage directory for backups
+
+                        command = "sudo mkdir " + localStoragePath
+                        subprocess.call(shlex.split(command))
 
                         final_json = json.dumps({'remoteTransferStatus': 1, 'error_message': "None","dir":data['dir']})
                         return HttpResponse(final_json)
@@ -1325,6 +1301,11 @@ def getRemoteTransferStatus(request):
                     data = {'remoteTransferStatus': 1, 'error_message': "None", "status": data['status'],'backupsSent': 1}
                     json_data = json.dumps(data)
                     return HttpResponse(json_data)
+                elif data['status'].find("[5010]") > -1:
+                    data = {'remoteTransferStatus': 0, 'error_message': data['status'],
+                            'backupsSent': 0}
+                    json_data = json.dumps(data)
+                    return HttpResponse(json_data)
                 else:
                     data = {'remoteTransferStatus': 1, 'error_message': "None", "status": data['status'],
                             'backupsSent': 0}
@@ -1354,16 +1335,22 @@ def remoteBackupRestore(request):
                 backupDirComplete = "/home/backup/transfer-"+str(backupDir)
                 #adminEmail = admin.email
 
-                restoreRequest = rBackup.remoteBackup.remoteRestore(backupDirComplete,str(backupDir))
+                ##
 
-                if restoreRequest[0] == 1:
-                    data = {'remoteRestoreStatus': 1, 'error_message': 'None'}
-                    json_data = json.dumps(data)
-                    return HttpResponse(json_data)
-                else:
-                    data = {'remoteRestoreStatus': 0, 'error_message': restoreRequest[1]}
-                    json_data = json.dumps(data)
-                    return HttpResponse(json_data)
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
+
+                execPath = execPath + " remoteBackupRestore --backupDirComplete " + backupDirComplete + " --backupDir " + str(backupDir)
+
+
+
+                subprocess.Popen(shlex.split(execPath))
+
+                data = {'remoteRestoreStatus': 1, 'error_message': 'None'}
+                json_data = json.dumps(data)
+                return HttpResponse(json_data)
+
+                ##
+
 
         except BaseException, msg:
             data = {'remoteRestoreStatus': 0, 'error_message': str(msg)}
@@ -1389,14 +1376,21 @@ def localRestoreStatus(request):
 
             if os.path.isfile(backupLogPath):
 
-                statusFile = open(backupLogPath,"r")
-                status = statusFile.read()
-                statusFile.close()
+                command = "sudo cat " + backupLogPath
+                status = subprocess.check_output(shlex.split(command))
 
                 if status.find("completed[success]")>-1:
-                    rmtree(removalPath)
+                    command = "sudo rm -rf " + removalPath
+                    #subprocess.call(shlex.split(command))
                     data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 1}
                     json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                elif status.find("[5010]") > -1:
+                    command = "sudo rm -rf " + removalPath
+                    #subprocess.call(shlex.split(command))
+                    data = {'remoteTransferStatus': 0, 'error_message': status,
+                            "status":"None","complete":0}
+                    json_data = json.dumps(data)
                     return HttpResponse(json_data)
                 else:
                     data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 0}

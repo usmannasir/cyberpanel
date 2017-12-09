@@ -30,22 +30,29 @@ function getCookie(name) {
 var app = angular.module('CyberCP', []);
 
 
-app.config(['$interpolateProvider',
-
-    function($interpolateProvider) {
+app.config(['$interpolateProvider', function($interpolateProvider) {
         $interpolateProvider.startSymbol('{$');
         $interpolateProvider.endSymbol('$}');
-    }
-]);
+    }]);
 
 
 app.filter('getwebsitename', function() {
     return function(domain, uppercase) {
 
-        domain = domain.replace("-", "");
+        if(domain !== undefined) {
 
-       var domainName = domain.split(".");
-       return domainName[0];
+            domain = domain.replace("-", "");
+
+            var domainName = domain.split(".");
+
+            var finalDomainName = domainName[0];
+
+            if (finalDomainName.length > 5) {
+                finalDomainName = finalDomainName.substring(0, 4);
+            }
+
+            return finalDomainName;
+        }
     };
   });
 

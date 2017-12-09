@@ -8,6 +8,10 @@ import plogical.CyberCPLogFileWriter as logging
 from plogical.tuning import tuning
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
+from websiteFunctions.models import Websites,ChildDomains
+from plogical.virtualHostUtilities import virtualHostUtilities
+import subprocess
+import shlex
 # Create your views here.
 
 
@@ -46,7 +50,20 @@ def phpTuning(request):
         if admin.type == 3:
             return HttpResponse("You don't have enough priviliges to access this page.")
 
-        return render(request,'tuning/phpTuning.html',{})
+        admin = Administrator.objects.get(pk=request.session['userID'])
+
+        websites = Websites.objects.all()
+        websitesName = []
+
+        for items in websites:
+            websitesName.append(items.domain)
+
+        childs = ChildDomains.objects.all()
+
+        for items in childs:
+            websitesName.append(items.domain)
+
+        return render(request,'tuning/phpTuning.html',{'websiteList':websitesName})
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -107,16 +124,16 @@ def tuneLitespeed(request):
                     inMemCache = data['inMemCache']
                     gzipCompression = data['gzipCompression']
 
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/tuning.py"
+
+                    execPath = execPath + " saveTuningDetails --maxConn " + maxConn + " --maxSSLConn " + maxSSLConn + " --connTime " + connTime + " --keepAlive " + keepAlive + " --inMemCache '" + inMemCache + "' --gzipCompression " + gzipCompression
 
 
-                    if gzipCompression == "Enable":
-                        gzip = 1
-                    else:
-                        gzip = 0
 
+                    output = subprocess.check_output(shlex.split(execPath))
 
-                    if tuning.saveTuningDetails(maxConn,maxSSLConn,connTime,keepAlive,inMemCache,gzip)==1:
-                        data_ret = {'fetch_status': 1, 'error_message': "None",'tuneStatus': 1}
+                    if output.find("1,None") > -1:
+                        data_ret = {'fetch_status': 1, 'error_message': "None", 'tuneStatus': 1}
                         final_json = json.dumps(data_ret)
                         return HttpResponse(final_json)
                     else:
@@ -146,30 +163,13 @@ def tunePHP(request):
             if request.method == 'POST':
                 data = json.loads(request.body)
                 status = data['status']
+                domainSelection = str(data['domainSelection'])
 
                 if status=="fetch":
 
-                    phpVers = str(data['finalPHP'])
-                    finalPHP = 0
 
-                    if phpVers == "PHP 5.3":
-                        finalPHP = 53
 
-                    elif phpVers == "PHP 5.4":
-                        finalPHP = 54
-
-                    elif phpVers == "PHP 5.5":
-                        finalPHP = 55
-
-                    elif phpVers == "PHP 5.6":
-                        finalPHP = 56
-
-                    elif phpVers == "PHP 7.0":
-                        finalPHP = 70
-                    elif phpVers == "PHP 7.1":
-                        finalPHP = 71
-
-                    json_data = json.dumps(tuning.fetchPHPDetails(finalPHP))
+                    json_data = json.dumps(tuning.fetchPHPDetails(domainSelection))
 
                     data_ret = {'fetch_status': 1, 'error_message': "None","tuning_data":json_data,'tuneStatus': 0}
 
@@ -178,43 +178,31 @@ def tunePHP(request):
                     return HttpResponse(final_json)
 
                 else:
-                    initTimeout = data['initTimeout']
-                    maxConns = data['maxConns']
+                    initTimeout = str(data['initTimeout'])
+                    maxConns = str(data['maxConns'])
                     memSoftLimit = data['memSoftLimit']
                     memHardLimit = data['memHardLimit']
-                    procSoftLimit = data['procSoftLimit']
-                    procHardLimit = data['procHardLimit']
+                    procSoftLimit = str(data['procSoftLimit'])
+                    procHardLimit = str(data['procHardLimit'])
                     persistConn = data['persistConn']
 
-                    phpVers = str(data['finalPHP'])
-                    finalPHP = 0
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/tuning.py"
 
-                    if phpVers == "PHP 5.3":
-                        finalPHP = 53
-
-                    elif phpVers == "PHP 5.4":
-                        finalPHP = 54
-
-                    elif phpVers == "PHP 5.5":
-                        finalPHP = 55
-
-                    elif phpVers == "PHP 5.6":
-                        finalPHP = 56
-
-                    elif phpVers == "PHP 7.0":
-                        finalPHP = 70
-
-
-                    tuning.tunePHP(finalPHP,maxConns,initTimeout,persistConn,memSoftLimit,memHardLimit,procSoftLimit,procHardLimit)
-
-                    data_ret = {'fetch_status': 0, 'error_message': "None",'tuneStatus': 1}
-
-                    final_json = json.dumps(data_ret)
-
-                    return HttpResponse(final_json)
+                    execPath = execPath + " tunePHP --virtualHost " + domainSelection +" --initTimeout " + initTimeout + " --maxConns " + maxConns + " --memSoftLimit " + memSoftLimit + " --memHardLimit '" + memHardLimit + "' --procSoftLimit " + procSoftLimit + " --procHardLimit " + procHardLimit + " --persistConn " + persistConn
 
 
 
+                    output = subprocess.check_output(shlex.split(execPath))
+
+                    if output.find("1,None") > -1:
+                        data_ret = {'tuneStatus': 1,'fetch_status': 0, 'error_message': "None"}
+                        final_json = json.dumps(data_ret)
+                        return HttpResponse(final_json)
+                    else:
+                        data_ret = {'fetch_status': 0, 'error_message': output, 'tuneStatus': 0}
+                        logging.CyberCPLogFileWriter.writeToFile(output + " [tunePHP]]")
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
 
 
         except BaseException,msg:

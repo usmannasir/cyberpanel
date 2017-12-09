@@ -3,6 +3,7 @@ import subprocess
 import CyberCPLogFileWriter as logging
 import os
 import shlex
+import argparse
 
 
 class FTPUtilities:
@@ -214,4 +215,43 @@ class FTPUtilities:
             return 0
 
         return 1
+
+    @staticmethod
+    def ftpFunctions(path,externalApp):
+        try:
+            FNULL = open(os.devnull, 'w')
+
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+            command = "chown " + externalApp + ":" + externalApp + " " + path
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            print "1,None"
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [getErrorLogs]")
+            print "0,"+str(msg)
+
+
+def main():
+
+    parser = argparse.ArgumentParser(description='CyberPanel Installer')
+    parser.add_argument('function', help='Specific a function to call!')
+    parser.add_argument('--path', help='Path to ftp directory!')
+    parser.add_argument('--externalApp', help='Owner for the path of FTP Directory!')
+
+
+    args = parser.parse_args()
+
+    if args.function == "ftpFunctions":
+        FTPUtilities.ftpFunctions(args.path,args.externalApp)
+
+
+
+
+if __name__ == "__main__":
+    main()
 

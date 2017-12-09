@@ -70,14 +70,15 @@ def getSystemStatus(request):
         HTTPData = SystemInformation.getSystemInformation()
 
         try:
-            data = open("/tmp/lshttpd/.rtreport", "r").readlines()
+            command = "sudo cat /tmp/lshttpd/tempReport"
+            logging.CyberCPLogFileWriter.writeToFile(shlex.split(command))
+            data = subprocess.check_output(shlex.split(command)).split("\n")
 
             httpData = data[3]
             requestsData = data[4]
 
             finalHTTP = re.findall(r"[A-Za-z0-9]+", httpData)
             finalReq = re.findall(r"[A-Za-z0-9]+", requestsData)
-
 
 
             HTTPData['RequestProcessing'] = finalReq[4]
@@ -90,6 +91,7 @@ def getSystemStatus(request):
             HTTPData['AvailSSL'] = finalHTTP[14]
 
         except BaseException,msg:
+
             HTTPData['RequestProcessing'] = 0
             HTTPData['TotalRequests'] = 0
 

@@ -73,76 +73,46 @@ def issueSSL(request):
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
 
+                adminEmail = ""
+                path = ""
+
                 try:
                     website = ChildDomains.objects.get(domain=virtualHost)
+                    adminEmail = website.master.adminEmail
+                    path = data['path']
                 except:
                     website = Websites.objects.get(domain=virtualHost)
+                    adminEmail = website.adminEmail
+                    path = "/home/" + virtualHost + "/public_html"
 
-                srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
-                srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
+                ## ssl issue
 
-                pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHost
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-                pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-                pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
-
-                if os.path.exists(pathToStoreSSLPrivKey):
-                    os.remove(pathToStoreSSLPrivKey)
-                if os.path.exists(pathToStoreSSLFullChain):
-                    os.remove(pathToStoreSSLFullChain)
-
-                adminEmail = "email@"+virtualHost
+                execPath = execPath + " issueSSL --virtualHostName " + virtualHost + " --administratorEmail " + adminEmail + " --path " + path
 
 
-                if not (os.path.exists(srcPrivKey) and os.path.exists(srcFullChain)):
-                    path = ''
-                    try:
-                        path = data['path']
-                    except:
-                        path = "/home/"+virtualHost+"/public_html"
 
-                    ssl_responce = sslUtilities.obtainSSLForADomain(virtualHost, adminEmail,path)
-                    if ssl_responce == 1:
-                        sslUtilities.installSSLForDomain(virtualHost)
-                        installUtilities.reStartLiteSpeed()
-                        website.ssl = 1
-                        website.save()
-                        data_ret = {"SSL": 1,
-                                    'error_message': "None"}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
+                output = subprocess.check_output(shlex.split(execPath))
 
-                    else:
-                        data_ret = {"SSL": 0,
-                                    'error_message': str(ssl_responce) + ", for more information see CyberCP main log file."}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
+                if output.find("1,None") > -1:
+                    pass
+
                 else:
-                    ###### Copy SSL To config location ######
-
-                    try:
-                        os.mkdir(pathToStoreSSL)
-                    except BaseException, msg:
-                        logging.writeToFile(
-                            str(msg) + " [Directory for SSL already exists.. Continuing [obtainSSLForADomain]]")
-
-                    srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
-                    srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
-
-
-                    shutil.copy(srcPrivKey, pathToStoreSSLPrivKey)
-                    shutil.copy(srcFullChain, pathToStoreSSLFullChain)
-
-                    website.ssl = 1
-                    website.save()
-
-                    sslUtilities.installSSLForDomain(virtualHost)
-                    installUtilities.reStartLiteSpeed()
-
-                    data_ret = {"SSL": 1,
-                                'error_message': "None"}
+                    data_ret = {"SSL": 0,
+                                'error_message': output}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
+
+                ## ssl issue ends
+
+                website.ssl = 1
+                website.save()
+
+                data_ret = {"SSL": 1,
+                            'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
         except BaseException,msg:
             data_ret = {"SSL": 0,
@@ -209,96 +179,29 @@ def obtainHostNameSSL(request):
 
                 website = Websites.objects.get(domain=virtualHost)
 
-                srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
-                srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
+                path = "/home/" + virtualHost + "/public_html"
 
-                pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHost
+                ## ssl issue
 
-                pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-                pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-                destPrivKey = "/usr/local/lscp/key.pem"
-                destCert = "/usr/local/lscp/cert.pem"
+                execPath = execPath + " issueSSLForHostName --virtualHostName " + virtualHost + " --path " + path
 
 
-                ## removing old certs
+                output = subprocess.check_output(shlex.split(execPath))
 
-                if os.path.exists(pathToStoreSSLPrivKey):
-                    os.remove(pathToStoreSSLPrivKey)
-                if os.path.exists(pathToStoreSSLFullChain):
-                    os.remove(pathToStoreSSLFullChain)
-
-                ## removing old certs for lscpd
-                if os.path.exists(destPrivKey):
-                    os.remove(destPrivKey)
-                if os.path.exists(destCert):
-                    os.remove(destCert)
-
-                adminEmail = "email@"+virtualHost
-
-
-                if not (os.path.exists(srcPrivKey) and os.path.exists(srcFullChain)):
-                    path = "/home/" + virtualHost + "/public_html"
-                    ssl_responce = sslUtilities.obtainSSLForADomain(virtualHost, adminEmail,path)
-                    if ssl_responce == 1:
-                        sslUtilities.installSSLForDomain(virtualHost)
-                        installUtilities.reStartLiteSpeed()
-                        website.ssl = 1
-                        website.save()
-
-                        ## lcpd specific functions
-
-                        shutil.copy(srcPrivKey, destPrivKey)
-                        shutil.copy(srcFullChain, destCert)
-
-                        command = 'sudo systemctl restart lscpd'
-
-                        cmd = shlex.split(command)
-
-                        res = subprocess.call(cmd)
-
-                        data_ret = {"SSL": 1,
-                                    'error_message': "None"}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-
-                    else:
-                        data_ret = {"SSL": 0,
-                                    'error_message': str(ssl_responce) + ", for more information see CyberCP main log file."}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-                else:
-                    ###### Copy SSL To config location ######
-
-                    try:
-                        os.mkdir(pathToStoreSSL)
-                    except BaseException, msg:
-                        logging.writeToFile(str(msg) + " [Directory for SSL already exists.. Continuing [obtainSSLForADomain]]")
-
-                    srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
-                    srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
-
-
-                    shutil.copy(srcPrivKey, pathToStoreSSLPrivKey)
-                    shutil.copy(srcFullChain, pathToStoreSSLFullChain)
-
-                    ## lcpd specific functions
-
-                    shutil.copy(srcPrivKey, destPrivKey)
-                    shutil.copy(srcFullChain, destCert)
-
-                    command = 'sudo systemctl restart lscpd'
-
-                    cmd = shlex.split(command)
-
-                    res = subprocess.call(cmd)
-                    website.ssl = 1
-                    website.save()
-
+                if output.find("1,None") > -1:
                     data_ret = {"SSL": 1,
                                 'error_message': "None"}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
+                else:
+                    data_ret = {"SSL": 0,
+                                'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+                ## ssl issue ends
 
         except BaseException,msg:
             data_ret = {"SSL": 0,

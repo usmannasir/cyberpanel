@@ -81,11 +81,7 @@ def submitDBCreation(request):
                 dbName = data['dbName']
                 dbUsername = data['dbUsername']
                 dbPassword = data['dbPassword']
-
-                webUsername = databaseWebsite.replace("-","")
-
-
-                webUsername = webUsername.split('.')[0]
+                webUsername = data['webUserName']
 
                 dbName = webUsername+"_"+dbName
                 dbUsername = webUsername+"_"+dbUsername

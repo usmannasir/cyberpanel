@@ -12,7 +12,6 @@ from baseTemplate.models import version
 from plogical.getSystemInformation import SystemInformation
 from django.utils.translation import LANGUAGE_SESSION_KEY
 import CyberCP.settings as settings
-from django.utils import translation
 # Create your views here.
 
 def verifyLogin(request):
@@ -71,7 +70,6 @@ def verifyLogin(request):
                     settings.LANGUAGE_CODE = "en"
 
 
-
             admin = Administrator.objects.get(userName=username)
 
             if hashPassword.check_password(admin.password, password):
@@ -116,7 +114,7 @@ def loadLoginPage(request):
                                   firstName="Cyber",lastName="Panel")
             admin.save()
 
-            vers = version(currentVersion="1.5",build=1)
+            vers = version(currentVersion="1.6",build=0)
             vers.save()
 
             package = Package(admin=admin, packageName="Default", diskSpace=1000,
@@ -158,6 +156,9 @@ def loadLoginPage(request):
             newFWRule.save()
 
             newFWRule = FirewallRules(name="dnstcp", proto="tcp", port="53")
+            newFWRule.save()
+
+            newFWRule = FirewallRules(name="ftptls", proto="tcp", port="40110-40210")
             newFWRule.save()
 
             return render(request, 'loginSystem/login.html', {})

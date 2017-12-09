@@ -11,8 +11,12 @@ from loginSystem.models import Administrator
 import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 from websiteFunctions.models import Websites
-from plogical.ftpUtilities import FTPUtilities
-import os
+from websiteFunctions.models import ChildDomains
+import pwd
+import grp
+import subprocess
+from plogical.virtualHostUtilities import virtualHostUtilities
+import shlex
 # Create your views here.
 
 def loadFTPHome(request):
@@ -77,27 +81,44 @@ def submitFTPCreation(request):
                 password = data['ftpPassword']
                 path = data['path']
 
+                ## need to get gid and uid
+
+                try:
+                    website = ChildDomains.objects.get(domain=data['ftpDomain'])
+                    externalApp = website.master.externalApp
+                except:
+                    website = Websites.objects.get(domain=data['ftpDomain'])
+                    externalApp = website.externalApp
+
+                uid = pwd.getpwnam(externalApp).pw_uid
+                gid = grp.getgrnam(externalApp).gr_gid
+
+                ## gid , uid ends
+
                 path = path.lstrip("/")
 
                 if len(path)>0:
+
                     path = "/home/" + data['ftpDomain']+"/public_html/"+path
 
-                    if not os.path.exists(path):
-                        os.makedirs(path)
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/ftpUtilities.py"
 
-                    if FTPUtilities.changePermissions("/home/" + data['ftpDomain']) == 0:
-                        data_ret = {'creatFTPStatus': 0, 'error_message': "Can not change directory permissions."}
+                    execPath = execPath + " ftpFunctions --path " + path + " --externalApp " + externalApp
+
+
+
+                    output = subprocess.check_output(shlex.split(execPath))
+
+                    if output.find("1,None") > -1:
+                        pass
+                    else:
+                        data_ret = {'creatFTPStatus': 0, 'error_message': "Not able to create the directory specified, for more information see CyberPanel main log file."}
                         json_data = json.dumps(data_ret)
                         return HttpResponse(json_data)
 
                 else:
                     path = "/home/" + data['ftpDomain']
-                    if FTPUtilities.changePermissions(path) == 0:
-                        data_ret = {'creatFTPStatus': 0, 'error_message': "Can not change directory permissions."}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
 
-                website = Websites.objects.get(domain=data['ftpDomain'])
 
                 hash = hashlib.md5()
                 hash.update(password)
@@ -107,7 +128,7 @@ def submitFTPCreation(request):
                 userName = admin.userName + "_" + userName
 
                 if website.package.ftpAccounts == 0:
-                    user = Users(domain=website, user=userName, password=hash.hexdigest(), uid=2001, gid=2001, dir=path,
+                    user = Users(domain=website, user=userName, password=hash.hexdigest(), uid=uid, gid=gid, dir=path,
                                  quotasize=website.package.diskSpace,
                                  status="1",
                                  ulbandwidth=500000,
@@ -123,17 +144,13 @@ def submitFTPCreation(request):
                     return HttpResponse(json_data)
 
                 elif website.users_set.all().count() < website.package.ftpAccounts:
-                    user = Users(domain=website,user=userName, password=hash.hexdigest(), uid=2001, gid=2001, dir=path, quotasize=website.package.diskSpace,
+                    user = Users(domain=website,user=userName, password=hash.hexdigest(), uid=uid, gid=gid, dir=path, quotasize=website.package.diskSpace,
                                  status="1",
                                  ulbandwidth=500000,
                                  dlbandwidth=500000,
                                  date=datetime.now())
 
                     user.save()
-
-
-
-
 
                     data_ret = {'creatFTPStatus': 1,'error_message': "None"}
                     json_data = json.dumps(data_ret)

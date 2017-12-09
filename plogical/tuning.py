@@ -1,5 +1,8 @@
 import CyberCPLogFileWriter as logging
 from installUtilities import installUtilities
+import argparse
+import subprocess
+import shlex
 
 class tuning:
 
@@ -8,10 +11,10 @@ class tuning:
     def fetchTuningDetails():
 
         try:
-            datas = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
             dataToReturn = {}
 
-
+            command = "sudo cat /usr/local/lsws/conf/httpd_config.conf"
+            datas = subprocess.check_output(shlex.split(command)).split("\n")
 
             for items in datas:
                 if items.find("maxConnections")>-1:
@@ -59,6 +62,11 @@ class tuning:
             datas = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
             writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf","w")
 
+            if gzipCompression == "Enable":
+                gzip = 1
+            else:
+                gzip = 0
+
 
             for items in datas:
                 if items.find("maxConnections") > -1:
@@ -87,28 +95,30 @@ class tuning:
                     continue
 
                 elif items.find("enableGzipCompress") > -1:
-                    data = "  enableGzipCompress      " + str(gzipCompression) + "\n"
+                    data = "  enableGzipCompress      " + str(gzip) + "\n"
                     writeDataToFile.writelines(data)
                     continue
                 else:
                     writeDataToFile.writelines(items)
+
             writeDataToFile.close()
 
-            return 1
+            print "1,None"
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + " [saveTuningDetails]")
-            return 0
-
-
+            print "0," + str(msg)
 
 
     @staticmethod
-    def fetchPHPDetails(phpVersion):
+    def fetchPHPDetails(virtualHost):
         try:
-            path = installUtilities.Server_root_path + "/conf/phpconfigs/php"+str(phpVersion)+".conf"
-            datas = open(path).readlines()
+            path = installUtilities.Server_root_path + "/conf/vhosts/"+virtualHost+"/vhost.conf"
+
+            command = "sudo cat "+path
+            datas = subprocess.check_output(shlex.split(command)).split("\n")
+
             dataToReturn = {}
 
             for items in datas:
@@ -150,11 +160,11 @@ class tuning:
             return 0
 
     @staticmethod
-    def tunePHP(phpVersion,maxConns,initTimeout,persistConn,memSoftLimit,memHardLimit,procSoftLimit,procHardLimit):
+    def tunePHP(virtualHost,maxConns,initTimeout,persistConn,memSoftLimit,memHardLimit,procSoftLimit,procHardLimit):
 
 
         try:
-            path = installUtilities.Server_root_path + "/conf/phpconfigs/php" + str(phpVersion) + ".conf"
+            path = installUtilities.Server_root_path + "/conf/vhosts/" + virtualHost + "/vhost.conf"
             datas = open(path).readlines()
 
             writeDataToFile = open(path,"w")
@@ -205,10 +215,47 @@ class tuning:
 
             writeDataToFile.close()
 
-            return 1
+            print "1,None"
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + " [saveTuningDetails]")
-            return 0
+            print "0,"+str(msg)
+
+def main():
+
+    parser = argparse.ArgumentParser(description='CyberPanel Installer')
+    parser.add_argument('function', help='Specific a function to call!')
+    parser.add_argument('--virtualHost', help='Domain name!')
+    parser.add_argument('--maxConns', help='Max Connections for PHP!')
+    parser.add_argument('--initTimeout', help='Initial Request Timeout (secs) for PHP!')
+    parser.add_argument("--persistConn", help="Persistent Connection for PHP!")
+    parser.add_argument("--memSoftLimit", help="Memory Soft Limit (bytes) for PHP!")
+    parser.add_argument("--memHardLimit", help="Memory Hard Limit (bytes) for PHP!")
+    parser.add_argument("--procSoftLimit", help="Process Soft Limit for PHP!")
+    parser.add_argument("--procHardLimit", help="Process Hard Limit for PHP!")
+
+    ## Litespeed Tuning Arguments
+
+    parser.add_argument("--maxConn", help="Max Connections for LiteSpeed!")
+    parser.add_argument("--maxSSLConn", help="Max SSL Connections for LiteSpeed!")
+    parser.add_argument("--connTime", help="Connection Timeout (secs) for LiteSpeed!")
+    parser.add_argument("--keepAlive", help="Keep-Alive Timeout (secs) for LiteSpeed!")
+    parser.add_argument("--inMemCache", help="Total Small File Cache Size (bytes) for LiteSpeed!")
+    parser.add_argument("--gzipCompression", help="Enable disable GZIP Compression for LiteSpeed!")
+
+
+    args = parser.parse_args()
+
+    if args.function == "tunePHP":
+        tuning.tunePHP(args.virtualHost, args.maxConns, args.initTimeout, args.persistConn, args.memSoftLimit, args.memHardLimit, args.procSoftLimit,
+                       args.procHardLimit)
+    elif args.function == "saveTuningDetails":
+        tuning.saveTuningDetails(args.maxConn, args.maxSSLConn, args.connTime, args.keepAlive, args.inMemCache, args.gzipCompression)
+
+
+
+
+if __name__ == "__main__":
+    main()
 

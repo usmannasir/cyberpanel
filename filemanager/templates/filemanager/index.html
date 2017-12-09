@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>File Manager - CyberPanel</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    {% load static %}
+
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'filemanager/images/fonts/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'filemanager/css/fileManager.css' %}">
+
+
+    <!-- Angular JS -->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.6/angular.min.js"></script>
+    <script src="{% static 'filemanager/js/fileManager.js' %}"></script>
+
+    <!-- Fix for old browsers -->
+    <script src="{% static 'filemanager/js/es5-shim.min.js' %}"></script>
+    <script src="{% static 'filemanager/js/es5-sham.min.js' %}"></script>
+    <script src="{% static 'filemanager/js/jquery-1.8.3.min.js' %}"></script>
+    <script src="{% static 'filemanager/js/console-sham.js' %}"></script>
+
+    <!--<script src="../bower_components/angular/angular.js"></script>-->
+    <script src="{% static 'filemanager/js/angular-file-upload.min.js' %}"></script>
+
+
+
+    <!-- HTML Editor Include -->
+
+</head>
+<body ng-app="fileManager" ng-controller="fileManagerCtrl">
+
+<!--- navigation bar ---->
+
+<nav id="navBar" class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#"><img id="logo" src="{% static 'filemanager/images/fileManager.png' %}"> File Manager </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+
+        </ul>
+    </div>
+</nav>
+
+<!--- navigation bar ends ---->
+
+<!--- second bar ---->
+
+<div class="card">
+    <div class="card-body">
+        <ul class="nav">
+            <li class="nav-item">
+                <a onclick="return false;" ng-click="showUploadBox()" class="nav-link" href="#"><i class="fa fa-upload" aria-hidden="true"></i>  Upload</a>
+            </li>
+            <li class="nav-item">
+                <a onclick="return false;" ng-click="showCreateFileModal()" class="nav-link" href="#"><i class="fa fa-file" aria-hidden="true"></i>  New File</a>
+            </li>
+            <li class="nav-item">
+                <a onclick="return false;" ng-click="showCreateFolderModal()" class="nav-link" href="#"><i class="fa fa-folder" aria-hidden="true"></i>  New Folder</a>
+            </li>
+            <li id="deleteFile" class="nav-item">
+                <a onclick="return false;" ng-click="showDeleteModal()" class="nav-link" href="#"><i class="fa fa-trash-o" aria-hidden="true"></i>  Delete</a>
+            </li>
+            <li id="copyFile" class="nav-item">
+                <a onclick="return false;" ng-click="showCopyModal()" class="nav-link" href="#"><i class="fa fa-files-o" aria-hidden="true"></i>  Copy</a>
+            </li>
+            <li id="moveFile" class="nav-item">
+                <a onclick="return false;" ng-click="showMoveModal()" class="nav-link" href="#"><i class="fa fa-arrows-alt" aria-hidden="true"></i>  Move</a>
+            </li>
+            <li id="renameFile" class="nav-item">
+                <a onclick="return false;" ng-click="showRenameModal()" class="nav-link" href="#"><i class="fa fa-file-text-o" aria-hidden="true"></i>  Rename</a>
+            </li>
+            <li id="editFile" class="nav-item">
+                <a onclick="return false;" ng-click="showHTMLEditorModal()"  class="nav-link" href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  Edit</a>
+            </li>
+            <li id="compressFile" class="nav-item">
+                <a onclick="return false;" ng-click="showCompressionModal()" class="nav-link" href="#"><i class="fa fa-compress" aria-hidden="true"></i>  Compress</a>
+            </li>
+            <li id="extractFile" class="nav-item">
+                <a onclick="return false;" ng-click="showExtractionModal()" class="nav-link" href="#"><i class="fa fa-expand" aria-hidden="true"></i>  Extract</a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!--- second bar ends ---->
+
+<!--- File Manager body ---->
+
+<div id="mainRow" class="row">
+
+    <div id="treeView" class="col-sm-3">
+        <div class="card border-primary mb-3" style="min-height: 30rem;">
+            <div class="card-header">
+
+
+                <div>
+                    <label>Current Path  <img ng-hide="treeLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"> </label>
+                    <input type="text" class="form-control" id="currentPath"  ng-model="currentPath" readonly>
+                </div>
+
+            </div>
+            <ul class="list-group list-group-flush">
+                <li  class="list-group-item">
+                    <a href="#" onclick="return false;" ng-click="fetchChilds($event,completeStartingPath,'primary')">
+                        <i class="fa fa-plus" aria-hidden="true"></i>
+                    </a>
+                    <a onclick="return false;" ng-click="fetchForTableSecondary($event,'fromTree',completeStartingPath)" href="#">
+                        <i class="fa fa-folder" aria-hidden="true"></i> {$ startingPath $}
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+
+    <div class="col-sm-9">
+        <div class="card border-primary mb-3" style="min-height: 30rem;">
+            <div class="card-header">
+
+                <ul class="nav">
+                    <li class="nav-item">
+                        <a onclick="return false;" ng-click="fetchForTableSecondary($event,'homeFetch')"  class="nav-link" href="#"><i class="fa fa-home" aria-hidden="true"></i>  Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a onclick="return false;" ng-click="fetchForTableSecondary($event,'goBackOnPath')" class="nav-link" href="#"><i class="fa fa-arrow-left" aria-hidden="true"></i>  Back</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a onclick="return false;" ng-click="fetchForTableSecondary($event,'refresh')" class="nav-link" href="#"><i class="fa fa-refresh" aria-hidden="true"></i>  Refresh</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a onclick="return false;" ng-click="selectAll()" class="nav-link" href="#"><i class="fa fa-check-square-o" aria-hidden="true"></i>  Select All</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a onclick="return false;" ng-click="unSelectAll()" class="nav-link" href="#"><i class="fa fa-square-o" aria-hidden="true"></i>  UnSelect All</a>
+                    </li>
+                </ul>
+
+            </div>
+            <table class="table">
+                <thead id="tableHead">
+                <tr>
+                    <th scope="col"></th>
+                    <th scope="col">File Name</th>
+                    <th scope="col">Size (KB)</th>
+                    <th scope="col">Last Modified</th>
+                    <th scope="col">Permissions</th>
+                </tr>
+                </thead>
+                <tbody id="tableBodyFiles">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!--- File Manager body ends ---->
+
+<!-- File Upload popup Modal -->
+
+
+<div class="modal fade bd-example-modal-lg" id="uploadBox" tabindex="-1" role="dialog" aria-labelledby="uploadBox" aria-hidden="true" nv-file-drop="" uploader="uploader" filters="queueLimit, customFilter" >
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div id="uploadBoxLabel" class="modal-header">
+                <h5 class="modal-title" >Upload File</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <h3>Upload queue</h3>
+                <p>Queue length: {$ uploader.queue.length $}</p>
+
+
+                <div>
+
+                    <div class="card my-drop-zone" nv-file-over="" uploader="uploader">
+                        <div class="card-body">
+                            <h4 class="card-title">Drop</h4>
+                            <p class="card-text">Drop Files here to upload them.</p>
+                        </div>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="uploadControlMultiple">Upload</label>
+                        <input type="file" nv-file-select="" uploader="uploader" class="form-control-file" id="uploadControlMultiple" multiple>
+                    </div>
+
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Size</th>
+                            <th scope="col">Progress</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                        <tr ng-repeat="item in uploader.queue">
+                            <td><strong>{$ item.file.name $}</strong></td>
+                            <td ng-show="uploader.isHTML5" nowrap>{$ item.file.size/1024/1024|number:2 $} MB</td>
+                            <td ng-show="uploader.isHTML5">
+                                <div class="progress" style="margin-bottom: 0;">
+                                    <div class="progress-bar" role="progressbar" ng-style="{ 'width': item.progress + '%' }"></div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span ng-show="item.isSuccess"><i class="fa fa-check" aria-hidden="true"></i></span>
+                                <span ng-show="item.isCancel"><i class="fa fa-ban" aria-hidden="true"></i></span>
+                                <span ng-show="item.isError"><i class="fa fa-trash" aria-hidden="true"></i></span>
+                            </td>
+                            <td nowrap>
+                                <button type="button" class="btn btn-success btn-sm" ng-click="item.upload()" ng-disabled="item.isReady || item.isUploading || item.isSuccess">
+                                    <i class="fa fa-upload" aria-hidden="true"></i> Upload
+                                </button>
+                                <button type="button" class="btn btn-warning btn-sm" ng-click="item.cancel()" ng-disabled="!item.isUploading">
+                                    <i class="fa fa-ban" aria-hidden="true"></i> Cancel
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm" ng-click="item.remove()">
+                                    <i class="fa fa-trash" aria-hidden="true"></i> Remove
+                                </button>
+                            </td>
+                        </tr>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <div>
+                        <div id="queueProg">
+                            Queue progress:
+                            <div class="progress" style="">
+                                <div class="progress-bar" role="progressbar" ng-style="{ 'width': uploader.progress + '%' }"></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div ng-hide="errorMessage" class="alert alert-danger" role="alert">
+                        {$ fileName $} can not be uploaded, Error message: {$ error_message $}
+                    </div>
+
+                    <button type="button" class="btn btn-success btn-lg" ng-click="uploader.uploadAll()" ng-disabled="!uploader.getNotUploadedItems().length">
+                        <i class="fa fa-upload" aria-hidden="true"></i> Upload all
+                    </button>
+                    <button type="button" class="btn btn-warning btn-lg" ng-click="uploader.cancelAll()" ng-disabled="!uploader.isUploading">
+                        <i class="fa fa-ban" aria-hidden="true"></i> Cancel all
+                    </button>
+                    <button type="button" class="btn btn-danger btn-lg" ng-click="uploader.clearQueue()" ng-disabled="!uploader.queue.length">
+                        <i class="fa fa-trash" aria-hidden="true"></i> Remove all
+                    </button>
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- File Upload popup Modal Ends -->
+
+<!-- HTML Editor Upload popup Modal -->
+
+<div id="showHTMLEditor" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div id="htmlEditorLable" class="modal-header">
+                <h5 class="modal-title" >{$fileInEditor$} - HTML Editor <img ng-hide="htmlEditorLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div id="htmlEditorContent">
+            </div>
+
+            <div class="modal-footer">
+
+                <div id="htmlEditorStyles" class="row">
+
+                    <div class="col-sm-12">
+                        <div ng-hide="errorMessageEditor" class="alert alert-danger" role="alert">
+                            {$error_message$}
+                        </div>
+                        <div ng-hide="saveSuccess" class="alert alert-success" role="alert">
+                            File Successfully saved.
+                        </div>
+                    </div>
+
+                </div>
+
+                <button ng-click="putFileContents()" type="button" class="btn btn-success btn-lg">
+                    <i class="fa" aria-hidden="true"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- HTML Editor Upload popup Modal -->
+
+
+<!-- create folder modal -->
+
+<div id="showCreateFolder" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div id="htmlEditorLable" class="modal-header">
+                <h5 class="modal-title" >Create new folder! <img ng-hide="htmlEditorLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="/">
+                    <div class="form-group">
+                        <label>New Folder Name</label>
+                        <input ng-model="newFolderName" type="text" class="form-control" >
+                        <small class="form-text text-muted">Folder will be created in your current directory</small>
+                    </div>
+                    <button type="button" ng-click="createNewFolder()" class="btn btn-primary">Create Folder</button>
+                </form>
+            </div>
+
+
+            <div class="modal-footer">
+                <div class="row">
+
+                    <div class="col-sm-12">
+                        <div ng-hide="errorMessageFolder" class="alert alert-danger" role="alert">
+                            {$error_message$}
+                        </div>
+                        <div ng-hide="createSuccess" class="alert alert-success" role="alert">
+                            Folder Successfully created.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- create folder modal -->
+
+<!-- create file modal -->
+
+<div id="showCreateFile" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div id="htmlEditorLable" class="modal-header">
+                <h5 class="modal-title" >Create new file! <img ng-hide="htmlEditorLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="/">
+                    <div class="form-group">
+                        <label>New File Name</label>
+                        <input ng-model="newFileName" type="text" class="form-control" >
+                        <small class="form-text text-muted">File will be created in your current directory, if it already exists it will not overwirte.</small>
+                    </div>
+                    <button type="button" ng-click="createNewFile()" class="btn btn-primary">Create File</button>
+                </form>
+            </div>
+
+
+            <div class="modal-footer">
+                <div class="row">
+
+                    <div class="col-sm-12">
+                        <div ng-hide="errorMessageFile" class="alert alert-danger" role="alert">
+                            {$error_message$}
+                        </div>
+                        <div ng-hide="createSuccess" class="alert alert-success" role="alert">
+                            File Successfully created.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- create file modal -->
+
+<div id="showDelete" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div id="htmlEditorLable" class="modal-header">
+                <h5 class="modal-title" >Confirm Deletion! <img ng-hide="deleteLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button ng-click="deleteFolderOrFile()" type="button" class="btn btn-primary">Confirm</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--- Delete File Confirmation modal -->
+
+
+<!-- compression modal -->
+
+<div id="showCompression" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div id="htmlEditorLable" class="modal-header">
+                <h5 class="modal-title">Compress <img ng-hide="compressionLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label>List of files/folder!</label>
+                        <textarea ng-model="listOfFiles" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Compressed File Name</label>
+                        <input ng-model="compressedFileName" type="text" class="form-control">
+                        <small class="form-text text-muted">Enter without extension name!</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Compression Type</label>
+                        <select ng-model="compressionType" class="form-control">
+                            <option>zip</option>
+                            <option>tar.gz</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button ng-click="startCompression()" type="button" class="btn btn-primary">Compress</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--- compression modal -->
+
+<!-- extraction modal -->
+
+<div id="showExtraction" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div id="htmlEditorLable" class="modal-header">
+                <h5 class="modal-title" >Extracting {$ fileToBeExtracted $} <img ng-hide="extractionLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="/">
+                    <div class="form-group">
+                        <label>Extract in</label>
+                        <input ng-model="extractionLocation" type="text" class="form-control" >
+                        <small class="form-text text-muted">You can enter . to extract in current directory!</small>
+                    </div>
+                    <button type="button" ng-click="startExtraction()" class="btn btn-primary">Extract</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- extraction modal -->
+
+
+<!-- move modal -->
+
+<div id="showMove" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div id="htmlEditorLable" class="modal-header">
+                <h5 class="modal-title">Move Files <img ng-hide="moveLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label>List of files/folders!</label>
+                        <textarea ng-model="listOfFiles" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Move to</label>
+                        <input ng-model="pathToMoveTo" type="text" class="form-control">
+                        <small class="form-text text-muted">Enter a path to move your files!</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button ng-click="startMoving()" type="button" class="btn btn-primary">Move</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--- move modal -->
+
+
+<!-- copy modal -->
+
+<div id="showCopy" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div id="htmlEditorLable" class="modal-header">
+                <h5 class="modal-title">Copy Files <img ng-hide="copyLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label>List of files/folders!</label>
+                        <textarea ng-model="listOfFiles" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Copy to</label>
+                        <input ng-model="pathToCopyTo" type="text" class="form-control">
+                        <small class="form-text text-muted">Enter a path to copy your files to!</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button ng-click="startCopying()" type="button" class="btn btn-primary">Copy</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--- copy modal -->
+
+<!-- rename modal -->
+
+<div id="showRename" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div id="htmlEditorLable" class="modal-header">
+                <h5 class="modal-title">Renaming {$ fileToRename $} <img ng-hide="renameLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label>New Name</label>
+                        <input ng-model="newFileName" type="text" class="form-control">
+                        <small class="form-text text-muted">Enter new name of file!</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button ng-click="renameFile()" type="button" class="btn btn-primary">Rename</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--- rename modal -->
+
+
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+
+
+<!-- HTML Editor Include -->
+
+<script src="{% static 'filemanager/js/ace/ace.js' %}" type="text/javascript" charset="utf-8"></script>
+
+<!-- Notification js --->
+
+<!-- JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/alertify.min.js"></script>
+
+<!-- CSS -->
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/alertify.min.css"/>
+<!-- Default theme -->
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/themes/default.min.css"/>
+<!-- Semantic UI theme -->
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/themes/semantic.min.css"/>
+<!-- Bootstrap theme -->
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/themes/bootstrap.min.css"/>
+
+
+<div style="position: absolute;top: 0;left: 0;"  id="rightClick" class="card" style="width: 20rem;">
+    <ul class="list-group list-group-flush">
+        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showMoveModal()" href="#"><li  class="list-group-item"><i class="fa fa-arrows-alt" aria-hidden="true"></i>  Move</li></a>
+        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showCopyModal()" href="#"><li  class="list-group-item"><i class="fa fa-files-o" aria-hidden="true"></i>  Copy</li></a>
+        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showRenameModal()" href="#"><li  class="list-group-item"><i class="fa fa-file-text-o" aria-hidden="true"></i>  Rename</li></a>
+        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showDeleteModal()" href="#"><li class="list-group-item"><i class="fa fa-trash" aria-hidden="true"></i>  Delete</li></a>
+        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showCompressionModal()" href="#"><li class="list-group-item"><i class="fa fa-compress" aria-hidden="true"></i>  Compress</li></a>
+        <a style="border-bottom: 1px solid #007bff;" id="extractOnRight" onclick="return false;" ng-click="showExtractionModal()" href="#"><li class="list-group-item"><i class="fa fa-expand" aria-hidden="true"></i>  Extract</li></a>
+        <a style="border-bottom: 1px solid #007bff;" id="editOnRight" onclick="return false;" ng-click="showHTMLEditorModal()" href="#"><li class="list-group-item"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  Edit</li></a>
+    </ul>
+</div>
+
+</body>
+</html>

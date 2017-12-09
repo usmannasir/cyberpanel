@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>openlitespeed upload files and module uploadprogress</title>
+    <style>
+        body {
+            font-family: arial;
+            font-size: 12px;
+        }
+        #statbar_box {
+            width: 800px;
+            height: 20px;
+            background-color: #FFF;
+            position: relative;
+            text-align: center;
+            margin-bottom: 12px;
+            display: none;
+            border-radius: 4px;
+        }
+        #statbar_bar {
+            position: absolute;
+            height: 20px;
+            top: 0px;
+            background-color: green;
+            text-align: center;
+            z-index: 100;
+            border-radius: 4px;
+        }
+        #status {
+            margin-bottom: 12px;
+            text-align: center;
+            width: 800px;
+            color: blue;
+        }
+        iframe {
+            background-color: #AAFFFF;
+            width: 100%;
+            height: 400px;
+            margin-bottom: 0;
+            position: relative;
+        }
+        #footer {
+            text-align: center;
+            width: 800px;
+            background: #ddd;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        #base {
+            width: 800px;
+            padding: 20px;
+            background: #EFEFEF;
+            border-radius: 4px;
+            position: relative;
+            margin: auto;
+        }
+    </style>
+    
+    <script src="http://code.jquery.com/jquery-1.8.3.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        (function ($) {
+            var interv;
+            var test = 1;
+            var statbarWidth;
+            $(document).ready(function () {
+                statbarWidth = $("#statbar_box").width();
+                $("#upload").submit(function () {
+                                        uuid = "";
+                                        /*
+                                        * You may want to do more to make the uuid more random, such as to use
+                                        * some kinds of seed or to use a longer uuid.
+                                        */
+                                        for (i = 0; i < 32; i++) {
+                                                uuid += Math.floor(Math.random() * 16).toString(16);
+                                        }
+                                        $("#upload").attr("action", "/upload.php?X-Progress-ID=" + uuid);
+                    $("#statbar_bar").css("width", "1px");
+                    $("#statbar_box").fadeIn(500);
+                    $(this).disabled = false;
+                    interv = setInterval(function () {
+                        progress(uuid)
+                    }, 800);
+                });
+            });
+            var firststart = true;
+                function progress(uuid) {
+                $.ajax({
+                    url: "progress?X-Progress-ID=" + uuid,
+                    type: "GET",
+                    dataType: "json"
+                })
+                .done(function (data) {
+                    console.log(data);
+                    if (data.state == 'done') {
+                        clearInterval(interv);
+                        $("#statbar_bar").animate({"width": statbarWidth + "px"});
+                        $("#status").html('100% (Done)');
+                    } else {
+                        var ratio = Math.round((data.received * 100) / data.size);
+                        ratio = !ratio?0:ratio;
+                        var pixel = Math.round((ratio * statbarWidth) / 100);
+                        firststart = false;
+                        $("#statbar_bar").animate({"width": pixel + "px"});
+                        $("#status").html(ratio + '%');
+                        
+                    }
+                })
+                .fail(function() {
+                    clearInterval(interv);
+                    $("#statbar_box").fadeTo(500, 0.6);
+                    $("#status").html('ERROR -- uploadProgress module not enabled?');
+                }); 
+            }
+        })(jQuery);
+    </script>
+</head>
+<body>
+    
+<div id="base">
+    <div id="comments"><p><h4>This page is designed to test the uploading of files as well as the displaying of a progress bar when uploading. <br>
+If the server side "uploadpassbypath" is set to "enabled",  remember that the files path will be uploaded but not it's content. <br>
+If context "/progress" is set to be handled by the "uploadprogress" module, then the progress request for this file will work as intended, displaying a working progress bar.</h4></p></div>
+    <div id="status">0%</div>
+    <div id="statbar_box">
+        <div id="statbar_bar"></div>
+    </div>
+    
+    <form id="upload" action="upload.php" target="resultwindow" method="post" enctype="multipart/form-data">
+        <div>
+            <input type="file" name="file1"/>
+            <input type="file" name="file2"/>
+            <p><input type="submit"/>
+        </div>
+    </form>
+    <iframe src="about:blank" name="resultwindow" frameborder="0" scrolling="no">Your browser does not support iframe.</iframe>
+</div>
+
+</body>
+</html>

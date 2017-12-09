@@ -25,15 +25,12 @@
 
 
                  <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
+                    <label class="col-sm-3 control-label">{% trans "Select Domain" %}</label>
                     <div class="col-sm-6">
-                        <select ng-change="fetchPHPDetails()" ng-model="phpSelection" class="form-control">
-                                <option>PHP 5.3</option>
-                                <option>PHP 5.4</option>
-                                <option>PHP 5.5</option>
-                                <option>PHP 5.6</option>
-                                <option>PHP 7.0</option>
-                                <option>PHP 7.1</option>
+                        <select ng-change="fetchPHPDetails()" ng-model="domainSelection" class="form-control">
+                                {% for items in websiteList %}
+                                    <option>{{ items }}</option>
+                                {% endfor %}
                         </select>
                     </div>
                  </div>
@@ -124,7 +121,7 @@
                             </div>
 
                             <div id="successfullyTuned" class="alert alert-success">
-                                <p>{% trans "PHP version " %}<strong>{$ phpVersionTuned $}</strong> {% trans "Successfully tuned." %}</p>
+                                <p>{% trans "PHP for " %}<strong>{$ phpVersionTuned $}</strong> {% trans "Successfully tuned." %}</p>
                             </div>
                     </div>
 

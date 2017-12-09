@@ -32,7 +32,7 @@ class FirewallUtilities:
 
             res = subprocess.call(cmd)
 
-            command = 'firewall-cmd --reload'
+            command = 'sudo firewall-cmd --reload'
 
             cmd = shlex.split(command)
 
@@ -68,7 +68,7 @@ class FirewallUtilities:
 
             res = subprocess.call(cmd)
 
-            command = 'firewall-cmd --reload'
+            command = 'sudo firewall-cmd --reload'
 
             cmd = shlex.split(command)
 

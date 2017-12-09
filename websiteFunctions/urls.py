@@ -1,6 +1,5 @@
 from django.conf.urls import url
 import views
-from filemanager_app import views as fm
 
 
 urlpatterns = [
@@ -46,29 +45,6 @@ urlpatterns = [
 
 
     url(r'^CreateWebsiteFromBackup', views.CreateWebsiteFromBackup, name='CreateWebsiteFromBackup'),
-
-
-
-
-    url(r'^filemanager/(?P<domain>([\da-z\.-]+\.[a-z\.]{2,6}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)$', views.filemanager,name='filemanager'),
-
-    ## File manager urls
-
-    url(r'^filemanager/list', fm.list_),
-    url(r'^filemanager/rename', fm.rename),
-    url(r'^filemanager/move', fm.move),
-    url(r'^filemanager/copy', fm.copy),
-    url(r'^filemanager/remove', fm.remove),
-    url(r'^filemanager/edit', fm.edit),
-    url(r'^filemanager/getContent', fm.getContent),
-    url(r'^filemanager/createFolder', fm.createFolder),
-    url(r'^filemanager/changePermissions', fm.changePermissions),
-    url(r'^filemanager/compress', fm.compress),
-    url(r'^filemanager/extract', fm.extract),
-    url(r'^filemanager/downloadMultiple', fm.downloadMultiple),
-    url(r'^filemanager/download', fm.download),
-    url(r'^filemanager/upload', fm.upload),
-
 
     ## sub/add/park domains
 

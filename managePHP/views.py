@@ -16,6 +16,11 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import re
 import subprocess
 from loginSystem.models import Administrator
+from plogical.virtualHostUtilities import virtualHostUtilities
+import subprocess
+import shlex
+import plogical.CyberCPLogFileWriter as logging
+from random import randint
 # Create your views here.
 
 
@@ -26,8 +31,6 @@ def loadPHPHome(request):
         return render(request,'managePHP/index.html')
     except KeyError:
         return redirect(loadLoginPage)
-
-
 
 
 
@@ -1257,7 +1260,7 @@ def installExtensions(request):
 
             phpExtension = installedPackages(phpVers=php70,
                                              extensionName="lsphp70-debuginfo",
-                                             description="Debug information for package lsphp56",
+                                             description="Debug information for package lsphp70",
                                              status=0)
 
             phpExtension.save()
@@ -1584,7 +1587,7 @@ def installExtensions(request):
 
             phpExtension = installedPackages(phpVers=php71,
                                              extensionName="lsphp71-debuginfo",
-                                             description="Debug information for package lsphp56",
+                                             description="Debug information for package lsphp71",
                                              status=0)
 
             phpExtension.save()
@@ -1727,7 +1730,6 @@ def installExtensions(request):
         return redirect(loadLoginPage)
 
 
-
 def getExtensionsInformation(request):
 
     try:
@@ -1836,9 +1838,8 @@ def getRequestStatus(request):
                 size = data['size']
                 extensionName = data['extensionName']
 
-                path = "/usr/local/CyberCP/managePHP/phpExtensionRequestLog"
 
-                requestStatus = unicode(open(path, "r").read())
+                requestStatus = unicode(open(phpUtilities.installLogPath, "r").read())
                 requestStatusSize = len(requestStatus)
 
                 if requestStatus.find("PHP Extension Installed")>-1:
@@ -2081,56 +2082,29 @@ def savePHPConfigBasic(request):
                 elif phpVers == "PHP 7.1":
                     phpVers = "php71"
 
-                path = "/usr/local/lsws/ls"+phpVers+"/etc/php.ini"
+                ##
 
-                data = open(path,'r').readlines()
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
 
-                writeToFile = open(path,'w')
-
-
-                for items in data:
-                    if items.find("allow_url_fopen")>-1 and items.find("=")>-1:
-                        writeToFile.writelines(allow_url_fopen+"\n")
-                    elif items.find("display_errors")>-1 and items.find("=")>-1:
-                        writeToFile.writelines(display_errors + "\n")
-                    elif items.find("file_uploads")>-1 and items.find("=")>-1 and not items.find("max_file_uploads")>-1:
-                        writeToFile.writelines(file_uploads + "\n")
-                    elif items.find("allow_url_include")>-1 and items.find("=")>-1:
-                        writeToFile.writelines(allow_url_include + "\n")
-
-                    elif items.find("memory_limit")>-1 and items.find("=")>-1:
-                        writeToFile.writelines("memory_limit = "+memory_limit+"\n")
-
-                    elif items.find("max_execution_time")>-1 and items.find("=")>-1:
-                        writeToFile.writelines("max_execution_time = " + max_execution_time + "\n")
-
-                    elif items.find("upload_max_filesize")>-1 and items.find("=")>-1:
-                        writeToFile.writelines("upload_max_filesize = " + upload_max_filesize + "\n")
-
-                    elif items.find("max_input_time")>-1 and items.find("=")>-1:
-                        writeToFile.writelines("max_input_time = " + max_input_time + "\n")
-                    else:
-                        writeToFile.writelines(items)
-
-                writeToFile.close()
+                execPath = execPath + " savePHPConfigBasic --phpVers " + phpVers + " --allow_url_fopen '" + allow_url_fopen + "' --display_errors '" + display_errors + "' --file_uploads '" + file_uploads + "' --allow_url_include '" + allow_url_include + "' --memory_limit " + memory_limit+ " --max_execution_time " + max_execution_time + " --upload_max_filesize " + upload_max_filesize + " --max_input_time " + max_input_time
 
 
-                installUtilities.reStartLiteSpeed()
 
+                output = subprocess.check_output(shlex.split(execPath))
 
-                final_dic = {'saveStatus': 1}
-
-                final_json = json.dumps(final_dic)
-
-                return HttpResponse(final_json)
+                if output.find("1,None") > -1:
+                    data_ret = {'saveStatus': 1}
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+                else:
+                    final_dic = {'saveStatus': 0, 'error_message': output}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
         except BaseException,msg:
             final_dic = {'saveStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-
-
-        return render(request,'managePHP/editPHPConfig.html')
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -2188,7 +2162,6 @@ def savePHPConfigAdvance(request):
         if request.method == 'POST':
             try:
                 data = json.loads(request.body)
-                configData = data['configData']
                 phpVers = data['phpSelection']
 
                 if phpVers == "PHP 5.3":
@@ -2206,29 +2179,36 @@ def savePHPConfigAdvance(request):
 
                 path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
 
+                tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-                phpFile = open(path,"w")
+                vhost = open(tempPath, "w")
 
-                phpFile.write(configData)
+                vhost.write(data['configData'])
 
-                phpFile.close()
+                vhost.close()
 
-                installUtilities.reStartLiteSpeed()
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+
+                execPath = execPath + " savePHPConfigAdvance --phpVers " + path + " --tempPath " + tempPath
 
 
-                status = {"saveStatus":1,"configData":configData}
 
-                final_json = json.dumps(status)
-                return HttpResponse(final_json)
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    status = {"saveStatus": 1, "configData": data['configData']}
+                    final_json = json.dumps(status)
+                    return HttpResponse(final_json)
+                else:
+                    data_ret = {'saveStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
 
             except BaseException, msg:
                 data_ret = {'saveStatus': 0, 'error_message': str(msg)}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-
-
-
     except KeyError, msg:
-        status = {"saveStatus":0,"error":"Could not save, see main log file."}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[saveConfigsToFile]")
         return HttpResponse("Not Logged in as admin")

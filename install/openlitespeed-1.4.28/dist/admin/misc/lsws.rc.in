@@ -1,0 +1,81 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          lsws
+# Required-Start:    $local_fs $remote_fs $network
+# Required-Stop:     $local_fs $remote_fs $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: lshttpd
+# Description:       LiteSpeed Web Server is a World Wide Web server.
+### END INIT INFO
+#
+### BEGIN INIT INFO
+# Provides:          lsws
+# Required-Start:    $local_fs $remote_fs $network
+# Required-Stop:     $local_fs $remote_fs $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: lshttpd
+# Description:       LiteSpeed Web Server is a World Wide Web server.
+### END INIT INFO
+# Startup script for the LiteSpeed Web Server
+#
+# chkconfig: - 85 15
+# description: LiteSpeed Web Server is a World Wide Web server.  
+# processname: lshttpd
+
+LSWS_CTRL="%LSWS_CTRL%"
+
+ret=0
+case "$1" in 
+	start)
+		"$LSWS_CTRL" start 2>/dev/null 1>&2
+		ret=$?
+		if [ "x`uname -s`" = "xFreeBSD" ]; then
+			if [ $ret -eq 0 ]; then
+				echo -n " lsws"
+			fi
+		fi
+		;;
+	stop)
+		"$LSWS_CTRL" stop 2>/dev/null 1>&2
+		ret=$?
+		if [ "x`uname -s`" = "xFreeBSD" ]; then
+			if [ $ret -eq 0 ]; then
+				echo -n " lsws"
+			fi
+		fi
+		;;
+	restart)
+		"$LSWS_CTRL" restart 2>/dev/null 1>&2
+		ret=$?
+		;;
+	reload)
+		"$LSWS_CTRL" reload 2>/dev/null 1>&2
+		ret=$?
+		;;
+    condrestart|try-restart)
+        "$LSWS_CTRL" condrestart 2>/dev/null 1>&2
+        ;;
+    status)
+        "$LSWS_CTRL" status
+        ;;
+	*)
+	echo $"Usage: $PROG {start|stop|restart|reload|condrestart|try-restart|status|help}"
+	cat <<EOF
+
+start       - start web server
+stop        - stop web server
+restart     - gracefully restart web server with zero down time
+reload      - same as restart
+condrestart - gracefully restart web server if server is running
+try-restart - same as condrestart
+status      - show service status
+help        - this screen
+		
+EOF
+
+		ret=2
+		;;
+esac
+exit $ret

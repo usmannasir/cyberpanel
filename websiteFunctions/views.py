@@ -12,21 +12,16 @@ import json
 from math import ceil
 from plogical.mysqlUtilities import mysqlUtilities
 import os
-import shutil
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.installUtilities import installUtilities
-from plogical.sslUtilities import sslUtilities
 import plogical.randomPassword as randomPassword
 import subprocess
 import shlex
 from databases.models import Databases
-from os.path import join
-from os import listdir, rmdir
-from shutil import move
-from filemanager_app import views as fileManage
-from plogical.findBWUsage import findBWUsage
 from dns.models import Domains,Records
 import requests
+import re
+from random import randint
 # Create your views here.
 
 
@@ -204,227 +199,165 @@ def siteState(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
-
 def submitWebsiteCreation(request):
     try:
-        val = request.session['userID']
-        try:
-            if request.method == 'POST':
+        if request.method == 'POST':
 
-                data = json.loads(request.body)
-                domain = data['domainName']
-                adminEmail = data['adminEmail']
-                phpSelection = data['phpSelection']
-                packageName = data['package']
-                websiteOwner = data['websiteOwner']
+            data = json.loads(request.body)
+            domain = data['domainName']
+            adminEmail = data['adminEmail']
+            phpSelection = data['phpSelection']
+            packageName = data['package']
+            websiteOwner = data['websiteOwner']
+            externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:7]
 
-                try:
-                    website = Websites.objects.get(domain=domain)
+            try:
+                website = Websites.objects.get(domain=domain)
+                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
+                            'error_message': "Website Already Exists"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except:
+                pass
+
+            try:
+                website = ChildDomains.objects.get(domain=domain)
+                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
+                            'error_message': "Website Already Exists"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except:
+                pass
+
+            ####### Limitations check
+
+            admin = Administrator.objects.get(userName=websiteOwner)
+
+            if admin.type == 1:
+                pass
+            elif admin.type == 3:
+                if admin.initWebsitesLimit == 0:
+                    pass
+                elif admin.websites_set.all().count() == admin.initWebsitesLimit:
                     data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                                'error_message': "Website Already Exists"}
+                                'error_message': "Selected owner have reached maximum websites limit"}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
+                else:
+                    pass
+
+            else:
+
+                initialLimit = admin.initWebsitesLimit
+                try:
+                    subaccounts = Administrator.objects.filter(owner=admin.pk)
+                    for items in subaccounts:
+                        initialLimit = initialLimit - items.initWebsitesLimit
                 except:
                     pass
 
-                try:
-                    website = ChildDomains.objects.get(domain=domain)
+                if admin.initWebsitesLimit == 0:
+                    pass
+                elif admin.websites_set.all().count() == initialLimit:
                     data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                                'error_message': "Website Already Exists"}
+                                'error_message': "Selected owner have reached maximum websites limit"}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
-                except:
+                else:
                     pass
 
+            ####### Limitations Check End
 
-                ####### Limitations check
+            numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
+            sslpath = "/home/" + domain + "/public_html"
 
-                admin = Administrator.objects.get(userName=websiteOwner)
+            ## Create Configurations
 
-                if admin.type == 1:
-                    pass
-                elif admin.type == 3:
-                    if admin.initWebsitesLimit == 0:
-                        pass
-                    elif admin.websites_set.all().count() == admin.initWebsitesLimit:
-                        data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                                    'error_message': "Selected owner have reached maximum websites limit"}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-                    else:
-                        pass
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-                else:
-
-                    initialLimit = admin.initWebsitesLimit
-                    try:
-                        subaccounts = Administrator.objects.filter(owner=admin.pk)
-                        for items in subaccounts:
-                            initialLimit = initialLimit - items.initWebsitesLimit
-                    except:
-                        pass
-
-                    if admin.initWebsitesLimit == 0:
-                        pass
-                    elif admin.websites_set.all().count() == initialLimit:
-                        data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                                    'error_message': "Selected owner have reached maximum websites limit"}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-                    else:
-                        pass
-
-                ####### Limitations Check End
-
-                ssl = data['ssl']
-
-                ## tmp change of permissions
+            execPath = execPath + " createVirtualHost --virtualHostName " + domain + " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + " --ssl " + str(
+                data['ssl']) + " --sslPath " + sslpath
 
 
 
-                if virtualHostUtilities.checkIfVirtualHostExists(domain) == 1:
+            output = subprocess.check_output(shlex.split(execPath))
 
-
-                    data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
-                                'error_message': "This domain already exists in Litespeed Configurations, first delete the domain to perform sweap."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                if virtualHostUtilities.createDirectoryForVirtualHost(domain, adminEmail, phpSelection) != 1:
-
-                    numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
-                    virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
-
-
-
-
-                    data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
-                                'error_message': "Can not create configurations, see CyberPanel main log file. [createDirectoryForVirtualHost]"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                if virtualHostUtilities.createConfigInMainVirtualHostFile(domain) != 1:
-                    numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
-                    virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
-
-
-
-
-                    data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
-                                'error_message': "Can not create configurations, see CyberPanel main log file."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-
-                if ssl == 1:
-                    installUtilities.reStartOpenLiteSpeed("restart","ols")
-                else:
-                    installUtilities.reStartLiteSpeed()
-
-                if ssl == 1:
-                    sslpath = "/home/" + domain + "/public_html"
-                    ssl_responce = sslUtilities.obtainSSLForADomain(domain, adminEmail,sslpath)
-                    if ssl_responce == 1:
-                        sslUtilities.installSSLForDomain(domain)
-                        installUtilities.reStartLiteSpeed()
-                    else:
-                        numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
-                        virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
-
-
-
-
-                        data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
-                                    'error_message': str(
-                                        ssl_responce) + ", for more information see CyberPanel main log file."}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-
-
-                ## zone creation
-                try:
-
-                    newZone = Domains(admin=admin, name=domain, type="NATIVE")
-                    newZone.save()
-
-                    content = "ns1." + domain + " hostmaster." + domain + " 1 10800 3600 604800 3600"
-
-                    soaRecord = Records(domainOwner=newZone,
-                                        domain_id=newZone.id,
-                                        name=domain,
-                                        type="SOA",
-                                        content=content,
-                                        ttl=3600,
-                                        prio=0,
-                                        disabled=0,
-                                        auth=1)
-                    soaRecord.save()
-
-                    try:
-                        recordContentA = requests.get('https://api.ipify.org').text
-                        zone = Domains.objects.get(name=domain)
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=domain,
-                                         type="A",
-                                         content=recordContentA,
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-                    except:
-                        pass
-
-                except:
-                    try:
-                        recordContentA = requests.get('https://api.ipify.org').text
-                        zone = Domains.objects.get(name=domain)
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=domain,
-                                         type="A",
-                                         content=recordContentA,
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-                    except:
-                        pass
-
-                ## zone creation
-
-
-
-                selectedPackage = Package.objects.get(packageName=packageName)
-
-                website = Websites(admin=admin, package=selectedPackage, domain=domain, adminEmail=adminEmail,
-                                   phpSelection=phpSelection, ssl=ssl)
-
-                website.save()
-
-                shutil.copy("/usr/local/CyberCP/index.html", "/home/" + domain + "/public_html/index.html")
-
-
-
-
-                data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
+            if output.find("1,None") > -1:
+                pass
+            else:
+                data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException,msg:
-            numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
-            virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
+            ## Create Configurations ends here
 
+            ## zone creation
+            try:
 
+                newZone = Domains(admin=admin, name=domain, type="NATIVE")
+                newZone.save()
 
-            data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg),"existsStatus":0}
+                content = "ns1." + domain + " hostmaster." + domain + " 1 10800 3600 604800 3600"
+
+                soaRecord = Records(domainOwner=newZone,
+                                    domain_id=newZone.id,
+                                    name=domain,
+                                    type="SOA",
+                                    content=content,
+                                    ttl=3600,
+                                    prio=0,
+                                    disabled=0,
+                                    auth=1)
+                soaRecord.save()
+
+                try:
+                    recordContentA = requests.get('https://api.ipify.org').text
+                    zone = Domains.objects.get(name=domain)
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=domain,
+                                     type="A",
+                                     content=recordContentA,
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+                except:
+                    pass
+
+            except:
+                try:
+                    recordContentA = requests.get('https://api.ipify.org').text
+                    zone = Domains.objects.get(name=domain)
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=domain,
+                                     type="A",
+                                     content=recordContentA,
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+                except:
+                    pass
+
+            ## zone creation
+
+            selectedPackage = Package.objects.get(packageName=packageName)
+
+            website = Websites(admin=admin, package=selectedPackage, domain=domain, adminEmail=adminEmail,
+                               phpSelection=phpSelection, ssl=data['ssl'], externalApp=externalApp)
+
+            website.save()
+
+            data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-    except KeyError:
-        data_ret = {'createWebSiteStatus': 0, 'error_message': "not logged in as admin","existsStatus":0}
+
+    except BaseException, msg:
+        data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -459,6 +392,7 @@ def submitDomainCreation(request):
 
             master = Websites.objects.get(domain=masterDomain)
 
+
             if master.package.allowedDomains > master.childdomains_set.all().count():
                 pass
             else:
@@ -474,8 +408,8 @@ def submitDomainCreation(request):
 
             restart = 1
 
+            ## Create Configurations
 
-            ####### Creation
             try:
                 restore = data['restore']
                 restart = 0
@@ -486,65 +420,36 @@ def submitDomainCreation(request):
                 else:
                     path = "/home/" + masterDomain + "/public_html/" + domain
 
-            if virtualHostUtilities.createDirectoryForDomain(masterDomain, domain, phpSelection, path,
-                                                             master.adminEmail) != 1:
-                numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-                virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
+            externalApp = master.externalApp
+            numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
+
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+            execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + " --administratorEmail " + master.adminEmail + " --phpVersion '" + phpSelection + "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + " --ssl " + str(
+                data['ssl']) + " --path " + path
 
 
-                data_ret = {"existsStatus": 1, 'createWebSiteStatus': 0,
-                            'error_message': "Can not create configurations, see CyberCP main log file."}
+
+            output = subprocess.check_output(shlex.split(execPath))
+
+            if output.find("1,None") > -1:
+                pass
+            else:
+                data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            if virtualHostUtilities.createConfigInMainDomainHostFile(domain, masterDomain) != 1:
-                numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-                virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
-
-
-                data_ret = {"existsStatus": 1, 'createWebSiteStatus': 0,
-                            'error_message': "Can not create configurations, see CyberCP main log file."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            if restart == 1:
-                installUtilities.reStartLiteSpeed()
-
-            if ssl == 1:
-                ssl_responce = sslUtilities.obtainSSLForADomain(domain, master.adminEmail, path)
-                if ssl_responce == 1:
-                    sslUtilities.installSSLForDomain(domain)
-                    if restart == 1:
-                        installUtilities.reStartLiteSpeed()
-                else:
-                    numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-                    virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
-
-
-                    data_ret = {"existsStatus": 1, 'createWebSiteStatus': 0,
-                                'error_message': str(
-                                    ssl_responce) + ", for more information see CyberCP main log file."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+            ## Create Configurations ends here
 
             website = ChildDomains(master=master, domain=domain, path=path, phpSelection=phpSelection, ssl=ssl)
 
             website.save()
-
-            shutil.copy("/usr/local/CyberCP/index.html", path + "/index.html")
-
-
-
 
             data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
     except BaseException, msg:
-        numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-        virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
-
-
         data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -706,21 +611,31 @@ def submitWebsiteDeletion(request):
                 data = json.loads(request.body)
                 websiteName = data['websiteName']
 
-                numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
+                numberOfWebsites = str(Websites.objects.count()+ChildDomains.objects.count())
+
+                ## Deleting master domain
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+                execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName "+ websiteName+" --numberOfSites "+numberOfWebsites
 
 
-                virtualHostUtilities.deleteVirtualHostConfigurations(websiteName,numberOfWebsites)
 
-
+                subprocess.check_output(shlex.split(execPath))
 
                 delWebsite = Websites.objects.get(domain=websiteName)
                 databases = Databases.objects.filter(website=delWebsite)
 
                 childDomains = delWebsite.childdomains_set.all()
 
+                ## Deleting child domains
+
                 for items in childDomains:
-                    numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
-                    virtualHostUtilities.deleteVirtualHostConfigurations(items.domain, numberOfWebsites)
+                    numberOfWebsites = str(Websites.objects.count()+ChildDomains.objects.count())
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                    execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + items.domain + " --numberOfSites " + numberOfWebsites
+
+                    subprocess.check_output(shlex.split(execPath))
 
 
                 for items in databases:
@@ -730,10 +645,10 @@ def submitWebsiteDeletion(request):
                 delWebsite.delete()
 
 
+                delZone = Domains.objects.get(name=websiteName)
+                delZone.delete()
 
                 installUtilities.reStartLiteSpeed()
-
-
 
 
                 data_ret = {'websiteDeleteStatus': 1,'error_message': "None"}
@@ -759,9 +674,15 @@ def submitDomainDeletion(request):
                 data = json.loads(request.body)
                 websiteName = data['websiteName']
 
-                numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
+                numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
 
-                virtualHostUtilities.deleteVirtualHostConfigurations(websiteName,numberOfWebsites)
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+                execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName + " --numberOfSites " + numberOfWebsites
+
+
+
+                subprocess.check_output(shlex.split(execPath))
 
 
                 delWebsite = ChildDomains.objects.get(domain=websiteName)
@@ -930,6 +851,28 @@ def saveWebsiteChanges(request):
                 phpVersion = data['phpVersion']
                 admin = data['admin']
 
+                ## php changes
+
+                confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domain
+                completePathToConfigFile = confPath + "/vhost.conf"
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+                execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
+
+
+
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    pass
+                else:
+                    data_ret = {'saveStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+                    ## php changes ends
+
                 newOwner = Administrator.objects.get(userName=admin)
 
                 modifyWeb = Websites.objects.get(domain=domain)
@@ -940,11 +883,6 @@ def saveWebsiteChanges(request):
                 modifyWeb.phpSelection = phpVersion
                 modifyWeb.admin = newOwner
 
-                confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domain
-                completePathToConfigFile = confPath + "/vhost.conf"
-
-                virtualHostUtilities.changePHP(completePathToConfigFile,phpVersion)
-                installUtilities.reStartLiteSpeed()
 
                 modifyWeb.save()
 
@@ -988,14 +926,21 @@ def domain(request,domain):
 
                 ## bw usage calculation
 
-                bwData = findBWUsage.findDomainBW(domain,website.package.bandwidth)
+                try:
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                    execPath = execPath + " findDomainBW --virtualHostName " + domain + " --bandwidth " + str(website.package.bandwidth)
+
+                    output = subprocess.check_output(shlex.split(execPath))
+                    bwData = output.split(",")
+                except BaseException,msg:
+                    logging.CyberCPLogFileWriter.writeToFile(str(msg))
+                    bwData = [0,0]
+
+                ## bw usage calculations
 
                 Data['bwInMBTotal'] = website.package.bandwidth
                 Data['bwInMB'] = bwData[0]
                 Data['bwUsage'] = bwData[1]
-
-
-
 
 
 
@@ -1064,32 +1009,26 @@ def getDataFromLogFile(request):
     else:
         fileName = "/home/" + virtualHost + "/logs/" + virtualHost + ".error_log"
 
-    numberOfTotalLines = int(subprocess.check_output(["wc", "-l", fileName]).split(" ")[0])
+    ## get Logs
 
-    if numberOfTotalLines < 25 :
-        data = subprocess.check_output(["cat", fileName])
-    else:
-        if page == 1:
-            end = numberOfTotalLines
-            start = end - 24
-            if start <= 0:
-                start = 1
-            startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
-            command = "sudo sed -n " + startingAndEnding + " " + fileName
-            proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
-            data = proc.stdout.read()
-        else:
-            end = numberOfTotalLines - ((page-1)*25)
-            start = end - 24
-            if start <= 0:
-                start = 1
-            startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
-            command = "sudo sed -n " + startingAndEnding + " " + fileName
-            proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
-            data = proc.stdout.read()
 
-    data = data.split("\n")
+    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
+    execPath = execPath + " getAccessLogs --path " + fileName + " --page " + str(page)
+
+
+
+    output = subprocess.check_output(shlex.split(execPath))
+
+    if output.find("1,None") > -1:
+        final_json = json.dumps(
+            {'logstatus': 0, 'error_message': "Not able to fetch logs, see CyberPanel main log file!"})
+        return HttpResponse(final_json)
+
+    ## get log ends here.
+
+
+    data = output.split("\n")
 
     json_data = "["
     checker = 0
@@ -1117,6 +1056,8 @@ def getDataFromLogFile(request):
                 json_data = json_data + ',' + json.dumps(dic)
 
     json_data = json_data + ']'
+
+
     final_json = json.dumps({'logstatus': 1, 'error_message': "None", "data": json_data})
     return HttpResponse(final_json)
 
@@ -1128,31 +1069,25 @@ def fetchErrorLogs(request):
 
         fileName = "/home/" + virtualHost + "/logs/" + virtualHost + ".error_log"
 
-        numberOfTotalLines = int(subprocess.check_output(["wc", "-l", fileName]).split(" ")[0])
+        ## get Logs
 
-        if numberOfTotalLines < 25:
-            data = subprocess.check_output(["cat", fileName])
-        else:
-            if page == 1:
-                end = numberOfTotalLines
-                start = end - 24
-                if start <= 0:
-                    start = 1
-                startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
-                command = "sudo sed -n " + startingAndEnding + " " + fileName
-                proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
-                data = proc.stdout.read()
-            else:
-                end = numberOfTotalLines - ((page - 1) * 25)
-                start = end - 24
-                if start <= 0:
-                    start = 1
-                startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
-                command = "sudo sed -n " + startingAndEnding + " " + fileName
-                proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
-                data = proc.stdout.read()
 
-        final_json = json.dumps({'logstatus': 1, 'error_message': "None", "data": data})
+        execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+        execPath = execPath + " getErrorLogs --path " + fileName + " --page " + str(page)
+
+
+
+        output = subprocess.check_output(shlex.split(execPath))
+
+        if output.find("1,None") > -1:
+            final_json = json.dumps(
+                {'logstatus': 0, 'error_message': "Not able to fetch logs, see CyberPanel main log file!"})
+            return HttpResponse(final_json)
+
+        ## get log ends here.
+
+        final_json = json.dumps({'logstatus': 1, 'error_message': "None", "data": output})
         return HttpResponse(final_json)
 
     except BaseException,msg:
@@ -1172,71 +1107,18 @@ def installWordpress(request):
 
                 finalPath = ""
 
-                ## temporarily changing permission for sshd files
-
-
-                virtualHostUtilities.permissionControl("/home/"+domainName+"/public_html")
-
                 if home == '0':
                     path = data['path']
                     finalPath = "/home/" + domainName + "/public_html/" + path + "/"
                 else:
                     finalPath = "/home/" + domainName + "/public_html/"
 
-                if not os.path.exists(finalPath):
-                    os.makedirs(finalPath)
-
-                if not os.listdir(finalPath):
-                    pass
-                else:
-                    data_ret = {'installStatus': 0, 'error_message': "Target directory should be empty before installation, otherwise data loss could occur."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-
-
-                ## Get wordpress
-
-
-                if not os.path.exists("latest.tar.gz"):
-                    command = 'wget --no-check-certificate http://wordpress.org/latest.tar.gz -O latest.tar.gz'
-
-                    cmd = shlex.split(command)
-
-                    res = subprocess.call(cmd)
-
-                command = 'tar -xzvf latest.tar.gz -C ' + finalPath
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-
-                ## Get plugin
-
-                if not os.path.exists("litespeed-cache.1.1.5.1.zip"):
-                    command = 'wget --no-check-certificate https://downloads.wordpress.org/plugin/litespeed-cache.1.1.5.1.zip'
-
-                    cmd = shlex.split(command)
-
-                    res = subprocess.call(cmd)
-
-                command = 'unzip litespeed-cache.1.1.5.1.zip -d ' + finalPath
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                root = finalPath
-
-                for filename in listdir(join(root, 'wordpress')):
-                    move(join(root, 'wordpress', filename), join(root, filename))
-
-                rmdir(root + "wordpress")
-
-                shutil.copytree(finalPath + "litespeed-cache", finalPath + "wp-content/plugins/litespeed-cache")
-                shutil.rmtree(finalPath + "litespeed-cache")
-
+                try:
+                    website = ChildDomains.objects.get(domain=domainName)
+                    externalApp = website.master.externalApp
+                except:
+                    website = Websites.objects.get(domain=domainName)
+                    externalApp = website.externalApp
 
                 ## DB Creation
 
@@ -1244,42 +1126,20 @@ def installWordpress(request):
                 dbUser = dbName
                 dbPassword = randomPassword.generate_pass()
 
-
                 ## DB Creation
-
-                website = Websites.objects.get(domain=domainName)
 
                 if website.package.dataBases > website.databases_set.all().count():
                     pass
                 else:
-                    # remove the downloaded files if installation fails
-                    shutil.rmtree(finalPath)
-                    homeDir = "/home/"+domainName+"/public_html"
-
-                    if not os.path.exists(homeDir):
-                        os.mkdir(homeDir)
-                        command = 'chown -R nobody:cyberpanel '+homeDir
-                        cmd = shlex.split(command)
-                        res = subprocess.call(cmd)
-
-                    data_ret = {'installStatus': 0,
-                                'error_message': "Maximum database limit reached for this website."}
+                    data_ret = {'installStatus': 0, 'error_message': "0,Maximum database limit reached for this website."}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
                 if Databases.objects.filter(dbName=dbName).exists() or Databases.objects.filter(
                         dbUser=dbUser).exists():
-                    # remove the downloaded files if installation fails
-                    shutil.rmtree(finalPath)
-                    homeDir = "/home/" + domainName + "/public_html"
 
-                    if not os.path.exists(homeDir):
-                        os.mkdir(homeDir)
-                        command = 'chown -R nobody:cyberpanel ' + homeDir
-                        cmd = shlex.split(command)
-                        res = subprocess.call(cmd)
                     data_ret = {'installStatus': 0,
-                                'error_message': "This database or user is already taken."}
+                                'error_message': "0,This database or user is already taken."}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
@@ -1288,81 +1148,39 @@ def installWordpress(request):
                 if result == 1:
                     pass
                 else:
-                    # remove the downloaded files
-                    shutil.rmtree(finalPath)
-                    homeDir = "/home/" + domainName + "/public_html"
-
-                    if not os.path.exists(homeDir):
-                        os.mkdir(homeDir)
-                        command = 'chown -R nobody:cyberpanel ' + homeDir
-                        cmd = shlex.split(command)
-                        res = subprocess.call(cmd)
-
                     data_ret = {'installStatus': 0,
-                                'error_message': result}
+                                'error_message': "0,Not able to create database."}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
                 db = Databases(website=website, dbName=dbName, dbUser=dbUser)
                 db.save()
 
-                ## edit config file
 
-                wpconfigfile = finalPath + "wp-config-sample.php"
 
-                data = open(wpconfigfile, "r").readlines()
+                ## Installation
 
-                writeDataToFile = open(wpconfigfile, "w")
 
-                defDBName = "define('DB_NAME', '" + dbName + "');" + "\n"
-                defDBUser = "define('DB_USER', '" + dbUser + "');" + "\n"
-                defDBPassword = "define('DB_PASSWORD', '" + dbPassword + "');" + "\n"
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-                for items in data:
-                    if items.find("DB_NAME") > -1:
-                        if items.find("database_name_here") > -1:
-                            writeDataToFile.writelines(defDBName)
-                    elif items.find("DB_USER") > -1:
-                        if items.find("username_here") > -1:
-                            writeDataToFile.writelines(defDBUser)
-                    elif items.find("DB_PASSWORD") > -1:
-                        writeDataToFile.writelines(defDBPassword)
-                    else:
-                        writeDataToFile.writelines(items)
+                execPath = execPath + " installWordPress --virtualHostName " + domainName + " --virtualHostUser " + externalApp + " --path " + finalPath + " --dbName " + dbName + " --dbUser " + dbUser + " --dbPassword " + dbPassword
 
-                writeDataToFile.close()
 
-                os.rename(wpconfigfile, finalPath + 'wp-config.php')
 
-                command = 'sudo chown -R  nobody:cyberpanel ' + "/home/" + domainName + "/public_html/"
+                output = subprocess.check_output(shlex.split(execPath))
 
-                cmd = shlex.split(command)
+                if output.find("1,None") > -1:
+                    data_ret = {"installStatus": 1}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'installStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
 
-                res = subprocess.call(cmd)
-
-                virtualHostUtilities.addRewriteRules(domainName)
-
-                installUtilities.reStartLiteSpeed()
-
-                status = {"installStatus": 1}
-
-                final_json = json.dumps(status)
-                return HttpResponse(final_json)
+                ## Installation ends
 
             except BaseException, msg:
-                # remove the downloaded files
-                try:
-                    shutil.rmtree(finalPath)
-                except:
-                    logging.CyberCPLogFileWriter.writeToFile("shutil.rmtree(finalPath)")
-
-                homeDir = "/home/" + domainName + "/public_html"
-
-                if not os.path.exists(homeDir):
-                    os.mkdir(homeDir)
-                    command = 'chown -R nobody:cyberpanel ' + homeDir
-                    cmd = shlex.split(command)
-                    res = subprocess.call(cmd)
                 data_ret = {'installStatus': 0, 'error_message': str(msg)}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -1391,11 +1209,10 @@ def getDataFromConfigFile(request):
                 configData = open(filePath,"r").read()
 
                 if len(configData) == 0:
-                    status = {"logstatus": 0, "error_message": "Log file is currently empty"}
+                    status = {"configstatus": 0, "error_message": "Configuration file is currently empty!"}
 
                     final_json = json.dumps(status)
                     return HttpResponse(final_json)
-
 
 
 
@@ -1412,7 +1229,7 @@ def getDataFromConfigFile(request):
 
 
     except KeyError, msg:
-        status = {"logstatus":0,"error":"Could not fetch data from log file, please see CyberCP main log file through command line."}
+        status = {"configstatus":0,"error":"Could not fetch data from log file, please see CyberCP main log file through command line."}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[getDataFromConfigFile]")
         return HttpResponse("Not Logged in as admin")
 
@@ -1424,26 +1241,44 @@ def saveConfigsToFile(request):
             try:
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
-                configData = data['configData']
+
+                ## writing data temporary to file
 
 
+                tempPath = "/home/cyberpanel/"+str(randint(1000, 9999))
 
-                filePath = installUtilities.Server_root_path + "/conf/vhosts/"+virtualHost+"/vhost.conf"
+                vhost = open(tempPath, "w")
 
-                vhost = open(filePath,"w")
-
-                vhost.write(configData)
+                vhost.write(data['configData'])
 
                 vhost.close()
 
+                ## writing data temporary to file
+
+                filePath = installUtilities.Server_root_path + "/conf/vhosts/"+virtualHost+"/vhost.conf"
+
+                ## save configuration data
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+                execPath = execPath + " saveVHostConfigs --path " + filePath + " --tempPath " + tempPath
 
 
 
+                output = subprocess.check_output(shlex.split(execPath))
 
-                status = {"configstatus":1,"configData":configData}
+                if output.find("1,None") > -1:
+                    status = {"configstatus": 1}
 
-                final_json = json.dumps(status)
-                return HttpResponse(final_json)
+                    final_json = json.dumps(status)
+                    return HttpResponse(final_json)
+                else:
+                    data_ret = {'configstatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+                ## save configuration data ends
+
 
             except BaseException, msg:
                 data_ret = {'configstatus': 0, 'error_message': str(msg)}
@@ -1453,7 +1288,7 @@ def saveConfigsToFile(request):
 
 
     except KeyError, msg:
-        status = {"logstatus":0,"error":"Could not save, see main log file."}
+        status = {"configstatus":0,"error":"Could not save, see CyberPanel main log file."}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[saveConfigsToFile]")
         return HttpResponse("Not Logged in as admin")
 
@@ -1467,9 +1302,6 @@ def getRewriteRules(request):
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
 
-
-
-
                 filePath = "/home/"+virtualHost+"/public_html/.htaccess"
 
                 try:
@@ -1477,24 +1309,15 @@ def getRewriteRules(request):
 
                     if len(rewriteRules) == 0:
 
-
-
-
                         status = {"rewriteStatus": 1, "error_message": "Rules file is currently empty"}
                         final_json = json.dumps(status)
                         return HttpResponse(final_json)
-
-
-
 
                     status = {"rewriteStatus": 1, "rewriteRules": rewriteRules}
 
                     final_json = json.dumps(status)
                     return HttpResponse(final_json)
                 except IOError:
-
-
-
                     status = {"rewriteStatus": 1, "error_message": "none","rewriteRules":""}
                     final_json = json.dumps(status)
                     return HttpResponse(final_json)
@@ -1519,24 +1342,41 @@ def saveRewriteRules(request):
             try:
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
-                rewriteRules = data['rewriteRules']
+
+                ## writing data temporary to file
 
 
+                tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
+                vhost = open(tempPath, "w")
 
-                virtualHostUtilities.addRewriteRules(virtualHost)
-
-                filePath = "/home/" + virtualHost + "/public_html/.htaccess"
-
-                vhost = open(filePath,"w")
-
-                vhost.write(rewriteRules)
+                vhost.write(data['rewriteRules'])
 
                 vhost.close()
 
+                ## writing data temporary to file
+
+
+                filePath = "/home/" + virtualHost + "/public_html/.htaccess"
+
+                ## save configuration data
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+                execPath = execPath + " saveRewriteRules --virtualHostName "+ virtualHost + " --path " + filePath + " --tempPath " + tempPath
 
 
 
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    pass
+                else:
+                    data_ret = {'rewriteStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+                    ## save configuration data ends
 
                 status = {"rewriteStatus":1}
 
@@ -1549,9 +1389,8 @@ def saveRewriteRules(request):
                 return HttpResponse(json_data)
 
 
-
     except KeyError, msg:
-        status = {"logstatus":0,"error":"Could not save, see main log file."}
+        status = {"rewriteStatus":0,"error":"Could not save, see main log file."}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[saveConfigsToFile]")
         return HttpResponse("Not Logged in as admin")
 
@@ -1565,11 +1404,27 @@ def saveSSL(request):
 
                 data = json.loads(request.body)
                 domain = data['virtualHost']
-                cert = data['cert']
-                key = data['key']
+
+                ## writing data temporary to file
 
 
+                tempKeyPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
+                vhost = open(tempKeyPath, "w")
+
+                vhost.write(data['key'])
+
+                vhost.close()
+
+                tempCertPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+                vhost = open(tempCertPath, "w")
+
+                vhost.write(data['key'])
+
+                vhost.close()
+
+                ## writing data temporary to file
 
                 pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + domain
 
@@ -1577,70 +1432,57 @@ def saveSSL(request):
 
 
                 if website.ssl == 0:
-                    try:
-                        os.mkdir(pathToStoreSSL)
+                    ## save configuration data
 
-                        pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-                        pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-                        privkey = open(pathToStoreSSLPrivKey, 'w')
-                        privkey.write(key)
-                        privkey.close()
+                    execPath = execPath + " saveSSL --virtualHostName " + domain + " --path " + pathToStoreSSL + " --tempKeyPath " + tempKeyPath + " --tempCertPath " + tempCertPath + " --sslCheck 0"
 
-                        fullchain = open(pathToStoreSSLFullChain, 'w')
-                        fullchain.write(cert)
-                        fullchain.close()
 
-                        sslUtilities.installSSLForDomain(domain)
 
-                        installUtilities.reStartLiteSpeed()
+                    output = subprocess.check_output(shlex.split(execPath))
 
+                    if output.find("1,None") > -1:
                         website.ssl = 1
                         website.save()
-
-
-
-
                         data_ret = {'sslStatus': 1, 'error_message': "None"}
                         json_data = json.dumps(data_ret)
                         return HttpResponse(json_data)
-
-                    except BaseException, msg:
-                        logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Can not create directory to stroe SSL [saveSSL]]")
-                        data_ret = {'sslStatus': 0, 'error_message': str(msg)}
+                    else:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            output)
+                        data_ret = {'sslStatus': 0, 'error_message': output}
                         json_data = json.dumps(data_ret)
                         return HttpResponse(json_data)
+
+                        ## save configuration data ends
+
                 else:
+                    ## save configuration data
 
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-                    pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-                    pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
-
-                    privkey = open(pathToStoreSSLPrivKey, 'w')
-                    privkey.write(key)
-                    privkey.close()
-
-                    fullchain = open(pathToStoreSSLFullChain, 'w')
-                    fullchain.write(cert)
-                    fullchain.close()
-
-                    installUtilities.reStartLiteSpeed()
-
-                    website.ssl = 1
-                    website.save()
+                    execPath = execPath + " saveSSL --virtualHostName " + domain + " --path " + pathToStoreSSL + " --tempKeyPath " + tempKeyPath + " --tempCertPath " + tempCertPath + " --sslCheck 1"
 
 
 
+                    output = subprocess.check_output(shlex.split(execPath))
 
-                    data_ret = {'sslStatus': 1, 'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                    if output.find("1,None") > -1:
+                        website.ssl = 1
+                        website.save()
+                        data_ret = {'sslStatus': 1, 'error_message': "None"}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+                    else:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            output)
+                        data_ret = {'sslStatus': 0, 'error_message': output}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
 
+                        ## save configuration data ends
 
-
-                data_ret = {'saveStatus': 1,'error_message': "None"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
 
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Can not create directory to stroe SSL [saveSSL]]")
@@ -1652,15 +1494,51 @@ def saveSSL(request):
         data_ret = {'sslStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
 
-def filemanager(request, domain):
+
+def changePHP(request):
     try:
         val = request.session['userID']
-        request.session['fileManagerHome'] = '/home/' + domain
-        fileManage.fm.root = request.session['fileManagerHome']
-        return fileManage.index(request)
-    except KeyError:
-        return redirect(loadLoginPage)
+        try:
+            if request.method == 'POST':
 
+                data = json.loads(request.body)
+                childDomain = data['childDomain']
+                phpVersion = data['phpSelection']
+
+
+                confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + childDomain
+                completePathToConfigFile = confPath + "/vhost.conf"
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+                execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
+
+
+
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    pass
+                else:
+                    data_ret = {'changePHP': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+
+
+                data_ret = {'changePHP': 1,'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException,msg:
+            data_ret = {'changePHP': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError,msg:
+        data_ret = {'changePHP': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
 
 
 def CreateWebsiteFromBackup(request):
@@ -1681,128 +1559,67 @@ def CreateWebsiteFromBackup(request):
                 path = "/home/backup/" + backupFile
 
             admin = Administrator.objects.get(pk=1)
-            websiteOwner = admin.userName
-
             adminEmail = admin.email
 
             ## open meta file to read data
 
 
             data = open(path + "/meta", 'r').readlines()
-            domain = data[0].split('-')[0]
-            phpSelection = data[0].split("-")[1].strip("\n")
-
-            try:
-                website = Websites.objects.get(domain=domain)
-                data_ret = {"existsStatus": 1, 'createWebSiteStatus': 0,
-                            'error_message': "Website Already Exists, please delete this account to restore."}
-
-                status = open(path + '/status', "w")
-                status.write("Website already exists")
-                status.close()
-
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            except:
-                pass
+            domain = data[0].split('--')[0]
+            phpSelection = data[0].split("--")[1].strip("\n")
+            externalApp = data[0].split("--")[2].strip("\n")
 
             check = 0
             dbCheck = 0
 
-
-
-
             for items in data:
                 if check == 0:
-                    if virtualHostUtilities.createDirectoryForVirtualHost(domain, adminEmail, phpSelection) != 1:
-                        numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
-                        virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
 
+                    ####### Limitations Check End
 
-                        data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
-                                    'error_message': "Can not create configurations, see CyberCP main log file."}
+                    numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
+
+                    ## Create Configurations
+
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+                    execPath = execPath + " createVirtualHost --virtualHostName " + domain + " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + " --ssl " + str(0) + " --sslPath " + "CyberPanel"
+
+                    output = subprocess.check_output(shlex.split(execPath))
+
+                    if output.find("1,None") > -1:
+                        check = check + 1
+                        selectedPackage = Package.objects.get(packageName="Default")
+                        website = Websites(admin=admin, package=selectedPackage, domain=domain, adminEmail=adminEmail,
+                                           phpSelection=phpSelection, ssl=0, externalApp=externalApp)
+                        website.save()
+                        continue
+                    else:
+                        data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
                         json_data = json.dumps(data_ret)
                         return HttpResponse(json_data)
 
-                    if virtualHostUtilities.createConfigInMainVirtualHostFile(domain) != 1:
-                        numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
-                        virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
+                        ## Create Configurations ends here
 
+                    # shutil.copy("/usr/local/CyberCP/index.html", "/home/" + domain + "/public_html/index.html")
 
-                        data_ret = {"existsStatus": 1, 'createWebSiteStatus': 1,
-                                    'error_message': "Can not create configurations, see CyberCP main log file."}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-
-                    selectedPackage = Package.objects.get(packageName="Default")
-
-                    website = Websites(admin=admin, package=selectedPackage, domain=domain, adminEmail=adminEmail,
-                                       phpSelection=phpSelection, ssl=0)
-
-                    website.save()
-
-                    #shutil.copy("/usr/local/CyberCP/index.html", "/home/" + domain + "/public_html/index.html")
-
-                    check = check + 1
                 else:
+
                     if items.find("Databases") > -1:
+                        website = Websites.objects.get(domain=domain)
                         dbCheck = 1
                         continue
-
                     if dbCheck == 1:
-                        dbData = items.split('-')
+                        dbData = items.split('--')
                         mysqlUtilities.createDatabase(dbData[0], dbData[1], "cyberpanel")
                         newDB = Databases(website=website, dbName=dbData[0], dbUser=dbData[1])
                         newDB.save()
-
-            status = open(path + '/status', "w")
-            status.write("Accounts and DBs Created")
-            status.close()
-
-
-
 
             data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
     except BaseException, msg:
-        numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
-        virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
         data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
-        json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
-
-
-def changePHP(request):
-    try:
-        val = request.session['userID']
-        try:
-            if request.method == 'POST':
-
-                data = json.loads(request.body)
-                childDomain = data['childDomain']
-                phpVersion = data['phpSelection']
-
-
-                confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + childDomain
-                completePathToConfigFile = confPath + "/vhost.conf"
-
-                virtualHostUtilities.changePHP(completePathToConfigFile,phpVersion)
-                installUtilities.reStartLiteSpeed()
-
-
-
-                data_ret = {'changePHP': 1,'error_message': "None"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-        except BaseException,msg:
-            data_ret = {'changePHP': 0, 'error_message': str(msg)}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-    except KeyError,msg:
-        data_ret = {'changePHP': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

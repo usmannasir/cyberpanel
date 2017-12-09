@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from websiteFunctions.models import Websites
 import json
-from django.shortcuts import render,redirect
+from django.shortcuts import redirect
 from django.http import HttpResponse
 from loginSystem.models import Administrator
 from plogical.virtualHostUtilities import virtualHostUtilities
@@ -14,7 +13,6 @@ from plogical.mysqlUtilities import mysqlUtilities
 from databases.models import Databases
 from baseTemplate.views import renderBase
 from random import randint
-import plogical.remoteBackup as rBackup
 from websiteFunctions.models import Websites,ChildDomains
 import os
 import signal
@@ -338,23 +336,15 @@ def fetchSSHkey(request):
             admin = Administrator.objects.get(userName=username)
 
             if hashPassword.check_password(admin.password, password):
-                keyPath = "/home/cyberpanel/.ssh"
 
-                if not os.path.exists(keyPath):
-                    os.makedirs(keyPath)
-                    command = "ssh-keygen -f " + keyPath + "/cyberpanel -t rsa -N ''"
-                    cmd = shlex.split(command)
-                    res = subprocess.call(cmd)
-                else:
-                    if not os.path.exists(keyPath+"/cyberpanel"):
-                        command = "ssh-keygen -f " + keyPath + "/cyberpanel -t rsa -N ''"
-                        cmd = shlex.split(command)
-                        res = subprocess.call(cmd)
-
+                keyPath = "/root/.ssh"
                 pubKey = keyPath + "/cyberpanel.pub"
 
-                f = open(pubKey)
-                data = f.read()
+                execPath = "sudo cat " + pubKey
+
+
+
+                data = subprocess.check_output(shlex.split(execPath))
 
 
                 data_ret = {'pubKeyStatus': 1, 'error_message': "None", "pubKey":data}
@@ -382,22 +372,32 @@ def remoteTransfer(request):
             accountsToTransfer = data['accountsToTransfer']
 
             admin = Administrator.objects.get(userName=username)
+
             if hashPassword.check_password(admin.password, password):
                 dir = str(randint(1000, 9999))
 
+                ##
 
-                transferRequest = rBackup.remoteBackup.remoteTransfer(ipAddress, dir,accountsToTransfer)
+                accountsToTransfer = ','.join(accountsToTransfer)
 
-                if transferRequest[0] == 1:
-                    return HttpResponse(json.dumps({"transferStatus": 1, "dir": dir}))
-                else:
-                    data_ret = {'transferStatus': 0, 'error_message': transferRequest[1]}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
+
+                execPath = execPath + " remoteTransfer --ipAddress " + ipAddress + " --dir " + dir + " --accountsToTransfer " + accountsToTransfer
+
+
+
+                subprocess.Popen(shlex.split(execPath))
+
+                return HttpResponse(json.dumps({"transferStatus": 1, "dir": dir}))
+
+                ##
             else:
                 data_ret = {'transferStatus': 0, 'error_message': "Invalid Credentials"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
+
+
+
 
     except BaseException, msg:
         data = {'transferStatus': 0,'error_message': str(msg)}
@@ -457,20 +457,24 @@ def FetchRemoteTransferStatus(request):
             password = data['password']
             dir = "/home/backup/transfer-"+str(data['dir'])+"/backup_log"
 
-            statusFile = open(dir,'r')
-            status = statusFile.read()
-            statusFile.close()
+            try:
+                command = "sudo cat "+ dir
+                status = subprocess.check_output(shlex.split(command))
 
-            admin = Administrator.objects.get(userName=username)
-            if hashPassword.check_password(admin.password, password):
+                admin = Administrator.objects.get(userName=username)
+                if hashPassword.check_password(admin.password, password):
 
-                final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "status": status})
-
+                    final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "status": status})
+                    return HttpResponse(final_json)
+                else:
+                    data_ret = {'fetchStatus': 0, 'error_message': "Invalid Credentials"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+            except:
+                final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "status": "Just started.."})
                 return HttpResponse(final_json)
-            else:
-                data_ret = {'fetchStatus': 0, 'error_message': "Invalid Credentials"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+
+
 
     except BaseException, msg:
         data = {'fetchStatus': 0,'error_message': str(msg)}
@@ -621,6 +625,40 @@ def putSSHkey(request):
     except BaseException, msg:
         data_ret = {"putSSHKey": 0,
                     'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def changeAdminPassword(request):
+    try:
+
+        data = json.loads(request.body)
+
+        adminPass = data['password']
+        randomFile = data['randomFile']
+
+        if os.path.exists(randomFile):
+            os.remove(randomFile)
+            admin = Administrator.objects.get(userName="admin")
+            admin.password = hashPassword.hash_password(adminPass)
+            admin.save()
+            data_ret = {"changed": 1,
+                        'error_message': "None"}
+
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        else:
+            data_ret = {"changed": 0,
+                        'error_message': "Failed to authorize access to change password!"}
+
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+
+    except BaseException, msg:
+        data_ret = {"changed": 0,
+                    'error_message': "Failed to authorize access to change password!"}
+
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 

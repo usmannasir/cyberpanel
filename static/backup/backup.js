@@ -6,9 +6,6 @@
 
 app.controller('backupWebsiteControl', function($scope,$http,$timeout) {
 
-                // variable to stop updating running status data
-
-                var runningStatus = 1;
                 $scope.destination = true;
                 $scope.backupButton = true;
                 $scope.backupLoading = true;
@@ -43,6 +40,7 @@ app.controller('backupWebsiteControl', function($scope,$http,$timeout) {
                   getBackupStatus();
                   populateCurrentRecords();
                   $scope.destination = false;
+                  $scope.runningBackup = true;
 
                 };
 
@@ -75,24 +73,9 @@ app.controller('backupWebsiteControl', function($scope,$http,$timeout) {
 
                     if(response.data.backupStatus == 1){
 
-                        if(response.data.status != 0){
+                        if(response.data.abort === 1){
 
-                            if (runningStatus == 1){
-                                $scope.destination = true;
-                                $scope.backupButton = true;
-                                $scope.runningBackup = false;
-                                $scope.cancelButton = false;
-
-                                $scope.fileName = response.data.fileName;
-                                $scope.status = response.data.status;
-                                $timeout(getBackupStatus, 2000);
-                                console.log(response.data.fileName);
-                            }
-                        }
-                        else if(response.data.status === "Aborted, please check CyberPanel main log file." || response.data.status === "Aborted manually."){
-                            runningStatus = 0;
                             $timeout.cancel();
-                            populateCurrentRecords();
                             $scope.backupLoadingBottom = true;
                             $scope.destination = false;
                             $scope.runningBackup = false;
@@ -101,18 +84,20 @@ app.controller('backupWebsiteControl', function($scope,$http,$timeout) {
                             $scope.backupLoading = true;
                             $scope.fileName = response.data.fileName;
                             $scope.status = response.data.status;
-
+                            populateCurrentRecords();
+                            return;
                         }
                         else{
-                            $scope.destination = false;
-                            $scope.runningBackup = true;
-                            $scope.cancelButton = true;
-                            $scope.backupLoading = true;
-                            $timeout.cancel();
-                            populateCurrentRecords();
+                                $scope.destination = true;
+                                $scope.backupButton = true;
+                                $scope.runningBackup = false;
+                                $scope.cancelButton = false;
+
+                                $scope.fileName = response.data.fileName;
+                                $scope.status = response.data.status;
+                                $timeout(getBackupStatus, 2000);
+
                         }
-
-
                     }
                     else{
                         $timeout.cancel();
@@ -211,21 +196,11 @@ app.controller('backupWebsiteControl', function($scope,$http,$timeout) {
 
 
                     if(response.data.metaStatus == 1){
-
-                        console.log("meta generated")
                         getBackupStatus();
-
-
-                    }
-                    else{
-
                     }
 
                 }
-                function cantLoadInitialDatas(response) {
-
-
-                }
+                function cantLoadInitialDatas(response) {}
 
            };
 
@@ -295,6 +270,10 @@ app.controller('restoreWebsiteControl', function($scope,$http,$timeout) {
     $scope.backupError = true;
     $scope.siteExists = true;
 
+    // check to start time of status function
+
+    var check = 1;
+
 
     $scope.fetchDetails = function () {
                   $scope.restoreLoading = false;
@@ -303,8 +282,6 @@ app.controller('restoreWebsiteControl', function($scope,$http,$timeout) {
 
 
     function getRestoreStatus(){
-
-                $scope.restoreButton = true;
 
                 var backupFile = $scope.backupFile;
 
@@ -328,39 +305,10 @@ app.controller('restoreWebsiteControl', function($scope,$http,$timeout) {
                 function ListInitialDatas(response) {
 
 
-                    if(response.data.restoreStatus == 1){
+                    if(response.data.restoreStatus === 1){
 
-                        $scope.restoreLoading = true;
-
-
-                        if(response.data.status=="Done"){
-                            $scope.restoreButton=false;
-                            $scope.status = response.data.status;
-                            $scope.restoreFinished = true;
-                            $scope.running = "Completed";
-                            $scope.restoreLoading = true;
-                            $timeout.cancel();
-                        }
-                        else if(response.data.status=="Website already exists"){
-                            $scope.siteExists = false;
-                            $scope.restoreButton = true;
-                            $scope.runningRestore = true;
-                            $scope.restoreLoading = true;
-                            $scope.running = "Running";
-                            $scope.fileName = $scope.backupFile;
-                            $timeout.cancel();
-
-                        }
-                        else if(response.data.status==0){
-                            $scope.running = "Running";
-                            $scope.fileName = $scope.backupFile;
-                            $scope.restoreButton=false;
-                            $scope.restoreLoading = true;
-                            $timeout.cancel();
-                        }
-                        else if(response.data.status == "Not able to create Account and databases, aborting."){
-
-                            $scope.running = "Aborted";
+                        if(response.data.abort === 1){
+                            $scope.running = response.data.running;
                             $scope.fileName = $scope.backupFile;
                             $scope.restoreLoading = true;
                             $scope.status = response.data.status;
@@ -368,22 +316,17 @@ app.controller('restoreWebsiteControl', function($scope,$http,$timeout) {
                             $scope.restoreButton=false;
                             $scope.restoreFinished = true;
                             $timeout.cancel();
-
+                            return;
                         }
-                        else if(response.data.status != 0){
-
-                            $scope.running = "Running";
+                        else{
+                            $scope.running = response.data.running;
                             $scope.fileName = $scope.backupFile;
                             $scope.restoreLoading = false;
                             $scope.status = response.data.status;
                             $scope.runningRestore = false;
+                            $scope.restoreButton = true;
                             $timeout(getRestoreStatus, 2000);
-
                         }
-
-                    }
-                    else{
-
                     }
 
                 }
@@ -398,6 +341,7 @@ app.controller('restoreWebsiteControl', function($scope,$http,$timeout) {
 
     $scope.restoreBackup = function(){
         var backupFile = $scope.backupFile;
+        $scope.running = "Lets start.."
 
                 url = "/backup/submitRestore";
 
@@ -1070,6 +1014,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
     };
 
     $scope.addRemoveWebsite = function (website,websiteStatus) {
+
         if(websiteStatus==true)
         {
             var check = 1;
@@ -1432,11 +1377,11 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
 
                 if(response.data.complete == 0){
                     $scope.backupStatus = false;
-                    $scope.requestData = response.data.status;
+                    $scope.restoreData = response.data.status;
                     $timeout(localRestoreStatus, 2000);
                 }
                 else{
-                    $scope.requestData = response.data.status;
+                    $scope.restoreData = response.data.status;
                     $timeout.cancel();
                     $scope.backupLoading = true;
                     $scope.startTransferbtn = false;

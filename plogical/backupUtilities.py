@@ -12,29 +12,40 @@ import json
 import requests
 import signal
 from installUtilities import installUtilities
+import argparse
+from shutil import move,copy
+import sys
+
 
 class backupUtilities:
 
     completeKeyPath  = "/home/cyberpanel/.ssh"
+    destinationsPath = "/home/cyberpanel/destinations"
 
 
     @staticmethod
     def startBackup(tempStoragePath,backupName,backupPath):
         try:
 
+            ## writing the name of backup file
+
+            backupFileNamePath = backupPath + "backupFileName"
+            status = open(backupFileNamePath, "w")
+            status.write(backupName)
+            status.close()
+
             meta = open(tempStoragePath+'/meta',"r").readlines()
 
             status = open(backupPath+'status',"w")
-            status.write(backupName+"\n")
             status.write("Making archive of home directory\n")
-            logging.CyberCPLogFileWriter.writeToFile("Making archive of home directory")
             status.close()
 
             count = 0
             dbCheck = 0
+
             for items in meta:
                 if count==0:
-                    domainName = items.split('-')[0]
+                    domainName = items.split('--')[0]
                     make_archive(tempStoragePath+"/public_html", 'gztar', "/home/"+domainName+"/public_html")
                     count = count + 1
                 else:
@@ -43,10 +54,8 @@ class backupUtilities:
                         continue
 
                     if dbCheck == 1:
-                        dbName = items.split('-')[0]
+                        dbName = items.split('--')[0]
                         status = open(backupPath + 'status', "w")
-                        status.write(backupName + "\n")
-                        logging.CyberCPLogFileWriter.writeToFile("Backing up database: " + dbName)
                         status.write("Backing up database: " + dbName)
                         status.close()
                         mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, tempStoragePath)
@@ -56,11 +65,8 @@ class backupUtilities:
             rmtree(tempStoragePath)
 
             status = open(backupPath + 'status', "w")
-            status.write(backupName + "\n")
-            logging.CyberCPLogFileWriter.writeToFile("completed")
             status.write("completed\n")
             status.close()
-
 
 
         except BaseException,msg:
@@ -77,7 +83,7 @@ class backupUtilities:
 
             status = open(backupPath + 'status', "w")
             status.write(backupName + "\n")
-            status.write("Aborted, please check CyberPanel main log file.")
+            status.write("Aborted, please check CyberPanel main log file. [5009]")
             status.close()
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
@@ -97,7 +103,7 @@ class backupUtilities:
     def startRestore(backupName, dir):
         try:
 
-            if dir == None:
+            if dir == "CyberPanelRestore":
                 backupFileName = backupName.strip(".tar.gz")
                 completPath = "/home/backup/" + backupFileName ## without extension
                 originalFile = "/home/backup/" + backupName ## with extension
@@ -142,24 +148,15 @@ class backupUtilities:
                     pass
                 else:
                     status = open(completPath + '/status', "w")
-                    status.write("Not able to create Account and databases, aborting.")
+                    status.write("Error Message: " + data['error_message'] +". Not able to create Account and databases, aborting. [5009]")
                     status.close()
                     logging.CyberCPLogFileWriter.writeToFile(r.text)
                     return 0
             except BaseException,msg:
                 status = open(completPath + '/status', "w")
-                status.write("[132] Not able to create Account and databases, aborting.")
+                status.write("Error Message: " + str(msg) +". Not able to create Account and databases, aborting. [5009]")
                 status.close()
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
-                return 0
-
-            f = open(completPath + '/status')
-            data = f.read()
-            status = data.split('\n', 1)[0]
-
-            if (status == "Accounts and DBs Created"):
-                pass
-            elif (status == "Website already exists"):
                 return 0
 
             ########### creating sub/addon/parked domains
@@ -175,6 +172,7 @@ class backupUtilities:
             ## extracting master domain for later use
 
             masterDomain = data[0].split('-')[0]
+            externalApp = data[0].split('-')[2]
             websiteHome = "/home/" + masterDomain + "/public_html"
 
 
@@ -188,9 +186,9 @@ class backupUtilities:
                         break
 
                     if childDomainsCheck == 1:
-                        domain = items.split('-')[0]
-                        phpSelection = items.split('-')[1]
-                        path = items.split('-')[2].strip("\n")
+                        domain = items.split('--')[0]
+                        phpSelection = items.split('--')[1]
+                        path = items.split('--')[2].strip("\n")
 
 
                         finalData = json.dumps({'masterDomain': masterDomain, 'domainName': domain,'phpSelection': phpSelection,'path': path,'ssl':0,'restore':1})
@@ -200,11 +198,11 @@ class backupUtilities:
                         data = json.loads(r.text)
 
                         if data['createWebSiteStatus'] == 1:
-                            rmtree(path)
+                            rmtree(websiteHome)
                             continue
                         else:
                             status = open(completPath + '/status', "w")
-                            status.write("Not able to create Account and databases, aborting.")
+                            status.write("Error Message: " + data['error_message'] +". Not able to create child domains, aborting. [5009]")
                             status.close()
                             logging.CyberCPLogFileWriter.writeToFile(r.text)
                             return 0
@@ -212,13 +210,10 @@ class backupUtilities:
 
             except BaseException, msg:
                 status = open(completPath + '/status', "w")
-                status.write("[201] Not able to create Account and databases, aborting.")
+                status.write("Error Message: " + str(msg) +". Not able to create child domains, aborting. [5009]")
                 status.close()
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
                 return 0
-
-
-
 
             ## restoring databases
 
@@ -236,7 +231,7 @@ class backupUtilities:
                     dbCheck = 1
                     continue
                 if dbCheck == 1:
-                    dbData = items.split('-')
+                    dbData = items.split('--')
                     mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbData[0], completPath, dbData[2].strip('\n'))
 
             status = open(completPath + '/status', "w")
@@ -252,15 +247,16 @@ class backupUtilities:
             status.close()
             installUtilities.reStartLiteSpeed()
 
-            command = "sudo chown -R nobody:cyberpanel "+websiteHome
+            command = "chown -R " + externalApp + ":" + externalApp + " " + websiteHome
 
             cmd = shlex.split(command)
 
             subprocess.call(cmd)
 
-
-
         except BaseException, msg:
+            status = open(completPath + '/status', "w")
+            status.write(str(msg) + " [5009]")
+            status.close()
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
 
     @staticmethod
@@ -364,11 +360,12 @@ class backupUtilities:
     def checkConnection(IPAddress):
         try:
 
-            path = "/usr/local/CyberCP/backup/"
-            destinations = path + "destinations"
-
-            data = open(destinations, 'r').readlines()
-            port = data[1].strip("\n")
+            try:
+                destinations = backupUtilities.destinationsPath
+                data = open(destinations, 'r').readlines()
+                port = data[1].strip("\n")
+            except:
+                port = "22"
 
             expectation = []
             expectation.append("password:")
@@ -502,5 +499,112 @@ class backupUtilities:
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [host_key_verification]")
             return 0
+
+
+def submitBackupCreation(tempStoragePath,backupName,backupPath,metaPath):
+    try:
+
+        if not os.path.exists(backupPath):
+            os.mkdir(backupPath)
+
+        if not os.path.exists(tempStoragePath):
+            os.mkdir(tempStoragePath)
+
+
+        move(metaPath,tempStoragePath+"/meta")
+
+        p = Process(target=backupUtilities.startBackup, args=(tempStoragePath, backupName, backupPath,))
+        p.start()
+        pid = open(backupPath + 'pid', "w")
+        pid.write(str(p.pid))
+        pid.close()
+
+        print "1,None"
+
+    except BaseException,msg:
+        logging.CyberCPLogFileWriter.writeToFile(
+            str(msg) + "  [submitBackupCreation]")
+        print "0,"+str(msg)
+
+def cancelBackupCreation(backupCancellationDomain,fileName):
+    try:
+
+        path = "/home/" + backupCancellationDomain + "/backup/pid"
+
+        pid = open(path, "r").readlines()[0]
+
+        try:
+            os.kill(int(pid), signal.SIGKILL)
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
+
+        backupPath = "/home/" + backupCancellationDomain + "/backup/"
+
+        tempStoragePath = backupPath + fileName
+
+        try:
+            os.remove(tempStoragePath + ".tar.gz")
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
+
+        try:
+            rmtree(tempStoragePath)
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
+
+        status = open(backupPath + 'status', "w")
+        status.write("Aborted manually. [5009]")
+        status.close()
+    except BaseException,msg:
+        logging.CyberCPLogFileWriter.writeToFile(
+            str(msg) + "  [cancelBackupCreation]")
+        print "0,"+str(msg)
+
+def submitRestore(backupFile,dir):
+    try:
+
+        p = Process(target=backupUtilities.startRestore, args=(backupFile, dir,))
+        p.start()
+
+        print "1,None"
+
+    except BaseException,msg:
+        logging.CyberCPLogFileWriter.writeToFile(
+            str(msg) + "  [cancelBackupCreation]")
+        print "0,"+str(msg)
+
+def main():
+
+    parser = argparse.ArgumentParser(description='CyberPanel Installer')
+    parser.add_argument('function', help='Specific a function to call!')
+    parser.add_argument('--tempStoragePath', help='')
+    parser.add_argument('--backupName', help='!')
+    parser.add_argument('--backupPath', help='')
+    parser.add_argument('--metaPath', help='')
+
+    ## backup cancellation arguments
+
+    parser.add_argument('--backupCancellationDomain', help='')
+    parser.add_argument('--fileName', help='')
+
+    ## backup restore arguments
+
+    parser.add_argument('--backupFile', help='')
+    parser.add_argument('--dir', help='')
+
+
+
+
+    args = parser.parse_args()
+
+    if args.function == "submitBackupCreation":
+        submitBackupCreation(args.tempStoragePath,args.backupName,args.backupPath,args.metaPath)
+    elif args.function == "cancelBackupCreation":
+        cancelBackupCreation(args.backupCancellationDomain,args.fileName)
+    elif args.function == "submitRestore":
+        submitRestore(args.backupFile,args.dir)
+
+if __name__ == "__main__":
+    main()
 
 

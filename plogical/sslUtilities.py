@@ -1,20 +1,24 @@
 import CyberCPLogFileWriter as logging
-from virtualHostUtilities import virtualHostUtilities
 import shutil
 import pexpect
 import os
 import sys
 import shlex
 import subprocess
+import socket
+import requests
 
 class sslUtilities:
+
+    Server_root = "/usr/local/lsws"
 
     @staticmethod
     def installSSLForDomain(virtualHostName):
 
-        pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
 
-        confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + virtualHostName
+        pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
+
+        confPath = sslUtilities.Server_root + "/conf/vhosts/" + virtualHostName
         completePathToConfigFile = confPath + "/vhost.conf"
 
         try:
@@ -34,8 +38,6 @@ class sslUtilities:
                 final = "}" + "\n" + "\n"
 
                 writeDataToFile.writelines("\n")
-                writeDataToFile.writelines("\n")
-                writeDataToFile.writelines("\n")
                 writeDataToFile.writelines(listener)
                 writeDataToFile.writelines(address)
                 writeDataToFile.writelines(secure)
@@ -45,8 +47,6 @@ class sslUtilities:
                 writeDataToFile.writelines(sslProtocol)
                 writeDataToFile.writelines(map)
                 writeDataToFile.writelines(final)
-                writeDataToFile.writelines("\n")
-                writeDataToFile.writelines("\n")
                 writeDataToFile.writelines("\n")
                 writeDataToFile.close()
 
@@ -91,8 +91,6 @@ class sslUtilities:
                     final = "}"
 
                     writeSSLConfig.writelines("\n")
-                    writeSSLConfig.writelines("\n")
-                    writeSSLConfig.writelines("\n")
 
                     writeSSLConfig.writelines(vhssl)
                     writeSSLConfig.writelines(keyFile)
@@ -103,19 +101,14 @@ class sslUtilities:
 
 
                     writeSSLConfig.writelines("\n")
-                    writeSSLConfig.writelines("\n")
-                    writeSSLConfig.writelines("\n")
 
                     writeSSLConfig.close()
 
-
-
-
+            return 1
 
         except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [IO Error with main config file [createConfigInMainVirtualHostFile]]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [installSSLForDomain]]")
             return 0
-        return 1
 
 
 
@@ -141,10 +134,19 @@ class sslUtilities:
             #else:
             #    command = "sudo certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
 
+            try:
+                serverIPAddress = requests.get('https://api.ipify.org').text
+                domainIP = socket.gethostbyname("www."+virtualHostName)
+                if serverIPAddress == domainIP:
+                    command = "certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName
+                else:
+                    command = "certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        "SSL is issues without 'www' due to DNS error! for domain :" + virtualHostName)
 
-
-
-            command = "sudo certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
+            except:
+                command = "certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
+                logging.CyberCPLogFileWriter.writeToFile("SSL is issues without 'www' due to DNS error! for domain : " + virtualHostName)
 
 
             expectation = []
@@ -174,7 +176,7 @@ class sslUtilities:
                     logging.CyberCPLogFileWriter.writeToFile(virtualHostName + " SSL OK")
                 elif index==3:
 
-                    pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
+                    pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
 
                     try:
                         os.mkdir(pathToStoreSSL)
@@ -195,7 +197,7 @@ class sslUtilities:
                     return 1
                 elif index == 4:
 
-                    pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
+                    pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
 
                     try:
                         os.mkdir(pathToStoreSSL)
@@ -206,7 +208,7 @@ class sslUtilities:
                     pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
                     pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
 
-                    command = 'sudo openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
+                    command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
 
                     cmd = shlex.split(command)
 
@@ -255,7 +257,7 @@ class sslUtilities:
                 logging.CyberCPLogFileWriter.writeToFile(str(obtainSSL.after))
                 logging.CyberCPLogFileWriter.writeToFile("#######################################")
 
-                pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
+                pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
 
                 try:
                     os.mkdir(pathToStoreSSL)
@@ -282,7 +284,7 @@ class sslUtilities:
                 logging.CyberCPLogFileWriter.writeToFile(str(obtainSSL.after))
                 logging.CyberCPLogFileWriter.writeToFile("#######################################")
 
-                pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
+                pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
 
                 try:
                     os.mkdir(pathToStoreSSL)
@@ -301,20 +303,11 @@ class sslUtilities:
 
                 return 1
 
-            ## fix permissions
-
-            command = 'sudo chown -R  cyberpanel:cyberpanel /etc/letsencrypt'
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd)
-
-
 
             ###### Copy SSL To config location ######
 
 
-            pathToStoreSSL = virtualHostUtilities.Server_root+"/conf/vhosts/" +"SSL-"+virtualHostName
+            pathToStoreSSL = sslUtilities.Server_root+"/conf/vhosts/" +"SSL-"+virtualHostName
 
 
             try:
@@ -336,3 +329,17 @@ class sslUtilities:
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [IO Error with main config file [obtainSSLForADomain]]")
             return 0
+
+
+def issueSSLForDomain(domain,adminEmail,sslpath):
+    try:
+        ssl_responce = sslUtilities.obtainSSLForADomain(domain, adminEmail, sslpath)
+        if ssl_responce == 1:
+            if sslUtilities.installSSLForDomain(domain) == 1:
+                return [1, "None"]
+            else:
+                [0, "327 Failed to install SSL for domain. [issueSSLForDomain]"]
+        else:
+            return [0,"347 Failed to obtain SSL [issueSSLForDomain]"]
+    except BaseException,msg:
+        return [0, "347 "+ str(msg)+ " [issueSSLForDomain]"]

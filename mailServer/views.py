@@ -14,7 +14,7 @@ import os
 import shutil
 import shlex
 import subprocess
-
+from plogical.virtualHostUtilities import virtualHostUtilities
 
 def loadEmailHome(request):
     try:
@@ -60,49 +60,28 @@ def submitEmailCreation(request):
                 userName = data['username']
                 password = data['password']
 
-                path = "/usr/local/CyberCP/install/rainloop/cyberpanel.net.ini"
+                ## create email entry
 
-                if not os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/"):
-                    command = 'sudo mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains'
-                    cmd = shlex.split(command)
-                    res = subprocess.call(cmd)
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
 
+                execPath = execPath + " createEmailAccount --domain " + domain
 
 
-                finalPath = "/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/" + domain + ".ini"
 
-                if not os.path.exists(finalPath):
-                    command = 'sudo cp '+path +" "+finalPath
+                output = subprocess.check_output(shlex.split(execPath))
 
-                    cmd = shlex.split(command)
+                if output.find("1,None") > -1:
+                    pass
+                else:
+                    data_ret = {'createEmailStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
 
-                    res = subprocess.call(cmd)
-
-                command = 'sudo chown -R nobody:nobody /usr/local/lscp/rainloop'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                command = 'sudo chown -R nobody:nobody /usr/local/lscp/cyberpanel/rainloop/data/_data_'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                command = 'sudo chown -R vmail:vmail /home/vmail'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-
+                ## create email entry ends
 
                 finalEmailUsername = userName+"@"+domain
 
-
                 website = Websites.objects.get(domain=domain)
-
 
                 if EUsers.objects.filter(email=finalEmailUsername).exists():
                     data_ret = {'createEmailStatus': 0, 'error_message': "This account already exists"}

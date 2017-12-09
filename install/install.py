@@ -12,12 +12,52 @@ from firewallUtilities import FirewallUtilities
 
 class preFlightsChecks:
 
-    def __init__(self,rootPath,ip,path,cwd):
+    def __init__(self,rootPath,ip,path,cwd,cyberPanelPath):
         self.ipAddr = ip
         self.path = path
         self.cwd = cwd
         self.server_root_path = rootPath
+        self.cyberPanelPath = cyberPanelPath
 
+    def yum_update(self):
+        try:
+
+            cmd = []
+
+            count = 0
+
+            while (1):
+
+                command = 'yum update -y'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    print("###############################################")
+                    print("          Can not run yum_update                ")
+                    print("###############################################")
+                    logging.InstallLog.writeToFile("Could not install unzip")
+                    count = count + 1
+                    print("Trying again, try number: " + str(count)+"\n")
+                    if count == 3:
+                        break
+                else:
+                    print("###############################################")
+                    print("          yum_update successfull               ")
+                    print("###############################################")
+                    break
+
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [yum_update]")
+            return 0
+        except ValueError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [yum_update]")
+            return 0
+
+        return 1
 
     def setup_account_cyberpanel(self):
         try:
@@ -47,12 +87,12 @@ class preFlightsChecks:
 
             path = "/etc/sudoers"
 
-            data = open(path,'r').readlines()
+            data = open(path, 'r').readlines()
 
-            writeToFile = open(path,'w')
+            writeToFile = open(path, 'w')
 
             for items in data:
-                if items.find("wheel	ALL=(ALL)	NOPASSWD: ALL")>-1:
+                if items.find("wheel	ALL=(ALL)	NOPASSWD: ALL") > -1:
                     writeToFile.writelines("%wheel	ALL=(ALL)	NOPASSWD: ALL")
                 else:
                     writeToFile.writelines(items)
@@ -69,73 +109,8 @@ class preFlightsChecks:
 
             ##
 
-
-            command = "chown cyberpanel:cyberpanel /etc/letsencrypt"
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd)
-
-            ##
-
-
-            command = "usermod -a -G root cyberpanel"
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd)
-
-            ##
-
-            command = "usermod -a -G nobody cyberpanel"
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd)
-
         except:
             logging.InstallLog.writeToFile("[116] setup_account_cyberpanel")
-
-
-    def yum_update(self):
-        try:
-
-            cmd = []
-
-            count = 0
-
-            while (1):
-
-                command = 'yum update -y'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    print("###############################################")
-                    print("          Can not run yum_update                ")
-                    print("###############################################")
-                    logging.InstallLog.writeToFile("Could not install unzip")
-                    count = count + 1
-                    print("Trying again, try number: " + str(count)+"\n")
-                    if count == 3:
-                        break
-                else:
-                    print("###############################################")
-                    print("          yum_update successfull                     ")
-                    print("###############################################")
-                    break
-
-
-        except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [yum_update]")
-            return 0
-        except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [yum_update]")
-            return 0
-
-        return 1
 
     def checkPythonVersion(self):
 
@@ -168,12 +143,46 @@ class preFlightsChecks:
                     break
             else:
                 print("###############################################")
-                print("          CyberPanel Repo Added                 ")
+                print("          CyberPanel Repo Added                ")
                 print("###############################################")
                 break
 
+    def enableEPELRepo(self):
+        try:
+            cmd = []
 
+            count = 0
 
+            while (1):
+                cmd.append("yum")
+                cmd.append("-y")
+                cmd.append("install")
+                cmd.append("epel-release")
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    print("###############################################")
+                    print("         Could not add EPEL repo              " )
+                    print("###############################################")
+                    logging.InstallLog.writeToFile("Not able to add epel repo")
+                    count = count + 1
+                    print("Trying again, try number: " + str(count) + "\n")
+                    if count == 3:
+                        break
+                else:
+                    print("###############################################")
+                    print("          EPEL Repo Added                      ")
+                    print("###############################################")
+                    break
+
+        except OSError,msg:
+            logging.InstallLog.writeToFile(str(msg) + " [enableEPELRepo]")
+            return 0
+        except ValueError,msg:
+            logging.InstallLog.writeToFile(str(msg) + " [enableEPELRepo]")
+            return 0
+
+        return 1
 
     def install_pip(self):
         cmd = []
@@ -279,7 +288,7 @@ class preFlightsChecks:
 
                 if res == 1:
                     print("###############################################")
-                    print("       Can not install  Python Requests    ")
+                    print("       Can not install  Python Requests        ")
                     print("###############################################")
                     logging.InstallLog.writeToFile("Can not install  Python Requests")
                     count = count + 1
@@ -288,12 +297,9 @@ class preFlightsChecks:
                         break
                 else:
                     print("###############################################")
-                    print("       Python Requests Installed        ")
+                    print("       Python Requests Installed               ")
                     print("###############################################")
                     break
-
-
-
 
     def install_gcc(self):
 
@@ -324,7 +330,6 @@ class preFlightsChecks:
                 print("             GCC Installed                     ")
                 print("###############################################")
                 break
-
 
     def install_pexpect(self):
 
@@ -366,7 +371,7 @@ class preFlightsChecks:
 
             cmd.append("pip")
             cmd.append("install")
-            cmd.append("django")
+            cmd.append("django==1.11")
 
             res = subprocess.call(cmd)
 
@@ -384,8 +389,6 @@ class preFlightsChecks:
                 print("             DJANGO Installed                 ")
                 print("###############################################")
                 break
-
-
 
     def install_python_mysql_library(self):
         cmd = []
@@ -415,7 +418,6 @@ class preFlightsChecks:
                 print("        MYSQL Library Installed                ")
                 print("###############################################")
                 break
-
 
     def install_wget(self):
         cmd = []
@@ -566,7 +568,6 @@ class preFlightsChecks:
                     break
 
 
-
     def install_argparse(self):
 
         try:
@@ -600,9 +601,7 @@ class preFlightsChecks:
                     break
 
     def fix_selinux_issue(self):
-
         try:
-
             cmd = []
 
             cmd.append("setsebool")
@@ -616,7 +615,7 @@ class preFlightsChecks:
                 logging.InstallLog.writeToFile("fix_selinux_issue problem")
             else:
                 pass
-        except BaseException,msg:
+        except:
             logging.InstallLog.writeToFile("fix_selinux_issue problem")
 
     def install_psmisc(self):
@@ -682,18 +681,18 @@ class preFlightsChecks:
         cmd = []
 
         cmd.append("wget")
-        cmd.append("http://cyberpanel.net/CyberPanel.1.5.1.tar.gz")
+        cmd.append("http://cyberpanel.net/CyberPanel.1.6.0.tar.gz")
 
         res = subprocess.call(cmd)
 
         if res == 1:
             print("###############################################")
-            print("           Could Not Download CyberCP          ")
+            print("           Could Not Download CyberPanel          ")
             print("###############################################")
             logging.InstallLog.writeToFile("Could Not Download CyberPanel")
         else:
             print("###############################################")
-            print("              CyberCP Downloaded               ")
+            print("              CyberPanel Downloaded               ")
             print("###############################################")
 
 
@@ -701,7 +700,7 @@ class preFlightsChecks:
 
         cmd.append("tar")
         cmd.append("zxf")
-        cmd.append("CyberPanel.1.5.1.tar.gz")
+        cmd.append("CyberPanel.1.6.0.tar.gz")
 
         res = subprocess.call(cmd)
 
@@ -714,7 +713,7 @@ class preFlightsChecks:
         password = data.split('\n', 1)[0]
 
 
-        path = "/usr/local/CyberCP/CyberCP/settings.py"
+        path = self.cyberPanelPath+"/CyberCP/settings.py"
 
         data = open(path, "r").readlines()
 
@@ -796,48 +795,6 @@ class preFlightsChecks:
 
             print("###################################################################")
 
-
-
-    def enableEPELRepo(self):
-        try:
-            cmd = []
-
-            count = 0
-
-            while (1):
-                cmd.append("yum")
-                cmd.append("-y")
-                cmd.append("install")
-                cmd.append("epel-release")
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    print("###############################################")
-                    print("         Could not add EPEL repo              " )
-                    print("###############################################")
-                    logging.InstallLog.writeToFile("Not able to add epel repo")
-                    count = count + 1
-                    print("Trying again, try number: " + str(count) + "\n")
-                    if count == 3:
-                        break
-                else:
-                    print("###############################################")
-                    print("          EPEL Repo Added                      ")
-                    print("###############################################")
-                    break
-
-        except OSError,msg:
-            logging.InstallLog.writeToFile(str(msg) + " [enableEPELRepo]")
-            return 0
-        except ValueError,msg:
-            logging.InstallLog.writeToFile(str(msg) + " [enableEPELRepo]")
-            return 0
-
-        return 1
-
-
-
-
     def install_unzip(self):
         try:
 
@@ -878,7 +835,45 @@ class preFlightsChecks:
 
         return 1
 
+    def install_zip(self):
+        try:
 
+            cmd = []
+
+            count = 0
+
+            while (1):
+
+                command = 'yum -y install zip'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    print("###############################################")
+                    print("          Can not install zip                ")
+                    print("###############################################")
+                    logging.InstallLog.writeToFile("Could not install unzip")
+                    count = count + 1
+                    print("Trying again, try number: " + str(count) + "\n")
+                    if count == 3:
+                        break
+                else:
+                    print("###############################################")
+                    print("          zip Installed                      ")
+                    print("###############################################")
+                    break
+
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [install_zip]")
+            return 0
+        except ValueError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [install_zip]")
+            return 0
+
+        return 1
 
     def download_install_phpmyadmin(self):
         try:
@@ -1445,6 +1440,20 @@ class preFlightsChecks:
                pass
 
 
+           ## chaging permissions for main.cf
+
+           command = "chmod 755 /etc/postfix/main.cf"
+
+           cmd = shlex.split(command)
+
+           res = subprocess.call(cmd)
+
+           if res == 1:
+               logging.InstallLog.writeToFile("1453 [setup_postfix_davecot_config]")
+           else:
+               pass
+
+
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [setup_postfix_davecot_config]")
             return 0
@@ -1458,7 +1467,7 @@ class preFlightsChecks:
     def downoad_and_install_raindloop(self):
         try:
 
-            command = 'chown -R nobody:cyberpanel /usr/local/lscp/cyberpanel/'
+            command = 'chown -R nobody:nobody /usr/local/lscp/cyberpanel/'
 
             cmd = shlex.split(command)
 
@@ -1631,6 +1640,7 @@ class preFlightsChecks:
             FirewallUtilities.addRule("tcp", "993")
             FirewallUtilities.addRule("udp", "53")
             FirewallUtilities.addRule("tcp", "53")
+            FirewallUtilities.addRule("tcp", "40110-40210")
 
             print("###############################################")
             print("          Firewall Enabled                ")
@@ -1709,7 +1719,6 @@ class preFlightsChecks:
 
         return 1
 
-
     def setup_cron(self):
 
         try:
@@ -1722,7 +1731,7 @@ class preFlightsChecks:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd,stdout=file)
+            res = subprocess.call(cmd, stdout=file)
 
             if res == 1:
                 logging.InstallLog.writeToFile("1725 [Cron is not installed]")
@@ -1733,7 +1742,7 @@ class preFlightsChecks:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd,stdout=file)
+            res = subprocess.call(cmd, stdout=file)
 
             if res == 1:
                 logging.InstallLog.writeToFile("1737 [Cron is not enabled]")
@@ -1744,7 +1753,7 @@ class preFlightsChecks:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd,stdout=file)
+            res = subprocess.call(cmd, stdout=file)
 
             if res == 1:
                 logging.InstallLog.writeToFile("1748 [Cron is not started]")
@@ -1753,29 +1762,26 @@ class preFlightsChecks:
 
             ##
 
-            cronFile = open("/etc/crontab","a")
-            cronFile.writelines("0 * * * * root python /usr/local/CyberCP/plogical/findBWUsage.py"+"\n")
+            cronFile = open("/etc/crontab", "a")
+            cronFile.writelines("0 * * * * root python /usr/local/CyberCP/plogical/findBWUsage.py" + "\n")
             cronFile.close()
-
 
             command = 'chmod +x /usr/local/CyberCP/plogical/findBWUsage.py'
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd,stdout=file)
-
+            res = subprocess.call(cmd, stdout=file)
 
             if res == 1:
                 logging.InstallLog.writeToFile("1428 [setup_cron]")
             else:
                 pass
 
-
             command = 'systemctl restart crond.service'
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd,stdout=file)
+            res = subprocess.call(cmd, stdout=file)
 
             if res == 1:
                 logging.InstallLog.writeToFile("1440 [setup_cron]")
@@ -1791,36 +1797,6 @@ class preFlightsChecks:
             return 0
         except ValueError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [setup_cron]")
-            return 0
-
-        return 1
-
-
-    def changeSystemLanguage(self):
-        try:
-
-            command = 'localectl set-locale LANG=en_US.UTF-8'
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd)
-
-            if res == 1:
-                logging.InstallLog.writeToFile("1690 [changeSystemLanguage]")
-            else:
-                pass
-
-
-            print("###############################################")
-            print("        Language Changed to English                ")
-            print("###############################################")
-
-
-        except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [changeSystemLanguage]")
-            return 0
-        except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [changeSystemLanguage]")
             return 0
 
         return 1
@@ -1907,91 +1883,9 @@ class preFlightsChecks:
 
         return 1
 
-    def fix_permissions(self):
-        try:
-
-            count = 0
-
-            while (1):
-
-                command = 'chown -R nobody:cyberpanel /usr/local/lsws'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                ##
-
-                command = 'chown -R nobody:cyberpanel /home'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                ##
 
 
-                command = "chown cyberpanel:cyberpanel /usr/local/lscp"
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                ##
-
-                command = "sudo chmod -R 775 /home"
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                ##
-
-                command = "sudo chmod -R 775 /usr/local/lsws"
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                ##
-
-                command = "sudo chmod -R 775 /etc/postfix"
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    print("###############################################")
-                    print("          fix_admin_permissions                ")
-                    print("###############################################")
-                    logging.InstallLog.writeToFile("fix_admin_permissions")
-                    count = count + 1
-                    print("Trying again, try number: " + str(count)+"\n")
-                    if count == 3:
-                        break
-                else:
-                    print("###############################################")
-                    print("          fix_admin_permissions OK                     ")
-                    print("###############################################")
-                    break
-
-
-        except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [fix_admin_permissions]")
-            return 0
-        except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [fix_admin_permissions]")
-            return 0
-
-        return 1
-
-
-
-
-
-
-def Main():
+def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('publicip', help='Please enter public IP for your VPS or dedicated server.')
@@ -1999,42 +1893,38 @@ def Main():
 
     cwd = os.getcwd()
 
+    checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd,"/usr/local/CyberCP")
 
-    checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd)
 
     checks.checkPythonVersion()
+    checks.setup_account_cyberpanel()
     checks.yum_update()
     checks.installCyberPanelRepo()
     checks.enableEPELRepo()
-
     checks.install_pip()
     checks.install_python_dev()
     checks.install_gcc()
     checks.install_python_setup_tools()
-
     checks.install_django()
     checks.install_pexpect()
     checks.install_python_mysql_library()
     checks.install_wget()
-    checks.setup_account_cyberpanel()
     checks.install_gunicorn()
     checks.install_psutil()
     checks.setup_gunicorn()
 
     import installCyberPanel
 
-
     installCyberPanel.Main(cwd)
-
     checks.fix_selinux_issue()
     checks.install_psmisc()
-
     checks.install_postfix_davecot()
     checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword)
     checks.setup_postfix_davecot_config()
 
 
     checks.install_unzip()
+    checks.install_zip()
     checks.install_rsync()
 
     checks.downoad_and_install_raindloop()
@@ -2048,20 +1938,9 @@ def Main():
     checks.install_python_requests()
     checks.install_default_keys()
 
-    checks.fix_permissions()
-    checks.reStartLiteSpeed()
-
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword)
     checks.setup_cron()
 
 
-
-def test():
-    cwd = os.getcwd()
-    checks = preFlightsChecks("/usr/local/lsws/", "123", "/usr/local", cwd)
-
-    checks.download_install_CyberPanel("OaInMyB6Qj9z7O")
-
-
-
-Main()
+if __name__ == "__main__":
+    main()

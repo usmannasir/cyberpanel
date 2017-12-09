@@ -1,5 +1,6 @@
 from CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
+import shlex
 
 
 
@@ -29,24 +30,30 @@ class ProcessUtilities:
     @staticmethod
     def restartLitespeed():
         try:
-            cmd = []
-            cmd.append("/usr/local/lsws/bin/lswsctrl")
-            cmd.append("restart")
-            subprocess.call(cmd)
-            return 1
+            command = "sudo systemctl restart lsws"
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+
+            if res == 0:
+                return 1
+            else:
+                return 0
 
         except subprocess.CalledProcessError,msg:
-
             logging.writeToFile(str(msg) + "[restartLitespeed]")
 
     @staticmethod
     def stopLitespeed():
         try:
-            cmd = []
-            cmd.append("/usr/local/lsws/bin/lswsctrl")
-            cmd.append("stop")
-            subprocess.call(cmd)
-            return 1
+            command = "sudo systemctl stop lsws"
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+
+            if res == 0:
+                return 1
+            else:
+                return 0
+
         except subprocess.CalledProcessError, msg:
             logging.writeToFile(str(msg) + "[stopLitespeed]")
 

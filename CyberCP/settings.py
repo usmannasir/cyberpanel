@@ -52,12 +52,12 @@ INSTALLED_APPS = [
     'databases',
     'mailServer',
     'serverLogs',
-    'filemanager_app',
     'firewall',
     'backup',
     'managePHP',
     'manageSSL',
     'api',
+    'filemanager',
 ]
 
 MIDDLEWARE = [

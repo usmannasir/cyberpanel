@@ -22,7 +22,6 @@ class InstallCyberPanel:
 
     def installLiteSpeed(self):
         try:
-
             cmd = []
 
             count = 0
@@ -72,7 +71,6 @@ class InstallCyberPanel:
             shutil.copytree("litespeed/conf", "/usr/local/lsws/conf")
 
 
-
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [install_ls_panel_config]")
             return 0
@@ -112,6 +110,75 @@ class InstallCyberPanel:
             return 0
         return 1
 
+    def fix_ols_configs(self):
+        try:
+
+            ## cache module settings
+
+            cacheStart = "module cache {\n"
+            param = "  param                   <<<END_param\n"
+            enableCache = "enableCache 0\n"
+            qsCache = "qsCache 1\n"
+            reqCookieCache = "reqCookieCache 1\n"
+            respCookieCache = "respCookieCache 1\n"
+            ignoreReqCacheCtrl = "ignoreReqCacheCtrl 1\n"
+            ignoreRespCacheCtrl = "ignoreRespCacheCtrl 0\n"
+            enablePrivateCache = "enablePrivateCache 0\n"
+            privateExpireInSeconds = "privateExpireInSeconds 1000\n"
+            expireInSeconds = "expireInSeconds 1000\n"
+            storagePath = "storagePath cachedata\n"
+            checkPrivateCache = "checkPrivateCache 1\n"
+            checkPublicCache = "checkPublicCache 1\n"
+            END_param = "  END_param\n"
+            cacheEnd = "}\n"
+
+
+
+            writeDataToFile = open(self.server_root_path+"conf/httpd_config.conf", 'a')
+
+            writeDataToFile.writelines(cacheStart)
+            writeDataToFile.writelines(param)
+            writeDataToFile.writelines(enableCache)
+            writeDataToFile.writelines(qsCache)
+            writeDataToFile.writelines(reqCookieCache)
+            writeDataToFile.writelines(respCookieCache)
+            writeDataToFile.writelines(ignoreReqCacheCtrl)
+            writeDataToFile.writelines(ignoreRespCacheCtrl)
+            writeDataToFile.writelines(enablePrivateCache)
+            writeDataToFile.writelines(privateExpireInSeconds)
+            writeDataToFile.writelines(expireInSeconds)
+            writeDataToFile.writelines(storagePath)
+            writeDataToFile.writelines(checkPrivateCache)
+            writeDataToFile.writelines(checkPublicCache)
+            writeDataToFile.writelines(END_param)
+            writeDataToFile.writelines(cacheEnd)
+            writeDataToFile.writelines("\n")
+            writeDataToFile.writelines("\n")
+
+            writeDataToFile.close()
+
+            ## remove example virtual host
+
+            data = open(self.server_root_path+"conf/httpd_config.conf",'r').readlines()
+
+            writeDataToFile = open(self.server_root_path + "conf/httpd_config.conf", 'w')
+
+            for items in data:
+                if items.find("map") > -1 and items.find("Example") > -1:
+                    continue
+                else:
+                    writeDataToFile.writelines(items)
+
+            writeDataToFile.close()
+
+
+        except IOError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [fix_ols_configs]")
+            return 0
+
+        return self.reStartLiteSpeed()
+
+
     def changePortTo80(self):
         try:
             data = open(self.server_root_path+"conf/httpd_config.conf").readlines()
@@ -132,29 +199,29 @@ class InstallCyberPanel:
 
         return self.reStartLiteSpeed()
 
-    def addLiteSpeedRepo(self):
+    def setupFileManager(self):
         try:
-            cmd = []
 
-            cmd.append("rpm")
-            cmd.append("-ivh")
-            cmd.append("http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm")
-            res = subprocess.call(cmd)
-            if res == 1:
-                print("###############################################")
-                print("         Could not add Litespeed repo         " )
-                print("###############################################")
-                logging.InstallLog.writeToFile("[addLiteSpeedRepo]")
-            else:
-                print("###############################################")
-                print("          Litespeed Repo Added                 ")
-                print("###############################################")
+            os.chdir(self.cwd)
 
-        except OSError,msg:
-            logging.InstallLog.writeToFile(str(msg) + " [addLiteSpeedRepo]")
+            fileManagerPath = self.server_root_path+"Example/html/FileManager"
+            shutil.copytree("FileManager",fileManagerPath)
+
+            ## remove unnecessary files
+
+            fileManagerPath = self.server_root_path + "Example/html/"
+
+            shutil.rmtree(fileManagerPath+"protected")
+            shutil.rmtree(fileManagerPath+"blocked")
+            os.remove(fileManagerPath+"phpinfo.php")
+            os.remove(fileManagerPath + "upload.html")
+            os.remove(fileManagerPath + "upload.php")
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [setupFileManager]")
             return 0
-        except ValueError,msg:
-            logging.InstallLog.writeToFile(str(msg) + " [addLiteSpeedRepo]")
+        except ValueError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [setupFileManager]")
             return 0
 
         return 1
@@ -219,22 +286,6 @@ class InstallCyberPanel:
 
         return 1
 
-
-    def installAllPHPToLitespeed(self):
-        try:
-            os.chdir(self.cwd)
-
-
-            path = self.server_root_path + "conf/"
-
-            if not os.path.exists(path+"phpconfigs"):
-                shutil.copytree("phpconfigs",path+"phpconfigs")
-
-        except IOError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [installAllPHPToLitespeed]")
-            return 0
-
-        return 1
 
     def setup_mariadb_repo(self):
         try:
@@ -358,57 +409,6 @@ class InstallCyberPanel:
 
         return 1
 
-    def secureMysqlInstallation(self):
-        try:
-            expectation = "Enter current password"
-            securemysql = pexpect.spawn("mysql_secure_installation", timeout=5)
-            securemysql.expect(expectation)
-            securemysql.sendline("")
-
-            expectation = "root password? [Y/n]"
-            securemysql.expect(expectation)
-            securemysql.sendline("Y")
-
-            expectation = "New password:"
-            securemysql.expect(expectation)
-            securemysql.sendline(self.mysql_password)
-
-            expectation = "new password:"
-            securemysql.expect(expectation)
-            securemysql.sendline(self.mysql_password)
-
-            expectation = "anonymous users? [Y/n]"
-            securemysql.expect(expectation)
-            securemysql.sendline("Y")
-
-            expectation = "root login remotely? [Y/n]"
-            securemysql.expect(expectation)
-            securemysql.sendline("Y")
-
-            expectation = "test database and access to it? [Y/n]"
-            securemysql.expect(expectation)
-            securemysql.sendline("Y")
-
-            expectation = "Reload privilege tables now? [Y/n]"
-            securemysql.expect(expectation)
-            securemysql.sendline("Y")
-
-            securemysql.wait()
-
-            if (securemysql.before.find("Thanks for using MariaDB!") > -1 or securemysql.after.find(
-                    "Thanks for using MariaDB!") > -1):
-                return 1
-
-        except pexpect.EOF, msg:
-            logging.InstallLog.writeToFile(str(msg) + " Exception EOF [secureMysqlInstallation]")
-        except pexpect.TIMEOUT, msg:
-            print securemysql.after
-            logging.InstallLog.writeToFile(str(msg) + " Exception EOF [secureMysqlInstallation]")
-        except BaseException, msg:
-            logging.InstallLog.writeToFile(str(msg) + "[secureMysqlInstallation]")
-
-        return 0
-
     def changeMYSQLRootPassword(self):
         try:
             expectation = "Enter password:"
@@ -481,7 +481,6 @@ class InstallCyberPanel:
 
         return 0
 
-
     def startMariaDB(self):
 
         ############## Start mariadb ######################
@@ -515,7 +514,6 @@ class InstallCyberPanel:
             return 0
 
         return 1
-
 
     def installPureFTPD(self):
         try:
@@ -644,11 +642,7 @@ class InstallCyberPanel:
                 print("###############################################")
 
 
-            commad = "usermod -a -G cyberpanel ftpuser"
 
-            cmd = shlex.split(commad)
-
-            subprocess.call(cmd)
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [installPureFTPD]")
@@ -693,10 +687,20 @@ class InstallCyberPanel:
 
         return 1
 
-
     def installPureFTPDConfigurations(self):
 
         try:
+            ## setup ssl for ftp
+
+            try:
+                os.mkdir("/etc/ssl/private")
+            except:
+                logging.InstallLog.writeToFile("Could not create directory for FTP SSL")
+
+            command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
+            subprocess.call(shlex.split(command))
+
+
             os.chdir(self.cwd)
             ftpdPath = "/etc/pure-ftpd"
 
@@ -871,139 +875,6 @@ class InstallCyberPanel:
 
         return 1
 
-    def installCertBot(self):
-
-        try:
-
-            cmd = []
-
-            count = 0
-
-            while (1):
-
-                cmd.append("yum")
-                cmd.append("-y")
-                cmd.append("install")
-                cmd.append("yum-utils")
-
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    print("###############################################")
-                    print("         Could not install yum utils             ")
-                    print("###############################################")
-                    logging.InstallLog.writeToFile("yum utils not installed" + " [installCertBot]")
-                    count = count + 1
-                    print("Trying again, try number: " + str(count)+"\n")
-                    if count == 3:
-                        break
-                else:
-                    print("###############################################")
-                    print("            yum utils Installed                  ")
-                    print("###############################################")
-                    break
-
-            cmd = []
-
-            count = 0
-
-            while (1):
-
-                cmd.append("yum-config-manager")
-                cmd.append("--enable")
-                cmd.append("rhui-REGION-rhel-server-extras")
-                cmd.append("rhui-REGION-rhel-server-optional")
-
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    print("###############################################")
-                    print("         Could not install yum-config-manager             ")
-                    print("###############################################")
-                    logging.InstallLog.writeToFile("yum-config-manager --enable failed" + " [installCertBot]")
-                    count = count + 1
-                    print("Trying again, try number: " + str(count)+"\n")
-                    if count == 3:
-                        break
-                else:
-                    print("###############################################")
-                    print("            yum-config-manager Installed                  ")
-                    print("###############################################")
-                    break
-
-            cmd = []
-
-            count = 0
-
-            while (1):
-
-                if subprocess.check_output('systemd-detect-virt').find("openvz") > -1:
-
-                    command = "pip install pyOpenSSL==16.2.0"
-
-                    cmd = shlex.split(command)
-
-                    subprocess.call(cmd)
-
-                    command = "pip install certbot"
-
-                    cmd = shlex.split(command)
-
-                    subprocess.call(cmd)
-
-                    if res == 1:
-                        print("###############################################")
-                        print("         Could not install CertBot             ")
-                        print("###############################################")
-                        logging.InstallLog.writeToFile("Certbot not installed" + " [installCertBot]")
-                        count = count + 1
-                        print("Trying again, try number: " + str(count)+"\n")
-                        if count == 3:
-                            break
-                    else:
-                        print("###############################################")
-                        print("            Certbot Installed                  ")
-                        print("###############################################")
-                        break
-
-                else:
-
-                    cmd.append("yum")
-                    cmd.append("-y")
-                    cmd.append("install")
-                    cmd.append("certbot")
-
-                    res = subprocess.call(cmd)
-
-                    if res == 1:
-                        print("###############################################")
-                        print("         Could not install CertBot             ")
-                        print("###############################################")
-                        logging.InstallLog.writeToFile("Certbot not installed" + " [installCertBot]")
-                        count = count + 1
-                        print("Trying again, try number: " + str(count)+"\n")
-                        if count == 3:
-                            break
-                    else:
-                        print("###############################################")
-                        print("            Certbot Installed                  ")
-                        print("###############################################")
-                        break
-
-
-
-
-        except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [installCertBot]")
-            return 0
-        except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [installCertBot]")
-            return 0
-
-        return 1
-
-
-
     def installLSCPD(self):
         try:
 
@@ -1045,7 +916,7 @@ class InstallCyberPanel:
                 pass
 
 
-            command = 'tar zxf openlitespeed-1.4.28.tgz'
+            command = 'tar zxf openlitespeed.tar.gz'
 
             cmd = shlex.split(command)
 
@@ -1056,7 +927,9 @@ class InstallCyberPanel:
             else:
                 pass
 
-            os.chdir("openlitespeed-1.4.28")
+            os.chdir("openlitespeed")
+
+            ##command = './configure --prefix=/usr/local/lscp --with-tempdir=/tmp/lscp --with-pidfile=/tmp/lscp/lscp.pid --with-adminport=7090 --with-exampleport=8090'
 
             command = './configure --with-lscpd --prefix=/usr/local/lscp'
 
@@ -1125,11 +998,165 @@ class InstallCyberPanel:
 
         return 1
 
+    def installCertBot(self):
 
+        try:
+
+            cmd = []
+
+            count = 0
+
+            while (1):
+
+                cmd.append("yum")
+                cmd.append("-y")
+                cmd.append("install")
+                cmd.append("yum-utils")
+
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    print("###############################################")
+                    print("         Could not install yum utils             ")
+                    print("###############################################")
+                    logging.InstallLog.writeToFile("yum utils not installed" + " [installCertBot]")
+                    count = count + 1
+                    print("Trying again, try number: " + str(count) + "\n")
+                    if count == 3:
+                        break
+                else:
+                    print("###############################################")
+                    print("            yum utils Installed                  ")
+                    print("###############################################")
+                    break
+
+            cmd = []
+
+            count = 0
+
+            while (1):
+
+                cmd.append("yum-config-manager")
+                cmd.append("--enable")
+                cmd.append("rhui-REGION-rhel-server-extras")
+                cmd.append("rhui-REGION-rhel-server-optional")
+
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    print("###############################################")
+                    print("         Could not install yum-config-manager             ")
+                    print("###############################################")
+                    logging.InstallLog.writeToFile("yum-config-manager --enable failed" + " [installCertBot]")
+                    count = count + 1
+                    print("Trying again, try number: " + str(count) + "\n")
+                    if count == 3:
+                        break
+                else:
+                    print("###############################################")
+                    print("            yum-config-manager Installed                  ")
+                    print("###############################################")
+                    break
+
+            cmd = []
+
+            count = 0
+
+            while (1):
+
+                try:
+                    if subprocess.check_output('systemd-detect-virt').find("openvz") > -1:
+
+                        command = "pip install pyOpenSSL==16.2.0"
+
+                        cmd = shlex.split(command)
+
+                        subprocess.call(cmd)
+
+                        command = "pip install certbot"
+
+                        cmd = shlex.split(command)
+
+                        subprocess.call(cmd)
+
+                        if res == 1:
+                            print("###############################################")
+                            print("         Could not install CertBot             ")
+                            print("###############################################")
+                            logging.InstallLog.writeToFile("Certbot not installed" + " [installCertBot]")
+                            count = count + 1
+                            print("Trying again, try number: " + str(count) + "\n")
+                            if count == 3:
+                                break
+                        else:
+                            print("###############################################")
+                            print("            Certbot Installed                  ")
+                            print("###############################################")
+                            break
+
+                    else:
+
+                        cmd.append("yum")
+                        cmd.append("-y")
+                        cmd.append("install")
+                        cmd.append("certbot")
+
+                        res = subprocess.call(cmd)
+
+                        if res == 1:
+                            print("###############################################")
+                            print("         Could not install CertBot             ")
+                            print("###############################################")
+                            logging.InstallLog.writeToFile("Certbot not installed" + " [installCertBot]")
+                            count = count + 1
+                            print("Trying again, try number: " + str(count) + "\n")
+                            if count == 3:
+                                break
+                        else:
+                            print("###############################################")
+                            print("            Certbot Installed                  ")
+                            print("###############################################")
+                            break
+                except:
+                    cmd.append("yum")
+                    cmd.append("-y")
+                    cmd.append("install")
+                    cmd.append("certbot")
+
+                    res = subprocess.call(cmd)
+
+                    if res == 1:
+                        print("###############################################")
+                        print("         Could not install CertBot             ")
+                        print("###############################################")
+                        logging.InstallLog.writeToFile("Certbot not installed" + " [installCertBot]")
+                        count = count + 1
+                        print("Trying again, try number: " + str(count) + "\n")
+                        if count == 3:
+                            break
+                    else:
+                        print("###############################################")
+                        print("            Certbot Installed                  ")
+                        print("###############################################")
+                        break
+
+
+
+
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [installCertBot]")
+            return 0
+        except ValueError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [installCertBot]")
+            return 0
+
+        return 1
 
 
 
 def Main(cwd):
+
     InstallCyberPanel.mysqlPassword = randomPassword.generate_pass()
 
     InstallCyberPanel.mysql_Root_password = randomPassword.generate_pass()
@@ -1146,13 +1173,11 @@ def Main(cwd):
 
 
     installer.installLiteSpeed()
-    installer.install_ls_panel_config()
     installer.changePortTo80()
-
-    #installer.addLiteSpeedRepo()
-
+    installer.setupFileManager()
     installer.installAllPHPVersions()
-    installer.installAllPHPToLitespeed()
+    installer.fix_ols_configs()
+
 
     installer.setup_mariadb_repo()
     installer.installMySQL()
@@ -1173,10 +1198,4 @@ def Main(cwd):
 
 
     installer.installCertBot()
-    installer.installLSCPD()
-
-
-
-def test():
-    installer = InstallCyberPanel("/usr/local/lsws/", "/home")
     installer.installLSCPD()

@@ -7,7 +7,7 @@
 
 
 /* Java script code to create database */
-app.controller('createDatabase', function($scope,$http,getwebsitenameFilter) {
+app.controller('createDatabase', function($scope,$http) {
 
     $scope.createDatabaseLoading = true;
     $scope.dbDetails = true;
@@ -34,11 +34,23 @@ app.controller('createDatabase', function($scope,$http,getwebsitenameFilter) {
                 var dbName = $scope.dbName;
                 var dbUsername = $scope.dbUsername;
                 var dbPassword = $scope.dbPassword;
+                var webUserName = "";
+
+                // getting website username
+
+                webUserName = databaseWebsite.replace("-", "");
+
+                webUserName = webUserName.split(".")[0];
+
+                if(webUserName.length > 5){
+                    webUserName =  webUserName.substring(0,4);
+                }
 
                 var url = "/dataBases/submitDBCreation";
 
 
                 var data = {
+                    webUserName:webUserName,
                     databaseWebsite:databaseWebsite,
                     dbName:dbName,
                     dbUsername:dbUsername,

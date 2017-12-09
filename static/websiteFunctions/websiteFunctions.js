@@ -439,7 +439,8 @@ app.controller('websitePages', function($scope,$http) {
         $scope.hideLogs = true;
     };
 
-    $scope.fileManagerURL = "filemanager/"+$("#domainNamePage").text();
+    $scope.fileManagerURL = "/filemanager/"+$("#domainNamePage").text();
+    $scope.previewUrl = "/preview/"+$("#domainNamePage").text()+"/";
 
     var logType = 0;
     $scope.pageNumber = 1;

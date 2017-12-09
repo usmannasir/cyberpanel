@@ -136,6 +136,9 @@ class installUtilities:
     @staticmethod
     def reStartLiteSpeed():
         try:
+
+            FNULL = open(os.devnull, 'w')
+
             command = "sudo systemctl restart lsws"
 
             cmd = shlex.split(command)
@@ -165,6 +168,8 @@ class installUtilities:
     @staticmethod
     def reStartOpenLiteSpeed(restart,orestart):
         try:
+
+            FNULL = open(os.devnull, 'w')
 
             command = "sudo systemctl restart lsws"
 

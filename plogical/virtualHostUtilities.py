@@ -1,20 +1,24 @@
 import os.path
-import pwd
-import grp
 import shutil
-import logging
 import CyberCPLogFileWriter as logging
 import subprocess
+import argparse
 import shlex
+import installUtilities
+from random import randint
+import sslUtilities
+from os.path import join
+from os import listdir, rmdir
+from shutil import move
 
 
 class virtualHostUtilities:
 
     Server_root = "/usr/local/lsws"
-
+    cyberPanel = "/usr/local/CyberCP"
 
     @staticmethod
-    def createDirectoryForVirtualHost(virtualHostName,administratorEmail, phpVersion):
+    def createDirectoryForVirtualHost(virtualHostName,administratorEmail,virtualHostUser, phpVersion):
 
         path = "/home/" + virtualHostName
         pathHTML = "/home/" + virtualHostName + "/public_html"
@@ -22,67 +26,100 @@ class virtualHostUtilities:
         confPath = virtualHostUtilities.Server_root + "/conf/vhosts/"+virtualHostName
         completePathToConfigFile = confPath +"/vhost.conf"
 
+        FNULL = open(os.devnull, 'w')
+
+        ## adding user
+
+        command = "adduser "+virtualHostUser + " -M"
+
+        cmd = shlex.split(command)
+
+        res = subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
+        command = "groupadd " + virtualHostUser
+
+        cmd = shlex.split(command)
+
+        res = subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
+        command = "usermod -a -G "+virtualHostUser +" "+virtualHostUser
+
+        cmd = shlex.split(command)
+
+        res = subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
+        ## adding user ends
+
 
         try:
             os.makedirs(path)
+
+            command = "chown "+virtualHostUser+":"+virtualHostUser+" " + path
+            cmd = shlex.split(command)
+            subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
         except OSError,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to create directories for virtual host: "+ path+" [createDirectoryForVirtualHost]]")
-            return 0
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [27 Not able create to directories for virtual host [createDirectoryForVirtualHost]]")
+            return [0,"[27 Not able to directories for virtual host [createDirectoryForVirtualHost]]"]
 
         try:
             os.makedirs(pathHTML)
+
+            command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + pathHTML
+            cmd = shlex.split(command)
+            subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
         except OSError,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to create  directories for virtual host "+ pathHTML+"  [createDirectoryForVirtualHost]]")
-            return 0
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [33 Not able to directories for virtual host [createDirectoryForVirtualHost]]")
+            return [0, "[33 Not able to directories for virtual host [createDirectoryForVirtualHost]]"]
 
         try:
             os.makedirs(pathLogs)
+
+            command = "chown " + "nobody" + ":" + "nobody" + " " + pathLogs
+            cmd = shlex.split(command)
+            subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
+            command = "chmod -R 666 " + pathLogs
+            cmd = shlex.split(command)
+            subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
         except OSError,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able create to directories for virtual host "+ pathLogs+"  [createDirectoryForVirtualHost]]")
-            return 0
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [39 Not able to directories for virtual host [createDirectoryForVirtualHost]]")
+            return [0, "[39 Not able to directories for virtual host [createDirectoryForVirtualHost]]"]
 
         try:
+            ## For configuration files permissions will be changed later globally.
             os.makedirs(confPath)
         except OSError,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able create to directories for virtual host "+ confPath+"  [createDirectoryForVirtualHost]]")
-            return 0
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [45 Not able to directories for virtual host [createDirectoryForVirtualHost]]")
+            return [0, "[45 Not able to directories for virtual host [createDirectoryForVirtualHost]]"]
 
 
 
         try:
+            ## For configuration files permissions will be changed later globally.
             file = open(completePathToConfigFile, "w+")
+
+            command = "chown " + "lsadm" + ":" + "lsadm" + " " + completePathToConfigFile
+            cmd = shlex.split(command)
+            subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
         except IOError,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForVirtualHost]]")
-            return 0
-
-        #try:
-
-            #command = "sudo chown -R nobody:cyberpanel " + completePathToConfigFile
-
-            #cmd = shlex.split(command)
-
-            #res = subprocess.call(cmd)
+            return [0, "[45 Not able to directories for virtual host [createDirectoryForVirtualHost]]"]
 
 
-            #command = "sudo chown -R nobody:cyberpanel /home"
-
-            #cmd = shlex.split(command)
-
-            #res = subprocess.call(cmd)
-
-
-        #except BaseException,msg:
-        #    logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForVirtualHost]]")
-
-
-        if virtualHostUtilities.perHostVirtualConf(completePathToConfigFile,administratorEmail,phpVersion) == 1:
-            return 1
+        if virtualHostUtilities.perHostVirtualConf(completePathToConfigFile,administratorEmail,virtualHostUser,phpVersion) == 1:
+            command = "chmod -R 766 " + pathHTML
+            #subprocess.call(shlex.split(command))
+            return [1,"None"]
         else:
-            return 0
+            return [0,"[61 Not able to create per host virtual configurations [perHostVirtualConf]"]
 
 
     @staticmethod
-    def perHostVirtualConf(vhFile, administratorEmail, phpVersion):
+    def perHostVirtualConf(vhFile, administratorEmail,virtualHostUser, phpVersion):
 
         # General Configurations tab
 
@@ -91,12 +128,14 @@ class virtualHostUtilities:
 
             docRoot = "docRoot                   $VH_ROOT/public_html" + "\n"
             vhDomain = "vhDomain                  $VH_NAME" + "\n"
+            vhAliases = "vhAliases                 www.$VH_NAME"+ "\n"
             adminEmails = "adminEmails               " + administratorEmail + "\n"
             enableGzip = "enableGzip                1" + "\n"
             enableIpGeo = "enableIpGeo               1" + "\n" + "\n"
 
             confFile.writelines(docRoot)
             confFile.writelines(vhDomain)
+            confFile.writelines(vhAliases)
             confFile.writelines(adminEmails)
             confFile.writelines(enableGzip)
             confFile.writelines(enableIpGeo)
@@ -151,25 +190,93 @@ class virtualHostUtilities:
             # php settings
 
             scripthandler = "scripthandler  {" + "\n"
-            add = ""
+            add = "  add                     lsapi:"+virtualHostUser+" php" + "\n"
             php_end = "}" + "\n" + "\n"
-
-            if phpVersion == "PHP 5.3":
-                add = "  add                     lsapi:php53 php" + "\n"
-            elif phpVersion == "PHP 5.4":
-                add = "  add                     lsapi:php54 php" + "\n"
-            elif phpVersion == "PHP 5.5":
-                add = "  add                     lsapi:php55 php" + "\n"
-            elif phpVersion == "PHP 5.6":
-                add = "  add                     lsapi:php56 php" + "\n"
-            elif phpVersion == "PHP 7.0":
-                add = "  add                     lsapi:php70 php" + "\n"
-            elif phpVersion == "PHP 7.1":
-                add = "  add                     lsapi:php71 php" + "\n"
 
             confFile.writelines(scripthandler)
             confFile.writelines(add)
             confFile.writelines(php_end)
+
+
+            ## external app
+
+            if phpVersion == "PHP 5.3":
+                php = "53"
+            elif phpVersion == "PHP 5.4":
+                php = "55"
+            elif phpVersion == "PHP 5.5":
+                php = "55"
+            elif phpVersion == "PHP 5.6":
+                php = "56"
+            elif phpVersion == "PHP 7.0":
+                php = "70"
+            elif phpVersion == "PHP 7.1":
+                php = "71"
+
+            extprocessor = "extprocessor "+virtualHostUser+" {\n"
+            type = "  type                    lsapi\n"
+            address = "  address                 UDS://tmp/lshttpd/"+virtualHostUser+".sock\n"
+            maxConns = "  maxConns                35\n"
+            initTimeout = "  initTimeout             60\n"
+            retryTimeout = "  retryTimeout            0\n"
+            persistConn = "  persistConn             1\n"
+            respBuffer = "  respBuffer              0\n"
+            autoStart = "  autoStart               1\n"
+            path = "  path                    /usr/local/lsws/lsphp"+php+"/bin/lsphp\n"
+            extUser = "  extUser                 " + virtualHostUser + "\n"
+            extGroup = "  extGroup                 " + virtualHostUser + "\n"
+            memSoftLimit = "  memSoftLimit            2047M\n"
+            memHardLimit = "  memHardLimit            2047M\n"
+            procSoftLimit = "  procSoftLimit           400\n"
+            procHardLimit = "  procHardLimit           500\n"
+            extprocessorEnd = "}\n"
+
+            confFile.writelines(extprocessor)
+            confFile.writelines(type)
+            confFile.writelines(address)
+            confFile.writelines(maxConns)
+            confFile.writelines(initTimeout)
+            confFile.writelines(retryTimeout)
+            confFile.writelines(persistConn)
+            confFile.writelines(respBuffer)
+            confFile.writelines(autoStart)
+            confFile.writelines(path)
+            confFile.writelines(extUser)
+            confFile.writelines(extGroup)
+            confFile.writelines(memSoftLimit)
+            confFile.writelines(memHardLimit)
+            confFile.writelines(procSoftLimit)
+            confFile.writelines(procHardLimit)
+            confFile.writelines(extprocessorEnd)
+
+            ## File Manager defination
+
+            context = "context /.filemanager {\n"
+            type = "  type                    NULL\n"
+            location = "  location                /usr/local/lsws/Example/html/FileManager\n"
+            allowBrowse = "  allowBrowse             1\n"
+            autoIndex = "  autoIndex               1\n\n"
+
+            accessControl = "  accessControl  {\n"
+            allow = "    allow                 127.0.0.1, localhost\n"
+            deny = "    deny                  0.0.0.0/0\n"
+            accessControlEnds = "  }\n"
+
+
+            defaultCharSet = "  addDefaultCharset       off\n"
+            contextEnds = "}\n"
+
+            confFile.writelines(context)
+            confFile.writelines(type)
+            confFile.writelines(location)
+            confFile.writelines(allowBrowse)
+            confFile.writelines(autoIndex)
+            confFile.writelines(accessControl)
+            confFile.writelines(allow)
+            confFile.writelines(deny)
+            confFile.writelines(accessControlEnds)
+            confFile.writelines(defaultCharSet)
+            confFile.writelines(contextEnds)
 
             confFile.close()
 
@@ -178,7 +285,6 @@ class virtualHostUtilities:
                 str(msg) + " [IO Error with per host config file [perHostVirtualConf]]")
             return 0
         return 1
-
 
 
     @staticmethod
@@ -238,58 +344,54 @@ class virtualHostUtilities:
                     writeDataToFile.writelines(items)
 
             writeDataToFile.close()
+            return [1,"None"]
+
         except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [IO Error with main config file [createConfigInMainVirtualHostFile]]")
-            return 0
-        return 1
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "223 [IO Error with main config file [createConfigInMainVirtualHostFile]]")
+            return [0,"223 [IO Error with main config file [createConfigInMainVirtualHostFile]]"]
+
 
     @staticmethod
-    def createDirectoryForDomain(masterDomain, domain, phpVersion, path, administratorEmail):
+    def createDirectoryForDomain(masterDomain, domain, phpVersion, path, administratorEmail,virtualHostUser):
+
+        FNULL = open(os.devnull, 'w')
 
         confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domain
         completePathToConfigFile = confPath + "/vhost.conf"
 
         try:
             os.makedirs(path)
+            command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + path
+            cmd = shlex.split(command)
+            subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
         except OSError, msg:
             logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + " [Not able create to directories for virtual host [createDirectoryForDomain]]")
+                str(msg) + "329 [Not able to create directories for virtual host [createDirectoryForDomain]]")
 
         try:
+            ## For configuration files permissions will be changed later globally.
             os.makedirs(confPath)
         except OSError, msg:
             logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + " [Not able create to directories for virtual host [createDirectoryForDomain]]")
+                str(msg) + "335 [Not able to create directories for virtual host [createDirectoryForDomain]]")
+            return [0, "[344 Not able to directories for virtual host [createDirectoryForDomain]]"]
 
         try:
+            ## For configuration files permissions will be changed later globally.
             file = open(completePathToConfigFile, "w+")
         except IOError, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForDomain]]")
-            return 0
+            return [0, "[351 Not able to directories for virtual host [createDirectoryForDomain]]"]
 
-        #try:
-         #   uid = pwd.getpwnam("lsadm").pw_uid
-        #    gid = grp.getgrnam("lsadm").gr_gid
-         #   os.chown(confPath, uid, gid)
-        #    os.chown(completePathToConfigFile, uid, gid)
 
-         #   uid = pwd.getpwnam("nobody").pw_uid
-         #   gid = grp.getgrnam("nobody").gr_gid
-
-         #   os.chown("/home", uid, gid)
-         #   os.chown(path, uid, gid)
-
-        #except BaseException, msg:
-            #logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForDomain]]")
-
-        if virtualHostUtilities.perHostDomainConf(path, masterDomain, domain, completePathToConfigFile,
-                                                  administratorEmail, phpVersion) == 1:
-            return 1
+        if virtualHostUtilities.perHostDomainConf(path, masterDomain, completePathToConfigFile,
+                                                  administratorEmail, phpVersion,virtualHostUser) == 1:
+            return [1,"None"]
         else:
-            return 0
+            return [0, "[359 Not able to create per host virtual configurations [perHostVirtualConf]"]
 
     @staticmethod
-    def perHostDomainConf(path, masterDomain, domain, vhFile, administratorEmail, phpVersion):
+    def perHostDomainConf(path, masterDomain, vhFile, administratorEmail, phpVersion,virtualHostUser):
 
         # General Configurations tab
 
@@ -306,12 +408,14 @@ class virtualHostUtilities:
 
             docRoot = "docRoot                   " + path + "\n"
             vhDomain = "vhDomain                  $VH_NAME" + "\n"
+            vhAliases = "vhAliases                 www.$VH_NAME" + "\n"
             adminEmails = "adminEmails               " + administratorEmail + "\n"
             enableGzip = "enableGzip                1" + "\n"
             enableIpGeo = "enableIpGeo               1" + "\n" + "\n"
 
             confFile.writelines(docRoot)
             confFile.writelines(vhDomain)
+            confFile.writelines(vhAliases)
             confFile.writelines(adminEmails)
             confFile.writelines(enableGzip)
             confFile.writelines(enableIpGeo)
@@ -365,26 +469,67 @@ class virtualHostUtilities:
 
             # php settings
 
-            scripthandler = "scripthandler  {" + "\n"
-            add = ""
-            php_end = "}" + "\n" + "\n"
+            sockRandomPath = str(randint(1000, 9999))
 
-            if phpVersion == "PHP 5.3":
-                add = "  add                     lsapi:php53 php" + "\n"
-            elif phpVersion == "PHP 5.4":
-                add = "  add                     lsapi:php54 php" + "\n"
-            elif phpVersion == "PHP 5.5":
-                add = "  add                     lsapi:php55 php" + "\n"
-            elif phpVersion == "PHP 5.6":
-                add = "  add                     lsapi:php56 php" + "\n"
-            elif phpVersion == "PHP 7.0":
-                add = "  add                     lsapi:php70 php" + "\n"
-            elif phpVersion == "PHP 7.1":
-                add = "  add                     lsapi:php71 php" + "\n"
+            scripthandler = "scripthandler  {" + "\n"
+            add = "  add                     lsapi:" + virtualHostUser+sockRandomPath + " php" + "\n"
+            php_end = "}" + "\n" + "\n"
 
             confFile.writelines(scripthandler)
             confFile.writelines(add)
             confFile.writelines(php_end)
+
+            ## external app
+
+            if phpVersion == "PHP 5.3":
+                php = "53"
+            elif phpVersion == "PHP 5.4":
+                php = "55"
+            elif phpVersion == "PHP 5.5":
+                php = "55"
+            elif phpVersion == "PHP 5.6":
+                php = "56"
+            elif phpVersion == "PHP 7.0":
+                php = "70"
+            elif phpVersion == "PHP 7.1":
+                php = "71"
+
+
+            extprocessor = "extprocessor " + virtualHostUser+sockRandomPath + " {\n"
+            type = "  type                    lsapi\n"
+            address = "  address                 UDS://tmp/lshttpd/" + virtualHostUser+sockRandomPath + ".sock\n"
+            maxConns = "  maxConns                35\n"
+            initTimeout = "  initTimeout             60\n"
+            retryTimeout = "  retryTimeout            0\n"
+            persistConn = "  persistConn             1\n"
+            respBuffer = "  respBuffer              0\n"
+            autoStart = "  autoStart               1\n"
+            path = "  path                    /usr/local/lsws/lsphp" + php + "/bin/lsphp\n"
+            extUser = "  extUser                 " + virtualHostUser + "\n"
+            extGroup = "  extGroup                 " + virtualHostUser + "\n"
+            memSoftLimit = "  memSoftLimit            2047M\n"
+            memHardLimit = "  memHardLimit            2047M\n"
+            procSoftLimit = "  procSoftLimit           400\n"
+            procHardLimit = "  procHardLimit           500\n"
+            extprocessorEnd = "}\n"
+
+            confFile.writelines(extprocessor)
+            confFile.writelines(type)
+            confFile.writelines(address)
+            confFile.writelines(maxConns)
+            confFile.writelines(initTimeout)
+            confFile.writelines(retryTimeout)
+            confFile.writelines(persistConn)
+            confFile.writelines(respBuffer)
+            confFile.writelines(autoStart)
+            confFile.writelines(path)
+            confFile.writelines(extUser)
+            confFile.writelines(extGroup)
+            confFile.writelines(memSoftLimit)
+            confFile.writelines(memHardLimit)
+            confFile.writelines(procSoftLimit)
+            confFile.writelines(procHardLimit)
+            confFile.writelines(extprocessorEnd)
 
             confFile.close()
 
@@ -449,11 +594,13 @@ class virtualHostUtilities:
                     writeDataToFile.writelines(items)
 
             writeDataToFile.close()
+
+            return [1,"None"]
+
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + " [IO Error with main config file [createConfigInMainVirtualHostFile]]")
-            return 0
-        return 1
+            return [0, "223 [IO Error with main config file [createConfigInMainVirtualHostFile]]"]
 
     @staticmethod
     def deleteVirtualHostConfigurations(virtualHostName,numberOfSites):
@@ -463,6 +610,7 @@ class virtualHostUtilities:
             shutil.rmtree(virtualHostPath)
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to remove virtual host directory from /home continuing..]")
+
 
         try:
             confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + virtualHostName
@@ -504,7 +652,7 @@ class virtualHostUtilities:
                         check = 1
 
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to remove virtual host configuration main configuration file]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
             return 0
 
         return 1
@@ -514,11 +662,14 @@ class virtualHostUtilities:
     def checkIfVirtualHostExists(virtualHostName):
         if os.path.exists("/home/"+virtualHostName):
             return 1
+        return 0
 
     @staticmethod
     def changePHP(vhFile,phpVersion):
 
         # General Configurations tab
+
+        finalphp = 0
 
         try:
             data = open(vhFile, "r").readlines()
@@ -538,28 +689,35 @@ class virtualHostUtilities:
 
             writeDataToFile = open(vhFile,"w")
 
-            add = "  add                     lsapi:php"+str(finalphp)+" php" + "\n"
+            sockRandomPath = str(randint(1000, 9999))
+
+            address = "  address                 UDS://tmp/lshttpd/" + sockRandomPath + ".sock\n"
+            path = "  path                    /usr/local/lsws/lsphp" + str(finalphp) + "/bin/lsphp\n"
 
             for items in data:
-                if items.find("add") > -1 and items.find("lsapi:") > -1 and items.find("php") > -1:
-                    writeDataToFile.writelines(add)
+                if items.find("/usr/local/lsws/lsphp") > -1 and items.find("path") > -1:
+                    writeDataToFile.writelines(path)
                 else:
                     writeDataToFile.writelines(items)
 
             writeDataToFile.close()
 
+            installUtilities.installUtilities.reStartLiteSpeed()
+
+            print "1,None"
+
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + " [IO Error with per host config file [changePHP]]")
-            return 0
-        return 1
+            return [0,str(msg) + " [IO Error with per host config file [changePHP]]"]
+
 
 
     @staticmethod
     def getDiskUsage(path, totalAllowed):
         try:
 
-            totalUsageInMB = subprocess.check_output(["du", "-hs",path,"--block-size=1M"]).split()[0]
+            totalUsageInMB = subprocess.check_output(["sudo","du", "-hs",path,"--block-size=1M"]).split()[0]
 
             percentage = float(100)/float(totalAllowed)
 
@@ -657,25 +815,653 @@ class virtualHostUtilities:
         return 1
 
     @staticmethod
-    def permissionControl(path):
+    def findDomainBW(domainName,totalAllowed):
         try:
-            command = 'sudo chown -R  cyberpanel:cyberpanel '+path
+            path = "/home/"+domainName+"/logs/"+domainName+".access_log"
+
+            if not os.path.exists("/home/"+domainName+"/logs"):
+                print "0,0"
+
+            bwmeta = "/home/" + domainName + "/logs/bwmeta"
+
+            if not os.path.exists(path):
+                print "0,0"
+
+
+
+            if os.path.exists(bwmeta):
+                try:
+                    data = open(bwmeta).readlines()
+                    currentUsed = int(data[0].strip("\n"))
+
+                    inMB = int(float(currentUsed)/(1024.0*1024.0))
+
+                    percentage = float(100) / float(totalAllowed)
+
+                    percentage = float(percentage) * float(inMB)
+                except:
+                    print "0,0"
+
+                if percentage > 100.0:
+                    percentage = 100
+
+                print str(inMB)+","+str(percentage)
+            else:
+                print "0,0"
+
+
+        except OSError, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [findDomainBW]")
+            print "0,0"
+        except ValueError, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [findDomainBW]")
+            print "0,0"
+
+
+def createVirtualHost(virtualHostName,administratorEmail,phpVersion,virtualHostUser,numberOfSites,ssl,sslPath):
+    try:
+        if virtualHostUtilities.checkIfVirtualHostExists(virtualHostName) == 1:
+            print "0,Virtual Host Directory already exists!"
+            return
+
+        FNULL = open(os.devnull, 'w')
+
+        retValues = virtualHostUtilities.createDirectoryForVirtualHost(virtualHostName, administratorEmail,virtualHostUser, phpVersion)
+        if retValues[0] == 0:
+            virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostName, numberOfSites)
+            print "0,"+str(retValues[1])
+            return
+
+        retValues = virtualHostUtilities.createConfigInMainVirtualHostFile(virtualHostName)
+        if retValues[0] == 0:
+            virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostName, numberOfSites)
+            print "0,"+str(retValues[1])
+
+        if ssl == 1:
+            installUtilities.installUtilities.reStartLiteSpeed()
+            retValues = sslUtilities.issueSSLForDomain(virtualHostName, administratorEmail, sslPath)
+            if retValues[0] == 0:
+                virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostName, numberOfSites)
+                print "0,"+str(retValues[1])
+                return
+
+        installUtilities.installUtilities.reStartLiteSpeed()
+
+        shutil.copy("/usr/local/CyberCP/index.html","/home/" + virtualHostName + "/public_html/index.html")
+
+        command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + "/home/" + virtualHostName + "/public_html/index.html"
+        cmd = shlex.split(command)
+        subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+        vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
+
+        command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
+        cmd = shlex.split(command)
+        subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+        print "1,None"
+
+
+    except BaseException,msg:
+        virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostName, numberOfSites)
+        logging.CyberCPLogFileWriter.writeToFile(
+            str(msg) + "  [createVirtualHost]")
+        print "0,"+str(msg)
+
+def createDomain(masterDomain, virtualHostName, phpVersion, path,administratorEmail,virtualHostUser,restart,numberOfSites,ssl):
+    try:
+        if virtualHostUtilities.checkIfVirtualHostExists(virtualHostName) == 1:
+            print "0,Virtual Host Directory already exists!"
+            return
+
+        FNULL = open(os.devnull, 'w')
+
+        retValues = virtualHostUtilities.createDirectoryForDomain(masterDomain, virtualHostName, phpVersion, path,administratorEmail,virtualHostUser)
+        if retValues[0] == 0:
+            virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostUtilities,numberOfSites)
+            print "0,"+str(retValues[1])
+            return
+
+        retValues = virtualHostUtilities.createConfigInMainDomainHostFile(virtualHostName, masterDomain)
+
+        if retValues[0] == 0:
+            virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostUtilities, numberOfSites)
+            print "0," + str(retValues[1])
+            return
+
+        ## Now restart litespeed after initial configurations are done
+
+        installUtilities.installUtilities.reStartLiteSpeed()
+
+        if ssl == 1:
+            retValues = sslUtilities.issueSSLForDomain(virtualHostName, administratorEmail, path)
+            if retValues[0] == 0:
+                virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostName, numberOfSites)
+                print "0,"+str(retValues[1])
+                return
+
+
+        ## final Restart
+
+        installUtilities.installUtilities.reStartLiteSpeed()
+
+        shutil.copy("/usr/local/CyberCP/index.html",path + "/index.html")
+
+        command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + path + "/index.html"
+        cmd = shlex.split(command)
+        subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+        vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
+        command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
+        cmd = shlex.split(command)
+        subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
+        print "1,None"
+
+
+    except BaseException,msg:
+        virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostName, numberOfSites)
+        logging.CyberCPLogFileWriter.writeToFile(
+            str(msg) + "  [createDomain]")
+        print "0,"+str(msg)
+
+def issueSSL(virtualHost,path,adminEmail):
+    try:
+
+        FNULL = open(os.devnull, 'w')
+
+        srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
+        srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
+
+        pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHost
+
+        pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
+        pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
+
+        if os.path.exists(pathToStoreSSLPrivKey):
+            os.remove(pathToStoreSSLPrivKey)
+        if os.path.exists(pathToStoreSSLFullChain):
+            os.remove(pathToStoreSSLFullChain)
+
+        if not (os.path.exists(srcPrivKey) and os.path.exists(srcFullChain)):
+
+            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
+
+
+            if retValues[0] == 0:
+                print "0," + str(retValues[1])
+                return
+
+            installUtilities.installUtilities.reStartLiteSpeed()
+
+            vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
+            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+
+            print "1,None"
+            return
+        else:
+            ###### Copy SSL To config location ######
+
+            try:
+                os.mkdir(pathToStoreSSL)
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    str(msg) + " [Directory for SSL already exists.. Continuing [issueSSL]]")
+
+            srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
+            srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
+
+            shutil.copy(srcPrivKey, pathToStoreSSLPrivKey)
+            shutil.copy(srcFullChain, pathToStoreSSLFullChain)
+
+            sslUtilities.sslUtilities.installSSLForDomain(virtualHost)
+            installUtilities.installUtilities.reStartLiteSpeed()
+
+            vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
+            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            print "1,None"
+            return
+
+
+    except BaseException,msg:
+        logging.CyberCPLogFileWriter.writeToFile(
+            str(msg) + "  [issueSSL]")
+        print "0,"+str(msg)
+
+def getAccessLogs(fileName,page):
+    try:
+
+        numberOfTotalLines = int(subprocess.check_output(["wc", "-l", fileName]).split(" ")[0])
+
+        if numberOfTotalLines < 25:
+            data = subprocess.check_output(["cat", fileName])
+        else:
+            if page == 1:
+                end = numberOfTotalLines
+                start = end - 24
+                if start <= 0:
+                    start = 1
+                startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
+                command = "sed -n " + startingAndEnding + " " + fileName
+                proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
+                data = proc.stdout.read()
+            else:
+                end = numberOfTotalLines - ((page - 1) * 25)
+                start = end - 24
+                if start <= 0:
+                    start = 1
+                startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
+                command = "sed -n " + startingAndEnding + " " + fileName
+                proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
+                data = proc.stdout.read()
+        print data
+    except BaseException,msg:
+        logging.CyberCPLogFileWriter.writeToFile(
+            str(msg) + "  [getAccessLogs]")
+        print "1,None"
+
+def getErrorLogs(fileName,page):
+    try:
+
+        numberOfTotalLines = int(subprocess.check_output(["wc", "-l", fileName]).split(" ")[0])
+
+        if numberOfTotalLines < 25:
+            data = subprocess.check_output(["cat", fileName])
+        else:
+            if page == 1:
+                end = numberOfTotalLines
+                start = end - 24
+                if start <= 0:
+                    start = 1
+                startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
+                command = "sed -n " + startingAndEnding + " " + fileName
+                proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
+                data = proc.stdout.read()
+            else:
+                end = numberOfTotalLines - ((page - 1) * 25)
+                start = end - 24
+                if start <= 0:
+                    start = 1
+                startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
+                command = "sed -n " + startingAndEnding + " " + fileName
+                proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
+                data = proc.stdout.read()
+        print data
+    except BaseException,msg:
+        logging.CyberCPLogFileWriter.writeToFile(
+            str(msg) + "  [getErrorLogs]")
+        print "1,None"
+
+def saveVHostConfigs(fileName,tempPath):
+    try:
+
+        vhost = open(fileName, "w")
+
+        vhost.write(open(tempPath,"r").read())
+
+        vhost.close()
+
+        if os.path.exists(tempPath):
+            os.remove(tempPath)
+
+        installUtilities.installUtilities.reStartLiteSpeed()
+
+        print "1,None"
+
+    except BaseException,msg:
+        logging.CyberCPLogFileWriter.writeToFile(
+            str(msg) + "  [saveVHostConfigs]")
+        print "0,"+str(msg)
+
+def saveRewriteRules(virtualHost,fileName,tempPath):
+    try:
+
+        virtualHostUtilities.addRewriteRules(virtualHost)
+
+        vhost = open(fileName, "w")
+
+        vhost.write(open(tempPath,"r").read())
+
+        vhost.close()
+
+        if os.path.exists(tempPath):
+            os.remove(tempPath)
+
+        installUtilities.installUtilities.reStartLiteSpeed()
+
+        print "1,None"
+
+    except BaseException,msg:
+        logging.CyberCPLogFileWriter.writeToFile(
+            str(msg) + "  [saveRewriteRules]")
+        print "0,"+str(msg)
+
+def installWordPress(domainName,finalPath,virtualHostUser,dbName,dbUser,dbPassword):
+    try:
+
+        FNULL = open(os.devnull, 'w')
+
+        if not os.path.exists(finalPath):
+            os.makedirs(finalPath)
+
+        if not os.listdir(finalPath):
+            pass
+        else:
+            print "0,Target directory should be empty before installation, otherwise data loss could occur."
+            return
+
+        ## Get wordpress
+
+
+        if not os.path.exists("latest.tar.gz"):
+            command = 'wget --no-check-certificate http://wordpress.org/latest.tar.gz -O latest.tar.gz'
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
+        command = 'tar -xzvf latest.tar.gz -C ' + finalPath
+
+        cmd = shlex.split(command)
+
+        res = subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
+        ## Get plugin
+
+        if not os.path.exists("litespeed-cache.1.1.5.1.zip"):
+            command = 'wget --no-check-certificate https://downloads.wordpress.org/plugin/litespeed-cache.1.1.5.1.zip'
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
+        command = 'unzip litespeed-cache.1.1.5.1.zip -d ' + finalPath
+
+        cmd = shlex.split(command)
+
+        res = subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
+        root = finalPath
+
+        for filename in listdir(join(root, 'wordpress')):
+            move(join(root, 'wordpress', filename), join(root, filename))
+
+        rmdir(root + "wordpress")
+
+        shutil.copytree(finalPath + "litespeed-cache", finalPath + "wp-content/plugins/litespeed-cache")
+        shutil.rmtree(finalPath + "litespeed-cache")
+
+
+
+        ## edit config file
+
+        wpconfigfile = finalPath + "wp-config-sample.php"
+
+        data = open(wpconfigfile, "r").readlines()
+
+        writeDataToFile = open(wpconfigfile, "w")
+
+        defDBName = "define('DB_NAME', '" + dbName + "');" + "\n"
+        defDBUser = "define('DB_USER', '" + dbUser + "');" + "\n"
+        defDBPassword = "define('DB_PASSWORD', '" + dbPassword + "');" + "\n"
+
+        for items in data:
+            if items.find("DB_NAME") > -1:
+                if items.find("database_name_here") > -1:
+                    writeDataToFile.writelines(defDBName)
+            elif items.find("DB_USER") > -1:
+                if items.find("username_here") > -1:
+                    writeDataToFile.writelines(defDBUser)
+            elif items.find("DB_PASSWORD") > -1:
+                writeDataToFile.writelines(defDBPassword)
+            else:
+                writeDataToFile.writelines(items)
+
+        writeDataToFile.close()
+
+        os.rename(wpconfigfile, finalPath + 'wp-config.php')
+
+        command = "chown -R "+virtualHostUser+":"+virtualHostUser+" " + "/home/" + domainName + "/public_html/"
+
+        cmd = shlex.split(command)
+
+        res = subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
+        virtualHostUtilities.addRewriteRules(domainName)
+
+        installUtilities.installUtilities.reStartLiteSpeed()
+
+        print "1,None"
+
+
+    except BaseException, msg:
+        # remove the downloaded files
+        try:
+            shutil.rmtree(finalPath)
+        except:
+            logging.CyberCPLogFileWriter.writeToFile("shutil.rmtree(finalPath)")
+
+        homeDir = "/home/" + domainName + "/public_html"
+
+        if not os.path.exists(homeDir):
+            FNULL = open(os.devnull, 'w')
+            os.mkdir(homeDir)
+            command = "chown -R "+virtualHostUser+":"+virtualHostUser+" " + homeDir
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
+        print "0," + str(msg)
+        return
+
+def issueSSLForHostName(virtualHost,path):
+    try:
+
+        FNULL = open(os.devnull, 'w')
+
+        srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
+        srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
+
+        pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHost
+
+        pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
+        pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
+
+        destPrivKey = "/usr/local/lscp/key.pem"
+        destCert = "/usr/local/lscp/cert.pem"
+
+        ## removing old certs
+
+        if os.path.exists(pathToStoreSSLPrivKey):
+            os.remove(pathToStoreSSLPrivKey)
+        if os.path.exists(pathToStoreSSLFullChain):
+            os.remove(pathToStoreSSLFullChain)
+
+        ## removing old certs for lscpd
+        if os.path.exists(destPrivKey):
+            os.remove(destPrivKey)
+        if os.path.exists(destCert):
+            os.remove(destCert)
+
+        adminEmail = "email@" + virtualHost
+
+        if not (os.path.exists(srcPrivKey) and os.path.exists(srcFullChain)):
+
+            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
+
+            if retValues[0] == 0:
+                print "0," + str(retValues[1])
+                return
+
+            ## lcpd specific functions
+
+            shutil.copy(srcPrivKey, destPrivKey)
+            shutil.copy(srcFullChain, destCert)
+
+            command = 'systemctl restart lscpd'
 
             cmd = shlex.split(command)
 
             res = subprocess.call(cmd)
 
-        except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
+            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-    @staticmethod
-    def leaveControl(path):
-        try:
-            command = 'sudo chown -R  root:root ' + path
+            print "1,None"
+        else:
+            ###### Copy SSL To config location ######
+
+            try:
+                os.mkdir(pathToStoreSSL)
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Directory for SSL already exists.. Continuing [issueSSLForHostName]]")
+
+            srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
+            srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
+
+            shutil.copy(srcPrivKey, pathToStoreSSLPrivKey)
+            shutil.copy(srcFullChain, pathToStoreSSLFullChain)
+
+            ## lcpd specific functions
+
+            shutil.copy(srcPrivKey, destPrivKey)
+            shutil.copy(srcFullChain, destCert)
+
+            command = 'systemctl restart lscpd'
 
             cmd = shlex.split(command)
 
             res = subprocess.call(cmd)
 
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
+            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            print "1,None"
+            return
+
+    except BaseException,msg:
+        logging.CyberCPLogFileWriter.writeToFile(
+            str(msg) + "  [issueSSLForHostName]")
+        print "0,"+str(msg)
+
+
+
+def saveSSL(virtualHost,pathToStoreSSL,keyPath,certPath,sslCheck):
+    try:
+
+        if not os.path.exists(pathToStoreSSL):
+            os.mkdir(pathToStoreSSL)
+
+        pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
+        pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
+
+        privkey = open(pathToStoreSSLPrivKey, 'w')
+        privkey.write(open(keyPath,"r").read())
+        privkey.close()
+
+        fullchain = open(pathToStoreSSLFullChain, 'w')
+        fullchain.write(open(certPath,"r").read())
+        fullchain.close()
+
+        if sslCheck == "0":
+            sslUtilities.sslUtilities.installSSLForDomain(virtualHost)
+
+        installUtilities.installUtilities.reStartLiteSpeed()
+
+        FNULL = open(os.devnull, 'w')
+
+        command = "chown " + "lsadm" + ":" + "lsadm" + " " + pathToStoreSSL
+        cmd = shlex.split(command)
+        subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+
+        print "1,None"
+
+    except BaseException,msg:
+        logging.CyberCPLogFileWriter.writeToFile(
+            str(msg) + "  [saveSSL]")
+        print "0,"+str(msg)
+
+def main():
+
+    parser = argparse.ArgumentParser(description='CyberPanel Installer')
+    parser.add_argument('function', help='Specific a function to call!')
+    parser.add_argument('--virtualHostName', help='Domain name!')
+    parser.add_argument('--administratorEmail', help='Administration Email!')
+    parser.add_argument('--phpVersion', help='PHP Version')
+    parser.add_argument("--virtualHostUser", help="Virtual Host Directory Owner and Group!")
+    parser.add_argument("--numberOfSites", help="Number of sites!")
+    parser.add_argument("--ssl", help="Weather to activate SSL")
+    parser.add_argument("--sslPath", help="Path to website document root!")
+
+
+    ## arguments for creation child domains
+
+    parser.add_argument('--masterDomain', help='Master Domain Needed While Creating Child Domains!')
+    parser.add_argument('--path', help='Path Needed for Child domains Creation!')
+    parser.add_argument('--restart', help='OLS Restart Frequency while child domain creation!')
+
+    ## arguments for logs
+
+    parser.add_argument('--page', help='Page number to fetch logs!')
+
+    ## arguments for configuration files
+
+    parser.add_argument('--tempPath', help='Temporary path where configuration data is placed!')
+
+
+    ## save ssl arguments
+
+    parser.add_argument('--tempKeyPath', help='Temporary path to store key!')
+    parser.add_argument('--tempCertPath', help='Temporary path to store cert!')
+    parser.add_argument('--sslCheck', help='Weather SSL is already activated or not!')
+
+    ## install wordpress arguments
+
+    parser.add_argument('--dbName', help='Database Name!')
+    parser.add_argument('--dbUser', help='Database User!')
+    parser.add_argument('--dbPassword', help='Database Password!')
+
+    ## calculate bw arguments
+
+    parser.add_argument('--bandwidth', help='Pack Bandwidth!')
+
+
+
+    args = parser.parse_args()
+
+    if args.function == "createVirtualHost":
+        createVirtualHost(args.virtualHostName,args.administratorEmail,args.phpVersion,args.virtualHostUser,int(args.numberOfSites),int(args.ssl),args.sslPath)
+    elif args.function == "deleteVirtualHostConfigurations":
+        virtualHostUtilities.deleteVirtualHostConfigurations(args.virtualHostName,int(args.numberOfSites))
+    elif args.function == "createDomain":
+        createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path,args.administratorEmail,args.virtualHostUser,args.restart,int(args.numberOfSites),int(args.ssl))
+    elif args.function == "issueSSL":
+        issueSSL(args.virtualHostName,args.path,args.administratorEmail)
+    elif args.function == "changePHP":
+        virtualHostUtilities.changePHP(args.path,args.phpVersion)
+    elif args.function == "getAccessLogs":
+        getAccessLogs(args.path,int(args.page))
+    elif args.function == "getErrorLogs":
+        getErrorLogs(args.path,int(args.page))
+    elif args.function == "saveVHostConfigs":
+        saveVHostConfigs(args.path,args.tempPath)
+    elif args.function == "saveRewriteRules":
+        saveRewriteRules(args.virtualHostName,args.path,args.tempPath)
+    elif args.function == "saveSSL":
+        saveSSL(args.virtualHostName,args.path,args.tempKeyPath,args.tempCertPath,args.sslCheck)
+    elif args.function == "installWordPress":
+        installWordPress(args.virtualHostName,args.path,args.virtualHostUser,args.dbName,args.dbUser,args.dbPassword)
+    elif args.function == "issueSSLForHostName":
+        issueSSLForHostName(args.virtualHostName,args.path)
+    elif args.function == "findDomainBW":
+        virtualHostUtilities.findDomainBW(args.virtualHostName, int(args.bandwidth))
+
+if __name__ == "__main__":
+    main()
