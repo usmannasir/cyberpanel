@@ -1393,9 +1393,6 @@ RewriteRule .* - [E=cache-control:max-age=120]
 
         installUtilities.installUtilities.reStartLiteSpeed()
 
-        print "1,None"
-
-
     except BaseException, msg:
         # remove the downloaded files
         try:
@@ -1411,8 +1408,6 @@ RewriteRule .* - [E=cache-control:max-age=120]
             command = "chown -R "+virtualHostUser+":"+virtualHostUser+" " + homeDir
             cmd = shlex.split(command)
             res = subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
-
-        print "0," + str(msg)
         return
 
 def issueSSLForHostName(virtualHost,path):

@@ -1294,7 +1294,7 @@ def installJoomla(request):
 
     except KeyError, msg:
         status = {"installStatus":0,"error":str(msg)}
-        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installJoomla]")
         return HttpResponse("Not Logged in as admin")
 
 
