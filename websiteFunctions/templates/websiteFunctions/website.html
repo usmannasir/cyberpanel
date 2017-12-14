@@ -624,7 +624,7 @@
 
                     </div>
 
-                    <!---- HTML For rewrite rules----->
+                    <!-- HTML For rewrite rules-->
 
                     <div  class="col-md-12">
 
@@ -752,6 +752,17 @@
                                     </a>
                     </div>
 
+                    <div  class="col-md-4">
+                        <a ng-click="installationDetailsJoomla()" href="" title="{% trans 'Install Joomla with(?) LSCache' %}" class="tile-box tile-box-shortcut btn-primary">
+                            <div class="tile-header">
+                                {% trans "Joomla" %}
+                            </div>
+                            <div class="tile-content-wrapper">
+                                <i class="glyph-icon icon-dashboard"></i>
+                            </div>
+                        </a>
+                    </div>
+
 
                     <div ng-hide="installationDetailsForm" class="col-md-12">
                         <form  action="/" class="form-horizontal bordered-row">
@@ -797,23 +808,87 @@
                 </div>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                         </form>
                     </div>
+
+                    <!-- Joomla Installer -->
+
+
+
+                    <div ng-hide="installationDetailsFormJoomla" class="col-md-12">
+                        <form  action="/" class="form-horizontal bordered-row">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Path" %}</label>
+                                <div class="col-sm-9">
+                                    <input placeholder="Leave emtpy to install in website home directory. (Without preceding slash)"  type="text" name="path" class="form-control" ng-model="installPath" required>
+                                </div>
+                            </div>
+
+                             <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Site name" %}</label>
+                                <div class="col-sm-9">
+                                    <input placeholder="Keep around 2-20 words."  type="text" name="sitename" class="form-control" ng-model="sitename" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Admin Username" %}</label>
+                                <div class="col-sm-9">
+                                    <input value="admin" type="text" name="username" ng-init="username='admin'" class="form-control" ng-model="username" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Admin Password" %}</label>
+                                <div class="col-sm-9">
+                                    <input  type="password" name="password" class="form-control" ng-model="password" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Database prefix" %}</label>
+                                <div class="col-sm-9">
+                                    <input value="jos_"  type="text" name="prefix" ng-init="prefix='jos_'" class="form-control" ng-model="prefix" required>
+                                </div>
+                            </div>
+
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                 <button type="button" ng-click="installJoomla()" class="btn btn-primary btn-lg btn-block">Install Joomla</button>
+
+                            </div>
+                        </div>
+
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div ng-hide="installationFailed" class="alert alert-danger">
+                                        <p>{% trans "Installation failed. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="installationSuccessfull" class="alert alert-success">
+                                <p>{% trans "Installation successful. To complete the setup visit:" %} {$ installationURL $}</p>
+                            </div>
+
+
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+                    </div>
+
+
+
+                </div>
+                        </form>
+                    </div>
+
+                    <!-- /Joomla Installer -->
 
 
                 </div>
