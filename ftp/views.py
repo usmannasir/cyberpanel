@@ -24,6 +24,7 @@ def loadFTPHome(request):
         val = request.session['userID']
         return render(request,'ftp/index.html')
     except KeyError:
+		## test
         return redirect(loadLoginPage)
 
 
