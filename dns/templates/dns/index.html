@@ -1,0 +1,134 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "DNS Functions - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "DNS Functions" %}</h2>
+   <p>{% trans "Create, edit and delete DNS zones on this page." %}</p>
+</div>
+
+    <div class="panel">
+        <div class="panel-body">
+            <h3 class="title-hero">
+            {% trans "Available Functions" %}
+            </h3>
+
+             <div class="example-box-wrapper">
+
+                {% if type == 3 %}
+
+                <div class="row">
+
+                    <div class="col-md-4">
+                                    <a href="{% url 'createDNSZone' %}" title="{% trans 'Create DNS Zone' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Create DNS Zone" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div class="col-md-4">
+                                    <a href="{% url 'deleteDNSZone' %}" title="{% trans 'Delete Zone' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Delete Zone" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div class="col-md-4">
+                                    <a href="{% url 'addDeleteDNSRecords' %}" title="{% trans 'Add Delete Records' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Add Delete/Records" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                </div>
+
+                 {% else %}
+
+                 <div class="row">
+
+
+                    <div class="col-md-4">
+                                        <a href="{% url 'createNameserver' %}" title="{% trans 'Create Nameserver' %}" class="tile-box tile-box-shortcut btn-primary">
+                                            <div class="tile-header">
+                                                {% trans "Create Nameserver" %}
+                                            </div>
+                                            <div class="tile-content-wrapper">
+                                                <i class="glyph-icon icon-dashboard"></i>
+                                            </div>
+                                        </a>
+                    </div>
+
+
+                    <div class="col-md-4">
+                                    <a href="{% url 'createDNSZone' %}" title="{% trans 'Create DNS Zone' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Create DNS Zone" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div class="col-md-4">
+                                    <a href="{% url 'deleteDNSZone' %}" title="{% trans 'Delete Zone' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Delete Zone" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div class="col-md-4">
+                                    <a href="{% url 'addDeleteDNSRecords' %}" title="{% trans 'Add Delete Records' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Add Delete/Records" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                </div>
+
+
+
+                 {% endif %}
+
+
+
+             </div>
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}

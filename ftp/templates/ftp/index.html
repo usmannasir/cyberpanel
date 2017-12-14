@@ -1,0 +1,67 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "FTP Functions - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "FTP Functions" %}</h2>
+   <p>{% trans "Delete and create FTP accounts on this page." %}</p>
+</div>
+
+    <div class="panel">
+        <div class="panel-body">
+            <h3 class="title-hero">
+            {% trans "Available Functions" %}
+            </h3>
+
+             <div class="example-box-wrapper">
+                <div class="row">
+                    <div class="col-md-4">
+                                    <a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Create FTP Account" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div class="col-md-4">
+                                    <a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Delete FTP Account" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div class="col-md-4">
+                                    <a href="{% url 'listFTPAccounts' %}" title="{% trans 'List FTP Accounts' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "List FTP Accounts" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+                </div>
+             </div>
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}

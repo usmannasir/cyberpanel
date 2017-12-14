@@ -1,0 +1,128 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "LiteSpeed Tuning - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "LiteSpeed Tuning" %}</h2>
+   <p>{% trans "You can use this page to tweak your server according to your website requirments." %}</p>
+</div>
+<div class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Tuning Details" %} <img id="tuningLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div ng-controller="litespeedTuning" class="example-box-wrapper">
+
+
+            <form  action="/"  class="form-horizontal bordered-row">
+
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Max Connections" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="maxConnections" required>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Max SSL Connections" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="maxSSLConnections" required>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Connection Timeout" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="connectionTimeOut" required>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Keep Alive Timeout" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="keepAliveTimeOut" required>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Cache Size in memory" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="cacheSizeInMemory" required>
+                    </div>
+                </div>
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Enable GZIP Compression" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-model="gzipCompression" class="form-control">
+                                <option>{% trans "Enable" %}</option>
+                                <option>{% trans "Disable" %}</option>
+                        </select>
+                    </div>
+                     <div class="current-pack">{% trans "Currently:" %} {$ gzipStatus $}</div>
+                 </div>
+
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="saveTuningSettings()" class="btn btn-primary btn-lg btn-block">{% trans "Tune Web Server" %}</button>
+
+                    </div>
+                </div>
+
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div id="canNotFetchTuning" class="alert alert-danger">
+                                        <p>{% trans "Cannot fetch Current Value, but you can still submit new changes, error reported from server:" %} {$ errMessage $}</p>
+                            </div>
+
+                            <div id="notTuned" class="alert alert-danger">
+                                <p>{% trans "Cannot save details, Error Message: " %}{$ errMessage $} </p>
+                            </div>
+
+
+                            <div id="tuned" class="alert alert-success">
+                                <p>{% trans "Web Server Successfully tuned." %} </p>
+                            </div>
+
+
+
+                    </div>
+
+
+
+                </div>
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+</div>
+
+
+{% endblock %}

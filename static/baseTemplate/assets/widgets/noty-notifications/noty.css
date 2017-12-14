@@ -1,0 +1,40 @@
+    /* Noty */
+    
+    .noty-wrapper {
+        font-size: 14px;
+        font-weight: bold;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        opacity: 95;
+        -moz-opacity: 95;
+        filter: alpha(opacity: 95);
+    }
+    .noty-wrapper:hover {
+        opacity: 1;
+        -moz-opacity: 1;
+        filter: alpha(opacity: 100);
+    }
+    .noty_message {
+        line-height: 20px;
+        padding: 15px 10px;
+        text-align: center;
+    }
+    #noty_bottom {
+        bottom: 0;
+    }
+    #noty_top {
+        top: 0;
+    }
+    #noty_center {
+        top: 50%;
+        left: 50%;
+    }
+    #noty_center li {
+        margin: 10px 0;
+        border: 0;
+    }

@@ -1,0 +1,146 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "PHP Tuning - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "PHP Tuning" %}</h2>
+   <p>{% trans "Set how each version of PHP behaves in your server here." %}</p>
+</div>
+<div class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Select PHP Version" %} <img id="tunePHPLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+
+            <form ng-controller="tunePHP"  action="/" id="modifyPackageForm" class="form-horizontal bordered-row">
+
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Domain" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-change="fetchPHPDetails()" ng-model="domainSelection" class="form-control">
+                                {% for items in websiteList %}
+                                    <option>{{ items }}</option>
+                                {% endfor %}
+                        </select>
+                    </div>
+                 </div>
+
+
+            <!------ Modification form that appears after a click --------------->
+
+                    <div ng-hide="hideDetails" class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Initial Request Timeout (secs)" %}</label>
+                        <div class="col-sm-6">
+                            <input  type="number" class="form-control" ng-model="initTimeout" required>
+                        </div>
+                    </div>
+
+                     <div ng-hide="hideDetails" class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Max Connections" %}</label>
+                        <div class="col-sm-6">
+                            <input  type="number" class="form-control" ng-model="maxConns" required>
+                        </div>
+                    </div>
+
+
+                    <div ng-hide="hideDetails" class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Memory Soft Limit" %}</label>
+                        <div class="col-sm-6">
+                            <input type="text" class="form-control" ng-model="memSoftLimit" required>
+                        </div>
+                    </div>
+
+                    <div ng-hide="hideDetails" class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Memory Hard Limit" %}</label>
+                        <div class="col-sm-6">
+                            <input type="text" class="form-control" ng-model="memHardLimit" required>
+                        </div>
+                    </div>
+
+
+                    <div ng-hide="hideDetails" class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Process Soft Limit" %}</label>
+                        <div class="col-sm-6">
+                            <input type="number" class="form-control" ng-model="procSoftLimit" required>
+                        </div>
+                    </div>
+
+                    <div ng-hide="hideDetails" class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Process Hard Limit" %}</label>
+                        <div class="col-sm-6">
+                            <input type="number" class="form-control" ng-model="procHardLimit" required>
+                        </div>
+                    </div>
+
+
+                    <div ng-hide="hideDetails" class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Persistent Connection" %}</label>
+                        <div class="col-sm-6">
+                            <select ng-model="persistConn" class="form-control">
+                                    <option>{% trans "Enable" %}</option>
+                                    <option>{% trans "Disable" %}</option>
+                            </select>
+                        </div>
+                         <div class="current-pack">{% trans "Currently:" %} {$ persistStatus $}</div>
+                    </div>
+            <!------ Modification form that appears after a click --------------->
+
+
+            <div ng-hide="hideDetails" class="form-group">
+                <label class="col-sm-3 control-label"></label>
+                <div class="col-sm-4">
+                    <button  type="button" ng-click="tunePHPFunc()" class="btn btn-primary btn-lg btn-block">{% trans "Tune PHP" %}</button>
+
+                </div>
+            </div>
+
+            <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div id="canNotFetch" class="alert alert-danger">
+                                        <p>{% trans "Cannot fetch details. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div id="canNotTune" class="alert alert-danger">
+                                        <p>{% trans "Cannot tune. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+
+                            <div id="successfullyFetched" class="alert alert-success">
+                                        <p>{% trans "Details Successfully fetched." %}</p>
+                            </div>
+
+                            <div id="successfullyTuned" class="alert alert-success">
+                                <p>{% trans "PHP for " %}<strong>{$ phpVersionTuned $}</strong> {% trans "Successfully tuned." %}</p>
+                            </div>
+                    </div>
+
+
+
+                </div>
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

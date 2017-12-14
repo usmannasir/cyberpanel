@@ -1,0 +1,61 @@
+/* Mailbox */
+
+.mailbox-wrapper .nav-list .list-group-item {
+    border-width: 1px 0 0;
+}
+.mailbox-wrapper .nav-list .list-group-item:first-child {
+    border-radius: 0;
+}
+.mailbox-wrapper td .checker {
+    float: none;
+    margin: 3px auto 0;
+}
+.content-box-wrapper.nav-list {
+    padding: 0;
+}
+.content-box-wrapper.nav-list .list-group-item {
+    padding: 5px 10px;
+    border-width: 0;
+}
+.mail-header {
+    padding: 15px;
+}
+.mail-title {
+    font-size: 20px;
+    line-height: 32px;
+    display: block;
+    float: left;
+    height: 34px;
+    margin: 0 10px 0 0;
+}
+.mail-toolbar {
+    padding: 15px;
+    border-top-width: 1px;
+    border-top-style: solid;
+}
+.mail-toolbar h4 {
+    margin-top: 6px;
+    font-weight: bold;
+    font-size: 15px;
+}
+.mail-toolbar .btn {
+    line-height: 34px;
+    height: 34px;
+}
+.email-title {
+    font-size: 13px;
+    text-align: left;
+    color: #333;
+}
+.email-body {
+    font-size: 15px;
+    text-align: left;
+    color: #9b9b9b;
+    padding: 15px;
+    border-top-width: 1px;
+    border-top-style: solid;
+}
+.email-body p {
+    margin-bottom: 20px;
+    line-height: 1.8em;
+}

@@ -1,0 +1,123 @@
+/* Custom inputs */
+
+div[id^='uniform-'],
+div[id^='uniform-'] span,
+div[id^='uniform-'] input {
+  line-height: 18px;
+  display: block;
+  float: left;
+  width: auto;
+  width: 20px;
+  height: auto;
+  height: 20px;
+  margin: 0 3px 0 0;
+  padding: 0;
+  cursor: pointer;
+}
+div[id^='uniform-'] {
+  margin-right: 10px;
+}
+div[id^='uniform-'] span {
+  position: relative;
+  display: -moz-inline-box;
+  display: inline-block;
+  zoom: 1;
+  margin-top: -1px;
+  text-align: center;
+  border-width: 1px;
+  border-style: solid;
+  *display: inline;
+}
+div.radio[id^='uniform-'] > span {
+    margin-top: -7px;
+}
+.input-group-addon div[id^='uniform-'] span i,
+div[id^='uniform-'] span i {
+  display: none;
+}
+div[id^='uniform-'] {
+  opacity: .9;
+  filter: alpha(opacity=90);
+  -moz-opacity: 90;
+}
+div[id^='uniform-'] span.checked i {
+  font-size: 14px;
+  line-height: 18px;
+  display: block;
+  height: 18px;
+}
+div.radio[id^='uniform-'] span.checked i {
+  font-size: 9px;
+}
+div.radio[id^='uniform-'] span {
+  border-radius: 50px;
+}
+div[id^='uniform-'] input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: -moz-inline-box;
+  display: inline-block;
+  zoom: 1;
+  opacity: 0;
+  border: none;
+  background: none;
+  filter: alpha(opacity=0);
+  -moz-opacity: 0;
+  *display: inline;
+}
+div.checker[id^='uniform-'] label {
+  line-height: 19px;
+}
+/* Custom Select */
+
+div.selector {
+  line-height: 38px;
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: auto !important;
+  height: 38px;
+  margin: 0;
+  padding: 0 10px !important;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  border-width: 1px;
+  border-style: solid;
+}
+.selector i {
+  line-height: 38px;
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  right: 0;
+  display: block;
+  width: 38px;
+  height: 38px;
+  margin-top: -19px;
+  margin-top: -19px;
+  padding: 0 !important;
+  text-align: center;
+  border-left: 1px solid transparent;
+}
+div.selector select {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 38px;
+  opacity: 0;
+  border: none;
+  background: none;
+  filter: alpha(opacity=0);
+  -moz-opacity: 0;
+}
+div.selector span {
+  line-height: 38px;
+  display: block;
+  width: auto !important;
+  height: 38px;
+  padding: 0 !important;
+}

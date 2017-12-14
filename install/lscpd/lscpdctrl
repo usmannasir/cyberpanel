@@ -1,0 +1,259 @@
+#!/bin/sh
+
+# resolve links - $0 may be a softlink
+PROG="$0"
+PIDFILE=/tmp/lscpd/lscpd.pid
+GRACEFUL_PIDFILE=/tmp/lscpd/lscpd.pid
+
+#if [ -d "/usr/local/cpanel" ]; then
+#    WSWATCH=1
+#fi
+
+EXECUTABLE=lscpd
+DESC="lscpd"
+BASE_DIR=`dirname "$PROG"`
+cd "$BASE_DIR"
+BASE_DIR=`pwd`
+RESTART_LOG="$BASE_DIR/../logs/lsrestart.log"
+if [ ! -x "$BASE_DIR"/"$EXECUTABLE" ]; then
+    echo "[ERROR] Cannot find $BASE_DIR/$EXECUTABLE"
+    exit 1
+fi
+SYS_NAME=`uname -s`
+if [ "x$SYS_NAME" = "xFreeBSD" ] || [ "x$SYS_NAME" = "xDarwin" ] ; then
+    PS_CMD="ps -ax"
+else
+    PS_CMD="ps -ef"
+fi
+
+test_running()
+{
+RUNNING=0
+if [ -f $PIDFILE ] ; then
+    FPID=`cat $PIDFILE`
+    if [ "x$FPID" != "x" ]; then
+        kill -0 $FPID 2>/dev/null
+        if [ $? -eq 0 ] ; then
+            RUNNING=1
+            PID=$FPID
+        fi
+    fi
+fi
+RESTARTING=0
+if [ -f "$BASE_DIR"/"../admin/tmp/.restart" ]; then
+    RESTARTING=1
+fi
+}
+
+ret=0
+
+killwatch()
+{
+        WATCH_PROCS=`$PS_CMD | grep wswatch.sh | grep -v grep | wc -l`
+        if [ $WATCH_PROCS -gt 0 ]; then
+                killall wswatch.sh
+        fi
+}
+
+
+start()
+{
+    if [ -f "get_trial_key.sh" ]; then
+        ./get_trial_key.sh
+    fi
+    killwatch
+    if [ -f "$PIDFILE" ]; then
+        PID=`cat $PIDFILE`
+    else
+        PID=""
+    fi
+
+    ./$EXECUTABLE
+    ret=$?
+
+
+    if [ $ret -eq 0 ]; then
+        NEW_PID=`cat $PIDFILE`
+        if [ "x$NEW_PID" = "x$PID" ] || [ "x$NEW_PID" = "x" ]; then
+            sleep 1
+            NEW_PID=`cat $PIDFILE`
+        fi
+        echo "[OK] $DESC: pid=$NEW_PID."
+        test_running
+        if [ "x$WSWATCH" = "x1" ]; then
+            ./wswatch.sh &
+        fi
+    else
+        echo "[ERROR] Failed to start $DESC!"
+    fi
+}
+
+
+stop()
+{
+    killwatch
+    kill -USR2 $PID
+    kill $PID
+    ret=$?
+    if  [ $ret -eq 0 ]; then
+#    if [ -f $PIDFILE ]; then
+#        sleep 1
+#    fi
+        echo "[OK] $DESC: stopped."
+    else
+        echo "[ERROR] can not kill $DESC"
+    fi
+}
+
+
+do_restart()
+{
+    if [ $RUNNING -eq 1 ]; then
+        kill -USR1 $PID
+        ret=$?
+        if  [ $ret -ne 0 ]; then
+            echo "[ERROR] cannot gracefully restart $DESC"
+        else
+            echo "[OK] Send SIGUSR1 to $PID"
+        fi
+    else
+        start
+    fi
+}
+
+log7080()
+{
+    if [ "x$SYS_NAME" = "xLinux" ]; then
+        echo "checking port 7080 usage with netstat" >> $RESTART_LOG
+        netstat -anp | grep 7080 >> $RESTART_LOG
+        echo "checking port 7080 usage with lsof" >> $RESTART_LOG
+        lsof -i TCP:7080 >> $RESTART_LOG
+    fi
+}
+
+restart()
+{
+    SPID=$PID
+    TRY=1
+    if [ $RUNNING -eq 1 ]; then
+        do_restart
+        if [ $RESTARTING -eq 1 ]; then
+            exit 0
+        fi
+        sleep 2
+        test_running
+    else
+        if [ $RESTARTING -eq 1 ]; then
+            if [ -f $GRACEFUL_PIDFILE ]; then
+                GPID=`cat $GRACEFUL_PIDFILE`
+                if [ "x$GPID" != 'x' ]; then
+                    if [ $GPID -ne 0 ] && [ $GPID -ne 1 ]; then
+                        killall -9 $EXECUTABLE
+                    fi
+                fi
+            fi
+        fi
+        start
+        sleep 2
+        test_running
+    fi
+    while [ $TRY -lt 15 ] && [ "x$PID" = "x$SPID" ]; do
+        TRY=`expr $TRY + 1`
+        sleep 1
+        test_running
+    done
+
+    if [ $RUNNING -eq 0 ]; then
+
+        echo "LSWS does not restart properly, check port 7080" >> $RESTART_LOG
+        #log7080
+        killall -9 $EXECUTABLE
+        sleep 1
+        echo "check port 7080 after kill all $EXECUTABLE processes " >> $RESTART_LOG
+        #log7080
+        start
+    fi
+
+}
+
+reload()
+{
+    restart
+
+#    kill -HUP $PID
+#    ret=$?
+#    if [ $ret -eq 0 ]; then
+#        echo "[OK] $DESC: configuration reloaded"
+#    else
+#        echo "[ERROR] Can't send SIGHUP to $DESC"
+#    fi
+}
+
+help() {
+    echo $"Usage: $PROG {start|stop|restart|reload|condrestrt|try-restart|status|help}"
+    cat <<EOF
+
+start       - start web server
+stop        - stop web server
+restart     - gracefully restart web server with zero down time
+reload      - same as restart
+condrestart - gracefully restart web server if server is running
+try-restart - same as condrestart
+status      - show service status
+help        - this screen
+
+EOF
+}
+
+test_running
+
+date >> $RESTART_LOG
+echo "$1, LSWS running: $RUNNING" >> $RESTART_LOG
+
+case "$1" in
+    start|restart)
+        restart
+        ;;
+    condrestart|try-restart)
+        if [ $RUNNING -eq 1 ]; then
+            restart
+        fi
+        ;;
+    status)
+        if [ $RUNNING -eq 1 ]; then
+            echo "$DESC is running with PID $PID."
+        else
+            echo "[ERROR] $DESC is not running."
+        fi
+        ;;
+    stop)
+        if [ $RUNNING -eq 0 ]; then
+            sleep 1
+            test_running
+        fi
+        if [ $RUNNING -eq 1 ]; then
+            stop
+        else
+            echo "[ERROR] $DESC is not running."
+            ret=1
+        fi
+        ;;
+    stophttpd)
+        if [ $RUNNING -eq 1 ]; then
+            kill $PID
+        fi
+        ;;
+    reload)
+        if [ $RUNNING -eq 1 ]; then
+            reload
+        else
+            echo "[ERROR] $DESC is not running."
+            ret=2
+        fi
+        ;;
+    *)
+        help
+        ret=3
+        ;;
+esac
+exit $ret

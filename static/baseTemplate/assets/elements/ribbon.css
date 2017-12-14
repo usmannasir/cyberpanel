@@ -1,0 +1,101 @@
+/* The ribbons */
+
+.corner-ribbon {
+    position: absolute;
+    z-index: 5;
+    top: -1px;
+    left: -1px;
+    overflow: hidden;
+    width: 48px;
+    height: 48px;
+}
+.corner-ribbon > div,
+.corner-ribbon > a {
+    line-height: 38px;
+    position: absolute;
+    top: -6px;
+    left: -26px;
+    display: block;
+    width: 78px;
+    height: 35px;
+    -webkit-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+    text-align: center;
+}
+.corner-ribbon .glyph-icon {
+    display: block;
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+.corner-ribbon-tr {
+    right: -1px;
+    left: auto;
+    border-top-left-radius: 0;
+}
+.corner-ribbon-tr > div,
+.corner-ribbon-tr > a {
+    right: -26px;
+    left: auto;
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+.corner-ribbon-tr .glyph-icon {
+    -webkit-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+}
+/* Alternate */
+
+.ribbon {
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    overflow: hidden;
+    width: 100px;
+    height: 100px;
+}
+.ribbon:after,
+.ribbon:before {
+    position: absolute;
+    z-index: -1;
+    top: 2px;
+    left: 77px;
+    width: 10px;
+    height: 10px;
+    content: '';
+    -webkit-transform: rotate(-45deg);
+    background-color: rgba(0, 0, 0, .3);
+}
+.ribbon:before {
+    top: 79px;
+    left: 0;
+}
+.ribbon > div {
+    position: relative;
+    z-index: 100;
+    top: 15px;
+    left: -30px;
+    width: 120px;
+    padding: 7px 0;
+    -webkit-transform: rotate(-45deg);
+    text-align: center;
+    color: #fff;
+}
+.ribbon-tr {
+    right: -1px;
+    left: auto;
+}
+.ribbon-tr:after,
+.ribbon-tr:before {
+    right: 79px;
+    left: auto;
+    -webkit-transform: rotate(45deg);
+}
+.ribbon-tr:before {
+    top: 79px;
+    right: 2px;
+}
+.ribbon-tr > div {
+    right: -8px;
+    left: auto;
+    -webkit-transform: rotate(45deg);
+}

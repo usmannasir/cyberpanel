@@ -1,0 +1,94 @@
+/* Labels */
+
+.bs-label {
+    font-size: 80%;
+    line-height: 1;
+    display: inline;
+    padding: .3em .6em .5em;
+    text-align: center;
+    text-transform: uppercase;
+    vertical-align: baseline;
+    white-space: nowrap;
+    color: #fff;
+    border-radius: .25em;
+}
+
+.content-box .bs-label { padding:.3em .6em .3em; }
+
+.bs-label[href]:hover,
+.bs-label[href]:focus {
+    cursor: pointer;
+    text-decoration: none;
+    color: #fff;
+}
+.bs-label:empty {
+    display: none;
+}
+.btn .bs-label {
+    position: relative;
+    top: -1px;
+}
+.label-default {
+    background-color: #999;
+}
+.label-default[href]:hover,
+.label-default[href]:focus {
+    background-color: #808080;
+}
+/* Badges */
+
+.badge,
+.bs-badge {
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 19px;
+    display: inline-block;
+    min-width: 20px;
+    /*height: 20px;*/
+    padding: 0 5px 0 4px;
+    text-align: center;
+    vertical-align: baseline;
+    white-space: nowrap;
+    color: #fff;
+    border-radius: 10px;
+}
+.badge-small {
+    min-width: 10px;
+    height: 10px;
+}
+.bs-badge:empty {
+    display: none;
+}
+.btn .bs-badge {
+    position: relative;
+    top: -2px;
+}
+.bs-badge.badge-absolute {
+    position: absolute;
+    z-index: 5;
+    top: -10px;
+    left: -15px;
+}
+.bs-badge.badge-absolute.float-right {
+    right: -15px;
+    left: auto;
+}
+/* Status badge */
+
+.status-badge {
+    position: relative;
+    display: inline-block;
+}
+.status-badge .small-badge {
+    position: absolute;
+    right: 1px;
+    bottom: -2px;
+}
+.small-badge {
+    overflow: hidden;
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    border: #fff solid 2px !important;
+    border-radius: 20px;
+}

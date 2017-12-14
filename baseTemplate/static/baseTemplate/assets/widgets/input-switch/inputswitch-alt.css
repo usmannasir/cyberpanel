@@ -1,0 +1,55 @@
+/* Input switch alternate */
+
+div.switch-toggle {
+    display: block;
+    height: 24px;
+    width: 48px;
+    position: relative;
+    cursor: pointer;
+    background: #fff;
+    box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.2);
+    -webkit-transition: all .2s ease;
+    -moz-transition: all .2s ease;
+    -o-transition: all .2s ease;
+    transition: all .2s ease;
+    border-radius: 50px;
+}
+div.switch-toggle:after {
+    content: '';
+    display: block;
+    height: 18px;
+    width: 18px;
+    background: #fff;
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    border-radius: 50px;
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    -webkit-transition: all .2s ease;
+    -moz-transition: all .2s ease;
+    -o-transition: all .2s ease;
+    transition: all .2s ease;
+}
+div.switch-toggle:before {
+    content: '';
+    position: absolute;
+    right: 1px;
+    top: 12px;
+    color: #fff;
+}
+div.switch-toggle:hover:after {
+    left: 5px;
+}
+div.switch-toggle.switch-on:before {
+    content: '';
+    right: 40px;
+}
+.switch-toggle.switch-on {
+    background: #0c0;
+}
+div.switch-toggle.switch-on:after {
+    left: 26px;
+}
+div.switch-toggle.switch-on:hover:after {
+    left: 24px;
+}

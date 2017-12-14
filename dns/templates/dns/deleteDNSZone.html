@@ -1,0 +1,89 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Delete DNS Zone - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Delete DNS Zone" %}</h2>
+   <p>{% trans "This page can be used to delete DNS Zone. Deleting the DNS zone will remove all its related records as well." %}</p>
+</div>
+<div class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Delete DNS Zone" %}
+        </h3>
+        <div ng-controller="deleteDNSZone" class="example-box-wrapper">
+
+
+            <form  action="/" class="form-horizontal bordered-row">
+
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Zone" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-model="selectedZone" class="form-control">
+                            {% for items in domainsList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+            <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="deleteZone()" class="btn btn-primary btn-lg btn-block">{% trans "Delete Zone" %}</button>
+
+                    </div>
+            </div>
+
+
+            <div ng-hide="deleteZoneButton" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="deleteZoneFinal()" class="btn btn-primary btn-lg btn-block">{% trans "Are you sure?" %}</button>
+
+                    </div>
+            </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div ng-hide="deleteFailure" class="alert alert-danger">
+                                        <p>{% trans "Cannot delete zone. Error message: " %}{$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="deleteSuccess" class="alert alert-success">
+                                <p>{% trans "Zone for domain:" %} <strong>{$ deletedZone $}</strong> {% trans "is successfully erased." %}</p>
+                            </div>
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+                    </div>
+
+
+
+                </div>
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

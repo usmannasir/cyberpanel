@@ -1,0 +1,139 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Create New Website - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Create Website" %}</h2>
+   <p>{% trans "On this page you can launch, list, modify and delete websites from your server." %}</p>
+</div>
+
+
+<div class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Website Details" %} <img id="webSiteCreation" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div ng-controller="createWebsite" class="example-box-wrapper">
+
+
+        <form name="websiteCreationForm"  action="/" id="createPackages" class="form-horizontal bordered-row">
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Package" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-model="packageForWebsite" class="form-control">
+                            {% for items in packageList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Owner" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-model="websiteOwner" class="form-control">
+                            {% for items in owernList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
+                    <div class="col-sm-6">
+                        <input ng-pattern="/([\da-z\.-]+\.[a-z\.]{2,6}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?$/i"  name="dom"  type="text" class="form-control" ng-model="domainNameCreate" placeholder="{% trans "Do not enter WWW, it will be auto created!" %}" required>
+                    </div>
+                        <div ng-show="websiteCreationForm.dom.$error.pattern" class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Email" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="email" name="email" class="form-control" ng-model="adminEmail" required>
+                    </div>
+                    <div ng-show="websiteCreationForm.email.$error.email" class="current-pack">{% trans "Invalid Email" %}</div>
+                </div>
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-model="phpSelection" class="form-control">
+                                <option>PHP 5.3</option>
+                                <option>PHP 5.4</option>
+                                <option>PHP 5.5</option>
+                                <option>PHP 5.6</option>
+                                <option>PHP 7.0</option>
+                                <option>PHP 7.1</option>
+                        </select>
+                    </div>
+                 </div>
+
+
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
+                    <div class="col-sm-6">
+                        <div class="checkbox">
+                            <label>
+                                <input ng-model="sslCheck" type="checkbox" value="">
+                                SSL
+                                <div ng-show="sslCheck" style="margin-top: 2%;margin-bottom: -2%" class="alert alert-warning">
+                                    <p>{% trans "For SSL to work DNS of domain should point to server, otherwise self signed SSL will be issued, you can add your own SSL later." %}</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button ng-disabled="websiteCreationForm.dom.$error.required || websiteCreationForm.dom.$error.pattern || websiteCreationForm.email.$invalid" type="button" ng-click="createWebsite()" class="btn btn-primary btn-lg btn-block">{% trans "Create Website" %}</button>
+
+                    </div>
+                </div>
+
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div id="websiteCreationFailed" class="alert alert-danger">
+                                        <p>{% trans "Cannot create website. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div id="websiteCreated" class="alert alert-success">
+                                <p>{% trans "Website with domain" %} <strong>{$ websiteDomain $}</strong>{% trans " is Successfully Created" %}</p>
+                            </div>
+                    </div>
+
+
+
+                </div>
+
+
+            </form>
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+</div>
+
+
+{% endblock %}

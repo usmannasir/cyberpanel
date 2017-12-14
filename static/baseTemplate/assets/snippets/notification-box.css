@@ -1,0 +1,74 @@
+/* Notifications List */
+
+.notifications-box {
+    border: #ddd solid 1px;
+}
+.notifications-box li {
+    line-height: 26px;
+    position: relative;
+    padding: 10px;
+    border-bottom: #ebebeb solid 1px;
+}
+.notifications-box li .notification-text {
+    float: left;
+}
+.notifications-box li:last-child {
+    border-bottom: 0;
+}
+.notifications-box li .icon-notification {
+    line-height: 26px;
+    float: left;
+    width: 26px;
+    height: 26px;
+    margin: 0 10px 0 0;
+    text-align: center;
+    border-radius: 50px;
+}
+.notifications-box li .notification-time {
+    font-size: 11px;
+    font-style: italic;
+    float: right;
+    margin: 0 5px 0 10px;
+    color: #a9a9a9;
+}
+.notifications-box li .notification-time .glyph-icon {
+    margin-left: 3px;
+}
+/* Alternate */
+
+.notifications-box.notifications-box-alt {
+    text-align: left;
+    border: 0;
+}
+.notifications-box-alt li {
+    line-height: inherit;
+    padding: 15px 10px;
+    border-bottom: #232323 solid 1px;
+}
+.notifications-box-alt li .notification-btn {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    margin-top: -11px;
+}
+.sb-slidebar .notifications-box-alt li .notification-btn {
+    right: 10px;
+}
+.notifications-box-alt li:first-child {
+    padding-top: 5px;
+}
+.notifications-box-alt li:last-child {
+    padding-bottom: 5px;
+    border-bottom: 0;
+}
+.notifications-box-alt li .notification-text {
+    font-size: 11px;
+    display: block;
+    float: none;
+    margin-top: -1px;
+    margin-bottom: 1px;
+}
+.notifications-box-alt li .notification-time {
+    font-size: 10px;
+    float: none;
+}

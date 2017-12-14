@@ -1,0 +1,514 @@
+/* Components */
+/* Framework CSS */
+/* Secondary font color */
+
+.table,
+.chosen-disabled .chosen-single,
+div.selector,
+.content-box-header.bg-default > .ui-tabs-nav li > a,
+.content-box-header.bg-gray > .ui-tabs-nav li > a,
+.content-box-header.bg-white > .ui-tabs-nav li > a,
+.content-box-header > .ui-tabs-nav li.ui-tabs-active > a,
+body .content-box-header > .ui-tabs-nav li.ui-tabs-active > a:hover,
+.pagination > li > a,
+.pagination > li > span,
+.btn-link,
+a {
+    color: #8da0aa;
+}
+/* Primary font color */
+
+.tabs-nav li a:hover,
+.tabs-nav li.active a,
+.features-tour-box h3,
+.font-primary,
+table.dataTable thead th.sorting_asc:after,
+table.dataTable thead th.sorting_desc:after,
+.content-box-header.bg-default > .ui-tabs-nav li > a:hover,
+.content-box-header.bg-gray > .ui-tabs-nav li > a:hover,
+.content-box-header.bg-white > .ui-tabs-nav li > a:hover,
+.btn-link:hover,
+#page-sidebar ul li.sfHover > a.sf-with-ul,
+a:hover {
+    color: #1c82e1;
+}
+/* Primary border color */
+
+.ui-accordion .ui-accordion-header.ui-accordion-header-active,
+.ui-dialog-buttonset button,
+.ui-datepicker .ui-datepicker-prev,
+.ui-datepicker .ui-datepicker-next,
+a.thumbnail:hover,
+.ui-spinner .ui-spinner-button:hover,
+div[id^='uniform-'] span.checked,
+.nav > li.active > a,
+.nav > li.active > a:hover,
+.nav > li.active > a:focus,
+a.list-group-item.active,
+a.list-group-item.active:hover,
+a.list-group-item.active:focus,
+li.active a.list-group-item,
+li.active a.list-group-item:hover,
+li.active a.list-group-item:focus,
+.border-primary,
+.btn-primary {
+    border-color: #00a792;
+}
+
+a:focus { outline:none !important; }
+
+/* Primary background color */
+
+#loadingbar,
+.irs-line-mid,
+.irs-line-left,
+.irs-line-right,
+div.switch-toggle.switch-on,
+.bootstrap-switch-primary,
+.ui-tabs-nav li.ui-state-active > a,
+.ui-tabs-nav li.ui-state-active.ui-state-hover > a,
+.ms-hover.ui-state-focus,
+.ui-accordion-header.ui-accordion-header-active,
+.ui-slider-handle,
+.ui-rangeSlider-bar,
+.ui-dialog-buttonset button,
+.ui-datepicker .ui-datepicker-current-day a,
+.ui-datepicker .ui-datepicker-current-day span,
+.ui-datepicker .ui-datepicker-prev,
+.ui-datepicker .ui-datepicker-next,
+.daterangepicker .ranges li.active,
+.daterangepicker .ranges li.active:hover,
+.form-wizard > ul > li.active .wizard-step,
+.ui-spinner .ui-spinner-button:hover,
+.ui-menu li > a:hover,
+.ms-list .ms-hover,
+.chosen-container .chosen-results li.active-result.highlighted,
+div[id^='uniform-'] span.checked,
+.nav > li.active > a,
+.nav > li.active > a:hover,
+.nav > li.active > a:focus,
+a.list-group-item.active,
+a.list-group-item.active:hover,
+a.list-group-item.active:focus,
+li.active a.list-group-item,
+li.active a.list-group-item:hover,
+li.active a.list-group-item:focus,
+.label-primary,
+.badge-primary,
+.fc-event,
+.bg-primary,
+.btn-primary,
+.owl-controls .owl-page span,
+#nav-toggle.collapsed span,
+#nav-toggle span:before,
+#nav-toggle span:after {
+    color: #fff;
+    background: #00bca4;
+}
+
+.font-secondary,
+.post-box .post-title,
+.inverse.carousel-wrapper .owl-controls .owl-buttons .owl-next,
+.inverse.carousel-wrapper .owl-controls .owl-buttons .owl-prev {
+    color: #00bca4;
+}
+
+.post-box .post-title:hover {
+    color: #3e4855;
+}
+/* Default border color */
+
+.thumb-pane,
+.mailbox-wrapper .nav-list li a,
+.ui-tabs-nav,
+.tabs-navigation > ul,
+.tabs-navigation > ul li > a,
+.tabs-navigation > ul li.ui-state-hover > a,
+.ui-accordion .ui-accordion-header,
+.panel,
+.panel-group .panel-heading + .panel-collapse .panel-body,
+.panel-group .panel-footer + .panel-collapse .panel-body,
+.panel-footer,
+.panel-heading,
+.timeline-box:before,
+.timeline-box .tl-item .popover,
+.popover-title,
+.ui-dialog .ui-dialog-titlebar,
+.thumbnail,
+.img-thumbnail,
+.daterangepicker .calendar-date,
+.ui-spinner .ui-spinner-button,
+.ms-container .ms-list,
+.ms-container .ms-selectable li.ms-elem-selectable,
+.ms-container .ms-selection li.ms-elem-selection,
+.chosen-container-multi .chosen-choices li.search-choice,
+.chosen-container .chosen-drop,
+.chosen-container,
+.chosen-container-single .chosen-single div,
+.chosen-container-active.chosen-with-drop .chosen-single div,
+div[id^='uniform-'] span,
+div.selector,
+.selector i,
+.list-group-item,
+.nav-tabs,
+.nav-tabs > li > a:hover,
+.nav-tabs > li > a:focus,
+.nav .open > a,
+.nav .open > a:hover,
+.nav .open > a:focus,
+.table > thead > tr > th,
+.table > tbody > tr > th,
+.table > tfoot > tr > th,
+.table > thead > tr > td,
+.table > tbody > tr > td,
+.table > tfoot > tr > td,
+.table > thead > tr > th,
+.table-bordered,
+.button-pane,
+.ui-datepicker-buttonpane,
+.ui-dialog-buttonpane,
+.content-box,
+.content-box-header.bg-default,
+.content-box-header.bg-gray,
+.content-box-header.bg-white,
+.panel-box.bg-default,
+.panel-box.bg-gray,
+.panel-box.bg-white,
+.panel-content.bg-default,
+.panel-content.bg-gray,
+.panel-content.bg-white,
+.pagination > li > a,
+.pagination > li > span,
+.dashboard-buttons .btn,
+.bg-default,
+.fc-state-default,
+.fc-widget-header,
+.fc-widget-content,
+.ui-datepicker .ui-datepicker-buttonpane button,
+.btn-default,
+.popover-title,
+.bordered-row .form-group,
+.bg-white.dashboard-box .button-pane,
+.bg-white.tile-box .tile-footer,
+.mail-toolbar,
+.email-body,
+.ui-dialog, .ui-datepicker, .dropdown-menu, .popover, .ui-menu, .minicolors-panel,
+.jvectormap-label,
+.jvectormap-zoomin,
+.jvectormap-zoomout,
+.posts-list li,
+.border-default {
+    border-color: #dfe8f1;
+}
+.nav-divider,
+.divider,
+.timeline-horizontal.timeline-box:before {
+    background: #dfe8f1;
+}
+.content-box.border-top {
+    border-right-color: #dfe8f1 !important;
+    border-bottom-color: #dfe8f1 !important;
+    border-left-color: #dfe8f1 !important;
+}
+/* Default background color */
+
+.label-default,
+.bootstrap-switch-default,
+.ui-accordion-header,
+.panel-heading,
+.panel-footer,
+.ui-dialog .ui-dialog-titlebar,
+.popover-title,
+.ui-datepicker td span,
+.ui-datepicker td a,
+.ui-spinner .ui-spinner-button,
+div[id^='uniform-'] span,
+.bg-default,
+.btn-default,
+.button-pane,
+.mail-toolbar,
+.bg-white.dashboard-box .button-pane,
+.bg-white.tile-box .tile-footer,
+.jvectormap-zoomin, .jvectormap-zoomout,
+.jvectormap-zoomin,
+.jvectormap-zoomout,
+.jvectormap-label {
+    color: #555a60;
+    background-color: #FEFEFF;
+}
+.irs-diapason,
+.ui-datepicker-buttonpane,
+.ui-dialog-buttonpane,
+.ui-slider-range,
+.ui-rangeSlider-container {
+    background-color: #FEFEFF;
+}
+.table > thead > tr > th,
+.table > tbody > tr > th,
+.table > tfoot > tr > th {
+    color: #4b5056;
+    background-color: #f9fafe;
+}
+/* Button default hover */
+
+.ui-tabs-nav > li.ui-state-hover > a,
+.ui-accordion-header.ui-state-hover,
+.fc-state-hover,
+.fc-state-down,
+.fc-state-active,
+.fc-state-disabled,
+.btn-default:hover,
+.btn-default:focus,
+.btn-default:active,
+.btn-default.active,
+.ui-datepicker .ui-datepicker-buttonpane button:hover,
+.open .dropdown-toggle.btn-default,
+.open.dropdown-submenu a,
+.btn-default.disabled,
+.btn-default[disabled],
+.btn-default.disabled:hover,
+.btn-default[disabled]:hover,
+.btn-default.disabled:focus,
+.btn-default[disabled]:focus,
+.btn-default.disabled:active,
+.btn-default[disabled]:active,
+.btn-default.disabled.active,
+.btn-default[disabled].active,
+.jvectormap-zoomin:hover,
+.jvectormap-zoomout:hover {
+    color: #2b2f33;
+    border-color: #bfc8d1;
+    background-color: #f3f3f9;
+}
+.btn-default.active .glyph-icon {
+    color: #2b2f33 !important;
+}
+/* Button primary hover */
+
+.ui-accordion-header.ui-accordion-header-active.ui-state-hover,
+.ui-rangeSlider-bar:hover,
+.ui-rangeSlider-bar:active,
+.ui-slider-handle.ui-state-hover,
+.ui-slider-handle.ui-state-active,
+.ui-dialog-buttonset button:hover,
+.ui-datepicker td a:hover,
+.ui-datepicker .ui-datepicker-prev.ui-state-hover,
+.ui-datepicker .ui-datepicker-next.ui-state-hover,
+.bsdatepicker th.next:hover,
+.bsdatepicker th.prev:hover,
+.bsdatepicker td.active,
+.bsdatepicker td.day.active:hover,
+.bsdatepicker td span:hover,
+.daterangepicker .calendar th.next:hover,
+.daterangepicker .calendar th.prev:hover,
+.daterangepicker td.active,
+.daterangepicker td.available.active:hover,
+.label-primary[href]:hover,
+.label-primary[href]:focus,
+.pagination > .active > a,
+.pagination > .active > span,
+.pagination > .active > a:hover,
+.pagination > .active > span:hover,
+.pagination > .active > a:focus,
+.pagination > .active > span:focus,
+.hover-primary:hover,
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active,
+.open .dropdown-toggle.btn-primary,
+.btn-primary.disabled,
+.btn-primary[disabled],
+.btn-primary.disabled:hover,
+.btn-primary[disabled]:hover,
+.btn-primary.disabled:focus,
+.btn-primary[disabled]:focus,
+.btn-primary.disabled:active,
+.btn-primary[disabled]:active,
+.btn-primary.disabled.active,
+.btn-primary[disabled].active {
+    color: #fff;
+    border-color: #00b19b;
+    background-color: #00ceb4;
+}
+/* Dropdown hover/active/focus */
+
+.ui-datepicker-title,
+.bsdatepicker td.day:hover,
+.bsdatepicker thead tr:first-child th.switch:hover,
+.bsdatepicker td span,
+.daterangepicker td.available:hover,
+.daterangepicker .ranges li:hover,
+.chosen-container-single .chosen-single div,
+.chosen-container-multi .chosen-choices li.search-choice,
+.selector i,
+.nav > li > a:hover,
+.nav > li > a:focus,
+a.list-group-item:hover,
+a.list-group-item:focus,
+.pager li > a:hover,
+.pager li > a:focus,
+.pagination > li > a:hover,
+.pagination > li > span:hover,
+.pagination > li > a:focus,
+.pagination > li > span:focus {
+    color: #2b2f33;
+    background: #eff4f6;
+}
+.pager li > a:hover,
+.pager li > a:focus,
+.pagination > li > a:hover,
+.pagination > li > span:hover,
+.pagination > li > a:focus,
+.pagination > li > span:focus {
+    color: #2b2f33;
+    background-color: #f3f3f9;
+}
+.dropdown-menu li > a:hover,
+.dropdown-menu .active > a,
+.dropdown-menu .active > a:hover,
+.dropdown-menu .active > a:focus {
+    color: #2b2f33;
+    background: #eff4f6;
+}
+/* Colors for elements inside active class */
+
+.active > .badge,
+.active > .bs-badge,
+.active > .bs-label {
+    color: #666 !important;
+    background: #fff !important;
+}
+a.list-group-item.active > .glyph-icon,
+li.active a.list-group-item > .glyph-icon,
+.active > .glyph-icon {
+    color: #fff !important;
+}
+/* Icon separator */
+
+.icon-separator {
+    border-right: rgba(255, 255, 255, .21) solid 1px;
+    background: rgba(255, 255, 255, .2);
+}
+.tile-box.bg-default .tile-header,
+.tile-box.bg-gray .tile-header,
+.tile-box.bg-white .tile-header,
+.tile-box.btn-default .tile-header,
+.content-box-header.bg-default .icon-separator,
+.content-box-header.bg-gray .icon-separator,
+.content-box-header.bg-white .icon-separator {
+    border-right: #dfe8f1 solid 1px;
+    background: rgba(255, 255, 255, .1);
+}
+.content-box-header .header-buttons-separator .icon-separator {
+    border-right: 0;
+    border-left: rgba(255, 255, 255, .21) solid 1px;
+}
+.content-box-header.bg-default .header-buttons-separator .icon-separator,
+.content-box-header.bg-gray .header-buttons-separator .icon-separator,
+.content-box-header.bg-white .header-buttons-separator .icon-separator {
+    border-right: 0;
+    border-left: #dfe8f1 solid 1px;
+}
+.header-buttons-separator .icon-separator {
+    color: rgba(255, 255, 255, .8);
+}
+.header-buttons-separator .icon-separator:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, .3);
+}
+.content-box-header.bg-default .header-buttons-separator .icon-separator,
+.content-box-header.bg-gray .header-buttons-separator .icon-separator,
+.content-box-header.bg-white .header-buttons-separator .icon-separator {
+    color: rgba(0, 0, 0, .6);
+}
+.content-box-header.bg-default .header-buttons-separator .icon-separator:hover,
+.content-box-header.bg-gray .header-buttons-separator .icon-separator:hover,
+.content-box-header.bg-white .header-buttons-separator .icon-separator:hover {
+    color: rgba(0, 0, 0, .9);
+}
+.dashboard-panel .button-pane {
+    background: rgba(0, 0, 0, .1) !important;
+}
+
+/* Charts */
+
+.xchart .color0 .line {
+    stroke: #00bca4;
+}
+.xchart .color0 circle {
+    stroke: #00bca4;
+}
+.xchart .color0 .line .fill {
+    pointer-events: none;
+}
+.xchart .color0 rect {
+    fill: #00bca4;
+}
+.xchart .color0 circle {
+    fill: #fff;
+}
+.xchart .color0 .fill {
+    fill: rgba(0, 188, 164, 0.06);
+}
+.xchart .color0.comp .line {
+    stroke: #00bca4;
+}
+.xchart .color0.comp rect {
+    fill: #00bca4;
+}
+.xchart .color0.comp .fill {
+    display: none;
+}
+.xchart .color0.comp circle,
+.xchart .color0.comp .pointer {
+    fill: #00bca4;
+}
+
+
+.xchart .color1 .line {
+    stroke: #52a7e0;
+}
+.xchart .color1 circle {
+    stroke: #52a7e0;
+}
+.xchart .color1 .line .fill {
+    pointer-events: none;
+}
+.xchart .color1 rect {
+    fill: #52a7e0;
+}
+.xchart .color1 circle {
+    fill: #fff;
+}
+.xchart .color1 .fill {
+    fill: rgba(82, 167, 224, 0.06);
+}
+.xchart .color1.comp .line {
+    stroke: #52a7e0;
+}
+.xchart .color1.comp rect {
+    fill: #52a7e0;
+}
+.xchart .color1.comp .fill {
+    display: none;
+}
+.xchart .color1.comp circle,
+.xchart .color1.comp .pointer {
+    fill: #52a7e0;
+}
+
+/* Components modifiers */
+
+body .popover.top .arrow:after {
+    border-top-color: #fff;
+}
+body .popover.right .arrow:after {
+    border-right-color: #fff;
+}
+body .popover.bottom .arrow:after {
+    border-bottom-color: #fff;
+}
+body .popover.left .arrow:after {
+    border-left-color: #fff;
+}

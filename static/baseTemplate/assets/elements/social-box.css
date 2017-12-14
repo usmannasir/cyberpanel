@@ -1,0 +1,104 @@
+/* Post it box */
+
+.post-box textarea {
+    font-size: 18px;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 80px;
+    padding: 15px;
+    border: 0;
+}
+.post-box .button-pane .glyph-icon {
+    font-size: 13px;
+}
+.post-box .button-pane .hover-white:hover {
+    background: #fff;
+}
+.post-box .button-pane {
+    text-align: left;
+}
+.post-box .button-pane .btn-post {
+    font-size: 13px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+/* Profile box */
+
+.profile-box.content-box .content-box-header {
+    line-height: 1.6em;
+    height: auto;
+    padding: 15px !important;
+}
+.profile-box .content-box-header img {
+    float: left;
+    margin: 0 15px 0 0;
+}
+.profile-box .content-box-header .user-details {
+    font-size: 16px;
+    position: relative;
+    overflow: hidden;
+    padding-top: 5px;
+}
+.profile-box .content-box-header .user-details span {
+    font-size: 13px;
+    display: block;
+    opacity: .80;
+    text-transform: none;
+    -moz-opacity: .80;
+    filter: alpha(opacity: 80);
+}
+/* Alternate profile box */
+
+.profile-box-alt .content-box-header {
+    text-align: center;
+}
+.profile-box .pie-wrapper {
+    padding: 20px;
+    text-align: center;
+}
+.profile-box .pie-wrapper canvas {
+    display: block;
+    margin: 0 auto;
+}
+/* Profile box with list group inside */
+
+.profile-box div.list-group {
+    margin-bottom: 0 !important;
+    border: 0;
+}
+.profile-box div.list-group a.list-group-item {
+    border-right: 0;
+    border-left: 0;
+}
+.profile-box div.list-group a.list-group-item.active {
+    margin-right: -1px;
+    margin-left: -1px;
+}
+.profile-box div.list-group a.list-group-item:last-child {
+    border-bottom: 0;
+    border-radius: 0;
+}
+.profile-box div.list-group a.list-group-item:first-child {
+    border-top: 0;
+    border-radius: 0;
+}
+.profile-box .list-group.list-group-separator.row {
+    padding: 10px;
+}
+.profile-box .list-group.list-group-separator a.list-group-item:after {
+    right: -10px;
+}
+.profile-box ul.list-group {
+    margin: 10px 0;
+}
+.profile-box .nav > li > a {
+    padding: 0;
+}
+.profile-box .nav {
+    margin-bottom: 0 !important;
+}
+.profile-box .nav.nav-justified {
+    margin: 0 !important;
+}

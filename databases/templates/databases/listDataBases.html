@@ -1,0 +1,122 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "List Databases  - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "List Databases" %}</h2>
+   <p>{% trans "List Databases or change their passwords." %}</p>
+</div>
+<div ng-controller="listDBs" class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "List Databases" %} <img ng-hide="dbLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+
+            <form action="/" class="form-horizontal bordered-row">
+
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Domain" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-change="fetchDBs()" ng-model="selectedDomain" class="form-control">
+                            {% for items in websiteList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+
+            <div ng-hide="notificationsBox" class="form-group">
+
+
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+
+                            <div ng-hide="recordsFetched" class="alert alert-success">
+                                <p>{% trans "Records successfully fetched for" %} <strong>{$ domainFeteched $}</strong></p>
+                            </div>
+
+                            <div ng-hide="passwordChanged" class="alert alert-success">
+                                {% trans "Password changed for: " %} <strong>{$ dbUsername $}</strong>
+                            </div>
+
+                            <div ng-hide="canNotChangePassword" class="alert alert-danger">
+                                <p>{% trans "Cannot change password for " %}<strong>{$ dbUsername $}</strong>, {% trans "Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <p>{% trans "Could Not Connect to server. Please refresh this page" %}</p>
+                            </div>
+
+                    </div>
+                </div>
+
+
+            <div ng-hide="changePasswordBox" class="form-group">
+                    <label class="col-sm-3 control-label">{$ dbUsername $}</label>
+                    <div class="col-sm-6">
+                        <input  name="dom"  type="password" class="form-control" ng-model="dbPassword" required>
+                    </div>
+
+                    <div style="margin-top: 1%" class="col-sm-6 col-md-offset-3">
+                         <button type="button" ng-click="changePasswordBtn()" class="btn btn-primary btn-lg btn-block">{% trans "Change Password" %}</button>
+                    </div>
+            </div>
+
+
+            <!------ List of records --------------->
+
+                <div ng-hide="dbAccounts" class="form-group">
+
+                    <div  class="col-sm-12">
+
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Database Name" %}</th>
+                                <th>{% trans "Database User" %}</th>
+                                <th>{% trans "Password" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="record in records track by $index">
+                                <td ng-bind="record.id"></td>
+                                <td ng-bind="record.dbName"></td>
+                                <td ng-bind="record.dbUser"></td>
+                                <td><button type="button" ng-click="changePassword(record.dbUser)" class="btn ra-100 btn-purple">{% trans "Change" %}</button></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            <!------ List of records --------------->
+
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

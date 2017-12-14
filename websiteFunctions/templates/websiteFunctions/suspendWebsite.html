@@ -1,0 +1,98 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Suspend/Unsuspend Website - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Suspend/Unsuspend Website" %}</h2>
+   <p>{% trans "This page can be used to suspend/unsuspend website." %}</p>
+</div>
+
+<div ng-controller="suspendWebsiteControl" class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Suspend/Unsuspend Website" %} <img ng-hide="suspendLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+
+            <form  action="/" class="form-horizontal bordered-row">
+
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Website" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-change="showSuspendUnsuspend()" ng-model="websiteToBeSuspended" class="form-control">
+                            {% for items in websiteList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+
+                <div ng-hide="stateView" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Suspend/Unsuspend" %}</label>
+                    <div class="col-sm-6">
+                        <select  ng-model="state" class="form-control">
+                                <option>{% trans "Suspend" %}</option>
+                                <option>{% trans "Un-Suspend" %}</option>
+                        </select>
+                    </div>
+                </div>
+
+
+
+                <div class="form-group">
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-4">
+                             <button type="button" ng-click="save()" class="btn btn-primary btn-lg btn-block">{% trans "Save" %}</button>
+
+                        </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div ng-hide="websiteSuspendFailure" class="alert alert-danger">
+                                        <p>{% trans "Cannot suspend website, Error message: " %}{$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="websiteUnsuspendFailure" class="alert alert-danger">
+                                        <p>{% trans "Cannot unsuspend website. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="websiteSuccess" class="alert alert-success">
+                                <p>{% trans "Website " %}<strong>{$ websiteStatus $}</strong> {% trans "Successfully " %}{$ finalStatus $}.</p>
+                            </div>
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+                    </div>
+
+
+
+                </div>
+
+
+            </form>
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

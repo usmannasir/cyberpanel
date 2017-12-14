@@ -1,0 +1,110 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Create FTP Account - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Create FTP Account" %}</h2>
+   <p>{% trans "Select the website from list, and its home directory will be set as the path to ftp account." %}</p>
+</div>
+
+<div ng-controller="createFTPAccount" class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Create FTP Account" %} <img ng-hide="ftpLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+
+            <form  action="/" class="form-horizontal bordered-row">
+
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
+                    <div class="col-sm-6">
+                        <select ng-change="showFTPDetails()" ng-model="ftpDomain" class="form-control">
+                            {% for items in websiteList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+
+            <!------ Modification form that appears after a click --------------->
+
+
+                <div ng-hide="ftpDetails" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "User Name" %}</label>
+                    <div class="col-sm-6">
+                        <input ng-change="hideFewDetails()"  type="text" class="form-control" ng-model="ftpUserName" required>
+                    </div>
+                     <div class="current-pack">{{ admin }}_{$ ftpUserName $}</div>
+
+                </div>
+
+                <div ng-hide="ftpDetails" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "FTP Password" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="password" class="form-control" ng-model="ftpPassword" required>
+                    </div>
+                </div>
+
+               <div ng-hide="ftpDetails" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Path (Relative)" %}</label>
+                    <div class="col-sm-6">
+                        <input placeholder="{% trans 'Leave empty to select default home directory.' %}"  type="text" class="form-control" ng-model="ftpPath" required>
+                    </div>
+                </div>
+
+
+            <!------ Modification form that appears after a click --------------->
+
+
+            <div ng-hide="ftpDetails" class="form-group">
+                <label class="col-sm-3 control-label"></label>
+                <div class="col-sm-4">
+                    <button  type="button" ng-click="createFTPAccount()" class="btn btn-primary btn-lg btn-block">{% trans "Create FTP" %}</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div ng-hide="canNotCreate" class="alert alert-danger">
+                                        <p>{% trans "Cannot create FTP account. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="successfullyCreated" class="alert alert-success">
+                                        <p>{% trans "FTP Account with username:" %} {$ ftpUserName $} {% trans "is successfully created." %}</p>
+                            </div>
+                            <div ng-hide="couldNotConnect" class="alert alert-success">
+                                        <p>{% trans "FTP Account with username:" %} {$ ftpUserName $} {% trans "is successfully created." %}</p>
+                            </div>
+
+                    </div>
+
+
+
+                </div>
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

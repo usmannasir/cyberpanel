@@ -1,0 +1,139 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Modify Package - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Modify Package" %}</h2>
+   <p>{% trans "Packages define resources for your websites, you need to add package before creating a website." %}</p>
+</div>
+<div class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Modify Package" %} <img id="packageLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+
+            <form ng-controller="modifyPackages"  action="/" id="modifyPackageForm" class="form-horizontal bordered-row">
+
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Package" %} </label>
+                    <div class="col-sm-6">
+                        <select ng-change="fetchDetails()" ng-model="packageToBeModified" class="form-control">
+                            {% for items in packList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+
+            <!------ Modification form that appears after a click --------------->
+
+            <div id="packageDetailsToBeModified">
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Domains" %}</label>
+                        <div class="col-sm-6">
+                            <input  type="number" class="form-control" ng-model="allowedDomains" required>
+                        </div>
+                        <div class="current-pack"> {% trans "(0 = Unlimited)" %} </div>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Disk Space" %}</label>
+                        <div class="col-sm-6">
+                            <input  type="number" class="form-control" ng-model="diskSpace" required>
+                        </div>
+                        <div class="current-pack"> {% trans "MB (0 = Unlimited)" %} </div>
+                    </div>
+
+                     <div class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Bandwidth" %}</label>
+                        <div class="col-sm-6">
+                            <input  type="number" class="form-control" ng-model="bandwidth" required>
+                        </div>
+                         <div class="current-pack"> {% trans "MB (0 = Unlimited)" %} </div>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "FTP Accounts" %}</label>
+                        <div class="col-sm-6">
+                            <input type="number" class="form-control" ng-model="ftpAccounts" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Databases" %}</label>
+                        <div class="col-sm-6">
+                            <input type="number" class="form-control" ng-model="dataBases" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Emails" %}</label>
+                        <div class="col-sm-6">
+                            <input type="number" class="form-control" ng-model="emails" required>
+                        </div>
+                    </div>
+
+
+            </div>
+
+            <!------ Modification form that appears after a click --------------->
+
+
+            <div id="modifyButton" class="form-group">
+                <label class="col-sm-3 control-label"></label>
+                <div class="col-sm-4">
+                    <button  type="button" ng-click="modifyPackageFunc()" class="btn btn-primary btn-lg btn-block">{% trans "Modify Package" %}</button>
+
+                </div>
+            </div>
+
+            <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div id="modifyFailure" class="alert alert-danger">
+                                        <p>{% trans "Cannot fetch package details. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div id="modifySuccess" class="alert alert-success">
+                                        <p>{% trans "Package Details Successfully Fetched" %}</p>
+                            </div>
+
+                            <div id="successfullyModified" class="alert alert-success">
+                                <p>{% trans "Package" %} <strong>{$ packageModified $}</strong> {% trans "Successfully Modified" %}</p>
+                            </div>
+                    </div>
+
+
+
+                </div>
+
+
+
+
+
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,126 @@
+/* Theme Switcher */
+
+#theme-options {
+    position: fixed;
+    top: 110px;
+    right: -300px;
+    z-index: 9999;
+    width: 300px;
+    -webkit-transition: transform 0.5s ease;
+    -o-transition: transform 0.5s ease;
+    transition: transform 0.5s ease;
+}
+#theme-options.active {
+    transform: translateX(-300px);
+    -ms-transform: translateX(-300px);
+    -o-transform: translateX(-300px);
+    -webkit-transform: translateX(-300px);
+}
+.btn.theme-switcher {
+    width: 54px;
+    height: 50px;
+    line-height: 50px;
+    display: block;
+    font-size: 27px;
+    border-width: 1px;
+    border-style: solid;
+    border-right: 0;
+    border-radius: 0;
+    border-bottom-left-radius: 3px;
+    border-top-left-radius: 3px;
+    text-align: center;
+    position: absolute;
+    left: -54px;
+    top: 25px;
+    z-index: 55;
+    padding: 0;
+}
+.theme-switcher .glyph-icon {
+    width: 54px;
+    height: 50px;
+    line-height: 50px;
+    display: block;
+}
+#theme-switcher-wrapper {
+    background: #fff;
+    width: 300px;
+    padding: 0;
+    border-bottom-left-radius: 3px;
+    border-top-left-radius: 3px;
+    position: relative;
+    z-index: 60;
+    -webkit-transition: transform 0.5s ease;
+    -o-transition: transform 0.5s ease;
+    transition: transform 0.5s ease;
+}
+#theme-options.active #theme-switcher-wrapper {
+    box-shadow: 0 4px 5px rgba(0, 0, 0, 0.3);
+}
+#theme-switcher-wrapper {
+    max-height: 580px;
+}
+#theme-switcher-wrapper .header {
+    background: #FEFEFF;
+    border-top: #dfe8f1 solid 1px;
+    border-bottom: #dfe8f1 solid 1px;
+    text-transform: uppercase;
+    padding: 13px 15px 10px;
+    font-size: 12px;
+}
+#theme-switcher-wrapper .header a {
+    font-weight: bold;
+    text-transform: capitalize;
+    float: right;
+}
+#theme-switcher-wrapper .header:first-child {
+    border-top-left-radius: 3px;
+}
+#theme-switcher-wrapper ul + .header {
+    border-radius: 0;
+}
+#theme-switcher-wrapper ul li {
+    height: 34px;
+    line-height: 28px;
+    margin: 5px 0;
+    padding: 0 15px;
+    border-bottom: #dfe8f1 solid 1px;
+}
+#theme-switcher-wrapper ul li:last-child {
+    border-bottom: 0;
+    margin-bottom: 0;
+}
+#theme-switcher-wrapper ul li label {
+    font-size: 13px;
+}
+#theme-switcher-wrapper ul li .switch-toggle {
+    float: right;
+    margin-top: 3px;
+}
+.theme-color-wrapper h5 {
+    text-transform: capitalize;
+    font-weight: bold;
+    font-size: 12px;
+    margin: 0 5px 5px;
+}
+.theme-color-wrapper {
+    padding: 10px;
+}
+.theme-color-wrapper a {
+    height: 24px;
+    width: 24px;
+    display: block;
+    overflow: hidden;
+    text-indent: -999em;
+    float: left;
+    margin: 2px;
+    border-radius: 50px;
+    border: #fff solid 2px !important;
+    box-shadow: 1px 2px 3px rgba(0,0,0,0.1);
+    opacity: 0.8;
+}
+
+.theme-color-wrapper a:hover,
+.theme-color-wrapper a.active {
+    opacity: 1;
+    border-color: red !important;
+}

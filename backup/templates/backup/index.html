@@ -1,0 +1,77 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Back up Home - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Back up" %}</h2>
+   <p>{% trans "Back up and restore sites." %}</p>
+</div>
+    <div class="panel">
+        <div class="panel-body">
+            <h3 class="title-hero">
+            {% trans "Available Functions" %}
+            </h3>
+
+             <div class="example-box-wrapper">
+                {% if viewStatus == 0 %}
+
+                    <div class="row">
+                    <div class="col-md-6">
+                                    <a href="{% url 'backupSite' %}" title="{% trans 'Back up Site' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Back up" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+                </div>
+
+                 {% else %}
+
+                    <div class="row">
+                    <div class="col-md-6">
+                                    <a href="{% url 'backupSite' %}" title="{% trans 'Back up Site' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Back up" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div class="col-md-6">
+                                    <a href="{% url 'restoreSite' %}" title="{% trans 'Restore Back up' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Restore" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                </div>
+
+                 {% endif %}
+
+             </div>
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}

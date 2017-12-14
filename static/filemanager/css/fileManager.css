@@ -1,0 +1,44 @@
+#logo{
+    width: 25%;
+}
+
+#navBar{
+    background: -moz-linear-gradient(#a4dbf5, #8cc5e0);
+    background: -webkit-linear-gradient(#a4dbf5, #8cc5e0);
+    background: -o-linear-gradient(#a4dbf5, #8cc5e0);
+}
+
+#mainRow{
+    margin: 1%;
+}
+
+#tableHead{
+    background: -moz-linear-gradient(#a4dbf5, #8cc5e0);
+    background: -webkit-linear-gradient(#a4dbf5, #8cc5e0);
+    background: -o-linear-gradient(#a4dbf5, #8cc5e0);
+}
+
+#uploadBoxLabel,#htmlEditorLable{
+    background: -moz-linear-gradient(#a4dbf5, #8cc5e0);
+    background: -webkit-linear-gradient(#a4dbf5, #8cc5e0);
+    background: -o-linear-gradient(#a4dbf5, #8cc5e0);
+}
+
+.my-drop-zone {
+    border: dotted 3px lightgray;
+    margin-bottom: 2%;
+}
+
+#queueProg{
+    margin-bottom: 2%;
+}
+
+#htmlEditorContent{
+    width: 100%;
+    height: 500px;
+}
+
+#htmlEditorStyles{
+    margin-bottom: 2%;
+    margin-top: 2%;
+}

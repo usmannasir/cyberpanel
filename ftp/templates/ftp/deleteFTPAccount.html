@@ -1,0 +1,101 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Delete FTP Account - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Delete FTP Account" %}</h2>
+   <p>{% trans "Select domain and delete its related FTP accounts." %}</p>
+</div>
+<div class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Delete FTP Account" %}
+        </h3>
+        <div ng-controller="deleteFTPAccount" class="example-box-wrapper">
+
+
+            <form  action="/" class="form-horizontal bordered-row">
+
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Domain" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-change="getFTPAccounts()" ng-model="selectedDomain" class="form-control">
+                            {% for items in websiteList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+
+
+            <div ng-hide="ftpAccountsOfDomain" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select FTP Account" %}</label>
+                    <div class="col-sm-6">
+                        <select  ng-model="selectedFTPAccount" class="form-control">
+                                <option ng-repeat="ftpAcct in ftpAccountsFeteched track by $index">{$ ftpAcct.userName $}</option>
+                        </select>
+                    </div>
+                </div>
+
+
+            <div ng-hide="deleteFTPButtonInit" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="deleteFTPAccount()" class="btn btn-primary btn-lg btn-block">{% trans "Delete FTP Account" %}</button>
+
+                    </div>
+            </div>
+
+
+            <div ng-hide="deleteFTPButton" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="deleteFTPFinal()" class="btn btn-primary btn-lg btn-block">{% trans "Are you sure?" %}</button>
+
+                    </div>
+            </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div ng-hide="deleteFailure" class="alert alert-danger">
+                                        <p>{% trans "Cannot delete account. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="deleteSuccess" class="alert alert-success">
+                                <p>{% trans "FTP Account with username:" %} <strong>{$ ftpUserNameDeleted $}</strong>{% trans " is successfully deleted." %}</p>
+                            </div>
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <p>{% trans "Could not connect to the server. Please refresh this page." %}</p>
+                            </div>
+                    </div>
+
+
+
+                </div>
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Manage PHP Installations - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Manage PHP Installations" %}</h2>
+   <p>{% trans "Edit your PHP Configurations to suit your needs." %}</p>
+</div>
+    <div class="panel">
+        <div class="panel-body">
+            <h3 class="title-hero">
+            {% trans "Available Functions" %}
+            </h3>
+
+             <div class="example-box-wrapper">
+                <div class="row">
+                    <div class="col-md-6">
+                                    <a href="{% url 'installExtensions' %}" title="{% trans 'Install Extensions' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Install Extensions" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div class="col-md-6">
+                                    <a href="{% url 'editPHPConfigs' %}" title="{% trans 'Edit PHP Configs' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Edit PHP Configs" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                </div>
+
+             </div>
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}

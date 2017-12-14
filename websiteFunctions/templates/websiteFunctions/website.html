@@ -1,0 +1,843 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{{ domain }} - CyberPanel{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div ng-controller="websitePages" class="container">
+
+    <div id="page-title">
+        <h2 ><span id="domainNamePage">{{ domain }}</span> -  <a target="_blank" href="{$ previewUrl $}" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "Preview" %}</span></a></h2>
+       <p>{% trans "All functions related to a particular site." %}</p>
+    </div>
+
+    {% if not error %}
+
+   <div class="panel">
+                <div class="panel-body">
+                    <h3 class="title-hero">
+                        {% trans "Resource Usage" %}
+                    </h3>
+                    <div class="example-box-wrapper">
+                        <div class="row">
+
+                            <div class="col-md-6">
+                                <table class="table table-bordered">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "Resource" %}</th>
+                                        <th>{% trans "Usage" %}</th>
+                                        <th>{% trans "Allowed" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td><code>{% trans "FTP" %}</code></td>
+                                        <td><span class="bs-badge badge-success">{{ ftpUsed }}</span></td>
+                                        <td><span class="bs-badge badge-success">{{ ftpTotal }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>{% trans "Databases" %}</code></td>
+                                        <td><span class="bs-badge badge-success">{{ databasesUsed }}</span></td>
+                                        <td><span class="bs-badge badge-success">{{ databasesTotal }}</span></td>
+                                    </tr>
+
+
+                                    <tr>
+                                        <td><code>{% trans "Disk Usage" %}</code></td>
+                                        <td><span class="bs-badge badge-success">{{ diskInMB }} (MB)</span></td>
+                                        <td><span class="bs-badge badge-success">{{ diskInMBTotal }} (MB)</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>{% trans "Bandwidth Usage" %}</code></td>
+                                        <td><span class="bs-badge badge-success">{{ bwInMB }} (MB)</span></td>
+                                        <td><span class="bs-badge badge-success">{{ bwInMBTotal }} (MB)</span></td>
+                                    </tr>
+
+
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="col-md-6">
+                                      <div class="panel">
+                                        <div class="panel-body">
+                                            <div class="example-box-wrapper">
+                                            <h3 class="title-hero">
+                                                {% trans "Disk Usage" %}
+                                            </h3>
+                                                <div class="progressbar" data-value="{{ diskUsage }}">
+                                                    <div class="progressbar-value bg-primary">
+                                                        <div class="progress-overlay"></div>
+                                                        <div class="progress-label">{{ diskUsage }}%</div>
+                                                    </div>
+                                                </div>
+
+
+                                                <h3 class="title-hero">
+                                                {% trans "Bandwidth Usage" %}
+                                                </h3>
+                                                <div class="progressbar" data-value="{{ bwUsage }}">
+                                                    <div class="progressbar-value bg-primary">
+                                                        <div class="progress-overlay"></div>
+                                                        <div class="progress-label">{{ bwUsage }}%</div>
+                                                    </div>
+                                                </div>
+
+
+
+                                            </div>
+
+                                        </div>
+                                      </div>
+                            </div>
+
+
+
+
+
+
+                        </div>
+                    </div>
+                </div>
+   </div>
+
+   <div class="panel">
+        <div class="panel-body">
+            <h3 class="title-hero">
+            {% trans "Logs" %} <img  ng-hide="logFileLoading" src="/static/images/loading.gif">
+            </h3>
+
+             <div class="example-box-wrapper">
+                <div class="row">
+                    <div class="col-md-6">
+                                    <a ng-click="fetchLogs(1)" href="" title="{% trans 'Load Access Logs' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Access Logs" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div class="col-md-6">
+                                    <a ng-click="fetchErrorLogs(1)" href="" title="{% trans 'Load Error Logs' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Error Logs" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div  class="col-md-12">
+
+                        <form ng-hide="hideLogs" class="form-horizontal bordered-row">
+
+                             <div ng-hide="logsFeteched" class="alert alert-success">
+                                    <p>{% trans "Logs Fetched" %}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotFetchLogs" class="alert alert-danger">
+                                    <p>{% trans "Could not fetch logs, see the logs file through command line. Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+
+
+
+                            <div ng-hide="fetchedData" class="form-group">
+
+                                <div class="col-sm-3">
+                                    <input placeholder="Search..." ng-model="logSearch"  name="dom"  type="text" class="form-control" ng-model="domainNameCreate" required>
+                                </div>
+
+                                <div class="col-sm-2">
+                                    <input placeholder="Page Number"    type="number" class="form-control" ng-model="pageNumber" required>
+                                </div>
+
+                                <div class="col-sm-6">
+                                    <button ng-click="fetchLogs(3)" type="button" class="btn ra-100 btn-purple">{% trans "Next" %}</button>
+                                    <button ng-click="fetchLogs(4)" type="button" class="btn ra-100 btn-purple">{% trans "Previous" %}</button>
+                                </div>
+
+                                <div style="margin-bottom: 1%;"  class=" col-sm-1">
+                                    <a ng-click="hidelogsbtn()" href=""><img src="/static/images/close-32.png"></a>
+                                </div>
+                                <div class="col-sm-12">
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>Domain</th>
+                                            <th>IP Address</th>
+                                            <th>Time</th>
+                                            <th>Resource</th>
+                                            <th>Size</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr ng-repeat="record in records | filter:logSearch">
+                                            <td ng-bind="record.domain"></td>
+                                            <td ng-bind="record.ipAddress"></td>
+                                            <td ng-bind="record.time"></td>
+                                            <td ng-bind="record.resource"></td>
+                                            <td ng-bind="record.size"></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+
+                            <div ng-hide="hideErrorLogs" class="form-group">
+
+                                <div class="col-sm-2">
+                                    <input placeholder="Page Number"    type="number" class="form-control" ng-model="errorPageNumber" required>
+                                </div>
+
+                                <div class="col-sm-9">
+                                    <button ng-click="fetchErrorLogs(3)" type="button" class="btn ra-100 btn-purple">{% trans "Next" %}</button>
+                                    <button ng-click="fetchErrorLogs(4)" type="button" class="btn ra-100 btn-purple">{% trans "Previous" %}</button>
+                                </div>
+
+                                <div style="margin-bottom: 1%;"  class=" col-sm-1">
+                                    <a ng-click="hideErrorLogsbtn()" href=""><img src="/static/images/close-32.png"></a>
+                                </div>
+
+                                <div class="col-sm-12">
+                                    <textarea ng-model="errorLogsData" rows="25" class="form-control"></textarea>
+                                </div>
+                            </div>
+
+
+
+
+
+
+
+
+                        </form>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+             </div>
+        </div>
+    </div>
+
+
+    <div class="panel">
+        <div class="panel-body">
+            <h3 class="title-hero">
+            {% trans "Domains" %} <img  ng-hide="domainLoading" src="/static/images/loading.gif">
+            </h3>
+
+             <div class="example-box-wrapper">
+                <div class="row">
+
+                    <div class="col-md-6">
+                                    <a href="" ng-click="showCreateDomainForm()" title="{% trans 'Add Domains' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Add Domains" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div class="col-md-6">
+                                    <a href="" ng-click="showListDomains()" title="{% trans 'List Domains' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "List Domains" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+                </div>
+
+
+                 <!---------- HTML For creating domains --------------->
+
+
+                 <form id="domainCreationForm" name="websiteCreationForm"  action="/" class="form-horizontal bordered-row">
+
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
+                            <div class="col-sm-6">
+                                <input ng-pattern="/([\da-z\.-]+\.[a-z\.]{2,6}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?$/i"  name="dom"  type="text" class="form-control" ng-model="domainNameCreate" required>
+                            </div>
+                                <div ng-show="websiteCreationForm.dom.$error.pattern" class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
+                            <div style="margin-bottom: 1%;"  class=" col-sm-1">
+                                    <a title="{% trans 'Cancel' %}" ng-click="hideDomainCreationForm()" href=""><img src="/static/images/close-32.png"></a>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Path" %}</label>
+                            <div class="col-sm-6">
+                                <input placeholder="{% trans 'This path is relative to: ' %}{$ masterDomain $}. {% trans 'Leave empty to set default.' %}"  type="text" class="form-control" ng-model="docRootPath" required>
+                            </div>
+                                <div ng-show="websiteCreationForm.dom.$error.pattern" class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="phpSelection" class="form-control">
+                                        <option>PHP 5.3</option>
+                                        <option>PHP 5.4</option>
+                                        <option>PHP 5.5</option>
+                                        <option>PHP 5.6</option>
+                                        <option>PHP 7.0</option>
+                                        <option>PHP 7.1</option>
+                                </select>
+                            </div>
+                         </div>
+
+
+
+                         <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
+                            <div class="col-sm-6">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="sslCheck" type="checkbox" value="">
+                                        SSL
+                                        <div ng-show="sslCheck" style="margin-top: 2%;margin-bottom: -2%" class="alert alert-warning">
+                                            <p>{% trans "For SSL to work DNS of domain should point to server, otherwise self signed SSL will be issued, you can add your own SSL later." %}</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                 <button ng-disabled="websiteCreationForm.dom.$error.required || websiteCreationForm.dom.$error.pattern || websiteCreationForm.email.$invalid" type="button" ng-click="createDomain()" class="btn btn-primary btn-lg btn-block">{% trans "Create Domain" %}</button>
+
+                            </div>
+                        </div>
+
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                    <div ng-hide="websiteCreationFailed" class="alert alert-danger">
+                                                <p>{% trans "Cannot create website. Error message:" %} {$ errorMessage $}</p>
+                                    </div>
+
+                                     <div ng-hide="domainCreated" class="alert alert-success">
+                                        <p>{% trans "Website with domain" %} <strong>{$ websiteDomain $}</strong>{% trans " is Successfully Created" %}</p>
+                                    </div>
+
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                    </div>
+                            </div>
+
+
+
+                        </div>
+
+
+            </form>
+
+
+                 <!---------- HTML For creating domains --------------->
+
+                 <!---------- HTML For Listing domains --------------->
+
+
+                 <div id="listDomains"  class="col-md-12">
+
+                        <form ng-hide="" class="form-horizontal bordered-row">
+
+
+
+                                <div ng-hide="phpChanged" class="alert alert-success">
+                                    <p>{% trans "PHP Version Changed to:" %} {$ changedPHPVersion $} </p>
+                                </div>
+
+                                <div ng-hide="domainDeleted" class="alert alert-success">
+                                    <p>{% trans "Deleted:" %} {$ deletedDomain $} </p>
+                                </div>
+
+                                <div ng-hide="sslIssued" class="alert alert-success">
+                                    <p>{% trans "SSL Issued:" %} {$ sslDomainIssued $} </p>
+                                </div>
+
+
+                                <div ng-hide="domainError" class="alert alert-danger">
+                                    <p>{$ errorMessage $}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+
+
+
+
+                            <div ng-hide="" class="form-group">
+
+                                <div class="col-sm-11">
+                                    <input placeholder="Search Domain..." ng-model="logSearch"  name="dom"  type="text" class="form-control" ng-model="domainNameCreate" required>
+                                </div>
+
+                                <div style="margin-bottom: 1%;"  class=" col-sm-1">
+                                    <a title="{% trans 'Close' %}" ng-click="hideListDomains()" href=""><img src="/static/images/close-32.png"></a>
+                                </div>
+
+
+
+
+
+                                <div class="col-sm-12">
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>Domain</th>
+                                            <th>Path</th>
+                                            <th>PHP</th>
+                                            <th>SSL</th>
+                                            <th>Delete</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr ng-repeat="record in childDomains | filter:logSearch">
+                                            <td ng-bind="record.childDomain"></td>
+                                            <td ng-bind="record.path"></td>
+                                            <td >
+                                                <select ng-change="changePHP(record.childDomain,phpSelection)" ng-model="phpSelection" class="form-control">
+                                                    <option>PHP 5.3</option>
+                                                    <option>PHP 5.4</option>
+                                                    <option>PHP 5.5</option>
+                                                    <option>PHP 5.6</option>
+                                                    <option>PHP 7.0</option>
+                                                    <option>PHP 7.1</option>
+                                                </select>
+                                            </td>
+                                            <td><button type="button" ng-click="issueSSL(record.childDomain,record.path)" class="btn ra-100 btn-purple">{% trans "Issue" %}</button></td>
+                                            <td><button type="button" ng-click="deleteChildDomain(record.childDomain)" class="btn ra-100 btn-purple">{% trans "Delete" %}</button></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+
+                        </form>
+
+
+
+
+
+                    </div>
+
+
+                 <!---------- HTML For Listing domains --------------->
+
+
+             </div>
+        </div>
+    </div>
+
+   <div class="panel">
+        <div class="panel-body">
+            <h3 class="title-hero">
+            {% trans "Configurations" %} <img  ng-hide="configFileLoading" src="/static/images/loading.gif">
+            </h3>
+
+             <div class="example-box-wrapper">
+                <div class="row">
+                    <div class="col-md-4">
+                                    <a ng-click="fetchConfigurations()" href="" title="{% trans 'Edit Virtual Host Main Configurations' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Edit vHost Main Configurations" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div class="col-md-4">
+                                    <a ng-click="fetchRewriteFules()" href="" title="{% trans 'Add Rewrite Rules (.htaccess)' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Add Rewrite Rules (.htaccess)" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div class="col-md-4">
+                                    <a ng-click="addSSL()" href="" title="{% trans 'Add Your Own SSL' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Add SSL" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+                    <!---- HTML for main ssl file ---->
+
+                    <div  class="col-md-12">
+
+                        <form ng-hide="hidsslconfigs"  class="form-horizontal bordered-row">
+
+                             <div ng-hide="sslSaved" class="alert alert-success">
+                                    <p>{% trans "SSL Saved" %}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotSaveSSL" class="alert alert-danger">
+                                    <p>{% trans "Could not save SSL. Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+
+
+                            <div ng-hide="" class="form-group">
+                                <div style="margin-bottom: 1%;"  class="col-sm-offset-11 col-sm-1">
+                                    <a ng-click="hidesslbtn()" href=""><img src="/static/images/close-32.png"></a>
+                                </div>
+                                <div class="col-sm-6">
+                                    <textarea placeholder="Paste Your Cert" ng-model="cert" rows="10" class="form-control"></textarea>
+                                </div>
+                                <div class="col-sm-6">
+                                    <textarea placeholder="Paste Your Key" ng-model="key" rows="10" class="form-control"></textarea>
+                                </div>
+                            </div>
+
+                            <div ng-hide="" class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                     <button type="button" ng-click="saveSSL()" class="btn btn-primary btn-lg btn-block">{% trans "Save" %}</button>
+
+                                </div>
+                            </div>
+
+
+                        </form>
+
+
+
+
+
+                    </div>
+
+
+
+                    <!----- HTML For SSL
+
+
+                    <!---- HTML for main conf file ---->
+
+                    <div  class="col-md-12">
+
+                        <form ng-hide="configurationsBox"  class="form-horizontal bordered-row">
+
+                             <div ng-hide="configsFetched" class="alert alert-success">
+                                    <p>{% trans "Current configuration in the file fetched." %}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotFetchConfigs" class="alert alert-danger">
+                                    <p>{% trans "Could not fetch current configuration. Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+
+                                <div ng-hide="configSaved" class="alert alert-success">
+                                    <p>{% trans "Configurations saved." %}</p>
+                                </div>
+
+                                 <div ng-hide="couldNotSaveConfigurations" class="alert alert-danger">
+                                    <p>{% trans "Could not fetch current configuration. Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+
+                            <div ng-hide="fetchedConfigsData" class="form-group">
+                                <div style="margin-bottom: 1%;"  class="col-sm-offset-11 col-sm-1">
+                                    <a ng-click="hideconfigbtn()" href=""><img src="/static/images/close-32.png"></a>
+                                </div>
+                                <div class="col-sm-12">
+                                    <textarea ng-model="configData" rows="20" class="form-control"></textarea>
+                                </div>
+                            </div>
+
+                            <div ng-hide="saveConfigBtn" class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                     <button type="button" ng-click="saveCongiruations()" class="btn btn-primary btn-lg btn-block">{% trans "Save" %}</button>
+
+                                </div>
+                            </div>
+
+
+                        </form>
+
+
+
+
+
+                    </div>
+
+                    <!---- HTML For rewrite rules----->
+
+                    <div  class="col-md-12">
+
+                        <form ng-hide="configurationsBoxRewrite"  class="form-horizontal bordered-row">
+
+                             <div ng-hide="rewriteRulesFetched" class="alert alert-success">
+                                    <p>{% trans "Current rewrite rules in the file fetched." %}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotFetchRewriteRules" class="alert alert-danger">
+                                    <p>{% trans "Could not fetch current rewrite rules. Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+
+                                <div ng-hide="rewriteRulesSaved" class="alert alert-success">
+                                    <p>{% trans "Configurations saved." %}</p>
+                                </div>
+
+                                 <div ng-hide="couldNotSaveRewriteRules" class="alert alert-danger">
+                                    <p>{% trans "Could not save rewrite rules. Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+
+                            <div ng-hide="fetchedRewriteRules" class="form-group">
+                                <div style="margin-bottom: 1%;"  class="col-sm-offset-11 col-sm-1">
+                                    <a ng-click="hideRewriteRulesbtn()" href=""><img src="/static/images/close-32.png"></a>
+                                </div>
+                                <div class="col-sm-12">
+                                    <textarea ng-model="rewriteRules" rows="10" class="form-control"></textarea>
+                                </div>
+                            </div>
+
+                            <div ng-hide="saveRewriteRulesBTN" class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                     <button type="button" ng-click="saveRewriteRules()" class="btn btn-primary btn-lg btn-block">{% trans "Save Rewrite Rules" %}</button>
+
+                                </div>
+                            </div>
+
+
+                        </form>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+             </div>
+        </div>
+    </div>
+
+   <div class="panel">
+        <div class="panel-body">
+            <h3 class="title-hero">
+            {% trans "Files" %}
+            </h3>
+
+             <div class="example-box-wrapper">
+                <div class="row">
+
+                    <div class="col-md-4">
+                                    <a href="{$ fileManagerURL $}" target="_blank" title="{% trans 'File Manager' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "File Manager" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+                    <div class="col-md-4">
+                                    <a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Create FTP Account" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div class="col-md-4">
+                                    <a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Delete FTP Account" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+                </div>
+             </div>
+        </div>
+    </div>
+
+   <div class="panel">
+        <div class="panel-body">
+            <h3 class="title-hero">
+            {% trans "Application Installer" %} <img  ng-hide="applicationInstallerLoading" src="/static/images/loading.gif">
+            </h3>
+
+             <div class="example-box-wrapper">
+                <div class="row">
+                    <div  class="col-md-4">
+                                    <a ng-click="installationDetails()" href="" title="{% trans 'Install wordpress with LSCache' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Wordpress with LSCache" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div ng-hide="installationDetailsForm" class="col-md-12">
+                        <form  action="/" class="form-horizontal bordered-row">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Path" %}</label>
+                                <div class="col-sm-9">
+                                    <input placeholder="Leave emtpy to install in website home directory. (Without preceding slash)"  type="text" name="path" class="form-control" ng-model="installPath" required>
+                                </div>
+                            </div>
+
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                 <button type="button" ng-click="installWordpress()" class="btn btn-primary btn-lg btn-block">Install Wordpress</button>
+
+                            </div>
+                        </div>
+
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div ng-hide="installationFailed" class="alert alert-danger">
+                                        <p>{% trans "Installation failed. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="installationSuccessfull" class="alert alert-success">
+                                <p>{% trans "Installation successful. To complete the setup visit:" %} {$ installationURL $}</p>
+                            </div>
+
+
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+                    </div>
+
+
+
+                </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        </form>
+                    </div>
+
+
+                </div>
+
+
+             </div>
+        </div>
+    </div>
+
+
+    {% else %}
+
+        <div class="alert alert-danger">
+            <p>{{ domain }}</p>
+        </div>
+
+
+    {% endif %}
+
+
+
+
+</div>
+
+
+
+{% endblock %}

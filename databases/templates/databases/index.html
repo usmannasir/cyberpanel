@@ -1,0 +1,86 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Database Functions - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Database Functions" %}</h2>
+   <p>{% trans "Create, edit and delete databases on this page." %}</p>
+</div>
+
+    <div class="panel">
+        <div class="panel-body">
+            <h3 class="title-hero">
+            {% trans "Available Functions" %}
+            </h3>
+
+             <div class="example-box-wrapper">
+                <div class="row">
+                    <div class="col-md-6">
+                                    <a href="{% url 'createDatabase' %}" title="{% trans 'Create Database' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Create Database" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div class="col-md-6">
+                                    <a href="{% url 'deleteDatabase' %}" title="{% trans 'Delete Database' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "Delete Database" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                </div>
+
+
+                <div class="row">
+                    <div class="col-md-6">
+                                    <a href="{% url 'listDBs' %}" title="{% trans 'List Databases' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "List Databases" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                    <div class="col-md-6">
+                                    <a target="_blank" href="/phpmyadmin/index.php" title="{% trans 'PHPMYAdmin' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "PHPMYAdmin" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+
+                </div>
+
+
+             </div>
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}

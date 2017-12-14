@@ -1,0 +1,69 @@
+/* Multiselect inputs */
+
+.ms-container {
+    position: relative;
+}
+.ms-container .glyph-icon {
+    font-size: 20px;
+    line-height: 30px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    text-align: center;
+}
+.ms-container:after {
+    font-size: 0;
+    line-height: 0;
+    display: block;
+    visibility: hidden;
+    clear: both;
+    height: 0;
+    min-height: 0;
+    content: '.';
+}
+.ms-container .ms-selectable,
+.ms-container .ms-selection {
+    float: left;
+    width: 45%;
+    color: #555;
+    background: #fff;
+}
+.ms-container .ms-selection {
+    float: right;
+}
+.ms-container .ms-list {
+    position: relative;
+    overflow-y: auto;
+    height: 200px;
+    padding: 5px 10px;
+    border-width: 1px;
+    border-style: solid;
+}
+.ms-list li {
+    line-height: 20px;
+    margin: 5px 0;
+    padding: 3px 10px;
+}
+.ms-container ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+.ms-container .ms-optgroup-container {
+    width: 100%;
+}
+.ms-container .ms-optgroup-label {
+    line-height: 20px;
+    margin: 0;
+    padding: 3px 10px;
+    cursor: pointer;
+}
+.ms-container li.ms-hover {
+    cursor: pointer;
+}
+.ms-container li.disabled {
+    cursor: text;
+}
