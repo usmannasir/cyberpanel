@@ -22,6 +22,7 @@ from dns.models import Domains,Records
 import requests
 import re
 from random import randint
+import hashlib
 # Create your views here.
 
 
@@ -1191,6 +1192,110 @@ def installWordpress(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
         return HttpResponse("Not Logged in as admin")
 
+def installJoomla(request):
+    try:
+        val = request.session['userID']
+
+        if request.method == 'POST':
+            try:
+                data = json.loads(request.body)
+                domainName = data['domain']
+                home = data['home']
+
+                sitename = data['sitename']
+                username = data['username']
+                password = data['password']
+                prefix = data['prefix']
+
+                finalPath = ""
+
+                if home == '0':
+                    path = data['path']
+                    finalPath = "/home/" + domainName + "/public_html/" + path + "/"
+                else:
+                    finalPath = "/home/" + domainName + "/public_html/"
+
+                try:
+                    website = ChildDomains.objects.get(domain=domainName)
+                    externalApp = website.master.externalApp
+                except:
+                    website = Websites.objects.get(domain=domainName)
+                    externalApp = website.externalApp
+
+
+                ## DB Creation
+
+                dbName = randomPassword.generate_pass()
+                dbUser = dbName
+                dbPassword = randomPassword.generate_pass()
+
+
+                ## DB Creation
+
+                if website.package.dataBases > website.databases_set.all().count():
+                    pass
+                else:
+                    data_ret = {'installStatus': 0, 'error_message': "0,Maximum database limit reached for this website."}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+                if Databases.objects.filter(dbName=dbName).exists() or Databases.objects.filter(
+                        dbUser=dbUser).exists():
+
+                    data_ret = {'installStatus': 0,
+                                'error_message': "0,This database or user is already taken."}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+
+                result = mysqlUtilities.createDatabase(dbName, dbUser, dbPassword)
+
+                if result == 1:
+                    pass
+                else:
+                    data_ret = {'installStatus': 0,
+                                'error_message': "0,Not able to create database."}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+                db = Databases(website=website, dbName=dbName, dbUser=dbUser)
+                db.save()
+
+                ## Installation
+                salt = randomPassword.generate_pass(32)
+                #return salt
+                password_hash = hashlib.md5(password + salt).hexdigest()
+                password = password_hash + ":" + salt
+
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+                execPath = execPath + " installJoomla --virtualHostName " + domainName + " --virtualHostUser " + externalApp + " --path " + finalPath + " --dbName " + dbName + " --dbUser " + dbUser + " --dbPassword " + dbPassword + " --username " + username + " --password " + password +" --prefix " + prefix +" --sitename '" + sitename + "'"
+
+                #return execPath
+
+
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    data_ret = {"installStatus": 1}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'installStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                ## Installation ends
+
+            except BaseException, msg:
+                data_ret = {'installStatus': 0, 'error_message': str(msg)}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+    except KeyError, msg:
+        status = {"installStatus":0,"error":str(msg)}
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installJoomla]")
+        return HttpResponse("Not Logged in as admin")
 
 
 def getDataFromConfigFile(request):

@@ -31,7 +31,8 @@ urlpatterns = [
 
 
     url(r'^installWordpress', views.installWordpress, name='installWordpress'),
-
+    url(r'^installJoomla', views.installJoomla, name='installJoomla'),
+    
     url(r'^getDataFromConfigFile', views.getDataFromConfigFile, name='getDataFromConfigFile'),
 
     url(r'^saveConfigsToFile', views.saveConfigsToFile, name='saveConfigsToFile'),

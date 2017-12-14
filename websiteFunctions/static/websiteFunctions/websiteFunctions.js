@@ -1129,6 +1129,7 @@ app.controller('websitePages', function($scope,$http) {
     //////// Application Installation part
 
     $scope.installationDetailsForm = true;
+    $scope.installationDetailsFormJoomla = true;
     $scope.applicationInstallerLoading = true;
     $scope.installationFailed = true;
     $scope.installationSuccessfull = true;
@@ -1138,8 +1139,15 @@ app.controller('websitePages', function($scope,$http) {
 
     $scope.installationDetails = function(){
 
-        $scope.installationDetailsForm = false;
+        $scope.installationDetailsForm = !$scope.installationDetailsForm;
+        $scope.installationDetailsFormJoomla = true;
 
+    }
+
+    $scope.installationDetailsJoomla = function(){
+
+        $scope.installationDetailsFormJoomla = !$scope.installationDetailsFormJoomla;
+        $scope.installationDetailsForm = true;
 
     }
 
@@ -1215,6 +1223,95 @@ app.controller('websitePages', function($scope,$http) {
                 function cantLoadInitialDatas(response) {
 
                     $scope.installationDetailsForm = false;
+                    $scope.applicationInstallerLoading = true;
+                    $scope.installationFailed = true;
+                    $scope.installationSuccessfull = true;
+                    $scope.couldNotConnect = false;
+
+                }
+
+    };
+
+    $scope.installJoomla = function(){
+
+
+                $scope.installationDetailsFormJoomla = false;
+                $scope.applicationInstallerLoading = false;
+                $scope.installationFailed = true;
+                $scope.installationSuccessfull = true;
+                $scope.couldNotConnect = true;
+
+                var domain = $("#domainNamePage").text();
+                var path = $scope.installPath;
+                var sitename = $scope.sitename
+                var username = $scope.username
+                var password = $scope.password
+                var prefix = $scope.prefix
+
+
+                url = "/websites/installJoomla";
+
+                var home = "1";
+
+                if (typeof path != 'undefined'){
+                    home = "0";
+                }
+
+
+                var data = {
+                    domain: domain,
+                    home:home,
+                    path:path,
+                    sitename:sitename,
+                    username:username,
+                    password:password,
+                    prefix:prefix,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if (response.data.installStatus == 1)
+                    {
+                        if (typeof path != 'undefined'){
+                            $scope.installationURL = "http://"+domain+"/"+path;
+                        }
+                        else{
+                            $scope.installationURL = domain;
+                        }
+
+                        $scope.installationDetailsFormJoomla = false;
+                        $scope.applicationInstallerLoading = true;
+                        $scope.installationFailed = true;
+                        $scope.installationSuccessfull = false;
+                        $scope.couldNotConnect = true;
+
+                    }
+                    else{
+
+                        $scope.installationDetailsFormJoomla = false;
+                        $scope.applicationInstallerLoading = true;
+                        $scope.installationFailed = false;
+                        $scope.installationSuccessfull = true;
+                        $scope.couldNotConnect = true;
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    $scope.installationDetailsFormJoomla = false;
                     $scope.applicationInstallerLoading = true;
                     $scope.installationFailed = true;
                     $scope.installationSuccessfull = true;
