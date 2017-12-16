@@ -158,6 +158,8 @@ class sslUtilities:
             expectation.append("that you are serving files from the webroot path") #4
             expectation.append("Enter email address") #5
             expectation.append("There were too many requests") # 6
+            expectation.append("--expand flag") #7
+
 
             try:
 
@@ -248,6 +250,11 @@ class sslUtilities:
 
                 elif index==6:
                     return "Too many SSL requests for this domain, please try to get SSL at later time."
+                elif index==7:
+                    command = "certbot certonly -n --agree-tos --email " + adminEmail + " --expand --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName
+                    subprocess.call(shlex.split(command))
+                    logging.CyberCPLogFileWriter.writeToFile(virtualHostName + " SSL OK by expanding!")
+
 
 
             except pexpect.EOF,msg:
