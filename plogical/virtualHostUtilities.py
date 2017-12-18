@@ -1393,6 +1393,9 @@ RewriteRule .* - [E=cache-control:max-age=120]
 
         installUtilities.installUtilities.reStartLiteSpeed()
 
+        print "1,None"
+        return
+
     except BaseException, msg:
         # remove the downloaded files
         try:

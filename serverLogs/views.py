@@ -8,6 +8,8 @@ import json
 import plogical.CyberCPLogFileWriter as logging
 from plogical.installUtilities import installUtilities
 from loginSystem.models import Administrator
+import subprocess
+import shlex
 # Create your views here.
 
 
@@ -104,10 +106,9 @@ def getLogsFromFile(request):
         elif type=="ftp":
             fileName="/var/log/messages"
 
-        fewLinesOfLogFile = logging.CyberCPLogFileWriter.readLastNFiles(50,fileName)
+        command = "sudo tail -50 " + fileName
 
-        fewLinesOfLogFile = str(fewLinesOfLogFile)
-
+        fewLinesOfLogFile = subprocess.check_output(shlex.split(command))
 
         status = {"logstatus":1,"logsdata":fewLinesOfLogFile}
 

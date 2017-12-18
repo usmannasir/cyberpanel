@@ -489,16 +489,16 @@ msgstr "Upotreba"
 #: baseTemplate/templates/baseTemplate/homePage.html:34
 #: baseTemplate/templates/baseTemplate/index.html:221
 msgid "CPU Usage"
-msgstr "CPU"
+msgstr "CPU Upotreba"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:55
 #: baseTemplate/templates/baseTemplate/index.html:232
 msgid "Ram Usage"
-msgstr "RAM"
+msgstr "RAM Upotreba"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:74
 msgid "Disk Usage '/'"
-msgstr "Disk '/'"
+msgstr "Upotreba diska '/'"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:98
 msgid "HTTP Statistics"
@@ -510,7 +510,7 @@ msgstr "Dostupno/Max konekcija"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:118
 msgid "Available/Max SSL Connections"
-msgstr "Dostupno/Max SSL konekcija"
+msgstr "Dostupno/Max ssl konekcija"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:127
 msgid "Requests Processing"
@@ -994,7 +994,7 @@ msgstr "Server"
 
 #: baseTemplate/templates/baseTemplate/index.html:594
 msgid "NEW"
-msgstr "NOVO"
+msgstr "Novi"
 
 #: baseTemplate/templates/baseTemplate/index.html:599
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
@@ -1452,7 +1452,7 @@ msgid ""
 "On this page you can add/delete firewall rules. (By default all ports are "
 "blocked, except mentioned below)"
 msgstr ""
-"Na ovoj stranici možete dodati / izbrisati pravila firewalla. (Podrazumijevano "
+"Na ovoj stranici možete dodati / izbrisati pravila firewalla. (Podrazumevano "
 "su svi portovi blokirani, osim što je navedeno ispod)"
 
 #: firewall/templates/firewall/firewall.html:19
@@ -1498,7 +1498,7 @@ msgstr "Bezbijednost - CyberPanel"
 
 #: firewall/templates/firewall/index.html:12
 msgid "Security Functions"
-msgstr "Bezbjednosne funkcije"
+msgstr "Sigurnosne funkcije"
 
 #: firewall/templates/firewall/index.html:13
 msgid "Manage the security of the server on this page."
@@ -2788,7 +2788,7 @@ msgstr "Izmijeni PHP konfiguracije"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:486
 msgid "Edit vHost Main Configurations"
-msgstr "Promjena vHost glavnih podešavanja"
+msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/website.html:496
 #: websiteFunctions/templates/websiteFunctions/website.html:498
@@ -2811,7 +2811,7 @@ msgstr "SLL spremljen"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:530
 msgid "Could not save SSL. Error message:"
-msgstr "Nisam mogao sačuvati SSL. Poruka o grešci:"
+msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/website.html:580
 msgid "Current configuration in the file fetched."
@@ -2820,12 +2820,12 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/website.html:585
 #: websiteFunctions/templates/websiteFunctions/website.html:598
 msgid "Could not fetch current configuration. Error message:"
-msgstr "Nisam mogao dohvatiti trenutnu konfiguraciju. Greška poruke:"
+msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/website.html:594
 #: websiteFunctions/templates/websiteFunctions/website.html:649
 msgid "Configuration saved. Restart LiteSpeed put them in effect."
-msgstr "Postavke su sačuavane. Morate da restartujete LiteSpeed."
+msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/website.html:635
 msgid "Current rewrite rules in the file fetched."

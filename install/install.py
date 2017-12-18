@@ -1883,6 +1883,34 @@ class preFlightsChecks:
 
         return 1
 
+    def test_Requests(self):
+        try:
+            import requests
+            getVersion = requests.get('https://cyberpanel.net/version.txt')
+            latest = getVersion.json()
+        except BaseException,msg:
+
+            command = "pip uninstall --yes requests"
+            subprocess.call(shlex.split(command))
+
+            command = "pip install requests==2.2.1"
+            res = subprocess.call(shlex.split(command))
+
+            if res == 1:
+                print("###############################################")
+                print("          Requests Test Ran                ")
+                print("###############################################")
+            else:
+                print("###############################################")
+                print("          Request Test Fail                ")
+                print("###############################################")
+
+
+
+            logging.InstallLog.writeToFile(str(msg) + " [test_Requests]")
+            return 0
+
+
 
 
 def main():
@@ -1938,6 +1966,7 @@ def main():
     checks.install_python_requests()
     checks.install_default_keys()
 
+    checks.test_Requests()
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword)
     checks.setup_cron()
 
