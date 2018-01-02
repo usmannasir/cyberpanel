@@ -865,6 +865,30 @@ class virtualHostUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [findDomainBW]")
             print "0,0"
 
+    @staticmethod
+    def permissionControl(path):
+        try:
+            command = 'sudo chown -R  cyberpanel:cyberpanel ' + path
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
+    @staticmethod
+    def leaveControl(path):
+        try:
+            command = 'sudo chown -R  root:root ' + path
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
 
 def createVirtualHost(virtualHostName,administratorEmail,phpVersion,virtualHostUser,numberOfSites,ssl,sslPath):
     try:
