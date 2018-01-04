@@ -1,0 +1,223 @@
+/* Feature Boxes */
+
+.feature-box .feature-content {
+    overflow: hidden;
+    padding: 0 35px;
+}
+.feature-box .feature-img {
+    float: left;
+    margin: 0 40px 0 20px;
+}
+.feature-box .feature-img.float-right {
+    margin: 0 20px 0 40px;
+}
+.feature-box .feature-img > a > img,
+.feature-box .feature-img > img {
+    width: 100%;
+    margin-top: 25px;
+    padding: 10px;
+}
+.feature-box .feature-content .feature-heading {
+    padding: 20px 0 0;
+}
+.feature-box .feature-content .feature-heading h2 {
+    font-size: 30px;
+}
+.feature-box .feature-content .feature-heading p {
+    font-size: 18px;
+    font-weight: normal;
+    line-height: 1.6em;
+    padding: 15px 0;
+    opacity: .65;
+    -moz-opacity: .65;
+    filter: alpha(opacity: 65);
+}
+.feature-content .feature-list {
+    margin: 25px 0 0;
+}
+.feature-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.feature-list li {
+    padding: 0 0 35px;
+}
+.feature-list li .glyph-icon {
+    font-size: 26px;
+    line-height: 40px;
+    float: left;
+    width: 40px;
+    height: 40px;
+    margin: -5px 5px 0 0;
+    text-align: center;
+    opacity: .75;
+    -moz-opacity: .75;
+    filter: alpha(opacity: 75);
+}
+.feature-list li span {
+    display: block;
+    overflow: hidden;
+}
+.feature-list li b {
+    font-size: 20px;
+    font-weight: 300;
+    display: block;
+}
+.feature-list li p {
+    font-size: 14px;
+    line-height: 2em;
+    margin: 5px 0 0;
+    opacity: 0.7;
+}
+
+/* Featured icons */
+
+.feature-icon {
+    float: none;
+    margin: 0 auto;
+    text-align: left;
+}
+.feature-icon .feature-box-wrapper {
+    padding: 35px 0 35px 110px;
+    position: relative;
+}
+.feature-icon .feature-box-wrapper .glyph-icon {
+    position: absolute;
+    text-align: center;
+    width: 90px;
+    display: block;
+    font-size: 80px;
+    left: 0;
+    height: 100px;
+    line-height: 100px;
+    top: 50%;
+    margin-top: -50px;
+    color: rgba(255,255,255,0.4);
+}
+.feature-icon h3 {
+    font-size: 35px;
+    font-weight: 300;
+    margin: 0;
+    color: rgba(255,255,255,0.8);
+}
+.feature-icon p {
+    margin: 5px 0 0;
+    font-size: 20px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.5em;
+}
+
+/* Clients box */
+
+.clients-title {
+    font-weight: 300;
+    font-size: 55px;
+    text-align: center;
+    line-height: 1.3em;
+    padding: 0 70px;
+    margin: 0 0 34px;
+}
+.clients-title + .text-center {
+    margin-bottom: 24px;
+    margin-top: -10px;
+}
+.clients-desc {
+    opacity: 0.5;
+    text-align: center;
+    padding: 0 60px 50px;
+    font-size: 23px;
+    line-height: 1.6em;
+}
+.clients-box .content-box {
+    height: 100px;
+    line-height: 100px;
+    margin: 0 0 20px;
+    font-size: 45px;
+    text-align: center;
+}
+.tick-feature {
+    padding: 0 25px;
+    font-size: 20px;
+}
+.tick-feature .glyph-icon {
+    margin-right: 5px;
+    font-size: 30px;
+}
+
+/* Tabs checklist */
+
+.tabs-nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    z-index: 6;
+    text-align: center;
+}
+.tabs-nav:before {
+    content: "";
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    width: 100%;
+    left: 0;
+    top: 50%;
+    background: #f1f1f1;
+    z-index: 5;
+}
+.tabs-nav li {
+    display: inline-block;
+    margin: 0 -5px 0 0;
+    position: relative;
+    z-index: 6;
+}
+.tabs-nav li:first-child a {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+.tabs-nav li:last-child a {
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+.tabs-nav li a {
+    display: block;
+    padding: 15px 40px;
+    text-transform: uppercase;
+    font-size: 20px;
+    border: 1px solid #d1d1d1;
+    color: #bfbfbf;
+    background: #fff;
+}
+.tabs-nav li.active a {
+    background: #fdfdfd;
+}
+
+/* Features tour box */
+
+.features-tour-box {
+    padding: 55px 0;
+}
+.features-tour-box h3 {
+    font-size: 30px;
+    text-transform: uppercase;
+    margin: 0;
+}
+.features-tour-box p {
+    line-height: 1.7em;
+    margin: 15px 0;
+}
+.features-tour-box ul {
+    list-style: none;
+    margin: 0 0 0 25px;
+    padding: 0;
+}
+.features-tour-box ul li {
+    font-size: 16px;
+    padding: 6px 0;
+    color: rgba(0,0,0,0.6);
+}
+.features-tour-box ul li .glyph-icon {
+    margin-right: 10px;
+    font-size: 22px;
+}

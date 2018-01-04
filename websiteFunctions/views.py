@@ -280,6 +280,7 @@ def submitWebsiteCreation(request):
                 data['ssl']) + " --sslPath " + sslpath
 
 
+
             output = subprocess.check_output(shlex.split(execPath))
 
             if output.find("1,None") > -1:
@@ -720,6 +721,8 @@ def submitWebsiteStatus(request):
                 state = data['state']
 
                 website = Websites.objects.get(domain=websiteName)
+
+
 
 
                 if state == "Suspend":

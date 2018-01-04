@@ -793,8 +793,7 @@ class virtualHostUtilities:
 
             confPath = virtualHostUtilities.Server_root + "/conf/vhosts/"+virtualHostName
 
-            command = "sudo mv " + confPath + " " + confPath+"-suspended"
-            subprocess.call(shlex.split(command))
+            shutil.move(confPath,confPath+"-suspended")
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
@@ -808,13 +807,7 @@ class virtualHostUtilities:
 
             confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + virtualHostName
 
-            command = "sudo mv " + confPath + "-suspended" + " " + confPath
-            subprocess.call(shlex.split(command))
-
-            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + confPath
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
-
+            shutil.move(confPath + "-suspended",confPath)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
@@ -864,30 +857,6 @@ class virtualHostUtilities:
         except ValueError, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [findDomainBW]")
             print "0,0"
-
-    @staticmethod
-    def permissionControl(path):
-        try:
-            command = 'sudo chown -R  cyberpanel:cyberpanel ' + path
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd)
-
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-
-    @staticmethod
-    def leaveControl(path):
-        try:
-            command = 'sudo chown -R  root:root ' + path
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd)
-
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
 
 def createVirtualHost(virtualHostName,administratorEmail,phpVersion,virtualHostUser,numberOfSites,ssl,sslPath):
