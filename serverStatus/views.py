@@ -9,6 +9,9 @@ from loginSystem.views import loadLoginPage
 import json
 import subprocess
 from loginSystem.models import Administrator
+import os
+import psutil
+import shlex
 # Create your views here.
 
 
@@ -75,6 +78,181 @@ def litespeedStatus(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
         return redirect(loadLoginPage)
 
+
+def services(request):
+    try:
+        userID = request.session['userID']
+
+        admin = Administrator.objects.get(pk=userID)
+
+        if admin.type == 3:
+            return HttpResponse("You don't have enough priviliges to access this page.")
+
+        return render(request,'serverStatus/services.html')
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def servicesStatus(request):
+    try:
+        userID = request.session['userID']
+
+        admin = Administrator.objects.get(pk=userID)
+
+        if admin.type == 3:
+            final = {'error': 1, "error_message": "Not enough privilege"}
+            final_json = json.dumps(final)
+            return HttpResponse(final_json)
+
+        lsStatus = []
+        sqlStatus = []
+        dnsStatus = []
+        ftpStatus = []
+        mailStatus = []
+
+        def getMemStats(pid):
+            proc = open('/proc/%d/statm' % pid)
+            Rss = (int(proc.readline().split()[1]) * pagesize)
+            return Rss
+
+        processlist  = subprocess.check_output(['ps', '-A'])
+
+        def getServiceStats(service):
+            if service in processlist:
+                return 1
+            else:
+                return 0
+
+        def getMemStats(service):
+            memCount = 0
+            for proc in psutil.process_iter():
+                if service in proc.name():
+                    process = psutil.Process(proc.pid)
+                    memCount += process.memory_info().rss
+            return memCount
+
+        ### [1] status [2] mem
+        lsStatus.append(getServiceStats('litespeed'))
+        if getServiceStats('litespeed'):
+            lsStatus.append(getMemStats('litespeed'))
+        else:
+            lsStatus.append(0)
+
+        # mysql status
+
+        cmd1 = ['netstat','-tlnp']
+        cmd2 = ['grep', '3306']
+        res1 = subprocess.Popen(cmd1, stdout=subprocess.PIPE, shell=False)
+        res2 = subprocess.Popen(cmd2, stdin=res1.stdout, stdout=subprocess.PIPE, shell=False)
+        res1.stdout.close()
+        result = res2.communicate()[0]
+
+        if '3306' in result:
+            sqlStatus.append(1)
+        else:
+            sqlStatus.append(0)
+
+        if getServiceStats('mysql'):
+            sqlStatus.append(getMemStats('mysql'))
+        else:
+            sqlStatus.append(0)
+
+        dnsStatus.append(getServiceStats('pdns'))
+        if getServiceStats('pdns'):
+            dnsStatus.append(getMemStats('pdns'))
+        else:
+            dnsStatus.append(0)
+
+        ftpStatus.append(getServiceStats('pure-ftpd'))
+        if getServiceStats('pure-ftpd'):
+            ftpStatus.append(getMemStats('pure-ftpd'))
+        else:
+            ftpStatus.append(0)
+
+        mailStatus.append(getServiceStats('postfix'))
+        if getServiceStats('postfix'):
+            mailStatus.append(getMemStats('postfix'))
+        else:
+            mailStatus.append(0)
+
+
+        json_data = {'status':
+                         {'litespeed':lsStatus[0],
+                          'mysql': sqlStatus[0],
+                          'powerdns': dnsStatus[0],
+                          'pureftp': ftpStatus[0],
+                          'postfix': mailStatus[0]},
+                     'memUsage':
+                         {'litespeed':lsStatus[1],
+                          'mysql': sqlStatus[1],
+                          'powerdns': dnsStatus[1],
+                          'pureftp': ftpStatus[1],
+                          'postfix': mailStatus[1]}}
+
+        return HttpResponse(json.dumps(json_data))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def servicesAction(request):
+    try:
+        val = request.session['userID']
+
+        admin = Administrator.objects.get(pk=val)
+
+        if admin.type == 3:
+            final = {'error': 1, "error_message": "Not enough privilege"}
+            final_json = json.dumps(final)
+            return HttpResponse(final_json)
+
+        try:
+            if request.method == 'POST':
+                data = json.loads(request.body)
+                service = data['service']
+                action = data['action']
+
+                if action not in ["stop","start","restart"]:
+
+                    final_dic = {'serviceAction': 0, "error_message": "Invalid Action"}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+                else:
+                    pass
+
+                if service not in ["lsws", "mysql", "pdns","pure-ftpd"]:
+
+                    final_dic = {'serviceAction': 0, "error_message":"Invalid Service"}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+                else:
+
+                    command = 'sudo service %s %s' % (service, action)
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
+
+                    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+                    result = p.communicate()[0]
+
+
+                    return HttpResponse(result)
+
+                    #if res != 0:
+                    #    final_dic = {'serviceAction': 0, "error_message": "Error while performing action"}
+                    #    final_json = json.dumps(final_dic)
+                    #    return HttpResponse(final_json)
+                    #else:
+                    #    final_dic = {'serviceAction': 1, "error_message":0}
+                    #   final_json = json.dumps(final_dic)
+                     #   return HttpResponse(final_json)
+
+        except BaseException,msg:
+            final_dic = {'serviceAction': 0,'error_message':str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError,msg:
+        final_dic = {'serviceAction': 0,'error_message':str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
 
 
 def stopOrRestartLitespeed(request):

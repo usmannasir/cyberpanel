@@ -8,6 +8,8 @@ urlpatterns = [
     url(r'^cyberCPMainLogFile', views.cyberCPMainLogFile, name='cyberCPMainLogFile'),
     url(r'^getFurtherDataFromLogFile',views.getFurtherDataFromLogFile,name='getFurtherDataFromLogFile'),
 
-
+    url(r'^servicesStatus', views.servicesStatus, name='servicesStatus'),
+    url(r'^servicesAction', views.servicesAction, name='servicesAction'),
+    url(r'^services', views.services, name='services'),
 
 ]

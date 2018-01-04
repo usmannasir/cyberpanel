@@ -823,4 +823,5 @@ app.controller('secureSSHCTRL', function($scope,$http) {
 
 });
 
-/* Java script code to Secure SSH */
+
+

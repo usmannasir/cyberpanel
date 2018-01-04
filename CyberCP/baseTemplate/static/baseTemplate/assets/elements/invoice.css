@@ -1,0 +1,51 @@
+/* Invoice */
+
+.dummy-logo {
+    border: #8da0aa dashed 1px;
+    padding: 35px 25px;
+    text-align: center;
+    font-size: 22px;
+    color: #8da0aa;
+    margin-bottom: 15px;
+}
+.invoice-title {
+    font-size: 32px;
+    text-transform: uppercase;
+}
+.invoice-title + b {
+    font-size: 18px;
+    opacity: 0.7;
+}
+.invoice-address {
+    line-height: 2em;
+    font-size: 14px;
+    margin: 0 0 10px;
+}
+.invoice-date {
+    font-size: 18px;
+    opacity: 0.5;
+}
+.invoice-client {
+    font-size: 13px;
+    text-transform: uppercase;
+    margin: 10px 0 15px;
+    font-weight: bold;
+}
+.invoice-client + .reset-ul li {
+    padding: 0 0 15px;
+}
+.invoice-client + .reset-ul li b {
+    width: 80px;
+    display: inline-block;
+    opacity: 0.6;
+}
+.invoice-client + h5 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.invoice-client + h5 + address {
+    opacity: 0.5;
+    line-height: 1.6em;
+}
