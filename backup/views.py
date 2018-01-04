@@ -217,12 +217,13 @@ def submitBackupCreation(request):
             execPath = execPath + " submitBackupCreation --tempStoragePath " + tempStoragePath + " --backupName " + backupName + " --backupPath " + backupPath + " --metaPath " + metaPath
 
 
-
             subprocess.Popen(shlex.split(execPath))
 
             newBackup = Backups(website=website, fileName=backupName, date=time.strftime("%I-%M-%S-%a-%b-%Y"),
                                 size=0, status=0)
             newBackup.save()
+
+            time.sleep(2)
 
             final_json = json.dumps({'metaStatus': 1, 'error_message': "None", 'tempStorage': tempStoragePath})
             return HttpResponse(final_json)

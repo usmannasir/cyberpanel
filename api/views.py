@@ -21,6 +21,8 @@ from shutil import rmtree
 from baseTemplate.models import version
 import subprocess
 import shlex
+import re
+from dns.models import Domains,Records
 # Create your views here.
 
 
@@ -62,10 +64,20 @@ def createWebsite(request):
             packageName = data['packageName']
             websiteOwner = data['websiteOwner']
             ownerPassword = data['ownerPassword']
+            externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:7]
 
 
             try:
                 website = Websites.objects.get(domain=domain)
+                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
+                            'error_message': "Website Already Exists"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except:
+                pass
+
+            try:
+                website = ChildDomains.objects.get(domain=domain)
                 data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
                             'error_message': "Website Already Exists"}
                 json_data = json.dumps(data_ret)
@@ -96,49 +108,42 @@ def createWebsite(request):
             except BaseException,msg:
                 pass
 
+            ## Create Configurations
 
-            if virtualHostUtilities.checkIfVirtualHostExists(domain) == 1:
-                data_ret = {"existsStatus": 1, 'createWebSiteStatus': 0,
-                            'error_message': "This domain already exists in Litespeed Configurations, first delete the domain to perform sweap."}
+            numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
+            sslpath = "/home/" + domain + "/public_html"
+
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+            execPath = execPath + " createVirtualHost --virtualHostName " + domain + " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + " --ssl " + str(
+                '0') + " --sslPath " + sslpath
+
+            output = subprocess.check_output(shlex.split(execPath))
+
+            if output.find("1,None") > -1:
+                pass
+            else:
+                data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            if virtualHostUtilities.createDirectoryForVirtualHost(domain, adminEmail, phpSelection) != 1:
-                numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
-                virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
-                data_ret = {"existsStatus": 1, 'createWebSiteStatus': 0,
-                            'error_message': "Can not create configurations, see CyberCP main log file."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+            ## Create Configurations ends here
 
-            if virtualHostUtilities.createConfigInMainVirtualHostFile(domain) != 1:
-                numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
-                virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
-                data_ret = {"existsStatus": 1, 'createWebSiteStatus': 0,
-                            'error_message': "Can not create configurations, see CyberCP main log file."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            installUtilities.reStartLiteSpeed()
 
             selectedPackage = Package.objects.get(packageName=packageName)
 
             websiteOwn = Administrator.objects.get(userName=websiteOwner)
 
             website = Websites(admin=websiteOwn, package=selectedPackage, domain=domain, adminEmail=adminEmail,
-                               phpSelection=phpSelection, ssl=0)
+                               phpSelection=phpSelection, ssl=0,externalApp=externalApp)
 
             website.save()
-
-            shutil.copy("/usr/local/CyberCP/index.html", "/home/" + domain + "/public_html/index.html")
 
             data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
     except BaseException, msg:
-        numberOfWebsites = Websites.objects.count()+ChildDomains.objects.count()
-        virtualHostUtilities.deleteVirtualHostConfigurations(domain, numberOfWebsites)
         data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -238,17 +243,40 @@ def deleteWebsite(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            numberOfWebsites = Websites.objects.count()
+            numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
 
-            virtualHostUtilities.deleteVirtualHostConfigurations(websiteName, numberOfWebsites)
+            ## Deleting master domain
+
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+            execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName + " --numberOfSites " + numberOfWebsites
+
+            subprocess.check_output(shlex.split(execPath))
 
             delWebsite = Websites.objects.get(domain=websiteName)
             databases = Databases.objects.filter(website=delWebsite)
+
+            childDomains = delWebsite.childdomains_set.all()
+
+            ## Deleting child domains
+
+            for items in childDomains:
+                numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + items.domain + " --numberOfSites " + numberOfWebsites
+
+                subprocess.check_output(shlex.split(execPath))
 
             for items in databases:
                 mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
 
             delWebsite.delete()
+
+            try:
+                delZone = Domains.objects.get(name=websiteName)
+                delZone.delete()
+            except:
+                pass
 
             installUtilities.reStartLiteSpeed()
 
