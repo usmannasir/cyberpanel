@@ -1,0 +1,145 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Services - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<style>
+    .serviceImg { text-align:center; }
+    .serviceImg img { bottom: 63px; width: 100px; margin-top: -65px; background: white; padding: 10px; height: 100px;}
+    .service-panel { margin-top: 63px; border: 0; background: #38b4bf; }
+    .service-panel .panel-body { height: 188px; }
+    .serviceDetails { color: white; text-align:center; margin-top: 15px;}
+    .serviceActionBtn { margin: 10px; }
+</style>
+
+<div ng-controller="servicesManager" class="container">
+
+    <div id="page-title">
+        <h2>Services <img ng-show="actionLoader" src="/static/images/loading.gif"></h2>
+
+       <p>Show stats for services and actions (Start, Stop, Restart)</p>
+    </div>
+
+    <div >
+        <div class="row">
+            <div class="col-sm-6 col-md-6">
+                <div class="panel panel-default service-panel">
+                  <div class="panel-body">
+                    <div class="serviceImg">
+                        <img src="{% static 'images/litespeed.png' %}" alt="OpenLitespeed" class="img-circle">
+                    </div>
+                    <div class="serviceDetails">
+                        <div class="serviceHeading">
+                            <h5><b>OpenLitespeed</b></h5>
+                            <span class="help-block" ng-bind="olsStatus">Stopped</span>
+                        </div>
+                        <div class="serviceActionBtn">
+                            <button type="button" class="btn btn-success" ng-disabled="btnDisable" ng-show="olsStart" ng-click="serviceAction('lsws','start')" data-toggle="tooltip" title="Start!"><i class="glyph-icon icon-play" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-warning" ng-disabled="btnDisable" ng-show="olsStop" ng-click="serviceAction('lsws','stop')" data-toggle="tooltip" title="Stop!"><i class="glyph-icon icon-pause" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-default" ng-disabled="btnDisable" ng-click="serviceAction('lsws','restart')" data-toggle="tooltip" title="Restart!"><i class="glyph-icon icon-refresh" aria-hidden="true"></i></button>
+                        </div>
+                        <div ng-show="olsStats">
+                            <p>Memory Usage: <span ng-bind="olsMem"></span></p>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-6">
+                <div class="panel panel-default service-panel">
+                  <div class="panel-body">
+                    <div class="serviceImg">
+                        <img src="{% static 'images/mariadb.png' %}" alt="MariaDB" class="img-circle">
+                    </div>
+                    <div class="serviceDetails">
+                        <div class="serviceHeading">
+                            <h5><b>MariaDB</b></h5>
+                            <span class="help-block" ng-bind="sqlStatus">Stopped</span>
+                        </div>
+                        <div class="serviceActionBtn">
+                            <button type="button" class="btn btn-success" ng-disabled="btnDisable" ng-show="sqlStart" ng-click="serviceAction('mysql','start')" data-toggle="tooltip" title="Start!"><i class="glyph-icon icon-play" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-warning" ng-disabled="btnDisable" ng-show="sqlStop" ng-click="serviceAction('mysql','stop')" data-toggle="tooltip" title="Stop!"><i class="glyph-icon icon-pause" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-default" ng-disabled="btnDisable" ng-click="serviceAction('mysql','restart')" data-toggle="tooltip" title="Restart!"><i class="glyph-icon icon-refresh" aria-hidden="true"></i></button>
+                        </div>
+                        <div ng-show="sqlStats">
+                            <p>Memory Usage: <span ng-bind="sqlMem"></span></p>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="row">
+
+            <div class="col-sm-6 col-md-6">
+                <div class="panel panel-default service-panel">
+                  <div class="panel-body">
+                    <div class="serviceImg">
+                        <img src="{% static 'images/powerdns.png' %}" alt="PowerDNS" class="img-circle">
+                    </div>
+                    <div class="serviceDetails">
+                        <div class="serviceHeading">
+                            <h5><b>PowerDNS</b></h5>
+                            <span class="help-block" ng-bind="dnsStatus">Stopped</span>
+                        </div>
+                        <div class="serviceActionBtn">
+                            <button type="button" class="btn btn-success" ng-disabled="btnDisable" ng-show="dnsStart" ng-click="serviceAction('pdns','start')" data-toggle="tooltip" title="Start!"><i class="glyph-icon icon-play" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-warning" ng-disabled="btnDisable" ng-show="dnsStop" ng-click="serviceAction('pdns','stop')" data-toggle="tooltip" title="Stop!"><i class="glyph-icon icon-pause" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-default" ng-disabled="btnDisable" ng-click="serviceAction('pdns','restart')" data-toggle="tooltip" title="Restart!"><i class="glyph-icon icon-refresh" aria-hidden="true"></i></button>
+                        </div>
+                        <div ng-show="dnsStats">
+                            <p>Memory Usage: <span ng-bind="dnsMem"></span></p>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-6">
+                <div class="panel panel-default service-panel">
+                  <div class="panel-body">
+                    <div class="serviceImg">
+                        <img src="{% static 'images/pureftpd.png' %}" alt="PureFTPd" class="img-circle">
+                    </div>
+                    <div class="serviceDetails">
+                        <div class="serviceHeading">
+                            <h5><b>PureFTPd</b></h5>
+                            <span class="help-block" ng-bind="dnsStatus">Stopped</span>
+                        </div>
+                        <div class="serviceActionBtn">
+                            <button type="button" class="btn btn-success" ng-disabled="btnDisable" ng-show="ftpStart" ng-click="serviceAction('pure-ftpd','start')" data-toggle="tooltip" title="Start!"><i class="glyph-icon icon-play" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-warning" ng-disabled="btnDisable" ng-show="ftpStop" ng-click="serviceAction('pure-ftpd','stop')" data-toggle="tooltip" title="Stop!"><i class="glyph-icon icon-pause" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-default" ng-disabled="btnDisable" ng-click="serviceAction('pure-ftpd','restart')" data-toggle="tooltip" title="Restart!"><i class="glyph-icon icon-refresh" aria-hidden="true"></i></button>
+                        </div>
+                        <div ng-show="ftpStats">
+                            <p>Memory Usage: <span ng-bind="ftpMem"></span></p>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label"></label>
+            <div class="col-sm-4">
+                <div ng-show="ActionFailed" class="alert alert-danger">
+                    <p class="ng-binding">Action Failed</p>
+                </div>
+                <div ng-show="ActionSuccessfull" class="alert alert-success ng-hide">
+                    <p class="ng-binding">Action Completed</p>
+                </div>
+                <div ng-show="couldNotConnect" class="alert alert-danger ng-hide">
+                    <p>Could not connect to server. Please refresh this page.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

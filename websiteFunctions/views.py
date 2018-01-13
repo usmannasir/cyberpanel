@@ -32,12 +32,7 @@ def loadWebsitesHome(request):
 
         admin = Administrator.objects.get(pk=val)
 
-        viewStatus = 1
-
-        if admin.type == 3:
-            viewStatus = 0
-
-        return render(request,'websiteFunctions/index.html',{"viewStatus":viewStatus})
+        return render(request,'websiteFunctions/index.html',{"type":admin.type})
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -49,6 +44,12 @@ def createWebsite(request):
             admin = Administrator.objects.get(pk=request.session['userID'])
             packages = admin.package_set.all()
             packagesName = []
+
+            if admin.type == 3:
+                final = {'error': 1, "error_message": "Not enough privilege"}
+                final_json = json.dumps(final)
+                return HttpResponse(final_json)
+
 
             for items in packages:
                 packagesName.append(items.packageName)

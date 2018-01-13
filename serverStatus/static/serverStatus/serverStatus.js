@@ -277,3 +277,164 @@ app.controller('readCyberCPLogFile', function($scope,$http) {
 
 
 /* Java script code to read log file ends here */
+
+
+/* Java script code to read log file ends here */
+
+/* Services */
+
+app.controller('servicesManager', function($scope,$http) {
+
+           $scope.services = false;
+           $scope.btnDisable = false;
+           $scope.actionLoader = false;
+
+           function getServiceStatus(){
+                $scope.btnDisable = true;
+
+                url = "/serverstatus/servicesStatus";
+
+                $http.post(url).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if (response.data.status.litespeed) {
+                        $scope.olsStatus = "Running";
+                        $scope.olsStats = true;
+                        $scope.olsStart = false;
+                        $scope.olsStop = true;
+                        $scope.olsMem = Math.round(parseInt(response.data.memUsage.litespeed) / 1048576) + " MB";
+                    }
+                    else {
+                        $scope.olsStatus = "Stopped";
+                        $scope.olsStats = false;
+                        $scope.olsStart = true;
+                        $scope.olsStop = false;
+                    }
+
+                    // Update SQL stats
+
+                    if (response.data.status.mysql) {
+                        $scope.sqlStatus = "Running";
+                        $scope.sqlStats = true;
+                        $scope.sqlStart = false;
+                        $scope.sqlStop = true;
+                        $scope.sqlMem = Math.round(parseInt(response.data.memUsage.mysql) / 1048576) + " MB";
+                    }
+                    else {
+                        $scope.sqlStatus = "Stopped";
+                        $scope.sqlStats = false;
+                        $scope.sqlStart = true;
+                        $scope.sqlStop = false;
+                    }
+
+                    // Update DNS stats
+
+                    if (response.data.status.powerdns) {
+                        $scope.dnsStatus = "Running";
+                        $scope.dnsStats = true;
+                        $scope.dnsStart = false;
+                        $scope.dnsStop = true;
+                        $scope.dnsMem = Math.round(parseInt(response.data.memUsage.powerdns) / 1048576) + " MB";
+                    }
+                    else {
+                        $scope.dnsStatus = "Stopped";
+                        $scope.dnsStats = false;
+                        $scope.dnsStart = true;
+                        $scope.dnsStop = false;
+                    }
+
+                    // Update FTP stats
+
+                    if (response.data.status.pureftp) {
+                        $scope.ftpStatus = "Running";
+                        $scope.ftpStats = true;
+                        $scope.ftpStart = false;
+                        $scope.ftpStop = true;
+                        $scope.ftpMem = Math.round(parseInt(response.data.memUsage.pureftp) / 1048576) + " MB";
+                    }
+                    else {
+                        $scope.ftpStatus = "Stopped";
+                        $scope.ftpStats = false;
+                        $scope.ftpStart = true;
+                        $scope.ftpStop = false;
+                    }
+
+                    $scope.services = true;
+
+                    $scope.btnDisable = false;
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.couldNotConnect = true;
+
+                }
+
+           };
+           getServiceStatus();
+
+           $scope.serviceAction = function(serviceName, action){
+                $scope.ActionProgress = true;
+                $scope.btnDisable = true;
+                $scope.ActionSuccessfull = false;
+                $scope.ActionFailed = false;
+                $scope.couldNotConnect = false;
+                $scope.actionLoader = true;
+
+                url = "/serverstatus/servicesAction";
+
+                var data = {
+                    service:serviceName,
+                    action:action
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+                function ListInitialDatas(response) {
+                console.log(response.data);
+
+                    if(response.data.serviceAction == 1){
+                        setTimeout(function() {
+                            getServiceStatus();
+                            setTimeout(function() {
+                                $scope.ActionSuccessfull = true;
+                                $scope.ActionFailed = false;
+                                $scope.couldNotConnect = false;
+                                $scope.actionLoader = false;
+                                $scope.btnDisable = false;
+                            },1000)
+                        }, 3000);
+                    }
+                    else{
+                        setTimeout(function() {
+                            getServiceStatus();
+                            setTimeout(function() {
+                                $scope.ActionSuccessfull = false;
+                                $scope.ActionFailed = true;
+                                $scope.couldNotConnect = false;
+                                $scope.actionLoader = false;
+                                $scope.btnDisable = false;
+                            },1000)
+                        }, 5000);
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.ActionSuccessfull = false;
+                    $scope.ActionFailed = false;
+                    $scope.couldNotConnect = true;
+                    $scope.actionLoader = false;
+                    $scope.btnDisable = false;
+                }
+
+           }
+
+});

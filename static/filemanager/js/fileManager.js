@@ -421,10 +421,10 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
         return trNode;
 
     }
-    
-    
+
+
     // Button Activator
-    
+
     $scope.buttonActivator = function () {
 
         // for edit button

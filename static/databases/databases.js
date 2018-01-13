@@ -277,6 +277,7 @@ app.controller('deleteDatabase', function($scope,$http) {
 
 
 });
+
 /* Java script code to delete database ends here */
 
 

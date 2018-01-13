@@ -681,7 +681,7 @@ class preFlightsChecks:
         cmd = []
 
         cmd.append("wget")
-        cmd.append("http://cyberpanel.net/CyberPanel.1.6.0.tar.gz")
+        cmd.append("http://cyberpanel.net/CyberPanelTemp.tar.gz")
 
         res = subprocess.call(cmd)
 
@@ -700,7 +700,7 @@ class preFlightsChecks:
 
         cmd.append("tar")
         cmd.append("zxf")
-        cmd.append("CyberPanel.1.6.0.tar.gz")
+        cmd.append("CyberPanelTemp.tar.gz")
 
         res = subprocess.call(cmd)
 

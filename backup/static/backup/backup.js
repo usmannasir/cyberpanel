@@ -1144,7 +1144,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
         }
 
     };
-    
+
     $scope.startTransfer = function () {
 
         // notifications boxes

@@ -421,7 +421,7 @@ app.controller('addModifyDNSRecords', function($scope,$http) {
 
                         populateCurrentRecords();
 
-                        
+
 
                     }
                     else{
@@ -441,7 +441,7 @@ app.controller('addModifyDNSRecords', function($scope,$http) {
 
                         $scope.errorMessage = response.data.error_message;
 
-                        
+
                     }
 
                 }
@@ -459,7 +459,7 @@ app.controller('addModifyDNSRecords', function($scope,$http) {
                     $scope.couldNotDeleteRecords = true;
                     $scope.couldNotAddRecord = true;
 
-                    
+
 
 
                 }
