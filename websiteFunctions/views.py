@@ -1112,6 +1112,14 @@ def installWordpress(request):
                 else:
                     finalPath = "/home/" + domainName + "/public_html/"
 
+                ## Security Check
+
+                if finalPath.find("..") > -1:
+                    data_ret = {'installStatus': 0,
+                                'error_message': "Specified path must be inside virtual host home!"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
                 try:
                     website = ChildDomains.objects.get(domain=domainName)
                     externalApp = website.master.externalApp
@@ -1155,10 +1163,7 @@ def installWordpress(request):
                 db = Databases(website=website, dbName=dbName, dbUser=dbUser)
                 db.save()
 
-
-
                 ## Installation
-
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
@@ -1212,6 +1217,13 @@ def installJoomla(request):
                     finalPath = "/home/" + domainName + "/public_html/" + path + "/"
                 else:
                     finalPath = "/home/" + domainName + "/public_html/"
+
+
+                if finalPath.find("..") > -1:
+                    data_ret = {'installStatus': 0,
+                                'error_message': "Specified path must be inside virtual host home!"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
 
                 try:
                     website = ChildDomains.objects.get(domain=domainName)

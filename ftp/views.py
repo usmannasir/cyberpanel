@@ -101,11 +101,17 @@ def submitFTPCreation(request):
 
                     path = "/home/" + data['ftpDomain']+"/public_html/"+path
 
+                    ## Security Check
+
+                    if path.find("..") > -1:
+                        data_ret = {'creatFTPStatus': 0,
+                                    'error_message': "Specified path must be inside virtual host home!"}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+
                     execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/ftpUtilities.py"
 
                     execPath = execPath + " ftpFunctions --path " + path + " --externalApp " + externalApp
-
-
 
                     output = subprocess.check_output(shlex.split(execPath))
 
