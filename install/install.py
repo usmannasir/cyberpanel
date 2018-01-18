@@ -795,6 +795,25 @@ class preFlightsChecks:
 
             print("###################################################################")
 
+            ## fix permissions
+
+            command = "chmod -R 744 /usr/local/CyberCP"
+
+            res = subprocess.call(shlex.split(command))
+
+            if res == 1:
+                logging.InstallLog.writeToFile("[805] Permissions fix failed!")
+            else:
+                pass
+
+            ## move static content
+
+            command = 'mv static /usr/local/lscp/cyberpanel'
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
+
     def install_unzip(self):
         try:
 
