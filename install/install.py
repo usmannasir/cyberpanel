@@ -806,14 +806,6 @@ class preFlightsChecks:
             else:
                 pass
 
-            ## move static content
-
-            command = 'mv static /usr/local/lscp/cyberpanel'
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd)
-
     def install_unzip(self):
         try:
 
