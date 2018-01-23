@@ -681,7 +681,7 @@ class preFlightsChecks:
         cmd = []
 
         cmd.append("wget")
-        cmd.append("http://cyberpanel.net/CyberPanelTemp.tar.gz")
+        cmd.append("http://cyberpanel.net/CyberPanel.1.6.0.tar.gz")
 
         res = subprocess.call(cmd)
 
@@ -700,7 +700,7 @@ class preFlightsChecks:
 
         cmd.append("tar")
         cmd.append("zxf")
-        cmd.append("CyberPanelTemp.tar.gz")
+        cmd.append("CyberPanel.1.6.0.tar.gz")
 
         res = subprocess.call(cmd)
 
@@ -798,6 +798,18 @@ class preFlightsChecks:
             ## fix permissions
 
             command = "chmod -R 744 /usr/local/CyberCP"
+
+            res = subprocess.call(shlex.split(command))
+
+            if res == 1:
+                logging.InstallLog.writeToFile("[805] Permissions fix failed!")
+            else:
+                pass
+
+
+            ## change owner
+
+            command = "chown -R cyberpanel:cyberpanel /usr/local/CyberCP"
 
             res = subprocess.call(shlex.split(command))
 

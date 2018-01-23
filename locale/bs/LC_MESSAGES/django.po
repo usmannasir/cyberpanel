@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-02 02:08+0500\n"
+"POT-Creation-Date: 2018-01-23 20:36+0500\n"
 "PO-Revision-Date: 2017-10-21 21:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: LANGUAGE <info@reuhost.net>\n"
@@ -49,16 +49,16 @@ msgstr ""
 msgid "Bosnian"
 msgstr ""
 
-#: backup/templates/backup/backup.html:3 backup/templates/backup/backup.html:13
-#: backup/templates/backup/backup.html:20
+#: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
+#: backup/templates/backup/backup.html:21
 msgid "Back up Website"
 msgstr "Nazad na sajt"
 
-#: backup/templates/backup/backup.html:14
+#: backup/templates/backup/backup.html:15
 msgid "This page can be used to Back up your websites"
 msgstr "Ova stranica može poslužiti da napravite Backup vašeg sajta"
 
-#: backup/templates/backup/backup.html:29
+#: backup/templates/backup/backup.html:30
 #: databases/templates/databases/createDatabase.html:28
 #: databases/templates/databases/deleteDatabase.html:28
 #: ftp/templates/ftp/createFTPAccount.html:28
@@ -73,47 +73,50 @@ msgstr "Ova stranica može poslužiti da napravite Backup vašeg sajta"
 msgid "Select Website"
 msgstr "Odabir sajta"
 
-#: backup/templates/backup/backup.html:40
+#: backup/templates/backup/backup.html:41
 #: backup/templates/backup/backupSchedule.html:90
 msgid "Destination"
 msgstr "Odredište"
 
-#: backup/templates/backup/backup.html:43
+#: backup/templates/backup/backup.html:44
 #: baseTemplate/templates/baseTemplate/homePage.html:12
+#: filemanager/templates/filemanager/index.html:133
 msgid "Home"
 msgstr "Početna"
 
-#: backup/templates/backup/backup.html:59
+#: backup/templates/backup/backup.html:60
 #: backup/templates/backup/restore.html:62
+#: filemanager/templates/filemanager/index.html:157
 msgid "File Name"
 msgstr "Ime datoteke"
 
-#: backup/templates/backup/backup.html:60
-#: backup/templates/backup/backup.html:105
+#: backup/templates/backup/backup.html:61
+#: backup/templates/backup/backup.html:106
 #: backup/templates/backup/restore.html:63
 #: baseTemplate/templates/baseTemplate/index.html:390
+#: filemanager/templates/filemanager/index.html:212
 #: firewall/templates/firewall/firewall.html:36
 #: managePHP/templates/managePHP/installExtensions.html:65
 msgid "Status"
 msgstr "Status"
 
-#: backup/templates/backup/backup.html:65
+#: backup/templates/backup/backup.html:66
 msgid "Running"
 msgstr "Pokrenuto"
 
-#: backup/templates/backup/backup.html:80
-#: baseTemplate/templates/baseTemplate/index.html:561
+#: backup/templates/backup/backup.html:81
+#: baseTemplate/templates/baseTemplate/index.html:565
 msgid "Create Back up"
 msgstr "Kreiraj backup"
 
-#: backup/templates/backup/backup.html:87
+#: backup/templates/backup/backup.html:88
 #, fuzzy
 #| msgid "Create Back up"
 msgid "Cancel Backup"
 msgstr "Kreiraj backup"
 
-#: backup/templates/backup/backup.html:101
-#: backup/templates/backup/backupDestinations.html:90
+#: backup/templates/backup/backup.html:102
+#: backup/templates/backup/backupDestinations.html:97
 #: backup/templates/backup/backupSchedule.html:89
 #: databases/templates/databases/listDataBases.html:87
 #: dns/templates/dns/addDeleteDNSRecords.html:129
@@ -123,46 +126,51 @@ msgstr "Kreiraj backup"
 msgid "ID"
 msgstr "ID"
 
-#: backup/templates/backup/backup.html:102
+#: backup/templates/backup/backup.html:103
 msgid "File"
 msgstr "Datoteka"
 
-#: backup/templates/backup/backup.html:103
+#: backup/templates/backup/backup.html:104
 msgid "Date"
 msgstr "Datum"
 
-#: backup/templates/backup/backup.html:104
+#: backup/templates/backup/backup.html:105
+#: filemanager/templates/filemanager/index.html:210
 #: ftp/templates/ftp/listFTPAccounts.html:90
 msgid "Size"
 msgstr "Veličina"
 
-#: backup/templates/backup/backup.html:106
-#: backup/templates/backup/backupDestinations.html:93
+#: backup/templates/backup/backup.html:107
+#: backup/templates/backup/backupDestinations.html:100
 #: backup/templates/backup/backupSchedule.html:92
 #: dns/templates/dns/addDeleteDNSRecords.html:134
+#: filemanager/templates/filemanager/index.html:72
 #: firewall/templates/firewall/firewall.html:140
 #: firewall/templates/firewall/secureSSH.html:122
-#: websiteFunctions/templates/websiteFunctions/website.html:451
+#: websiteFunctions/templates/websiteFunctions/website.html:450
 msgid "Delete"
 msgstr "Briši"
 
-#: backup/templates/backup/backup.html:130
+#: backup/templates/backup/backup.html:131
 msgid "Cannot delete website, Error message:  "
 msgstr "Nije moguće izbisati web sajti, greška: "
 
-#: backup/templates/backup/backup.html:134
+#: backup/templates/backup/backup.html:135
 msgid "Successfully Deleted"
 msgstr "Uspješno izbrisan"
 
 #: backup/templates/backup/backupDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:14
-#: backup/templates/backup/backupDestinations.html:21
 msgid "Set up Back up Destinations"
 msgstr "Destinacija Backupa"
 
 #: backup/templates/backup/backupDestinations.html:15
 msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgstr "Na ovoj stranici možete podesiti Backup destinacije (SFTP)"
+
+#: backup/templates/backup/backupDestinations.html:21
+msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
+msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:30
 #: backup/templates/backup/remoteBackups.html:29
@@ -185,34 +193,45 @@ msgstr "IP adresa"
 msgid "Password"
 msgstr "Šifra"
 
-#: backup/templates/backup/backupDestinations.html:48
+#: backup/templates/backup/backupDestinations.html:45
+#: firewall/templates/firewall/firewall.html:139
+msgid "Port"
+msgstr "Port"
+
+#: backup/templates/backup/backupDestinations.html:47
+msgid "Backup server SSH Port, leave empty for 22."
+msgstr ""
+
+#: backup/templates/backup/backupDestinations.html:55
 #: backup/templates/backup/backupSchedule.html:54
-#: baseTemplate/templates/baseTemplate/index.html:563
+#: baseTemplate/templates/baseTemplate/index.html:567
 msgid "Add Destination"
 msgstr "Dodaj destinaciju"
 
-#: backup/templates/backup/backupDestinations.html:62
-#: backup/templates/backup/backupDestinations.html:66
+#: backup/templates/backup/backupDestinations.html:69
+#: backup/templates/backup/backupDestinations.html:73
 msgid "Connection to"
 msgstr "Povezivanje na "
 
-#: backup/templates/backup/backupDestinations.html:62
-msgid "failed. Please delete and re-add."
+#: backup/templates/backup/backupDestinations.html:69
+#, fuzzy
+#| msgid "failed. Please delete and re-add."
+msgid "failed. Please delete and re-add. "
 msgstr "nije uspjelo. Molimo da radnju izbrišete i ponovno dodate."
 
-#: backup/templates/backup/backupDestinations.html:66
+#: backup/templates/backup/backupDestinations.html:73
 msgid "successful."
 msgstr "uspješno."
 
-#: backup/templates/backup/backupDestinations.html:70
+#: backup/templates/backup/backupDestinations.html:77
 msgid "Cannot add destination. Error message:"
 msgstr "Nije moguće dodati destinaciju. Greška je:"
 
-#: backup/templates/backup/backupDestinations.html:74
+#: backup/templates/backup/backupDestinations.html:81
 msgid "Destination Added."
 msgstr "Destinacija je dodana."
 
-#: backup/templates/backup/backupDestinations.html:78
+#: backup/templates/backup/backupDestinations.html:85
 #: backup/templates/backup/backupSchedule.html:77
 #: backup/templates/backup/restore.html:95
 #: databases/templates/databases/createDatabase.html:88
@@ -228,22 +247,23 @@ msgstr "Destinacija je dodana."
 #: userManagment/templates/userManagment/createUser.html:162
 #: userManagment/templates/userManagment/modifyUser.html:138
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:77
-#: websiteFunctions/templates/websiteFunctions/website.html:157
-#: websiteFunctions/templates/websiteFunctions/website.html:363
-#: websiteFunctions/templates/websiteFunctions/website.html:405
-#: websiteFunctions/templates/websiteFunctions/website.html:535
-#: websiteFunctions/templates/websiteFunctions/website.html:590
-#: websiteFunctions/templates/websiteFunctions/website.html:645
-#: websiteFunctions/templates/websiteFunctions/website.html:792
+#: websiteFunctions/templates/websiteFunctions/website.html:156
+#: websiteFunctions/templates/websiteFunctions/website.html:362
+#: websiteFunctions/templates/websiteFunctions/website.html:404
+#: websiteFunctions/templates/websiteFunctions/website.html:534
+#: websiteFunctions/templates/websiteFunctions/website.html:589
+#: websiteFunctions/templates/websiteFunctions/website.html:644
+#: websiteFunctions/templates/websiteFunctions/website.html:802
+#: websiteFunctions/templates/websiteFunctions/website.html:881
 msgid "Could not connect to server. Please refresh this page."
 msgstr "Ne mogu se spojiti na udaljeni računar. Molimo da refreshujete "
 
-#: backup/templates/backup/backupDestinations.html:91
+#: backup/templates/backup/backupDestinations.html:98
 msgid "IP"
 msgstr "IP"
 
-#: backup/templates/backup/backupDestinations.html:92
-#: backup/templates/backup/backupDestinations.html:100
+#: backup/templates/backup/backupDestinations.html:99
+#: backup/templates/backup/backupDestinations.html:107
 msgid "Check Connection"
 msgstr "Provjerite vašu Internet konekciju."
 
@@ -253,7 +273,7 @@ msgstr "Zakazivanje Backupa - CyberPanel"
 
 #: backup/templates/backup/backupSchedule.html:13
 #: backup/templates/backup/backupSchedule.html:20
-#: baseTemplate/templates/baseTemplate/index.html:564
+#: baseTemplate/templates/baseTemplate/index.html:568
 msgid "Schedule Back up"
 msgstr "Zakazivanje backupa"
 
@@ -303,9 +323,9 @@ msgstr "Backup naslovna "
 #: baseTemplate/templates/baseTemplate/homePage.html:271
 #: baseTemplate/templates/baseTemplate/homePage.html:463
 #: baseTemplate/templates/baseTemplate/homePage.html:466
-#: baseTemplate/templates/baseTemplate/index.html:554
-#: baseTemplate/templates/baseTemplate/index.html:556
-#: baseTemplate/templates/baseTemplate/index.html:573
+#: baseTemplate/templates/baseTemplate/index.html:558
+#: baseTemplate/templates/baseTemplate/index.html:560
+#: baseTemplate/templates/baseTemplate/index.html:577
 msgid "Back up"
 msgstr "Backup"
 
@@ -325,7 +345,7 @@ msgstr "Backup i vrati sajtove"
 #: serverStatus/templates/serverStatus/index.html:19
 #: tuning/templates/tuning/index.html:18
 #: userManagment/templates/userManagment/index.html:20
-#: websiteFunctions/templates/websiteFunctions/index.html:20
+#: websiteFunctions/templates/websiteFunctions/index.html:22
 msgid "Available Functions"
 msgstr "Dostupne funkcije"
 
@@ -336,7 +356,7 @@ msgid "Back up Site"
 msgstr "Nazad na sajt"
 
 #: backup/templates/backup/index.html:55
-#: baseTemplate/templates/baseTemplate/index.html:562
+#: baseTemplate/templates/baseTemplate/index.html:566
 msgid "Restore Back up"
 msgstr "Vrati backup"
 
@@ -373,7 +393,8 @@ msgid "Start Transfer"
 msgstr ""
 
 #: backup/templates/backup/remoteBackups.html:59
-#: websiteFunctions/templates/websiteFunctions/website.html:296
+#: filemanager/templates/filemanager/index.html:236
+#: websiteFunctions/templates/websiteFunctions/website.html:295
 msgid "Cancel"
 msgstr ""
 
@@ -414,8 +435,8 @@ msgstr "Sajt"
 
 #: backup/templates/backup/remoteBackups.html:108
 #: baseTemplate/templates/baseTemplate/homePage.html:333
-#: baseTemplate/templates/baseTemplate/index.html:626
-#: baseTemplate/templates/baseTemplate/index.html:628
+#: baseTemplate/templates/baseTemplate/index.html:631
+#: baseTemplate/templates/baseTemplate/index.html:633
 #: managePHP/templates/managePHP/installExtensions.html:62
 msgid "PHP"
 msgstr "PHP"
@@ -428,8 +449,8 @@ msgid "Package"
 msgstr "Paket"
 
 #: backup/templates/backup/remoteBackups.html:110
-#: baseTemplate/templates/baseTemplate/index.html:514
-#: baseTemplate/templates/baseTemplate/index.html:516
+#: baseTemplate/templates/baseTemplate/index.html:518
+#: baseTemplate/templates/baseTemplate/index.html:520
 #: userManagment/templates/userManagment/createUser.html:47
 #: userManagment/templates/userManagment/modifyUser.html:54
 #: userManagment/templates/userManagment/userProfile.html:50
@@ -461,6 +482,12 @@ msgstr ""
 msgid "Select Back up"
 msgstr "Odabir backupa"
 
+#: backup/templates/backup/restore.html:61
+#, fuzzy
+#| msgid "Configurations"
+msgid "Condition"
+msgstr "Upravljajte postavkama"
+
 #: backup/templates/backup/restore.html:86
 #: databases/templates/databases/deleteDatabase.html:64
 #: databases/templates/databases/listDataBases.html:54
@@ -482,7 +509,7 @@ msgid "Use the tabs to navigate through the control panel."
 msgstr "Koristi tabove da te vode do kontrolnog panela"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:23
-#: websiteFunctions/templates/websiteFunctions/website.html:33
+#: websiteFunctions/templates/websiteFunctions/website.html:32
 msgid "Usage"
 msgstr "Upotreba"
 
@@ -528,9 +555,9 @@ msgstr "Korisničke funkcije"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:178
 #: baseTemplate/templates/baseTemplate/homePage.html:392
-#: baseTemplate/templates/baseTemplate/index.html:426
-#: baseTemplate/templates/baseTemplate/index.html:427
-#: baseTemplate/templates/baseTemplate/index.html:428
+#: baseTemplate/templates/baseTemplate/index.html:430
+#: baseTemplate/templates/baseTemplate/index.html:431
+#: baseTemplate/templates/baseTemplate/index.html:432
 msgid "Users"
 msgstr "Korisnici"
 
@@ -543,9 +570,9 @@ msgstr ""
 #: baseTemplate/templates/baseTemplate/homePage.html:191
 #: baseTemplate/templates/baseTemplate/homePage.html:405
 #: baseTemplate/templates/baseTemplate/index.html:360
-#: baseTemplate/templates/baseTemplate/index.html:444
-#: baseTemplate/templates/baseTemplate/index.html:445
-#: baseTemplate/templates/baseTemplate/index.html:446
+#: baseTemplate/templates/baseTemplate/index.html:448
+#: baseTemplate/templates/baseTemplate/index.html:449
+#: baseTemplate/templates/baseTemplate/index.html:450
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:21
 msgid "Websites"
 msgstr "Sajtovi"
@@ -558,8 +585,8 @@ msgstr "Promijeni paket"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:204
 #: baseTemplate/templates/baseTemplate/index.html:366
-#: baseTemplate/templates/baseTemplate/index.html:461
-#: baseTemplate/templates/baseTemplate/index.html:463
+#: baseTemplate/templates/baseTemplate/index.html:465
+#: baseTemplate/templates/baseTemplate/index.html:467
 #: packages/templates/packages/index.html:13
 msgid "Packages"
 msgstr "Pakti"
@@ -572,12 +599,12 @@ msgstr "Funkcije za bazu podataka"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:228
 #: baseTemplate/templates/baseTemplate/homePage.html:418
-#: baseTemplate/templates/baseTemplate/index.html:477
-#: baseTemplate/templates/baseTemplate/index.html:478
-#: baseTemplate/templates/baseTemplate/index.html:479
+#: baseTemplate/templates/baseTemplate/index.html:481
+#: baseTemplate/templates/baseTemplate/index.html:482
+#: baseTemplate/templates/baseTemplate/index.html:483
 #: packages/templates/packages/createPackage.html:67
 #: packages/templates/packages/modifyPackage.html:73
-#: websiteFunctions/templates/websiteFunctions/website.html:44
+#: websiteFunctions/templates/websiteFunctions/website.html:43
 msgid "Databases"
 msgstr "Baze podataka"
 
@@ -589,8 +616,8 @@ msgstr ""
 #: baseTemplate/templates/baseTemplate/homePage.html:240
 #: baseTemplate/templates/baseTemplate/homePage.html:441
 #: baseTemplate/templates/baseTemplate/index.html:372
-#: baseTemplate/templates/baseTemplate/index.html:495
-#: baseTemplate/templates/baseTemplate/index.html:497
+#: baseTemplate/templates/baseTemplate/index.html:499
+#: baseTemplate/templates/baseTemplate/index.html:501
 msgid "DNS"
 msgstr "DNS"
 
@@ -603,9 +630,9 @@ msgstr "FTP funkcije"
 #: baseTemplate/templates/baseTemplate/homePage.html:253
 #: baseTemplate/templates/baseTemplate/homePage.html:454
 #: baseTemplate/templates/baseTemplate/index.html:378
-#: baseTemplate/templates/baseTemplate/index.html:536
-#: baseTemplate/templates/baseTemplate/index.html:538
-#: websiteFunctions/templates/websiteFunctions/website.html:39
+#: baseTemplate/templates/baseTemplate/index.html:540
+#: baseTemplate/templates/baseTemplate/index.html:542
+#: websiteFunctions/templates/websiteFunctions/website.html:38
 msgid "FTP"
 msgstr "FTP"
 
@@ -626,9 +653,9 @@ msgstr "Server tuning"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:317
 #: baseTemplate/templates/baseTemplate/homePage.html:320
-#: baseTemplate/templates/baseTemplate/index.html:607
-#: baseTemplate/templates/baseTemplate/index.html:609
-#: baseTemplate/templates/baseTemplate/index.html:642
+#: baseTemplate/templates/baseTemplate/index.html:611
+#: baseTemplate/templates/baseTemplate/index.html:613
+#: baseTemplate/templates/baseTemplate/index.html:647
 #: serverStatus/templates/serverStatus/index.html:13
 msgid "Server Status"
 msgstr "Status servera"
@@ -641,15 +668,15 @@ msgstr "Izmijeni PHP konfiguracije"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:342
 #: baseTemplate/templates/baseTemplate/homePage.html:345
-#: baseTemplate/templates/baseTemplate/index.html:644
-#: websiteFunctions/templates/websiteFunctions/website.html:113
+#: baseTemplate/templates/baseTemplate/index.html:649
+#: websiteFunctions/templates/websiteFunctions/website.html:112
 msgid "Logs"
 msgstr "Logovi"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:365
 #: baseTemplate/templates/baseTemplate/homePage.html:368
-#: baseTemplate/templates/baseTemplate/index.html:660
-#: baseTemplate/templates/baseTemplate/index.html:662
+#: baseTemplate/templates/baseTemplate/index.html:665
+#: baseTemplate/templates/baseTemplate/index.html:667
 msgid "Security"
 msgstr "Sigurnost"
 
@@ -658,8 +685,8 @@ msgid "CPU Status"
 msgstr "Status CPU-a"
 
 #: baseTemplate/templates/baseTemplate/index.html:241
-#: websiteFunctions/templates/websiteFunctions/website.html:51
-#: websiteFunctions/templates/websiteFunctions/website.html:72
+#: websiteFunctions/templates/websiteFunctions/website.html:50
+#: websiteFunctions/templates/websiteFunctions/website.html:71
 msgid "Disk Usage"
 msgstr "Upotreba diska "
 
@@ -691,7 +718,7 @@ msgid "Edit profile"
 msgstr "Uredi profil"
 
 #: baseTemplate/templates/baseTemplate/index.html:310
-#: baseTemplate/templates/baseTemplate/index.html:433
+#: baseTemplate/templates/baseTemplate/index.html:437
 #: userManagment/templates/userManagment/index.html:26
 #: userManagment/templates/userManagment/index.html:28
 msgid "View Profile"
@@ -725,8 +752,8 @@ msgid "Dashboard Quick Menu"
 msgstr "Kontrolna ploča"
 
 #: baseTemplate/templates/baseTemplate/index.html:384
-#: baseTemplate/templates/baseTemplate/index.html:591
-#: baseTemplate/templates/baseTemplate/index.html:593
+#: baseTemplate/templates/baseTemplate/index.html:595
+#: baseTemplate/templates/baseTemplate/index.html:597
 msgid "Tuning"
 msgstr "Tuning"
 
@@ -735,27 +762,34 @@ msgid "Overview"
 msgstr "Pregled"
 
 #: baseTemplate/templates/baseTemplate/index.html:413
-#: baseTemplate/templates/baseTemplate/index.html:415
+#: baseTemplate/templates/baseTemplate/index.html:414
+#, fuzzy
+#| msgid "IP Address"
+msgid "Server IP Address"
+msgstr "IP adresa"
+
 #: baseTemplate/templates/baseTemplate/index.html:417
+#: baseTemplate/templates/baseTemplate/index.html:419
 msgid "Dashboard"
 msgstr "Kontrolna ploča"
 
-#: baseTemplate/templates/baseTemplate/index.html:418
-#: baseTemplate/templates/baseTemplate/index.html:419
+#: baseTemplate/templates/baseTemplate/index.html:421
+#: baseTemplate/templates/baseTemplate/index.html:422
+#: baseTemplate/templates/baseTemplate/index.html:423
 #: baseTemplate/templates/baseTemplate/versionManagment.html:10
 msgid "Version Management"
 msgstr "Upravljanje verzijama"
 
-#: baseTemplate/templates/baseTemplate/index.html:423
+#: baseTemplate/templates/baseTemplate/index.html:427
 msgid "Main"
 msgstr "Glavna"
 
-#: baseTemplate/templates/baseTemplate/index.html:434
+#: baseTemplate/templates/baseTemplate/index.html:438
 #: userManagment/templates/userManagment/createUser.html:12
 msgid "Create New User"
 msgstr "Novi korisnik"
 
-#: baseTemplate/templates/baseTemplate/index.html:435
+#: baseTemplate/templates/baseTemplate/index.html:439
 #: userManagment/templates/userManagment/index.html:52
 #: userManagment/templates/userManagment/index.html:54
 #: userManagment/templates/userManagment/modifyUser.html:12
@@ -763,7 +797,7 @@ msgstr "Novi korisnik"
 msgid "Modify User"
 msgstr "Promjena korisnika"
 
-#: baseTemplate/templates/baseTemplate/index.html:436
+#: baseTemplate/templates/baseTemplate/index.html:440
 #: userManagment/templates/userManagment/deleteUser.html:13
 #: userManagment/templates/userManagment/deleteUser.html:20
 #: userManagment/templates/userManagment/deleteUser.html:42
@@ -772,45 +806,51 @@ msgstr "Promjena korisnika"
 msgid "Delete User"
 msgstr "Brisanje korisnika"
 
-#: baseTemplate/templates/baseTemplate/index.html:451
+#: baseTemplate/templates/baseTemplate/index.html:455
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:12
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:102
-#: websiteFunctions/templates/websiteFunctions/index.html:26
-#: websiteFunctions/templates/websiteFunctions/index.html:28
+#: websiteFunctions/templates/websiteFunctions/index.html:73
+#: websiteFunctions/templates/websiteFunctions/index.html:75
 msgid "Create Website"
 msgstr "Kreiranje sajta"
 
-#: baseTemplate/templates/baseTemplate/index.html:452
-#: websiteFunctions/templates/websiteFunctions/index.html:38
-#: websiteFunctions/templates/websiteFunctions/index.html:40
+#: baseTemplate/templates/baseTemplate/index.html:456
+#: websiteFunctions/templates/websiteFunctions/index.html:34
+#: websiteFunctions/templates/websiteFunctions/index.html:36
+#: websiteFunctions/templates/websiteFunctions/index.html:85
+#: websiteFunctions/templates/websiteFunctions/index.html:87
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:14
 msgid "List Websites"
 msgstr "Lista sajtova"
 
-#: baseTemplate/templates/baseTemplate/index.html:453
-#: websiteFunctions/templates/websiteFunctions/index.html:50
-#: websiteFunctions/templates/websiteFunctions/index.html:52
+#: baseTemplate/templates/baseTemplate/index.html:457
+#: websiteFunctions/templates/websiteFunctions/index.html:46
+#: websiteFunctions/templates/websiteFunctions/index.html:48
+#: websiteFunctions/templates/websiteFunctions/index.html:97
+#: websiteFunctions/templates/websiteFunctions/index.html:99
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:12
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:19
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:95
 msgid "Modify Website"
 msgstr "Promjena sajta"
 
-#: baseTemplate/templates/baseTemplate/index.html:454
+#: baseTemplate/templates/baseTemplate/index.html:458
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:41
 msgid "Suspend/Unsuspend"
 msgstr "Suspend/Unsuspend"
 
-#: baseTemplate/templates/baseTemplate/index.html:455
+#: baseTemplate/templates/baseTemplate/index.html:459
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:12
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:19
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:42
-#: websiteFunctions/templates/websiteFunctions/index.html:84
-#: websiteFunctions/templates/websiteFunctions/index.html:86
+#: websiteFunctions/templates/websiteFunctions/index.html:57
+#: websiteFunctions/templates/websiteFunctions/index.html:59
+#: websiteFunctions/templates/websiteFunctions/index.html:126
+#: websiteFunctions/templates/websiteFunctions/index.html:128
 msgid "Delete Website"
 msgstr "Izbriši sajt"
 
-#: baseTemplate/templates/baseTemplate/index.html:468
+#: baseTemplate/templates/baseTemplate/index.html:472
 #: packages/templates/packages/createPackage.html:13
 #: packages/templates/packages/createPackage.html:84
 #: packages/templates/packages/index.html:25
@@ -818,7 +858,7 @@ msgstr "Izbriši sajt"
 msgid "Create Package"
 msgstr "Kreiraj paket"
 
-#: baseTemplate/templates/baseTemplate/index.html:469
+#: baseTemplate/templates/baseTemplate/index.html:473
 #: packages/templates/packages/deletePackage.html:12
 #: packages/templates/packages/deletePackage.html:18
 #: packages/templates/packages/deletePackage.html:40
@@ -827,7 +867,7 @@ msgstr "Kreiraj paket"
 msgid "Delete Package"
 msgstr "Izbriši paket"
 
-#: baseTemplate/templates/baseTemplate/index.html:470
+#: baseTemplate/templates/baseTemplate/index.html:474
 #: packages/templates/packages/index.html:49
 #: packages/templates/packages/index.html:51
 #: packages/templates/packages/modifyPackage.html:9
@@ -836,7 +876,7 @@ msgstr "Izbriši paket"
 msgid "Modify Package"
 msgstr "Promijeni paket"
 
-#: baseTemplate/templates/baseTemplate/index.html:484
+#: baseTemplate/templates/baseTemplate/index.html:488
 #: databases/templates/databases/createDatabase.html:12
 #: databases/templates/databases/createDatabase.html:19
 #: databases/templates/databases/createDatabase.html:68
@@ -846,7 +886,7 @@ msgstr "Promijeni paket"
 msgid "Create Database"
 msgstr "Kreiranje baze"
 
-#: baseTemplate/templates/baseTemplate/index.html:485
+#: baseTemplate/templates/baseTemplate/index.html:489
 #: databases/templates/databases/deleteDatabase.html:12
 #: databases/templates/databases/deleteDatabase.html:19
 #: databases/templates/databases/deleteDatabase.html:53
@@ -856,7 +896,7 @@ msgstr "Kreiranje baze"
 msgid "Delete Database"
 msgstr "Brisanje baze"
 
-#: baseTemplate/templates/baseTemplate/index.html:486
+#: baseTemplate/templates/baseTemplate/index.html:490
 #: databases/templates/databases/index.html:53
 #: databases/templates/databases/index.html:55
 #: databases/templates/databases/listDataBases.html:13
@@ -864,20 +904,20 @@ msgstr "Brisanje baze"
 msgid "List Databases"
 msgstr "Lista baza"
 
-#: baseTemplate/templates/baseTemplate/index.html:487
+#: baseTemplate/templates/baseTemplate/index.html:491
 #: databases/templates/databases/index.html:65
 #: databases/templates/databases/index.html:67
 msgid "PHPMYAdmin"
 msgstr "PHPMYAdmin"
 
-#: baseTemplate/templates/baseTemplate/index.html:502
+#: baseTemplate/templates/baseTemplate/index.html:506
 #: dns/templates/dns/createNameServer.html:12
 #: dns/templates/dns/createNameServer.html:76 dns/templates/dns/index.html:72
 #: dns/templates/dns/index.html:74
 msgid "Create Nameserver"
 msgstr "Kreiranje name servera"
 
-#: baseTemplate/templates/baseTemplate/index.html:503
+#: baseTemplate/templates/baseTemplate/index.html:507
 #: dns/templates/dns/createDNSZone.html:12
 #: dns/templates/dns/createDNSZone.html:40 dns/templates/dns/index.html:29
 #: dns/templates/dns/index.html:31 dns/templates/dns/index.html:84
@@ -885,44 +925,44 @@ msgstr "Kreiranje name servera"
 msgid "Create DNS Zone"
 msgstr "Kreiranje DNS zone"
 
-#: baseTemplate/templates/baseTemplate/index.html:504
+#: baseTemplate/templates/baseTemplate/index.html:508
 #: dns/templates/dns/deleteDNSZone.html:40 dns/templates/dns/index.html:41
 #: dns/templates/dns/index.html:43 dns/templates/dns/index.html:96
 #: dns/templates/dns/index.html:98
 msgid "Delete Zone"
 msgstr "Briši zonu"
 
-#: baseTemplate/templates/baseTemplate/index.html:505
+#: baseTemplate/templates/baseTemplate/index.html:509
 msgid "Add/Delete Records"
 msgstr "Dodaj / izbriši unose"
 
-#: baseTemplate/templates/baseTemplate/index.html:521
+#: baseTemplate/templates/baseTemplate/index.html:525
 #: mailServer/templates/mailServer/createEmailAccount.html:12
 #: mailServer/templates/mailServer/createEmailAccount.html:19
 msgid "Create Email Account"
 msgstr "Kreiraj email račun"
 
-#: baseTemplate/templates/baseTemplate/index.html:521
+#: baseTemplate/templates/baseTemplate/index.html:525
 #: mailServer/templates/mailServer/createEmailAccount.html:64
 #: mailServer/templates/mailServer/index.html:25
 #: mailServer/templates/mailServer/index.html:27
 msgid "Create Email"
 msgstr "Kreiraj email"
 
-#: baseTemplate/templates/baseTemplate/index.html:522
+#: baseTemplate/templates/baseTemplate/index.html:526
 #: mailServer/templates/mailServer/deleteEmailAccount.html:12
 #: mailServer/templates/mailServer/deleteEmailAccount.html:19
 msgid "Delete Email Account"
 msgstr "Izbriši email račun"
 
-#: baseTemplate/templates/baseTemplate/index.html:522
+#: baseTemplate/templates/baseTemplate/index.html:526
 #: mailServer/templates/mailServer/deleteEmailAccount.html:56
 #: mailServer/templates/mailServer/index.html:37
 #: mailServer/templates/mailServer/index.html:39
 msgid "Delete Email"
 msgstr "Izbriši email"
 
-#: baseTemplate/templates/baseTemplate/index.html:523
+#: baseTemplate/templates/baseTemplate/index.html:527
 #: databases/templates/databases/listDataBases.html:73
 #: ftp/templates/ftp/listFTPAccounts.html:73
 #: mailServer/templates/mailServer/changeEmailPassword.html:64
@@ -931,156 +971,162 @@ msgstr "Izbriši email"
 msgid "Change Password"
 msgstr "Promijeni šifru"
 
-#: baseTemplate/templates/baseTemplate/index.html:524
+#: baseTemplate/templates/baseTemplate/index.html:528
 msgid "Access Webmail"
 msgstr "Pristup webmailu"
 
-#: baseTemplate/templates/baseTemplate/index.html:543
+#: baseTemplate/templates/baseTemplate/index.html:547
 #: ftp/templates/ftp/createFTPAccount.html:12
 #: ftp/templates/ftp/createFTPAccount.html:19 ftp/templates/ftp/index.html:25
 #: ftp/templates/ftp/index.html:27
-#: websiteFunctions/templates/websiteFunctions/website.html:710
-#: websiteFunctions/templates/websiteFunctions/website.html:712
+#: websiteFunctions/templates/websiteFunctions/website.html:709
+#: websiteFunctions/templates/websiteFunctions/website.html:711
 msgid "Create FTP Account"
 msgstr "Kreiranje FTP računa"
 
-#: baseTemplate/templates/baseTemplate/index.html:544
+#: baseTemplate/templates/baseTemplate/index.html:548
 #: ftp/templates/ftp/deleteFTPAccount.html:12
 #: ftp/templates/ftp/deleteFTPAccount.html:18
 #: ftp/templates/ftp/deleteFTPAccount.html:52 ftp/templates/ftp/index.html:37
 #: ftp/templates/ftp/index.html:39
-#: websiteFunctions/templates/websiteFunctions/website.html:722
-#: websiteFunctions/templates/websiteFunctions/website.html:724
+#: websiteFunctions/templates/websiteFunctions/website.html:721
+#: websiteFunctions/templates/websiteFunctions/website.html:723
 msgid "Delete FTP Account"
 msgstr "Briši FTP račun"
 
-#: baseTemplate/templates/baseTemplate/index.html:545
+#: baseTemplate/templates/baseTemplate/index.html:549
 #: ftp/templates/ftp/index.html:49 ftp/templates/ftp/index.html:51
 #: ftp/templates/ftp/listFTPAccounts.html:13
 #: ftp/templates/ftp/listFTPAccounts.html:19
 msgid "List FTP Accounts"
 msgstr "Lista FTP računa"
 
-#: baseTemplate/templates/baseTemplate/index.html:563
+#: baseTemplate/templates/baseTemplate/index.html:567
 msgid "Add/Delete Destination"
 msgstr "Dodaj / izbriši destinaciju"
 
-#: baseTemplate/templates/baseTemplate/index.html:565
+#: baseTemplate/templates/baseTemplate/index.html:569
 #, fuzzy
 #| msgid "Restore Back up"
 msgid "Remote Back ups"
 msgstr "Vrati backup"
 
-#: baseTemplate/templates/baseTemplate/index.html:574
-#: baseTemplate/templates/baseTemplate/index.html:575
+#: baseTemplate/templates/baseTemplate/index.html:578
+#: baseTemplate/templates/baseTemplate/index.html:579
 msgid "SSL"
 msgstr "SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:580
+#: baseTemplate/templates/baseTemplate/index.html:584
 #: manageSSL/templates/manageSSL/index.html:28
 #: manageSSL/templates/manageSSL/manageSSL.html:13
 #: manageSSL/templates/manageSSL/manageSSL.html:20
 msgid "Manage SSL"
 msgstr "Upravljanje SSL-om"
 
-#: baseTemplate/templates/baseTemplate/index.html:581
+#: baseTemplate/templates/baseTemplate/index.html:585
 #: manageSSL/templates/manageSSL/index.html:40
 msgid "Hostname SSL"
 msgstr "Hostname ssl"
 
-#: baseTemplate/templates/baseTemplate/index.html:589
+#: baseTemplate/templates/baseTemplate/index.html:593
 msgid "Server"
 msgstr "Server"
 
-#: baseTemplate/templates/baseTemplate/index.html:594
+#: baseTemplate/templates/baseTemplate/index.html:598
 msgid "NEW"
 msgstr "Novi"
 
-#: baseTemplate/templates/baseTemplate/index.html:599
+#: baseTemplate/templates/baseTemplate/index.html:603
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
 #: tuning/templates/tuning/liteSpeedTuning.html:12
 msgid "LiteSpeed Tuning"
 msgstr "LiteSpeed  tuning"
 
-#: baseTemplate/templates/baseTemplate/index.html:600
+#: baseTemplate/templates/baseTemplate/index.html:604
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13
 msgid "PHP Tuning"
 msgstr "PHP tuning"
 
-#: baseTemplate/templates/baseTemplate/index.html:615
+#: baseTemplate/templates/baseTemplate/index.html:619
 #: serverStatus/templates/serverStatus/index.html:25
 #: serverStatus/templates/serverStatus/index.html:27
 msgid "LiteSpeed Status"
 msgstr "LiteSpeed status"
 
-#: baseTemplate/templates/baseTemplate/index.html:616
+#: baseTemplate/templates/baseTemplate/index.html:620
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:15
 #: serverStatus/templates/serverStatus/index.html:37
 #: serverStatus/templates/serverStatus/index.html:39
 msgid "CyberPanel Main Log File"
 msgstr "Glavni log fajl"
 
-#: baseTemplate/templates/baseTemplate/index.html:633
+#: baseTemplate/templates/baseTemplate/index.html:621
+#, fuzzy
+#| msgid "Server Status"
+msgid "Services Status"
+msgstr "Status servera"
+
+#: baseTemplate/templates/baseTemplate/index.html:638
 #: managePHP/templates/managePHP/installExtensions.html:13
 msgid "Install PHP Extensions"
 msgstr "Instalacija extenzija za php"
 
-#: baseTemplate/templates/baseTemplate/index.html:633
+#: baseTemplate/templates/baseTemplate/index.html:638
 #: managePHP/templates/managePHP/index.html:24
 #: managePHP/templates/managePHP/index.html:26
 msgid "Install Extensions"
 msgstr "Instalacija extenzija"
 
-#: baseTemplate/templates/baseTemplate/index.html:634
+#: baseTemplate/templates/baseTemplate/index.html:639
 #: managePHP/templates/managePHP/index.html:36
 #: managePHP/templates/managePHP/index.html:38
 msgid "Edit PHP Configs"
 msgstr "Promjena php konfiguracije"
 
-#: baseTemplate/templates/baseTemplate/index.html:649
+#: baseTemplate/templates/baseTemplate/index.html:654
 msgid "Access Log"
 msgstr "Pristupni log"
 
-#: baseTemplate/templates/baseTemplate/index.html:650
+#: baseTemplate/templates/baseTemplate/index.html:655
 #: serverLogs/templates/serverLogs/errorLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:37
 #: serverLogs/templates/serverLogs/index.html:39
-#: websiteFunctions/templates/websiteFunctions/website.html:133
+#: websiteFunctions/templates/websiteFunctions/website.html:132
 msgid "Error Logs"
 msgstr "Log grešaka"
 
-#: baseTemplate/templates/baseTemplate/index.html:651
+#: baseTemplate/templates/baseTemplate/index.html:656
 #: serverLogs/templates/serverLogs/emailLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:49
 #: serverLogs/templates/serverLogs/index.html:51
 msgid "Email Logs"
 msgstr "Email logovi"
 
-#: baseTemplate/templates/baseTemplate/index.html:651
+#: baseTemplate/templates/baseTemplate/index.html:656
 msgid "Email Log"
 msgstr "Email log"
 
-#: baseTemplate/templates/baseTemplate/index.html:652
+#: baseTemplate/templates/baseTemplate/index.html:657
 #: serverLogs/templates/serverLogs/ftplogs.html:14
 #: serverLogs/templates/serverLogs/index.html:61
 #: serverLogs/templates/serverLogs/index.html:63
 msgid "FTP Logs"
 msgstr "FTP logovi"
 
-#: baseTemplate/templates/baseTemplate/index.html:667
+#: baseTemplate/templates/baseTemplate/index.html:672
 #, fuzzy
 #| msgid "Firewall"
 msgid "Firewall Home"
 msgstr "Firewall  "
 
-#: baseTemplate/templates/baseTemplate/index.html:667
+#: baseTemplate/templates/baseTemplate/index.html:672
 #: firewall/templates/firewall/index.html:25
 #: firewall/templates/firewall/index.html:27
 msgid "Firewall"
 msgstr "Firewall  "
 
-#: baseTemplate/templates/baseTemplate/index.html:668
+#: baseTemplate/templates/baseTemplate/index.html:673
 #: firewall/templates/firewall/index.html:36
 #: firewall/templates/firewall/index.html:38
 #: firewall/templates/firewall/secureSSH.html:13
@@ -1202,6 +1248,7 @@ msgstr "Izlistajte baze podataka ili promijenite njihove šifre."
 #: dns/templates/dns/addDeleteDNSRecords.html:28
 #: ftp/templates/ftp/deleteFTPAccount.html:27
 #: ftp/templates/ftp/listFTPAccounts.html:28
+#: tuning/templates/tuning/phpTuning.html:28
 msgid "Select Domain"
 msgstr "Odaberite domene"
 
@@ -1258,6 +1305,7 @@ msgstr "Dodajte zapise"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:53
 #: dns/templates/dns/addDeleteDNSRecords.html:131
+#: filemanager/templates/filemanager/index.html:209
 #: firewall/templates/firewall/firewall.html:136
 #: serverStatus/templates/serverStatus/litespeedStatus.html:40
 msgid "Name"
@@ -1276,7 +1324,7 @@ msgstr "Prioritet"
 #: dns/templates/dns/createDNSZone.html:27
 #: dns/templates/dns/createNameServer.html:27
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:52
-#: websiteFunctions/templates/websiteFunctions/website.html:290
+#: websiteFunctions/templates/websiteFunctions/website.html:289
 msgid "Domain Name"
 msgstr "Naziv domene"
 
@@ -1439,6 +1487,344 @@ msgstr "Dodaj / izbriši unose"
 msgid "Add Delete/Records"
 msgstr "Dodaj / izbriši unose"
 
+#: filemanager/templates/filemanager/index.html:5
+#, fuzzy
+#| msgid "Manage SSL - CyberPanel"
+msgid "File Manager - CyberPanel"
+msgstr "Upravljajte SSL-om - CyberPanel"
+
+#: filemanager/templates/filemanager/index.html:43
+#, fuzzy
+#| msgid "File Manager"
+msgid " File Manager"
+msgstr "Upravljač datotekama"
+
+#: filemanager/templates/filemanager/index.html:63
+#: filemanager/templates/filemanager/index.html:202
+#: filemanager/templates/filemanager/index.html:233
+#, fuzzy
+#| msgid "Reload"
+msgid "Upload"
+msgstr "Učitaj ponovo"
+
+#: filemanager/templates/filemanager/index.html:66
+#, fuzzy
+#| msgid "File"
+msgid "New File"
+msgstr "Datoteka"
+
+#: filemanager/templates/filemanager/index.html:69
+msgid "New Folder"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:75
+#: filemanager/templates/filemanager/index.html:563
+msgid "Copy"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:78
+#: filemanager/templates/filemanager/index.html:528
+msgid "Move"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:81
+#: filemanager/templates/filemanager/index.html:593
+#, fuzzy
+#| msgid "Username"
+msgid "Rename"
+msgstr "Korisničko ime"
+
+#: filemanager/templates/filemanager/index.html:84
+msgid "Edit"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:87
+#: filemanager/templates/filemanager/index.html:438
+#: filemanager/templates/filemanager/index.html:465
+msgid "Compress"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:90
+#: filemanager/templates/filemanager/index.html:493
+msgid "Extract"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:108
+#, fuzzy
+#| msgid "Current Package:"
+msgid "Current Path"
+msgstr "Sadašnji paket:"
+
+#: filemanager/templates/filemanager/index.html:136
+#, fuzzy
+#| msgid "Back up"
+msgid "Back"
+msgstr "Backup"
+
+#: filemanager/templates/filemanager/index.html:140
+#: serverLogs/templates/serverLogs/accessLogs.html:42
+#: serverLogs/templates/serverLogs/emailLogs.html:39
+#: serverLogs/templates/serverLogs/errorLogs.html:39
+#: serverLogs/templates/serverLogs/ftplogs.html:39
+#: serverStatus/templates/serverStatus/cybercpmainlogfile.html:40
+msgid "Refresh"
+msgstr "Osvježi"
+
+#: filemanager/templates/filemanager/index.html:144
+#, fuzzy
+#| msgid "Select Email"
+msgid "Select All"
+msgstr "Izaberite Email"
+
+#: filemanager/templates/filemanager/index.html:148
+#, fuzzy
+#| msgid "Select Email"
+msgid "UnSelect All"
+msgstr "Izaberite Email"
+
+#: filemanager/templates/filemanager/index.html:158
+#, fuzzy
+#| msgid "Size"
+msgid "Size (KB)"
+msgstr "Veličina"
+
+#: filemanager/templates/filemanager/index.html:159
+msgid "Last Modified"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:160
+#, fuzzy
+#| msgid "PHP version "
+msgid "Permissions"
+msgstr "PHP verzija "
+
+#: filemanager/templates/filemanager/index.html:180
+msgid "Upload File"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:187
+msgid "Upload queue"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:188
+msgid "Queue length:"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:195
+msgid "Drop"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:196
+msgid "Drop Files here to upload them."
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:211
+msgid "Progress"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:213
+#, fuzzy
+#| msgid "FTP Functions"
+msgid "Actions"
+msgstr "FTP funkcije"
+
+#: filemanager/templates/filemanager/index.html:239
+msgid "Remove"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:249
+msgid "Queue progress:"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:258
+#, fuzzy
+#| msgid "Cannot add record. Error message: "
+msgid "can not be uploaded, Error message:"
+msgstr "Ne mogu dodati zapis. Poruka o grešci:"
+
+#: filemanager/templates/filemanager/index.html:262
+msgid "Upload all"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:265
+#, fuzzy
+#| msgid "Create Back up"
+msgid "Cancel all"
+msgstr "Kreiraj backup"
+
+#: filemanager/templates/filemanager/index.html:268
+msgid "Remove all"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:304
+#, fuzzy
+#| msgid "Rule successfully added."
+msgid "File Successfully saved."
+msgstr "Pravilo je uspješno dodano."
+
+#: filemanager/templates/filemanager/index.html:311
+#: firewall/templates/firewall/secureSSH.html:68
+#: managePHP/templates/managePHP/editPHPConfig.html:130
+#: managePHP/templates/managePHP/editPHPConfig.html:203
+msgid "Save Changes"
+msgstr "Sačuvaj promjene"
+
+#: filemanager/templates/filemanager/index.html:328
+#, fuzzy
+#| msgid "Create New User"
+msgid "Create new folder!"
+msgstr "Novi korisnik"
+
+#: filemanager/templates/filemanager/index.html:336
+#, fuzzy
+#| msgid "File Name"
+msgid "New Folder Name"
+msgstr "Ime datoteke"
+
+#: filemanager/templates/filemanager/index.html:338
+msgid "Folder will be created in your current directory"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:340
+#, fuzzy
+#| msgid "Create User"
+msgid "Create Folder"
+msgstr "Novi korisnik"
+
+#: filemanager/templates/filemanager/index.html:353
+#, fuzzy
+#| msgid "is successfully created."
+msgid "Folder Successfully created."
+msgstr "  je spješno kreiran. "
+
+#: filemanager/templates/filemanager/index.html:372
+#, fuzzy
+#| msgid "Create New User"
+msgid "Create new file!"
+msgstr "Novi korisnik"
+
+#: filemanager/templates/filemanager/index.html:380
+#, fuzzy
+#| msgid "File Name"
+msgid "New File Name"
+msgstr "Ime datoteke"
+
+#: filemanager/templates/filemanager/index.html:382
+msgid ""
+"File will be created in your current directory, if it already exists it will "
+"not overwirte."
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:384
+#, fuzzy
+#| msgid "Create Email"
+msgid "Create File"
+msgstr "Kreiraj email"
+
+#: filemanager/templates/filemanager/index.html:397
+#, fuzzy
+#| msgid "is successfully created."
+msgid "File Successfully created."
+msgstr "  je spješno kreiran. "
+
+#: filemanager/templates/filemanager/index.html:413
+#, fuzzy
+#| msgid "Configurations"
+msgid "Confirm Deletion!"
+msgstr "Upravljajte postavkama"
+
+#: filemanager/templates/filemanager/index.html:422
+msgid "Confirm"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:423
+#: filemanager/templates/filemanager/index.html:466
+#: filemanager/templates/filemanager/index.html:529
+#: filemanager/templates/filemanager/index.html:564
+#: filemanager/templates/filemanager/index.html:594
+#: websiteFunctions/templates/websiteFunctions/website.html:417
+msgid "Close"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:446
+msgid "List of files/folder!"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:450
+#, fuzzy
+#| msgid "File Name"
+msgid "Compressed File Name"
+msgstr "Ime datoteke"
+
+#: filemanager/templates/filemanager/index.html:452
+#, fuzzy
+#| msgid "Extension Name"
+msgid "Enter without extension name!"
+msgstr "Ime proširenja (extenzije)"
+
+#: filemanager/templates/filemanager/index.html:456
+msgid "Compression Type"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:481
+msgid "Extracting"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:489
+msgid "Extract in"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:491
+msgid "You can enter . to extract in current directory!"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:509
+#, fuzzy
+#| msgid "Files"
+msgid "Move Files"
+msgstr "Datoteke"
+
+#: filemanager/templates/filemanager/index.html:517
+#: filemanager/templates/filemanager/index.html:552
+msgid "List of files/folders!"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:521
+msgid "Move to"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:523
+msgid "Enter a path to move your files!"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:544
+#, fuzzy
+#| msgid "Files"
+msgid "Copy Files"
+msgstr "Datoteke"
+
+#: filemanager/templates/filemanager/index.html:556
+msgid "Copy to"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:558
+msgid "Enter a path to copy your files to!"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:578
+msgid "Renaming"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:586
+#, fuzzy
+#| msgid "File Name"
+msgid "New Name"
+msgstr "Ime datoteke"
+
+#: filemanager/templates/filemanager/index.html:588
+msgid "Enter new name of file!"
+msgstr ""
+
 #: firewall/templates/firewall/firewall.html:3
 msgid "Firewall - CyberPanel"
 msgstr "Firewall"
@@ -1483,10 +1869,6 @@ msgstr "Uspješno je radnja obavljena."
 #: firewall/templates/firewall/firewall.html:137
 msgid "Protocol"
 msgstr "Protokol"
-
-#: firewall/templates/firewall/firewall.html:139
-msgid "Port"
-msgstr "Port"
 
 #: firewall/templates/firewall/firewall.html:172
 msgid "Rule successfully added."
@@ -1539,12 +1921,6 @@ msgstr ""
 "Pre nego što onemogućite prijavljivanje root-a, uvjerite se da imate drugi "
 "nalog sa sudo privilegijama na serveru."
 
-#: firewall/templates/firewall/secureSSH.html:68
-#: managePHP/templates/managePHP/editPHPConfig.html:130
-#: managePHP/templates/managePHP/editPHPConfig.html:203
-msgid "Save Changes"
-msgstr "Sačuvaj promjene"
-
 #: firewall/templates/firewall/secureSSH.html:82
 msgid "SSH Configurations Saved."
 msgstr "SSH konfiguracije su sačuvane."
@@ -1559,8 +1935,8 @@ msgstr "Dodaj ključ"
 
 #: firewall/templates/firewall/secureSSH.html:158
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:55
-#: websiteFunctions/templates/websiteFunctions/website.html:554
-#: websiteFunctions/templates/websiteFunctions/website.html:614
+#: websiteFunctions/templates/websiteFunctions/website.html:553
+#: websiteFunctions/templates/websiteFunctions/website.html:613
 msgid "Save"
 msgstr "Sačuvaj"
 
@@ -1765,10 +2141,9 @@ msgstr "Napredno"
 #: managePHP/templates/managePHP/editPHPConfig.html:48
 #: managePHP/templates/managePHP/editPHPConfig.html:174
 #: managePHP/templates/managePHP/installExtensions.html:28
-#: tuning/templates/tuning/phpTuning.html:28
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:68
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:74
-#: websiteFunctions/templates/websiteFunctions/website.html:310
+#: websiteFunctions/templates/websiteFunctions/website.html:309
 msgid "Select PHP"
 msgstr "Izaberi PHP"
 
@@ -1864,7 +2239,7 @@ msgid "Go Back"
 msgstr "Idi nazad"
 
 #: managePHP/templates/managePHP/installExtensions.html:104
-#: tuning/templates/tuning/phpTuning.html:114
+#: tuning/templates/tuning/phpTuning.html:111
 #: userManagment/templates/userManagment/modifyUser.html:143
 msgid "Cannot fetch details. Error message:"
 msgstr "Ne mogu da prikupim detalje. Poruka o grešci:"
@@ -1956,7 +2331,7 @@ msgstr "Naziv paketa"
 
 #: packages/templates/packages/createPackage.html:35
 #: packages/templates/packages/modifyPackage.html:40
-#: websiteFunctions/templates/websiteFunctions/website.html:250
+#: websiteFunctions/templates/websiteFunctions/website.html:249
 #, fuzzy
 #| msgid "Domain Name"
 msgid "Domains"
@@ -2046,7 +2421,7 @@ msgstr "Pristupni logovi - CyberPanel"
 #: serverLogs/templates/serverLogs/accessLogs.html:17
 #: serverLogs/templates/serverLogs/index.html:25
 #: serverLogs/templates/serverLogs/index.html:27
-#: websiteFunctions/templates/websiteFunctions/website.html:121
+#: websiteFunctions/templates/websiteFunctions/website.html:120
 msgid "Access Logs"
 msgstr "Pristupni logovi"
 
@@ -2061,14 +2436,6 @@ msgstr "Access logovi  za glavni web server."
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:24
 msgid "Last 50 Lines"
 msgstr "Zadnjih 50 linija"
-
-#: serverLogs/templates/serverLogs/accessLogs.html:42
-#: serverLogs/templates/serverLogs/emailLogs.html:39
-#: serverLogs/templates/serverLogs/errorLogs.html:39
-#: serverLogs/templates/serverLogs/ftplogs.html:39
-#: serverStatus/templates/serverStatus/cybercpmainlogfile.html:40
-msgid "Refresh"
-msgstr "Osvježi"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:49
 #: serverLogs/templates/serverLogs/emailLogs.html:46
@@ -2200,6 +2567,12 @@ msgstr ""
 msgid "Could not connect to server."
 msgstr "Ne mogu se spojiti na udaljeni računar."
 
+#: serverStatus/templates/serverStatus/services.html:3
+#, fuzzy
+#| msgid "Server Logs - CyberPanel"
+msgid "Services - CyberPanel"
+msgstr "Server logovi"
+
 #: tuning/templates/tuning/index.html:3
 msgid "Server Tuning - CyberPanel"
 msgstr ""
@@ -2225,7 +2598,7 @@ msgid "Tuning Details"
 msgstr ""
 
 #: tuning/templates/tuning/liteSpeedTuning.html:28
-#: tuning/templates/tuning/phpTuning.html:52
+#: tuning/templates/tuning/phpTuning.html:49
 msgid "Max Connections"
 msgstr ""
 
@@ -2250,17 +2623,17 @@ msgid "Enable GZIP Compression"
 msgstr ""
 
 #: tuning/templates/tuning/liteSpeedTuning.html:70
-#: tuning/templates/tuning/phpTuning.html:93
+#: tuning/templates/tuning/phpTuning.html:90
 msgid "Enable"
 msgstr "Uključi"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:71
-#: tuning/templates/tuning/phpTuning.html:94
+#: tuning/templates/tuning/phpTuning.html:91
 msgid "Disable"
 msgstr "Isključi"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:74
-#: tuning/templates/tuning/phpTuning.html:97
+#: tuning/templates/tuning/phpTuning.html:94
 #: userManagment/templates/userManagment/modifyUser.html:77
 msgid "Currently:"
 msgstr "Trenutno:"
@@ -2291,47 +2664,49 @@ msgstr "PHP modifikacije"
 msgid "Set how each version of PHP behaves in your server here."
 msgstr ""
 
-#: tuning/templates/tuning/phpTuning.html:45
+#: tuning/templates/tuning/phpTuning.html:42
 msgid "Initial Request Timeout (secs)"
 msgstr ""
 
-#: tuning/templates/tuning/phpTuning.html:60
+#: tuning/templates/tuning/phpTuning.html:57
 msgid "Memory Soft Limit"
 msgstr ""
 
-#: tuning/templates/tuning/phpTuning.html:67
+#: tuning/templates/tuning/phpTuning.html:64
 msgid "Memory Hard Limit"
 msgstr ""
 
-#: tuning/templates/tuning/phpTuning.html:75
+#: tuning/templates/tuning/phpTuning.html:72
 msgid "Process Soft Limit"
 msgstr ""
 
-#: tuning/templates/tuning/phpTuning.html:82
+#: tuning/templates/tuning/phpTuning.html:79
 msgid "Process Hard Limit"
 msgstr ""
 
-#: tuning/templates/tuning/phpTuning.html:90
+#: tuning/templates/tuning/phpTuning.html:87
 msgid "Persistent Connection"
 msgstr ""
 
-#: tuning/templates/tuning/phpTuning.html:105
+#: tuning/templates/tuning/phpTuning.html:102
 msgid "Tune PHP"
 msgstr "PHP"
 
-#: tuning/templates/tuning/phpTuning.html:118
+#: tuning/templates/tuning/phpTuning.html:115
 msgid "Cannot tune. Error message:"
 msgstr ""
 
-#: tuning/templates/tuning/phpTuning.html:123
+#: tuning/templates/tuning/phpTuning.html:120
 msgid "Details Successfully fetched."
 msgstr ""
 
-#: tuning/templates/tuning/phpTuning.html:127
-msgid "PHP version "
+#: tuning/templates/tuning/phpTuning.html:124
+#, fuzzy
+#| msgid "PHP version "
+msgid "PHP for "
 msgstr "PHP verzija "
 
-#: tuning/templates/tuning/phpTuning.html:127
+#: tuning/templates/tuning/phpTuning.html:124
 msgid "Successfully tuned."
 msgstr ""
 
@@ -2537,36 +2912,40 @@ msgstr ""
 msgid "Select Owner"
 msgstr "Vlasnik"
 
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:54
+msgid "Do not enter WWW, it will be auto created!"
+msgstr ""
+
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:56
-#: websiteFunctions/templates/websiteFunctions/website.html:294
-#: websiteFunctions/templates/websiteFunctions/website.html:305
+#: websiteFunctions/templates/websiteFunctions/website.html:293
+#: websiteFunctions/templates/websiteFunctions/website.html:304
 msgid "Invalid Domain (Note: You don't need to add 'http' or 'https')"
 msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:84
-#: websiteFunctions/templates/websiteFunctions/website.html:326
+#: websiteFunctions/templates/websiteFunctions/website.html:325
 msgid "Additional Features"
 msgstr "Dodatne informacije"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:91
-#: websiteFunctions/templates/websiteFunctions/website.html:333
+#: websiteFunctions/templates/websiteFunctions/website.html:332
 msgid ""
 "For SSL to work DNS of domain should point to server, otherwise self signed "
 "SSL will be issued, you can add your own SSL later."
 msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:113
-#: websiteFunctions/templates/websiteFunctions/website.html:355
+#: websiteFunctions/templates/websiteFunctions/website.html:354
 msgid "Cannot create website. Error message:"
 msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:117
-#: websiteFunctions/templates/websiteFunctions/website.html:359
+#: websiteFunctions/templates/websiteFunctions/website.html:358
 msgid "Website with domain"
 msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:117
-#: websiteFunctions/templates/websiteFunctions/website.html:359
+#: websiteFunctions/templates/websiteFunctions/website.html:358
 msgid " is Successfully Created"
 msgstr "  je spješno kreiran"
 
@@ -2592,8 +2971,8 @@ msgstr "Uspješno izbrisan."
 msgid "Website Functions - CyberPanel"
 msgstr "Funkcije za sajtove"
 
-#: websiteFunctions/templates/websiteFunctions/index.html:70
-#: websiteFunctions/templates/websiteFunctions/index.html:72
+#: websiteFunctions/templates/websiteFunctions/index.html:113
+#: websiteFunctions/templates/websiteFunctions/index.html:115
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:13
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:20
 msgid "Suspend/Unsuspend Website"
@@ -2663,216 +3042,255 @@ msgstr "Sajt "
 msgid "Successfully "
 msgstr "Uspješno "
 
-#: websiteFunctions/templates/websiteFunctions/website.html:15
+#: websiteFunctions/templates/websiteFunctions/website.html:13
+#, fuzzy
+#| msgid "Previous"
+msgid "Preview"
+msgstr "Prethodno"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:14
 msgid "All functions related to a particular site."
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:23
+#: websiteFunctions/templates/websiteFunctions/website.html:22
 msgid "Resource Usage"
 msgstr "Upotreba resursa"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:32
+#: websiteFunctions/templates/websiteFunctions/website.html:31
 msgid "Resource"
 msgstr "Resurs"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:34
+#: websiteFunctions/templates/websiteFunctions/website.html:33
 msgid "Allowed"
 msgstr "Dopušteno"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:56
-#: websiteFunctions/templates/websiteFunctions/website.html:83
+#: websiteFunctions/templates/websiteFunctions/website.html:55
+#: websiteFunctions/templates/websiteFunctions/website.html:82
 msgid "Bandwidth Usage"
 msgstr "Upotreba jesečnog protoka"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:119
+#: websiteFunctions/templates/websiteFunctions/website.html:118
 #, fuzzy
 #| msgid "Access Logs"
 msgid "Load Access Logs"
 msgstr "Pristupni logovi"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:131
+#: websiteFunctions/templates/websiteFunctions/website.html:130
 #, fuzzy
 #| msgid "Error Logs"
 msgid "Load Error Logs"
 msgstr "Log grešaka"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:147
+#: websiteFunctions/templates/websiteFunctions/website.html:146
 msgid "Logs Fetched"
 msgstr "Logovi"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:152
+#: websiteFunctions/templates/websiteFunctions/website.html:151
 msgid ""
 "Could not fetch logs, see the logs file through command line. Error message:"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:173
-#: websiteFunctions/templates/websiteFunctions/website.html:212
+#: websiteFunctions/templates/websiteFunctions/website.html:172
+#: websiteFunctions/templates/websiteFunctions/website.html:211
 msgid "Next"
 msgstr "Sljedeće"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:174
-#: websiteFunctions/templates/websiteFunctions/website.html:213
+#: websiteFunctions/templates/websiteFunctions/website.html:173
+#: websiteFunctions/templates/websiteFunctions/website.html:212
 msgid "Previous"
 msgstr "Prethodno"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:257
-#: websiteFunctions/templates/websiteFunctions/website.html:259
+#: websiteFunctions/templates/websiteFunctions/website.html:256
+#: websiteFunctions/templates/websiteFunctions/website.html:258
 #, fuzzy
 #| msgid "Add Destination"
 msgid "Add Domains"
 msgstr "Dodaj destinaciju"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:269
-#: websiteFunctions/templates/websiteFunctions/website.html:271
+#: websiteFunctions/templates/websiteFunctions/website.html:268
+#: websiteFunctions/templates/websiteFunctions/website.html:270
 #, fuzzy
 #| msgid "Select Domain"
 msgid "List Domains"
 msgstr "Odaberite domene"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:301
-#: websiteFunctions/templates/websiteFunctions/website.html:760
+#: websiteFunctions/templates/websiteFunctions/website.html:300
+#: websiteFunctions/templates/websiteFunctions/website.html:770
+#: websiteFunctions/templates/websiteFunctions/website.html:821
 msgid "Path"
 msgstr "Putanja"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:303
+#: websiteFunctions/templates/websiteFunctions/website.html:302
 msgid "This path is relative to: "
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:303
+#: websiteFunctions/templates/websiteFunctions/website.html:302
 msgid "Leave empty to set default."
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:344
+#: websiteFunctions/templates/websiteFunctions/website.html:343
 #, fuzzy
 #| msgid "Create Email"
 msgid "Create Domain"
 msgstr "Kreiraj email"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:387
+#: websiteFunctions/templates/websiteFunctions/website.html:386
 #, fuzzy
 #| msgid "Version Management"
 msgid "PHP Version Changed to:"
 msgstr "Upravljanje verzijama"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:391
+#: websiteFunctions/templates/websiteFunctions/website.html:390
 #, fuzzy
 #| msgid "Delete"
 msgid "Deleted:"
 msgstr "Briši"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:395
+#: websiteFunctions/templates/websiteFunctions/website.html:394
 #, fuzzy
 #| msgid "SSL Issued for"
 msgid "SSL Issued:"
 msgstr "SSL izdat za "
 
-#: websiteFunctions/templates/websiteFunctions/website.html:418
-msgid "Close"
-msgstr ""
-
-#: websiteFunctions/templates/websiteFunctions/website.html:450
+#: websiteFunctions/templates/websiteFunctions/website.html:449
 #, fuzzy
 #| msgid "Issue SSL"
 msgid "Issue"
 msgstr "Izdavanje  SSL"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:478
+#: websiteFunctions/templates/websiteFunctions/website.html:477
 msgid "Configurations"
 msgstr "Upravljajte postavkama"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:484
+#: websiteFunctions/templates/websiteFunctions/website.html:483
 #, fuzzy
 #| msgid "Edit PHP Configurations"
 msgid "Edit Virtual Host Main Configurations"
 msgstr "Izmijeni PHP konfiguracije"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:486
+#: websiteFunctions/templates/websiteFunctions/website.html:485
 msgid "Edit vHost Main Configurations"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:496
-#: websiteFunctions/templates/websiteFunctions/website.html:498
+#: websiteFunctions/templates/websiteFunctions/website.html:495
+#: websiteFunctions/templates/websiteFunctions/website.html:497
 msgid "Add Rewrite Rules (.htaccess)"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:508
+#: websiteFunctions/templates/websiteFunctions/website.html:507
 #, fuzzy
 #| msgid "Add SSL"
 msgid "Add Your Own SSL"
 msgstr "Dodaj SSL"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:510
+#: websiteFunctions/templates/websiteFunctions/website.html:509
 msgid "Add SSL"
 msgstr "Dodaj SSL"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:525
+#: websiteFunctions/templates/websiteFunctions/website.html:524
 msgid "SSL Saved"
 msgstr "SLL spremljen"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:530
+#: websiteFunctions/templates/websiteFunctions/website.html:529
 msgid "Could not save SSL. Error message:"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:580
+#: websiteFunctions/templates/websiteFunctions/website.html:579
 msgid "Current configuration in the file fetched."
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:585
-#: websiteFunctions/templates/websiteFunctions/website.html:598
+#: websiteFunctions/templates/websiteFunctions/website.html:584
+#: websiteFunctions/templates/websiteFunctions/website.html:597
 msgid "Could not fetch current configuration. Error message:"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:594
-#: websiteFunctions/templates/websiteFunctions/website.html:649
-msgid "Configuration saved. Restart LiteSpeed put them in effect."
-msgstr ""
+#: websiteFunctions/templates/websiteFunctions/website.html:593
+#: websiteFunctions/templates/websiteFunctions/website.html:648
+#, fuzzy
+#| msgid "SSH Configurations Saved."
+msgid "Configurations saved."
+msgstr "SSH konfiguracije su sačuvane."
 
-#: websiteFunctions/templates/websiteFunctions/website.html:635
+#: websiteFunctions/templates/websiteFunctions/website.html:634
 msgid "Current rewrite rules in the file fetched."
 msgstr "Trenutno rewrite pravilo je dohvaćeno."
 
-#: websiteFunctions/templates/websiteFunctions/website.html:640
+#: websiteFunctions/templates/websiteFunctions/website.html:639
 msgid "Could not fetch current rewrite rules. Error message:"
 msgstr "Nisam mogao dohvatiti trenutno rewrite pravilo. Poruka s greškom:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:653
+#: websiteFunctions/templates/websiteFunctions/website.html:652
 msgid "Could not save rewrite rules. Error message:"
 msgstr "Nisam mogao promijeniti vrijednost rewrite pravila. Poruka s greškom:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:669
+#: websiteFunctions/templates/websiteFunctions/website.html:668
 msgid "Save Rewrite Rules"
 msgstr "Sačuvaj promjene"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:692
+#: websiteFunctions/templates/websiteFunctions/website.html:691
 msgid "Files"
 msgstr "Datoteke"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:699
-#: websiteFunctions/templates/websiteFunctions/website.html:701
+#: websiteFunctions/templates/websiteFunctions/website.html:698
+#: websiteFunctions/templates/websiteFunctions/website.html:700
 msgid "File Manager"
 msgstr "Upravljač datotekama"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:740
+#: websiteFunctions/templates/websiteFunctions/website.html:739
 msgid "Application Installer"
 msgstr "Instalacija aplikacija"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:746
+#: websiteFunctions/templates/websiteFunctions/website.html:745
 #, fuzzy
 #| msgid "Wordpress with LSCache"
 msgid "Install wordpress with LSCache"
 msgstr "Wordpress sa LSCache"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:748
+#: websiteFunctions/templates/websiteFunctions/website.html:747
 msgid "Wordpress with LSCache"
 msgstr "Wordpress sa LSCache"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:782
+#: websiteFunctions/templates/websiteFunctions/website.html:756
+#, fuzzy
+#| msgid "Wordpress with LSCache"
+msgid "Install Joomla with(?) LSCache"
+msgstr "Wordpress sa LSCache"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:758
+msgid "Joomla"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:792
+#: websiteFunctions/templates/websiteFunctions/website.html:871
 msgid "Installation failed. Error message:"
 msgstr "Nije uspjela instalacija. Greška:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:786
+#: websiteFunctions/templates/websiteFunctions/website.html:796
+#: websiteFunctions/templates/websiteFunctions/website.html:875
 msgid "Installation successful. To complete the setup visit:"
 msgstr "Instalacija je uspjela. Do završetka je ostalo samo da posjetite:"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:828
+msgid "Site name"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:835
+#, fuzzy
+#| msgid "Username"
+msgid "Admin Username"
+msgstr "Korisničko ime"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:842
+#, fuzzy
+#| msgid "Password"
+msgid "Admin Password"
+msgstr "Šifra"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:849
+#, fuzzy
+#| msgid "Database Name"
+msgid "Database prefix"
+msgstr "Naziv baze"
 
 #~ msgid "Reseller"
 #~ msgstr "Reseller"
