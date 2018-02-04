@@ -703,3 +703,4 @@ proxy_read_maps = $local_recipient_maps $mydestination $virtual_alias_maps $virt
 virtual_transport = dovecot
 dovecot_destination_recipient_limit = 1
 inet_interfaces = all
+smtp_tls_security_level = may

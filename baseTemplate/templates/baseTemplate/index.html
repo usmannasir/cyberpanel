@@ -21,163 +21,46 @@
 
 
 
-<script src = "https://code.angularjs.org/1.6.5/angular.js"></script>
+<script src = "https://code.angularjs.org/1.6.5/angular.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 
-<link rel="apple-touch-icon-precomposed" sizes="144x144" href="{% static 'baseTemplate/assets/images/icons/apple-touch-icon-144-precomposed.png' %}">
-<link rel="apple-touch-icon-precomposed" sizes="114x114" href="{% static 'baseTemplate/assets/images/icons/apple-touch-icon-114-precomposed.png' %}">
-<link rel="apple-touch-icon-precomposed" sizes="72x72" href="{% static 'baseTemplate/assets/images/icons/apple-touch-icon-72-precomposed.png' %}">
-<link rel="apple-touch-icon-precomposed" href="{% static 'baseTemplate/assets/images/icons/apple-touch-icon-57-precomposed.png' %}">
-<link rel="shortcut icon" href="{% static 'baseTemplate/assets/images/icons/favicon.png' %}">
 
 
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/bootstrap/css/bootstrap.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'websiteFunctions/websiteFunctions.css' %}">
 
 <!-- HELPERS -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/animate.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/backgrounds.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/boilerplate.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/border-radius.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/grid.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/page-transitions.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/spacing.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/typography.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/utils.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/colors.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/bootstrap-toggle.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/finalBase/finalBase.css' %}">
 
 <!-- ELEMENTS -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/badges.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/buttons.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/content-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/dashboard-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/forms.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/images.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/info-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/invoice.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/loading-indicators.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/menus.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/panel-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/response-messages.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/responsive-tables.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/ribbon.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/social-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/tables.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/tile-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/timeline.css' %}">
-
-
-
 <!-- ICONS -->
-
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/icons/fontawesome/fontawesome.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/icons/linecons/linecons.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/icons/spinnericon/spinnericon.css' %}">
-
 
 <!-- WIDGETS -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/accordion-ui/accordion.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/calendar/calendar.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/carousel/carousel.css' %}">
-
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/charts/justgage/justgage.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/charts/morris/morris.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/charts/piegage/piegage.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/charts/xcharts/xcharts.css' %}">
-
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/chosen/chosen.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/colorpicker/colorpicker.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/datatable/datatable.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/datepicker/datepicker.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/datepicker-ui/datepicker.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/daterangepicker/daterangepicker.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/dialog/dialog.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/dropdown/dropdown.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/dropzone/dropzone.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/file-input/fileinput.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/input-switch/inputswitch.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/input-switch/inputswitch-alt.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/ionrangeslider/ionrangeslider.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/jcrop/jcrop.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/jgrowl-notifications/jgrowl.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/loading-bar/loadingbar.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/maps/vector-maps/vectormaps.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/markdown/markdown.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/modal/modal.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/multi-select/multiselect.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/multi-upload/fileupload.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/nestable/nestable.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/noty-notifications/noty.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/popover/popover.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/pretty-photo/prettyphoto.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/progressbar/progressbar.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/range-slider/rangeslider.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/slidebars/slidebars.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/slider-ui/slider.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/summernote-wysiwyg/summernote-wysiwyg.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/tabs-ui/tabs.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/theme-switcher/themeswitcher.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/timepicker/timepicker.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/tocify/tocify.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/tooltip/tooltip.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/touchspin/touchspin.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/uniform/uniform.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/wizard/wizard.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/xeditable/xeditable.css' %}">
-
 <!-- SNIPPETS -->
-
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/chat.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/files-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/login-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/notification-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/progress-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/todo.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/user-profile.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/mobile-navigation.css' %}">
 
 <!-- APPLICATIONS -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/applications/mailbox.css' %}">
-
 <!-- Admin theme -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/themes/admin/layout.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/themes/admin/color-schemes/default.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/finalBase/finalBaseTheme.css' %}">
+
+<link rel="stylesheet" type="text/css" href="/static/baseTemplate/assets/themes/admin/layout.css">
+<link rel="stylesheet" type="text/css" href="/static/baseTemplate/assets/themes/admin/color-schemes/default.css">
 
 <!-- Components theme -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/themes/components/default.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/themes/components/border-radius.css' %}">
 
 <!-- Admin responsive -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/responsive-elements.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/admin-responsive.css' %}">
 
 <!-- Packages -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/percircle.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'packages/packages.css' %}">
 
-    <!-- JS Core -->
+<!-- JS Core -->
 
-    <script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-core.js' %}"></script>
-    <script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-ui-core.js' %}"></script>
-    <script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-ui-widget.js' %}"></script>
-    <script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-ui-mouse.js' %}"></script>
-    <script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-ui-position.js' %}"></script>
-    <script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/modernizr.js' %}"></script>
-    <script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-cookie.js' %}"></script>
-
-
-
-
+<script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-core.min.js' %}"></script>
     <script type="text/javascript">
         $(window).load(function(){
             setTimeout(function() {
@@ -186,6 +69,7 @@
         });
     </script>
 
+<!-- JS Ends -->
 
 
 </head>
@@ -335,10 +219,6 @@
 
         <a class="hide-on-phone" style="background-color: none;width: 33px" href="#" class="hdr-btn" title="{% trans 'CPU Load Average' %}" data-placement="bottom">
             <span class="badge bg-yellow">{$ three $}</span>
-        </a>
-
-        <a href="#" class="hdr-btn" id="fullscreen-btn" title="{% trans 'Fullscreen' %}">
-            <i class="glyph-icon icon-arrows-alt"></i>
         </a>
 
         <div class="dropdown" id="cloud-btn">
@@ -690,25 +570,19 @@
             {% block content %}
             {% endblock %}
 
-
         </div>
 
-
-
     </div>
-
-
-
 
 </div>
 
 
-    <!-- WIDGETS -->
+<!-- WIDGETS -->
 
 
 <!-- Sparklines charts -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/custom-js/system-status.js' %}"></script>
+<script src="{% static 'baseTemplate/custom-js/system-status.js' %}"></script>
 <script src="{% static 'packages/packages.js' %}"></script>
 <script src="{% static 'websiteFunctions/websiteFunctions.js' %}"></script>
 <script src="{% static 'tuning/tuning.js' %}"></script>
@@ -719,83 +593,40 @@
 <script src="{% static 'databases/databases.js' %}"></script>
 <script src="{% static 'mailServer/mailServer.js' %}"></script>
 <script src="{% static 'serverLogs/serverLogs.js' %}"></script>
+
 <!-- PieGage charts -->
 
-
-
-<script type="text/javascript" src="{% static 'baseTemplate/assets/bootstrap/js/bootstrap.js' %}"></script>
-
-<!-- Bootstrap Dropdown -->
-
-<!-- <script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/dropdown/dropdown.js' %}"></script> -->
-
-<!-- Bootstrap Tooltip -->
-
-<!-- <script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/tooltip/tooltip.js' %}"></script> -->
-
-<!-- Bootstrap Popover -->
-
-<!-- <script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/popover/popover.js' %}"></script> -->
+<script type="text/javascript" src="{% static 'baseTemplate/assets/finalJS/final.js' %}"></script>
 
 <!-- Bootstrap Progress Bar -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/progressbar/progressbar.js' %}"></script>
-
-<!-- Bootstrap Buttons -->
-
-<!-- <script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/button/button.js' %}"></script> -->
-
-<!-- Bootstrap Collapse -->
-
-<!-- <script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/collapse/collapse.js' %}"></script> -->
 
 <!-- Superclick -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/superclick/superclick.js' %}"></script>
 
 <!-- Input switch alternate -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/input-switch/inputswitch-alt.js' %}"></script>
-
 <!-- Slim scroll -->
-
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/slimscroll/slimscroll.js' %}"></script>
 
 <!-- Slidebars -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/slidebars/slidebars.js' %}"></script>
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/slidebars/slidebars-demo.js' %}"></script>
 
 <!-- PieGage -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/charts/piegage/piegage.js' %}"></script>
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/charts/piegage/piegage-demo.js' %}"></script>
-
 <!-- Screenfull -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/screenfull/screenfull.js' %}"></script>
 
 <!-- Content box -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/content-box/contentbox.js' %}"></script>
-
 <!-- Overlay -->
-
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/overlay/overlay.js' %}"></script>
 
 <!-- Widgets init for demo -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/js-init/widgets-init.js' %}"></script>
-
 <!-- Theme layout -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/themes/admin/layout.js' %}"></script>
 
 <!-- Theme switcher -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/theme-switcher/themeswitcher.js' %}"></script>
-
-<script src="{% static 'baseTemplate/percircle.js' %}"></script>
 <script src="{% static 'backup/backup.js' %}"></script>
 <script src="{% static 'managePHP/managePHP.js' %}"></script>
 <script src="{% static 'baseTemplate/bootstrap-toggle.min.js' %}"></script>

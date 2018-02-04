@@ -1,13 +1,13 @@
 import shutil
-import sys
 import subprocess
 import os
 import pexpect
-import random
 from mysqlUtilities import mysqlUtilities
 import installLog as logging
 import shlex
 import randomPassword
+import time
+import sys
 
 
 class InstallCyberPanel:
@@ -19,35 +19,35 @@ class InstallCyberPanel:
         self.server_root_path = rootPath
         self.cwd = cwd
 
+    @staticmethod
+    def stdOut(message):
+        print("\n\n")
+        print ("[" + time.strftime(
+            "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
+        print("[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + message + "\n")
+        print ("[" + time.strftime(
+            "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
+
 
     def installLiteSpeed(self):
         try:
-            cmd = []
-
             count = 0
-
             while (1):
 
                 command = 'yum install -y openlitespeed'
-
                 cmd = shlex.split(command)
-
                 res = subprocess.call(cmd)
 
-
                 if res == 1:
-                    print("###############################################")
-                    print("         Could not install Litespeed           ")
-                    print("###############################################")
-                    logging.InstallLog.writeToFile("Openlitespeed is not installed from repo" + " [installLiteSpeed]")
                     count = count + 1
-                    print("Trying again, try number: " + str(count)+"\n")
+                    InstallCyberPanel.stdOut("Trying to install OpenLiteSpeed, trying again, try number: " + str(count))
                     if count == 3:
-                        break
+                        logging.InstallLog.writeToFile("Failed to install OpenLiteSpeed, exiting installer! [installLiteSpeed]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
                 else:
-                    print("###############################################")
-                    print("          Litespeed Installed                  ")
-                    print("###############################################")
+                    logging.InstallLog.writeToFile("OpenLiteSpeed successfully installed!")
+                    InstallCyberPanel.stdOut("OpenLiteSpeed successfully installed!")
                     break
 
         except OSError, msg:
@@ -59,48 +59,28 @@ class InstallCyberPanel:
 
         return 1
 
-
-    def install_ls_panel_config(self):
-
-        try:
-
-            shutil.rmtree("/usr/local/lsws/conf")
-
-            os.chdir(self.cwd)
-
-            shutil.copytree("litespeed/conf", "/usr/local/lsws/conf")
-
-
-        except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [install_ls_panel_config]")
-            return 0
-        except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [install_ls_panel_config]")
-            return 0
-
-        return 1
-
     def reStartLiteSpeed(self):
 
         try:
-
             cmd = []
+            count = 0
 
-            cmd.append(self.server_root_path+"bin/lswsctrl")
-            cmd.append("restart")
+            while(1):
+                cmd.append(self.server_root_path+"bin/lswsctrl")
+                cmd.append("restart")
 
-            res = subprocess.call(cmd)
+                res = subprocess.call(cmd)
 
-            if res == 1:
-                print("###############################################")
-                print("         Could not restart Litespeed server    ")
-                print("###############################################")
-                logging.InstallLog.writeToFile("[reStartLiteSpeed]")
-            else:
-                print("###############################################")
-                print("          Litespeed Re-Started                 ")
-                print("###############################################")
-
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to restart OpenLiteSpeed, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to restart OpenLiteSpeed, you can do this manually later using: systemctl restart lsws! [reStartLiteSpeed]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("OpenLiteSpeed successfully restarted!")
+                    InstallCyberPanel.stdOut("OpenLiteSpeed successfully restarted!")
+                    break
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [reStartLiteSpeed]")
@@ -113,8 +93,10 @@ class InstallCyberPanel:
     def fix_ols_configs(self):
         try:
 
-            ## cache module settings
+            InstallCyberPanel.stdOut("Fixing OpenLiteSpeed configurations!")
+            logging.InstallLog.writeToFile("Fixing OpenLiteSpeed configurations!")
 
+            ## cache module settings
             cacheStart = "module cache {\n"
             param = "  param                   <<<END_param\n"
             enableCache = "enableCache 0\n"
@@ -131,8 +113,6 @@ class InstallCyberPanel:
             checkPublicCache = "checkPublicCache 1\n"
             END_param = "  END_param\n"
             cacheEnd = "}\n"
-
-
 
             writeDataToFile = open(self.server_root_path+"conf/httpd_config.conf", 'a')
 
@@ -171,6 +151,9 @@ class InstallCyberPanel:
 
             writeDataToFile.close()
 
+            InstallCyberPanel.stdOut("OpenLiteSpeed Configurations fixed!")
+            logging.InstallLog.writeToFile("OpenLiteSpeed Configurations fixed!")
+
 
         except IOError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [fix_ols_configs]")
@@ -181,6 +164,9 @@ class InstallCyberPanel:
 
     def changePortTo80(self):
         try:
+            InstallCyberPanel.stdOut("Changing default port to 80..")
+            logging.InstallLog.writeToFile("Changing default port to 80..")
+
             data = open(self.server_root_path+"conf/httpd_config.conf").readlines()
 
             writeDataToFile = open(self.server_root_path+"conf/httpd_config.conf", 'w')
@@ -193,6 +179,9 @@ class InstallCyberPanel:
 
             writeDataToFile.close()
 
+            InstallCyberPanel.stdOut("Default port is now 80 for OpenLiteSpeed!")
+            logging.InstallLog.writeToFile("Default port is now 80 for OpenLiteSpeed!")
+
         except IOError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [changePortTo80]")
             return 0
@@ -201,6 +190,8 @@ class InstallCyberPanel:
 
     def setupFileManager(self):
         try:
+            logging.InstallLog.writeToFile("Setting up Filemanager files..")
+            InstallCyberPanel.stdOut("Setting up Filemanager files..")
 
             os.chdir(self.cwd)
 
@@ -217,6 +208,9 @@ class InstallCyberPanel:
             os.remove(fileManagerPath + "upload.html")
             os.remove(fileManagerPath + "upload.php")
 
+            logging.InstallLog.writeToFile("Filemanager files are set!")
+            InstallCyberPanel.stdOut("Filemanager files are set!")
+
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [setupFileManager]")
             return 0
@@ -226,55 +220,46 @@ class InstallCyberPanel:
 
         return 1
 
-
     def installAllPHPVersions(self):
         try:
-
-            cmd = []
-
             count = 0
 
             while (1):
 
                 command = 'yum -y groupinstall lsphp-all'
-
                 cmd = shlex.split(command)
-
                 res = subprocess.call(cmd)
 
                 if res == 1:
-                    print("###############################################")
-                    print("         Could not install PHP Binaries        ")
-                    print("###############################################")
-                    logging.InstallLog.writeToFile("initial PHP Binaries not installed properly [installAllPHPVersions]")
                     count = count + 1
-                    print("Trying again, try number: " + str(count)+"\n")
+                    InstallCyberPanel.stdOut("Trying to install LiteSpeed PHPs, trying again, try number: " + str(count))
                     if count == 3:
-                        break
+                        logging.InstallLog.writeToFile("Failed to install LiteSpeed PHPs, exiting installer! [installAllPHPVersions]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
                 else:
-                    print("###############################################")
-                    print("          PHP Binaries installed               ")
-                    print("###############################################")
+                    logging.InstallLog.writeToFile("LiteSpeed PHPs successfully installed!")
+                    InstallCyberPanel.stdOut("LiteSpeed PHPs successfully installed!")
 
                     ## only php 71
+                    count = 0
+                    while(1):
+                        command = 'yum install lsphp71 lsphp71-json lsphp71-xmlrpc lsphp71-xml lsphp71-tidy lsphp71-soap lsphp71-snmp lsphp71-recode lsphp71-pspell lsphp71-process lsphp71-pgsql lsphp71-pear lsphp71-pdo lsphp71-opcache lsphp71-odbc lsphp71-mysqlnd lsphp71-mcrypt lsphp71-mbstring lsphp71-ldap lsphp71-intl lsphp71-imap lsphp71-gmp lsphp71-gd lsphp71-enchant lsphp71-dba  lsphp71-common  lsphp71-bcmath -y'
+                        cmd = shlex.split(command)
+                        res = subprocess.call(cmd)
+                        if res == 1:
+                            count = count + 1
+                            InstallCyberPanel.stdOut("Trying to install LiteSpeed PHP 7.1, trying again, try number: " + str(count))
+                            if count == 3:
+                                logging.InstallLog.writeToFile("Failed to install LiteSpeed PHP 7.1, exiting installer! [installAllPHPVersions]")
+                                InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                                sys.exit()
+                        else:
+                            logging.InstallLog.writeToFile("LiteSpeed PHP 7.1 successfully installed!")
+                            InstallCyberPanel.stdOut("LiteSpeed PHP 7.1 successfully installed!")
+                            break
 
-
-                    command = 'yum install lsphp71 lsphp71-json lsphp71-xmlrpc lsphp71-xml lsphp71-tidy lsphp71-soap lsphp71-snmp lsphp71-recode lsphp71-pspell lsphp71-process lsphp71-pgsql lsphp71-pear lsphp71-pdo lsphp71-opcache lsphp71-odbc lsphp71-mysqlnd lsphp71-mcrypt lsphp71-mbstring lsphp71-ldap lsphp71-intl lsphp71-imap lsphp71-gmp lsphp71-gd lsphp71-enchant lsphp71-dba  lsphp71-common  lsphp71-bcmath -y'
-
-                    cmd = shlex.split(command)
-
-                    res = subprocess.call(cmd)
-
-                    if res == 1:
-                        print("###############################################")
-                        print("         Could not install PHP 71        ")
-                        print("###############################################")
-                        logging.InstallLog.writeToFile("PHP71 Binaries not installed properly [installAllPHPVersions]")
-
-                    else:
-                        print("###############################################")
-                        print("          PHP 71 installed               ")
-                        print("###############################################")
+                    ## break for outer loop
                     break
 
         except OSError, msg:
@@ -290,9 +275,14 @@ class InstallCyberPanel:
     def setup_mariadb_repo(self):
         try:
 
-            os.chdir(self.cwd)
+            logging.InstallLog.writeToFile("Setting up MariaDB Repo..")
+            InstallCyberPanel.stdOut("Setting up MariaDB Repo..")
 
+            os.chdir(self.cwd)
             shutil.copy("mysql/MariaDB.repo","/etc/yum.repos.d/MariaDB.repo")
+
+            logging.InstallLog.writeToFile("MariaDB repo set!")
+            InstallCyberPanel.stdOut("MariaDB repo set!")
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [setup_mariadb_repo]")
@@ -301,42 +291,35 @@ class InstallCyberPanel:
             logging.InstallLog.writeToFile(str(msg) + " [setup_mariadb_repo]")
             return 0
 
-
-
     def installMySQL(self):
 
         try:
-
             ############## Install mariadb ######################
-
-            cmd = []
 
             count = 0
 
             while (1):
 
                 command = 'yum -y install mariadb-server'
-
                 cmd = shlex.split(command)
-
                 res = subprocess.call(cmd)
 
                 if res == 1:
-                    print("###############################################")
-                    print("         Could not install MariaDB             ")
-                    print("###############################################")
-                    logging.InstallLog.writeToFile("Could not install MYSQL [installMySQL]")
                     count = count + 1
-                    print("Trying again, try number: " + str(count)+"\n")
+                    InstallCyberPanel.stdOut("Trying to install MariaDB, trying again, try number: " + str(count))
                     if count == 3:
-                        break
+                        logging.InstallLog.writeToFile("Failed to install MariaDB, exiting installer! [installMySQL]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
                 else:
-                    print("###############################################")
-                    print("              MariaDB Installed                ")
-                    print("###############################################")
+                    logging.InstallLog.writeToFile("MariaDB successfully installed!")
+                    InstallCyberPanel.stdOut("MariaDB successfully installed!")
                     break
 
             ## fix configurations
+
+            logging.InstallLog.writeToFile("Setting up MariaDB configurations!")
+            InstallCyberPanel.stdOut("Setting up MariaDB configurations!")
 
             pathConf = "/etc/my.cnf"
             pathServiceFile = "/etc/systemd/system/mysqld@.service"
@@ -352,17 +335,68 @@ class InstallCyberPanel:
             shutil.copy("mysql/my.cnf",pathConf)
             shutil.copy("mysql/mysqld@.service",pathServiceFile)
 
-            command = "mysql_install_db --user=mysql --datadir=/var/lib/mysql1"
+            logging.InstallLog.writeToFile("MariaDB configurations set!")
+            InstallCyberPanel.stdOut("MariaDB configurations set!")
 
-            subprocess.call(shlex.split(command))
+            ##
 
-            command = "systemctl start mysqld@1"
+            count = 0
 
-            subprocess.call(shlex.split(command))
+            while(1):
+                command = "mysql_install_db --user=mysql --datadir=/var/lib/mysql1"
 
-            command = "systemctl enable mysqld@1"
+                res = subprocess.call(shlex.split(command))
 
-            subprocess.call(shlex.split(command))
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to create data directories for second MariaDB instance, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to create data directories for second MariaDB instance, exiting installer! [installMySQL]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("Data directories created for second MariaDB instance!")
+                    InstallCyberPanel.stdOut("Data directories created for second MariaDB instance!")
+                    break
+
+            ##
+
+            count = 0
+
+            while(1):
+                command = "systemctl start mysqld@1"
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to start first MariaDB instance, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to start first MariaDB instance, exiting installer! [installMySQL]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("First MariaDB instance successfully started!")
+                    InstallCyberPanel.stdOut("First MariaDB instance successfully started!")
+                    break
+
+
+            count = 0
+
+            while(1):
+                command = "systemctl enable mysqld@1"
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to enable first MariaDB instance to start and system restart, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to enable first MariaDB instance to run at system restart, exiting installer! [installMySQL]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("First MariaDB instance successfully enabled at system restart!")
+                    InstallCyberPanel.stdOut("First MariaDB instance successfully enabled at system restart!")
+                    break
 
 
         except OSError, msg:
@@ -381,23 +415,23 @@ class InstallCyberPanel:
 
         try:
 
-            cmd = []
+            count = 0
 
-            cmd.append("systemctl")
-            cmd.append("enable")
-            cmd.append("mariadb")
+            while(1):
 
-            res = subprocess.call(cmd)
+                command = "systemctl enable mysql"
+                res = subprocess.call(shlex.split(command))
 
-            if res == 1:
-                print("###############################################")
-                print("      Could not add mariadb to startup         ")
-                print("###############################################")
-                logging.InstallLog.writeToFile("Could not add mariadb to startup [installMySQL]")
-            else:
-                print("###############################################")
-                print("          MariaDB Addded to startup            ")
-                print("###############################################")
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to enable MariaDB instance to start and system restart, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to enable MariaDB instance to run at system restart, you can do this later using systemctl enable mysql! [installMySQL]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("MariaDB instance successfully enabled at system restart!")
+                    InstallCyberPanel.stdOut("MariaDB instance successfully enabled at system restart!")
+                    break
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " Could not add mariadb to startup [installMySQL]")
@@ -411,6 +445,11 @@ class InstallCyberPanel:
 
     def changeMYSQLRootPassword(self):
         try:
+
+            logging.InstallLog.writeToFile("Changing MariaDB root password..")
+            InstallCyberPanel.stdOut("Changing MariaDB root password..")
+
+
             expectation = "Enter password:"
             securemysql = pexpect.spawn("mysql -u root -p", timeout=5)
             securemysql.expect(expectation)
@@ -434,6 +473,9 @@ class InstallCyberPanel:
 
             securemysql.wait()
 
+            logging.InstallLog.writeToFile("MariaDB root password changed!")
+            InstallCyberPanel.stdOut("MariaDB root password changed!")
+
 
         except pexpect.EOF, msg:
             logging.InstallLog.writeToFile(str(msg) + " Exception EOF [changeMYSQLRootPassword]")
@@ -447,6 +489,10 @@ class InstallCyberPanel:
 
     def changeMYSQLRootPasswordCyberPanel(self):
         try:
+
+            logging.InstallLog.writeToFile("Changing CyberPanel MariaDB root password..")
+            InstallCyberPanel.stdOut("Changing CyberPanel MariaDB root password..")
+
             expectation = "Enter password:"
             securemysql = pexpect.spawn("mysql --host=127.0.0.1 --port=3307 -u root -p", timeout=5)
             securemysql.expect(expectation)
@@ -470,6 +516,9 @@ class InstallCyberPanel:
 
             securemysql.wait()
 
+            logging.InstallLog.writeToFile("CyberPanel MariaDB root password changed!")
+            InstallCyberPanel.stdOut("CyberPanel MariaDB root password changed!")
+
 
         except pexpect.EOF, msg:
             logging.InstallLog.writeToFile(str(msg) + " Exception EOF [changeMYSQLRootPasswordCyberPanel]")
@@ -486,24 +535,23 @@ class InstallCyberPanel:
         ############## Start mariadb ######################
 
         try:
+            count = 0
 
-            cmd = []
+            while(1):
+                command = "systemctl start mysql"
+                res = subprocess.call(shlex.split(command))
 
-            cmd.append("systemctl")
-            cmd.append("start")
-            cmd.append("mariadb")
-
-            res = subprocess.call(cmd)
-
-            if res == 1:
-                print("###############################################")
-                print("           Could not start MariaDB             ")
-                print("###############################################")
-                logging.InstallLog.writeToFile("Could not start MariaDB [startMariaDB]")
-            else:
-                print("###############################################")
-                print("              MariaDB Started                  ")
-                print("###############################################")
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to start MariaDB instance, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to start MariaDB instance, exiting installer! [startMariaDB]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("MariaDB instance successfully started!")
+                    InstallCyberPanel.stdOut("MariaDB instance successfully started!")
+                    break
 
 
         except OSError, msg:
@@ -518,130 +566,106 @@ class InstallCyberPanel:
     def installPureFTPD(self):
         try:
 
-            cmd = []
-
             count = 0
-
             while (1):
-
-                cmd.append("yum")
-                cmd.append("install")
-                cmd.append("-y")
-                cmd.append("pure-ftpd")
-
-                res = subprocess.call(cmd)
+                command = "yum install -y pure-ftpd"
+                res = subprocess.call(shlex.split(command))
 
                 if res == 1:
-                    print("###############################################")
-                    print("         Could not install PureFTPD            ")
-                    print("###############################################")
-                    logging.InstallLog.writeToFile("Could not install PureFTPD [installPureFTPD]")
                     count = count + 1
-                    print("Trying again, try number: " + str(count)+"\n")
+                    InstallCyberPanel.stdOut("Trying to install PureFTPD, trying again, try number: " + str(count))
                     if count == 3:
-                        break
+                        logging.InstallLog.writeToFile("Failed to install PureFTPD, exiting installer! [installPureFTPD]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
                 else:
-                    print("###############################################")
-                    print("          PureFTPD Installed                   ")
-                    print("###############################################")
+                    logging.InstallLog.writeToFile("PureFTPD successfully installed!")
+                    InstallCyberPanel.stdOut("PureFTPD successfully installed!")
                     break
 
 
             ####### Install pureftpd to system startup
 
-            cmd = []
+            count = 0
 
-            cmd.append("systemctl")
-            cmd.append("enable")
-            cmd.append("pure-ftpd")
+            while(1):
 
-            res = subprocess.call(cmd)
+                command = "systemctl enable pure-ftpd"
+                res = subprocess.call(shlex.split(command))
 
-            if res == 1:
-                print("###############################################")
-                print("      Could not add pureftpd to startup        ")
-                print("###############################################")
-                logging.InstallLog.writeToFile("Could not add pureftpd to startup [installPureFTPD]")
-            else:
-                print("###############################################")
-                print("         pureftpd Addded to startup            ")
-                print("###############################################")
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to enable PureFTPD to start and system restart, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to enable PureFTPD to run at system restart, exiting installer! [installPureFTPD]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("PureFTPD successfully enabled at system restart!")
+                    InstallCyberPanel.stdOut("PureFTPD successfully enabled at system restart!")
+                    break
 
 
 
 
             ###### FTP Groups and user settings settings
 
+            count = 0
 
-            cmd = []
+            while(1):
+                cmd = []
+                cmd.append("groupadd")
+                cmd.append("-g")
+                cmd.append("2001")
+                cmd.append("ftpgroup")
 
-            cmd.append("groupadd")
-            cmd.append("-g")
-            cmd.append("2001")
-            cmd.append("ftpgroup")
+                res = subprocess.call(cmd)
 
-            res = subprocess.call(cmd)
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to create group for FTP, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to create group for FTP, exiting installer! [installPureFTPD]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("System group for FTP successfully created!")
+                    InstallCyberPanel.stdOut("System group for FTP successfully created!")
+                    break
 
-            if res == 1:
-                print("###############################################")
-                print("          Could not add FTP Group              ")
-                print("###############################################")
-                logging.InstallLog.writeToFile("Could not add FTP Group [installPureFTPD]")
-            else:
-                print("###############################################")
-                print("             FTP Group Added                   ")
-                print("###############################################")
+            count = 0
 
-            cmd = []
+            while(1):
 
-            cmd.append("useradd")
-            cmd.append("-u")
-            cmd.append("2001")
-            cmd.append("-s")
-            cmd.append("/bin/false")
-            cmd.append("-d")
-            cmd.append("/bin/null")
-            cmd.append("-c")
-            cmd.append('"pureftpd user"')
-            cmd.append("-g")
-            cmd.append("ftpgroup")
-            cmd.append("ftpuser")
+                cmd = []
 
-
-            res = subprocess.call(cmd)
-
-            if res == 1:
-                print("###############################################")
-                print("          Could not add FTP User               ")
-                print("###############################################")
-                logging.InstallLog.writeToFile("Could not add FTP group [installPureFTPD]")
-            else:
-                print("###############################################")
-                print("            FTP User Added                     ")
-                print("###############################################")
-
-            cmd = []
-
-            cmd.append("usermod")
-            cmd.append("-a")
-            cmd.append("-G")
-            cmd.append("nobody")
-            cmd.append("ftpuser")
+                cmd.append("useradd")
+                cmd.append("-u")
+                cmd.append("2001")
+                cmd.append("-s")
+                cmd.append("/bin/false")
+                cmd.append("-d")
+                cmd.append("/bin/null")
+                cmd.append("-c")
+                cmd.append('"pureftpd user"')
+                cmd.append("-g")
+                cmd.append("ftpgroup")
+                cmd.append("ftpuser")
 
 
-            res = subprocess.call(cmd)
+                res = subprocess.call(cmd)
 
-            if res == 1:
-                print("###############################################")
-                print("          Could not add FTP User               ")
-                print("###############################################")
-                logging.InstallLog.writeToFile("Could not add FTP User [installPureFTPD]")
-            else:
-                print("###############################################")
-                print("            FTP User Added                     ")
-                print("###############################################")
-
-
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to create user for FTP, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to create user for FTP, exiting installer! [installPureFTPD]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("System user for FTP successfully created!")
+                    InstallCyberPanel.stdOut("System user for FTP successfully created!")
+                    break
 
 
         except OSError, msg:
@@ -655,27 +679,33 @@ class InstallCyberPanel:
 
     def startPureFTPD(self):
 
-        ############## Start mariadb ######################
+        ############## Start pureftpd ######################
 
         try:
 
-            cmd = []
+            count = 0
 
-            cmd.append("systemctl")
-            cmd.append("start")
-            cmd.append("pure-ftpd")
+            while(1):
+                cmd = []
 
-            res = subprocess.call(cmd)
+                cmd.append("systemctl")
+                cmd.append("start")
+                cmd.append("pure-ftpd")
 
-            if res == 1:
-                print("###############################################")
-                print("           Could not start pureftpd            ")
-                print("###############################################")
-                logging.InstallLog.writeToFile("Could not start pureftpd [installPureFTPD]")
-            else:
-                print("###############################################")
-                print("              pureftpd Started                 ")
-                print("###############################################")
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to start PureFTPD instance, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Failed to start PureFTPD instance, exiting installer! [startPureFTPD]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("PureFTPD instance successfully started!")
+                    InstallCyberPanel.stdOut("PureFTPD instance successfully started!")
+                    break
 
 
         except OSError, msg:
@@ -692,13 +722,30 @@ class InstallCyberPanel:
         try:
             ## setup ssl for ftp
 
+            logging.InstallLog.writeToFile("Configuring PureFTPD..")
+            InstallCyberPanel.stdOut("Configuring PureFTPD..")
+
             try:
                 os.mkdir("/etc/ssl/private")
             except:
                 logging.InstallLog.writeToFile("Could not create directory for FTP SSL")
 
-            command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
-            subprocess.call(shlex.split(command))
+            count = 0
+
+            while(1):
+                command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to create SSL for PureFTPD, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to create SSL for PureFTPD! [installPureFTPDConfigurations]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("SSL for PureFTPD successfully created!")
+                    InstallCyberPanel.stdOut("SSL for PureFTPD successfully created!")
+                    break
 
 
             os.chdir(self.cwd)
@@ -725,6 +772,9 @@ class InstallCyberPanel:
 
             writeDataToFile.close()
 
+            logging.InstallLog.writeToFile("PureFTPD configured!")
+            InstallCyberPanel.stdOut("PureFTPD configured!")
+
         except IOError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [installPureFTPDConfigurations]")
             return 0
@@ -738,53 +788,62 @@ class InstallCyberPanel:
             count = 0
 
             while (1):
-
                 command = 'yum -y install epel-release yum-plugin-priorities'
-
                 cmd = shlex.split(command)
-
                 res = subprocess.call(cmd)
 
                 if res == 1:
-                    logging.InstallLog.writeToFile("plugin-priorities [installPowerDNS]")
-                else:
-                    pass
-
-                command = 'curl -o /etc/yum.repos.d/powerdns-auth-master.repo https://repo.powerdns.com/repo-files/centos-auth-master.repo'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    logging.InstallLog.writeToFile("636 [installPowerDNS]")
-                else:
-                    pass
-
-                command = 'yum -y install pdns pdns-backend-mysql'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-
-
-                if res == 1:
-                    print("###############################################")
-                    print("          Can not install PowerDNS                ")
-                    print("###############################################")
-                    logging.InstallLog.writeToFile("Can not install PowerDNS [installPowerDNS]")
                     count = count + 1
-                    print("Trying again, try number: " + str(count)+"\n")
+                    InstallCyberPanel.stdOut("Trying to install PowerDNS Repositories, trying again, try number: " + str(count))
                     if count == 3:
-                        break
+                        logging.InstallLog.writeToFile("Failed to install PowerDNS Repositories, exiting installer! [installPowerDNS]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
                 else:
-                    print("###############################################")
-                    print("          PowerDNS Installed                      ")
-                    print("###############################################")
+                    logging.InstallLog.writeToFile("PowerDNS Repositories successfully installed!")
+                    InstallCyberPanel.stdOut("PowerDNS Repositories successfully installed!")
                     break
 
+            count = 0
 
+            while(1):
+
+                command = 'curl -o /etc/yum.repos.d/powerdns-auth-master.repo https://repo.powerdns.com/repo-files/centos-auth-master.repo'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut(
+                        "Trying to install PowerDNS Repositories, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Failed to install PowerDNS Repositories, exiting installer! [installPowerDNS]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("PowerDNS Repositories successfully installed!")
+                    InstallCyberPanel.stdOut("PowerDNS Repositories successfully installed!")
+                    break
+
+            count = 1
+
+            while(1):
+                command = 'yum -y install pdns pdns-backend-mysql'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to install PowerDNS, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to install PowerDNS, exiting installer! [installPowerDNS]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("PowerDNS successfully installed!")
+                    InstallCyberPanel.stdOut("PowerDNS successfully installed!")
+                    break
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [powerDNS]")
@@ -795,10 +854,12 @@ class InstallCyberPanel:
 
         return 1
 
-
     def installPowerDNSConfigurations(self,mysqlPassword):
-
         try:
+
+            logging.InstallLog.writeToFile("Configuring PowerDNS..")
+            InstallCyberPanel.stdOut("Configuring PowerDNS..")
+
             os.chdir(self.cwd)
             dnsPath = "/etc/pdns/pdns.conf"
 
@@ -822,6 +883,9 @@ class InstallCyberPanel:
 
             writeDataToFile.close()
 
+            logging.InstallLog.writeToFile("PowerDNS configured!")
+            InstallCyberPanel.stdOut("PowerDNS configured!")
+
 
         except IOError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [installPowerDNSConfigurations]")
@@ -831,39 +895,52 @@ class InstallCyberPanel:
 
     def startPowerDNS(self):
 
-        ############## Start mariadb ######################
+        ############## Start PowerDNS ######################
 
         try:
 
-            cmd = []
+            count = 0
 
-            cmd.append("systemctl")
-            cmd.append("enable")
-            cmd.append("pdns")
+            while(1):
 
-            res = subprocess.call(cmd)
+                cmd = []
 
-            if res == 1:
-                print("###############################################")
-                print("           Could not start PowerDNS                 ")
-                print("###############################################")
-                logging.InstallLog.writeToFile("Could not start PowerDNS" + " [startPowerDNS]")
-            else:
-                print("###############################################")
-                print("              PowerDNS Started                      ")
-                print("###############################################")
+                cmd.append("systemctl")
+                cmd.append("enable")
+                cmd.append("pdns")
 
-            command = 'systemctl start pdns'
+                res = subprocess.call(cmd)
 
-            cmd = shlex.split(command)
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to enable PowerDNS to start and system restart, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to enable PowerDNS to run at system restart, you can manually do this later using systemctl enable pdns! [startPowerDNS]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("PowerDNS successfully enabled at system restart!")
+                    InstallCyberPanel.stdOut("PowerDNS successfully enabled at system restart!")
+                    break
 
-            res = subprocess.call(cmd)
+            count = 1
 
+            while(1):
+                command = 'systemctl start pdns'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
 
-            if res == 1:
-                logging.InstallLog.writeToFile("734 [startPowerDNS]")
-            else:
-                pass
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to start PowerDNS instance, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to start PowerDNS instance, exiting installer! [startPowerDNS]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("PowerDNS instance successfully started!")
+                    InstallCyberPanel.stdOut("PowerDNS instance successfully started!")
+                    break
 
 
         except OSError, msg:
@@ -878,102 +955,152 @@ class InstallCyberPanel:
     def installLSCPD(self):
         try:
 
+            logging.InstallLog.writeToFile("Starting LSCPD installation..")
+            InstallCyberPanel.stdOut("Starting LSCPD installation..")
+
             os.chdir(self.cwd)
 
-            command = 'yum -y install epel-release'
+            count = 0
 
-            cmd = shlex.split(command)
+            while(1):
+                command = 'yum -y install gcc gcc-c++ make autoconf glibc rcs'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
 
-            res = subprocess.call(cmd)
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to install LSCPD prerequisites, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to install LSCPD prerequisites, exiting installer! [installLSCPD]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("LSCPD prerequisites successfully installed!")
+                    InstallCyberPanel.stdOut("LSCPD prerequisites successfully installed!")
+                    break
 
-            if res == 1:
-                logging.InstallLog.writeToFile("836 [installLSCPD]")
-            else:
-                pass
+            count = 0
 
-            command = 'yum -y install gcc gcc-c++ make autoconf glibc rcs'
+            while(1):
+                command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
 
-            cmd = shlex.split(command)
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to install LSCPD prerequisites, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to install LSCPD prerequisites, exiting installer! [installLSCPD]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("LSCPD prerequisites successfully installed!")
+                    InstallCyberPanel.stdOut("LSCPD prerequisites successfully installed!")
+                    break
 
-            res = subprocess.call(cmd)
+            count = 0
 
-            if res == 1:
-                logging.InstallLog.writeToFile("846 [installLSCPD]")
-            else:
-                pass
+            while(1):
 
+                command = 'tar zxf openlitespeed.tar.gz'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
 
-            command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel'
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd)
-
-
-            if res == 1:
-                logging.InstallLog.writeToFile("860 [installLSCPD]")
-            else:
-                pass
-
-
-            command = 'tar zxf openlitespeed.tar.gz'
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd)
-
-            if res == 1:
-                logging.InstallLog.writeToFile("872 [installLSCPD]")
-            else:
-                pass
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to extract LSCPD, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to extract LSCPD, exiting installer! [installLSCPD]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("LSCPD successfully extracted!")
+                    InstallCyberPanel.stdOut("LSCPD successfully extracted!")
+                    break
 
             os.chdir("openlitespeed")
 
-            ##command = './configure --prefix=/usr/local/lscp --with-tempdir=/tmp/lscp --with-pidfile=/tmp/lscp/lscp.pid --with-adminport=7090 --with-exampleport=8090'
+            count = 0
 
-            command = './configure --with-lscpd --prefix=/usr/local/lscp'
+            while(1):
 
-            cmd = shlex.split(command)
+                command = './configure --with-lscpd --prefix=/usr/local/lscp'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
 
-            res = subprocess.call(cmd)
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to configure LSCPD, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to configure LSCPD, exiting installer! [installLSCPD]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("LSCPD successfully configured!")
+                    InstallCyberPanel.stdOut("LSCPD successfully extracted!")
+                    break
 
-            if res == 1:
-                logging.InstallLog.writeToFile("885 [installLSCPD]")
-            else:
-                pass
+            count = 0
 
-            command = 'make'
+            while(1):
 
-            cmd = shlex.split(command)
+                command = 'make'
 
-            res = subprocess.call(cmd)
+                cmd = shlex.split(command)
 
-            if res == 1:
-                logging.InstallLog.writeToFile("896 [installLSCPD]")
-            else:
-                pass
+                res = subprocess.call(cmd)
 
-            command = 'make install'
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to compile LSCPD, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to compile LSCPD, exiting installer! [installLSCPD]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("LSCPD successfully complied!")
+                    InstallCyberPanel.stdOut("LSCPD successfully compiled!")
+                    break
 
-            cmd = shlex.split(command)
+            count = 0
 
-            res = subprocess.call(cmd)
+            while(1):
 
-            if res == 1:
-                logging.InstallLog.writeToFile("907 [installLSCPD]")
-            else:
-                pass
+                command = 'make install'
 
-            command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /usr/local/lscp/key.pem -out /usr/local/lscp/cert.pem'
+                cmd = shlex.split(command)
 
-            cmd = shlex.split(command)
+                res = subprocess.call(cmd)
 
-            res = subprocess.call(cmd)
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to compile LSCPD, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to compile LSCPD, exiting installer! [installLSCPD]")
+                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("LSCPD successfully complied!")
+                    InstallCyberPanel.stdOut("LSCPD successfully compiled!")
+                    break
 
-            if res == 1:
-                logging.InstallLog.writeToFile("918 [installLSCPD]")
-            else:
-                pass
+            count = 0
+            while(1):
+
+                command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /usr/local/lscp/key.pem -out /usr/local/lscp/cert.pem'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    InstallCyberPanel.stdOut("Trying to create SSL for LSCPD, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to create SSL for LSCPD! [installLSCPD]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("SSL for LSCPD successfully created!")
+                    InstallCyberPanel.stdOut("SSL for LSCPD successfully created!")
+                    break
 
             try:
                 os.remove("/usr/local/lscp/fcgi-bin/lsphp")
@@ -982,11 +1109,8 @@ class InstallCyberPanel:
                 pass
 
 
-            if res == 0:
-
-                print("###############################################")
-                print("          LSCPD Installed                ")
-                print("###############################################")
+            logging.InstallLog.writeToFile("LSCPD successfully installed!")
+            InstallCyberPanel.stdOut("LSCPD successfully installed!")
 
 
         except OSError, msg:
@@ -994,161 +1118,6 @@ class InstallCyberPanel:
             return 0
         except ValueError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [installLSCPD]")
-            return 0
-
-        return 1
-
-    def installCertBot(self):
-
-        try:
-
-            cmd = []
-
-            count = 0
-
-            while (1):
-
-                cmd.append("yum")
-                cmd.append("-y")
-                cmd.append("install")
-                cmd.append("yum-utils")
-
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    print("###############################################")
-                    print("         Could not install yum utils             ")
-                    print("###############################################")
-                    logging.InstallLog.writeToFile("yum utils not installed" + " [installCertBot]")
-                    count = count + 1
-                    print("Trying again, try number: " + str(count) + "\n")
-                    if count == 3:
-                        break
-                else:
-                    print("###############################################")
-                    print("            yum utils Installed                  ")
-                    print("###############################################")
-                    break
-
-            cmd = []
-
-            count = 0
-
-            while (1):
-
-                cmd.append("yum-config-manager")
-                cmd.append("--enable")
-                cmd.append("rhui-REGION-rhel-server-extras")
-                cmd.append("rhui-REGION-rhel-server-optional")
-
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    print("###############################################")
-                    print("         Could not install yum-config-manager             ")
-                    print("###############################################")
-                    logging.InstallLog.writeToFile("yum-config-manager --enable failed" + " [installCertBot]")
-                    count = count + 1
-                    print("Trying again, try number: " + str(count) + "\n")
-                    if count == 3:
-                        break
-                else:
-                    print("###############################################")
-                    print("            yum-config-manager Installed                  ")
-                    print("###############################################")
-                    break
-
-            cmd = []
-
-            count = 0
-
-            while (1):
-
-                try:
-                    if subprocess.check_output('systemd-detect-virt').find("openvz") > -1:
-
-                        command = "pip install pyOpenSSL==16.2.0"
-
-                        cmd = shlex.split(command)
-
-                        subprocess.call(cmd)
-
-                        command = "pip install certbot"
-
-                        cmd = shlex.split(command)
-
-                        subprocess.call(cmd)
-
-                        if res == 1:
-                            print("###############################################")
-                            print("         Could not install CertBot             ")
-                            print("###############################################")
-                            logging.InstallLog.writeToFile("Certbot not installed" + " [installCertBot]")
-                            count = count + 1
-                            print("Trying again, try number: " + str(count) + "\n")
-                            if count == 3:
-                                break
-                        else:
-                            print("###############################################")
-                            print("            Certbot Installed                  ")
-                            print("###############################################")
-                            break
-
-                    else:
-
-                        cmd.append("yum")
-                        cmd.append("-y")
-                        cmd.append("install")
-                        cmd.append("certbot")
-
-                        res = subprocess.call(cmd)
-
-                        if res == 1:
-                            print("###############################################")
-                            print("         Could not install CertBot             ")
-                            print("###############################################")
-                            logging.InstallLog.writeToFile("Certbot not installed" + " [installCertBot]")
-                            count = count + 1
-                            print("Trying again, try number: " + str(count) + "\n")
-                            if count == 3:
-                                break
-                        else:
-                            print("###############################################")
-                            print("            Certbot Installed                  ")
-                            print("###############################################")
-                            break
-                except:
-                    cmd.append("yum")
-                    cmd.append("-y")
-                    cmd.append("install")
-                    cmd.append("certbot")
-
-                    res = subprocess.call(cmd)
-
-                    if res == 1:
-                        print("###############################################")
-                        print("         Could not install CertBot             ")
-                        print("###############################################")
-                        logging.InstallLog.writeToFile("Certbot not installed" + " [installCertBot]")
-                        count = count + 1
-                        print("Trying again, try number: " + str(count) + "\n")
-                        if count == 3:
-                            break
-                    else:
-                        print("###############################################")
-                        print("            Certbot Installed                  ")
-                        print("###############################################")
-                        break
-
-
-
-
-
-        except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [installCertBot]")
-            return 0
-        except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [installCertBot]")
             return 0
 
         return 1
@@ -1196,6 +1165,4 @@ def Main(cwd):
     installer.installPowerDNSConfigurations(InstallCyberPanel.mysqlPassword)
     installer.startPowerDNS()
 
-
-    installer.installCertBot()
     installer.installLSCPD()

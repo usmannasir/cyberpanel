@@ -1181,11 +1181,22 @@ def installWordPress(domainName,finalPath,virtualHostUser,dbName,dbUser,dbPasswo
         if not os.path.exists(finalPath):
             os.makedirs(finalPath)
 
-        if not os.listdir(finalPath):
+        ## checking for directories/files
+
+        dirFiles = os.listdir(finalPath)
+
+        if len(dirFiles) == 1:
+            if dirFiles[0] == ".well-known":
+                pass
+            else:
+                print "0,Target directory should be empty before installation, otherwise data loss could occur."
+                return
+        elif len(dirFiles) == 0:
             pass
         else:
             print "0,Target directory should be empty before installation, otherwise data loss could occur."
             return
+
 
         ## Get wordpress
 
@@ -1297,7 +1308,13 @@ def installJoomla(domainName,finalPath,virtualHostUser,dbName,dbUser,dbPassword,
         if not os.path.exists(finalPath):
             os.makedirs(finalPath)
 
-        if not os.listdir(finalPath):
+        if len(dirFiles) == 1:
+            if dirFiles[0] == ".well-known":
+                pass
+            else:
+                print "0,Target directory should be empty before installation, otherwise data loss could occur."
+                return
+        elif len(dirFiles) == 0:
             pass
         else:
             print "0,Target directory should be empty before installation, otherwise data loss could occur."
