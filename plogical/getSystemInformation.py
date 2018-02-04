@@ -2,9 +2,11 @@ import platform
 import os
 import datetime
 import math
+import argparse
 
 class SystemInformation:
     now = datetime.datetime.now()
+    olsReport = ""
 
     @staticmethod
     def cpuLoad():
@@ -96,3 +98,23 @@ class SystemInformation:
                           'diskUsage': 0}
 
         return SystemInfo
+
+    @staticmethod
+    def populateOLSReport():
+        SystemInformation.olsReport = open("/tmp/lshttpd/.rtreport", "r").readlines()
+
+
+
+def main():
+
+    parser = argparse.ArgumentParser(description='CyberPanel Installer')
+    parser.add_argument('function', help='Specific a function to call!')
+
+    args = parser.parse_args()
+
+    if args.function == "populateOLSReport":
+        SystemInformation.populateOLSReport()
+
+
+if __name__ == "__main__":
+    main()

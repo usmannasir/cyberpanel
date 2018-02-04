@@ -14,7 +14,7 @@ import subprocess
 import shlex
 import os
 import plogical.CyberCPLogFileWriter as logging
-from django.utils.translation import ugettext,ungettext
+from plogical.virtualHostUtilities import virtualHostUtilities
 # Create your views here.
 
 
@@ -70,8 +70,7 @@ def getSystemStatus(request):
         HTTPData = SystemInformation.getSystemInformation()
 
         try:
-            command = "sudo cat /tmp/lshttpd/tempReport"
-            logging.CyberCPLogFileWriter.writeToFile(shlex.split(command))
+            command = "sudo cat /tmp/lshttpd/.rtreport"
             data = subprocess.check_output(shlex.split(command)).split("\n")
 
             httpData = data[3]
@@ -91,7 +90,7 @@ def getSystemStatus(request):
             HTTPData['AvailSSL'] = finalHTTP[14]
 
         except BaseException,msg:
-
+            #logging.CyberCPLogFileWriter.writeToFile("Failed to read status file, error: " + str(msg))
             HTTPData['RequestProcessing'] = 0
             HTTPData['TotalRequests'] = 0
 

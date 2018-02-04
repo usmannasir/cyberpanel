@@ -217,10 +217,12 @@ class virtualHostUtilities:
             extprocessor = "extprocessor "+virtualHostUser+" {\n"
             type = "  type                    lsapi\n"
             address = "  address                 UDS://tmp/lshttpd/"+virtualHostUser+".sock\n"
-            maxConns = "  maxConns                35\n"
+            maxConns = "  maxConns                10\n"
+            env = "  env                     LSAPI_CHILDREN=10\n"
             initTimeout = "  initTimeout             60\n"
             retryTimeout = "  retryTimeout            0\n"
             persistConn = "  persistConn             1\n"
+            persistConnTimeout = "  pcKeepAliveTimeout      1\n"
             respBuffer = "  respBuffer              0\n"
             autoStart = "  autoStart               1\n"
             path = "  path                    /usr/local/lsws/lsphp"+php+"/bin/lsphp\n"
@@ -236,9 +238,11 @@ class virtualHostUtilities:
             confFile.writelines(type)
             confFile.writelines(address)
             confFile.writelines(maxConns)
+            confFile.writelines(env)
             confFile.writelines(initTimeout)
             confFile.writelines(retryTimeout)
             confFile.writelines(persistConn)
+            confFile.writelines(persistConnTimeout)
             confFile.writelines(respBuffer)
             confFile.writelines(autoStart)
             confFile.writelines(path)
@@ -499,10 +503,12 @@ class virtualHostUtilities:
             extprocessor = "extprocessor " + virtualHostUser+sockRandomPath + " {\n"
             type = "  type                    lsapi\n"
             address = "  address                 UDS://tmp/lshttpd/" + virtualHostUser+sockRandomPath + ".sock\n"
-            maxConns = "  maxConns                35\n"
+            maxConns = "  maxConns                10\n"
+            env = "  env                     LSAPI_CHILDREN=10\n"
             initTimeout = "  initTimeout             60\n"
             retryTimeout = "  retryTimeout            0\n"
             persistConn = "  persistConn             1\n"
+            persistConnTimeout = "  pcKeepAliveTimeout      1\n"
             respBuffer = "  respBuffer              0\n"
             autoStart = "  autoStart               1\n"
             path = "  path                    /usr/local/lsws/lsphp" + php + "/bin/lsphp\n"
@@ -518,9 +524,11 @@ class virtualHostUtilities:
             confFile.writelines(type)
             confFile.writelines(address)
             confFile.writelines(maxConns)
+            confFile.writelines(env)
             confFile.writelines(initTimeout)
             confFile.writelines(retryTimeout)
             confFile.writelines(persistConn)
+            confFile.writelines(persistConnTimeout)
             confFile.writelines(respBuffer)
             confFile.writelines(autoStart)
             confFile.writelines(path)
@@ -1283,6 +1291,7 @@ def installWordPress(domainName,finalPath,virtualHostUser,dbName,dbUser,dbPasswo
     except BaseException, msg:
         # remove the downloaded files
         try:
+
             shutil.rmtree(finalPath)
         except:
             logging.CyberCPLogFileWriter.writeToFile("shutil.rmtree(finalPath)")
@@ -1305,8 +1314,14 @@ def installJoomla(domainName,finalPath,virtualHostUser,dbName,dbUser,dbPassword,
     try:
         FNULL = open(os.devnull, 'w')
 
+
+
         if not os.path.exists(finalPath):
             os.makedirs(finalPath)
+
+        ## checking for directories/files
+
+        dirFiles = os.listdir(finalPath)
 
         if len(dirFiles) == 1:
             if dirFiles[0] == ".well-known":

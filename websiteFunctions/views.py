@@ -1170,7 +1170,6 @@ def installWordpress(request):
                 execPath = execPath + " installWordPress --virtualHostName " + domainName + " --virtualHostUser " + externalApp + " --path " + finalPath + " --dbName " + dbName + " --dbUser " + dbUser + " --dbPassword " + dbPassword
 
 
-
                 output = subprocess.check_output(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
@@ -1178,6 +1177,9 @@ def installWordpress(request):
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
                 else:
+                    mysqlUtilities.deleteDatabase(dbName, dbUser)
+                    db = Databases.objects.get(dbName=dbName)
+                    db.delete()
                     data_ret = {'installStatus': 0, 'error_message': output}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
@@ -1292,6 +1294,9 @@ def installJoomla(request):
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
                 else:
+                    mysqlUtilities.deleteDatabase(dbName,dbUser)
+                    db = Databases.objects.get(dbName=dbName)
+                    db.delete()
                     data_ret = {'installStatus': 0, 'error_message': output}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
