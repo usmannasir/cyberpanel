@@ -698,10 +698,8 @@ class InstallCyberPanel:
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to start PureFTPD instance, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Failed to start PureFTPD instance, exiting installer! [startPureFTPD]")
-                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        logging.InstallLog.writeToFile("Failed to start PureFTPD instance, you can do this manually later using systemctl start pure-ftpd [startPureFTPD]")
+                        break
                 else:
                     logging.InstallLog.writeToFile("PureFTPD instance successfully started!")
                     InstallCyberPanel.stdOut("PureFTPD instance successfully started!")
@@ -982,7 +980,7 @@ class InstallCyberPanel:
             count = 0
 
             while(1):
-                command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel'
+                command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel which curl'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 

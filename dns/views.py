@@ -143,7 +143,7 @@ def NSCreation(request):
 
                     record = Records(domainOwner=newZone,
                                      domain_id=newZone.id,
-                                     name=domainForNS,
+                                     name=ns1,
                                      type="A",
                                      content=firstNSIP,
                                      ttl=3600,
@@ -168,7 +168,7 @@ def NSCreation(request):
 
                     record = Records(domainOwner=newZone,
                                      domain_id=newZone.id,
-                                     name=domainForNS,
+                                     name=ns2,
                                      type="A",
                                      content=secondNSIP,
                                      ttl=3600,

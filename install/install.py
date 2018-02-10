@@ -33,7 +33,7 @@ class preFlightsChecks:
             command = "sestatus"
             output = subprocess.check_output(shlex.split(command))
 
-            if output.find("disabled") > -1:
+            if output.find("disabled") > -1 or output.find("permissive") > -1:
                 logging.InstallLog.writeToFile("SELinux Check OK. [checkIfSeLinuxDisabled]")
                 preFlightsChecks.stdOut("SELinux Check OK.")
                 return 1
@@ -45,6 +45,9 @@ class preFlightsChecks:
 
         except BaseException,msg:
             logging.InstallLog.writeToFile(str(msg) + "[checkIfSeLinuxDisabled]")
+            logging.InstallLog.writeToFile("SELinux Check OK. [checkIfSeLinuxDisabled]")
+            preFlightsChecks.stdOut("SELinux Check OK.")
+            return 1
 
     def checkPythonVersion(self):
         if sys.version_info[0] == 2 and sys.version_info[1] == 7:
@@ -575,8 +578,8 @@ class preFlightsChecks:
 
         count = 0
         while (1):
-            #command = "wget http://cyberpanel.net/CyberPanel.1.6.0.tar.gz"
-            command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
+            command = "wget http://cyberpanel.net/CyberPanel.1.6.0.tar.gz"
+            #command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
             res = subprocess.call(shlex.split(command))
 
             if res == 1:
@@ -595,8 +598,8 @@ class preFlightsChecks:
 
         count = 0
         while(1):
-            #command = "tar zxf CyberPanel.1.6.0.tar.gz"
-            command = "tar zxf CyberPanelTemp.tar.gz"
+            command = "tar zxf CyberPanel.1.6.0.tar.gz"
+            #command = "tar zxf CyberPanelTemp.tar.gz"
 
             res = subprocess.call(shlex.split(command))
 
@@ -2290,7 +2293,7 @@ class preFlightsChecks:
 
                         command = "pip install certbot"
                         cmd = shlex.split(command)
-                        subprocess.call(cmd)
+                        res = subprocess.call(cmd)
 
                         if res == 1:
                             count = count + 1
@@ -2335,6 +2338,7 @@ class preFlightsChecks:
                 count = 0
 
                 while (1):
+                    cmd = []
                     cmd.append("yum")
                     cmd.append("-y")
                     cmd.append("install")
