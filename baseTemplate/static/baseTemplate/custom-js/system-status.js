@@ -137,6 +137,7 @@ app.controller('adminController', function($scope,$http,$timeout) {
                     $("#remoteBackups").hide();
                     $("#packageHome").hide();
                     $("#packageSub").hide();
+                    $("#createWebsite").hide();
 
             }
         }

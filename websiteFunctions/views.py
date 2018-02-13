@@ -312,7 +312,12 @@ def submitWebsiteCreation(request):
                 soaRecord.save()
 
                 try:
-                    recordContentA = requests.get('https://api.ipify.org').text
+
+                    ipFile = "/etc/cyberpanel/machineIP"
+                    f = open(ipFile)
+                    ipData = f.read()
+                    recordContentA = ipData.split('\n', 1)[0]
+
                     zone = Domains.objects.get(name=domain)
                     record = Records(domainOwner=zone,
                                      domain_id=zone.id,
@@ -324,12 +329,16 @@ def submitWebsiteCreation(request):
                                      disabled=0,
                                      auth=1)
                     record.save()
-                except:
-                    pass
+                except BaseException,msg:
+                    logging.CyberCPLogFileWriter.writeToFile("Unable to add A record while creating website, error: " + str(msg))
 
             except:
                 try:
-                    recordContentA = requests.get('https://api.ipify.org').text
+                    ipFile = "/etc/cyberpanel/machineIP"
+                    f = open(ipFile)
+                    ipData = f.read()
+                    recordContentA = ipData.split('\n', 1)[0]
+
                     zone = Domains.objects.get(name=domain)
                     record = Records(domainOwner=zone,
                                      domain_id=zone.id,
@@ -341,15 +350,14 @@ def submitWebsiteCreation(request):
                                      disabled=0,
                                      auth=1)
                     record.save()
-                except:
-                    pass
+                except BaseException,msg:
+                    logging.CyberCPLogFileWriter.writeToFile("Unable to add A record while creating website, error: " + str(msg))
 
             ## zone creation
 
             selectedPackage = Package.objects.get(packageName=packageName)
 
-            website = Websites(admin=admin, package=selectedPackage, domain=domain, adminEmail=adminEmail,
-                               phpSelection=phpSelection, ssl=data['ssl'], externalApp=externalApp)
+            website = Websites(admin=admin, package=selectedPackage, domain=domain, adminEmail=adminEmail,phpSelection=phpSelection, ssl=data['ssl'], externalApp=externalApp)
 
             website.save()
 
@@ -567,12 +575,21 @@ def getFurtherAccounts(request):
             json_data = "["
             checker = 0
 
+            try:
+                ipFile = "/etc/cyberpanel/machineIP"
+                f = open(ipFile)
+                ipData = f.read()
+                ipAddress = ipData.split('\n', 1)[0]
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to read machine IP, error:" + str(msg))
+                ipAddress = "192.168.100.1"
+
             for items in websites:
                 if items.state == 0:
                     state = "Suspended"
                 else:
                     state = "Active"
-                dic = {'domain': items.domain, 'adminEmail': items.adminEmail,'admin': items.admin.userName,'package': items.package.packageName,'state':state}
+                dic = {'domain': items.domain, 'adminEmail': items.adminEmail,'ipAddress':ipAddress,'admin': items.admin.userName,'package': items.package.packageName,'state':state}
 
                 if checker == 0:
                     json_data = json_data + json.dumps(dic)

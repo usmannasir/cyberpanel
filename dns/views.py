@@ -259,10 +259,14 @@ def addDeleteDNSRecords(request):
         admin = Administrator.objects.get(pk=val)
         domainsList = []
 
-        domains = Domains.objects.all()
-
-        for items in domains:
-            domainsList.append(items.name)
+        if admin.type == 1:
+            domains = Domains.objects.all()
+            for items in domains:
+                domainsList.append(items.name)
+        else:
+            domains = admin.domains_set.all()
+            for items in domains:
+                domainsList.append(items.name)
 
 
         return render(request, 'dns/addDeleteDNSRecords.html',{"domainsList":domainsList})

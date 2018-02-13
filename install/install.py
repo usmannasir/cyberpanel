@@ -2381,6 +2381,14 @@ def main():
     logging.InstallLog.writeToFile("Starting CyberPanel installation..")
     preFlightsChecks.stdOut("Starting CyberPanel installation..")
 
+    ## Writing public IP
+
+    os.mkdir("/etc/cyberpanel")
+
+    machineIP = open("/etc/cyberpanel/machineIP", "w")
+    machineIP.writelines(args.publicip)
+    machineIP.close()
+
     cwd = os.getcwd()
 
     checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd,"/usr/local/CyberCP")

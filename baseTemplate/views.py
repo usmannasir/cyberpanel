@@ -46,12 +46,16 @@ def getAdminStatus(request):
         else:
             admin_type = "Normal User"
 
-        serverIPAddress = "192.168.100.1"
+        # read server IP
 
         try:
-            serverIPAddress = requests.get('https://api.ipify.org').text
-        except:
-            pass
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            serverIPAddress = ipData.split('\n', 1)[0]
+        except BaseException,msg:
+            logging.CyberCPLogFileWriter.writeToFile("Failed to read machine IP, error:" +str(msg))
+            serverIPAddress = "192.168.100.1"
 
         adminName = administrator.firstName + " " + administrator.lastName
 

@@ -1128,8 +1128,6 @@ def Main(cwd):
 
     InstallCyberPanel.mysql_Root_password = randomPassword.generate_pass()
 
-    os.mkdir("/etc/cyberpanel")
-
 
     password = open("/etc/cyberpanel/mysqlPassword","w")
     password.writelines(InstallCyberPanel.mysql_Root_password)

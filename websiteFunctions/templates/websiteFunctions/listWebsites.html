@@ -27,6 +27,7 @@
                 <tr>
                     <th>Domain</th>
                     <th>Launch</th>
+                    <th>IP Address</th>
                     <th>Package</th>
                     <th>Owner</th>
                     <th>State</th>
@@ -38,6 +39,7 @@
                 <tr ng-repeat="web in WebSitesList track by $index">
                     <td ng-bind="web.domain"></td>
                     <td><a href="{$ web.domain $}"><img width="30px" height="30" class="center-block" src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"></a></td>
+                    <td ng-bind="web.ipAddress"></td>
                     <td ng-bind="web.package"></td>
                     <td ng-bind="web.admin"></td>
                     <td ng-bind="web.state"></td>
