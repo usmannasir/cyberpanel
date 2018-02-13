@@ -3,12 +3,20 @@
 # This file is distributed under the same license as the CyberPanel package.
 # FIRST AUTHOR <unasir@litespeedtech.com>, 2017.
 #
+#: baseTemplate/templates/baseTemplate/index.html:211
+#: baseTemplate/templates/baseTemplate/index.html:301
+#: baseTemplate/templates/baseTemplate/index.html:356
+#: baseTemplate/templates/baseTemplate/index.html:362
+#: baseTemplate/templates/baseTemplate/index.html:368
+#: baseTemplate/templates/baseTemplate/index.html:374
+#: baseTemplate/templates/baseTemplate/index.html:380
+#: baseTemplate/templates/baseTemplate/index.html:386
 msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-01-23 20:36+0500\n"
-"PO-Revision-Date: 2018-02-12 00:40+0100\n"
+"PO-Revision-Date: 2017-10-29 19:32+0100\n"
 "Last-Translator: \n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
 "Language: zh_CN\n"
@@ -16,7 +24,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.0.6\n"
+"X-Generator: Poedit 2.0.4\n"
 
 #: CyberCP/settings.py:167
 msgid "English"
@@ -161,7 +169,7 @@ msgstr "这里是远程备份页面(SFTP)"
 
 #: backup/templates/backup/backupDestinations.html:21
 msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
-msgstr "设置备份目的地(目标服务器SSH端口应为22)"
+msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:30
 #: backup/templates/backup/remoteBackups.html:29
@@ -191,7 +199,7 @@ msgstr "端口"
 
 #: backup/templates/backup/backupDestinations.html:47
 msgid "Backup server SSH Port, leave empty for 22."
-msgstr "备份服务器SSH端口,留空为22"
+msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:55
 #: backup/templates/backup/backupSchedule.html:54
@@ -205,6 +213,8 @@ msgid "Connection to"
 msgstr "连接到"
 
 #: backup/templates/backup/backupDestinations.html:69
+#, fuzzy
+#| msgid "failed. Please delete and re-add."
 msgid "failed. Please delete and re-add. "
 msgstr "失败, 请删除后重新添加"
 
@@ -453,6 +463,8 @@ msgid "Select Back up"
 msgstr "选择备份"
 
 #: backup/templates/backup/restore.html:61
+#, fuzzy
+#| msgid "Configurations"
 msgid "Condition"
 msgstr "配置"
 
@@ -719,6 +731,8 @@ msgstr "概览"
 
 #: baseTemplate/templates/baseTemplate/index.html:413
 #: baseTemplate/templates/baseTemplate/index.html:414
+#, fuzzy
+#| msgid "IP Address"
 msgid "Server IP Address"
 msgstr "IP地址"
 
@@ -960,6 +974,8 @@ msgid "Add/Delete Destination"
 msgstr "添加/删除远程目录"
 
 #: baseTemplate/templates/baseTemplate/index.html:569
+#, fuzzy
+#| msgid "Remote Backups"
 msgid "Remote Back ups"
 msgstr "远程备份"
 
@@ -1014,6 +1030,8 @@ msgid "CyberPanel Main Log File"
 msgstr "Cybapenl主日志"
 
 #: baseTemplate/templates/baseTemplate/index.html:621
+#, fuzzy
+#| msgid "Server Status"
 msgid "Services Status"
 msgstr "服务器状态"
 
@@ -1424,64 +1442,78 @@ msgid "Add Delete/Records"
 msgstr "添加/删除记录"
 
 #: filemanager/templates/filemanager/index.html:5
+#, fuzzy
+#| msgid "Manage SSL - CyberPanel"
 msgid "File Manager - CyberPanel"
-msgstr "文件管理器 - CyberPanel"
+msgstr "管理SSL - CyberPanel"
 
 #: filemanager/templates/filemanager/index.html:43
+#, fuzzy
+#| msgid "File Manager"
 msgid " File Manager"
-msgstr "文件管理器"
+msgstr "文件管理"
 
 #: filemanager/templates/filemanager/index.html:63
 #: filemanager/templates/filemanager/index.html:202
 #: filemanager/templates/filemanager/index.html:233
+#, fuzzy
+#| msgid "Reload"
 msgid "Upload"
-msgstr "上传"
+msgstr "重载"
 
 #: filemanager/templates/filemanager/index.html:66
+#, fuzzy
+#| msgid "File"
 msgid "New File"
-msgstr "新建文件"
+msgstr "文件"
 
 #: filemanager/templates/filemanager/index.html:69
 msgid "New Folder"
-msgstr "新建目录"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:75
 #: filemanager/templates/filemanager/index.html:563
 msgid "Copy"
-msgstr "复制"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:78
 #: filemanager/templates/filemanager/index.html:528
 msgid "Move"
-msgstr "移动"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:81
 #: filemanager/templates/filemanager/index.html:593
+#, fuzzy
+#| msgid "Username"
 msgid "Rename"
-msgstr "重命名"
+msgstr "用户名"
 
 #: filemanager/templates/filemanager/index.html:84
 msgid "Edit"
-msgstr "编辑"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:87
 #: filemanager/templates/filemanager/index.html:438
 #: filemanager/templates/filemanager/index.html:465
 msgid "Compress"
-msgstr "压缩"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:90
 #: filemanager/templates/filemanager/index.html:493
 msgid "Extract"
-msgstr "解压缩"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:108
+#, fuzzy
+#| msgid "Current Package:"
 msgid "Current Path"
-msgstr "当前路径"
+msgstr "当前套餐:"
 
 #: filemanager/templates/filemanager/index.html:136
+#, fuzzy
+#| msgid "Back up"
 msgid "Back"
-msgstr "后退"
+msgstr "备份"
 
 #: filemanager/templates/filemanager/index.html:140
 #: serverLogs/templates/serverLogs/accessLogs.html:42
@@ -1493,80 +1525,96 @@ msgid "Refresh"
 msgstr "刷新"
 
 #: filemanager/templates/filemanager/index.html:144
+#, fuzzy
+#| msgid "Select Email"
 msgid "Select All"
-msgstr "全选"
+msgstr "选择Email"
 
 #: filemanager/templates/filemanager/index.html:148
+#, fuzzy
+#| msgid "Select Email"
 msgid "UnSelect All"
-msgstr "取消全选"
+msgstr "选择Email"
 
 #: filemanager/templates/filemanager/index.html:158
+#, fuzzy
+#| msgid "Size"
 msgid "Size (KB)"
-msgstr "大小(KB)"
+msgstr "大小"
 
 #: filemanager/templates/filemanager/index.html:159
 msgid "Last Modified"
-msgstr "最后修改"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:160
+#, fuzzy
+#| msgid "PHP version "
 msgid "Permissions"
-msgstr "权限"
+msgstr "PHP版本 "
 
 #: filemanager/templates/filemanager/index.html:180
 msgid "Upload File"
-msgstr "上传文件"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:187
 msgid "Upload queue"
-msgstr "上传列表"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:188
 msgid "Queue length:"
-msgstr "列表长度:"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:195
 msgid "Drop"
-msgstr "拖拽"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:196
 msgid "Drop Files here to upload them."
-msgstr "拖拽文件至此处上传"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:211
 msgid "Progress"
-msgstr "进度"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:213
+#, fuzzy
+#| msgid "FTP Functions"
 msgid "Actions"
-msgstr "动作"
+msgstr "FTP功能"
 
 #: filemanager/templates/filemanager/index.html:239
 msgid "Remove"
-msgstr "删除"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:249
 msgid "Queue progress:"
-msgstr "列表进度:"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:258
+#, fuzzy
+#| msgid "Cannot tune. Error message:"
 msgid "can not be uploaded, Error message:"
-msgstr "无法上传,错误信息:"
+msgstr "无法保存设置, 错误信息:"
 
 #: filemanager/templates/filemanager/index.html:262
 msgid "Upload all"
-msgstr "全部上传"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:265
+#, fuzzy
+#| msgid "Cancel"
 msgid "Cancel all"
-msgstr "全部取消"
+msgstr "取消"
 
 #: filemanager/templates/filemanager/index.html:268
 msgid "Remove all"
-msgstr "全部删除"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:304
+#, fuzzy
+#| msgid "Rule successfully added."
 msgid "File Successfully saved."
-msgstr "文件成功保存"
+msgstr "成功添加规则"
 
 #: filemanager/templates/filemanager/index.html:311
 #: firewall/templates/firewall/secureSSH.html:68
@@ -1576,54 +1624,72 @@ msgid "Save Changes"
 msgstr "保存修改"
 
 #: filemanager/templates/filemanager/index.html:328
+#, fuzzy
+#| msgid "Create New User"
 msgid "Create new folder!"
-msgstr "创建新目录"
+msgstr "创建新用户"
 
 #: filemanager/templates/filemanager/index.html:336
+#, fuzzy
+#| msgid "File Name"
 msgid "New Folder Name"
-msgstr "新目录名"
+msgstr "文件名"
 
 #: filemanager/templates/filemanager/index.html:338
 msgid "Folder will be created in your current directory"
-msgstr "文件夹将在你当前目录下创建"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:340
+#, fuzzy
+#| msgid "Create User"
 msgid "Create Folder"
-msgstr "新建目录"
+msgstr "创建用户"
 
 #: filemanager/templates/filemanager/index.html:353
+#, fuzzy
+#| msgid "is successfully created."
 msgid "Folder Successfully created."
-msgstr "文件夹创建成功"
+msgstr "已成功添加"
 
 #: filemanager/templates/filemanager/index.html:372
+#, fuzzy
+#| msgid "Create New User"
 msgid "Create new file!"
-msgstr "新建文件"
+msgstr "创建新用户"
 
 #: filemanager/templates/filemanager/index.html:380
+#, fuzzy
+#| msgid "File Name"
 msgid "New File Name"
-msgstr "新建文件名"
+msgstr "文件名"
 
 #: filemanager/templates/filemanager/index.html:382
 msgid ""
 "File will be created in your current directory, if it already exists it will "
 "not overwirte."
-msgstr "文件将在当前目录下创建,如果已存在则不会覆盖"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:384
+#, fuzzy
+#| msgid "Create Email"
 msgid "Create File"
-msgstr "新建文件"
+msgstr "创建Email"
 
 #: filemanager/templates/filemanager/index.html:397
+#, fuzzy
+#| msgid "is successfully created."
 msgid "File Successfully created."
-msgstr "文件创建成功"
+msgstr "已成功添加"
 
 #: filemanager/templates/filemanager/index.html:413
+#, fuzzy
+#| msgid "Configurations"
 msgid "Confirm Deletion!"
-msgstr "确认删除"
+msgstr "配置"
 
 #: filemanager/templates/filemanager/index.html:422
 msgid "Confirm"
-msgstr "确认"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:423
 #: filemanager/templates/filemanager/index.html:466
@@ -1636,72 +1702,82 @@ msgstr "关闭"
 
 #: filemanager/templates/filemanager/index.html:446
 msgid "List of files/folder!"
-msgstr "列表"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:450
+#, fuzzy
+#| msgid "File Name"
 msgid "Compressed File Name"
-msgstr "压缩文件名"
+msgstr "文件名"
 
 #: filemanager/templates/filemanager/index.html:452
+#, fuzzy
+#| msgid "Extension Name"
 msgid "Enter without extension name!"
-msgstr "输入不带后缀的文件名"
+msgstr "扩展名称"
 
 #: filemanager/templates/filemanager/index.html:456
 msgid "Compression Type"
-msgstr "压缩类型"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:481
 msgid "Extracting"
-msgstr "提取中"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:489
 msgid "Extract in"
-msgstr "解压到"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:491
 msgid "You can enter . to extract in current directory!"
-msgstr "输入 . 以解压到当前目录"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:509
+#, fuzzy
+#| msgid "Files"
 msgid "Move Files"
-msgstr "移动文件"
+msgstr "文件"
 
 #: filemanager/templates/filemanager/index.html:517
 #: filemanager/templates/filemanager/index.html:552
 msgid "List of files/folders!"
-msgstr "列表"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:521
 msgid "Move to"
-msgstr "移动到"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:523
 msgid "Enter a path to move your files!"
-msgstr "输入要移动的目录"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:544
+#, fuzzy
+#| msgid "Files"
 msgid "Copy Files"
-msgstr "复制文件"
+msgstr "文件"
 
 #: filemanager/templates/filemanager/index.html:556
 msgid "Copy to"
-msgstr "复制到"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:558
 msgid "Enter a path to copy your files to!"
-msgstr "输入要复制的目录"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:578
 msgid "Renaming"
-msgstr "重命名"
+msgstr ""
 
 #: filemanager/templates/filemanager/index.html:586
+#, fuzzy
+#| msgid "File Name"
 msgid "New Name"
-msgstr "新文件名"
+msgstr "文件名"
 
 #: filemanager/templates/filemanager/index.html:588
 msgid "Enter new name of file!"
-msgstr "输入新文件名"
+msgstr ""
 
 #: firewall/templates/firewall/firewall.html:3
 msgid "Firewall - CyberPanel"
@@ -2418,8 +2494,10 @@ msgid "Could not connect to server."
 msgstr "无法连接到服务器."
 
 #: serverStatus/templates/serverStatus/services.html:3
+#, fuzzy
+#| msgid "Server Logs - CyberPanel"
 msgid "Services - CyberPanel"
-msgstr "服务 - CyberPanel"
+msgstr "服务器日志 - CyberPanel"
 
 #: tuning/templates/tuning/index.html:3
 msgid "Server Tuning - CyberPanel"
@@ -2551,8 +2629,10 @@ msgid "Details Successfully fetched."
 msgstr "详情读取成功."
 
 #: tuning/templates/tuning/phpTuning.html:124
+#, fuzzy
+#| msgid "PHP version "
 msgid "PHP for "
-msgstr "PHP"
+msgstr "PHP版本 "
 
 #: tuning/templates/tuning/phpTuning.html:124
 msgid "Successfully tuned."
@@ -2762,7 +2842,7 @@ msgstr "选择拥有者"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:54
 msgid "Do not enter WWW, it will be auto created!"
-msgstr "不要输入WWW,将会自动创建"
+msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:56
 #: websiteFunctions/templates/websiteFunctions/website.html:293
@@ -2893,8 +2973,10 @@ msgid "Successfully "
 msgstr "成功 "
 
 #: websiteFunctions/templates/websiteFunctions/website.html:13
+#, fuzzy
+#| msgid "Previous"
 msgid "Preview"
-msgstr "预览"
+msgstr "上一个"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:14
 msgid "All functions related to a particular site."
@@ -3032,8 +3114,10 @@ msgstr "无法读取当前配置, 错误信息:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:593
 #: websiteFunctions/templates/websiteFunctions/website.html:648
+#, fuzzy
+#| msgid "SSH Configurations Saved."
 msgid "Configurations saved."
-msgstr "设置已保存"
+msgstr "SSH设置已保存"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:634
 msgid "Current rewrite rules in the file fetched."
@@ -3073,12 +3157,14 @@ msgid "Wordpress with LSCache"
 msgstr "Wordpress和LS Cache"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:756
+#, fuzzy
+#| msgid "Install wordpress with LSCache"
 msgid "Install Joomla with(?) LSCache"
-msgstr "安装Joomla和LS Cache"
+msgstr "安装Wordpress和LS Cache"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:758
 msgid "Joomla"
-msgstr "Joomla"
+msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/website.html:792
 #: websiteFunctions/templates/websiteFunctions/website.html:871
@@ -3092,19 +3178,25 @@ msgstr "安装成功, 请访问网站以完成设置:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:828
 msgid "Site name"
-msgstr "网站名字"
+msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/website.html:835
+#, fuzzy
+#| msgid "Username"
 msgid "Admin Username"
-msgstr "管理员用户名"
+msgstr "用户名"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:842
+#, fuzzy
+#| msgid "Password"
 msgid "Admin Password"
-msgstr "管理员密码"
+msgstr "密码"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:849
+#, fuzzy
+#| msgid "Database Name"
 msgid "Database prefix"
-msgstr "数据库前缀"
+msgstr "数据库名字"
 
 #~ msgid "Configuration saved. Restart LiteSpeed put them in effect."
 #~ msgstr "配置已保存, 重启LiteSpeed以生效."
