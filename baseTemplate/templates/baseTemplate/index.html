@@ -333,10 +333,10 @@
 
             <ul>
                 <li id="createWebsite"><a href="{% url 'createWebsite' %}" title="{% trans 'Create Website' %}"><span>{% trans "Create Website" %}</span></a></li>
-                <li><a href="{% url 'listWebsites' %}" title="{% trans 'List Websites' %}"><span>{% trans "List Websites" %}</span></a></li>
-                <li><a href="{% url 'modifyWebsite' %}" title="{% trans 'Modify Website' %}"><span>{% trans "Modify Website" %}</span></a></li>
+                <li ><a href="{% url 'listWebsites' %}" title="{% trans 'List Websites' %}"><span>{% trans "List Websites" %}</span></a></li>
+                <li id="modifyWebSite"><a href="{% url 'modifyWebsite' %}" title="{% trans 'Modify Website' %}"><span>{% trans "Modify Website" %}</span></a></li>
                 <li id="siteState"><a href="{% url 'siteState' %}" title="{% trans 'Suspend/Unsuspend' %}"><span>{% trans "Suspend/Unsuspend" %}</span></a></li>
-                <li><a href="{% url 'deleteWebsite' %}" title="{% trans 'Delete Website' %}"><span>{% trans "Delete Website" %}</span></a></li>
+                <li id="deleteWebsite"><a href="{% url 'deleteWebsite' %}" title="{% trans 'Delete Website' %}"><span>{% trans "Delete Website" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->

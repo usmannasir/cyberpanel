@@ -1315,7 +1315,6 @@ def installJoomla(domainName,finalPath,virtualHostUser,dbName,dbUser,dbPassword,
         FNULL = open(os.devnull, 'w')
 
 
-
         if not os.path.exists(finalPath):
             os.makedirs(finalPath)
 
@@ -1338,6 +1337,8 @@ def installJoomla(domainName,finalPath,virtualHostUser,dbName,dbUser,dbPassword,
         ## Get Joomla
 
         os.chdir(finalPath)
+
+
         if not os.path.exists("staging.zip"):
             command = 'wget --no-check-certificate https://github.com/joomla/joomla-cms/archive/staging.zip -P ' + finalPath
             cmd = shlex.split(command)

@@ -85,6 +85,11 @@ def modifyWebsite(request):
         try:
             admin = Administrator.objects.get(pk=request.session['userID'])
 
+            if admin.type == 3:
+                final = {'error': 1, "error_message": "Not enough privilege"}
+                final_json = json.dumps(final)
+                return HttpResponse(final_json)
+
             if admin.type == 1:
                 websites = Websites.objects.all()
                 websitesName = []
@@ -125,6 +130,11 @@ def deleteWebsite(request):
         val = request.session['userID']
         try:
             admin = Administrator.objects.get(pk=request.session['userID'])
+
+            if admin.type == 3:
+                final = {'error': 1, "error_message": "Not enough privilege"}
+                final_json = json.dumps(final)
+                return HttpResponse(final_json)
 
             if admin.type == 1:
                 websites = Websites.objects.all()

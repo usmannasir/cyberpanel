@@ -138,6 +138,8 @@ app.controller('adminController', function($scope,$http,$timeout) {
                     $("#packageHome").hide();
                     $("#packageSub").hide();
                     $("#createWebsite").hide();
+                    $("#modifyWebSite").hide();
+                    $("#deleteWebsite").hide();
 
             }
         }
