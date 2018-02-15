@@ -21,6 +21,9 @@ import requests
 from baseTemplate.models import version
 from plogical.virtualHostUtilities import virtualHostUtilities
 from random import randint
+from xml.etree.ElementTree import Element, SubElement
+from xml.etree import ElementTree
+from xml.dom import minidom
 
 def loadBackupHome(request):
     try:
@@ -177,44 +180,97 @@ def submitBackupCreation(request):
 
             ## defining paths
 
-            backupPath = "/home/" + backupDomain + "/backup/"
+
+            ## /home/example.com/backup
+            backupPath = os.path.join("/home",backupDomain,"backup/")
+
 
             domainUser = backupDomain.split('.')
 
             backupName = 'backup-' + domainUser[0] + "-" + time.strftime("%I-%M-%S-%a-%b-%Y")
 
-            tempStoragePath = backupPath + backupName
+            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018
+            tempStoragePath = os.path.join(backupPath,backupName)
 
             ## Generating meta
 
-            metaPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+            ## xml generation
 
-            metaFile = open(metaPath, "w")
+            metaFileXML = Element('metaFile')
 
-            metaFile.write(backupDomain + "--" + website.phpSelection + "--" + website.externalApp + "\n")
+            child = SubElement(metaFileXML, 'masterDomain')
+            child.text = backupDomain
+
+            child = SubElement(metaFileXML, 'phpSelection')
+            child.text = website.phpSelection
+
+            child = SubElement(metaFileXML, 'externalApp')
+            child.text = website.externalApp
+
 
             childDomains = website.childdomains_set.all()
 
             databases = website.databases_set.all()
 
-            metaFile.write("Child Domains\n")
+            ## child domains xml
+
+            childDomainsXML = Element('ChildDomains')
 
             for items in childDomains:
-                metaFile.write(items.domain + "--" + items.phpSelection + "--" + items.path + "\n")
 
-            metaFile.write("Databases\n")
+                childDomainXML = Element('domain')
+
+                child = SubElement(childDomainXML, 'domain')
+                child.text = items.domain
+                child = SubElement(childDomainXML, 'phpSelection')
+                child.text = items.phpSelection
+                child = SubElement(childDomainXML, 'path')
+                child.text = items.path
+
+                childDomainsXML.append(childDomainXML)
+
+
+            metaFileXML.append(childDomainsXML)
+
+            databasesXML = Element('Databases')
 
             for items in databases:
                 dbuser = DBUsers.objects.get(user=items.dbUser)
-                metaFile.write(items.dbName + "--" + items.dbUser + "--" + dbuser.password + "\n")
 
+                databaseXML = Element('database')
+
+                child = SubElement(databaseXML, 'dbName')
+                child.text = items.dbName
+                child = SubElement(databaseXML, 'dbUser')
+                child.text = items.dbUser
+                child = SubElement(databaseXML, 'password')
+                child.text = dbuser.password
+
+                databasesXML.append(databaseXML)
+
+            metaFileXML.append(databasesXML)
+
+
+            def prettify(elem):
+                """Return a pretty-printed XML string for the Element.
+                """
+                rough_string = ElementTree.tostring(elem, 'utf-8')
+                reparsed = minidom.parseString(rough_string)
+                return reparsed.toprettyxml(indent="  ")
+
+            ## /home/cyberpanel/1047.xml
+            metaPath = os.path.join("/home", "cyberpanel", str(randint(1000, 9999)) + ".xml")
+
+            xmlpretty = prettify(metaFileXML).encode('ascii', 'ignore')
+            metaFile = open(metaPath,'w')
+            metaFile.write(xmlpretty)
             metaFile.close()
 
             ## meta generated
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-
             execPath = execPath + " submitBackupCreation --tempStoragePath " + tempStoragePath + " --backupName " + backupName + " --backupPath " + backupPath + " --metaPath " + metaPath
+            logging.CyberCPLogFileWriter.writeToFile(execPath)
 
 
             subprocess.Popen(shlex.split(execPath))
@@ -227,7 +283,6 @@ def submitBackupCreation(request):
 
             final_json = json.dumps({'metaStatus': 1, 'error_message': "None", 'tempStorage': tempStoragePath})
             return HttpResponse(final_json)
-
 
     except BaseException, msg:
         final_dic = {'metaStatus': 0, 'error_message': str(msg)}
@@ -414,7 +469,6 @@ def submitRestore(request):
             execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
 
 
-
             subprocess.Popen(shlex.split(execPath))
 
             final_dic = {'restoreStatus': 1, 'error_message': "None"}
@@ -445,7 +499,6 @@ def restoreStatus(request):
             if os.path.exists(path):
                 try:
                     execPath = "sudo cat " + path+"/status"
-
 
 
                     status = subprocess.check_output(shlex.split(execPath))

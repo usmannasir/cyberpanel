@@ -23,6 +23,7 @@ import requests
 import re
 from random import randint
 import hashlib
+from xml.etree import ElementTree
 # Create your views here.
 
 
@@ -1710,57 +1711,51 @@ def CreateWebsiteFromBackup(request):
 
             ## open meta file to read data
 
+            ## Parsing XML Meta file!
 
-            data = open(path + "/meta", 'r').readlines()
-            domain = data[0].split('--')[0]
-            phpSelection = data[0].split("--")[1].strip("\n")
-            externalApp = data[0].split("--")[2].strip("\n")
+            backupMetaData = ElementTree.parse(path + '/meta.xml')
 
-            check = 0
-            dbCheck = 0
+            domain = backupMetaData.find('masterDomain').text
+            phpSelection = backupMetaData.find('phpSelection').text
+            externalApp = backupMetaData.find('externalApp').text
 
-            for items in data:
-                if check == 0:
+            ####### Limitations Check End
 
-                    ####### Limitations Check End
+            numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
 
-                    numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
+            ## Create Configurations
 
-                    ## Create Configurations
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = execPath + " createVirtualHost --virtualHostName " + domain + " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + " --ssl " + str(
+                0) + " --sslPath " + "CyberPanel"
 
-                    execPath = execPath + " createVirtualHost --virtualHostName " + domain + " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + " --ssl " + str(0) + " --sslPath " + "CyberPanel"
+            output = subprocess.check_output(shlex.split(execPath))
 
-                    output = subprocess.check_output(shlex.split(execPath))
+            if output.find("1,None") > -1:
+                selectedPackage = Package.objects.get(packageName="Default")
+                website = Websites(admin=admin, package=selectedPackage, domain=domain, adminEmail=adminEmail,
+                                   phpSelection=phpSelection, ssl=0, externalApp=externalApp)
+                website.save()
+            else:
+                data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
-                    if output.find("1,None") > -1:
-                        check = check + 1
-                        selectedPackage = Package.objects.get(packageName="Default")
-                        website = Websites(admin=admin, package=selectedPackage, domain=domain, adminEmail=adminEmail,
-                                           phpSelection=phpSelection, ssl=0, externalApp=externalApp)
-                        website.save()
-                        continue
-                    else:
-                        data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
+            ## Create Configurations ends here
 
-                        ## Create Configurations ends here
+            ## Create databases
 
-                    # shutil.copy("/usr/local/CyberCP/index.html", "/home/" + domain + "/public_html/index.html")
+            databases = backupMetaData.findall('Databases/database')
+            website = Websites.objects.get(domain=domain)
 
-                else:
+            for database in databases:
+                dbName = database.find('dbName').text
+                dbUser = database.find('dbUser').text
 
-                    if items.find("Databases") > -1:
-                        website = Websites.objects.get(domain=domain)
-                        dbCheck = 1
-                        continue
-                    if dbCheck == 1:
-                        dbData = items.split('--')
-                        mysqlUtilities.createDatabase(dbData[0], dbData[1], "cyberpanel")
-                        newDB = Databases(website=website, dbName=dbData[0], dbUser=dbData[1])
-                        newDB.save()
+                mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel")
+                newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
+                newDB.save()
 
             data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
             json_data = json.dumps(data_ret)

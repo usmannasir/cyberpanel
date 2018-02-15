@@ -3,19 +3,27 @@
 # This file is distributed under the same license as the CyberPanel package.
 # FIRST AUTHOR <unasir@litespeedtech.com>, 2017.
 #
-#: baseTemplate/templates/baseTemplate/index.html:211
-#: baseTemplate/templates/baseTemplate/index.html:301
-#: baseTemplate/templates/baseTemplate/index.html:356
-#: baseTemplate/templates/baseTemplate/index.html:362
-#: baseTemplate/templates/baseTemplate/index.html:368
-#: baseTemplate/templates/baseTemplate/index.html:374
-#: baseTemplate/templates/baseTemplate/index.html:380
-#: baseTemplate/templates/baseTemplate/index.html:386
+#: baseTemplate/templates/baseTemplate/index.html:95
+#: baseTemplate/templates/baseTemplate/index.html:185
+#: baseTemplate/templates/baseTemplate/index.html:236
+#: baseTemplate/templates/baseTemplate/index.html:242
+#: baseTemplate/templates/baseTemplate/index.html:248
+#: baseTemplate/templates/baseTemplate/index.html:254
+#: baseTemplate/templates/baseTemplate/index.html:260
+#: baseTemplate/templates/baseTemplate/index.html:266
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:198
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:288
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:343
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:349
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:355
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:361
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:367
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:373
 msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-01-23 20:36+0500\n"
+"POT-Creation-Date: 2018-02-15 13:07+0500\n"
 "PO-Revision-Date: 2017-10-21 21:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: LANGUAGE <info@reuhost.net>\n"
@@ -93,7 +101,8 @@ msgstr "Ime datoteke"
 #: backup/templates/backup/backup.html:61
 #: backup/templates/backup/backup.html:106
 #: backup/templates/backup/restore.html:63
-#: baseTemplate/templates/baseTemplate/index.html:390
+#: baseTemplate/templates/baseTemplate/index.html:270
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:377
 #: filemanager/templates/filemanager/index.html:212
 #: firewall/templates/firewall/firewall.html:36
 #: managePHP/templates/managePHP/installExtensions.html:65
@@ -105,7 +114,8 @@ msgid "Running"
 msgstr "Pokrenuto"
 
 #: backup/templates/backup/backup.html:81
-#: baseTemplate/templates/baseTemplate/index.html:565
+#: baseTemplate/templates/baseTemplate/index.html:445
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:552
 msgid "Create Back up"
 msgstr "Kreiraj backup"
 
@@ -204,7 +214,8 @@ msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:55
 #: backup/templates/backup/backupSchedule.html:54
-#: baseTemplate/templates/baseTemplate/index.html:567
+#: baseTemplate/templates/baseTemplate/index.html:447
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:554
 msgid "Add Destination"
 msgstr "Dodaj destinaciju"
 
@@ -273,7 +284,8 @@ msgstr "Zakazivanje Backupa - CyberPanel"
 
 #: backup/templates/backup/backupSchedule.html:13
 #: backup/templates/backup/backupSchedule.html:20
-#: baseTemplate/templates/baseTemplate/index.html:568
+#: baseTemplate/templates/baseTemplate/index.html:448
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:555
 msgid "Schedule Back up"
 msgstr "Zakazivanje backupa"
 
@@ -323,9 +335,12 @@ msgstr "Backup naslovna "
 #: baseTemplate/templates/baseTemplate/homePage.html:271
 #: baseTemplate/templates/baseTemplate/homePage.html:463
 #: baseTemplate/templates/baseTemplate/homePage.html:466
-#: baseTemplate/templates/baseTemplate/index.html:558
-#: baseTemplate/templates/baseTemplate/index.html:560
-#: baseTemplate/templates/baseTemplate/index.html:577
+#: baseTemplate/templates/baseTemplate/index.html:438
+#: baseTemplate/templates/baseTemplate/index.html:440
+#: baseTemplate/templates/baseTemplate/index.html:457
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:545
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:547
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:564
 msgid "Back up"
 msgstr "Backup"
 
@@ -356,7 +371,8 @@ msgid "Back up Site"
 msgstr "Nazad na sajt"
 
 #: backup/templates/backup/index.html:55
-#: baseTemplate/templates/baseTemplate/index.html:566
+#: baseTemplate/templates/baseTemplate/index.html:446
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:553
 msgid "Restore Back up"
 msgstr "Vrati backup"
 
@@ -435,8 +451,10 @@ msgstr "Sajt"
 
 #: backup/templates/backup/remoteBackups.html:108
 #: baseTemplate/templates/baseTemplate/homePage.html:333
-#: baseTemplate/templates/baseTemplate/index.html:631
-#: baseTemplate/templates/baseTemplate/index.html:633
+#: baseTemplate/templates/baseTemplate/index.html:511
+#: baseTemplate/templates/baseTemplate/index.html:513
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:618
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:620
 #: managePHP/templates/managePHP/installExtensions.html:62
 msgid "PHP"
 msgstr "PHP"
@@ -449,8 +467,10 @@ msgid "Package"
 msgstr "Paket"
 
 #: backup/templates/backup/remoteBackups.html:110
-#: baseTemplate/templates/baseTemplate/index.html:518
-#: baseTemplate/templates/baseTemplate/index.html:520
+#: baseTemplate/templates/baseTemplate/index.html:398
+#: baseTemplate/templates/baseTemplate/index.html:400
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:505
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:507
 #: userManagment/templates/userManagment/createUser.html:47
 #: userManagment/templates/userManagment/modifyUser.html:54
 #: userManagment/templates/userManagment/userProfile.html:50
@@ -514,12 +534,14 @@ msgid "Usage"
 msgstr "Upotreba"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:34
-#: baseTemplate/templates/baseTemplate/index.html:221
+#: baseTemplate/templates/baseTemplate/index.html:105
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:208
 msgid "CPU Usage"
 msgstr "CPU Upotreba"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:55
-#: baseTemplate/templates/baseTemplate/index.html:232
+#: baseTemplate/templates/baseTemplate/index.html:116
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:219
 msgid "Ram Usage"
 msgstr "RAM Upotreba"
 
@@ -555,9 +577,12 @@ msgstr "Korisničke funkcije"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:178
 #: baseTemplate/templates/baseTemplate/homePage.html:392
-#: baseTemplate/templates/baseTemplate/index.html:430
-#: baseTemplate/templates/baseTemplate/index.html:431
-#: baseTemplate/templates/baseTemplate/index.html:432
+#: baseTemplate/templates/baseTemplate/index.html:310
+#: baseTemplate/templates/baseTemplate/index.html:311
+#: baseTemplate/templates/baseTemplate/index.html:312
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:417
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:418
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:419
 msgid "Users"
 msgstr "Korisnici"
 
@@ -569,10 +594,14 @@ msgstr ""
 
 #: baseTemplate/templates/baseTemplate/homePage.html:191
 #: baseTemplate/templates/baseTemplate/homePage.html:405
-#: baseTemplate/templates/baseTemplate/index.html:360
-#: baseTemplate/templates/baseTemplate/index.html:448
-#: baseTemplate/templates/baseTemplate/index.html:449
-#: baseTemplate/templates/baseTemplate/index.html:450
+#: baseTemplate/templates/baseTemplate/index.html:240
+#: baseTemplate/templates/baseTemplate/index.html:328
+#: baseTemplate/templates/baseTemplate/index.html:329
+#: baseTemplate/templates/baseTemplate/index.html:330
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:347
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:435
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:436
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:437
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:21
 msgid "Websites"
 msgstr "Sajtovi"
@@ -584,9 +613,12 @@ msgid "Add/Modify Packages"
 msgstr "Promijeni paket"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:204
-#: baseTemplate/templates/baseTemplate/index.html:366
-#: baseTemplate/templates/baseTemplate/index.html:465
-#: baseTemplate/templates/baseTemplate/index.html:467
+#: baseTemplate/templates/baseTemplate/index.html:246
+#: baseTemplate/templates/baseTemplate/index.html:345
+#: baseTemplate/templates/baseTemplate/index.html:347
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:353
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:452
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:454
 #: packages/templates/packages/index.html:13
 msgid "Packages"
 msgstr "Pakti"
@@ -599,9 +631,12 @@ msgstr "Funkcije za bazu podataka"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:228
 #: baseTemplate/templates/baseTemplate/homePage.html:418
-#: baseTemplate/templates/baseTemplate/index.html:481
-#: baseTemplate/templates/baseTemplate/index.html:482
-#: baseTemplate/templates/baseTemplate/index.html:483
+#: baseTemplate/templates/baseTemplate/index.html:361
+#: baseTemplate/templates/baseTemplate/index.html:362
+#: baseTemplate/templates/baseTemplate/index.html:363
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:468
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:469
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:470
 #: packages/templates/packages/createPackage.html:67
 #: packages/templates/packages/modifyPackage.html:73
 #: websiteFunctions/templates/websiteFunctions/website.html:43
@@ -615,9 +650,12 @@ msgstr ""
 
 #: baseTemplate/templates/baseTemplate/homePage.html:240
 #: baseTemplate/templates/baseTemplate/homePage.html:441
-#: baseTemplate/templates/baseTemplate/index.html:372
-#: baseTemplate/templates/baseTemplate/index.html:499
-#: baseTemplate/templates/baseTemplate/index.html:501
+#: baseTemplate/templates/baseTemplate/index.html:252
+#: baseTemplate/templates/baseTemplate/index.html:379
+#: baseTemplate/templates/baseTemplate/index.html:381
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:359
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:486
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:488
 msgid "DNS"
 msgstr "DNS"
 
@@ -629,9 +667,12 @@ msgstr "FTP funkcije"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:253
 #: baseTemplate/templates/baseTemplate/homePage.html:454
-#: baseTemplate/templates/baseTemplate/index.html:378
-#: baseTemplate/templates/baseTemplate/index.html:540
-#: baseTemplate/templates/baseTemplate/index.html:542
+#: baseTemplate/templates/baseTemplate/index.html:258
+#: baseTemplate/templates/baseTemplate/index.html:420
+#: baseTemplate/templates/baseTemplate/index.html:422
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:365
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:527
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:529
 #: websiteFunctions/templates/websiteFunctions/website.html:38
 msgid "FTP"
 msgstr "FTP"
@@ -653,9 +694,12 @@ msgstr "Server tuning"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:317
 #: baseTemplate/templates/baseTemplate/homePage.html:320
-#: baseTemplate/templates/baseTemplate/index.html:611
-#: baseTemplate/templates/baseTemplate/index.html:613
-#: baseTemplate/templates/baseTemplate/index.html:647
+#: baseTemplate/templates/baseTemplate/index.html:491
+#: baseTemplate/templates/baseTemplate/index.html:493
+#: baseTemplate/templates/baseTemplate/index.html:527
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:598
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:600
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:634
 #: serverStatus/templates/serverStatus/index.html:13
 msgid "Server Status"
 msgstr "Status servera"
@@ -668,128 +712,160 @@ msgstr "Izmijeni PHP konfiguracije"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:342
 #: baseTemplate/templates/baseTemplate/homePage.html:345
-#: baseTemplate/templates/baseTemplate/index.html:649
+#: baseTemplate/templates/baseTemplate/index.html:529
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:636
 #: websiteFunctions/templates/websiteFunctions/website.html:112
 msgid "Logs"
 msgstr "Logovi"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:365
 #: baseTemplate/templates/baseTemplate/homePage.html:368
-#: baseTemplate/templates/baseTemplate/index.html:665
-#: baseTemplate/templates/baseTemplate/index.html:667
+#: baseTemplate/templates/baseTemplate/index.html:545
+#: baseTemplate/templates/baseTemplate/index.html:547
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:652
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:654
 msgid "Security"
 msgstr "Sigurnost"
 
-#: baseTemplate/templates/baseTemplate/index.html:212
+#: baseTemplate/templates/baseTemplate/index.html:96
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:199
 msgid "CPU Status"
 msgstr "Status CPU-a"
 
-#: baseTemplate/templates/baseTemplate/index.html:241
+#: baseTemplate/templates/baseTemplate/index.html:125
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:228
 #: websiteFunctions/templates/websiteFunctions/website.html:50
 #: websiteFunctions/templates/websiteFunctions/website.html:71
 msgid "Disk Usage"
 msgstr "Upotreba diska "
 
-#: baseTemplate/templates/baseTemplate/index.html:275
-#: baseTemplate/templates/baseTemplate/index.html:278
-#: baseTemplate/templates/baseTemplate/index.html:282
+#: baseTemplate/templates/baseTemplate/index.html:159
+#: baseTemplate/templates/baseTemplate/index.html:162
+#: baseTemplate/templates/baseTemplate/index.html:166
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:262
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:265
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:269
 #, fuzzy
 #| msgid "Home - CyberPanel"
 msgid "CyberPanel"
 msgstr "Početna - CyberPanel"
 
-#: baseTemplate/templates/baseTemplate/index.html:280
-#: baseTemplate/templates/baseTemplate/index.html:284
+#: baseTemplate/templates/baseTemplate/index.html:164
+#: baseTemplate/templates/baseTemplate/index.html:168
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:267
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:271
 msgid "Web Hosting Control Panel"
 msgstr "Web hosting Kontrolni panel"
 
-#: baseTemplate/templates/baseTemplate/index.html:286
+#: baseTemplate/templates/baseTemplate/index.html:170
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:273
 msgid "Close sidebar"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:292
+#: baseTemplate/templates/baseTemplate/index.html:176
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:279
 #, fuzzy
 #| msgid "FTP Accounts"
 msgid "My Account"
 msgstr "FTP računa"
 
-#: baseTemplate/templates/baseTemplate/index.html:309
+#: baseTemplate/templates/baseTemplate/index.html:193
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:296
 msgid "Edit profile"
 msgstr "Uredi profil"
 
-#: baseTemplate/templates/baseTemplate/index.html:310
-#: baseTemplate/templates/baseTemplate/index.html:437
+#: baseTemplate/templates/baseTemplate/index.html:194
+#: baseTemplate/templates/baseTemplate/index.html:317
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:297
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:424
 #: userManagment/templates/userManagment/index.html:26
 #: userManagment/templates/userManagment/index.html:28
 msgid "View Profile"
 msgstr "Pogledaj Profil"
 
-#: baseTemplate/templates/baseTemplate/index.html:317
-#: baseTemplate/templates/baseTemplate/index.html:398
+#: baseTemplate/templates/baseTemplate/index.html:201
+#: baseTemplate/templates/baseTemplate/index.html:278
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:304
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:385
 msgid "Logout"
 msgstr "Odjavi se"
 
-#: baseTemplate/templates/baseTemplate/index.html:328
-#: baseTemplate/templates/baseTemplate/index.html:332
-#: baseTemplate/templates/baseTemplate/index.html:336
+#: baseTemplate/templates/baseTemplate/index.html:212
+#: baseTemplate/templates/baseTemplate/index.html:216
+#: baseTemplate/templates/baseTemplate/index.html:220
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:315
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:319
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:323
 msgid "CPU Load Average"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:340
-msgid "Fullscreen"
-msgstr ""
-
-#: baseTemplate/templates/baseTemplate/index.html:345
+#: baseTemplate/templates/baseTemplate/index.html:225
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:332
 #, fuzzy
 #| msgid "Server Status"
 msgid "System Status"
 msgstr "Status servera"
 
-#: baseTemplate/templates/baseTemplate/index.html:350
+#: baseTemplate/templates/baseTemplate/index.html:230
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:337
 #, fuzzy
 #| msgid "Dashboard"
 msgid "Dashboard Quick Menu"
 msgstr "Kontrolna ploča"
 
-#: baseTemplate/templates/baseTemplate/index.html:384
-#: baseTemplate/templates/baseTemplate/index.html:595
-#: baseTemplate/templates/baseTemplate/index.html:597
+#: baseTemplate/templates/baseTemplate/index.html:264
+#: baseTemplate/templates/baseTemplate/index.html:475
+#: baseTemplate/templates/baseTemplate/index.html:477
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:371
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:582
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:584
 msgid "Tuning"
 msgstr "Tuning"
 
-#: baseTemplate/templates/baseTemplate/index.html:411
+#: baseTemplate/templates/baseTemplate/index.html:291
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:398
 msgid "Overview"
 msgstr "Pregled"
 
-#: baseTemplate/templates/baseTemplate/index.html:413
-#: baseTemplate/templates/baseTemplate/index.html:414
+#: baseTemplate/templates/baseTemplate/index.html:293
+#: baseTemplate/templates/baseTemplate/index.html:294
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:400
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:401
 #, fuzzy
 #| msgid "IP Address"
 msgid "Server IP Address"
 msgstr "IP adresa"
 
-#: baseTemplate/templates/baseTemplate/index.html:417
-#: baseTemplate/templates/baseTemplate/index.html:419
+#: baseTemplate/templates/baseTemplate/index.html:297
+#: baseTemplate/templates/baseTemplate/index.html:299
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:404
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:406
 msgid "Dashboard"
 msgstr "Kontrolna ploča"
 
-#: baseTemplate/templates/baseTemplate/index.html:421
-#: baseTemplate/templates/baseTemplate/index.html:422
-#: baseTemplate/templates/baseTemplate/index.html:423
+#: baseTemplate/templates/baseTemplate/index.html:301
+#: baseTemplate/templates/baseTemplate/index.html:302
+#: baseTemplate/templates/baseTemplate/index.html:303
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:408
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:409
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:410
 #: baseTemplate/templates/baseTemplate/versionManagment.html:10
 msgid "Version Management"
 msgstr "Upravljanje verzijama"
 
-#: baseTemplate/templates/baseTemplate/index.html:427
+#: baseTemplate/templates/baseTemplate/index.html:307
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:414
 msgid "Main"
 msgstr "Glavna"
 
-#: baseTemplate/templates/baseTemplate/index.html:438
+#: baseTemplate/templates/baseTemplate/index.html:318
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:425
 #: userManagment/templates/userManagment/createUser.html:12
 msgid "Create New User"
 msgstr "Novi korisnik"
 
-#: baseTemplate/templates/baseTemplate/index.html:439
+#: baseTemplate/templates/baseTemplate/index.html:319
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:426
 #: userManagment/templates/userManagment/index.html:52
 #: userManagment/templates/userManagment/index.html:54
 #: userManagment/templates/userManagment/modifyUser.html:12
@@ -797,7 +873,8 @@ msgstr "Novi korisnik"
 msgid "Modify User"
 msgstr "Promjena korisnika"
 
-#: baseTemplate/templates/baseTemplate/index.html:440
+#: baseTemplate/templates/baseTemplate/index.html:320
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:427
 #: userManagment/templates/userManagment/deleteUser.html:13
 #: userManagment/templates/userManagment/deleteUser.html:20
 #: userManagment/templates/userManagment/deleteUser.html:42
@@ -806,51 +883,53 @@ msgstr "Promjena korisnika"
 msgid "Delete User"
 msgstr "Brisanje korisnika"
 
-#: baseTemplate/templates/baseTemplate/index.html:455
+#: baseTemplate/templates/baseTemplate/index.html:335
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:442
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:12
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:102
-#: websiteFunctions/templates/websiteFunctions/index.html:73
-#: websiteFunctions/templates/websiteFunctions/index.html:75
+#: websiteFunctions/templates/websiteFunctions/index.html:49
+#: websiteFunctions/templates/websiteFunctions/index.html:51
 msgid "Create Website"
 msgstr "Kreiranje sajta"
 
-#: baseTemplate/templates/baseTemplate/index.html:456
+#: baseTemplate/templates/baseTemplate/index.html:336
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:443
 #: websiteFunctions/templates/websiteFunctions/index.html:34
 #: websiteFunctions/templates/websiteFunctions/index.html:36
-#: websiteFunctions/templates/websiteFunctions/index.html:85
-#: websiteFunctions/templates/websiteFunctions/index.html:87
+#: websiteFunctions/templates/websiteFunctions/index.html:61
+#: websiteFunctions/templates/websiteFunctions/index.html:63
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:14
 msgid "List Websites"
 msgstr "Lista sajtova"
 
-#: baseTemplate/templates/baseTemplate/index.html:457
-#: websiteFunctions/templates/websiteFunctions/index.html:46
-#: websiteFunctions/templates/websiteFunctions/index.html:48
-#: websiteFunctions/templates/websiteFunctions/index.html:97
-#: websiteFunctions/templates/websiteFunctions/index.html:99
+#: baseTemplate/templates/baseTemplate/index.html:337
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:444
+#: websiteFunctions/templates/websiteFunctions/index.html:73
+#: websiteFunctions/templates/websiteFunctions/index.html:75
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:12
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:19
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:95
 msgid "Modify Website"
 msgstr "Promjena sajta"
 
-#: baseTemplate/templates/baseTemplate/index.html:458
+#: baseTemplate/templates/baseTemplate/index.html:338
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:445
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:41
 msgid "Suspend/Unsuspend"
 msgstr "Suspend/Unsuspend"
 
-#: baseTemplate/templates/baseTemplate/index.html:459
+#: baseTemplate/templates/baseTemplate/index.html:339
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:446
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:12
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:19
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:42
-#: websiteFunctions/templates/websiteFunctions/index.html:57
-#: websiteFunctions/templates/websiteFunctions/index.html:59
-#: websiteFunctions/templates/websiteFunctions/index.html:126
-#: websiteFunctions/templates/websiteFunctions/index.html:128
+#: websiteFunctions/templates/websiteFunctions/index.html:102
+#: websiteFunctions/templates/websiteFunctions/index.html:104
 msgid "Delete Website"
 msgstr "Izbriši sajt"
 
-#: baseTemplate/templates/baseTemplate/index.html:472
+#: baseTemplate/templates/baseTemplate/index.html:352
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:459
 #: packages/templates/packages/createPackage.html:13
 #: packages/templates/packages/createPackage.html:84
 #: packages/templates/packages/index.html:25
@@ -858,7 +937,8 @@ msgstr "Izbriši sajt"
 msgid "Create Package"
 msgstr "Kreiraj paket"
 
-#: baseTemplate/templates/baseTemplate/index.html:473
+#: baseTemplate/templates/baseTemplate/index.html:353
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:460
 #: packages/templates/packages/deletePackage.html:12
 #: packages/templates/packages/deletePackage.html:18
 #: packages/templates/packages/deletePackage.html:40
@@ -867,7 +947,8 @@ msgstr "Kreiraj paket"
 msgid "Delete Package"
 msgstr "Izbriši paket"
 
-#: baseTemplate/templates/baseTemplate/index.html:474
+#: baseTemplate/templates/baseTemplate/index.html:354
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:461
 #: packages/templates/packages/index.html:49
 #: packages/templates/packages/index.html:51
 #: packages/templates/packages/modifyPackage.html:9
@@ -876,7 +957,8 @@ msgstr "Izbriši paket"
 msgid "Modify Package"
 msgstr "Promijeni paket"
 
-#: baseTemplate/templates/baseTemplate/index.html:488
+#: baseTemplate/templates/baseTemplate/index.html:368
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:475
 #: databases/templates/databases/createDatabase.html:12
 #: databases/templates/databases/createDatabase.html:19
 #: databases/templates/databases/createDatabase.html:68
@@ -886,7 +968,8 @@ msgstr "Promijeni paket"
 msgid "Create Database"
 msgstr "Kreiranje baze"
 
-#: baseTemplate/templates/baseTemplate/index.html:489
+#: baseTemplate/templates/baseTemplate/index.html:369
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:476
 #: databases/templates/databases/deleteDatabase.html:12
 #: databases/templates/databases/deleteDatabase.html:19
 #: databases/templates/databases/deleteDatabase.html:53
@@ -896,7 +979,8 @@ msgstr "Kreiranje baze"
 msgid "Delete Database"
 msgstr "Brisanje baze"
 
-#: baseTemplate/templates/baseTemplate/index.html:490
+#: baseTemplate/templates/baseTemplate/index.html:370
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:477
 #: databases/templates/databases/index.html:53
 #: databases/templates/databases/index.html:55
 #: databases/templates/databases/listDataBases.html:13
@@ -904,20 +988,23 @@ msgstr "Brisanje baze"
 msgid "List Databases"
 msgstr "Lista baza"
 
-#: baseTemplate/templates/baseTemplate/index.html:491
+#: baseTemplate/templates/baseTemplate/index.html:371
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:478
 #: databases/templates/databases/index.html:65
 #: databases/templates/databases/index.html:67
 msgid "PHPMYAdmin"
 msgstr "PHPMYAdmin"
 
-#: baseTemplate/templates/baseTemplate/index.html:506
+#: baseTemplate/templates/baseTemplate/index.html:386
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:493
 #: dns/templates/dns/createNameServer.html:12
 #: dns/templates/dns/createNameServer.html:76 dns/templates/dns/index.html:72
 #: dns/templates/dns/index.html:74
 msgid "Create Nameserver"
 msgstr "Kreiranje name servera"
 
-#: baseTemplate/templates/baseTemplate/index.html:507
+#: baseTemplate/templates/baseTemplate/index.html:387
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:494
 #: dns/templates/dns/createDNSZone.html:12
 #: dns/templates/dns/createDNSZone.html:40 dns/templates/dns/index.html:29
 #: dns/templates/dns/index.html:31 dns/templates/dns/index.html:84
@@ -925,44 +1012,51 @@ msgstr "Kreiranje name servera"
 msgid "Create DNS Zone"
 msgstr "Kreiranje DNS zone"
 
-#: baseTemplate/templates/baseTemplate/index.html:508
+#: baseTemplate/templates/baseTemplate/index.html:388
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:495
 #: dns/templates/dns/deleteDNSZone.html:40 dns/templates/dns/index.html:41
 #: dns/templates/dns/index.html:43 dns/templates/dns/index.html:96
 #: dns/templates/dns/index.html:98
 msgid "Delete Zone"
 msgstr "Briši zonu"
 
-#: baseTemplate/templates/baseTemplate/index.html:509
+#: baseTemplate/templates/baseTemplate/index.html:389
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:496
 msgid "Add/Delete Records"
 msgstr "Dodaj / izbriši unose"
 
-#: baseTemplate/templates/baseTemplate/index.html:525
+#: baseTemplate/templates/baseTemplate/index.html:405
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:512
 #: mailServer/templates/mailServer/createEmailAccount.html:12
 #: mailServer/templates/mailServer/createEmailAccount.html:19
 msgid "Create Email Account"
 msgstr "Kreiraj email račun"
 
-#: baseTemplate/templates/baseTemplate/index.html:525
+#: baseTemplate/templates/baseTemplate/index.html:405
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:512
 #: mailServer/templates/mailServer/createEmailAccount.html:64
 #: mailServer/templates/mailServer/index.html:25
 #: mailServer/templates/mailServer/index.html:27
 msgid "Create Email"
 msgstr "Kreiraj email"
 
-#: baseTemplate/templates/baseTemplate/index.html:526
+#: baseTemplate/templates/baseTemplate/index.html:406
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:513
 #: mailServer/templates/mailServer/deleteEmailAccount.html:12
 #: mailServer/templates/mailServer/deleteEmailAccount.html:19
 msgid "Delete Email Account"
 msgstr "Izbriši email račun"
 
-#: baseTemplate/templates/baseTemplate/index.html:526
+#: baseTemplate/templates/baseTemplate/index.html:406
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:513
 #: mailServer/templates/mailServer/deleteEmailAccount.html:56
 #: mailServer/templates/mailServer/index.html:37
 #: mailServer/templates/mailServer/index.html:39
 msgid "Delete Email"
 msgstr "Izbriši email"
 
-#: baseTemplate/templates/baseTemplate/index.html:527
+#: baseTemplate/templates/baseTemplate/index.html:407
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:514
 #: databases/templates/databases/listDataBases.html:73
 #: ftp/templates/ftp/listFTPAccounts.html:73
 #: mailServer/templates/mailServer/changeEmailPassword.html:64
@@ -971,11 +1065,13 @@ msgstr "Izbriši email"
 msgid "Change Password"
 msgstr "Promijeni šifru"
 
-#: baseTemplate/templates/baseTemplate/index.html:528
+#: baseTemplate/templates/baseTemplate/index.html:408
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:515
 msgid "Access Webmail"
 msgstr "Pristup webmailu"
 
-#: baseTemplate/templates/baseTemplate/index.html:547
+#: baseTemplate/templates/baseTemplate/index.html:427
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:534
 #: ftp/templates/ftp/createFTPAccount.html:12
 #: ftp/templates/ftp/createFTPAccount.html:19 ftp/templates/ftp/index.html:25
 #: ftp/templates/ftp/index.html:27
@@ -984,7 +1080,8 @@ msgstr "Pristup webmailu"
 msgid "Create FTP Account"
 msgstr "Kreiranje FTP računa"
 
-#: baseTemplate/templates/baseTemplate/index.html:548
+#: baseTemplate/templates/baseTemplate/index.html:428
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:535
 #: ftp/templates/ftp/deleteFTPAccount.html:12
 #: ftp/templates/ftp/deleteFTPAccount.html:18
 #: ftp/templates/ftp/deleteFTPAccount.html:52 ftp/templates/ftp/index.html:37
@@ -994,101 +1091,120 @@ msgstr "Kreiranje FTP računa"
 msgid "Delete FTP Account"
 msgstr "Briši FTP račun"
 
-#: baseTemplate/templates/baseTemplate/index.html:549
+#: baseTemplate/templates/baseTemplate/index.html:429
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:536
 #: ftp/templates/ftp/index.html:49 ftp/templates/ftp/index.html:51
 #: ftp/templates/ftp/listFTPAccounts.html:13
 #: ftp/templates/ftp/listFTPAccounts.html:19
 msgid "List FTP Accounts"
 msgstr "Lista FTP računa"
 
-#: baseTemplate/templates/baseTemplate/index.html:567
+#: baseTemplate/templates/baseTemplate/index.html:447
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:554
 msgid "Add/Delete Destination"
 msgstr "Dodaj / izbriši destinaciju"
 
-#: baseTemplate/templates/baseTemplate/index.html:569
+#: baseTemplate/templates/baseTemplate/index.html:449
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:556
 #, fuzzy
 #| msgid "Restore Back up"
 msgid "Remote Back ups"
 msgstr "Vrati backup"
 
-#: baseTemplate/templates/baseTemplate/index.html:578
-#: baseTemplate/templates/baseTemplate/index.html:579
+#: baseTemplate/templates/baseTemplate/index.html:458
+#: baseTemplate/templates/baseTemplate/index.html:459
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:565
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:566
 msgid "SSL"
 msgstr "SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:584
+#: baseTemplate/templates/baseTemplate/index.html:464
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:571
 #: manageSSL/templates/manageSSL/index.html:28
 #: manageSSL/templates/manageSSL/manageSSL.html:13
 #: manageSSL/templates/manageSSL/manageSSL.html:20
 msgid "Manage SSL"
 msgstr "Upravljanje SSL-om"
 
-#: baseTemplate/templates/baseTemplate/index.html:585
+#: baseTemplate/templates/baseTemplate/index.html:465
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:572
 #: manageSSL/templates/manageSSL/index.html:40
 msgid "Hostname SSL"
 msgstr "Hostname ssl"
 
-#: baseTemplate/templates/baseTemplate/index.html:593
+#: baseTemplate/templates/baseTemplate/index.html:473
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:580
 msgid "Server"
 msgstr "Server"
 
-#: baseTemplate/templates/baseTemplate/index.html:598
+#: baseTemplate/templates/baseTemplate/index.html:478
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:585
 msgid "NEW"
 msgstr "Novi"
 
-#: baseTemplate/templates/baseTemplate/index.html:603
+#: baseTemplate/templates/baseTemplate/index.html:483
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:590
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
 #: tuning/templates/tuning/liteSpeedTuning.html:12
 msgid "LiteSpeed Tuning"
 msgstr "LiteSpeed  tuning"
 
-#: baseTemplate/templates/baseTemplate/index.html:604
+#: baseTemplate/templates/baseTemplate/index.html:484
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:591
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13
 msgid "PHP Tuning"
 msgstr "PHP tuning"
 
-#: baseTemplate/templates/baseTemplate/index.html:619
+#: baseTemplate/templates/baseTemplate/index.html:499
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:606
 #: serverStatus/templates/serverStatus/index.html:25
 #: serverStatus/templates/serverStatus/index.html:27
 msgid "LiteSpeed Status"
 msgstr "LiteSpeed status"
 
-#: baseTemplate/templates/baseTemplate/index.html:620
+#: baseTemplate/templates/baseTemplate/index.html:500
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:607
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:15
 #: serverStatus/templates/serverStatus/index.html:37
 #: serverStatus/templates/serverStatus/index.html:39
 msgid "CyberPanel Main Log File"
 msgstr "Glavni log fajl"
 
-#: baseTemplate/templates/baseTemplate/index.html:621
+#: baseTemplate/templates/baseTemplate/index.html:501
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:608
 #, fuzzy
 #| msgid "Server Status"
 msgid "Services Status"
 msgstr "Status servera"
 
-#: baseTemplate/templates/baseTemplate/index.html:638
+#: baseTemplate/templates/baseTemplate/index.html:518
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:625
 #: managePHP/templates/managePHP/installExtensions.html:13
 msgid "Install PHP Extensions"
 msgstr "Instalacija extenzija za php"
 
-#: baseTemplate/templates/baseTemplate/index.html:638
+#: baseTemplate/templates/baseTemplate/index.html:518
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:625
 #: managePHP/templates/managePHP/index.html:24
 #: managePHP/templates/managePHP/index.html:26
 msgid "Install Extensions"
 msgstr "Instalacija extenzija"
 
-#: baseTemplate/templates/baseTemplate/index.html:639
+#: baseTemplate/templates/baseTemplate/index.html:519
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:626
 #: managePHP/templates/managePHP/index.html:36
 #: managePHP/templates/managePHP/index.html:38
 msgid "Edit PHP Configs"
 msgstr "Promjena php konfiguracije"
 
-#: baseTemplate/templates/baseTemplate/index.html:654
+#: baseTemplate/templates/baseTemplate/index.html:534
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:641
 msgid "Access Log"
 msgstr "Pristupni log"
 
-#: baseTemplate/templates/baseTemplate/index.html:655
+#: baseTemplate/templates/baseTemplate/index.html:535
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:642
 #: serverLogs/templates/serverLogs/errorLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:37
 #: serverLogs/templates/serverLogs/index.html:39
@@ -1096,43 +1212,53 @@ msgstr "Pristupni log"
 msgid "Error Logs"
 msgstr "Log grešaka"
 
-#: baseTemplate/templates/baseTemplate/index.html:656
+#: baseTemplate/templates/baseTemplate/index.html:536
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:643
 #: serverLogs/templates/serverLogs/emailLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:49
 #: serverLogs/templates/serverLogs/index.html:51
 msgid "Email Logs"
 msgstr "Email logovi"
 
-#: baseTemplate/templates/baseTemplate/index.html:656
+#: baseTemplate/templates/baseTemplate/index.html:536
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:643
 msgid "Email Log"
 msgstr "Email log"
 
-#: baseTemplate/templates/baseTemplate/index.html:657
+#: baseTemplate/templates/baseTemplate/index.html:537
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:644
 #: serverLogs/templates/serverLogs/ftplogs.html:14
 #: serverLogs/templates/serverLogs/index.html:61
 #: serverLogs/templates/serverLogs/index.html:63
 msgid "FTP Logs"
 msgstr "FTP logovi"
 
-#: baseTemplate/templates/baseTemplate/index.html:672
+#: baseTemplate/templates/baseTemplate/index.html:552
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:659
 #, fuzzy
 #| msgid "Firewall"
 msgid "Firewall Home"
 msgstr "Firewall  "
 
-#: baseTemplate/templates/baseTemplate/index.html:672
+#: baseTemplate/templates/baseTemplate/index.html:552
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:659
 #: firewall/templates/firewall/index.html:25
 #: firewall/templates/firewall/index.html:27
 msgid "Firewall"
 msgstr "Firewall  "
 
-#: baseTemplate/templates/baseTemplate/index.html:673
+#: baseTemplate/templates/baseTemplate/index.html:553
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:660
 #: firewall/templates/firewall/index.html:36
 #: firewall/templates/firewall/index.html:38
 #: firewall/templates/firewall/secureSSH.html:13
 #: firewall/templates/firewall/secureSSH.html:20
 msgid "Secure SSH"
 msgstr "Siguran SSH"
+
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:327
+msgid "Fullscreen"
+msgstr ""
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
@@ -2971,8 +3097,8 @@ msgstr "Uspješno izbrisan."
 msgid "Website Functions - CyberPanel"
 msgstr "Funkcije za sajtove"
 
-#: websiteFunctions/templates/websiteFunctions/index.html:113
-#: websiteFunctions/templates/websiteFunctions/index.html:115
+#: websiteFunctions/templates/websiteFunctions/index.html:89
+#: websiteFunctions/templates/websiteFunctions/index.html:91
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:13
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:20
 msgid "Suspend/Unsuspend Website"
@@ -2982,7 +3108,7 @@ msgstr "Suspend/Unsuspend sajt"
 msgid "Websites Hosted - CyberPanel"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/listWebsites.html:51
+#: websiteFunctions/templates/websiteFunctions/listWebsites.html:53
 msgid "Cannot list websites. Error message:"
 msgstr ""
 

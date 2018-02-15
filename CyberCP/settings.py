@@ -170,5 +170,8 @@ LANGUAGES = (
     ('pt', _('Portuguese')),
     ('ja', _('Japanese')),
     ('bs', _('Bosnian')),
+    ('gr', _('Greek')),
+    ('ru', _('Russian')),
+    ('tr', _('Turkish')),
 )
 

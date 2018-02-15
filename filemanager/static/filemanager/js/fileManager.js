@@ -1236,7 +1236,39 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
     };
 
 
+    // fix permissions
 
+    $scope.fixPermissions = function() {
+
+        url = "/filemanager/changePermissions";
+
+
+        var data = {
+            domainName : domainName,
+        };
+
+
+
+        $http.post(url, data).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.permissionsChanged === 1) {
+                var notification = alertify.notify('Permissions successfully fixed!', 'success', 5, function(){  console.log('dismissed'); });
+                $scope.fetchForTableSecondary(null,'refresh');
+            }
+            else {
+                var notification = alertify.notify(response.data.error_message, 'error', 5, function(){  console.log('dismissed'); });
+                $scope.fetchForTableSecondary(null,'refresh');
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+        }
+
+    };
 
 
 

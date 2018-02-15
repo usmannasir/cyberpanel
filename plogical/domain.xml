@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<metaFile>
+  <masterDomain>cyberpanel.net</masterDomain>
+  <phpSelection>PHP 7.1</phpSelection>
+  <externalApp>cyberpa</externalApp>
+  <ChildDomains/>
+  <Databases/>
+</metaFile>

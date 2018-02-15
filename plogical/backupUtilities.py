@@ -15,6 +15,7 @@ from installUtilities import installUtilities
 import argparse
 from shutil import move,copy
 import sys
+from xml.etree import ElementTree
 
 
 class backupUtilities:
@@ -29,49 +30,53 @@ class backupUtilities:
 
             ## writing the name of backup file
 
-            backupFileNamePath = backupPath + "backupFileName"
+            ## /home/example.com/backup/backupFileName
+            backupFileNamePath = os.path.join(backupPath,"backupFileName")
             status = open(backupFileNamePath, "w")
             status.write(backupName)
             status.close()
 
-            meta = open(tempStoragePath+'/meta',"r").readlines()
 
-            status = open(backupPath+'status',"w")
+
+            status = open(os.path.join(backupPath,'status'),"w")
             status.write("Making archive of home directory\n")
             status.close()
 
-            count = 0
-            dbCheck = 0
+            ## Parsing XML Meta file!
 
-            for items in meta:
-                if count==0:
-                    domainName = items.split('--')[0]
-                    make_archive(tempStoragePath+"/public_html", 'gztar', "/home/"+domainName+"/public_html")
-                    count = count + 1
-                else:
-                    if items.find("Databases")>-1:
-                        dbCheck = 1
-                        continue
-
-                    if dbCheck == 1:
-                        dbName = items.split('--')[0]
-                        status = open(backupPath + 'status', "w")
-                        status.write("Backing up database: " + dbName)
-                        status.close()
-                        mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, tempStoragePath)
+            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018/meta.xml -- tempStoragePath
+            backupMetaData = ElementTree.parse(os.path.join(tempStoragePath,'meta.xml'))
 
 
-            make_archive(backupPath+"/"+backupName, 'gztar', tempStoragePath)
+            ## Making archive of home directory
+
+            domainName = backupMetaData.find('masterDomain').text
+            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
+            make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
+
+            ## Backing up databases
+            databases = backupMetaData.findall('Databases/database')
+
+            for database in databases:
+                dbName = database.find('dbName').text
+
+                status = open(os.path.join(backupPath,'status'), "w")
+                status.write("Backing up database: " + dbName)
+                status.close()
+                mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, tempStoragePath)
+
+
+            make_archive(os.path.join(backupPath,backupName), 'gztar', tempStoragePath)
             rmtree(tempStoragePath)
 
-            status = open(backupPath + 'status', "w")
+            status = open(os.path.join(backupPath,'status'), "w")
             status.write("completed\n")
             status.close()
 
 
         except BaseException,msg:
             try:
-                os.remove(backupPath+"/"+backupName+".tar.gz")
+                os.remove(os.path.join(backupPath,backupName+".tar.gz"))
 
             except:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
@@ -81,7 +86,7 @@ class backupUtilities:
             except:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
-            status = open(backupPath + 'status', "w")
+            status = open(os.path.join(backupPath,'status'), "w")
             status.write(backupName + "\n")
             status.write("Aborted, please check CyberPanel main log file. [5009]")
             status.close()
@@ -105,8 +110,8 @@ class backupUtilities:
 
             if dir == "CyberPanelRestore":
                 backupFileName = backupName.strip(".tar.gz")
-                completPath = "/home/backup/" + backupFileName ## without extension
-                originalFile = "/home/backup/" + backupName ## with extension
+                completPath = os.path.join("/home","backup",backupFileName) ## without extension
+                originalFile = os.path.join("/home","backup",backupName) ## with extension
             else:
                 backupFileName = backupName.strip(".tar.gz")
                 completPath = "/home/backup/transfer-"+str(dir)+"/"+backupFileName ## without extension
@@ -114,18 +119,18 @@ class backupUtilities:
 
 
 
-            pathToCompressedHome = completPath + "/public_html.tar.gz"
+            pathToCompressedHome = os.path.join(completPath,"public_html.tar.gz")
 
             if not os.path.exists(completPath):
                 os.mkdir(completPath)
 
             ## writing pid of restore process
 
-            pid = open(completPath + '/pid', "w")
+            pid = open(os.path.join(completPath,'pid'), "w")
             pid.write(str(os.getpid()))
             pid.close()
 
-            status = open(completPath + '/status', "w")
+            status = open(os.path.join(completPath,'status'), "w")
             status.write("Extracting Main Archive")
             status.close()
 
@@ -133,7 +138,7 @@ class backupUtilities:
             tar.extractall(completPath)
             tar.close()
 
-            status = open(completPath + '/status', "w")
+            status = open(os.path.join(completPath,'status'), "w")
             status.write("Creating Account and databases")
             status.close()
 
@@ -147,13 +152,13 @@ class backupUtilities:
                 if data['createWebSiteStatus'] == 1:
                     pass
                 else:
-                    status = open(completPath + '/status', "w")
+                    status = open(os.path.join(completPath,'status'), "w")
                     status.write("Error Message: " + data['error_message'] +". Not able to create Account and databases, aborting. [5009]")
                     status.close()
                     logging.CyberCPLogFileWriter.writeToFile(r.text)
                     return 0
             except BaseException,msg:
-                status = open(completPath + '/status', "w")
+                status = open(os.path.join(completPath,'status'), "w")
                 status.write("Error Message: " + str(msg) +". Not able to create Account and databases, aborting. [5009]")
                 status.close()
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
@@ -161,55 +166,50 @@ class backupUtilities:
 
             ########### creating sub/addon/parked domains
 
-            status = open(completPath + '/status', "w")
+            status = open(os.path.join(completPath,'status'), "w")
             status.write("Creating Child Domains")
             status.close()
 
             ## reading meta file to create subdomains
 
-            data = open(completPath + "/meta", 'r').readlines()
+            backupMetaData = ElementTree.parse(os.path.join(completPath,"meta.xml"))
 
             ## extracting master domain for later use
+            masterDomain = backupMetaData.find('masterDomain').text
+            externalApp = backupMetaData.find('externalApp').text
+            websiteHome = os.path.join("/home",masterDomain,"public_html")
 
-            masterDomain = data[0].split('-')[0]
-            externalApp = data[0].split('-')[2]
-            websiteHome = "/home/" + masterDomain + "/public_html"
-
+            childDomains = backupMetaData.findall('ChildDomains/domain')
 
             try:
-                childDomainsCheck = 0
-                for items in data:
-                    if items.find("Child Domains") > -1:
-                        childDomainsCheck = 1
+                for childDomain in childDomains:
+
+                    domain = childDomain.find('domain').text
+                    phpSelection = childDomain.find('phpSelection').text
+                    path = childDomain.find('path').text
+
+                    finalData = json.dumps(
+                        {'masterDomain': masterDomain, 'domainName': domain, 'phpSelection': phpSelection,
+                         'path': path,
+                         'ssl': 0, 'restore': 1})
+                    r = requests.post("http://localhost:5003/websites/submitDomainCreation", data=finalData,
+                                      verify=False)
+
+                    data = json.loads(r.text)
+
+                    if data['createWebSiteStatus'] == 1:
+                        rmtree(websiteHome)
                         continue
-                    if items.find("Databases") > -1:
-                        break
-
-                    if childDomainsCheck == 1:
-                        domain = items.split('--')[0]
-                        phpSelection = items.split('--')[1]
-                        path = items.split('--')[2].strip("\n")
-
-
-                        finalData = json.dumps({'masterDomain': masterDomain, 'domainName': domain,'phpSelection': phpSelection,'path': path,'ssl':0,'restore':1})
-                        r = requests.post("http://localhost:5003/websites/submitDomainCreation", data=finalData,
-                                          verify=False)
-
-                        data = json.loads(r.text)
-
-                        if data['createWebSiteStatus'] == 1:
-                            rmtree(websiteHome)
-                            continue
-                        else:
-                            status = open(completPath + '/status', "w")
-                            status.write("Error Message: " + data['error_message'] +". Not able to create child domains, aborting. [5009]")
-                            status.close()
-                            logging.CyberCPLogFileWriter.writeToFile(r.text)
-                            return 0
-
+                    else:
+                        status = open(os.path.join(completPath,'status'), "w")
+                        status.write("Error Message: " + data[
+                            'error_message'] + ". Not able to create child domains, aborting. [5009]")
+                        status.close()
+                        logging.CyberCPLogFileWriter.writeToFile(r.text)
+                        return 0
 
             except BaseException, msg:
-                status = open(completPath + '/status', "w")
+                status = open(os.path.join(completPath,'status'), "w")
                 status.write("Error Message: " + str(msg) +". Not able to create child domains, aborting. [5009]")
                 status.close()
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
@@ -217,24 +217,19 @@ class backupUtilities:
 
             ## restoring databases
 
-            data = open(completPath + "/meta", 'r').readlines()
-
-
-            status = open(completPath + '/status', "w")
+            status = open(os.path.join(completPath,'status'), "w")
             status.write("Restoring Databases")
             status.close()
 
-            dbCheck = 0
+            databases = backupMetaData.findall('Databases/database')
 
-            for items in data:
-                if items.find("Databases") > -1:
-                    dbCheck = 1
-                    continue
-                if dbCheck == 1:
-                    dbData = items.split('--')
-                    mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbData[0], completPath, dbData[2].strip('\n'))
+            for database in databases:
+                dbName = database.find('dbName').text
+                password = database.find('password').text
+                mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password)
 
-            status = open(completPath + '/status', "w")
+
+            status = open(os.path.join(completPath, 'status'), "w")
             status.write("Extracting web home data")
             status.close()
 
@@ -242,7 +237,7 @@ class backupUtilities:
             tar.extractall(websiteHome)
             tar.close()
 
-            status = open(completPath + '/status', "w")
+            status = open(os.path.join(completPath,'status'), "w")
             status.write("Done")
             status.close()
             installUtilities.reStartLiteSpeed()
@@ -254,7 +249,7 @@ class backupUtilities:
             subprocess.call(cmd)
 
         except BaseException, msg:
-            status = open(completPath + '/status', "w")
+            status = open(os.path.join(completPath,'status'), "w")
             status.write(str(msg) + " [5009]")
             status.close()
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
@@ -511,7 +506,7 @@ def submitBackupCreation(tempStoragePath,backupName,backupPath,metaPath):
             os.mkdir(tempStoragePath)
 
 
-        move(metaPath,tempStoragePath+"/meta")
+        move(metaPath,tempStoragePath+"/meta.xml")
 
         p = Process(target=backupUtilities.startBackup, args=(tempStoragePath, backupName, backupPath,))
         p.start()

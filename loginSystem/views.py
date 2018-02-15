@@ -64,6 +64,21 @@ def verifyLogin(request):
                         request.session[LANGUAGE_SESSION_KEY] = user_Language
                         request.COOKIES['django_language'] = user_Language
                         settings.LANGUAGE_CODE = user_Language
+                    elif data['languageSelection'] == "Greek":
+                        user_Language = "gr"
+                        request.session[LANGUAGE_SESSION_KEY] = user_Language
+                        request.COOKIES['django_language'] = user_Language
+                        settings.LANGUAGE_CODE = user_Language
+                    elif data['languageSelection'] == "Russian":
+                        user_Language = "ru"
+                        request.session[LANGUAGE_SESSION_KEY] = user_Language
+                        request.COOKIES['django_language'] = user_Language
+                        settings.LANGUAGE_CODE = user_Language
+                    elif data['languageSelection'] == "Turkish":
+                        user_Language = "tr"
+                        request.session[LANGUAGE_SESSION_KEY] = user_Language
+                        request.COOKIES['django_language'] = user_Language
+                        settings.LANGUAGE_CODE = user_Language
                 except:
                     request.session[LANGUAGE_SESSION_KEY] = "en"
                     request.COOKIES['django_language'] = "en"

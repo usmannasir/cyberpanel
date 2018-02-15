@@ -146,7 +146,7 @@ class mysqlUtilities:
                 res = subprocess.call(cmd,stdout=f)
 
             if res == 1:
-                logging.CyberCPLogFileWriter.writeToFile("[could not backup]")
+                logging.CyberCPLogFileWriter.writeToFile("Database: "+databaseName + "could not be backed! [createDatabaseBackup]")
 
             return 1
         except BaseException, msg:
@@ -171,7 +171,7 @@ class mysqlUtilities:
                 res = subprocess.call(cmd, stdin=f)
 
             if res == 1:
-                logging.CyberCPLogFileWriter.writeToFile("[Could not restore MYSQL Database]")
+                logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " +databaseName +"! [restoreDatabaseBackup]")
                 return 0
 
             passwordCMD = "use mysql;SET PASSWORD FOR '"+databaseName+"'@'localhost' = '"+dbPassword+"';FLUSH PRIVILEGES;"
@@ -181,10 +181,8 @@ class mysqlUtilities:
             res = subprocess.call(cmd)
 
             if res == 1:
-                logging.CyberCPLogFileWriter.writeToFile("[Could not change Password]")
+                logging.CyberCPLogFileWriter.writeToFile("Could not change password for MYSQL user: " + databaseName + "! [restoreDatabaseBackup]")
                 return 0
-
-
 
             return 1
         except BaseException, msg:
