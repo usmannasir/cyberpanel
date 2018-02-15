@@ -3,61 +3,53 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#: baseTemplate/templates/baseTemplate/index.html:211
-#: baseTemplate/templates/baseTemplate/index.html:301
-#: baseTemplate/templates/baseTemplate/index.html:356
-#: baseTemplate/templates/baseTemplate/index.html:362
-#: baseTemplate/templates/baseTemplate/index.html:368
-#: baseTemplate/templates/baseTemplate/index.html:374
-#: baseTemplate/templates/baseTemplate/index.html:380
-#: baseTemplate/templates/baseTemplate/index.html:386
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: CyberPanel 1.6\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-01-23 20:36+0500\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"PO-Revision-Date: 2018-02-04 04:34+0300\n"
+"Language: tr_TR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Last-Translator: Burak BOZ\n"
+"Language-Team: Burak BOZ <burakboz@icloud.com>\n"
+"X-Generator: Poedit 1.8.7.1\n"
 
 #: CyberCP/settings.py:167
 msgid "English"
-msgstr ""
+msgstr "İngilizce"
 
 #: CyberCP/settings.py:168
 msgid "Chinese"
-msgstr ""
+msgstr "Çince"
 
 #: CyberCP/settings.py:169
 msgid "Bulgarian"
-msgstr ""
+msgstr "Bulgar"
 
 #: CyberCP/settings.py:170
 msgid "Portuguese"
-msgstr ""
+msgstr "Portekizce"
 
 #: CyberCP/settings.py:171
 msgid "Japanese"
-msgstr ""
+msgstr "Japonca"
 
 #: CyberCP/settings.py:172
 msgid "Bosnian"
-msgstr ""
+msgstr "Boşnakça"
 
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
 msgid "Back up Website"
-msgstr ""
+msgstr "Siteyi yedekle"
 
 #: backup/templates/backup/backup.html:15
 msgid "This page can be used to Back up your websites"
-msgstr ""
+msgstr "Bu sayfa web sitelerinizi yedekleme için kullanılır"
 
 #: backup/templates/backup/backup.html:30
 #: databases/templates/databases/createDatabase.html:28
@@ -72,24 +64,24 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:28
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:29
 msgid "Select Website"
-msgstr ""
+msgstr "Web site seçin"
 
 #: backup/templates/backup/backup.html:41
 #: backup/templates/backup/backupSchedule.html:90
 msgid "Destination"
-msgstr ""
+msgstr "Hedef"
 
 #: backup/templates/backup/backup.html:44
 #: baseTemplate/templates/baseTemplate/homePage.html:12
 #: filemanager/templates/filemanager/index.html:133
 msgid "Home"
-msgstr ""
+msgstr "Ev"
 
 #: backup/templates/backup/backup.html:60
 #: backup/templates/backup/restore.html:62
 #: filemanager/templates/filemanager/index.html:157
 msgid "File Name"
-msgstr ""
+msgstr "Dosya Adı"
 
 #: backup/templates/backup/backup.html:61
 #: backup/templates/backup/backup.html:106
@@ -99,20 +91,20 @@ msgstr ""
 #: firewall/templates/firewall/firewall.html:36
 #: managePHP/templates/managePHP/installExtensions.html:65
 msgid "Status"
-msgstr ""
+msgstr "Durum"
 
 #: backup/templates/backup/backup.html:66
 msgid "Running"
-msgstr ""
+msgstr "Çalışıyor"
 
 #: backup/templates/backup/backup.html:81
 #: baseTemplate/templates/baseTemplate/index.html:565
 msgid "Create Back up"
-msgstr ""
+msgstr "Yedek Oluştur"
 
 #: backup/templates/backup/backup.html:88
 msgid "Cancel Backup"
-msgstr ""
+msgstr "Yedeklemeyi iptal et"
 
 #: backup/templates/backup/backup.html:102
 #: backup/templates/backup/backupDestinations.html:97
@@ -123,21 +115,21 @@ msgstr ""
 #: ftp/templates/ftp/listFTPAccounts.html:87
 #: managePHP/templates/managePHP/installExtensions.html:61
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 #: backup/templates/backup/backup.html:103
 msgid "File"
-msgstr ""
+msgstr "Dosya"
 
 #: backup/templates/backup/backup.html:104
 msgid "Date"
-msgstr ""
+msgstr "Tarih"
 
 #: backup/templates/backup/backup.html:105
 #: filemanager/templates/filemanager/index.html:210
 #: ftp/templates/ftp/listFTPAccounts.html:90
 msgid "Size"
-msgstr ""
+msgstr "Boyut"
 
 #: backup/templates/backup/backup.html:107
 #: backup/templates/backup/backupDestinations.html:100
@@ -148,28 +140,30 @@ msgstr ""
 #: firewall/templates/firewall/secureSSH.html:122
 #: websiteFunctions/templates/websiteFunctions/website.html:450
 msgid "Delete"
-msgstr ""
+msgstr "Sil"
 
 #: backup/templates/backup/backup.html:131
 msgid "Cannot delete website, Error message:  "
-msgstr ""
+msgstr "Website silinemiyor, Hata mesajı:"
 
 #: backup/templates/backup/backup.html:135
 msgid "Successfully Deleted"
-msgstr ""
+msgstr "Başarıyla Silindi"
 
 #: backup/templates/backup/backupDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:14
 msgid "Set up Back up Destinations"
-msgstr ""
+msgstr "Yedekleme hedeflerini ayarlayın"
 
 #: backup/templates/backup/backupDestinations.html:15
 msgid "On this page you can set up your Back up destinations. (SFTP)"
-msgstr ""
+msgstr "Bu sayfada yedekleme hedeflerini ayarlayabilirsiniz. (SFTP)"
 
 #: backup/templates/backup/backupDestinations.html:21
 msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
 msgstr ""
+"Yedekleme Hedeflerini Ayarlayın (Yedekleme yapılacak sunucuda SSH port'u 22 "
+"olmalıdır)"
 
 #: backup/templates/backup/backupDestinations.html:30
 #: backup/templates/backup/remoteBackups.html:29
@@ -178,7 +172,7 @@ msgstr ""
 #: dns/templates/dns/createNameServer.html:65
 #: firewall/templates/firewall/firewall.html:138
 msgid "IP Address"
-msgstr ""
+msgstr "IP Adresi"
 
 #: backup/templates/backup/backupDestinations.html:38
 #: backup/templates/backup/remoteBackups.html:37
@@ -190,43 +184,44 @@ msgstr ""
 #: userManagment/templates/userManagment/createUser.html:123
 #: userManagment/templates/userManagment/modifyUser.html:106
 msgid "Password"
-msgstr ""
+msgstr "Şifre"
 
 #: backup/templates/backup/backupDestinations.html:45
 #: firewall/templates/firewall/firewall.html:139
 msgid "Port"
-msgstr ""
+msgstr "Port"
 
 #: backup/templates/backup/backupDestinations.html:47
 msgid "Backup server SSH Port, leave empty for 22."
 msgstr ""
+"Yedek sunucusu SSH Portu, Boş bırakırsanız varsayılan olarak 22 kullanılır."
 
 #: backup/templates/backup/backupDestinations.html:55
 #: backup/templates/backup/backupSchedule.html:54
 #: baseTemplate/templates/baseTemplate/index.html:567
 msgid "Add Destination"
-msgstr ""
+msgstr "Hedef Ekle"
 
 #: backup/templates/backup/backupDestinations.html:69
 #: backup/templates/backup/backupDestinations.html:73
 msgid "Connection to"
-msgstr ""
+msgstr "Bağlanılacak"
 
 #: backup/templates/backup/backupDestinations.html:69
 msgid "failed. Please delete and re-add. "
-msgstr ""
+msgstr "başarısız. Lütfen silin ve yeniden ekleyin."
 
 #: backup/templates/backup/backupDestinations.html:73
 msgid "successful."
-msgstr ""
+msgstr "başarılı."
 
 #: backup/templates/backup/backupDestinations.html:77
 msgid "Cannot add destination. Error message:"
-msgstr ""
+msgstr "Hedef eklenemiyor. Hata mesajı:"
 
 #: backup/templates/backup/backupDestinations.html:81
 msgid "Destination Added."
-msgstr ""
+msgstr "Hedef Eklendi."
 
 #: backup/templates/backup/backupDestinations.html:85
 #: backup/templates/backup/backupSchedule.html:77
@@ -253,64 +248,66 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/website.html:802
 #: websiteFunctions/templates/websiteFunctions/website.html:881
 msgid "Could not connect to server. Please refresh this page."
-msgstr ""
+msgstr "Sunucuya bağlanılamıyor. Lütfen bu sayfayı yenileyin."
 
 #: backup/templates/backup/backupDestinations.html:98
 msgid "IP"
-msgstr ""
+msgstr "IP"
 
 #: backup/templates/backup/backupDestinations.html:99
 #: backup/templates/backup/backupDestinations.html:107
 msgid "Check Connection"
-msgstr ""
+msgstr "Bağlantıyı Kontrol Et"
 
 #: backup/templates/backup/backupSchedule.html:3
 msgid "Schedule Back up - CyberPanel"
-msgstr ""
+msgstr "Yedekleme Zamanla - CyberPanel"
 
 #: backup/templates/backup/backupSchedule.html:13
 #: backup/templates/backup/backupSchedule.html:20
 #: baseTemplate/templates/baseTemplate/index.html:568
 msgid "Schedule Back up"
-msgstr ""
+msgstr "Yedekleme Zamanla"
 
 #: backup/templates/backup/backupSchedule.html:14
 msgid ""
 "On this page you can schedule Back ups to localhost or remote server (If you "
 "have added one)."
 msgstr ""
+"Bu sayfada uzak yada yerel sunucu yedeklemelerini zamanlayabilirsiniz (Eğer "
+"yapılandırdıysanız)."
 
 #: backup/templates/backup/backupSchedule.html:29
 msgid "Select Destination"
-msgstr ""
+msgstr "Hedef Seçin"
 
 #: backup/templates/backup/backupSchedule.html:40
 msgid "Select Frequency"
-msgstr ""
+msgstr "Sıklık Seçin"
 
 #: backup/templates/backup/backupSchedule.html:43
 msgid "Daily"
-msgstr ""
+msgstr "Günlük"
 
 #: backup/templates/backup/backupSchedule.html:44
 msgid "Weekly"
-msgstr ""
+msgstr "Haftalık"
 
 #: backup/templates/backup/backupSchedule.html:69
 msgid "Cannot add schedule. Error message:"
-msgstr ""
+msgstr "Zamanlanamadı. Hata mesajı:"
 
 #: backup/templates/backup/backupSchedule.html:73
 msgid "Schedule Added"
-msgstr ""
+msgstr "Zamanlandı"
 
 #: backup/templates/backup/backupSchedule.html:91
 msgid "Frequency"
-msgstr ""
+msgstr "Sıklık"
 
 #: backup/templates/backup/index.html:3
 msgid "Back up Home - CyberPanel"
-msgstr ""
+msgstr "Yedekleme Merkezi - CyberPanel"
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:29
 #: backup/templates/backup/index.html:45
@@ -322,11 +319,11 @@ msgstr ""
 #: baseTemplate/templates/baseTemplate/index.html:560
 #: baseTemplate/templates/baseTemplate/index.html:577
 msgid "Back up"
-msgstr ""
+msgstr "Yedek"
 
 #: backup/templates/backup/index.html:14
 msgid "Back up and restore sites."
-msgstr ""
+msgstr "Siteleri yedekle ve geri yükle."
 
 #: backup/templates/backup/index.html:19
 #: baseTemplate/templates/baseTemplate/homePage.html:164
@@ -342,73 +339,73 @@ msgstr ""
 #: userManagment/templates/userManagment/index.html:20
 #: websiteFunctions/templates/websiteFunctions/index.html:22
 msgid "Available Functions"
-msgstr ""
+msgstr "Kullanılabilir Fonksiyonlar"
 
 #: backup/templates/backup/index.html:27 backup/templates/backup/index.html:43
 msgid "Back up Site"
-msgstr ""
+msgstr "Siteyi"
 
 #: backup/templates/backup/index.html:55
 #: baseTemplate/templates/baseTemplate/index.html:566
 msgid "Restore Back up"
-msgstr ""
+msgstr "Yedeği geri yükle"
 
 #: backup/templates/backup/index.html:57
 #: backup/templates/backup/restore.html:45
 msgid "Restore"
-msgstr ""
+msgstr "Geri yükle"
 
 #: backup/templates/backup/remoteBackups.html:3
 msgid "Transfer Websites from Remote Server - CyberPanel"
-msgstr ""
+msgstr "Uzak Sunucudan Websitelerini Aktar - CyberPanel"
 
 #: backup/templates/backup/remoteBackups.html:14
 #: backup/templates/backup/remoteBackups.html:21
 msgid "Remote Backups"
-msgstr ""
+msgstr "Uzak Yedekler"
 
 #: backup/templates/backup/remoteBackups.html:15
 msgid "This feature can import website(s) from remote server"
-msgstr ""
+msgstr "Bu özellik uzak sunucudan websiteleri içe aktarır"
 
 #: backup/templates/backup/remoteBackups.html:46
 msgid "Fetch Accounts"
-msgstr ""
+msgstr "Hesapları Getir"
 
 #: backup/templates/backup/remoteBackups.html:55
 msgid "Start Transfer"
-msgstr ""
+msgstr "Aktarımı Başlat"
 
 #: backup/templates/backup/remoteBackups.html:59
 #: filemanager/templates/filemanager/index.html:236
 #: websiteFunctions/templates/websiteFunctions/website.html:295
 msgid "Cancel"
-msgstr ""
+msgstr "İptal"
 
 #: backup/templates/backup/remoteBackups.html:72
 msgid "Could not connect, please refresh this page."
-msgstr ""
+msgstr "Bağlanılamadı, lütfen bu sayfayı yenileyin."
 
 #: backup/templates/backup/remoteBackups.html:76
 msgid "Accounts Successfully Fetched from remote server."
-msgstr ""
+msgstr "Uzak sunucudan hesaplar başarıyla getirildi."
 
 #: backup/templates/backup/remoteBackups.html:80
 msgid "Backup Process successfully started."
-msgstr ""
+msgstr "Yedekleme işlemi başarıyla başlatıldı."
 
 #: backup/templates/backup/remoteBackups.html:84
 msgid "Backup successfully cancelled."
-msgstr ""
+msgstr "Yedekleme başarıyla iptal edildi."
 
 #: backup/templates/backup/remoteBackups.html:96
 msgid "Search Accounts.."
-msgstr ""
+msgstr "Hesaplarda ara.."
 
 #: backup/templates/backup/remoteBackups.html:107
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:65
 msgid "Website"
-msgstr ""
+msgstr "Website"
 
 #: backup/templates/backup/remoteBackups.html:108
 #: baseTemplate/templates/baseTemplate/homePage.html:333
@@ -416,14 +413,14 @@ msgstr ""
 #: baseTemplate/templates/baseTemplate/index.html:633
 #: managePHP/templates/managePHP/installExtensions.html:62
 msgid "PHP"
-msgstr ""
+msgstr "PHP"
 
 #: backup/templates/backup/remoteBackups.html:109
 #: packages/templates/packages/createPackage.html:99
 #: packages/templates/packages/deletePackage.html:63
 #: packages/templates/packages/modifyPackage.html:112
 msgid "Package"
-msgstr ""
+msgstr "Paket"
 
 #: backup/templates/backup/remoteBackups.html:110
 #: baseTemplate/templates/baseTemplate/index.html:518
@@ -434,16 +431,16 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:60
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:67
 msgid "Email"
-msgstr ""
+msgstr "Eposta"
 
 #: backup/templates/backup/restore.html:3
 msgid "Restore Website - CyberPanel"
-msgstr ""
+msgstr "Site yedeğini geri yükle - CyberPanel"
 
 #: backup/templates/backup/restore.html:14
 #: backup/templates/backup/restore.html:21
 msgid "Restore Website"
-msgstr ""
+msgstr "Website yedeğini geri yükle"
 
 #: backup/templates/backup/restore.html:15
 msgid ""
@@ -451,14 +448,17 @@ msgid ""
 "from CyberPanel Back up generation tool, it will detect all Back ups under "
 "<strong>/home/backup</strong>."
 msgstr ""
+"Bu sayfa yedeklerinizi geri yüklemek için kullanılır, Yedekler CyberPanel  "
+"yedek oluşturma aracı ile oluşturulmuş olmalıdır, <strong>/home/backup</"
+"strong> altındaki tüm yedekleri tanır."
 
 #: backup/templates/backup/restore.html:30
 msgid "Select Back up"
-msgstr ""
+msgstr "Yedek seçin"
 
 #: backup/templates/backup/restore.html:61
 msgid "Condition"
-msgstr ""
+msgstr "Durum"
 
 #: backup/templates/backup/restore.html:86
 #: databases/templates/databases/deleteDatabase.html:64
@@ -466,64 +466,64 @@ msgstr ""
 #: firewall/templates/firewall/firewall.html:166
 #: managePHP/templates/managePHP/editPHPConfig.html:212
 msgid "Error message:"
-msgstr ""
+msgstr "Hata mesajı:"
 
 #: backup/templates/backup/restore.html:90
 msgid "Site related to this Back up already exists."
-msgstr ""
+msgstr "Bu Yedekleme ile ilgili site zaten var."
 
 #: baseTemplate/templates/baseTemplate/homePage.html:3
 msgid "Home - CyberPanel"
-msgstr ""
+msgstr "Ev - CyberPanel"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:13
 msgid "Use the tabs to navigate through the control panel."
-msgstr ""
+msgstr "Kontrol panelinde gezinmek için sekmeleri kullanın."
 
 #: baseTemplate/templates/baseTemplate/homePage.html:23
 #: websiteFunctions/templates/websiteFunctions/website.html:32
 msgid "Usage"
-msgstr ""
+msgstr "Kullanım"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:34
 #: baseTemplate/templates/baseTemplate/index.html:221
 msgid "CPU Usage"
-msgstr ""
+msgstr "CPU Kullanımı"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:55
 #: baseTemplate/templates/baseTemplate/index.html:232
 msgid "Ram Usage"
-msgstr ""
+msgstr "Ram Kullanımı"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:74
 msgid "Disk Usage '/'"
-msgstr ""
+msgstr "Disk Kullanımı '/'"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:98
 msgid "HTTP Statistics"
-msgstr ""
+msgstr "HTTP İstatistikleri"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:107
 msgid "Available/Max Connections"
-msgstr ""
+msgstr "Kullanılabilir/Maks Bağlantı"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:118
 msgid "Available/Max SSL Connections"
-msgstr ""
+msgstr "Kullanılabilir/Maks SSL Bağlantısı"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:127
 msgid "Requests Processing"
-msgstr ""
+msgstr "İşlenen İstekler"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:136
 msgid "Total Requests"
-msgstr ""
+msgstr "Toplam İstek"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:175
 #: baseTemplate/templates/baseTemplate/homePage.html:389
 #: userManagment/templates/userManagment/index.html:13
 msgid "User Functions"
-msgstr ""
+msgstr "Kullanıcı Fonksiyonları"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:178
 #: baseTemplate/templates/baseTemplate/homePage.html:392
@@ -531,13 +531,13 @@ msgstr ""
 #: baseTemplate/templates/baseTemplate/index.html:431
 #: baseTemplate/templates/baseTemplate/index.html:432
 msgid "Users"
-msgstr ""
+msgstr "Kullanıcılar"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:188
 #: baseTemplate/templates/baseTemplate/homePage.html:402
 #: websiteFunctions/templates/websiteFunctions/index.html:13
 msgid "Website Functions"
-msgstr ""
+msgstr "Website Fonksiyonları"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:191
 #: baseTemplate/templates/baseTemplate/homePage.html:405
@@ -547,11 +547,11 @@ msgstr ""
 #: baseTemplate/templates/baseTemplate/index.html:450
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:21
 msgid "Websites"
-msgstr ""
+msgstr "Websiteler"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:201
 msgid "Add/Modify Packages"
-msgstr ""
+msgstr "Paket Ekle/Düzenle"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:204
 #: baseTemplate/templates/baseTemplate/index.html:366
@@ -559,13 +559,13 @@ msgstr ""
 #: baseTemplate/templates/baseTemplate/index.html:467
 #: packages/templates/packages/index.html:13
 msgid "Packages"
-msgstr ""
+msgstr "Paketler"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:225
 #: baseTemplate/templates/baseTemplate/homePage.html:415
 #: databases/templates/databases/index.html:12
 msgid "Database Functions"
-msgstr ""
+msgstr "Veritabanı Fonksiyonları"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:228
 #: baseTemplate/templates/baseTemplate/homePage.html:418
@@ -576,12 +576,12 @@ msgstr ""
 #: packages/templates/packages/modifyPackage.html:73
 #: websiteFunctions/templates/websiteFunctions/website.html:43
 msgid "Databases"
-msgstr ""
+msgstr "Veritabanları"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:237
 #: baseTemplate/templates/baseTemplate/homePage.html:438
 msgid "Control DNS"
-msgstr ""
+msgstr "Control DNS"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:240
 #: baseTemplate/templates/baseTemplate/homePage.html:441
@@ -589,13 +589,13 @@ msgstr ""
 #: baseTemplate/templates/baseTemplate/index.html:499
 #: baseTemplate/templates/baseTemplate/index.html:501
 msgid "DNS"
-msgstr ""
+msgstr "DNS"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:250
 #: baseTemplate/templates/baseTemplate/homePage.html:451
 #: ftp/templates/ftp/index.html:12
 msgid "FTP Functions"
-msgstr ""
+msgstr "FTP Fonksiyonları"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:253
 #: baseTemplate/templates/baseTemplate/homePage.html:454
@@ -604,7 +604,7 @@ msgstr ""
 #: baseTemplate/templates/baseTemplate/index.html:542
 #: websiteFunctions/templates/websiteFunctions/website.html:38
 msgid "FTP"
-msgstr ""
+msgstr "FTP"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:280
 #: baseTemplate/templates/baseTemplate/homePage.html:283
@@ -613,13 +613,13 @@ msgstr ""
 #: packages/templates/packages/createPackage.html:75
 #: packages/templates/packages/modifyPackage.html:80
 msgid "Emails"
-msgstr ""
+msgstr "Epostalar"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:293
 #: baseTemplate/templates/baseTemplate/homePage.html:296
 #: tuning/templates/tuning/index.html:12
 msgid "Server Tuning"
-msgstr ""
+msgstr "Sunucu İnce  Ayarları"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:317
 #: baseTemplate/templates/baseTemplate/homePage.html:320
@@ -628,124 +628,124 @@ msgstr ""
 #: baseTemplate/templates/baseTemplate/index.html:647
 #: serverStatus/templates/serverStatus/index.html:13
 msgid "Server Status"
-msgstr ""
+msgstr "Sunucu Durumu"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:330
 msgid "PHP Configurations"
-msgstr ""
+msgstr "PHP Ayarları"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:342
 #: baseTemplate/templates/baseTemplate/homePage.html:345
 #: baseTemplate/templates/baseTemplate/index.html:649
 #: websiteFunctions/templates/websiteFunctions/website.html:112
 msgid "Logs"
-msgstr ""
+msgstr "Günlükler"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:365
 #: baseTemplate/templates/baseTemplate/homePage.html:368
 #: baseTemplate/templates/baseTemplate/index.html:665
 #: baseTemplate/templates/baseTemplate/index.html:667
 msgid "Security"
-msgstr ""
+msgstr "Güvenlik"
 
 #: baseTemplate/templates/baseTemplate/index.html:212
 msgid "CPU Status"
-msgstr ""
+msgstr "İşlemci Durumu"
 
 #: baseTemplate/templates/baseTemplate/index.html:241
 #: websiteFunctions/templates/websiteFunctions/website.html:50
 #: websiteFunctions/templates/websiteFunctions/website.html:71
 msgid "Disk Usage"
-msgstr ""
+msgstr "Disk Kullanımı"
 
 #: baseTemplate/templates/baseTemplate/index.html:275
 #: baseTemplate/templates/baseTemplate/index.html:278
 #: baseTemplate/templates/baseTemplate/index.html:282
 msgid "CyberPanel"
-msgstr ""
+msgstr "CyberPanel"
 
 #: baseTemplate/templates/baseTemplate/index.html:280
 #: baseTemplate/templates/baseTemplate/index.html:284
 msgid "Web Hosting Control Panel"
-msgstr ""
+msgstr "Web Hosting Kontrol Paneli"
 
 #: baseTemplate/templates/baseTemplate/index.html:286
 msgid "Close sidebar"
-msgstr ""
+msgstr "Kenar çubuğunu kapat"
 
 #: baseTemplate/templates/baseTemplate/index.html:292
 msgid "My Account"
-msgstr ""
+msgstr "Hesabım"
 
 #: baseTemplate/templates/baseTemplate/index.html:309
 msgid "Edit profile"
-msgstr ""
+msgstr "Profili düzenle"
 
 #: baseTemplate/templates/baseTemplate/index.html:310
 #: baseTemplate/templates/baseTemplate/index.html:437
 #: userManagment/templates/userManagment/index.html:26
 #: userManagment/templates/userManagment/index.html:28
 msgid "View Profile"
-msgstr ""
+msgstr "Profili görüntüle"
 
 #: baseTemplate/templates/baseTemplate/index.html:317
 #: baseTemplate/templates/baseTemplate/index.html:398
 msgid "Logout"
-msgstr ""
+msgstr "Çıkış"
 
 #: baseTemplate/templates/baseTemplate/index.html:328
 #: baseTemplate/templates/baseTemplate/index.html:332
 #: baseTemplate/templates/baseTemplate/index.html:336
 msgid "CPU Load Average"
-msgstr ""
+msgstr "CPU Yük Ortalaması"
 
 #: baseTemplate/templates/baseTemplate/index.html:340
 msgid "Fullscreen"
-msgstr ""
+msgstr "Tam ekran"
 
 #: baseTemplate/templates/baseTemplate/index.html:345
 msgid "System Status"
-msgstr ""
+msgstr "Sistem Durumu"
 
 #: baseTemplate/templates/baseTemplate/index.html:350
 msgid "Dashboard Quick Menu"
-msgstr ""
+msgstr "Hızlı Menü"
 
 #: baseTemplate/templates/baseTemplate/index.html:384
 #: baseTemplate/templates/baseTemplate/index.html:595
 #: baseTemplate/templates/baseTemplate/index.html:597
 msgid "Tuning"
-msgstr ""
+msgstr "İnce ayarlar"
 
 #: baseTemplate/templates/baseTemplate/index.html:411
 msgid "Overview"
-msgstr ""
+msgstr "Genel Bakış"
 
 #: baseTemplate/templates/baseTemplate/index.html:413
 #: baseTemplate/templates/baseTemplate/index.html:414
 msgid "Server IP Address"
-msgstr ""
+msgstr "Sunucu IP Adresi"
 
 #: baseTemplate/templates/baseTemplate/index.html:417
 #: baseTemplate/templates/baseTemplate/index.html:419
 msgid "Dashboard"
-msgstr ""
+msgstr "Kontrol Paneli"
 
 #: baseTemplate/templates/baseTemplate/index.html:421
 #: baseTemplate/templates/baseTemplate/index.html:422
 #: baseTemplate/templates/baseTemplate/index.html:423
 #: baseTemplate/templates/baseTemplate/versionManagment.html:10
 msgid "Version Management"
-msgstr ""
+msgstr "Sürüm Yönetimi"
 
 #: baseTemplate/templates/baseTemplate/index.html:427
 msgid "Main"
-msgstr ""
+msgstr "Main"
 
 #: baseTemplate/templates/baseTemplate/index.html:438
 #: userManagment/templates/userManagment/createUser.html:12
 msgid "Create New User"
-msgstr ""
+msgstr "Kullanıcı oluştur"
 
 #: baseTemplate/templates/baseTemplate/index.html:439
 #: userManagment/templates/userManagment/index.html:52
@@ -753,7 +753,7 @@ msgstr ""
 #: userManagment/templates/userManagment/modifyUser.html:12
 #: userManagment/templates/userManagment/modifyUser.html:119
 msgid "Modify User"
-msgstr ""
+msgstr "Kullanıcı düzenle"
 
 #: baseTemplate/templates/baseTemplate/index.html:440
 #: userManagment/templates/userManagment/deleteUser.html:13
@@ -762,7 +762,7 @@ msgstr ""
 #: userManagment/templates/userManagment/index.html:74
 #: userManagment/templates/userManagment/index.html:76
 msgid "Delete User"
-msgstr ""
+msgstr "Kullanıcı sil"
 
 #: baseTemplate/templates/baseTemplate/index.html:455
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:12
@@ -770,7 +770,7 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/index.html:73
 #: websiteFunctions/templates/websiteFunctions/index.html:75
 msgid "Create Website"
-msgstr ""
+msgstr "Website oluştur"
 
 #: baseTemplate/templates/baseTemplate/index.html:456
 #: websiteFunctions/templates/websiteFunctions/index.html:34
@@ -779,7 +779,7 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/index.html:87
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:14
 msgid "List Websites"
-msgstr ""
+msgstr "Website listesi"
 
 #: baseTemplate/templates/baseTemplate/index.html:457
 #: websiteFunctions/templates/websiteFunctions/index.html:46
@@ -790,12 +790,12 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:19
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:95
 msgid "Modify Website"
-msgstr ""
+msgstr "Website düzenle"
 
 #: baseTemplate/templates/baseTemplate/index.html:458
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:41
 msgid "Suspend/Unsuspend"
-msgstr ""
+msgstr "Askıya al/Askıdan çıkar"
 
 #: baseTemplate/templates/baseTemplate/index.html:459
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:12
@@ -806,7 +806,7 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/index.html:126
 #: websiteFunctions/templates/websiteFunctions/index.html:128
 msgid "Delete Website"
-msgstr ""
+msgstr "Website Sil"
 
 #: baseTemplate/templates/baseTemplate/index.html:472
 #: packages/templates/packages/createPackage.html:13
@@ -814,7 +814,7 @@ msgstr ""
 #: packages/templates/packages/index.html:25
 #: packages/templates/packages/index.html:27
 msgid "Create Package"
-msgstr ""
+msgstr "Paket Oluştur"
 
 #: baseTemplate/templates/baseTemplate/index.html:473
 #: packages/templates/packages/deletePackage.html:12
@@ -823,7 +823,7 @@ msgstr ""
 #: packages/templates/packages/index.html:37
 #: packages/templates/packages/index.html:39
 msgid "Delete Package"
-msgstr ""
+msgstr "Paket Sil"
 
 #: baseTemplate/templates/baseTemplate/index.html:474
 #: packages/templates/packages/index.html:49
@@ -832,7 +832,7 @@ msgstr ""
 #: packages/templates/packages/modifyPackage.html:15
 #: packages/templates/packages/modifyPackage.html:95
 msgid "Modify Package"
-msgstr ""
+msgstr "Paket Düzenle"
 
 #: baseTemplate/templates/baseTemplate/index.html:488
 #: databases/templates/databases/createDatabase.html:12
@@ -842,7 +842,7 @@ msgstr ""
 #: databases/templates/databases/index.html:27
 #: manageSSL/templates/manageSSL/index.html:26
 msgid "Create Database"
-msgstr ""
+msgstr "Veritabanı Oluştur"
 
 #: baseTemplate/templates/baseTemplate/index.html:489
 #: databases/templates/databases/deleteDatabase.html:12
@@ -852,7 +852,7 @@ msgstr ""
 #: databases/templates/databases/index.html:39
 #: manageSSL/templates/manageSSL/index.html:38
 msgid "Delete Database"
-msgstr ""
+msgstr "Veritabanı Sil"
 
 #: baseTemplate/templates/baseTemplate/index.html:490
 #: databases/templates/databases/index.html:53
@@ -860,20 +860,20 @@ msgstr ""
 #: databases/templates/databases/listDataBases.html:13
 #: databases/templates/databases/listDataBases.html:19
 msgid "List Databases"
-msgstr ""
+msgstr "Veritabanı Listesi"
 
 #: baseTemplate/templates/baseTemplate/index.html:491
 #: databases/templates/databases/index.html:65
 #: databases/templates/databases/index.html:67
 msgid "PHPMYAdmin"
-msgstr ""
+msgstr "phpMyAdmin"
 
 #: baseTemplate/templates/baseTemplate/index.html:506
 #: dns/templates/dns/createNameServer.html:12
 #: dns/templates/dns/createNameServer.html:76 dns/templates/dns/index.html:72
 #: dns/templates/dns/index.html:74
 msgid "Create Nameserver"
-msgstr ""
+msgstr "Nameserver Oluştur"
 
 #: baseTemplate/templates/baseTemplate/index.html:507
 #: dns/templates/dns/createDNSZone.html:12
@@ -881,44 +881,44 @@ msgstr ""
 #: dns/templates/dns/index.html:31 dns/templates/dns/index.html:84
 #: dns/templates/dns/index.html:86
 msgid "Create DNS Zone"
-msgstr ""
+msgstr "DNS Bölgesi Oluştur"
 
 #: baseTemplate/templates/baseTemplate/index.html:508
 #: dns/templates/dns/deleteDNSZone.html:40 dns/templates/dns/index.html:41
 #: dns/templates/dns/index.html:43 dns/templates/dns/index.html:96
 #: dns/templates/dns/index.html:98
 msgid "Delete Zone"
-msgstr ""
+msgstr "Bölge Sil"
 
 #: baseTemplate/templates/baseTemplate/index.html:509
 msgid "Add/Delete Records"
-msgstr ""
+msgstr "Kayıt Ekle/Sil"
 
 #: baseTemplate/templates/baseTemplate/index.html:525
 #: mailServer/templates/mailServer/createEmailAccount.html:12
 #: mailServer/templates/mailServer/createEmailAccount.html:19
 msgid "Create Email Account"
-msgstr ""
+msgstr "Eposta Hesabı Oluştur"
 
 #: baseTemplate/templates/baseTemplate/index.html:525
 #: mailServer/templates/mailServer/createEmailAccount.html:64
 #: mailServer/templates/mailServer/index.html:25
 #: mailServer/templates/mailServer/index.html:27
 msgid "Create Email"
-msgstr ""
+msgstr "Eposta Oluştur"
 
 #: baseTemplate/templates/baseTemplate/index.html:526
 #: mailServer/templates/mailServer/deleteEmailAccount.html:12
 #: mailServer/templates/mailServer/deleteEmailAccount.html:19
 msgid "Delete Email Account"
-msgstr ""
+msgstr "Eposta Hesabı Sil"
 
 #: baseTemplate/templates/baseTemplate/index.html:526
 #: mailServer/templates/mailServer/deleteEmailAccount.html:56
 #: mailServer/templates/mailServer/index.html:37
 #: mailServer/templates/mailServer/index.html:39
 msgid "Delete Email"
-msgstr ""
+msgstr "Eposta Sil"
 
 #: baseTemplate/templates/baseTemplate/index.html:527
 #: databases/templates/databases/listDataBases.html:73
@@ -927,11 +927,11 @@ msgstr ""
 #: mailServer/templates/mailServer/index.html:49
 #: mailServer/templates/mailServer/index.html:51
 msgid "Change Password"
-msgstr ""
+msgstr "Şifre Değiştir"
 
 #: baseTemplate/templates/baseTemplate/index.html:528
 msgid "Access Webmail"
-msgstr ""
+msgstr "Webmail'e Eriş"
 
 #: baseTemplate/templates/baseTemplate/index.html:547
 #: ftp/templates/ftp/createFTPAccount.html:12
@@ -940,7 +940,7 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/website.html:709
 #: websiteFunctions/templates/websiteFunctions/website.html:711
 msgid "Create FTP Account"
-msgstr ""
+msgstr "FTP Hesabı Oluştur"
 
 #: baseTemplate/templates/baseTemplate/index.html:548
 #: ftp/templates/ftp/deleteFTPAccount.html:12
@@ -950,97 +950,97 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/website.html:721
 #: websiteFunctions/templates/websiteFunctions/website.html:723
 msgid "Delete FTP Account"
-msgstr ""
+msgstr "FTP Hesabı Sil"
 
 #: baseTemplate/templates/baseTemplate/index.html:549
 #: ftp/templates/ftp/index.html:49 ftp/templates/ftp/index.html:51
 #: ftp/templates/ftp/listFTPAccounts.html:13
 #: ftp/templates/ftp/listFTPAccounts.html:19
 msgid "List FTP Accounts"
-msgstr ""
+msgstr "FTP Hesapları"
 
 #: baseTemplate/templates/baseTemplate/index.html:567
 msgid "Add/Delete Destination"
-msgstr ""
+msgstr "Hedef Ekle/Sil"
 
 #: baseTemplate/templates/baseTemplate/index.html:569
 msgid "Remote Back ups"
-msgstr ""
+msgstr "Uzak Yedekler"
 
 #: baseTemplate/templates/baseTemplate/index.html:578
 #: baseTemplate/templates/baseTemplate/index.html:579
 msgid "SSL"
-msgstr ""
+msgstr "SSL"
 
 #: baseTemplate/templates/baseTemplate/index.html:584
 #: manageSSL/templates/manageSSL/index.html:28
 #: manageSSL/templates/manageSSL/manageSSL.html:13
 #: manageSSL/templates/manageSSL/manageSSL.html:20
 msgid "Manage SSL"
-msgstr ""
+msgstr "SSL Yönetimi"
 
 #: baseTemplate/templates/baseTemplate/index.html:585
 #: manageSSL/templates/manageSSL/index.html:40
 msgid "Hostname SSL"
-msgstr ""
+msgstr "Alanadı SSL"
 
 #: baseTemplate/templates/baseTemplate/index.html:593
 msgid "Server"
-msgstr ""
+msgstr "Sunucu"
 
 #: baseTemplate/templates/baseTemplate/index.html:598
 msgid "NEW"
-msgstr ""
+msgstr "YENİ"
 
 #: baseTemplate/templates/baseTemplate/index.html:603
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
 #: tuning/templates/tuning/liteSpeedTuning.html:12
 msgid "LiteSpeed Tuning"
-msgstr ""
+msgstr "LiteSpeed İnce ayarları"
 
 #: baseTemplate/templates/baseTemplate/index.html:604
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13
 msgid "PHP Tuning"
-msgstr ""
+msgstr "PHP İnce ayarları"
 
 #: baseTemplate/templates/baseTemplate/index.html:619
 #: serverStatus/templates/serverStatus/index.html:25
 #: serverStatus/templates/serverStatus/index.html:27
 msgid "LiteSpeed Status"
-msgstr ""
+msgstr "LiteSpeed Durumu"
 
 #: baseTemplate/templates/baseTemplate/index.html:620
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:15
 #: serverStatus/templates/serverStatus/index.html:37
 #: serverStatus/templates/serverStatus/index.html:39
 msgid "CyberPanel Main Log File"
-msgstr ""
+msgstr "CyberPanel Ana Günlük Dosyası"
 
 #: baseTemplate/templates/baseTemplate/index.html:621
 msgid "Services Status"
-msgstr ""
+msgstr "Hizmet Durumları"
 
 #: baseTemplate/templates/baseTemplate/index.html:638
 #: managePHP/templates/managePHP/installExtensions.html:13
 msgid "Install PHP Extensions"
-msgstr ""
+msgstr "PHP Uzantılarını Yükle"
 
 #: baseTemplate/templates/baseTemplate/index.html:638
 #: managePHP/templates/managePHP/index.html:24
 #: managePHP/templates/managePHP/index.html:26
 msgid "Install Extensions"
-msgstr ""
+msgstr "Uzantıları Yükle"
 
 #: baseTemplate/templates/baseTemplate/index.html:639
 #: managePHP/templates/managePHP/index.html:36
 #: managePHP/templates/managePHP/index.html:38
 msgid "Edit PHP Configs"
-msgstr ""
+msgstr "PHP Ayarlarını Düzenle"
 
 #: baseTemplate/templates/baseTemplate/index.html:654
 msgid "Access Log"
-msgstr ""
+msgstr "Erişim günlüğü"
 
 #: baseTemplate/templates/baseTemplate/index.html:655
 #: serverLogs/templates/serverLogs/errorLogs.html:14
@@ -1048,35 +1048,35 @@ msgstr ""
 #: serverLogs/templates/serverLogs/index.html:39
 #: websiteFunctions/templates/websiteFunctions/website.html:132
 msgid "Error Logs"
-msgstr ""
+msgstr "Hata günlükleri"
 
 #: baseTemplate/templates/baseTemplate/index.html:656
 #: serverLogs/templates/serverLogs/emailLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:49
 #: serverLogs/templates/serverLogs/index.html:51
 msgid "Email Logs"
-msgstr ""
+msgstr "Eposta günlükleri"
 
 #: baseTemplate/templates/baseTemplate/index.html:656
 msgid "Email Log"
-msgstr ""
+msgstr "Eposta günlüğü"
 
 #: baseTemplate/templates/baseTemplate/index.html:657
 #: serverLogs/templates/serverLogs/ftplogs.html:14
 #: serverLogs/templates/serverLogs/index.html:61
 #: serverLogs/templates/serverLogs/index.html:63
 msgid "FTP Logs"
-msgstr ""
+msgstr "FTP Günlükleri"
 
 #: baseTemplate/templates/baseTemplate/index.html:672
 msgid "Firewall Home"
-msgstr ""
+msgstr "Güvenlik Duvarı Merkezi"
 
 #: baseTemplate/templates/baseTemplate/index.html:672
 #: firewall/templates/firewall/index.html:25
 #: firewall/templates/firewall/index.html:27
 msgid "Firewall"
-msgstr ""
+msgstr "Güvenlik Duvarı"
 
 #: baseTemplate/templates/baseTemplate/index.html:673
 #: firewall/templates/firewall/index.html:36
@@ -1084,47 +1084,48 @@ msgstr ""
 #: firewall/templates/firewall/secureSSH.html:13
 #: firewall/templates/firewall/secureSSH.html:20
 msgid "Secure SSH"
-msgstr ""
+msgstr "Güvenli SSH"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
-msgstr ""
+msgstr "Sürüm Yönetimi - CyberPanel"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:11
 msgid ""
 "On this page you can manage versions and or upgrade to latest version of "
 "CyberPanel"
 msgstr ""
+"Bu sayfa CyberPanel'in sürüm bilgilerini ve varsa güncellemelerini içerir."
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:25
 msgid "Current Version"
-msgstr ""
+msgstr "Şimdiki sürüm"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:33
 msgid "Build"
-msgstr ""
+msgstr "Derleme"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:42
 msgid "Latest Version"
-msgstr ""
+msgstr "Son Sürüm"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:50
 msgid "Latest Build"
-msgstr ""
+msgstr "Son Derleme"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:66
 #: firewall/templates/firewall/secureSSH.html:78
 #: managePHP/templates/managePHP/editPHPConfig.html:140
 msgid "Error message: "
-msgstr ""
+msgstr "Hata mesajı:"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:70
 msgid "Update started..."
-msgstr ""
+msgstr "Güncelleme başlatıldı.."
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:74
 msgid "Update finished..."
-msgstr ""
+msgstr "Güncelleme tamamlandı.."
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:79
 #: firewall/templates/firewall/secureSSH.html:87
@@ -1133,20 +1134,20 @@ msgstr ""
 #: managePHP/templates/managePHP/editPHPConfig.html:221
 #: managePHP/templates/managePHP/installExtensions.html:113
 msgid "Could not connect. Please refresh this page."
-msgstr ""
+msgstr "Bağlanılamadı, lütfen bu sayfayı yenileyin."
 
 #: databases/templates/databases/createDatabase.html:3
 msgid "Create New Database - CyberPanel"
-msgstr ""
+msgstr "Yeni Veritabanı Oluştur - CyberPanel"
 
 #: databases/templates/databases/createDatabase.html:13
 msgid "Create a new database on this page."
-msgstr ""
+msgstr "Bu sayfa yeni bir veritabanı oluşturur"
 
 #: databases/templates/databases/createDatabase.html:42
 #: databases/templates/databases/listDataBases.html:88
 msgid "Database Name"
-msgstr ""
+msgstr "Veritabanı Adı"
 
 #: databases/templates/databases/createDatabase.html:50
 #: firewall/templates/firewall/secureSSH.html:120
@@ -1154,47 +1155,47 @@ msgstr ""
 #: ftp/templates/ftp/listFTPAccounts.html:88
 #: mailServer/templates/mailServer/createEmailAccount.html:43
 msgid "User Name"
-msgstr ""
+msgstr "Kullanıcı Adı"
 
 #: databases/templates/databases/createDatabase.html:79
 msgid "Cannot create database. Error message:"
-msgstr ""
+msgstr "Veritabanı oluşturulamıyor. Hata mesajı:"
 
 #: databases/templates/databases/createDatabase.html:83
 msgid "Database created successfully."
-msgstr ""
+msgstr "Veritabanı başarıyla oluşturuldu."
 
 #: databases/templates/databases/deleteDatabase.html:3
 msgid "Delete Database - CyberPanel"
-msgstr ""
+msgstr "Veritabanı Sil - CyberPanel"
 
 #: databases/templates/databases/deleteDatabase.html:13
 msgid "Delete an existing database on this page."
-msgstr ""
+msgstr "Bu sayfa varolan bir veritabanını siler"
 
 #: databases/templates/databases/deleteDatabase.html:40
 msgid "Select Database"
-msgstr ""
+msgstr "Veritabanı Seçin"
 
 #: databases/templates/databases/deleteDatabase.html:68
 msgid "Database deleted successfully."
-msgstr ""
+msgstr "Veritabanı başarıyla silindi."
 
 #: databases/templates/databases/index.html:3
 msgid "Database Functions - CyberPanel"
-msgstr ""
+msgstr "Veritabanı Fonksiyonları - CyberPanel"
 
 #: databases/templates/databases/index.html:13
 msgid "Create, edit and delete databases on this page."
-msgstr ""
+msgstr "Bu sayfada veritabanı oluşturup, düzenleyip, silebilirsiniz."
 
 #: databases/templates/databases/listDataBases.html:3
 msgid "List Databases  - CyberPanel"
-msgstr ""
+msgstr "Veritabanlarını Listele - CyberPanel"
 
 #: databases/templates/databases/listDataBases.html:14
 msgid "List Databases or change their passwords."
-msgstr ""
+msgstr "Veritabanlarını listele yada şifrelerini değiştir."
 
 #: databases/templates/databases/listDataBases.html:28
 #: dns/templates/dns/addDeleteDNSRecords.html:28
@@ -1202,54 +1203,56 @@ msgstr ""
 #: ftp/templates/ftp/listFTPAccounts.html:28
 #: tuning/templates/tuning/phpTuning.html:28
 msgid "Select Domain"
-msgstr ""
+msgstr "Domain seç"
 
 #: databases/templates/databases/listDataBases.html:46
 #: dns/templates/dns/addDeleteDNSRecords.html:168
 #: ftp/templates/ftp/listFTPAccounts.html:46
 msgid "Records successfully fetched for"
-msgstr ""
+msgstr "Kayıtlar başarıyla getirildi:"
 
 #: databases/templates/databases/listDataBases.html:50
 msgid "Password changed for: "
-msgstr ""
+msgstr "Şifresi değiştirildi: "
 
 #: databases/templates/databases/listDataBases.html:54
 msgid "Cannot change password for "
-msgstr ""
+msgstr "Şifresi değiştirilemiyor:"
 
 #: databases/templates/databases/listDataBases.html:59
 #: firewall/templates/firewall/firewall.html:176
 #: ftp/templates/ftp/listFTPAccounts.html:59
 msgid "Could Not Connect to server. Please refresh this page"
-msgstr ""
+msgstr "Sunucuya bağlanılamıyor. Lütfen bu sayfayı yenileyin."
 
 #: databases/templates/databases/listDataBases.html:89
 msgid "Database User"
-msgstr ""
+msgstr "Veritabanı Kullanıcısı"
 
 #: databases/templates/databases/listDataBases.html:98
 #: ftp/templates/ftp/listFTPAccounts.html:100
 msgid "Change"
-msgstr ""
+msgstr "Değiştir"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:3
 msgid "Add/Modify DNS Records - CyberPanel"
-msgstr ""
+msgstr "DNS Kayıtları Ekle/Düzenle"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:13
 msgid "Add/Modify DNS Zone"
-msgstr ""
+msgstr "DNS Bölgesi Ekle/Düzenle"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:14
 msgid ""
 "On this page you can add/modify dns records for domains whose dns zone is "
 "already created."
 msgstr ""
+"Bu sayfada, DNS bölgesi zaten oluşturulmuş alanlar için DNS kayıtları "
+"ekleyebilir veya değiştirebilirsiniz."
 
 #: dns/templates/dns/addDeleteDNSRecords.html:19
 msgid "Add Records"
-msgstr ""
+msgstr "Kayıt Ekle"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:53
 #: dns/templates/dns/addDeleteDNSRecords.html:131
@@ -1257,16 +1260,16 @@ msgstr ""
 #: firewall/templates/firewall/firewall.html:136
 #: serverStatus/templates/serverStatus/litespeedStatus.html:40
 msgid "Name"
-msgstr ""
+msgstr "İsim"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:69
 msgid "IPV6"
-msgstr ""
+msgstr "IPV6"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:78
 #: dns/templates/dns/addDeleteDNSRecords.html:133
 msgid "Priority"
-msgstr ""
+msgstr "Öncelik"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:87
 #: dns/templates/dns/createDNSZone.html:27
@@ -1274,117 +1277,123 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:52
 #: websiteFunctions/templates/websiteFunctions/website.html:289
 msgid "Domain Name"
-msgstr ""
+msgstr "Domain Adı"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:95
 msgid "Policy"
-msgstr ""
+msgstr "Politika"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:103
 msgid "Text"
-msgstr ""
+msgstr "Metin"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:111
 #: firewall/templates/firewall/firewall.html:117
 msgid "Add"
-msgstr ""
+msgstr "Ekle"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:130
 msgid "Type"
-msgstr ""
+msgstr "Tür"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:132
 msgid "Value"
-msgstr ""
+msgstr "Değer"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:160
 msgid "Cannot fetch records. Error message:"
-msgstr ""
+msgstr "Kayıtlar getirilemiyor. Hata mesajı:"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:164
 msgid "Cannot add record. Error message: "
-msgstr ""
+msgstr "Kayıt eklenemiyor. Hata mesajı: "
 
 #: dns/templates/dns/addDeleteDNSRecords.html:172
 msgid "Record Successfully Deleted"
-msgstr ""
+msgstr "Kayıt başarıyla silindi"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:176
 msgid "Cannot delete record. Error message:"
-msgstr ""
+msgstr "Kayıt silinemiyor. Hata mesajı:"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:180
 msgid "Record Successfully Added."
-msgstr ""
+msgstr "Kayıt Başarıyla Eklendi."
 
 #: dns/templates/dns/createDNSZone.html:3
 msgid "Create DNS Zone - CyberPanel"
-msgstr ""
+msgstr "DNS Bölgesi Oluştur - CyberPanel"
 
 #: dns/templates/dns/createDNSZone.html:13
 msgid ""
 "This page is used to create DNS zone, to edit dns zone you can visit Modify "
 "DNS Zone Page."
 msgstr ""
+"Bu sayfa, DNS bölgesi oluşturmak için kullanılır; DNS Bölgesi Düzenle "
+"sayfasını ziyaret ederek dns bölgesini düzenleyebilirsiniz."
 
 #: dns/templates/dns/createDNSZone.html:18
 #: dns/templates/dns/createNameServer.html:18
 #: userManagment/templates/userManagment/modifyUser.html:19
 msgid "Details"
-msgstr ""
+msgstr "Detaylar"
 
 #: dns/templates/dns/createDNSZone.html:51
 msgid "Cannot create DNS Zone. Error message:"
-msgstr ""
+msgstr "DNS Bölgesi oluşturulamıyor. Hata mesajı:"
 
 #: dns/templates/dns/createDNSZone.html:55
 msgid "DNS Zone for domain:"
-msgstr ""
+msgstr "Alan adı için DNS Bölgesi:"
 
 #: dns/templates/dns/createNameServer.html:3
 msgid "Create Nameserver - CyberPanel"
-msgstr ""
+msgstr "Nameserver Oluştur - CyberPanel"
 
 #: dns/templates/dns/createNameServer.html:13
 msgid ""
 "You can use this page to setup nameservers using which people on the "
 "internet can resolve websites hosted on this server."
 msgstr ""
+"Bu sayfayı, internette bulunan kişilerin bu sunucuda barındırılan web "
+"sitelerini çözümleyebileceği isim sunucularını kurmak için kullanabilirsiniz."
 
 #: dns/templates/dns/createNameServer.html:39
 msgid "First Nameserver"
-msgstr ""
+msgstr "Birinci Nameserver"
 
 #: dns/templates/dns/createNameServer.html:55
 msgid "Second Nameserver (Back up)"
-msgstr ""
+msgstr "İkinci Nameserver (Yedek)"
 
 #: dns/templates/dns/createNameServer.html:87
 msgid "Nameserver cannot be created. Error message:"
-msgstr ""
+msgstr "Nameserver oluşturulamıyor. Hata mesajı:"
 
 #: dns/templates/dns/createNameServer.html:91
 msgid "The following nameservers were successfully created:"
-msgstr ""
+msgstr "Nameserver'lar başarıyla oluşturuldu:"
 
 #: dns/templates/dns/deleteDNSZone.html:3
 msgid "Delete DNS Zone - CyberPanel"
-msgstr ""
+msgstr "DNS Bölgesi Sil - CyberPanel"
 
 #: dns/templates/dns/deleteDNSZone.html:12
 #: dns/templates/dns/deleteDNSZone.html:18
 msgid "Delete DNS Zone"
-msgstr ""
+msgstr "DNS Bölgesi Sil"
 
 #: dns/templates/dns/deleteDNSZone.html:13
 msgid ""
 "This page can be used to delete DNS Zone. Deleting the DNS zone will remove "
 "all its related records as well."
 msgstr ""
+"Bu sayfa, DNS Bölgesi silmek için kullanılabilir. DNS bölgesinin silinmesi, "
+"ilgili tüm kayıtları da kaldıracaktır."
 
 #: dns/templates/dns/deleteDNSZone.html:27
 msgid "Select Zone"
-msgstr ""
+msgstr "Bölge Seçin"
 
 #: dns/templates/dns/deleteDNSZone.html:49
 #: ftp/templates/ftp/deleteFTPAccount.html:61
@@ -1393,99 +1402,99 @@ msgstr ""
 #: userManagment/templates/userManagment/deleteUser.html:51
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:51
 msgid "Are you sure?"
-msgstr ""
+msgstr "Emin misiniz?"
 
 #: dns/templates/dns/deleteDNSZone.html:59
 msgid "Cannot delete zone. Error message: "
-msgstr ""
+msgstr "Bölge silinemiyor. Hata mesajı: "
 
 #: dns/templates/dns/deleteDNSZone.html:63
 msgid "Zone for domain:"
-msgstr ""
+msgstr "Alan adı için bölge:"
 
 #: dns/templates/dns/deleteDNSZone.html:63
 msgid "is successfully erased."
-msgstr ""
+msgstr "başarıyla silindi."
 
 #: dns/templates/dns/index.html:3
 msgid "DNS Functions - CyberPanel"
-msgstr ""
+msgstr "DNS Fonksiyonları - CyberPanel"
 
 #: dns/templates/dns/index.html:12
 msgid "DNS Functions"
-msgstr ""
+msgstr "DNS Fonksiyonları"
 
 #: dns/templates/dns/index.html:13
 msgid "Create, edit and delete DNS zones on this page."
-msgstr ""
+msgstr "Bu sayfada DNS bölgeleri oluşturun, düzenleyin ve silin."
 
 #: dns/templates/dns/index.html:53 dns/templates/dns/index.html:108
 msgid "Add Delete Records"
-msgstr ""
+msgstr "Kayıt Ekle Sil"
 
 #: dns/templates/dns/index.html:55 dns/templates/dns/index.html:110
 msgid "Add Delete/Records"
-msgstr ""
+msgstr "Kayıt Ekle/Sil"
 
 #: filemanager/templates/filemanager/index.html:5
 msgid "File Manager - CyberPanel"
-msgstr ""
+msgstr "Dosya Yöneticisi - CyberPanel"
 
 #: filemanager/templates/filemanager/index.html:43
 msgid " File Manager"
-msgstr ""
+msgstr "Dosya Yöneticisi"
 
 #: filemanager/templates/filemanager/index.html:63
 #: filemanager/templates/filemanager/index.html:202
 #: filemanager/templates/filemanager/index.html:233
 msgid "Upload"
-msgstr ""
+msgstr "Dosya Yükle"
 
 #: filemanager/templates/filemanager/index.html:66
 msgid "New File"
-msgstr ""
+msgstr "Yeni Dosya"
 
 #: filemanager/templates/filemanager/index.html:69
 msgid "New Folder"
-msgstr ""
+msgstr "Yeni Klasör"
 
 #: filemanager/templates/filemanager/index.html:75
 #: filemanager/templates/filemanager/index.html:563
 msgid "Copy"
-msgstr ""
+msgstr "Kopyala"
 
 #: filemanager/templates/filemanager/index.html:78
 #: filemanager/templates/filemanager/index.html:528
 msgid "Move"
-msgstr ""
+msgstr "Taşı"
 
 #: filemanager/templates/filemanager/index.html:81
 #: filemanager/templates/filemanager/index.html:593
 msgid "Rename"
-msgstr ""
+msgstr "Yeniden Adlandır"
 
 #: filemanager/templates/filemanager/index.html:84
 msgid "Edit"
-msgstr ""
+msgstr "Düzenle"
 
 #: filemanager/templates/filemanager/index.html:87
 #: filemanager/templates/filemanager/index.html:438
 #: filemanager/templates/filemanager/index.html:465
 msgid "Compress"
-msgstr ""
+msgstr "Sıkıştır"
 
 #: filemanager/templates/filemanager/index.html:90
 #: filemanager/templates/filemanager/index.html:493
 msgid "Extract"
-msgstr ""
+msgstr "Çıkar"
 
 #: filemanager/templates/filemanager/index.html:108
 msgid "Current Path"
-msgstr ""
+msgstr "Şuanki Dizin"
 
 #: filemanager/templates/filemanager/index.html:136
 msgid "Back"
-msgstr ""
+msgstr "Geri"
 
 #: filemanager/templates/filemanager/index.html:140
 #: serverLogs/templates/serverLogs/accessLogs.html:42
@@ -1494,140 +1503,142 @@ msgstr ""
 #: serverLogs/templates/serverLogs/ftplogs.html:39
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:40
 msgid "Refresh"
-msgstr ""
+msgstr "Yenile"
 
 #: filemanager/templates/filemanager/index.html:144
 msgid "Select All"
-msgstr ""
+msgstr "Tümünü Seç"
 
 #: filemanager/templates/filemanager/index.html:148
 msgid "UnSelect All"
-msgstr ""
+msgstr "Tüm Seçimi Kaldır"
 
 #: filemanager/templates/filemanager/index.html:158
 msgid "Size (KB)"
-msgstr ""
+msgstr "Boyut (KB)"
 
 #: filemanager/templates/filemanager/index.html:159
 msgid "Last Modified"
-msgstr ""
+msgstr "Son Değiştirilme"
 
 #: filemanager/templates/filemanager/index.html:160
 msgid "Permissions"
-msgstr ""
+msgstr "İzinler"
 
 #: filemanager/templates/filemanager/index.html:180
 msgid "Upload File"
-msgstr ""
+msgstr "Dosya Yükle"
 
 #: filemanager/templates/filemanager/index.html:187
 msgid "Upload queue"
-msgstr ""
+msgstr "Yükleme kuyruğu"
 
 #: filemanager/templates/filemanager/index.html:188
 msgid "Queue length:"
-msgstr ""
+msgstr "Kuyruk uzunluğu:"
 
 #: filemanager/templates/filemanager/index.html:195
 msgid "Drop"
-msgstr ""
+msgstr "Bırak"
 
 #: filemanager/templates/filemanager/index.html:196
 msgid "Drop Files here to upload them."
-msgstr ""
+msgstr "Dosya yüklemek için buraya sürükleyip bırakın."
 
 #: filemanager/templates/filemanager/index.html:211
 msgid "Progress"
-msgstr ""
+msgstr "İlerleme"
 
 #: filemanager/templates/filemanager/index.html:213
 msgid "Actions"
-msgstr ""
+msgstr "Eylemler"
 
 #: filemanager/templates/filemanager/index.html:239
 msgid "Remove"
-msgstr ""
+msgstr "Kaldır"
 
 #: filemanager/templates/filemanager/index.html:249
 msgid "Queue progress:"
-msgstr ""
+msgstr "Kuyruk ilerleme durumu:"
 
 #: filemanager/templates/filemanager/index.html:258
 msgid "can not be uploaded, Error message:"
-msgstr ""
+msgstr "yüklenemiyor, Hata mesajı:"
 
 #: filemanager/templates/filemanager/index.html:262
 msgid "Upload all"
-msgstr ""
+msgstr "Tümünü yükle"
 
 #: filemanager/templates/filemanager/index.html:265
 msgid "Cancel all"
-msgstr ""
+msgstr "Tümünü iptal et"
 
 #: filemanager/templates/filemanager/index.html:268
 msgid "Remove all"
-msgstr ""
+msgstr "Tümünü kaldır"
 
 #: filemanager/templates/filemanager/index.html:304
 msgid "File Successfully saved."
-msgstr ""
+msgstr "Dosya başarıyla kaydedildi."
 
 #: filemanager/templates/filemanager/index.html:311
 #: firewall/templates/firewall/secureSSH.html:68
 #: managePHP/templates/managePHP/editPHPConfig.html:130
 #: managePHP/templates/managePHP/editPHPConfig.html:203
 msgid "Save Changes"
-msgstr ""
+msgstr "Değişiklikleri Kaydet"
 
 #: filemanager/templates/filemanager/index.html:328
 msgid "Create new folder!"
-msgstr ""
+msgstr "Yeni klasör oluştur!"
 
 #: filemanager/templates/filemanager/index.html:336
 msgid "New Folder Name"
-msgstr ""
+msgstr "Yeni Klasör Adı"
 
 #: filemanager/templates/filemanager/index.html:338
 msgid "Folder will be created in your current directory"
-msgstr ""
+msgstr "Klasör şuanki dizinde oluşturulacak"
 
 #: filemanager/templates/filemanager/index.html:340
 msgid "Create Folder"
-msgstr ""
+msgstr "Klasör Oluştur"
 
 #: filemanager/templates/filemanager/index.html:353
 msgid "Folder Successfully created."
-msgstr ""
+msgstr "Klasör başarıyla oluşturuldu."
 
 #: filemanager/templates/filemanager/index.html:372
 msgid "Create new file!"
-msgstr ""
+msgstr "Yeni dosya oluştur!"
 
 #: filemanager/templates/filemanager/index.html:380
 msgid "New File Name"
-msgstr ""
+msgstr "Yeni Dosya Adı"
 
 #: filemanager/templates/filemanager/index.html:382
 msgid ""
 "File will be created in your current directory, if it already exists it will "
 "not overwirte."
 msgstr ""
+"Dosya şuanki dizinde oluşturulacak, eğer aynı dosya isminde bir dosya "
+"bulunursa hiç bir işlem yapılmayacak."
 
 #: filemanager/templates/filemanager/index.html:384
 msgid "Create File"
-msgstr ""
+msgstr "Dosya Oluştur"
 
 #: filemanager/templates/filemanager/index.html:397
 msgid "File Successfully created."
-msgstr ""
+msgstr "Dosya başarıyla oluşturuldu."
 
 #: filemanager/templates/filemanager/index.html:413
 msgid "Confirm Deletion!"
-msgstr ""
+msgstr "Silmeyi Onayla!"
 
 #: filemanager/templates/filemanager/index.html:422
 msgid "Confirm"
-msgstr ""
+msgstr "Onayla"
 
 #: filemanager/templates/filemanager/index.html:423
 #: filemanager/templates/filemanager/index.html:466
@@ -1636,378 +1647,385 @@ msgstr ""
 #: filemanager/templates/filemanager/index.html:594
 #: websiteFunctions/templates/websiteFunctions/website.html:417
 msgid "Close"
-msgstr ""
+msgstr "Kapat"
 
 #: filemanager/templates/filemanager/index.html:446
 msgid "List of files/folder!"
-msgstr ""
+msgstr "Dosya/Dizin listesi"
 
 #: filemanager/templates/filemanager/index.html:450
 msgid "Compressed File Name"
-msgstr ""
+msgstr "Sıkıştırılmış Dosya Adı"
 
 #: filemanager/templates/filemanager/index.html:452
 msgid "Enter without extension name!"
-msgstr ""
+msgstr "Uzantısız isim girin"
 
 #: filemanager/templates/filemanager/index.html:456
 msgid "Compression Type"
-msgstr ""
+msgstr "Sıkıştırma Türü"
 
 #: filemanager/templates/filemanager/index.html:481
 msgid "Extracting"
-msgstr ""
+msgstr "Çıkartılıyor"
 
 #: filemanager/templates/filemanager/index.html:489
 msgid "Extract in"
-msgstr ""
+msgstr "Şuraya çıkartılıyor"
 
 #: filemanager/templates/filemanager/index.html:491
 msgid "You can enter . to extract in current directory!"
-msgstr ""
+msgstr "Şimdiki dizine çıkartmak için sadece . (tek nokta) yazın!"
 
 #: filemanager/templates/filemanager/index.html:509
 msgid "Move Files"
-msgstr ""
+msgstr "Dosya Taşı"
 
 #: filemanager/templates/filemanager/index.html:517
 #: filemanager/templates/filemanager/index.html:552
 msgid "List of files/folders!"
-msgstr ""
+msgstr "Dosya/Dizin listesi!"
 
 #: filemanager/templates/filemanager/index.html:521
 msgid "Move to"
-msgstr ""
+msgstr "Şuraya taşı"
 
 #: filemanager/templates/filemanager/index.html:523
 msgid "Enter a path to move your files!"
-msgstr ""
+msgstr "Dosyaları taşımak için bir dizin girin!"
 
 #: filemanager/templates/filemanager/index.html:544
 msgid "Copy Files"
-msgstr ""
+msgstr "Dosya Kopyala"
 
 #: filemanager/templates/filemanager/index.html:556
 msgid "Copy to"
-msgstr ""
+msgstr "Şuraya Kopyala"
 
 #: filemanager/templates/filemanager/index.html:558
 msgid "Enter a path to copy your files to!"
-msgstr ""
+msgstr "Dosyaların kopyalanacağı dizin yolunu girin!"
 
 #: filemanager/templates/filemanager/index.html:578
 msgid "Renaming"
-msgstr ""
+msgstr "Yeniden adlandır"
 
 #: filemanager/templates/filemanager/index.html:586
 msgid "New Name"
-msgstr ""
+msgstr "Yeni İsim"
 
 #: filemanager/templates/filemanager/index.html:588
 msgid "Enter new name of file!"
-msgstr ""
+msgstr "Yeni dosya adını girin!"
 
 #: firewall/templates/firewall/firewall.html:3
 msgid "Firewall - CyberPanel"
-msgstr ""
+msgstr "Güvenlik Duvarı - CyberPanel"
 
 #: firewall/templates/firewall/firewall.html:13
 msgid "Add/Delete Firewall Rules"
-msgstr ""
+msgstr "Güvenlik Duvarı Kuralı Ekle/Sil"
 
 #: firewall/templates/firewall/firewall.html:14
 msgid ""
 "On this page you can add/delete firewall rules. (By default all ports are "
 "blocked, except mentioned below)"
 msgstr ""
+"Bu sayfada güvenlik duvarı kuralı ekleyip silebilirsiniz. (Varsayılan olarak "
+"listede yer almayan tüm portlar engelleniyor.)"
 
 #: firewall/templates/firewall/firewall.html:19
 msgid "Add/Delete Rules"
-msgstr ""
+msgstr "Kural Ekle/Sil"
 
 #: firewall/templates/firewall/firewall.html:45
 msgid "Start"
-msgstr ""
+msgstr "Başla"
 
 #: firewall/templates/firewall/firewall.html:51
 msgid "Stop"
-msgstr ""
+msgstr "Dur"
 
 #: firewall/templates/firewall/firewall.html:58
 msgid "Reload"
-msgstr ""
+msgstr "Yeniden Yükle"
 
 #: firewall/templates/firewall/firewall.html:63
 msgid "Action failed. Error message:"
-msgstr ""
+msgstr "Eylem başarısız. Hata mesajı:"
 
 #: firewall/templates/firewall/firewall.html:67
 #: serverStatus/templates/serverStatus/litespeedStatus.html:85
 msgid "Action successful."
-msgstr ""
+msgstr "Eylem başarılı."
 
 #: firewall/templates/firewall/firewall.html:137
 msgid "Protocol"
-msgstr ""
+msgstr "Protokol"
 
 #: firewall/templates/firewall/firewall.html:172
 msgid "Rule successfully added."
-msgstr ""
+msgstr "Kural başarıyla eklendi."
 
 #: firewall/templates/firewall/index.html:3
 msgid "Security - CyberPanel"
-msgstr ""
+msgstr "Güvenlik - CyberPanel"
 
 #: firewall/templates/firewall/index.html:12
 msgid "Security Functions"
-msgstr ""
+msgstr "Güvenlik Fonksiyonları"
 
 #: firewall/templates/firewall/index.html:13
 msgid "Manage the security of the server on this page."
-msgstr ""
+msgstr "Bu sayfada sunucu güvenliğini yönetin."
 
 #: firewall/templates/firewall/secureSSH.html:3
 msgid "Secure SSH - CyberPanel"
-msgstr ""
+msgstr "Güvenli SSH - CyberPanel"
 
 #: firewall/templates/firewall/secureSSH.html:14
 msgid "Secure or harden SSH Configurations."
-msgstr ""
+msgstr "SSH Yapılandırmalarını güvenli hale getirin veya sağlamlaştırın."
 
 #: firewall/templates/firewall/secureSSH.html:28
 #: managePHP/templates/managePHP/editPHPConfig.html:29
 msgid "Basic"
-msgstr ""
+msgstr "Basit"
 
 #: firewall/templates/firewall/secureSSH.html:34
 msgid "SSH Keys"
-msgstr ""
+msgstr "SSH Anahtarları"
 
 #: firewall/templates/firewall/secureSSH.html:47
 msgid "SSH Port"
-msgstr ""
+msgstr "SSH Portu"
 
 #: firewall/templates/firewall/secureSSH.html:56
 msgid "Permit Root Login"
-msgstr ""
+msgstr "Root Girişine İzin Ver"
 
 #: firewall/templates/firewall/secureSSH.html:60
 msgid ""
 "Before disabling root login, make sure you have another account with sudo "
 "priviliges on server."
 msgstr ""
+"Root girişini kapatmadan önce sunucuda sudo ayrıcalıklarına sahip başka bir "
+"hesabınız olduğundan emin olun."
 
 #: firewall/templates/firewall/secureSSH.html:82
 msgid "SSH Configurations Saved."
-msgstr ""
+msgstr "SSH Yapılandırmaları Kaydedildi."
 
 #: firewall/templates/firewall/secureSSH.html:121
 msgid "Key"
-msgstr ""
+msgstr "Anahtar"
 
 #: firewall/templates/firewall/secureSSH.html:150
 msgid "Add Key"
-msgstr ""
+msgstr "Anahtar Ekle"
 
 #: firewall/templates/firewall/secureSSH.html:158
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:55
 #: websiteFunctions/templates/websiteFunctions/website.html:553
 #: websiteFunctions/templates/websiteFunctions/website.html:613
 msgid "Save"
-msgstr ""
+msgstr "Kaydet"
 
 #: firewall/templates/firewall/secureSSH.html:167
 msgid "SSH Key Deleted"
-msgstr ""
+msgstr "SSH Anahtarı Silindi"
 
 #: ftp/templates/ftp/createFTPAccount.html:3
 msgid "Create FTP Account - CyberPanel"
-msgstr ""
+msgstr "FTP Hesabı Oluştur - CyberPanel"
 
 #: ftp/templates/ftp/createFTPAccount.html:13
 msgid ""
 "Select the website from list, and its home directory will be set as the path "
 "to ftp account."
 msgstr ""
+"Listeden web sitesini seçin. Ana dizini ftp hesabının yolu olarak "
+"ayarlanacaktır."
 
 #: ftp/templates/ftp/createFTPAccount.html:52
 msgid "FTP Password"
-msgstr ""
+msgstr "FTP Şifresi"
 
 #: ftp/templates/ftp/createFTPAccount.html:59
 msgid "Path (Relative)"
-msgstr ""
+msgstr "Yol (Bağıl)"
 
 #: ftp/templates/ftp/createFTPAccount.html:61
 msgid "Leave empty to select default home directory."
-msgstr ""
+msgstr "Varsayılan ev dizinini seçmek için boş bırakın."
 
 #: ftp/templates/ftp/createFTPAccount.html:72
 msgid "Create FTP"
-msgstr ""
+msgstr "FTP Oluştur"
 
 #: ftp/templates/ftp/createFTPAccount.html:80
 msgid "Cannot create FTP account. Error message:"
-msgstr ""
+msgstr "FTP Hesabı oluşturulamadı. Hata mesajı:"
 
 #: ftp/templates/ftp/createFTPAccount.html:84
 #: ftp/templates/ftp/createFTPAccount.html:87
 #: ftp/templates/ftp/deleteFTPAccount.html:75
 msgid "FTP Account with username:"
-msgstr ""
+msgstr "kullanıcı adı ile FTP Hesabı:"
 
 #: ftp/templates/ftp/createFTPAccount.html:84
 #: ftp/templates/ftp/createFTPAccount.html:87
 #: userManagment/templates/userManagment/createUser.html:154
 msgid "is successfully created."
-msgstr ""
+msgstr "başarıyla oluşturuldu."
 
 #: ftp/templates/ftp/deleteFTPAccount.html:3
 msgid "Delete FTP Account - CyberPanel"
-msgstr ""
+msgstr "FTP Hesabı Sil - CyberPanel"
 
 #: ftp/templates/ftp/deleteFTPAccount.html:13
 msgid "Select domain and delete its related FTP accounts."
-msgstr ""
+msgstr "Alan adı seçin ve ilgili FTP hesaplarını silin."
 
 #: ftp/templates/ftp/deleteFTPAccount.html:40
 msgid "Select FTP Account"
-msgstr ""
+msgstr "FTP Hesabı seçin"
 
 #: ftp/templates/ftp/deleteFTPAccount.html:71
 msgid "Cannot delete account. Error message:"
-msgstr ""
+msgstr "Hesap silinemiyor. Hata mesajı:"
 
 #: ftp/templates/ftp/deleteFTPAccount.html:75
 msgid " is successfully deleted."
-msgstr ""
+msgstr " başarıyla silindi."
 
 #: ftp/templates/ftp/deleteFTPAccount.html:79
 #: userManagment/templates/userManagment/deleteUser.html:70
 msgid "Could not connect to the server. Please refresh this page."
-msgstr ""
+msgstr "Sunucuya bağlanılamıyor. Lütfen bu sayfayı yenileyin."
 
 #: ftp/templates/ftp/index.html:3
 msgid "FTP Functions - CyberPanel"
-msgstr ""
+msgstr "FTP Fonksiyonları - CyberPanel"
 
 #: ftp/templates/ftp/index.html:13
 msgid "Delete and create FTP accounts on this page."
-msgstr ""
+msgstr "Bu sayfada FTP hesapları silebilir ve oluşturabilirsiniz."
 
 #: ftp/templates/ftp/listFTPAccounts.html:3
 msgid "List FTP Accounts - CyberPanel"
-msgstr ""
+msgstr "FTP Hesapları Listesi - CyberPanel"
 
 #: ftp/templates/ftp/listFTPAccounts.html:14
 msgid "List FTP Accounts or change their passwords."
-msgstr ""
+msgstr "FTP Hesaplarını listeleyin veya parolalarını değiştirin."
 
 #: ftp/templates/ftp/listFTPAccounts.html:50
 msgid "Password changed for"
-msgstr ""
+msgstr "Şifresi değiştirildi:"
 
 #: ftp/templates/ftp/listFTPAccounts.html:54
 msgid ""
 "Cannot change password for <strong>{$ ftpUsername $}</strong>. Error message:"
 msgstr ""
+"<strong>{$ ftpUsername $}</strong> için şifre değiştirilemiyor. Hata mesajı:"
 
 #: ftp/templates/ftp/listFTPAccounts.html:89
 msgid "Directory"
-msgstr ""
+msgstr "Dizin"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:3
 msgid "Change Email Password - CyberPanel"
-msgstr ""
+msgstr "Eposta Parolasını Değiştir - CyberPanel"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:12
 #: mailServer/templates/mailServer/changeEmailPassword.html:19
 msgid "Change Email Password"
-msgstr ""
+msgstr "Eposta Parolasını Değiştir"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:13
 msgid "Select a website from the list, to change its password."
-msgstr ""
+msgstr "Parolasını değiştirmek için listeden bir web sitesi seçin."
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:42
 #: mailServer/templates/mailServer/deleteEmailAccount.html:42
 msgid "Select Email"
-msgstr ""
+msgstr "Eposta Seç"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:73
 #: mailServer/templates/mailServer/deleteEmailAccount.html:72
 msgid "Cannot delete email account. Error message:"
-msgstr ""
+msgstr "Eposta hesabı silinemiyor. Hata mesajı:"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:77
 msgid "Password successfully changed for :"
-msgstr ""
+msgstr "Parola başarıyla değiştirildi:"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:84
 #: mailServer/templates/mailServer/deleteEmailAccount.html:83
 msgid "Currently no email accounts exist for this domain."
-msgstr ""
+msgstr "Şu anda bu alan adı için hiçbir eposta hesabı mevcut değil."
 
 #: mailServer/templates/mailServer/createEmailAccount.html:3
 msgid "Create Email Account - CyberPanel"
-msgstr ""
+msgstr "FTP Hesabı Oluştur - CyberPanel"
 
 #: mailServer/templates/mailServer/createEmailAccount.html:13
 msgid "Select a website from the list, to create an email account."
-msgstr ""
+msgstr "Bir eposta hesabı oluşturmak için listeden bir web sitesi seçin."
 
 #: mailServer/templates/mailServer/createEmailAccount.html:72
 msgid "Cannot create email account. Error message:"
-msgstr ""
+msgstr "Eposta hesabı oluşturulamıyor. Hata mesajı:"
 
 #: mailServer/templates/mailServer/createEmailAccount.html:76
 msgid "Email with id :"
-msgstr ""
+msgstr "Eposta ID :"
 
 #: mailServer/templates/mailServer/createEmailAccount.html:76
 msgid " is successfully created."
-msgstr ""
+msgstr " başarıyla oluşturuldu."
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:3
 msgid "Delete Email Account - CyberPanel"
-msgstr ""
+msgstr "Eposta Hesabını Sil - CyberPanel"
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:13
 msgid "Select a website from the list, to delete an email account."
-msgstr ""
+msgstr "Bir eposta hesabını silmek için listeden bir web sitesi seçin."
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:76
 msgid "Email with id : {$ deletedID $} is successfully deleted."
-msgstr ""
+msgstr "Eposta ID : {$ deletedID $} başarıyla silindi."
 
 #: mailServer/templates/mailServer/index.html:3
 msgid "Mail Functions - CyberPanel"
-msgstr ""
+msgstr "Posta Fonksiyonları - CyberPanel"
 
 #: mailServer/templates/mailServer/index.html:12
 msgid "Mail Functions"
-msgstr ""
+msgstr "Posta Fonksiyonları"
 
 #: mailServer/templates/mailServer/index.html:13
 msgid "Manage email accounts on this page."
-msgstr ""
+msgstr "Bu sayfada e-posta hesaplarını yönetin."
 
 #: managePHP/templates/managePHP/editPHPConfig.html:3
 msgid "Edit PHP Configurations - CyberPanel"
-msgstr ""
+msgstr "PHP Yapılandırmalarını Düzenle - CyberPanel"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:14
 #: managePHP/templates/managePHP/editPHPConfig.html:21
 msgid "Edit PHP Configurations"
-msgstr ""
+msgstr "PHP Yapılandırmalarını Düzenle"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:15
 msgid "Edit PHP Configurations on this page."
-msgstr ""
+msgstr "Bu sayfadan PHP Yapılandırmalarını düzenleyin."
 
 #: managePHP/templates/managePHP/editPHPConfig.html:35
 msgid "Advanced"
-msgstr ""
+msgstr "Gelişmiş"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:48
 #: managePHP/templates/managePHP/editPHPConfig.html:174
@@ -2016,163 +2034,165 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:74
 #: websiteFunctions/templates/websiteFunctions/website.html:309
 msgid "Select PHP"
-msgstr ""
+msgstr "PHP'yi seçin"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:66
 msgid "display_errors"
-msgstr ""
+msgstr "display_errors"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:73
 msgid "file_uploads"
-msgstr ""
+msgstr "file_uploads"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:81
 msgid "allow_url_fopen"
-msgstr ""
+msgstr "allow_url_fopen"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:89
 msgid "allow_url_include"
-msgstr ""
+msgstr "allow_url_include"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:97
 msgid "memory_limit"
-msgstr ""
+msgstr "memory_limit"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:104
 msgid "max_execution_time"
-msgstr ""
+msgstr "max_execution_time"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:111
 msgid "upload_max_filesize"
-msgstr ""
+msgstr "upload_max_filesize"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:118
 msgid "max_input_time"
-msgstr ""
+msgstr "max_input_time"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:144
 #: managePHP/templates/managePHP/editPHPConfig.html:216
 msgid "PHP Configs Saved."
-msgstr ""
+msgstr "PHP Yapılandırmaları Kaydedildi."
 
 #: managePHP/templates/managePHP/index.html:3
 msgid "Manage PHP Installations - CyberPanel"
-msgstr ""
+msgstr "PHP Kurulumlarını Yönet - CyberPanel"
 
 #: managePHP/templates/managePHP/index.html:12
 msgid "Manage PHP Installations"
-msgstr ""
+msgstr "PHP Kurulumlarını Yönet"
 
 #: managePHP/templates/managePHP/index.html:13
 msgid "Edit your PHP Configurations to suit your needs."
-msgstr ""
+msgstr "PHP Yapılandırmalarınızı ihtiyaçlarınıza göre düzenleyin."
 
 #: managePHP/templates/managePHP/installExtensions.html:3
 msgid "Install PHP Extensions - CyberPanel"
-msgstr ""
+msgstr "PHP Uzantılarını Yükle - CyberPanel"
 
 #: managePHP/templates/managePHP/installExtensions.html:14
 msgid "Install/uninstall php extensions on this page."
-msgstr ""
+msgstr "Bu sayfada php uzantılarını yükleyin / kaldırın."
 
 #: managePHP/templates/managePHP/installExtensions.html:19
 #: tuning/templates/tuning/phpTuning.html:19
 msgid "Select PHP Version"
-msgstr ""
+msgstr "PHP Versiyonunu Seçin"
 
 #: managePHP/templates/managePHP/installExtensions.html:48
 msgid "Search Extensions.."
-msgstr ""
+msgstr "Uzantılarda ara.."
 
 #: managePHP/templates/managePHP/installExtensions.html:63
 msgid "Extension Name"
-msgstr ""
+msgstr "Uzantı Adı"
 
 #: managePHP/templates/managePHP/installExtensions.html:64
 msgid "Description"
-msgstr ""
+msgstr "Açıklama"
 
 #: managePHP/templates/managePHP/installExtensions.html:66
 #: managePHP/templates/managePHP/installExtensions.html:77
 msgid "Install"
-msgstr ""
+msgstr "Kur"
 
 #: managePHP/templates/managePHP/installExtensions.html:67
 #: managePHP/templates/managePHP/installExtensions.html:78
 msgid "Uninstall"
-msgstr ""
+msgstr "Kaldır"
 
 #: managePHP/templates/managePHP/installExtensions.html:93
 msgid "Go Back"
-msgstr ""
+msgstr "Geri dön"
 
 #: managePHP/templates/managePHP/installExtensions.html:104
 #: tuning/templates/tuning/phpTuning.html:111
 #: userManagment/templates/userManagment/modifyUser.html:143
 msgid "Cannot fetch details. Error message:"
-msgstr ""
+msgstr "Ayrıntılar alınamıyor. Hata mesajı:"
 
 #: managePHP/templates/managePHP/installExtensions.html:108
 msgid "Cannot perform operation. Error message:"
-msgstr ""
+msgstr "İşlem gerçekleştirilemiyor. Hata mesajı:"
 
 #: manageSSL/templates/manageSSL/index.html:3
 msgid "SSL Functions - CyberPanel"
-msgstr ""
+msgstr "SSL Fonksiyonları - CyberPanel"
 
 #: manageSSL/templates/manageSSL/index.html:13
 msgid "SSL Functions"
-msgstr ""
+msgstr "SSL Fonksiyonları"
 
 #: manageSSL/templates/manageSSL/index.html:14
 msgid "Issue Let’s Encrypt SSLs for websites and hostname."
-msgstr ""
+msgstr "Issue Let’s Encrypt SSLs for websites and hostname."
 
 #: manageSSL/templates/manageSSL/manageSSL.html:3
 msgid "Manage SSL - CyberPanel"
-msgstr ""
+msgstr "SSL'i Yönet - CyberPanel"
 
 #: manageSSL/templates/manageSSL/manageSSL.html:14
 msgid ""
 "This page can be used to issue Let’s Encrypt SSL for existing websites on "
 "server."
 msgstr ""
+"Bu sayfa, sunucudaki mevcut web siteleri için Let's Encrypt SSL'yi "
+"etkinleştirmek için kullanılabilir."
 
 #: manageSSL/templates/manageSSL/manageSSL.html:42
 #: manageSSL/templates/manageSSL/sslForHostName.html:42
 msgid "Issue SSL"
-msgstr ""
+msgstr "Issue SSL"
 
 #: manageSSL/templates/manageSSL/manageSSL.html:52
 #: manageSSL/templates/manageSSL/sslForHostName.html:52
 msgid "Cannot issue SSL. Error message:"
-msgstr ""
+msgstr "Cannot issue SSL. Error message:"
 
 #: manageSSL/templates/manageSSL/manageSSL.html:56
 msgid "SSL Issued for"
-msgstr ""
+msgstr "SSL Issued for"
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:3
 msgid "Issue SSL For Hostname - CyberPanel"
-msgstr ""
+msgstr "Issue SSL For Hostname - CyberPanel"
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:13
 #: manageSSL/templates/manageSSL/sslForHostName.html:20
 msgid "Issue SSL For Hostname"
-msgstr ""
+msgstr "Issue SSL For Hostname"
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:14
 msgid "Let’s Encrypt SSL for hostname to access CyberPanel on verified SSL."
-msgstr ""
+msgstr "Let’s Encrypt SSL for hostname to access CyberPanel on verified SSL."
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:56
 #: manageSSL/templates/manageSSL/sslForHostName.html:60
 msgid "SSL Issued. You can now access CyberPanel at:"
-msgstr ""
+msgstr "SSL Issued. You can now access CyberPanel at:"
 
 #: packages/templates/packages/createPackage.html:3
 msgid "Create Package - CyberPanel"
-msgstr ""
+msgstr "Paket Oluştur - CyberPanel"
 
 #: packages/templates/packages/createPackage.html:14
 #: packages/templates/packages/deletePackage.html:13
@@ -2183,110 +2203,112 @@ msgid ""
 "Packages define resources for your websites, you need to add package before "
 "creating a website."
 msgstr ""
+"Paketler web siteleriniz için kaynakları tanımlar; bir web sitesi "
+"oluşturmadan önce paket eklemeniz gerekir."
 
 #: packages/templates/packages/createPackage.html:19
 msgid "Package Details"
-msgstr ""
+msgstr "Paket Detayları"
 
 #: packages/templates/packages/createPackage.html:26
 msgid "Package Name"
-msgstr ""
+msgstr "Paket Adı"
 
 #: packages/templates/packages/createPackage.html:35
 #: packages/templates/packages/modifyPackage.html:40
 #: websiteFunctions/templates/websiteFunctions/website.html:249
 msgid "Domains"
-msgstr ""
+msgstr "Alan adları"
 
 #: packages/templates/packages/createPackage.html:39
 #: packages/templates/packages/modifyPackage.html:44
 msgid "(0 = Unlimited)"
-msgstr ""
+msgstr "(0 = Limitsiz)"
 
 #: packages/templates/packages/createPackage.html:43
 #: packages/templates/packages/modifyPackage.html:49
 msgid "Disk Space"
-msgstr ""
+msgstr "Disk Alanı"
 
 #: packages/templates/packages/createPackage.html:47
 #: packages/templates/packages/createPackage.html:55
 #: packages/templates/packages/modifyPackage.html:53
 #: packages/templates/packages/modifyPackage.html:61
 msgid "MB (0 = Unlimited)"
-msgstr ""
+msgstr "MB (0 = Limitsiz)"
 
 #: packages/templates/packages/createPackage.html:51
 #: packages/templates/packages/modifyPackage.html:57
 msgid "Bandwidth"
-msgstr ""
+msgstr "Band genişliği"
 
 #: packages/templates/packages/createPackage.html:60
 #: packages/templates/packages/modifyPackage.html:66
 msgid "FTP Accounts"
-msgstr ""
+msgstr "FTP Hesapları"
 
 #: packages/templates/packages/createPackage.html:95
 msgid "Cannot create package. Error message:"
-msgstr ""
+msgstr "Paket oluşturulamıyor. Hata mesajı:"
 
 #: packages/templates/packages/createPackage.html:99
 msgid "Successfully Created"
-msgstr ""
+msgstr "Başarıyla oluşturuldu."
 
 #: packages/templates/packages/deletePackage.html:3
 msgid "Delete Package - CyberPanel"
-msgstr ""
+msgstr "Paket Sil - CyberPanel"
 
 #: packages/templates/packages/deletePackage.html:27
 #: packages/templates/packages/modifyPackage.html:24
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:29
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:45
 msgid "Select Package"
-msgstr ""
+msgstr "Paket Seçin"
 
 #: packages/templates/packages/deletePackage.html:59
 msgid "Cannot delete package. Error message:"
-msgstr ""
+msgstr "Paket silinemiyor. Hata mesajı:"
 
 #: packages/templates/packages/deletePackage.html:63
 #: userManagment/templates/userManagment/deleteUser.html:65
 msgid " Successfully Deleted"
-msgstr ""
+msgstr " Başarıyla Silindi"
 
 #: packages/templates/packages/index.html:3
 msgid "Packages - CyberPanel"
-msgstr ""
+msgstr "Paketler - CyberPanel"
 
 #: packages/templates/packages/modifyPackage.html:3
 msgid "Modify Package - CyberPanel"
-msgstr ""
+msgstr "Paket Düzenle - CyberPanel"
 
 #: packages/templates/packages/modifyPackage.html:104
 msgid "Cannot fetch package details. Error message:"
-msgstr ""
+msgstr "Paket ayrıntıları getirilemiyor. Hata mesajı:"
 
 #: packages/templates/packages/modifyPackage.html:108
 msgid "Package Details Successfully Fetched"
-msgstr ""
+msgstr "Paket Ayrıntıları Başarıyla Getirildi"
 
 #: packages/templates/packages/modifyPackage.html:112
 msgid "Successfully Modified"
-msgstr ""
+msgstr "Başarıyla Değiştirildi"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:3
 msgid "Access Logs - CyberPanel"
-msgstr ""
+msgstr "Erişim Günlükleri - CyberPanel"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:17
 #: serverLogs/templates/serverLogs/index.html:25
 #: serverLogs/templates/serverLogs/index.html:27
 #: websiteFunctions/templates/websiteFunctions/website.html:120
 msgid "Access Logs"
-msgstr ""
+msgstr "Erişim Günlükleri"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:18
 msgid "Access Logs for main web server."
-msgstr ""
+msgstr "Ana web sunucusu için Erişim Günlükleri."
 
 #: serverLogs/templates/serverLogs/accessLogs.html:26
 #: serverLogs/templates/serverLogs/emailLogs.html:23
@@ -2294,7 +2316,7 @@ msgstr ""
 #: serverLogs/templates/serverLogs/ftplogs.html:23
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:24
 msgid "Last 50 Lines"
-msgstr ""
+msgstr "Son 50 Satır"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:49
 #: serverLogs/templates/serverLogs/emailLogs.html:46
@@ -2302,7 +2324,7 @@ msgstr ""
 #: serverLogs/templates/serverLogs/ftplogs.html:46
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:47
 msgid "Last 50 Lines Fetched"
-msgstr ""
+msgstr "Son 50 Satır Getirildi"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:54
 #: serverLogs/templates/serverLogs/emailLogs.html:51
@@ -2311,438 +2333,455 @@ msgstr ""
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:52
 msgid "Could not fetch logs. Use the command line to view the log file."
 msgstr ""
+"Günlükler getirilemedi. Günlük dosyasını görüntülemek için komut satırını "
+"kullanın."
 
 #: serverLogs/templates/serverLogs/emailLogs.html:3
 #: serverLogs/templates/serverLogs/errorLogs.html:3
 msgid "Error Logs - CyberPanel"
-msgstr ""
+msgstr "Hata Günlükleri - CyberPanel"
 
 #: serverLogs/templates/serverLogs/emailLogs.html:15
 msgid "Email Logs for main web server."
-msgstr ""
+msgstr "Ana web sunucusu için e-posta günlükleri."
 
 #: serverLogs/templates/serverLogs/errorLogs.html:15
 msgid "Error Logs for main web server."
-msgstr ""
+msgstr "Ana web sunucusu için hata günlükleri."
 
 #: serverLogs/templates/serverLogs/ftplogs.html:3
 msgid "FTP Logs - CyberPanel"
-msgstr ""
+msgstr "FTP Günlükleri - CyberPanel"
 
 #: serverLogs/templates/serverLogs/ftplogs.html:15
 msgid "FTP Logs for main web server."
-msgstr ""
+msgstr "Ana web sunucusu için FTP günlükleri."
 
 #: serverLogs/templates/serverLogs/index.html:3
 msgid "Server Logs - CyberPanel"
-msgstr ""
+msgstr "Sunucu Günlükleri - CyberPanel"
 
 #: serverLogs/templates/serverLogs/index.html:13
 msgid "Server Logs"
-msgstr ""
+msgstr "Sunucu Günlükleri"
 
 #: serverLogs/templates/serverLogs/index.html:14
 msgid ""
 "These are the logs from main server, to see logs for your website navigate "
 "to: Websites -> List Websites -> Select Website -> View Logs."
 msgstr ""
+"These are the logs from main server, to see logs for your website navigate "
+"to: Websites -> List Websites -> Select Website -> View Logs."
 
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:3
 msgid "CyberPanel Main Log File - CyberPanel"
-msgstr ""
+msgstr "CyberPanel Ana Günlük Dosyası - CyberPanel"
 
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:16
 msgid ""
 "This log file corresponds to errors generated by CyberPanel for your domain "
 "errors log you can look into /home/domain/logs."
 msgstr ""
+"This log file corresponds to errors generated by CyberPanel for your domain "
+"errors log you can look into /home/domain/logs."
 
 #: serverStatus/templates/serverStatus/index.html:3
 msgid "Server Status - CyberPanel"
-msgstr ""
+msgstr "Sunucu Durumu - CyberPanel"
 
 #: serverStatus/templates/serverStatus/index.html:14
 msgid "View LiteSpeed status and log files."
-msgstr ""
+msgstr "LiteSpeed durumunu ve günlük dosyalarını görüntüleyin."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:3
 msgid "LiteSpeed Status - CyberPanel"
-msgstr ""
+msgstr "LiteSpeed Durumu - CyberPanel"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:16
 msgid "LiteSpeed Status:"
-msgstr ""
+msgstr "LiteSpeed Durumu:"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:17
 msgid ""
 "On this page you can get information regarding your LiteSpeed processes."
-msgstr ""
+msgstr "Bu sayfada LiteSpeed süreçleriniz hakkında bilgi alabilirsiniz."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:32
 msgid "LiteSpeed Processes"
-msgstr ""
+msgstr "LiteSpeed Süreçleri"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:39
 msgid "Process ID"
-msgstr ""
+msgstr "İşlem kimliği"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:51
 msgid "Main Process"
-msgstr ""
+msgstr "Ana Süreç"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:54
 msgid "lscgid Process"
-msgstr ""
+msgstr "lscgid Süreci"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:57
 msgid "Worker Process"
-msgstr ""
+msgstr "İşçi Süreci"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:67
 msgid ""
 "Could not fetch details, either LiteSpeed is not running or some error "
 "occurred, please see CyberPanel Main log file."
 msgstr ""
+"Ayrıntılar alınamıyor ya LiteSpeed çalışmıyor veya bir hata oluştu. Detaylar "
+"için CyberPanel ana günlük dosyasına bakın."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:72
 msgid "Reboot Litespeed"
-msgstr ""
+msgstr "Litespeed'i Yeniden Başlat"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:77
 msgid "Stop LiteSpeed"
-msgstr ""
+msgstr "LiteSpeed'i Durdur"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:90
 msgid "Error Occurred. See CyberPanel main log file."
-msgstr ""
+msgstr "Hata oluştu. CyberPanel ana günlük dosyasına bakın."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:95
 msgid "Could not connect to server."
-msgstr ""
+msgstr "Sunucuya bağlanılamadı."
 
 #: serverStatus/templates/serverStatus/services.html:3
 msgid "Services - CyberPanel"
-msgstr ""
+msgstr "Hizmetler - CyberPanel"
 
 #: tuning/templates/tuning/index.html:3
 msgid "Server Tuning - CyberPanel"
-msgstr ""
+msgstr "Sunucu Ayarları - CyberPanel"
 
 #: tuning/templates/tuning/index.html:13
 msgid ""
 "On this page you can set runing parameters for your webserver depending on "
 "your hardware."
 msgstr ""
+"Bu sayfada, donanımınıza bağlı olarak web sunucunuz için çalıştırma "
+"parametrelerini ayarlayabilirsiniz."
 
 #: tuning/templates/tuning/liteSpeedTuning.html:3
 msgid "LiteSpeed Tuning - CyberPanel"
-msgstr ""
+msgstr "LiteSpeed Ayarları - CyberPanel"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:13
 msgid ""
 "You can use this page to tweak your server according to your website "
 "requirments."
 msgstr ""
+"Web sitenizin gereksinimlerine göre sunucunuza ince ayar yapmak için bu "
+"sayfayı kullanabilirsiniz."
 
 #: tuning/templates/tuning/liteSpeedTuning.html:18
 msgid "Tuning Details"
-msgstr ""
+msgstr "Ayarlama Detayları"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:28
 #: tuning/templates/tuning/phpTuning.html:49
 msgid "Max Connections"
-msgstr ""
+msgstr "Maks Bağlantı"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:36
 msgid "Max SSL Connections"
-msgstr ""
+msgstr "Maks SSL Bağlantısı"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:44
 msgid "Connection Timeout"
-msgstr ""
+msgstr "Bağlantı Zaman aşımı"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:52
 msgid "Keep Alive Timeout"
-msgstr ""
+msgstr "Keep Alive Zaman aşımı"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:60
 msgid "Cache Size in memory"
-msgstr ""
+msgstr "RAM'deki Önbellek Boyutu"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:67
 msgid "Enable GZIP Compression"
-msgstr ""
+msgstr "GZIP Sıkıştırmasını Etkinleştir"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:70
 #: tuning/templates/tuning/phpTuning.html:90
 msgid "Enable"
-msgstr ""
+msgstr "Etkinleştir"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:71
 #: tuning/templates/tuning/phpTuning.html:91
 msgid "Disable"
-msgstr ""
+msgstr "Pasifleştir"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:74
 #: tuning/templates/tuning/phpTuning.html:94
 #: userManagment/templates/userManagment/modifyUser.html:77
 msgid "Currently:"
-msgstr ""
+msgstr "Şu anda:"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:82
 msgid "Tune Web Server"
-msgstr ""
+msgstr "Web Sunucusunu Ayarla"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:93
 msgid ""
 "Cannot fetch Current Value, but you can still submit new changes, error "
 "reported from server:"
 msgstr ""
+"Geçerli değer getirilemiyor, ama yinede değişiklik yapabilirsiniz. Sunucu "
+"tarafından bildirilen hata:"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:97
 msgid "Cannot save details, Error Message: "
-msgstr ""
+msgstr "Ayrıntılar kaydedilemiyor, Hata Mesajı: "
 
 #: tuning/templates/tuning/liteSpeedTuning.html:102
 msgid "Web Server Successfully tuned."
-msgstr ""
+msgstr "Web Sunucusu Başarıyla ayarlandı."
 
 #: tuning/templates/tuning/phpTuning.html:3
 msgid "PHP Tuning - CyberPanel"
-msgstr ""
+msgstr "PHP Ayarları - CyberPanel"
 
 #: tuning/templates/tuning/phpTuning.html:14
 msgid "Set how each version of PHP behaves in your server here."
-msgstr ""
+msgstr "Her bir PHP sürümünün sunucunuzda nasıl davrandığını ayarlayın."
 
 #: tuning/templates/tuning/phpTuning.html:42
 msgid "Initial Request Timeout (secs)"
-msgstr ""
+msgstr "Initial Request Timeout (secs)"
 
 #: tuning/templates/tuning/phpTuning.html:57
 msgid "Memory Soft Limit"
-msgstr ""
+msgstr "Memory Soft Limit"
 
 #: tuning/templates/tuning/phpTuning.html:64
 msgid "Memory Hard Limit"
-msgstr ""
+msgstr "Memory Hard Limit"
 
 #: tuning/templates/tuning/phpTuning.html:72
 msgid "Process Soft Limit"
-msgstr ""
+msgstr "Process Soft Limit"
 
 #: tuning/templates/tuning/phpTuning.html:79
 msgid "Process Hard Limit"
-msgstr ""
+msgstr "Process Hard Limit"
 
 #: tuning/templates/tuning/phpTuning.html:87
 msgid "Persistent Connection"
-msgstr ""
+msgstr "Kalıcı Bağlantı"
 
 #: tuning/templates/tuning/phpTuning.html:102
 msgid "Tune PHP"
-msgstr ""
+msgstr "PHP'yi ayarla"
 
 #: tuning/templates/tuning/phpTuning.html:115
 msgid "Cannot tune. Error message:"
-msgstr ""
+msgstr "Ayarlanamıyor. Hata mesajı:"
 
 #: tuning/templates/tuning/phpTuning.html:120
 msgid "Details Successfully fetched."
-msgstr ""
+msgstr "Ayrıntılar Başarıyla getirildi."
 
 #: tuning/templates/tuning/phpTuning.html:124
 msgid "PHP for "
-msgstr ""
+msgstr "PHP for "
 
 #: tuning/templates/tuning/phpTuning.html:124
 msgid "Successfully tuned."
-msgstr ""
+msgstr "Başarıyla ayarlandı."
 
 #: userManagment/templates/userManagment/createUser.html:3
 msgid "Create New User - CyberPanel"
-msgstr ""
+msgstr "Yeni Kullanıcı Oluştur - CyberPanel"
 
 #: userManagment/templates/userManagment/createUser.html:13
 msgid "Create root, reseller or normal users on this page."
-msgstr ""
+msgstr "Bu sayfada kök, satıcı veya normal kullanıcılar oluşturun."
 
 #: userManagment/templates/userManagment/createUser.html:19
 msgid "User Details"
-msgstr ""
+msgstr "Kullanıcı detayları"
 
 #: userManagment/templates/userManagment/createUser.html:28
 #: userManagment/templates/userManagment/modifyUser.html:39
 #: userManagment/templates/userManagment/userProfile.html:25
 msgid "First Name"
-msgstr ""
+msgstr "İsim"
 
 #: userManagment/templates/userManagment/createUser.html:32
 msgid "First Name should contain only alphabetic characters."
-msgstr ""
+msgstr "İsim yalnızca alfabetik karakter içermelidir."
 
 #: userManagment/templates/userManagment/createUser.html:37
 #: userManagment/templates/userManagment/modifyUser.html:46
 #: userManagment/templates/userManagment/userProfile.html:33
 msgid "Last Name"
-msgstr ""
+msgstr "Soyisim"
 
 #: userManagment/templates/userManagment/createUser.html:41
 msgid "Last Name should contain only alphabetic characters."
-msgstr ""
+msgstr "Soyisim yalnızca alfabetik karakter içermelidir."
 
 #: userManagment/templates/userManagment/createUser.html:51
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:64
 msgid "Invalid Email"
-msgstr ""
+msgstr "Geçersiz eposta"
 
 #: userManagment/templates/userManagment/createUser.html:64
 #: userManagment/templates/userManagment/createUser.html:76
 #: userManagment/templates/userManagment/modifyUser.html:69
 msgid "Account Type"
-msgstr ""
+msgstr "Hesap Türü"
 
 #: userManagment/templates/userManagment/createUser.html:67
 #: userManagment/templates/userManagment/modifyUser.html:72
 msgid "Admin"
-msgstr ""
+msgstr "Yönetici"
 
 #: userManagment/templates/userManagment/createUser.html:68
 #: userManagment/templates/userManagment/createUser.html:79
 #: userManagment/templates/userManagment/modifyUser.html:73
 msgid "Normal User"
-msgstr ""
+msgstr "Normal Kullanıcı"
 
 #: userManagment/templates/userManagment/createUser.html:92
 #: userManagment/templates/userManagment/modifyUser.html:88
 #: userManagment/templates/userManagment/userProfile.html:67
 #: userManagment/templates/userManagment/userProfile.html:74
 msgid "User Accounts Limit"
-msgstr ""
+msgstr "Kullanıcı Hesap Limiti"
 
 #: userManagment/templates/userManagment/createUser.html:96
 #: userManagment/templates/userManagment/createUser.html:107
 msgid "Only Numbers"
-msgstr ""
+msgstr "Sadece sayılar"
 
 #: userManagment/templates/userManagment/createUser.html:103
 #: userManagment/templates/userManagment/modifyUser.html:98
 #: userManagment/templates/userManagment/userProfile.html:82
 msgid "Websites Limit"
-msgstr ""
+msgstr "Web Siteleri Limiti"
 
 #: userManagment/templates/userManagment/createUser.html:113
 #: userManagment/templates/userManagment/userProfile.html:42
 msgid "Username"
-msgstr ""
+msgstr "Kullanıcı adı"
 
 #: userManagment/templates/userManagment/createUser.html:117
 msgid "Username should be lowercase alphanumeric."
-msgstr ""
+msgstr "Kullanıcı adı küçük harfli ve alfanümerik olmalıdır."
 
 #: userManagment/templates/userManagment/createUser.html:127
 msgid "Must contain one number and one special character."
-msgstr ""
+msgstr "Bir sayı ve bir özel karakter içermelidir."
 
 #: userManagment/templates/userManagment/createUser.html:143
 #: userManagment/templates/userManagment/index.html:40
 #: userManagment/templates/userManagment/index.html:42
 msgid "Create User"
-msgstr ""
+msgstr "Kullanıcı oluştur"
 
 #: userManagment/templates/userManagment/createUser.html:154
 #: userManagment/templates/userManagment/modifyUser.html:130
 msgid "Account with username:"
-msgstr ""
+msgstr "Kullanıcı adıyla hesap:"
 
 #: userManagment/templates/userManagment/createUser.html:158
 msgid "Cannot create user. Error message:"
-msgstr ""
+msgstr "Kullanıcı oluşturulamıyor. Hata mesajı:"
 
 #: userManagment/templates/userManagment/createUser.html:166
 msgid ""
 "Length of first and last name combined should be less than or equal to 20 "
 "characters"
 msgstr ""
+"Birleştirilen adın ve soyadın uzunluğu 20 karakterden az veya ona eşit "
+"olmalıdır"
 
 #: userManagment/templates/userManagment/deleteUser.html:3
 msgid "Delete User - CyberPanel"
-msgstr ""
+msgstr "Kullanıcı Sil - CyberPanel"
 
 #: userManagment/templates/userManagment/deleteUser.html:14
 msgid "Websites owned by this user will automatically transfer to the root."
 msgstr ""
+"Bu kullanıcıya ait web siteleri otomatik olarak kök hesabına aktarılır."
 
 #: userManagment/templates/userManagment/deleteUser.html:29
 msgid "Select User"
-msgstr ""
+msgstr "Kullanıcı Seç"
 
 #: userManagment/templates/userManagment/deleteUser.html:61
 msgid "Cannot delete user. Error message:"
-msgstr ""
+msgstr "Kullanıcı silinemiyor. Hata mesajı:"
 
 #: userManagment/templates/userManagment/deleteUser.html:65
 msgid "User "
-msgstr ""
+msgstr "Kullanıcı "
 
 #: userManagment/templates/userManagment/index.html:3
 msgid "User Functions - CyberPanel"
-msgstr ""
+msgstr "Kullanıcı Fonksiyonları - CyberPanel"
 
 #: userManagment/templates/userManagment/index.html:14
 msgid "Create, edit and delete users on this page."
-msgstr ""
+msgstr "Bu sayfada kullanıcı oluşturun, düzenleyin ve silin."
 
 #: userManagment/templates/userManagment/modifyUser.html:3
 msgid "Modify User - CyberPanel"
-msgstr ""
+msgstr "Kullanıcı Düzenle - CyberPanel"
 
 #: userManagment/templates/userManagment/modifyUser.html:13
 msgid "Modify existing user settings on this page."
-msgstr ""
+msgstr "Bu sayfada mevcut kullanıcı ayarlarını değiştirin."
 
 #: userManagment/templates/userManagment/modifyUser.html:26
 msgid "Select Account"
-msgstr ""
+msgstr "Hesap Seçin"
 
 #: userManagment/templates/userManagment/modifyUser.html:130
 msgid " is successfully modified."
-msgstr ""
+msgstr " başarıyla değiştirildi."
 
 #: userManagment/templates/userManagment/modifyUser.html:134
 msgid "Cannot modify user. Error message:"
-msgstr ""
+msgstr "Kullanıcı değiştirilemiyor. Hata mesajı:"
 
 #: userManagment/templates/userManagment/modifyUser.html:147
 msgid "Details fetched."
-msgstr ""
+msgstr "Ayrıntılar alındı."
 
 #: userManagment/templates/userManagment/userProfile.html:3
 msgid "Account Details - CyberPanel"
-msgstr ""
+msgstr "Hesap Ayrıntıları - CyberPanel"
 
 #: userManagment/templates/userManagment/userProfile.html:12
 #: userManagment/templates/userManagment/userProfile.html:18
 msgid "Account Details"
-msgstr ""
+msgstr "Hesap Ayrıntıları"
 
 #: userManagment/templates/userManagment/userProfile.html:13
 msgid "List the account details for the currently logged in user."
-msgstr ""
+msgstr "Şu anda oturum açmış olan kullanıcının hesap ayrıntılarını listeleyin."
 
 #: userManagment/templates/userManagment/userProfile.html:58
 msgid "Account Level"
-msgstr ""
+msgstr "Hesap Düzeyi"
 
 #: userManagment/templates/userManagment/userProfile.html:69
 #: userManagment/templates/userManagment/userProfile.html:76
 #: userManagment/templates/userManagment/userProfile.html:84
 msgid "( 0 = Unlimited )"
-msgstr ""
+msgstr "( 0 = Limitsiz )"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:3
 msgid "Create New Website - CyberPanel"
-msgstr ""
+msgstr "Yeni Web Sitesi Oluştur - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:13
 #: websiteFunctions/templates/websiteFunctions/index.html:14
@@ -2751,30 +2790,32 @@ msgid ""
 "On this page you can launch, list, modify and delete websites from your "
 "server."
 msgstr ""
+"Bu sayfada, web sitelerini sunucunuzdan başlatabilir, listeleyebilir, "
+"değiştirebilir ve silebilirsiniz."
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:20
 msgid "Website Details"
-msgstr ""
+msgstr "Web sitesi bilgileri"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:40
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:56
 msgid "Select Owner"
-msgstr ""
+msgstr "Sahibi Seç"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:54
 msgid "Do not enter WWW, it will be auto created!"
-msgstr ""
+msgstr "WWW olarak girmeyin, otomatik olarak oluşturulacaktır!"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:56
 #: websiteFunctions/templates/websiteFunctions/website.html:293
 #: websiteFunctions/templates/websiteFunctions/website.html:304
 msgid "Invalid Domain (Note: You don't need to add 'http' or 'https')"
-msgstr ""
+msgstr "Geçersiz Alan Adı (Not: 'http' veya 'https' eklemeniz gerekmez)"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:84
 #: websiteFunctions/templates/websiteFunctions/website.html:325
 msgid "Additional Features"
-msgstr ""
+msgstr "Ek Özellikler"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:91
 #: websiteFunctions/templates/websiteFunctions/website.html:332
@@ -2782,325 +2823,332 @@ msgid ""
 "For SSL to work DNS of domain should point to server, otherwise self signed "
 "SSL will be issued, you can add your own SSL later."
 msgstr ""
+"SSL'nin çalışması için alan adının DNS'i sunucuyu işaret etmelidir, aksi "
+"halde kendinden imzalı SSL verilecektir, daha sonra kendi SSL'nizi "
+"ekleyebilirsiniz."
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:113
 #: websiteFunctions/templates/websiteFunctions/website.html:354
 msgid "Cannot create website. Error message:"
-msgstr ""
+msgstr "Web sitesi oluşturulamıyor. Hata mesajı:"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:117
 #: websiteFunctions/templates/websiteFunctions/website.html:358
 msgid "Website with domain"
-msgstr ""
+msgstr "Website with domain"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:117
 #: websiteFunctions/templates/websiteFunctions/website.html:358
 msgid " is Successfully Created"
-msgstr ""
+msgstr " başarıyla oluşturuldu."
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:3
 msgid "Delete Website - CyberPanel"
-msgstr ""
+msgstr "Web Sitesi Sil - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:13
 msgid ""
 "This page can be used to delete website, once deleted it can not be "
 "recovered."
 msgstr ""
+"Bu sayfa web sitesini silmek için kullanılabilir, bir kez silindiyse "
+"kurtarılamaz."
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:61
 msgid "Cannot delete website, Error message: "
-msgstr ""
+msgstr "Web sitesi silinemiyor, Hata mesajı: "
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:65
 msgid "Successfully Deleted."
-msgstr ""
+msgstr "Başarıyla Silindi."
 
 #: websiteFunctions/templates/websiteFunctions/index.html:3
 msgid "Website Functions - CyberPanel"
-msgstr ""
+msgstr "Web Sitesi Fonksiyonları - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/index.html:113
 #: websiteFunctions/templates/websiteFunctions/index.html:115
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:13
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:20
 msgid "Suspend/Unsuspend Website"
-msgstr ""
+msgstr "Suspend/Unsuspend Website"
 
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:3
 msgid "Websites Hosted - CyberPanel"
-msgstr ""
+msgstr "Barındırılan Web Siteleri - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:51
 msgid "Cannot list websites. Error message:"
-msgstr ""
+msgstr "Web siteleri listelenemiyor. Hata mesajı:"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:3
 msgid "Modify Website - CyberPanel"
-msgstr ""
+msgstr "Web Sitesi Düzenle - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:51
 msgid "Current Package:"
-msgstr ""
+msgstr "Şu anki paket:"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:62
 msgid "Current Owner:"
-msgstr ""
+msgstr "Şu anki sahibi:"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:104
 msgid "Cannot fetch website details. Error message:"
-msgstr ""
+msgstr "Web sitesi ayrıntıları alınamıyor. Hata mesajı:"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:108
 msgid "Cannot modify website. Error message:"
-msgstr ""
+msgstr "Web sitesinde değişiklik yapılamıyor. Hata mesajı:"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:112
 msgid "Website Details Successfully fetched"
-msgstr ""
+msgstr "Web sitesi Ayrıntıları başarıyla alındı"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:3
 msgid "Suspend/Unsuspend Website - CyberPanel"
-msgstr ""
+msgstr "Suspend/Unsuspend Website - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:14
 msgid "This page can be used to suspend/unsuspend website."
-msgstr ""
+msgstr "This page can be used to suspend/unsuspend website."
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:44
 msgid "Suspend"
-msgstr ""
+msgstr "Suspend"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:45
 msgid "Un-Suspend"
-msgstr ""
+msgstr "Un-Suspend"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:65
 msgid "Cannot suspend website, Error message: "
-msgstr ""
+msgstr "Cannot suspend website, Error message: "
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:69
 msgid "Cannot unsuspend website. Error message:"
-msgstr ""
+msgstr "Cannot unsuspend website. Error message:"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:73
 msgid "Website "
-msgstr ""
+msgstr "Web sitesi "
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:73
 msgid "Successfully "
-msgstr ""
+msgstr "Başarıyla "
 
 #: websiteFunctions/templates/websiteFunctions/website.html:13
 msgid "Preview"
-msgstr ""
+msgstr "Önizleme"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:14
 msgid "All functions related to a particular site."
-msgstr ""
+msgstr "Belirli bir siteyle ilgili tüm işlevler."
 
 #: websiteFunctions/templates/websiteFunctions/website.html:22
 msgid "Resource Usage"
-msgstr ""
+msgstr "Kaynak Kullanımı"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:31
 msgid "Resource"
-msgstr ""
+msgstr "Kaynak"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:33
 msgid "Allowed"
-msgstr ""
+msgstr "İzin Verilen"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:55
 #: websiteFunctions/templates/websiteFunctions/website.html:82
 msgid "Bandwidth Usage"
-msgstr ""
+msgstr "Bant Genişliği Kullanımı"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:118
 msgid "Load Access Logs"
-msgstr ""
+msgstr "Erişim Günlüklerini Getir"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:130
 msgid "Load Error Logs"
-msgstr ""
+msgstr "Hata Günlüklerini Getir"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:146
 msgid "Logs Fetched"
-msgstr ""
+msgstr "Kayıtlar getirildi"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:151
 msgid ""
 "Could not fetch logs, see the logs file through command line. Error message:"
 msgstr ""
+"Günlükler getirilemedi, komut satırından günlük dosyalarına bakmayı deneyin. "
+"Hata mesajı:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:172
 #: websiteFunctions/templates/websiteFunctions/website.html:211
 msgid "Next"
-msgstr ""
+msgstr "Sonraki"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:173
 #: websiteFunctions/templates/websiteFunctions/website.html:212
 msgid "Previous"
-msgstr ""
+msgstr "Önceki"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:256
 #: websiteFunctions/templates/websiteFunctions/website.html:258
 msgid "Add Domains"
-msgstr ""
+msgstr "Alan adı ekle"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:268
 #: websiteFunctions/templates/websiteFunctions/website.html:270
 msgid "List Domains"
-msgstr ""
+msgstr "Alan adlarını listele"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:300
 #: websiteFunctions/templates/websiteFunctions/website.html:770
 #: websiteFunctions/templates/websiteFunctions/website.html:821
 msgid "Path"
-msgstr ""
+msgstr "Dizin"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:302
 msgid "This path is relative to: "
-msgstr ""
+msgstr "This path is relative to: "
 
 #: websiteFunctions/templates/websiteFunctions/website.html:302
 msgid "Leave empty to set default."
-msgstr ""
+msgstr "Varsayılan olarak ayarlamak için boş bırakın."
 
 #: websiteFunctions/templates/websiteFunctions/website.html:343
 msgid "Create Domain"
-msgstr ""
+msgstr "Alan Adı Oluştur"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:386
 msgid "PHP Version Changed to:"
-msgstr ""
+msgstr "PHP Sürümü değiştirildi:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:390
 msgid "Deleted:"
-msgstr ""
+msgstr "Silindi:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:394
 msgid "SSL Issued:"
-msgstr ""
+msgstr "SSL Veren:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:449
 msgid "Issue"
-msgstr ""
+msgstr "Issue"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:477
 msgid "Configurations"
-msgstr ""
+msgstr "Yapılandırmalar"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:483
 msgid "Edit Virtual Host Main Configurations"
-msgstr ""
+msgstr "Sanal Sunucu Ana Yapılandırmaları düzenle"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:485
 msgid "Edit vHost Main Configurations"
-msgstr ""
+msgstr "Sanal Sunucu Ana Yapılandırmalarını Düzenle"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:495
 #: websiteFunctions/templates/websiteFunctions/website.html:497
 msgid "Add Rewrite Rules (.htaccess)"
-msgstr ""
+msgstr "Yeniden Yazma Kuralları Ekle (.htaccess)"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:507
 msgid "Add Your Own SSL"
-msgstr ""
+msgstr "Kendi SSL'nizi Ekleyin"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:509
 msgid "Add SSL"
-msgstr ""
+msgstr "SSL ekle"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:524
 msgid "SSL Saved"
-msgstr ""
+msgstr "SSL Kaydedildi"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:529
 msgid "Could not save SSL. Error message:"
-msgstr ""
+msgstr "SSL kaydedilemedi. Hata mesajı:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:579
 msgid "Current configuration in the file fetched."
-msgstr ""
+msgstr "Dosyadaki geçerli yapılandırma getirildi."
 
 #: websiteFunctions/templates/websiteFunctions/website.html:584
 #: websiteFunctions/templates/websiteFunctions/website.html:597
 msgid "Could not fetch current configuration. Error message:"
-msgstr ""
+msgstr "Geçerli yapılandırma alınamadı. Hata mesajı:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:593
 #: websiteFunctions/templates/websiteFunctions/website.html:648
 msgid "Configurations saved."
-msgstr ""
+msgstr "Yapılandırmalar kaydedildi."
 
 #: websiteFunctions/templates/websiteFunctions/website.html:634
 msgid "Current rewrite rules in the file fetched."
-msgstr ""
+msgstr "Dosyadaki geçerli yeniden yazma kuralları getirildi."
 
 #: websiteFunctions/templates/websiteFunctions/website.html:639
 msgid "Could not fetch current rewrite rules. Error message:"
-msgstr ""
+msgstr "Geçerli yeniden yazma kuralları getirilemedi. Hata mesajı:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:652
 msgid "Could not save rewrite rules. Error message:"
-msgstr ""
+msgstr "Yeniden yazma kuralları kaydedilemedi. Hata mesajı:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:668
 msgid "Save Rewrite Rules"
-msgstr ""
+msgstr "Rewrite Kurallarını Kaydet"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:691
 msgid "Files"
-msgstr ""
+msgstr "Dosyalar"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:698
 #: websiteFunctions/templates/websiteFunctions/website.html:700
 msgid "File Manager"
-msgstr ""
+msgstr "Dosya Yöneticisi"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:739
 msgid "Application Installer"
-msgstr ""
+msgstr "Uygulama Kurucu"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:745
 msgid "Install wordpress with LSCache"
-msgstr ""
+msgstr "LSCache ile birlikte WordPress kur"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:747
 msgid "Wordpress with LSCache"
-msgstr ""
+msgstr "LSCache ile birlikte Wordpress"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:756
 msgid "Install Joomla with(?) LSCache"
-msgstr ""
+msgstr "LSCache ile birlikte Joomla kur?"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:758
 msgid "Joomla"
-msgstr ""
+msgstr "Joomla"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:792
 #: websiteFunctions/templates/websiteFunctions/website.html:871
 msgid "Installation failed. Error message:"
-msgstr ""
+msgstr "Kurulum başarısız. Hata mesajı:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:796
 #: websiteFunctions/templates/websiteFunctions/website.html:875
 msgid "Installation successful. To complete the setup visit:"
-msgstr ""
+msgstr "Kurulum başarılı. Kurulumu tamamlamak için şurayı ziyaret edin:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:828
 msgid "Site name"
-msgstr ""
+msgstr "Site adı"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:835
 msgid "Admin Username"
-msgstr ""
+msgstr "Yönetici kullanıcı adı"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:842
 msgid "Admin Password"
-msgstr ""
+msgstr "Yönetici şifresi"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:849
 msgid "Database prefix"
-msgstr ""
+msgstr "Veritabanı ön eki"
