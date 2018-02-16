@@ -18,6 +18,7 @@ import sys
 from xml.etree import ElementTree
 
 
+
 class backupUtilities:
 
     completeKeyPath  = "/home/cyberpanel/.ssh"
@@ -44,7 +45,7 @@ class backupUtilities:
 
             ## Parsing XML Meta file!
 
-            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018/meta.xml -- tempStoragePath
+            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
             backupMetaData = ElementTree.parse(os.path.join(tempStoragePath,'meta.xml'))
 
 
@@ -52,6 +53,7 @@ class backupUtilities:
 
             domainName = backupMetaData.find('masterDomain').text
             ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
+            ## shutil.make_archive
             make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
             ## Backing up databases
@@ -63,9 +65,10 @@ class backupUtilities:
                 status = open(os.path.join(backupPath,'status'), "w")
                 status.write("Backing up database: " + dbName)
                 status.close()
-                mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, tempStoragePath)
+                if mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, tempStoragePath) == 0:
+                    raise BaseException
 
-
+            ## shutil.make_archive, ## shutil.
             make_archive(os.path.join(backupPath,backupName), 'gztar', tempStoragePath)
             rmtree(tempStoragePath)
 
@@ -130,16 +133,22 @@ class backupUtilities:
             pid.write(str(os.getpid()))
             pid.close()
 
+
             status = open(os.path.join(completPath,'status'), "w")
             status.write("Extracting Main Archive")
             status.close()
+
+            ## Converting /home/backup/backup-example-06-50-03-Thu-Feb-2018.tar.gz -> /home/backup/backup-example-06-50-03-Thu-Feb-2018
+
 
             tar = tarfile.open(originalFile)
             tar.extractall(completPath)
             tar.close()
 
+
+
             status = open(os.path.join(completPath,'status'), "w")
-            status.write("Creating Account and databases")
+            status.write("Creating Account and databases!")
             status.close()
 
             ## creating website and its dabases
@@ -153,7 +162,7 @@ class backupUtilities:
                     pass
                 else:
                     status = open(os.path.join(completPath,'status'), "w")
-                    status.write("Error Message: " + data['error_message'] +". Not able to create Account and databases, aborting. [5009]")
+                    status.write("Error Message: " + data['error_message'] +". Not able to create Account and Databases, aborting. [5009]")
                     status.close()
                     logging.CyberCPLogFileWriter.writeToFile(r.text)
                     return 0
@@ -164,10 +173,10 @@ class backupUtilities:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
                 return 0
 
-            ########### creating sub/addon/parked domains
+            ########### creating child/sub/addon/parked domains
 
             status = open(os.path.join(completPath,'status'), "w")
-            status.write("Creating Child Domains")
+            status.write("Creating Child Domains!")
             status.close()
 
             ## reading meta file to create subdomains
@@ -205,7 +214,6 @@ class backupUtilities:
                         status.write("Error Message: " + data[
                             'error_message'] + ". Not able to create child domains, aborting. [5009]")
                         status.close()
-                        logging.CyberCPLogFileWriter.writeToFile(r.text)
                         return 0
 
             except BaseException, msg:
@@ -226,7 +234,8 @@ class backupUtilities:
             for database in databases:
                 dbName = database.find('dbName').text
                 password = database.find('password').text
-                mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password)
+                if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password) == 0:
+                    raise BaseException
 
 
             status = open(os.path.join(completPath, 'status'), "w")
@@ -498,6 +507,10 @@ class backupUtilities:
 
 def submitBackupCreation(tempStoragePath,backupName,backupPath,metaPath):
     try:
+        ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
+        ## backup-example-06-50-03-Thu-Feb-2018 -- backup name
+        ## /home/example.com/backup - backupPath
+        ## /home/cyberpanel/1047.xml - metaPath
 
         if not os.path.exists(backupPath):
             os.mkdir(backupPath)
@@ -505,8 +518,9 @@ def submitBackupCreation(tempStoragePath,backupName,backupPath,metaPath):
         if not os.path.exists(tempStoragePath):
             os.mkdir(tempStoragePath)
 
+        ## Move meta file inside the temporary storage created to store backup data.
 
-        move(metaPath,tempStoragePath+"/meta.xml")
+        move(metaPath,os.path.join(tempStoragePath,"meta.xml"))
 
         p = Process(target=backupUtilities.startBackup, args=(tempStoragePath, backupName, backupPath,))
         p.start()

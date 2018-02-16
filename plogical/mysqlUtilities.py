@@ -68,14 +68,10 @@ class mysqlUtilities:
 
             if res == 1:
                 logging.CyberCPLogFileWriter.writeToFile("Can not create Database User: " + dbuser)
-
                 ## reverting the db creation which was created earlier
-
                 mysqlUtilities.deleteDatabase(dbname,dbuser)
-
                 return 0
             else:
-
                 dropDB = "GRANT ALL PRIVILEGES ON " +dbname+ ".* TO '" +dbuser+ "'@'localhost'"
                 command = 'sudo mysql -u root -p' + password + ' -e "' + dropDB + '"'
                 cmd = shlex.split(command)
@@ -85,7 +81,6 @@ class mysqlUtilities:
                     mysqlUtilities.deleteDatabase(dbname, dbuser)
                     logging.CyberCPLogFileWriter.writeToFile("Can not grant privileges to user: " + dbuser)
                     return 0
-
 
             return 1
 
@@ -147,10 +142,12 @@ class mysqlUtilities:
 
             if res == 1:
                 logging.CyberCPLogFileWriter.writeToFile("Database: "+databaseName + "could not be backed! [createDatabaseBackup]")
+                return 0
 
             return 1
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabase]")
+            return 0
 
     @staticmethod
     def restoreDatabaseBackup(databaseName, tempStoragePath,dbPassword):

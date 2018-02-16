@@ -673,9 +673,12 @@ def submitWebsiteDeletion(request):
 
                 delWebsite.delete()
 
-
-                delZone = Domains.objects.get(name=websiteName)
-                delZone.delete()
+                try:
+                    delZone = Domains.objects.get(name=websiteName)
+                    delZone.delete()
+                except:
+                    ## There does not exist a zone for this domain.
+                    pass
 
                 installUtilities.reStartLiteSpeed()
 
@@ -1713,7 +1716,7 @@ def CreateWebsiteFromBackup(request):
 
             ## Parsing XML Meta file!
 
-            backupMetaData = ElementTree.parse(path + '/meta.xml')
+            backupMetaData = ElementTree.parse(os.path.join(path,'meta.xml'))
 
             domain = backupMetaData.find('masterDomain').text
             phpSelection = backupMetaData.find('phpSelection').text
@@ -1753,7 +1756,11 @@ def CreateWebsiteFromBackup(request):
                 dbName = database.find('dbName').text
                 dbUser = database.find('dbUser').text
 
-                mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel")
+                if mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
+                    data_ret = {'createWebSiteStatus': 0, 'error_message': "Failed to create Databases!", "existsStatus": 0}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
                 newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
                 newDB.save()
 

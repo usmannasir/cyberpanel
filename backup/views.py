@@ -24,6 +24,8 @@ from random import randint
 from xml.etree.ElementTree import Element, SubElement
 from xml.etree import ElementTree
 from xml.dom import minidom
+from dns.models import Domains,Records
+
 
 def loadBackupHome(request):
     try:
@@ -48,14 +50,16 @@ def restoreSite(request):
             admin = Administrator.objects.get(pk=request.session['userID'])
 
             if admin.type == 1:
-                path = "/home/backup"
+
+                path = os.path.join("/home","backup")
+
                 if not os.path.exists(path):
                     return render(request, 'backup/restore.html')
                 else:
                     all_files = []
                     ext = ".tar.gz"
 
-                    command = 'sudo chown -R  cyberpanel:cyberpanel '+path
+                    command = 'sudo chown -R  cyberpanel:cyberpanel '+ path
 
                     cmd = shlex.split(command)
 
@@ -184,10 +188,9 @@ def submitBackupCreation(request):
             ## /home/example.com/backup
             backupPath = os.path.join("/home",backupDomain,"backup/")
 
+            domainUser = website.externalApp
 
-            domainUser = backupDomain.split('.')
-
-            backupName = 'backup-' + domainUser[0] + "-" + time.strftime("%I-%M-%S-%a-%b-%Y")
+            backupName = 'backup-' + domainUser + "-" + time.strftime("%I-%M-%S-%a-%b-%Y")
 
             ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018
             tempStoragePath = os.path.join(backupPath,backupName)
@@ -232,6 +235,8 @@ def submitBackupCreation(request):
 
             metaFileXML.append(childDomainsXML)
 
+            ## Databases
+
             databasesXML = Element('Databases')
 
             for items in databases:
@@ -249,6 +254,34 @@ def submitBackupCreation(request):
                 databasesXML.append(databaseXML)
 
             metaFileXML.append(databasesXML)
+
+            ## DNS Records
+
+            try:
+                dnsRecordsXML = Element("dnsrecords")
+                domain = Domains.objects.get(name=backupDomain)
+                dnsRecords = Records.objects.filter(domain_id=domain.id)
+
+                for items in dnsRecords:
+                    dnsRecordXML = Element('dnsrecord')
+
+                    child = SubElement(dnsRecordXML, 'type')
+                    child.text = items.type
+                    child = SubElement(dnsRecordXML, 'name')
+                    child.text = items.name
+                    child = SubElement(dnsRecordXML, 'content')
+                    child.text = items.content
+                    child = SubElement(dnsRecordXML, 'priority')
+                    child.text = items.prio
+
+                    dnsRecordsXML.append(dnsRecordXML)
+
+                metaFileXML.append(dnsRecordsXML)
+
+            except BaseException,msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
+
 
 
             def prettify(elem):
@@ -270,8 +303,6 @@ def submitBackupCreation(request):
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " submitBackupCreation --tempStoragePath " + tempStoragePath + " --backupName " + backupName + " --backupPath " + backupPath + " --metaPath " + metaPath
-            logging.CyberCPLogFileWriter.writeToFile(execPath)
-
 
             subprocess.Popen(shlex.split(execPath))
 
@@ -298,12 +329,12 @@ def backupStatus(request):
                 data = json.loads(request.body)
                 backupDomain = data['websiteToBeBacked']
 
-                status = "/home/"+backupDomain+"/backup/status"
+                status = os.path.join("/home",backupDomain,"backup/status")
 
                 ## read file name
 
                 try:
-                    backupFileNamePath = "/home/" + backupDomain + "/backup/backupFileName"
+                    backupFileNamePath = os.path.join("/home",backupDomain,"backup/backupFileName")
                     command = "sudo cat " + backupFileNamePath
                     fileName = subprocess.check_output(shlex.split(command))
                 except:
@@ -318,11 +349,9 @@ def backupStatus(request):
                     if status.find("completed")> -1:
 
                         command = 'sudo rm -f ' + status
-                        cmd = shlex.split(command)
-                        res = subprocess.call(cmd)
+                        subprocess.call(shlex.split(command))
 
                         backupOb = Backups.objects.get(fileName=fileName)
-
                         backupOb.status = 1
 
                         ## adding backup data to database.
@@ -387,8 +416,6 @@ def cancelBackupCreation(request):
 
                 execPath = execPath + " cancelBackupCreation --backupCancellationDomain " + backupCancellationDomain + " --fileName " + fileName
 
-
-
                 subprocess.call(shlex.split(execPath))
 
                 try:
@@ -449,7 +476,6 @@ def deleteBackup(request):
         return HttpResponse(final_json)
 
 
-
 def submitRestore(request):
     try:
         if request.method == 'POST':
@@ -468,8 +494,9 @@ def submitRestore(request):
 
             execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
 
-
             subprocess.Popen(shlex.split(execPath))
+
+            time.sleep(4)
 
             final_dic = {'restoreStatus': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
@@ -488,18 +515,17 @@ def restoreStatus(request):
             data = json.loads(request.body)
             backupFile = data['backupFile'].strip(".tar.gz")
 
-            path = "/home/backup/" + data['backupFile']
+            path = os.path.join("/home","backup",data['backupFile'])
 
             if os.path.exists(path):
-                path = "/home/backup/" + backupFile
+                path = os.path.join("/home","backup",backupFile)
             else:
                 dir = data['dir']
                 path = "/home/backup/transfer-" + str(dir) + "/" + backupFile
 
             if os.path.exists(path):
                 try:
-                    execPath = "sudo cat " + path+"/status"
-
+                    execPath = "sudo cat " + path + "/status"
 
                     status = subprocess.check_output(shlex.split(execPath))
 
