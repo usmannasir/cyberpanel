@@ -1,5 +1,7 @@
 # CyberPanel
 
+[![Join the chat at https://gitter.im/cyberpanel/Lobby](https://badges.gitter.im/cyberpanel/Lobby.svg)](https://gitter.im/cyberpanel/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Webhosting control panel that uses OpenLiteSpeed as web server.
 
 ## Features
