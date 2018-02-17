@@ -52,9 +52,18 @@ class backupUtilities:
             ## Making archive of home directory
 
             domainName = backupMetaData.find('masterDomain').text
+
             ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
             ## shutil.make_archive
             make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
+
+            ## backup email accounts
+
+            status = open(os.path.join(backupPath, 'status'), "w")
+            status.write("Backing up email accounts!\n")
+            status.close()
+
+            make_archive(os.path.join(tempStoragePath,domainName),'gztar',os.path.join("/home","vmail",domainName))
 
             ## Backing up databases
             databases = backupMetaData.findall('Databases/database')
@@ -223,6 +232,47 @@ class backupUtilities:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
                 return 0
 
+            ## Restoring email accounts
+
+
+            status = open(os.path.join(completPath, 'status'), "w")
+            status.write("Restoring email accounts!")
+            status.close()
+
+            emailAccounts = backupMetaData.findall('emails/emailAccount')
+
+            try:
+                for emailAccount in emailAccounts:
+
+                    email = emailAccount.find('email').text
+                    username = email.split("@")[0]
+                    password = emailAccount.find('password').text
+
+
+                    finalData = json.dumps({'domain': masterDomain, 'username': username, 'password': password})
+
+                    r = requests.post("http://localhost:5003/email/submitEmailCreation", data=finalData,verify=False)
+
+                    data = json.loads(r.text)
+
+                    if data['createEmailStatus'] == 1:
+                        continue
+                    else:
+                        status = open(os.path.join(completPath,'status'), "w")
+                        status.write("Error Message: " + data[
+                            'error_message'] + ". Not able to create email accounts, aborting. [5009]")
+                        status.close()
+                        return 0
+
+            except BaseException, msg:
+                status = open(os.path.join(completPath,'status'), "w")
+                status.write("Error Message: " + str(msg) +". Not able to create email accounts, aborting. [5009]")
+                status.close()
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
+                return 0
+
+            ## Emails restored
+
             ## restoring databases
 
             status = open(os.path.join(completPath,'status'), "w")
@@ -237,14 +287,37 @@ class backupUtilities:
                 if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password) == 0:
                     raise BaseException
 
+            ## Databases restored
+
 
             status = open(os.path.join(completPath, 'status'), "w")
-            status.write("Extracting web home data")
+            status.write("Extracting web home data!")
             status.close()
+
 
             tar = tarfile.open(pathToCompressedHome)
             tar.extractall(websiteHome)
             tar.close()
+
+            ## extracting email accounts
+
+            status = open(os.path.join(completPath, 'status'), "w")
+            status.write("Extracting email accounts!")
+            status.close()
+
+            pathToCompressedEmails = os.path.join(completPath, masterDomain + ".tar.gz")
+            emailHome = os.path.join("/home","vmail",masterDomain)
+
+            tar = tarfile.open(pathToCompressedEmails)
+            tar.extractall(emailHome)
+            tar.close()
+
+            ## emails extracted
+
+            ## change permissions
+
+            command = "chmod -r vmail:vmail " + emailHome
+            subprocess.call(shlex.split(command))
 
             status = open(os.path.join(completPath,'status'), "w")
             status.write("Done")

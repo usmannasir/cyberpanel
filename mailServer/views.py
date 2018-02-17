@@ -51,70 +51,61 @@ def createEmailAccount(request):
 
 def submitEmailCreation(request):
     try:
-        val = request.session['userID']
-        try:
-            if request.method == 'POST':
+        if request.method == 'POST':
 
-                data = json.loads(request.body)
-                domain = data['domain']
-                userName = data['username']
-                password = data['password']
+            data = json.loads(request.body)
+            domain = data['domain']
+            userName = data['username']
+            password = data['password']
 
-                ## create email entry
+            ## create email entry
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
 
-                execPath = execPath + " createEmailAccount --domain " + domain
+            execPath = execPath + " createEmailAccount --domain " + domain
 
+            output = subprocess.check_output(shlex.split(execPath))
 
+            if output.find("1,None") > -1:
+                pass
+            else:
+                data_ret = {'createEmailStatus': 0, 'error_message': output}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
-                output = subprocess.check_output(shlex.split(execPath))
+            ## create email entry ends
 
-                if output.find("1,None") > -1:
-                    pass
-                else:
-                    data_ret = {'createEmailStatus': 0, 'error_message': output}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+            finalEmailUsername = userName + "@" + domain
 
-                ## create email entry ends
+            website = Websites.objects.get(domain=domain)
 
-                finalEmailUsername = userName+"@"+domain
+            if EUsers.objects.filter(email=finalEmailUsername).exists():
+                data_ret = {'createEmailStatus': 0, 'error_message': "This account already exists"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
-                website = Websites.objects.get(domain=domain)
+            if not Domains.objects.filter(domain=domain).exists():
+                newEmailDomain = Domains(domainOwner=website, domain=domain)
+                newEmailDomain.save()
 
-                if EUsers.objects.filter(email=finalEmailUsername).exists():
-                    data_ret = {'createEmailStatus': 0, 'error_message': "This account already exists"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                emailAcct = EUsers(emailOwner=newEmailDomain, email=finalEmailUsername, password=password)
+                emailAcct.save()
 
+                data_ret = {'createEmailStatus': 1, 'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
-                if not Domains.objects.filter(domain=domain).exists():
-                    newEmailDomain = Domains(domainOwner=website,domain=domain)
-                    newEmailDomain.save()
+            else:
+                emailDomain = Domains.objects.get(domain=domain)
+                emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
+                emailAcct.save()
 
-                    emailAcct = EUsers(emailOwner=newEmailDomain,email=finalEmailUsername,password=password)
-                    emailAcct.save()
-
-                    data_ret = {'createEmailStatus': 1, 'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                else:
-                    emailDomain = Domains.objects.get(domain=domain)
-                    emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
-                    emailAcct.save()
-
-                    data_ret = {'createEmailStatus': 1, 'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                data_ret = {'createEmailStatus': 1, 'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
 
-        except BaseException,msg:
-            data_ret = {'createEmailStatus': 0, 'error_message': str(msg)}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-    except KeyError,msg:
+    except BaseException, msg:
         data_ret = {'createEmailStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

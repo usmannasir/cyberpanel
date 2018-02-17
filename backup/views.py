@@ -25,6 +25,9 @@ from xml.etree.ElementTree import Element, SubElement
 from xml.etree import ElementTree
 from xml.dom import minidom
 from dns.models import Domains,Records
+from mailServer.models import Domains as eDomains
+from mailServer.models import EUsers
+
 
 
 def loadBackupHome(request):
@@ -272,7 +275,7 @@ def submitBackupCreation(request):
                     child = SubElement(dnsRecordXML, 'content')
                     child.text = items.content
                     child = SubElement(dnsRecordXML, 'priority')
-                    child.text = items.prio
+                    child.text = str(items.prio)
 
                     dnsRecordsXML.append(dnsRecordXML)
 
@@ -280,6 +283,30 @@ def submitBackupCreation(request):
 
             except BaseException,msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
+            ## email accounts
+
+            try:
+                emailRecordsXML = Element('emails')
+                eDomain = eDomains.objects.get(domain=backupDomain)
+                emailAccounts = eDomain.eusers_set.all()
+
+                for items in emailAccounts:
+                    emailRecordXML = Element('emailAccount')
+
+                    child = SubElement(emailRecordXML, 'email')
+                    child.text = items.email
+                    child = SubElement(emailRecordXML, 'password')
+                    child.text = items.password
+
+                    emailRecordsXML.append(emailRecordXML)
+
+                metaFileXML.append(emailRecordsXML)
+
+            except BaseException,msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
+            ## Email meta generated!
 
 
 

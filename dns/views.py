@@ -356,7 +356,7 @@ def addDNSRecord(request):
                                         auth=1  )
                     record.save()
                 elif recordType == "MX":
-                    recordContentMX = recordType = data['recordContentMX']
+                    recordContentMX = data['recordContentMX']
                     record = Records(domainOwner=zone,
                                      domain_id=zone.id,
                                      name=zoneDomain,

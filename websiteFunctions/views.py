@@ -1764,6 +1764,117 @@ def CreateWebsiteFromBackup(request):
                 newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
                 newDB.save()
 
+
+            ## Create dns zone
+
+            dnsrecords = backupMetaData.findall('dnsrecords/dnsrecord')
+
+            zone = Domains(admin=admin, name=domain, type="NATIVE")
+            zone.save()
+
+            for dnsrecord in dnsrecords:
+
+                recordType = dnsrecord.find('type').text
+                value = dnsrecord.find('name').text
+                content =  dnsrecord.find('content').text
+                prio = int(dnsrecord.find('priority').text)
+
+                if recordType == "SOA":
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=value,
+                                     type="SOA",
+                                     content=content,
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+                elif recordType == "NS":
+                    record = Records(   domainOwner=zone,
+                                        domain_id=zone.id,
+                                        name=value,
+                                        type="NS",
+                                        content=content,
+                                        ttl=3600,
+                                        prio=0,
+                                        disabled=0,
+                                        auth=1  )
+                    record.save()
+
+                elif recordType == "A":
+                    record = Records(   domainOwner=zone,
+                                        domain_id=zone.id,
+                                        name=value,
+                                        type="A",
+                                        content=content,
+                                        ttl=3600,
+                                        prio=0,
+                                        disabled=0,
+                                        auth=1  )
+                    record.save()
+                elif recordType == "MX":
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=value,
+                                     type="MX",
+                                     content=content,
+                                     ttl=3600,
+                                     prio=prio,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+                elif recordType == "AAAA":
+                    record = Records(   domainOwner=zone,
+                                        domain_id=zone.id,
+                                        name=value,
+                                        type="AAAA",
+                                        content=content,
+                                        ttl=3600,
+                                        prio=0,
+                                        disabled=0,
+                                        auth=1  )
+                    record.save()
+
+                elif recordType == "CNAME":
+                    record = Records(   domainOwner=zone,
+                                        domain_id=zone.id,
+                                        name=value,
+                                        type="CNAME",
+                                        content=content,
+                                        ttl=3600,
+                                        prio=0,
+                                        disabled=0,
+                                        auth=1  )
+                    record.save()
+
+
+                elif recordType == "SPF":
+                    record = Records(   domainOwner=zone,
+                                        domain_id=zone.id,
+                                        name=value,
+                                        type="SPF",
+                                        content=content,
+                                        ttl=3600,
+                                        prio=0,
+                                        disabled=0,
+                                        auth=1  )
+                    record.save()
+
+
+                elif recordType == "TXT":
+                    record = Records(   domainOwner=zone,
+                                        domain_id=zone.id,
+                                        name=value,
+                                        type="TXT",
+                                        content=content,
+                                        ttl=3600,
+                                        prio=0,
+                                        disabled=0,
+                                        auth=1  )
+                    record.save()
+
+
             data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
