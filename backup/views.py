@@ -45,7 +45,6 @@ def loadBackupHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def restoreSite(request):
     try:
         val = request.session['userID']
@@ -123,7 +122,6 @@ def backupSite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def getCurrentBackups(request):
     try:
         val = request.session['userID']
@@ -190,9 +188,7 @@ def submitBackupCreation(request):
 
             ## /home/example.com/backup
             backupPath = os.path.join("/home",backupDomain,"backup/")
-
             domainUser = website.externalApp
-
             backupName = 'backup-' + domainUser + "-" + time.strftime("%I-%M-%S-%a-%b-%Y")
 
             ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018
@@ -200,7 +196,7 @@ def submitBackupCreation(request):
 
             ## Generating meta
 
-            ## xml generation
+            ## XML Generation
 
             metaFileXML = Element('metaFile')
 
@@ -218,7 +214,7 @@ def submitBackupCreation(request):
 
             databases = website.databases_set.all()
 
-            ## child domains xml
+            ## Child domains XML
 
             childDomainsXML = Element('ChildDomains')
 
@@ -238,7 +234,7 @@ def submitBackupCreation(request):
 
             metaFileXML.append(childDomainsXML)
 
-            ## Databases
+            ## Databases XML
 
             databasesXML = Element('Databases')
 
@@ -258,7 +254,7 @@ def submitBackupCreation(request):
 
             metaFileXML.append(databasesXML)
 
-            ## DNS Records
+            ## DNS Records XML
 
             try:
                 dnsRecordsXML = Element("dnsrecords")
@@ -284,7 +280,7 @@ def submitBackupCreation(request):
             except BaseException,msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
-            ## email accounts
+            ## Email accounts XML
 
             try:
                 emailRecordsXML = Element('emails')
@@ -307,8 +303,6 @@ def submitBackupCreation(request):
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
             ## Email meta generated!
-
-
 
 
             def prettify(elem):
@@ -373,7 +367,7 @@ def backupStatus(request):
                     command = "sudo cat " + status
                     status = subprocess.check_output(shlex.split(command))
 
-                    if status.find("completed")> -1:
+                    if status.find("Completed")> -1:
 
                         command = 'sudo rm -f ' + status
                         subprocess.call(shlex.split(command))
@@ -502,7 +496,6 @@ def deleteBackup(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def submitRestore(request):
     try:
         if request.method == 'POST':
@@ -590,14 +583,13 @@ def restoreStatus(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def backupDestinations(request):
     try:
         val = request.session['userID']
 
         admin = Administrator.objects.get(pk=val)
 
-        if admin.type==1:
+        if admin.type == 1:
             return render(request, 'backup/backupDestinations.html', {})
         else:
             return HttpResponse("You should be admin to add backup destinations.")
@@ -609,13 +601,13 @@ def submitDestinationCreation(request):
         try:
             if request.method == 'POST':
 
-
                 destinations = backupUtil.backupUtilities.destinationsPath
 
                 data = json.loads(request.body)
                 ipAddress = data['IPAddress']
                 password = data['password']
                 port = "22"
+
                 try:
                     port = data['backupSSHPort']
                 except:
@@ -632,8 +624,9 @@ def submitDestinationCreation(request):
                     return HttpResponse(final_json)
                 except:
                     setupKeys = backupUtil.backupUtilities.setupSSHKeys(ipAddress,password,port)
+
                     if setupKeys[0] == 1:
-                        backupUtil.backupUtilities.initiateBackupDirCreation(ipAddress,port)
+                        backupUtil.backupUtilities.createBackupDir(ipAddress,port)
                         try:
                             writeToFile = open(destinations, "w")
                             writeToFile.writelines(ipAddress + "\n")

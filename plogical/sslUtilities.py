@@ -135,18 +135,22 @@ class sslUtilities:
             #    command = "sudo certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
 
             try:
-                serverIPAddress = requests.get('https://api.ipify.org').text
+                ipFile = "/etc/cyberpanel/machineIP"
+                f = open(ipFile)
+                ipData = f.read()
+                serverIPAddress = ipData.split('\n', 1)[0]
+
                 domainIP = socket.gethostbyname("www."+virtualHostName)
                 if serverIPAddress == domainIP:
                     command = "certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName
                 else:
                     command = "certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
                     logging.CyberCPLogFileWriter.writeToFile(
-                        "SSL is issues without 'www' due to DNS error! for domain :" + virtualHostName)
+                        "SSL is issued without 'www' due to DNS error! for domain :" + virtualHostName)
 
             except:
                 command = "certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
-                logging.CyberCPLogFileWriter.writeToFile("SSL is issues without 'www' due to DNS error! for domain : " + virtualHostName)
+                logging.CyberCPLogFileWriter.writeToFile("SSL is issued without 'www' due to DNS error! for domain : " + virtualHostName)
 
 
             expectation = []

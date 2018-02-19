@@ -16,6 +16,7 @@ import argparse
 from shutil import move,copy
 import sys
 from xml.etree import ElementTree
+import time
 
 
 
@@ -82,7 +83,7 @@ class backupUtilities:
             rmtree(tempStoragePath)
 
             status = open(os.path.join(backupPath,'status'), "w")
-            status.write("completed\n")
+            status.write("Completed\n")
             status.close()
 
 
@@ -144,11 +145,10 @@ class backupUtilities:
 
 
             status = open(os.path.join(completPath,'status'), "w")
-            status.write("Extracting Main Archive")
+            status.write("Extracting Main Archive!")
             status.close()
 
             ## Converting /home/backup/backup-example-06-50-03-Thu-Feb-2018.tar.gz -> /home/backup/backup-example-06-50-03-Thu-Feb-2018
-
 
             tar = tarfile.open(originalFile)
             tar.extractall(completPath)
@@ -157,7 +157,7 @@ class backupUtilities:
 
 
             status = open(os.path.join(completPath,'status'), "w")
-            status.write("Creating Account and databases!")
+            status.write("Creating Accounts,Databases and DNS records!")
             status.close()
 
             ## creating website and its dabases
@@ -171,13 +171,12 @@ class backupUtilities:
                     pass
                 else:
                     status = open(os.path.join(completPath,'status'), "w")
-                    status.write("Error Message: " + data['error_message'] +". Not able to create Account and Databases, aborting. [5009]")
+                    status.write("Error Message: " + data['error_message'] +". Not able to create Account, Databasesand DNS Records, aborting. [5009]")
                     status.close()
-                    logging.CyberCPLogFileWriter.writeToFile(r.text)
                     return 0
             except BaseException,msg:
                 status = open(os.path.join(completPath,'status'), "w")
-                status.write("Error Message: " + str(msg) +". Not able to create Account and databases, aborting. [5009]")
+                status.write("Error Message: " + str(msg) +". Not able to create Account, Databasesand DNS Records, aborting. [5009]")
                 status.close()
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
                 return 0
@@ -233,7 +232,6 @@ class backupUtilities:
                 return 0
 
             ## Restoring email accounts
-
 
             status = open(os.path.join(completPath, 'status'), "w")
             status.write("Restoring email accounts!")
@@ -314,20 +312,21 @@ class backupUtilities:
 
             ## emails extracted
 
-            ## change permissions
+            ## Change permissions
 
             command = "chmod -r vmail:vmail " + emailHome
             subprocess.call(shlex.split(command))
 
+            ##
+
             status = open(os.path.join(completPath,'status'), "w")
             status.write("Done")
             status.close()
+
             installUtilities.reStartLiteSpeed()
 
             command = "chown -R " + externalApp + ":" + externalApp + " " + websiteHome
-
             cmd = shlex.split(command)
-
             subprocess.call(cmd)
 
         except BaseException, msg:
@@ -384,7 +383,6 @@ class backupUtilities:
 
             expectation = "password:"
 
-
             command = "ssh -o StrictHostKeyChecking=no -p "+ port +" root@"+IPAddress+" mkdir /root/.ssh"
 
             setupKeys = pexpect.spawn(command,timeout=3)
@@ -404,7 +402,7 @@ class backupUtilities:
             index = setupKeys.expect(expectation)
 
             if index == 0:
-                return [0,"Wrong Password"]
+                return [0,"Wrong Password!"]
             elif index == 1:
                 setupKeys.wait()
 
@@ -547,32 +545,17 @@ class backupUtilities:
     def createBackupDir(IPAddress,port):
 
         try:
-            command = "ssh -o StrictHostKeyChecking=no -p "+ port +" -i /home/cyberpanel/.ssh/cyberpanel cyberpanel@"+IPAddress+" mkdir /home/backup"
-
-            shlex.split(command)
-
+            command = "sudo ssh -o StrictHostKeyChecking=no -p "+ port +" -i /root/.ssh/cyberpanel root@"+IPAddress+" mkdir /home/backup"
             subprocess.call(shlex.split(command))
-
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createBackupDir]")
             return 0
 
     @staticmethod
-    def initiateBackupDirCreation(IPAddress,port):
-        try:
-            thread.start_new_thread(backupUtilities.createBackupDir, (IPAddress,port))
-        except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateBackupDirCreation]")
-
-    @staticmethod
     def host_key_verification(IPAddress):
         try:
             command = 'sudo ssh-keygen -R '+IPAddress
-
-            shlex.split(command)
-
             subprocess.call(shlex.split(command))
-
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [host_key_verification]")
             return 0
@@ -597,7 +580,7 @@ def submitBackupCreation(tempStoragePath,backupName,backupPath,metaPath):
 
         p = Process(target=backupUtilities.startBackup, args=(tempStoragePath, backupName, backupPath,))
         p.start()
-        pid = open(backupPath + 'pid', "w")
+        pid = open(os.path.join(backupPath,'pid'), "w")
         pid.write(str(p.pid))
         pid.close()
 
@@ -688,5 +671,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

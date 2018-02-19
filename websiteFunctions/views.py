@@ -648,8 +648,6 @@ def submitWebsiteDeletion(request):
 
                 execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName "+ websiteName+" --numberOfSites "+numberOfWebsites
 
-
-
                 subprocess.check_output(shlex.split(execPath))
 
                 delWebsite = Websites.objects.get(domain=websiteName)
@@ -681,6 +679,11 @@ def submitWebsiteDeletion(request):
                     pass
 
                 installUtilities.reStartLiteSpeed()
+
+                ## Delete mail accounts
+
+                command = "sudo rm -rf /home/vmail/" + websiteName
+                subprocess.call(shlex.split(command))
 
 
                 data_ret = {'websiteDeleteStatus': 1,'error_message': "None"}

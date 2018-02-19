@@ -32,7 +32,9 @@ class backupSchedule:
                 time.sleep(2)
                 data = json.loads(r.text)
 
-                if data['status'] == 0:
+                if data['backupStatus'] == 0:
+                    break
+                elif data['abort'] == 1:
                     break
 
             writeToFile.writelines("[" + time.strftime(
@@ -61,10 +63,8 @@ class backupSchedule:
     @staticmethod
     def sendBackup(backupPath, IPAddress, writeToFile,port):
         try:
-            command = 'rsync -avz -e "ssh  -i /root/.ssh/cyberpanel -o StrictHostKeyChecking=no -p '+port+'" ' + backupPath + ' root@' + IPAddress + ':/home/backup/' + time.strftime(
-                "%a-%b") + "/"
+            command = "sudo scp -P "+port+" -i /root/.ssh/cyberpanel " + backupPath + " root@"+IPAddress+":/home/backup/"+ time.strftime("%a-%b") + "/"
             subprocess.call(shlex.split(command), stdout=writeToFile)
-
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
@@ -74,8 +74,6 @@ class backupSchedule:
             destinations = backupUtilities.destinationsPath
 
             backupLogPath = "/usr/local/lscp/logs/backup_log."+time.strftime("%I-%M-%S-%a-%b-%Y")
-
-
 
             writeToFile = open(backupLogPath,"a")
 
@@ -99,6 +97,11 @@ class backupSchedule:
                         "%I-%M-%S-%a-%b-%Y") + "]" + " Connection to:" + ipAddress+" Failed, please resetup this destination from CyberPanel, aborting." + "\n")
                     return 0
                 else:
+                    ## Create backup dir on remote server
+
+                    command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel root@" + ipAddress + " mkdir /home/backup/" + time.strftime("%a-%b")
+                    subprocess.call(shlex.split(command))
+
                     pass
             else:
                 writeToFile.writelines("[" + time.strftime(

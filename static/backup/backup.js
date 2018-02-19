@@ -36,7 +36,6 @@ app.controller('backupWebsiteControl', function($scope,$http,$timeout) {
                 };
 
                 $scope.fetchDetails = function () {
-
                   getBackupStatus();
                   populateCurrentRecords();
                   $scope.destination = false;
@@ -71,10 +70,9 @@ app.controller('backupWebsiteControl', function($scope,$http,$timeout) {
                 function ListInitialDatas(response) {
 
 
-                    if(response.data.backupStatus == 1){
+                    if(response.data.backupStatus === 1){
 
                         if(response.data.abort === 1){
-
                             $timeout.cancel();
                             $scope.backupLoadingBottom = true;
                             $scope.destination = false;
@@ -108,11 +106,7 @@ app.controller('backupWebsiteControl', function($scope,$http,$timeout) {
                     }
 
                 }
-                function cantLoadInitialDatas(response) {
-
-
-
-                }
+                function cantLoadInitialDatas(response) {}
 
            };
 
@@ -147,22 +141,12 @@ app.controller('backupWebsiteControl', function($scope,$http,$timeout) {
 
 
                     if(response.data.fetchStatus == 1){
-
                         $scope.records = JSON.parse(response.data.data);
-
-
-
                     }
-                    else{
-
-                    }
-
-                }
-                function cantLoadInitialDatas(response) {
-
 
 
                 }
+                function cantLoadInitialDatas(response) {}
 
            };
 
@@ -195,7 +179,7 @@ app.controller('backupWebsiteControl', function($scope,$http,$timeout) {
                 function ListInitialDatas(response) {
 
 
-                    if(response.data.metaStatus == 1){
+                    if(response.data.metaStatus === 1){
                         getBackupStatus();
                     }
 
