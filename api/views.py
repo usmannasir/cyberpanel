@@ -353,7 +353,6 @@ def loginAPI(request):
         return HttpResponse(json_data)
 
 
-
 def fetchSSHkey(request):
     try:
         if request.method == "POST":
@@ -365,15 +364,12 @@ def fetchSSHkey(request):
 
             if hashPassword.check_password(admin.password, password):
 
-                keyPath = "/root/.ssh"
+                keyPath = os.path.join("/root",".ssh")
                 pubKey = keyPath + "/cyberpanel.pub"
 
                 execPath = "sudo cat " + pubKey
 
-
-
                 data = subprocess.check_output(shlex.split(execPath))
-
 
                 data_ret = {'pubKeyStatus': 1, 'error_message': "None", "pubKey":data}
                 json_data = json.dumps(data_ret)
@@ -412,8 +408,6 @@ def remoteTransfer(request):
 
                 execPath = execPath + " remoteTransfer --ipAddress " + ipAddress + " --dir " + dir + " --accountsToTransfer " + accountsToTransfer
 
-
-
                 subprocess.Popen(shlex.split(execPath))
 
                 return HttpResponse(json.dumps({"transferStatus": 1, "dir": dir}))
@@ -431,7 +425,6 @@ def remoteTransfer(request):
         data = {'transferStatus': 0,'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
-
 
 def fetchAccountsFromRemoteServer(request):
     try:

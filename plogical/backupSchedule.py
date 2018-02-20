@@ -47,7 +47,7 @@ class backupSchedule:
             backupSchedule.sendBackup(backupPath+".tar.gz", ipAddress,writeToFile,port)
 
             writeToFile.writelines("[" + time.strftime(
-                "%I-%M-%S-%a-%b-%Y") + "]" + "  Backup for: " + virtualHost + " is sent to " + ipAddress + "\n")
+                "%I-%M-%S-%a-%b-%Y") + "]" + " Backup for: " + virtualHost + " is sent to " + ipAddress + "\n")
 
             writeToFile.writelines("\n")
             writeToFile.writelines("\n")

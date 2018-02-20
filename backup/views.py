@@ -1279,11 +1279,7 @@ def submitRemoteBackups(request):
 
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
-
             execPath = execPath + " writeAuthKey --pathToKey " + pathToKey
-
-
-
             output = subprocess.check_output(shlex.split(execPath))
 
             if output.find("1,None") > -1:
@@ -1338,7 +1334,10 @@ def starRemoteTransfer(request):
                 accountsToTransfer = data['accountsToTransfer']
 
                 try:
-                    ownIP = requests.get('https://api.ipify.org').text
+
+                    ipFile = "/etc/cyberpanel/machineIP"
+                    f = open(ipFile)
+                    ownIP = f.read()
 
                     finalData = json.dumps({'username': "admin", "password": password,"ipAddress": ownIP,"accountsToTransfer":accountsToTransfer})
 
@@ -1441,9 +1440,9 @@ def remoteBackupRestore(request):
 
                 execPath = execPath + " remoteBackupRestore --backupDirComplete " + backupDirComplete + " --backupDir " + str(backupDir)
 
-
-
                 subprocess.Popen(shlex.split(execPath))
+
+                time.sleep(3)
 
                 data = {'remoteRestoreStatus': 1, 'error_message': 'None'}
                 json_data = json.dumps(data)
@@ -1474,8 +1473,9 @@ def localRestoreStatus(request):
 
             removalPath = "/home/backup/transfer-"+ str(backupDir)
 
-            if os.path.isfile(backupLogPath):
+            time.sleep(3)
 
+            if os.path.isfile(backupLogPath):
                 command = "sudo cat " + backupLogPath
                 status = subprocess.check_output(shlex.split(command))
 
