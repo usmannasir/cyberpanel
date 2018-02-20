@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-02-15 13:07+0500\n"
-"PO-Revision-Date: 2018-02-20 17:54+0900\n"
+"PO-Revision-Date: 2018-02-20 18:26+0900\n"
 "Last-Translator: @ kazuo210 <kazu.nito@gmail.com>\n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
 "Language: ja\n"
@@ -262,7 +262,7 @@ msgstr "接続を確認"
 
 #: backup/templates/backup/backupSchedule.html:3
 msgid "Schedule Back up - CyberPanel"
-msgstr "バックアップスケジュール - Cyber​​Panel"
+msgstr "バックアップスケジュール - CyberPanel"
 
 #: backup/templates/backup/backupSchedule.html:13
 #: backup/templates/backup/backupSchedule.html:20
@@ -1711,7 +1711,7 @@ msgstr "新しいフォルダを作成します！"
 
 #: filemanager/templates/filemanager/index.html:336
 msgid "New Folder Name"
-msgstr "﻿﻿新しいフォルダ名"
+msgstr "新しいフォルダ名"
 
 #: filemanager/templates/filemanager/index.html:338
 msgid "Folder will be created in your current directory"
@@ -1731,7 +1731,7 @@ msgstr "新しいファイルを作成します！"
 
 #: filemanager/templates/filemanager/index.html:380
 msgid "New File Name"
-msgstr "﻿﻿新しいファイル名"
+msgstr "新しいファイル名"
 
 #: filemanager/templates/filemanager/index.html:382
 msgid ""
