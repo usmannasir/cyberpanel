@@ -6,7 +6,10 @@ try:
     mydoc = ElementTree.parse('domain.xml')
 
 
-    print mydoc.find('masterDomain').text
+    len = 0
+
+    if len == 0:
+        raise BaseException("Error occurred!")
 
     domains = mydoc.findall('ChildDomains/domain')
 
@@ -32,4 +35,4 @@ try:
 
     print os.path.join("/home", "cyberpanel", str(randint(1000, 9999)) + ".xml/", "test")
 except BaseException,msg:
-    print "hello"
+    print str(msg)

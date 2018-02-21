@@ -64,7 +64,10 @@ class backupUtilities:
             status.write("Backing up email accounts!\n")
             status.close()
 
-            make_archive(os.path.join(tempStoragePath,domainName),'gztar',os.path.join("/home","vmail",domainName))
+            try:
+                make_archive(os.path.join(tempStoragePath,domainName),'gztar',os.path.join("/home","vmail",domainName))
+            except:
+                pass
 
             ## Backing up databases
             databases = backupMetaData.findall('Databases/database')
@@ -303,12 +306,16 @@ class backupUtilities:
             status.write("Extracting email accounts!")
             status.close()
 
-            pathToCompressedEmails = os.path.join(completPath, masterDomain + ".tar.gz")
-            emailHome = os.path.join("/home","vmail",masterDomain)
+            try:
 
-            tar = tarfile.open(pathToCompressedEmails)
-            tar.extractall(emailHome)
-            tar.close()
+                pathToCompressedEmails = os.path.join(completPath, masterDomain + ".tar.gz")
+                emailHome = os.path.join("/home","vmail",masterDomain)
+
+                tar = tarfile.open(pathToCompressedEmails)
+                tar.extractall(emailHome)
+                tar.close()
+            except:
+                pass
 
             ## emails extracted
 

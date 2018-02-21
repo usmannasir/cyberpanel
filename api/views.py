@@ -364,18 +364,22 @@ def fetchSSHkey(request):
 
             if hashPassword.check_password(admin.password, password):
 
-                keyPath = os.path.join("/root",".ssh")
-                pubKey = keyPath + "/cyberpanel.pub"
-
+                pubKey = os.path.join("/root",".ssh",'cyberpanel.pub')
                 execPath = "sudo cat " + pubKey
-
                 data = subprocess.check_output(shlex.split(execPath))
 
-                data_ret = {'pubKeyStatus': 1, 'error_message': "None", "pubKey":data}
+                data_ret = {
+                            'pubKeyStatus': 1,
+                            'error_message': "None",
+                            'pubKey':data
+                            }
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
-                data_ret = {'pubKeyStatus': 0, 'error_message': "Invalid Credentials"}
+                data_ret = {
+                            'pubKeyStatus': 0,
+                            'error_message': "Could not authorize access to API."
+                            }
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -546,7 +550,6 @@ def cancelRemoteTransfer(request):
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
-
 def cyberPanelVersion(request):
     try:
         if request.method == 'POST':
@@ -563,22 +566,28 @@ def cyberPanelVersion(request):
 
                 Version = version.objects.get(pk=1)
 
-                data_ret = {"getVersion": 1,
-                            'error_message': "Could not authorize access to API",
+                data_ret = {
+                            "getVersion": 1,
+                            'error_message': "none",
                             'currentVersion':Version.currentVersion,
-                            'build':Version.build}
+                            'build':Version.build
+                            }
 
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
-                data_ret = {"getVersion": 0,
-                            'error_message': "Could not authorize access to API"}
+                data_ret = {
+                            "getVersion": 0,
+                            'error_message': "Could not authorize access to API."
+                            }
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
     except BaseException, msg:
-        data_ret = {"getVersion": 0,
-                    'error_message': "Could not authorize access to API"}
+        data_ret = {
+                    "getVersion": 0,
+                    'error_message': str(msg)
+                    }
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
