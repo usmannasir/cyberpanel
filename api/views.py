@@ -405,25 +405,19 @@ def remoteTransfer(request):
                 dir = str(randint(1000, 9999))
 
                 ##
-
                 accountsToTransfer = ','.join(accountsToTransfer)
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
-
                 execPath = execPath + " remoteTransfer --ipAddress " + ipAddress + " --dir " + dir + " --accountsToTransfer " + accountsToTransfer
-
                 subprocess.Popen(shlex.split(execPath))
 
                 return HttpResponse(json.dumps({"transferStatus": 1, "dir": dir}))
 
                 ##
             else:
-                data_ret = {'transferStatus': 0, 'error_message': "Invalid Credentials"}
+                data_ret = {'transferStatus': 0, 'error_message': "Could not authorize access to API."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-
-
-
 
     except BaseException, msg:
         data = {'transferStatus': 0,'error_message': str(msg)}

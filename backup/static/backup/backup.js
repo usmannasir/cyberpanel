@@ -1149,7 +1149,6 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
         // disable fetch accounts button
 
         $scope.fetchAccountsBtn = true;
-
         $scope.backupLoading = false;
 
         var IPAddress = $scope.IPAddress;
@@ -1174,7 +1173,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
 
         function ListInitialDatas(response) {
 
-            if (response.data.remoteTransferStatus == 1) {
+            if (response.data.remoteTransferStatus === 1) {
                     tempTransferDir = response.data.dir;
                     $scope.accountsInRemoteServerTable = true;
 
@@ -1235,8 +1234,6 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
 
     };
 
-
-
     function getBackupStatus(password) {
 
         url = "/backup/getRemoteTransferStatus";
@@ -1244,7 +1241,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
         var data = {
             password : $scope.password,
             ipAddress: $scope.IPAddress,
-            dir: tempTransferDir,
+            dir: tempTransferDir
         };
 
         var config = {
@@ -1258,9 +1255,9 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
 
         function ListInitialDatas(response) {
 
-            if (response.data.remoteTransferStatus == 1) {
+            if (response.data.remoteTransferStatus === 1) {
 
-                if(response.data.backupsSent == 0){
+                if(response.data.backupsSent === 0){
                     $scope.backupStatus = false;
                     $scope.requestData = response.data.status;
                     $timeout(getBackupStatus, 2000);
@@ -1270,7 +1267,6 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
                     $timeout.cancel();
 
                     // Start the restore of remote backups that are transferred to local server
-
 
                     remoteBackupRestore();
                 }

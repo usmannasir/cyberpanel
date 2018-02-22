@@ -1320,7 +1320,7 @@ def submitRemoteBackups(request):
             return HttpResponse("This URL only accepts POST requests")
 
     except BaseException, msg:
-        final_json = json.dumps({'status': 0, 'type': 'exception', 'error_message': str(msg)})
+        final_json = json.dumps({'status': 0, 'error_message': str(msg)})
     return HttpResponse(final_json)
 
 def starRemoteTransfer(request):
@@ -1336,7 +1336,7 @@ def starRemoteTransfer(request):
 
                 try:
 
-                    ipFile = "/etc/cyberpanel/machineIP"
+                    ipFile = os.path.join("/etc","cyberpanel","machineIP")
                     f = open(ipFile)
                     ownIP = f.read()
 
@@ -1350,6 +1350,14 @@ def starRemoteTransfer(request):
 
 
                     if data['transferStatus'] == 1:
+
+                        ## Create local backup dir
+
+                        localBackupDir = os.path.join("/home","backup")
+
+                        if not os.path.exists(localBackupDir):
+                            command = "sudo mkdir " + localBackupDir
+                            subprocess.call(shlex.split(command))
 
                         ## create local directory that will host backups
 

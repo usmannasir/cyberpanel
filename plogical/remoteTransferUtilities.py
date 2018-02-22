@@ -16,7 +16,7 @@ class remoteTransferUtilities:
     @staticmethod
     def writeAuthKey(pathToKey):
         try:
-            authorized_keys = "/root/.ssh/authorized_keys"
+            authorized_keys = os.path.join("/root",".ssh","authorized_keys")
             presenseCheck = 0
 
             try:
@@ -209,7 +209,7 @@ class remoteTransferUtilities:
         try:
             ## complete path is a path to the file need to send
 
-            command = "sudo scp -i /root/.ssh/cyberpanel " + completedPathToSend + " root@" + IPAddress + ":/home/backup/transfer-" + folderNumber + "/"
+            command = "sudo scp -o StrictHostKeyChecking=no -i /root/.ssh/cyberpanel " + completedPathToSend + " root@" + IPAddress + ":/home/backup/transfer-" + folderNumber + "/"
             subprocess.call(shlex.split(command), stdout=writeToFile)
 
         except BaseException, msg:

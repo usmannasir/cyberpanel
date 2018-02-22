@@ -63,7 +63,7 @@ class backupSchedule:
     @staticmethod
     def sendBackup(backupPath, IPAddress, writeToFile,port):
         try:
-            command = "sudo scp -P "+port+" -i /root/.ssh/cyberpanel " + backupPath + " root@"+IPAddress+":/home/backup/"+ time.strftime("%a-%b") + "/"
+            command = "sudo scp -o StrictHostKeyChecking=no -P "+port+" -i /root/.ssh/cyberpanel " + backupPath + " root@"+IPAddress+":/home/backup/"+ time.strftime("%a-%b") + "/"
             subprocess.call(shlex.split(command), stdout=writeToFile)
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
