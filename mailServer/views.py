@@ -58,7 +58,48 @@ def submitEmailCreation(request):
             userName = data['username']
             password = data['password']
 
-            ## create email entry
+            ## Check if already exists
+
+            finalEmailUsername = userName + "@" + domain
+
+            if EUsers.objects.filter(email=finalEmailUsername).exists():
+                data_ret = {'createEmailStatus': 0, 'error_message': "This account already exists!"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            ## Check for email limits.
+
+            website = Websites.objects.get(domain=domain)
+
+            try:
+
+                newEmailDomain = Domains(domainOwner=website, domain=domain)
+                newEmailDomain.save()
+
+                if website.package.emailAccounts == 0 or (
+                            newEmailDomain.eusers_set.all().count() < website.package.emailAccounts):
+                    pass
+                else:
+                    data_ret = {'createEmailStatus': 0,
+                                'error_message': "Exceeded maximum amount of email accounts allowed for the package."}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+            except:
+
+                emailDomain = Domains.objects.get(domain=domain)
+
+                if website.package.emailAccounts == 0 or (
+                    emailDomain.eusers_set.all().count() < website.package.emailAccounts):
+                    pass
+                else:
+                    data_ret = {'createEmailStatus': 0,
+                                'error_message': "Exceeded maximum amount of email accounts allowed for the package."}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+
+            ## Create email entry
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
 
@@ -67,7 +108,16 @@ def submitEmailCreation(request):
             output = subprocess.check_output(shlex.split(execPath))
 
             if output.find("1,None") > -1:
-                pass
+
+                emailDomain = Domains.objects.get(domain=domain)
+
+                emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
+                emailAcct.save()
+
+                data_ret = {'createEmailStatus': 1, 'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             else:
                 data_ret = {'createEmailStatus': 0, 'error_message': output}
                 json_data = json.dumps(data_ret)
@@ -75,34 +125,6 @@ def submitEmailCreation(request):
 
             ## create email entry ends
 
-            finalEmailUsername = userName + "@" + domain
-
-            website = Websites.objects.get(domain=domain)
-
-            if EUsers.objects.filter(email=finalEmailUsername).exists():
-                data_ret = {'createEmailStatus': 0, 'error_message': "This account already exists"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            if not Domains.objects.filter(domain=domain).exists():
-                newEmailDomain = Domains(domainOwner=website, domain=domain)
-                newEmailDomain.save()
-
-                emailAcct = EUsers(emailOwner=newEmailDomain, email=finalEmailUsername, password=password)
-                emailAcct.save()
-
-                data_ret = {'createEmailStatus': 1, 'error_message': "None"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            else:
-                emailDomain = Domains.objects.get(domain=domain)
-                emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
-                emailAcct.save()
-
-                data_ret = {'createEmailStatus': 1, 'error_message': "None"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
 
 
     except BaseException, msg:
