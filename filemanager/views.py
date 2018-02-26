@@ -5,11 +5,12 @@ from django.shortcuts import render,redirect
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
 import plogical.CyberCPLogFileWriter as logging
-from django.http import HttpResponse
+from django.http import HttpResponse,Http404
 import json
 from websiteFunctions.models import Websites
 import subprocess
 import shlex
+import os
 
 # Create your views here.
 
@@ -59,3 +60,18 @@ def changePermissions(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+def downloadFile(request):
+    data = json.loads(request.body)
+    fileToDownload = data['fileToDownload']
+
+    response = ''
+    if os.path.isfile(fileToDownload):
+        try:
+            with open(fileToDownload, 'rb') as f:
+                response = HttpResponse(f.read(), content_type="application/octet-stream")
+                response['Content-Disposition'] = 'inline; filename=' + os.path.basename(fileToDownload)
+        except Exception as e:
+            raise Http404
+
+    return response

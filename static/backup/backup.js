@@ -1267,7 +1267,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
                     $timeout.cancel();
 
                     // Start the restore of remote backups that are transferred to local server
-                    
+
                     remoteBackupRestore();
                 }
             }

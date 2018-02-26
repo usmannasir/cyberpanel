@@ -115,6 +115,13 @@
                 </div>
 
                 <div ng-hide="phpDetailsBox" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "post_max_size" %}</label>
+                    <div class="col-sm-6">
+                        <input ng-model="post_max_size"  type="text" class="form-control" required>
+                    </div>
+                </div>
+
+                <div ng-hide="phpDetailsBox" class="form-group">
                     <label class="col-sm-3 control-label">{% trans "max_input_time" %}</label>
                     <div class="col-sm-6">
                         <input ng-model="max_input_time"  type="text" class="form-control" required>

@@ -350,7 +350,9 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
          <td>26KB</td>
          <td>26 Oct</td>
          <td>775</td>
+         <td>Folder/File</td>
      </tr>
+
      */
 
     function createTR(fileName,fileSize,lastModified,permissions,dirCheck){
@@ -381,6 +383,9 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
         var secondTDNode = document.createElement('td');
         var thirdTDNode = document.createElement('td');
         var forthTDNode = document.createElement('td');
+        var fifthTDNode = document.createElement('td');
+
+        fifthTDNode.style.display = "none";
 
         //
 
@@ -405,18 +410,29 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
             trNode.addEventListener("dblclick", function(){ $scope.fetchForTableSecondary(firstTDNode,"doubleClick");});
             trNode.addEventListener("click", function(){ addFileOrFolderToList(trNode);});
             trNode.addEventListener("contextmenu", function(event){$scope.rightClickCallBack(event,trNode);});
+
+            // Hidden td to represent file or folder
+
+            var fileOrFolderNode = document.createTextNode("Folder");
+            fifthTDNode.appendChild(fileOrFolderNode)
         }
         else{
             thNode.appendChild(iNodeFile);
             trNode.appendChild(thNode);
             trNode.addEventListener("click", function(){ addFileOrFolderToList(trNode);});
             trNode.addEventListener("contextmenu", function(event){ $scope.rightClickCallBack(event,trNode); });
+
+            // Hidden td to represent file or folder
+
+            var fileOrFolderNode = document.createTextNode("File");
+            fifthTDNode.appendChild(fileOrFolderNode)
         }
 
         trNode.appendChild(firstTDNode);
         trNode.appendChild(secondTDNode);
         trNode.appendChild(thirdTDNode);
         trNode.appendChild(forthTDNode);
+        trNode.appendChild(fifthTDNode);
 
         return trNode;
 
@@ -1131,7 +1147,7 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
 
     // right click settings
 
-    var rightClickNode = document.getElementById("rightClick")
+    var rightClickNode = document.getElementById("rightClick");
     rightClickNode.style.display = "none";
 
     $scope.rightClickCallBack = function (event,trNode) {
@@ -1146,6 +1162,19 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
             'left': event.pageX
         });
 
+        // If we want to enable download for this node
+
+        var downloadOnRight = document.getElementById("downloadOnRight");
+
+        if(trNode.lastChild.innerHTML === "File"){
+            downloadOnRight.style.display = "Block";
+        }else{
+            downloadOnRight.style.display = "none";
+        }
+
+
+
+
         $scope.addFileOrFolderToListForRightClick(trNode);
     }
 
@@ -1154,7 +1183,7 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
         var check = 1;
         var getFileName = nodeName.getElementsByTagName('td')[0].innerHTML;
 
-        if(nodeName.style.backgroundColor == "aliceblue") {
+        if(nodeName.style.backgroundColor === "aliceblue") {
 
             var tempArray = [];
             nodeName.style.background = "None";
@@ -1236,7 +1265,7 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
     };
 
 
-    // fix permissions
+    // Fix permissions
 
     $scope.fixPermissions = function() {
 
@@ -1246,7 +1275,6 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
         var data = {
             domainName : domainName,
         };
-
 
 
         $http.post(url, data).then(ListInitialDatas, cantLoadInitialDatas);
@@ -1267,6 +1295,50 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
 
         function cantLoadInitialDatas(response) {
         }
+
+    };
+
+    // Download files
+
+    $scope.downloadFile = function() {
+
+        url = "/filemanager/downloadFile";
+
+        var data = {
+            fileToDownload: $scope.currentPath + "/" + allFilesAndFolders[0]
+        };
+
+
+        $http.post(url, data).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+            var blob = new Blob([response.data]);
+
+            //IE case
+              if (!!window.navigator.msSaveBlob){
+                window.navigator.msSaveBlob(blob, allFilesAndFolders[0]);
+                return;
+              }
+
+              //create blob and url
+              var url = URL.createObjectURL(blob);
+
+              //create invisible acnhor, to specify the file name
+              var a = document.createElement('a');
+              document.body.appendChild(a);
+              a.style = "display: none";
+              a.href = url;
+              a.download = allFilesAndFolders[0];
+              a.click();
+
+              setTimeout(function(){
+                URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+              }, 100);
+        }
+
+        function cantLoadInitialDatas(response) {}
 
     };
 

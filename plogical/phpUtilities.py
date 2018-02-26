@@ -78,7 +78,7 @@ class phpUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateRestore]")
 
     @staticmethod
-    def savePHPConfigBasic(phpVers,allow_url_fopen,display_errors,file_uploads,allow_url_include,memory_limit,max_execution_time,upload_max_filesize,max_input_time):
+    def savePHPConfigBasic(phpVers,allow_url_fopen,display_errors,file_uploads,allow_url_include,memory_limit,max_execution_time,upload_max_filesize,max_input_time,post_max_size):
         try:
 
             path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
@@ -109,6 +109,8 @@ class phpUtilities:
 
                 elif items.find("max_input_time") > -1 and items.find("=") > -1:
                     writeToFile.writelines("max_input_time = " + max_input_time + "\n")
+                elif items.find("post_max_size") > -1 and items.find("=") > -1:
+                    writeToFile.writelines("post_max_size = " + post_max_size + "\n")
                 else:
                     writeToFile.writelines(items)
 
@@ -155,6 +157,7 @@ def main():
     parser.add_argument("--max_execution_time", help="Memory Hard Limit (bytes) for PHP!")
     parser.add_argument("--upload_max_filesize", help="Process Soft Limit for PHP!")
     parser.add_argument("--max_input_time", help="Process Hard Limit for PHP!")
+    parser.add_argument("--post_max_size", help="Process Hard Limit for PHP!")
 
     ## Litespeed Tuning Arguments
 
@@ -165,7 +168,7 @@ def main():
 
     if args.function == "savePHPConfigBasic":
         phpUtilities.savePHPConfigBasic(args.phpVers, args.allow_url_fopen, args.display_errors, args.file_uploads, args.allow_url_include, args.memory_limit,
-                                        args.max_execution_time, args.upload_max_filesize, args.max_input_time)
+                                        args.max_execution_time, args.upload_max_filesize, args.max_input_time, args.post_max_size)
     elif args.function == "savePHPConfigAdvance":
         phpUtilities.savePHPConfigAdvance(args.phpVers, args.tempPath)
 

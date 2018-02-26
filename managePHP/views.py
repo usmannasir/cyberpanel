@@ -2000,6 +2000,8 @@ def getCurrentPHPConfig(request):
                         upload_max_filesize = re.findall(r"[A-Za-z0-9_]+", items)[1]
                     if items.find("max_input_time")>-1 and items.find("=")>-1:
                         max_input_time = re.findall(r"[A-Za-z0-9_]+", items)[1]
+                    if items.find("post_max_size") > -1 and items.find("=") > -1:
+                        post_max_size = re.findall(r"[A-Za-z0-9_]+", items)[1]
 
 
 
@@ -2011,7 +2013,8 @@ def getCurrentPHPConfig(request):
                              'memory_limit': memory_limit,
                              'max_execution_time': max_execution_time,
                              'upload_max_filesize': upload_max_filesize,
-                             'max_input_time': max_input_time}
+                             'max_input_time': max_input_time,
+                             'post_max_size':post_max_size}
 
                 final_json = json.dumps(final_dic)
 
@@ -2046,6 +2049,7 @@ def savePHPConfigBasic(request):
                 max_execution_time = data['max_execution_time']
                 upload_max_filesize = data['upload_max_filesize']
                 max_input_time = data['max_input_time']
+                post_max_size = data['post_max_size']
 
                 if allow_url_fopen == True:
                     allow_url_fopen = "allow_url_fopen = On"
@@ -2086,7 +2090,7 @@ def savePHPConfigBasic(request):
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
 
-                execPath = execPath + " savePHPConfigBasic --phpVers " + phpVers + " --allow_url_fopen '" + allow_url_fopen + "' --display_errors '" + display_errors + "' --file_uploads '" + file_uploads + "' --allow_url_include '" + allow_url_include + "' --memory_limit " + memory_limit+ " --max_execution_time " + max_execution_time + " --upload_max_filesize " + upload_max_filesize + " --max_input_time " + max_input_time
+                execPath = execPath + " savePHPConfigBasic --phpVers " + phpVers + " --allow_url_fopen '" + allow_url_fopen + "' --display_errors '" + display_errors + "' --file_uploads '" + file_uploads + "' --allow_url_include '" + allow_url_include + "' --memory_limit " + memory_limit+ " --max_execution_time " + max_execution_time + " --upload_max_filesize " + upload_max_filesize + " --max_input_time " + max_input_time + " --post_max_size " + post_max_size
 
 
 
