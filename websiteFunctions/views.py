@@ -529,7 +529,7 @@ def listWebsites(request):
             admin = Administrator.objects.get(pk=request.session['userID'])
 
             if admin.type == 1:
-                websites = admin.websites_set.all()
+                websites = Websites.objects.all()
             else:
                 websites = Websites.objects.filter(admin=admin)
 
@@ -546,6 +546,7 @@ def listWebsites(request):
 
                 for i in range(1, finalPages):
                     pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
+
 
             return render(request,'websiteFunctions/listWebsites.html',{"pagination":pagination})
 
@@ -610,10 +611,7 @@ def getFurtherAccounts(request):
 
             json_data = json_data + ']'
 
-
-
             final_dic = {'listWebSiteStatus': 1, 'error_message': "None", "data": json_data}
-
 
             final_json = json.dumps(final_dic)
 
