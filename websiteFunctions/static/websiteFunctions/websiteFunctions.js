@@ -1977,3 +1977,345 @@ app.controller('suspendWebsiteControl', function($scope,$http) {
 
 
 /* Java script code to suspend/un-suspend ends here */
+
+
+/* Java script code to manage cron ends here */
+
+app.controller('manageCronController', function($scope,$http) {
+    $("#manageCronLoading").hide();
+    $("#modifyCronForm").hide();
+    $("#cronTable").hide();
+    $("#saveCronButton").hide();
+    $("#addCronButton").hide();
+    
+    $("#addCronFailure").hide();
+    $("#cronEditSuccess").hide();
+    $("#fetchCronFailure").hide();
+    
+    $scope.fetchWebsites = function(){
+
+        $("#manageCronLoading").show();
+        $("#addCronFailure").hide();
+        $("#cronEditSuccess").hide();
+        $("#fetchCronFailure").hide();
+        var websiteToBeModified = $scope.websiteToBeModified;
+        url = "/websites/getWebsiteCron";
+
+        var data = {
+            domain: websiteToBeModified,
+        };
+
+        var config = {
+            headers : {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            if (response.data.getWebsiteCron == 0)
+            {
+                console.log(response.data);
+                $scope.errorMessage = response.data.error_message;
+                $("#cronTable").hide();
+                $("#manageCronLoading").hide();
+                $("#modifyCronForm").hide();
+                $("#saveCronButton").hide();
+                $("#addCronButton").hide();
+            }
+            else{
+                console.log(response.data);
+                var finalData = response.data.crons;
+                $scope.cronList = finalData;
+                $("#cronTable").show();
+                $("#manageCronLoading").hide();
+                $("#modifyCronForm").hide();
+                $("#saveCronButton").hide();
+                $("#addCronButton").hide();
+            }
+        }
+        function cantLoadInitialDatas(response) {
+            $("#manageCronLoading").hide();
+            $("#cronTable").hide();
+            $("#fetchCronFailure").show();
+            $("#addCronFailure").hide();
+            $("#cronEditSuccess").hide();
+        }
+    };
+    
+    $scope.fetchCron = function(cronLine){
+
+        $("#cronTable").show();
+        $("#manageCronLoading").show();
+        $("#modifyCronForm").show();
+        $("#saveCronButton").show();
+        $("#addCronButton").hide();
+        
+        $("#addCronFailure").hide();
+        $("#cronEditSuccess").hide();
+        $("#fetchCronFailure").hide();
+        
+        $scope.line = cronLine;
+        console.log($scope.line);
+        
+        var websiteToBeModified = $scope.websiteToBeModified;
+        url = "/websites/getCronbyLine";
+        var data = {
+            domain: websiteToBeModified,
+            line: cronLine
+        };
+
+        var config = {
+            headers : {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        function ListInitialDatas(response) {
+            console.log(response);
+
+            if (response.data.getWebsiteCron == 0)
+            {
+                console.log(response.data);
+                $scope.errorMessage = response.data.error_message;
+                $("#cronTable").show();
+                $("#manageCronLoading").hide();
+                $("#modifyCronForm").hide();
+                $("#saveCronButton").hide();
+                $("#addCronButton").hide();
+            }
+            else{
+                console.log(response.data);
+
+                $scope.minute = response.data.cron.minute
+                $scope.hour = response.data.cron.hour
+                $scope.monthday = response.data.cron.monthday
+                $scope.month = response.data.cron.month
+                $scope.weekday = response.data.cron.weekday
+                $scope.command = response.data.cron.command
+                $scope.line = response.data.line
+
+                $("#cronTable").show();
+                $("#manageCronLoading").hide();
+                $("#modifyCronForm").fadeIn();
+                $("#addCronButton").hide();
+                $("#saveCronButton").show();
+
+            }
+        }
+        function cantLoadInitialDatas(response) {
+            $("#manageCronLoading").hide();
+            $("#fetchCronFailure").show();
+            $("#addCronFailure").hide();
+            $("#cronEditSuccess").hide();
+        }
+    };
+    
+    $scope.populate = function(){
+        splitTime = $scope.defined.split(" ");
+        $scope.minute = splitTime[0];
+        $scope.hour = splitTime[1];
+        $scope.monthday = splitTime[2];
+        $scope.month = splitTime[3];
+        $scope.weekday = splitTime[4];
+    }
+    
+    $scope.addCronForm = function(){
+        
+        $("#addCronFailure").hide();
+        $("#cronEditSuccess").hide();
+        $("#fetchCronFailure").hide();
+        $("#manageCronLoading").hide();
+        if (!$scope.websiteToBeModified) {
+            alert("Please select a domain first");
+        }
+        else 
+        {
+            $scope.minute = $scope.hour = $scope.monthday = $scope.month = $scope.weekday = $scope.command = $scope.line = "";
+            
+            $("#cronTable").hide();
+            $("#manageCronLoading").hide();
+            $("#modifyCronForm").show();
+            $("#saveCronButton").hide()
+            $("#addCronButton").show();
+        }
+    };
+    
+    $scope.addCronFunc = function(){
+
+        $("#manageCronLoading").show();
+        $scope.errorMessage = "test1";
+        $("#addCronFailure").hide();
+        $("#cronEditSuccess").hide();
+        $("#fetchCronFailure").hide();
+        
+        var websiteToBeModified = $scope.websiteToBeModified;
+        
+        url = "/websites/addNewCron";
+        var data = {
+            domain   : websiteToBeModified,
+            minute   : $scope.minute,
+            hour     : $scope.hour,
+            monthday : $scope.monthday,
+            month    : $scope.month,
+            weekday  : $scope.weekday,
+            command  : $scope.command
+        };
+
+        var config = {
+            headers : {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        function ListInitialDatas(response) {
+            console.log(response);
+
+            if (response.data.addNewCron == 0)
+            {
+                console.log(response.data)
+                $scope.errorMessage = response.data.error_message;
+                console.log($scope.errorMessage)
+                $scope.errorMessage = "test2";
+                console.log(response.data.error_message)
+                $("#manageCronLoading").hide();
+                $("#cronEditSuccess").hide();
+                $("#fetchCronFailure").hide();
+                $("#addCronFailure").show();
+            }
+            else{
+                console.log(response.data);
+                $("#cronTable").hide();
+                $("#manageCronLoading").hide();
+                $("#cronEditSuccess").show();
+                $("#fetchCronFailure").hide();
+                $("#addCronFailure").hide();
+
+            }
+        }
+        function cantLoadInitialDatas(response) {
+            $("#manageCronLoading").hide();
+            $("#addCronFailure").show();
+            $("#cronEditSuccess").hide();
+            $("#fetchCronFailure").hide();
+        }
+    };
+    
+    
+    $scope.removeCron = function(line){
+
+        $("#manageCronLoading").show();
+        
+        $("#addCronFailure").hide();
+        $("#cronEditSuccess").hide();
+        $("#fetchCronFailure").hide();
+             
+        url = "/websites/remCronbyLine";
+        var data = {
+            domain   : $scope.websiteToBeModified,
+            line     : line
+        };
+
+        var config = {
+            headers : {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        function ListInitialDatas(response) {
+            console.log(response);
+
+            if (response.data.remCronbyLine == 0)
+            {
+                console.log(response.data)
+                $scope.errorMessage = response.data.error_message;
+                $("#manageCronLoading").hide();
+                $("#cronEditSuccess").hide();
+                $("#fetchCronFailure").hide();
+                $("#addCronFailure").show();
+            }
+            else{
+                console.log(response.data);
+                $("#cronTable").hide();
+                $("#manageCronLoading").hide();
+                $("#cronEditSuccess").show();
+                $("#fetchCronFailure").hide();
+                $("#addCronFailure").hide();
+
+            }
+        }
+        function cantLoadInitialDatas(response) {
+            $("#manageCronLoading").hide();
+            $("#addCronFailure").show();
+            $("#cronEditSuccess").hide();
+            $("#fetchCronFailure").hide();
+        }
+    };
+    
+    $scope.modifyCronFunc = function(){
+
+        $("#manageCronLoading").show();
+        $("#addCronFailure").hide();
+        $("#cronEditSuccess").hide();
+        $("#fetchCronFailure").hide();
+        
+        var websiteToBeModified = $scope.websiteToBeModified;
+        
+        url = "/websites/saveCronChanges";
+        var data = {
+            domain   : websiteToBeModified,
+            line     : $scope.line,
+            minute   : $scope.minute,
+            hour     : $scope.hour,
+            monthday : $scope.monthday,
+            month    : $scope.month,
+            weekday  : $scope.weekday,
+            command  : $scope.command
+        };
+
+        var config = {
+            headers : {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        function ListInitialDatas(response) {
+            console.log(response);
+
+            if (response.data.addNewCron == 0)
+            {
+                console.log(response.data)
+                $scope.errorMessage = response.data.error_message;
+                $("#manageCronLoading").hide();
+                $("#cronEditSuccess").hide();
+                $("#fetchCronFailure").hide();
+                $("#addCronFailure").show();
+            }
+            else{
+                console.log(response.data);
+                $("#cronTable").hide();
+                $("#manageCronLoading").hide();
+                $("#cronEditSuccess").show();
+                $("#fetchCronFailure").hide();
+                $("#addCronFailure").hide();
+
+            }
+        }
+        function cantLoadInitialDatas(response) {
+            $("#manageCronLoading").hide();
+            $("#addCronFailure").show();
+            $("#cronEditSuccess").hide();
+            $("#fetchCronFailure").hide();
+        }
+    };
+    
+});
+
+
+
+/* Java script code to manage cron ends here */

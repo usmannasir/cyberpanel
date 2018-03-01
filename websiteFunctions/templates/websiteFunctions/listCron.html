@@ -1,0 +1,181 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Cron Management - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Cron Management" %}</h2>
+   <p>{% trans "Create, edit or delete your cron from this page." %}</p>
+</div>
+
+<div class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Cron Management" %} <img id="manageCronLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+
+            <form ng-controller="manageCronController"  action="/" class="form-horizontal bordered-row">
+
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
+                    <div class="col-sm-6">
+                        <select ng-change="fetchWebsites()" ng-model="websiteToBeModified" class="form-control">
+                            {% for items in websiteList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                   <button type="button" class="btn btn-primary" ng-click="fetchWebsites()" href=""><i class="glyph-icon icon-refresh" title="Refresh"></i></button>
+                   <button type="button" class="btn btn-primary" ng-click="addCronForm()" href=""><i class="glyph-icon icon-plus" title="Add Cron"></i></button>
+                </div>
+
+
+            <!------ Modification form that appears after a click --------------->
+
+            <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="cronTable">
+                <thead>
+                <tr>
+                    <th>Minute</th>
+                    <th>Hour</th>
+                    <th>Day of Month</th>
+                    <th>Month</th>
+                    <th>Day of Week</th>
+                    <th>Command</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                <tr ng-repeat="cron in cronList track by $index">
+                    <td ng-bind="cron.minute"></td>
+                    <td ng-bind="cron.hour"></td>
+                    <td ng-bind="cron.monthday"></td>
+                    <td ng-bind="cron.month"></td>
+                    <td ng-bind="cron.weekday"></td>
+                    <td ng-bind="cron.command"></td>
+                    <td>
+                        <a class="btn btn-warning" ng-click="removeCron(cron.line)" href=""><i class="glyph-icon icon-trash" title="Delete"></i></a>
+                        <a class="btn btn-primary" ng-click="fetchCron(cron.line)" href=""><i class="glyph-icon icon-pencil" title="Edit"></i></a>
+                    </td>
+                </tr>
+
+                </tbody>
+                </table>
+
+            <!------ Modification form that appears after a click --------------->
+            <div id="modifyCronForm">
+            <form  action="/" class="form-horizontal bordered-row ng-scope ng-dirty ng-valid-parse ng-valid ng-valid-required">
+                <input type="hidden" ng-value="line" required="">
+                <hr>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Pre defined</label>
+                    <div class="col-sm-6">
+                       <select class="form-control" ng-model="defined" ng-change="populate()" required="">
+                         <option value="* * * * *">Every minute</option>
+                         <option value="*/5 * * * *">Every 5 minutes</option>
+                         <option value="*/30 * * * *">Every 30 minutes</option>
+                         <option value="0 * * * *">Every hour</option>
+                         <option value="0 0 * * *">Every day</option>
+                         <option value="0 0 * * 0">Every week</option>
+                         <option value="0 0 1 * *">Every month</option>
+                         <option value="0 0 1 1 *">Every year</option>
+                      </select>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Minute</label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="minute" required="">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Hour</label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="hour" required="">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Day of month</label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="monthday" required="">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Month</label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="month" required="">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Day of week</label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="weekday" required="">
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Command</label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="command" required="">
+                    </div>
+                </div>
+            </form>
+            <div id="saveCronButton" class="form-group">
+                <label class="col-sm-3 control-label"></label>
+                <div class="col-sm-4">
+                    <button type="button" ng-click="modifyCronFunc()" class="btn btn-primary btn-lg btn-block">{% trans "Save edits" %}</button>
+
+                </div>
+            </div>
+            <div id="addCronButton" class="form-group">
+                <label class="col-sm-3 control-label"></label>
+                <div class="col-sm-4">
+                    <button type="button" ng-click="addCronFunc()" class="btn btn-primary btn-lg btn-block">{% trans "Add cron" %}</button>
+                </div>
+            </div>
+            </div>
+
+            <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+              {{ messger }}
+                    <div class="col-sm-4">
+                            <div id="fetchCronFailure" class="alert alert-danger">
+                                        <p>{% trans "Cannot fetch website details. Error message:" %} {{ errorMessage }}</p>
+                            </div>
+
+                            <div id="addCronFailure" class="alert alert-danger">
+                                        <p>{% trans "Unable to add/save Cron. Error message:" %} {{ errorMessage }}</p>
+                            </div>
+                            <div id="cronEditSuccess" class="alert alert-success">
+                                        <p>{% trans "Cron job saved" %}</p>
+                            </div>
+                    </div>
+
+
+
+                </div>
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}
