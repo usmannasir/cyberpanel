@@ -9,6 +9,7 @@ from loginSystem.models import Administrator
 import os
 from loginSystem.views import loadLoginPage
 from models import Domains,Records
+from re import match,I,M
 
 # Create your views here.
 
@@ -334,17 +335,24 @@ def addDNSRecord(request):
                 recordType = data['recordType']
                 recordName = data['recordName']
 
-
-
-                admin = Administrator.objects.get(pk=val)
+                #admin = Administrator.objects.get(pk=val)
 
                 zone = Domains.objects.get(name=zoneDomain)
-                value = recordName+"."+zoneDomain
+                value = ""
+
 
                 if recordType == "A":
+
                     recordContentA = data['recordContentA']  ## IP or ponting value
+
                     if recordName == "@":
                         value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
                     record = Records(   domainOwner=zone,
                                         domain_id=zone.id,
                                         name=value,
@@ -356,6 +364,15 @@ def addDNSRecord(request):
                                         auth=1  )
                     record.save()
                 elif recordType == "MX":
+
+                    if recordName == "@":
+                        value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
                     recordContentMX = data['recordContentMX']
                     record = Records(domainOwner=zone,
                                      domain_id=zone.id,
@@ -368,9 +385,18 @@ def addDNSRecord(request):
                                      auth=1)
                     record.save()
                 elif recordType == "AAAA":
+
                     recordContentAAAA = data['recordContentAAAA']  ## IP or ponting value
+
                     if recordName == "@":
                         value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
+
                     record = Records(   domainOwner=zone,
                                         domain_id=zone.id,
                                         name=value,
@@ -383,7 +409,15 @@ def addDNSRecord(request):
                     record.save()
 
                 elif recordType == "CNAME":
-                    recordName = data['recordName']
+
+                    if recordName == "@":
+                        value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
                     recordContentCNAME = data['recordContentCNAME']  ## IP or ponting value
                     record = Records(   domainOwner=zone,
                                         domain_id=zone.id,
@@ -398,8 +432,15 @@ def addDNSRecord(request):
 
 
                 elif recordType == "SPF":
+
                     if recordName == "@":
                         value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
                     recordContentSPF = data['recordContentSPF']  ## IP or ponting value
                     record = Records(   domainOwner=zone,
                                         domain_id=zone.id,
@@ -414,8 +455,15 @@ def addDNSRecord(request):
 
 
                 elif recordType == "TXT":
+
                     if recordName == "@":
                         value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
                     recordContentTXT = data['recordContentTXT']  ## IP or ponting value
                     record = Records(   domainOwner=zone,
                                         domain_id=zone.id,

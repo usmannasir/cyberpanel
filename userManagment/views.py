@@ -140,7 +140,6 @@ def submitUserCreation(request):
                     return HttpResponse(final_json)
 
                 elif accountType == "Normal User":
-                    websitesLimit = data['websitesLimit']
 
                     newAdmin = Administrator(firstName=firstName,
                                             lastName=lastName,
@@ -148,7 +147,7 @@ def submitUserCreation(request):
                                             type=3,
                                             userName=userName,
                                             password=password,
-                                            initWebsitesLimit=websitesLimit,
+                                            initWebsitesLimit=0,
                                             owner=currentAdmin.pk
                                             )
                     newAdmin.save()
@@ -325,13 +324,12 @@ def saveModifications(request):
                     user.save()
 
                 elif data['accountType'] == "Normal User":
-                    websitesLimit = data['websitesLimit']
 
                     user.firstName = firstName
                     user.lastName = lastName
                     user.email = email
                     user.password = password
-                    user.initWebsitesLimit = websitesLimit
+                    user.initWebsitesLimit = 0
                     user.type = 3
 
                     user.save()
