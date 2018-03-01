@@ -1,0 +1,222 @@
+/* Headings */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6 {
+    font-weight: 500;
+    margin: 0;
+}
+h1 small,
+h2 small,
+h3 small,
+h4 small,
+h5 small,
+h6 small,
+.h1 small,
+.h2 small,
+.h3 small,
+.h4 small,
+.h5 small,
+.h6 small {
+    font-weight: normal;
+}
+h1,
+.h1 {
+    font-size: 38px;
+}
+h2,
+.h2 {
+    font-size: 26px;
+}
+h3,
+.h3 {
+    font-size: 20px;
+}
+h4,
+.h4 {
+    font-size: 16px;
+}
+h5,
+.h5 {
+    font-size: 14px;
+}
+h6,
+.h6 {
+    font-size: 12px;
+}
+h1 small,
+.h1 small {
+    font-size: 24px;
+}
+h2 small,
+.h2 small {
+    font-size: 18px;
+}
+h3 small,
+.h3 small,
+h4 small,
+.h4 small {
+    font-size: 14px;
+}
+h1 small,
+h2 small,
+h3 small,
+h1 .small,
+h2 .small,
+h3 .small {
+    font-size: 75%;
+}
+blockquote {
+    margin: 0 0 20px;
+    padding: 10px 20px;
+    border-left: 5px solid #eee;
+}
+blockquote p {
+    font-size: 17.5px;
+    font-weight: 50;
+    line-height: 1.25;
+}
+blockquote p:last-child {
+    margin-bottom: 0;
+}
+blockquote small {
+    line-height: 1.428571429;
+    display: block;
+    color: #999;
+}
+blockquote small:before {
+    content: '\2014 \00A0';
+}
+blockquote.pull-right {
+    padding-right: 15px;
+    padding-left: 0;
+    border-right: 5px solid #eee;
+    border-left: 0;
+}
+blockquote.pull-right p,
+blockquote.pull-right small,
+blockquote.pull-right .small {
+    text-align: right;
+}
+blockquote.pull-right small:before,
+blockquote.pull-right .small:before {
+    content: '';
+}
+blockquote.pull-right small:after,
+blockquote.pull-right .small:after {
+    content: '\00A0 \2014';
+}
+blockquote:before,
+blockquote:after {
+    content: '';
+}
+address {
+    font-style: normal;
+    line-height: 1.428571429;
+    margin-bottom: 20px;
+}
+code,
+kbd,
+pre,
+samp {
+    font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+code {
+    font-size: 90%;
+    padding: 0 4px;
+    white-space: nowrap;
+    color: #d05;
+    border: 1px solid #dfe8f1;
+    border-radius: 3px;
+    background: #fafafa;
+}
+pre {
+    font-size: 13px;
+    line-height: 1.428571429;
+    display: block;
+    margin: 0 0 10px;
+    padding: 9.5px;
+    word-wrap: break-word;
+    word-break: break-all;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f5f5f5;
+}
+pre code {
+    font-size: inherit;
+    padding: 0;
+    white-space: pre-wrap;
+    color: inherit;
+    border-radius: 0;
+    background-color: transparent;
+}
+p {
+    line-height: 1.6em;
+    margin: 0;
+}
+/* Titles */
+
+.title-hero {
+    margin: 0 0 15px;
+    padding: 0;
+    text-transform: uppercase;
+    font-size: 14px;
+    opacity: 0.7;
+}
+h4.title-hero {
+    font-size: 15px;
+}
+.title-lead {
+    color: #3F3F3F;
+}
+.title-hero .title-lead {
+    font-size: 65%;
+    margin: 5px 0 0;
+}
+.title-hero + .title-lead {
+    margin-top: -10px;
+}
+/* Jumbotron */
+
+.jumbotron {
+    font-size: 21px;
+    font-weight: 200;
+    line-height: 2.1428571435;
+    margin-bottom: 30px;
+    padding: 30px;
+    color: inherit;
+    background-color: #eee;
+}
+.jumbotron h1 {
+    line-height: 1;
+    color: inherit;
+}
+.jumbotron p {
+    line-height: 1.4;
+}
+.container .jumbotron {
+    border-radius: 6px;
+}
+@media screen and (min-width: 768px) {
+    .jumbotron {
+        padding-top: 48px;
+        padding-bottom: 48px;
+    }
+    .container .jumbotron {
+        padding-right: 60px;
+        padding-left: 60px;
+    }
+    .jumbotron h1 {
+        font-size: 63px;
+    }
+}

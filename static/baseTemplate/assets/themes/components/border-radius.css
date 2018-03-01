@@ -1,0 +1,266 @@
+
+/* Border radius */
+
+.sb-slidebar .chat-box li a,
+.sb-slidebar .popover-title,
+.ui-menu-item,
+div.dataTables_filter input,
+.main-header .main-nav.nav-alt li.sf-mega-menu .sf-mega a,
+.main-header .main-nav.nav-alt li > ul li a,
+.ui-accordion,
+.ui-accordion-header,
+.panel-group .panel,
+.ui-editRangeSlider-inputValue,
+.ui-rangeSlider-withArrows .ui-rangeSlider-container,
+.ui-rangeSlider-noArrow .ui-rangeSlider-container,
+.ui-rangeSlider-bar,
+.ui-rangeSlider-label,
+.ui-corner-all,
+.image-box,
+.ui-dialog .ui-dialog-titlebar-close,
+.ui-dialog-buttonset button,
+.input-group-addon.addon-inside,
+.ms-list li,
+.chosen-container-single .chosen-search input,
+div[id^='uniform-'] span,
+.nav-tabs.nav-justified > li > a,
+.nav > li > a,
+.alert-icon,
+.progressbar,
+.progressbar-value,
+.pagination,
+.icon-boxed,
+.hero-btn,
+.main-nav ul li ul li a,
+.daterangepicker td,
+.daterangepicker th,
+.daterangepicker .ranges li,
+.daterangepicker .calendar-date,
+.daterangepicker,
+.ui-datepicker td span,
+.ui-datepicker td a,
+.bsdatepicker,
+.bsdatepicker td,
+.bsdatepicker th,
+.bsdatepicker td span,
+.todo-box li,
+.tile-button,
+.dropzone,
+.btn,
+.ui-button,
+.ui-tabs,
+.ui-dialog,
+.ui-dialog-titlebar-close,
+.ui-datepicker,
+.ui-datepicker-prev,
+.ui-datepicker-next,
+.ui-datepicker-buttonpane button,
+.jGrowl-notification,
+.input,
+.form-control,
+.dropdown-menu,
+.popover,
+.minicolors-panel,
+.chosen-container,
+.chosen-choices li.search-choice,
+.chosen-single,
+.chosen-choices,
+.chosen-results li.highlighted,
+.ui-menu li a,
+.selector,
+.tile-box,
+.dashboard-box,
+.panel-layout,
+.panel-box,
+.panel-content,
+.content-box,
+.content-box-closed,
+.content-box-closed .content-box-header,
+.form-input-icon .glyph-icon,
+.content-box .ui-widget-overlay.loader,
+.bootstrap-timepicker-widget table td input,
+.button-pane,
+.alert,
+.tooltip-inner,
+.table-rounded,
+.info-box-alt,
+.notifications-box,
+.ui-toolbar select,
+.ui-toolbar input,
+.info-box,
+.dropdown-submenu.float-left > .dropdown-menu,
+.nav-list,
+.nav-list-horizontal-alt li a {
+    border-radius: 3px;
+}
+.ui-datepicker-title,
+.panel > .list-group:first-child .list-group-item:first-child,
+.panel-heading,
+.tile-header,
+.list-group-item:first-child,
+.pricing-title,
+.ui-dialog .ui-dialog-titlebar,
+.ui-datepicker-header,
+.content-box .content-box-header,
+.ui-tabs-nav,
+.btn-group-vertical > .btn:first-child,
+.notifications-box li:first-child,
+.ui-tabs-nav li > a,
+.nav-list li:first-child a,
+.post-box textarea,
+.popover-title {
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+}
+.panel > .list-group:last-child .list-group-item:last-child,
+.panel-footer,
+.popover-content,
+.list-group-item:last-child,
+.ui-tabs-nav.tabs-bottom {
+    border-bottom-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+}
+.irs-line-left,
+.ui-tabs-nav li:first-child,
+.table-rounded thead tr:first-child th:first-child,
+.table-rounded thead tr:first-child td:first-child {
+    border-top-left-radius: 3px;
+}
+.fc-state-default.fc-corner-left,
+.ui-tabs-nav.tabs-bottom li:first-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 3px;
+}
+.header-buttons-separator .icon-separator:last-child,
+.ui-tabs-nav li.float-right:not(:last-child),
+.table-rounded thead tr:first-child th:last-child,
+.table-rounded thead tr:first-child td:last-child {
+    border-top-right-radius: 3px;
+}
+.fc-state-default.fc-corner-right,
+.ui-tabs-nav.tabs-bottom li.float-right:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 3px;
+}
+.table-rounded tbody tr:last-child th:last-child,
+.table-rounded tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 3px;
+}
+.irs-line-left,
+.input-group-addon.addon-inside + .form-control,
+.table-rounded tbody tr:last-child th:first-child,
+.table-rounded tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 3px;
+}
+.nav-tabs-bottom > li > a,
+.main-nav ul li ul,
+.ui-dialog .ui-dialog-buttonpane,
+.ui-datepicker-buttonpane,
+.chosen-drop,
+.chosen-results li.no-results,
+.ui-menu,
+.content-box .content-box-wrapper,
+.btn-group-vertical > .btn:last-of-type,
+.info-box,
+.notifications-box li:last-child,
+.nav-list li:last-child a {
+    border-bottom-right-radius: 3px !important;
+    border-bottom-left-radius: 3px !important;
+}
+.nav-tabs-left > li > a,
+.pagination > li:first-child > a,
+.pagination > li:first-child > span,
+.fc-corner-left,
+.input-append-wrapper .input-append {
+    border-radius: 0;
+    border-top-left-radius: 3px !important;
+    border-bottom-left-radius: 3px !important;
+}
+.panel-box[class*=' col-xs'] + .panel-box[class*=' col-xs'],
+.nav-tabs-right > li > a,
+.chosen-container-single .chosen-search i,
+.chosen-container-single .chosen-single div,
+.selector i,
+.pagination > li:last-child > a,
+.pagination > li:last-child > span,
+.fc-corner-right,
+.input-append-right .input-append {
+    border-radius: 0;
+    border-top-right-radius: 3px !important;
+    border-bottom-right-radius: 3px !important;
+}
+.irs-line-right,
+.btn-group .btn:last-of-type,
+.btn-group .btn:last-of-type .icon-separator,
+.icon-separator.float-right {
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+.ui-spinner-up {
+    border-top-left-radius: 0;
+    border-top-right-radius: 3px !important;
+}
+.ui-spinner-down {
+    border-bottom-right-radius: 3px !important;
+    border-bottom-left-radius: 0;
+}
+.btn-group-vertical > .btn:not(:first-child):not(:last-child) {
+    border-radius: 0;
+}
+.btn-group-vertical > .btn:first-child:not(:last-child) {
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.btn-group-vertical > .btn:last-child:not(:first-child) {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 3px;
+}
+.btn-group > .btn-group:not(:first-child):not(:last-child) > .btn,
+.btn-group > .btn:not(:first-child):not(:last-child):not(.dropdown-toggle),
+.btn-group-vertical > .btn-group:not(:first-child):not(:last-child) > .btn {
+    border-radius: 0;
+}
+.btn-group-vertical > .btn-group:first-child:not(:last-child) > .btn:last-child,
+.btn-group-vertical > .btn-group:first-child:not(:last-child) > .dropdown-toggle {
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.ui-autocomplete,
+.btn-group-vertical > .btn-group:last-child:not(:first-child) > .btn:first-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+.btn-group > .btn-group:first-child > .btn:last-child,
+.btn-group > .btn-group:first-child > .dropdown-toggle,
+.btn-group > .btn:first-child:not(:last-child):not(.dropdown-toggle) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.btn-group > .btn-group:last-child > .btn:first-child,
+.btn-group > .btn:last-child:not(:first-child),
+.btn-group > .dropdown-toggle:not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.input-group-addon.addon-inside + .form-control,
+.corner-ribbon,
+.corner-ribbon > div,
+.corner-ribbon > a,
+.content-box-header > .icon-separator {
+    border-top-left-radius: 3px;
+}
+.corner-ribbon-tr,
+.corner-ribbon-tr > div,
+.corner-ribbon-tr > a {
+    border-top-right-radius: 3px;
+}
+.bootstrap-switch .bootstrap-switch-handle-on {
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+}
+.bootstrap-switch .bootstrap-switch-handle-off {
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}

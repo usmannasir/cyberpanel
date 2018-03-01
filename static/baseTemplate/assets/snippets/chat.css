@@ -1,0 +1,69 @@
+/* Chat */
+
+ul.chat-box {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.chat-box li {
+    position: relative;
+    z-index: 35;
+    margin-bottom: 30px;
+    padding-right: 65px;
+}
+.chat-box li.float-left {
+    float: none !important;
+    padding-right: 0;
+    padding-left: 60px;
+}
+.chat-box .chat-author {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+.chat-box li.float-left .chat-author {
+    right: auto;
+    left: 0;
+}
+.chat-box .chat-author img {
+    min-width: 45px;
+    border-radius: 100px;
+}
+.chat-box .popover {
+    position: relative !important;
+    display: block;
+    float: none;
+    min-height: 45px;
+}
+.chat-box .popover .popover-content {
+    padding: 15px;
+}
+.chat-box .popover {
+    margin-left: 0 !important;
+}
+.chat-box .popover.left .arrow,
+.chat-box .popover.right .arrow {
+    top: 23px;
+}
+.chat-box .chat-time {
+    font-size: 12px;
+    font-style: italic;
+    margin-top: 5px;
+    color: rgba(0, 0, 0, .5);
+}
+.chat-box .chat-time i {
+    font-size: 13px;
+    margin-right: 3px;
+}
+.chat-box .popover h3 {
+    font-size: 16px;
+    margin: 0 0 5px;
+}
+.chat-box .popover .divider {
+    margin: 8px 0 10px;
+}
+.chat-box .chat-reply {
+    overflow: hidden;
+    padding: 0;
+    border-width: 1px;
+}

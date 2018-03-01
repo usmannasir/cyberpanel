@@ -1,0 +1,12 @@
+.current-pack{
+    padding-top: 1.5%;
+    color: #3e4855;
+    font-weight: bold;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 13px;
+}
+
+.website-content-box{
+    border-radius: 25px;
+    border-color:#3498db
+}

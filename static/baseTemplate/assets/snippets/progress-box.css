@@ -1,0 +1,34 @@
+/* Progress List */
+
+.progress-box li {
+    font-size: 12px;
+    white-space: nowrap;
+    border-bottom: #ddd solid 1px;
+}
+.progress-box li a {
+    padding: 10px 15px 15px !important;
+}
+.progress-box li:last-child {
+    border-bottom: 0;
+}
+.progress-box .progress-title {
+    margin: 0 0 5px;
+    color: #888;
+}
+
+.progress-box li a:hover { text-decoration:none !important; }
+
+.progress-box .progress-title b {
+    float: right;
+    color: #666;
+}
+.progress-box .progress-time {
+    float: right;
+    opacity: .70;
+    -moz-opacity: .70;
+    filter: alpha(opacity: 70);
+}
+.progress-box-alt li {
+    padding: 10px 0;
+    border: 0;
+}
