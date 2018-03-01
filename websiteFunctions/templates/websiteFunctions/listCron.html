@@ -33,8 +33,8 @@
                             {% endfor %}
                         </select>
                     </div>
-                   <button type="button" class="btn btn-primary" ng-click="fetchWebsites()" href=""><i class="glyph-icon icon-refresh" title="Refresh"></i></button>
-                   <button type="button" class="btn btn-primary" ng-click="addCronForm()" href=""><i class="glyph-icon icon-plus" title="Add Cron"></i></button>
+                   <button type="button" class="btn btn-primary" ng-click="fetchWebsites()" href=""><i class="glyph-icon icon-refresh" title="{% trans "Refresh" %}"></i></button>
+                   <button type="button" class="btn btn-primary" ng-click="addCronForm()" href=""><i class="glyph-icon icon-plus" title="{% trans "Add Cron" %}"></i></button>
                 </div>
 
 
@@ -43,13 +43,13 @@
             <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="cronTable">
                 <thead>
                 <tr>
-                    <th>Minute</th>
-                    <th>Hour</th>
-                    <th>Day of Month</th>
-                    <th>Month</th>
-                    <th>Day of Week</th>
-                    <th>Command</th>
-                    <th>Action</th>
+                    <th>{% trans "Minute" %}</th>
+                    <th>{% trans "Hour" %}</th>
+                    <th>{% trans "Day of Month" %}</th>
+                    <th>{% trans "Month" %}</th>
+                    <th>{% trans "Day of Week" %}</th>
+                    <th>{% trans "Command" %}</th>
+                    <th>{% trans "Action" %}</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -62,8 +62,8 @@
                     <td ng-bind="cron.weekday"></td>
                     <td ng-bind="cron.command"></td>
                     <td>
-                        <a class="btn btn-warning" ng-click="removeCron(cron.line)" href=""><i class="glyph-icon icon-trash" title="Delete"></i></a>
-                        <a class="btn btn-primary" ng-click="fetchCron(cron.line)" href=""><i class="glyph-icon icon-pencil" title="Edit"></i></a>
+                        <a class="btn btn-warning" ng-click="removeCron(cron.line)" href=""><i class="glyph-icon icon-trash" title="{% trans "Delete" %}"></i></a>
+                        <a class="btn btn-primary" ng-click="fetchCron(cron.line)" href=""><i class="glyph-icon icon-pencil" title="{% trans "Edit" %}"></i></a>
                     </td>
                 </tr>
 
@@ -76,54 +76,54 @@
                 <input type="hidden" ng-value="line" required="">
                 <hr>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Pre defined</label>
+                    <label class="col-sm-3 control-label">{% trans "Pre defined" %}</label>
                     <div class="col-sm-6">
                        <select class="form-control" ng-model="defined" ng-change="populate()" required="">
-                         <option value="* * * * *">Every minute</option>
-                         <option value="*/5 * * * *">Every 5 minutes</option>
-                         <option value="*/30 * * * *">Every 30 minutes</option>
-                         <option value="0 * * * *">Every hour</option>
-                         <option value="0 0 * * *">Every day</option>
-                         <option value="0 0 * * 0">Every week</option>
-                         <option value="0 0 1 * *">Every month</option>
-                         <option value="0 0 1 1 *">Every year</option>
+                         <option value="* * * * *">{% trans "Every minute" %}</option>
+                         <option value="*/5 * * * *">{% trans "Every 5 minutes" %}</option>
+                         <option value="*/30 * * * *">{% trans "Every 30 minutes" %}</option>
+                         <option value="0 * * * *">{% trans "Every hour" %}</option>
+                         <option value="0 0 * * *">{% trans "Every day" %}</option>
+                         <option value="0 0 * * 0">{% trans "Every week" %}</option>
+                         <option value="0 0 1 * *">{% trans "Every month" %}</option>
+                         <option value="0 0 1 1 *">{% trans "Every year" %}</option>
                       </select>
                     </div>
                 </div>
                 <hr>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Minute</label>
+                    <label class="col-sm-3 control-label">{% trans "Minute" %}</label>
                     <div class="col-sm-6">
                         <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="minute" required="">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Hour</label>
+                    <label class="col-sm-3 control-label">{% trans "Hour" %}</label>
                     <div class="col-sm-6">
                         <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="hour" required="">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Day of month</label>
+                    <label class="col-sm-3 control-label">{% trans "Day of month" %}</label>
                     <div class="col-sm-6">
                         <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="monthday" required="">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Month</label>
+                    <label class="col-sm-3 control-label">{% trans "Month" %}</label>
                     <div class="col-sm-6">
                         <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="month" required="">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Day of week</label>
+                    <label class="col-sm-3 control-label">{% trans "Day of week" %}</label>
                     <div class="col-sm-6">
                         <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="weekday" required="">
                     </div>
                 </div>
                 <hr>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Command</label>
+                    <label class="col-sm-3 control-label">{% trans "Command" %}</label>
                     <div class="col-sm-6">
                         <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="command" required="">
                     </div>
