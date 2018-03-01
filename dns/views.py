@@ -265,9 +265,14 @@ def addDeleteDNSRecords(request):
             for items in domains:
                 domainsList.append(items.name)
         else:
-            domains = admin.domains_set.all()
-            for items in domains:
-                domainsList.append(items.name)
+            websites = admin.websites_set.all()
+
+            for web in websites:
+                try:
+                    tempDomain = Domains.objects.get(name = web.domain)
+                    domainsList.append(web.domain)
+                except:
+                    pass
 
 
         return render(request, 'dns/addDeleteDNSRecords.html',{"domainsList":domainsList})

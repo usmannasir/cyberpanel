@@ -672,6 +672,7 @@ app.controller('websitePages', function($scope,$http) {
 
                 $scope.hidsslconfigs = true;
                 $scope.configurationsBoxRewrite = true;
+                $scope.changePHPView = true;
 
 
                 //Rewrite rules
@@ -898,6 +899,7 @@ app.controller('websitePages', function($scope,$http) {
 
                 $scope.hidsslconfigs = true;
                 $scope.configurationsBox = true;
+                $scope.changePHPView = true;
 
 
                 $scope.configurationsBox = true;
@@ -1124,8 +1126,6 @@ app.controller('websitePages', function($scope,$http) {
 
 
 
-
-
     //////// Application Installation part
 
     $scope.installationDetailsForm = true;
@@ -1340,7 +1340,10 @@ app.controller('websitePages', function($scope,$http) {
         $scope.hidsslconfigs = false;
         $scope.configurationsBox = true;
         $scope.configurationsBoxRewrite = true;
+        $scope.changePHPView = true;
     };
+
+
 
 
     $scope.saveSSL = function(){
@@ -1410,6 +1413,98 @@ app.controller('websitePages', function($scope,$http) {
                 }
 
     };
+
+
+    //// Change PHP Master
+
+    $scope.failedToChangePHPMaster = true;
+    $scope.phpChangedMaster = true;
+    $scope.couldNotConnect = true;
+
+    $scope.changePHPView = true;
+
+
+    $scope.hideChangePHPMaster = function(){
+        $scope.changePHPView = true;
+    };
+
+    $scope.changePHPMaster = function(){
+        $scope.hidsslconfigs = true;
+        $scope.configurationsBox = true;
+        $scope.configurationsBoxRewrite = true;
+        $scope.changePHPView = false;
+    };
+
+
+    $scope.changePHPVersionMaster = function(childDomain,phpSelection){
+
+                // notifcations
+
+                $scope.configFileLoading = false;
+
+                var url = "/websites/changePHP";
+
+                var data = {
+                    childDomain:$("#domainNamePage").text(),
+                    phpSelection:$scope.phpSelectionMaster,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.changePHP === 1){
+
+                        $scope.configFileLoading = true;
+                        $scope.websiteDomain = $("#domainNamePage").text();
+
+
+                        // notifcations
+
+                        $scope.failedToChangePHPMaster = true;
+                        $scope.phpChangedMaster = false;
+                        $scope.couldNotConnect = true;
+
+
+                    }
+                    else{
+
+                        $scope.configFileLoading = true;
+                        $scope.errorMessage = response.data.error_message;
+
+                        // notifcations
+
+                        $scope.failedToChangePHPMaster = false;
+                        $scope.phpChangedMaster = true;
+                        $scope.couldNotConnect = true;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.configFileLoading = true;
+
+                         // notifcations
+
+                        $scope.failedToChangePHPMaster = true;
+                        $scope.phpChangedMaster = true;
+                        $scope.couldNotConnect = false;
+
+                }
+
+    }
+
+
 
 
     ////// create domain part
