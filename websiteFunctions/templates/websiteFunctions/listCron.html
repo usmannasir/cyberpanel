@@ -7,10 +7,10 @@
 {% get_current_language as LANGUAGE_CODE %}
 <!-- Current language: {{ LANGUAGE_CODE }} -->
 
-<div class="container">
+<div ng-controller="manageCronController" class="container">
 <div id="page-title">
    <h2>{% trans "Cron Management" %}</h2>
-   <p>{% trans "Create, edit or delete your cron from this page." %}</p>
+   <p>{% trans "Create, edit or delete your cron jobs from this page." %}</p>
 </div>
 
 <div class="panel">
@@ -21,7 +21,7 @@
         <div  class="example-box-wrapper">
 
 
-            <form ng-controller="manageCronController"  action="/" class="form-horizontal bordered-row">
+            <form   action="/" class="form-horizontal bordered-row">
 
 
                  <div class="form-group">
@@ -149,20 +149,18 @@
               {{ messger }}
                     <div class="col-sm-4">
                             <div id="fetchCronFailure" class="alert alert-danger">
-                                        <p>{% trans "Cannot fetch website details. Error message:" %} {{ errorMessage }}</p>
+                                        <p>{% trans "Cannot fetch website details. Error message:" %} {$ errorMessage $}</p>
                             </div>
 
                             <div id="addCronFailure" class="alert alert-danger">
-                                        <p>{% trans "Unable to add/save Cron. Error message:" %} {{ errorMessage }}</p>
+                                        <p>{% trans "Unable to add/save Cron. Error message:" %} {$ errorMessage $}</p>
                             </div>
                             <div id="cronEditSuccess" class="alert alert-success">
                                         <p>{% trans "Cron job saved" %}</p>
                             </div>
                     </div>
 
-
-
-                </div>
+            </div>
 
 
             </form>

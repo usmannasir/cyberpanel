@@ -37,480 +37,7 @@ def loadWebsitesHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-def listCron(request):
-    try:
-        val = request.session['userID']
-        try:
-            admin = Administrator.objects.get(pk=request.session['userID'])
 
-            if admin.type == 1:
-                websites = Websites.objects.all()
-                websitesName = []
-
-                for items in websites:
-                    websitesName.append(items.domain)
-            else:
-                if admin.type == 2:
-                    websites = admin.websites_set.all()
-                    admins = Administrator.objects.filter(owner=admin.pk)
-                    websitesName = []
-
-                    for items in websites:
-                        websitesName.append(items.domain)
-
-                    for items in admins:
-                        webs = items.websites_set.all()
-
-                        for web in webs:
-                            websitesName.append(web.domain)
-                else:
-                    websitesName = []
-                    websites = Websites.objects.filter(admin=admin)
-                    for items in websites:
-                        websitesName.append(items.domain)
-
-            return render(request, 'websiteFunctions/listCron.html', {'websiteList':websitesName})
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse(str(msg))
-    except KeyError:
-        return redirect(loadLoginPage)
-      
-
-
-def getWebsiteCron(request):
-    try:
-        val = request.session['userID']
-        if request.method == 'POST':
-            try:
-                
-                data = json.loads(request.body)
-                domain = data['domain']
-                
-                admin = Administrator.objects.get(pk=request.session['userID'])
-                website = Websites.objects.get(domain=domain)
-
-                if Websites.objects.filter(domain=domain).exists():
-                    pass
-                else:
-                    dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-
-                if admin.type != 1:
-                    website = Websites.objects.get(domain=domain)
-                    if website.admin != admin:
-                        dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
-                
-                cronPath = "/var/spool/cron/" + website.externalApp
-                cmd = 'sudo test -e '+cronPath+' && echo Exists'
-                output = os.popen(cmd).read()
-                
-                if "Exists" not in output:
-                  data_ret = {'getWebsiteCron': 1, "user": website.externalApp, "crons":{}}
-                  final_json = json.dumps(data_ret)
-                  return HttpResponse(final_json)
-                
-                cronPath = "/var/spool/cron/" + website.externalApp
-                crons = []
-                
-                try:
-                  f = subprocess.check_output(["sudo","cat",cronPath])
-                  print f
-                except subprocess.CalledProcessError as error:
-                  dic = {'getWebsiteCron': 0, 'error_message': 'Unable to access Cron file'}
-                  json_data = json.dumps(dic)
-                  return HttpResponse(json_data)
-                counter = 0
-                for line in f.split("\n"):
-                  if line:
-                    split = line.split(" ", 5)
-                    print line
-                    print split
-                    if len(split) == 6:
-                      counter += 1
-                      crons.append({"line"    :  counter,
-                                    "minute"  :  split[0],
-                                    "hour"    :  split[1],
-                                    "monthday":  split[2],
-                                    "month"   :  split[3],
-                                    "weekday" :  split[4],
-                                    "command" :  split[5]})
-
-                print json.dumps(crons)
-                    
-                data_ret = {'getWebsiteCron': 1, "user": website.externalApp, "crons":crons}
-                final_json = json.dumps(data_ret)
-                return HttpResponse(final_json)
-            except BaseException,msg:
-                print msg
-                dic = {'getWebsiteCron': 0, 'error_message': str(msg)}
-                json_data = json.dumps(dic)
-                return HttpResponse(json_data)
-
-    except KeyError, msg:
-        status = {"getWebsiteCron":0,"error":"Not Logged in as admin"}
-        final_json = json.dumps(status)
-        return HttpResponse(final_json)
-    
-def getCronbyLine(request):
-    try:
-        val = request.session['userID']
-        if request.method == 'POST':
-            try:
-                
-                data = json.loads(request.body)
-                domain = data['domain']
-                line = data['line']
-                
-                line -= 1
-                admin = Administrator.objects.get(pk=request.session['userID'])
-                website = Websites.objects.get(domain=domain)
-
-                if Websites.objects.filter(domain=domain).exists():
-                    pass
-                else:
-                    dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-
-                if admin.type == 1:
-                    pass
-                else:
-                    website = Websites.objects.get(domain=domain)
-                    if website.admin == admin:
-                        pass
-                    else:
-                        dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
-                
-                cronPath = "/var/spool/cron/" + website.externalApp
-                crons = []
-                
-                try:
-                  f = subprocess.check_output(["sudo","cat",cronPath])
-                  print f
-                except subprocess.CalledProcessError as error:
-                  dic = {'getWebsiteCron': 0, 'error_message': 'Unable to access Cron file'}
-                  json_data = json.dumps(dic)
-                  return HttpResponse(json_data)
-                
-                f = f.split("\n")
-                cron = f[line]
-
-                if not cron:
-                  dic = {'getWebsiteCron': 0, 'error_message':'Cron line empty'}
-                  json_data = json.dumps(dic)
-                  return HttpResponse(json_data)
-                  
-                cron = cron.split(" ", 5)
-                if len(cron) != 6:
-                  dic = {'getWebsiteCron': 0, 'error_message':'Cron line incorrect'}
-                  json_data = json.dumps(dic)
-                  return HttpResponse(json_data)
-                
-                    
-                data_ret = {"getWebsiteCron": 1, 
-                            "user": website.externalApp,
-                            "cron":{
-                                "minute":cron[0],
-                                "hour":cron[1],
-                                "monthday":cron[2],
-                                "month":cron[3],
-                                "weekday":cron[4],
-                                "command":cron[5],
-                            },
-                            "line":line}
-                final_json = json.dumps(data_ret)
-                return HttpResponse(final_json)
-            except BaseException,msg:
-                print msg
-                dic = {'getWebsiteCron': 0, 'error_message': str(msg)}
-                json_data = json.dumps(dic)
-                return HttpResponse(json_data)
-
-    except KeyError, msg:
-        status = {"getWebsiteCron":0,"error":"Not Logged in"}
-        final_json = json.dumps(status)
-        return HttpResponse(final_json)    
-
-def saveCronChanges(request):
-    try:
-        val = request.session['userID']
-        if request.method == 'POST':
-            try:
-                
-                data = json.loads(request.body)
-                domain = data['domain']
-                line = data['line']
-                
-                minute = data['minute']
-                hour = data['hour']
-                monthday = data['monthday']
-                month = data['month']
-                weekday = data['weekday']
-                command = data['command']
-                               
-                admin = Administrator.objects.get(pk=request.session['userID'])
-                website = Websites.objects.get(domain=domain)
-
-                if Websites.objects.filter(domain=domain).exists():
-                    pass
-                else:
-                    dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-
-                if admin.type == 1:
-                    pass
-                else:
-                    website = Websites.objects.get(domain=domain)
-                    if website.admin == admin:
-                        pass
-                    else:
-                        dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
-                
-                cronPath = "/var/spool/cron/" + website.externalApp
-                tempPath = "/home/cyberpanel/" + website.externalApp + str(randint(10000,99999)) + ".cron.tmp"
-                
-                finalCron = "%s %s %s %s %s %s" % (minute, hour, monthday, month, weekday, command)
-                              
-                o = subprocess.call(['sudo','cp',cronPath,tempPath])
-                if o is not 0:
-                  data_ret = {'addNewCron': 0, 'error_message': 'Unable to copy to temporary files'}
-                  final_json = json.dumps(data_ret)
-                  return HttpResponse(final_json)
-                
-                # Confirming that directory is read/writable
-                o = subprocess.call(['sudo','chown','cyberpanel:cyberpanel',tempPath])
-                if o is not 0:
-                  data_ret = {'addNewCron': 0, 'error_message': 'Error Changing Permissions'}
-                  final_json = json.dumps(data_ret)
-                  return HttpResponse(final_json)
-                
-                with open(tempPath, 'r') as file:
-                    data = file.readlines()
-
-                data[line] = finalCron+'\n'
-
-                with open(tempPath, 'w') as file:
-                    file.writelines( data )
-                print 'test'
-                 
-                output = subprocess.call(["sudo","/usr/bin/crontab", "-u", website.externalApp, tempPath])
-                
-                os.remove(tempPath)
-                if output != 0:
-                    data_ret = {'addNewCron': 0, 'error_message': 'Incorrect Syntax cannot be accepted'}
-                    final_json = json.dumps(data_ret)
-                    return HttpResponse(final_json)
-                    
-                data_ret = {"getWebsiteCron": 1, 
-                            "user": website.externalApp,
-                            "cron": finalCron,
-                            "line":line}
-                final_json = json.dumps(data_ret)
-                return HttpResponse(final_json)
-            except BaseException,msg:
-                print msg
-                dic = {'getWebsiteCron': 0, 'error_message': str(msg)}
-                json_data = json.dumps(dic)
-                return HttpResponse(json_data)
-
-    except KeyError, msg:
-        status = {"getWebsiteCron":0,"error":"Not Logged in"}
-        final_json = json.dumps(status)
-        return HttpResponse(final_json)    
-
-def remCronbyLine(request):
-    try:
-        val = request.session['userID']
-        if request.method == 'POST':
-            try:
-                
-                data = json.loads(request.body)
-                domain = data['domain']
-                line = data['line']
-                
-                line -= 1
-                
-                admin = Administrator.objects.get(pk=request.session['userID'])
-                website = Websites.objects.get(domain=domain)
-
-                if Websites.objects.filter(domain=domain).exists():
-                    pass
-                else:
-                    dic = {'remCronbyLine': 0, 'error_message': 'You do not own this domain'}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-
-                if admin.type == 1:
-                    pass
-                else:
-                    website = Websites.objects.get(domain=domain)
-                    if website.admin == admin:
-                        pass
-                    else:
-                        dic = {'remCronbyLine': 0, 'error_message': 'You do not own this domain'}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
-                      
-                cronPath = "/var/spool/cron/" + website.externalApp
-                cmd = 'sudo test -e '+cronPath+' && echo Exists'
-                output = os.popen(cmd).read()
-                
-                if "Exists" not in output:
-                    data_ret = {'remCronbyLine': 0, 'error_message': 'No Cron exists for this user'}
-                    final_json = json.dumps(data_ret)
-                    return HttpResponse(final_json)
-                
-                cronPath = "/var/spool/cron/" + website.externalApp
-                tempPath = "/home/cyberpanel/" + website.externalApp + str(randint(10000,99999)) + ".cron.tmp"
-                                            
-                o = subprocess.call(['sudo','cp',cronPath,tempPath])
-                if o is not 0:
-                  data_ret = {'addNewCron': 0, 'error_message': 'Unable to copy to temporary files'}
-                  final_json = json.dumps(data_ret)
-                  return HttpResponse(final_json)
-                
-                # Confirming that directory is read/writable
-                o = subprocess.call(['sudo','chown','cyberpanel:cyberpanel',tempPath])
-                if o is not 0:
-                  data_ret = {'addNewCron': 0, 'error_message': 'Error Changing Permissions'}
-                  final_json = json.dumps(data_ret)
-                  return HttpResponse(final_json)
-                
-                with open(tempPath, 'r') as file:
-                    data = file.readlines()
-
-                removedLine = data.pop(line)
-
-                with open(tempPath, 'w') as file:
-                    file.writelines( data )
-                 
-                output = subprocess.call(["sudo","/usr/bin/crontab", "-u", website.externalApp, tempPath])
-                
-                os.remove(tempPath)
-                if output != 0:
-                    data_ret = {'addNewCron': 0, 'error_message': 'Incorrect Syntax cannot be accepted'}
-                    final_json = json.dumps(data_ret)
-                    return HttpResponse(final_json)
-                
-                data_ret = {"remCronbyLine": 1, 
-                            "user": website.externalApp,
-                            "removeLine": removedLine,
-                            "line":line}
-                final_json = json.dumps(data_ret)
-                return HttpResponse(final_json)
-            except BaseException,msg:
-                print msg
-                dic = {'remCronbyLine': 0, 'error_message': str(msg)}
-                json_data = json.dumps(dic)
-                return HttpResponse(json_data)
-
-    except KeyError, msg:
-        status = {"remCronbyLine":0,"error":"Not Logged in"}
-        final_json = json.dumps(status)
-        return HttpResponse(final_json)    
-
-def addNewCron(request):
-    try:
-        val = request.session['userID']
-        if request.method == 'POST':
-            try:
-                
-                data = json.loads(request.body)
-                domain = data['domain']
-                
-                minute = data['minute']
-                hour = data['hour']
-                monthday = data['monthday']
-                month = data['month']
-                weekday = data['weekday']
-                command = data['command']
-                
-                admin = Administrator.objects.get(pk=request.session['userID'])
-                website = Websites.objects.get(domain=domain)
-
-                if Websites.objects.filter(domain=domain).exists():
-                    pass
-                else:
-                    dic = {'addNewCron': 0, 'error_message': 'You do not own this domain'}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-
-                if admin.type != 1:
-                    website = Websites.objects.get(domain=domain)
-                    if website.admin == admin:
-                        pass
-                    else:
-                        dic = {'addNewCron': 0, 'error_message': 'You do not own this domain'}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
-                
-                cronPath = "/var/spool/cron/" + website.externalApp
-                cmd = 'sudo test -e '+cronPath+' && echo Exists'
-                output = os.popen(cmd).read()
-                
-                if "Exists" not in output:
-                  echo = subprocess.Popen(('echo'), stdout=subprocess.PIPE)
-                  output = subprocess.call(('sudo', 'crontab', '-u', website.externalApp, '-'), stdin=echo.stdout)
-                  echo.wait()
-                  echo.stdout.close()
-                  # Confirmation
-                  o = subprocess.call(["sudo","cp","/dev/null",cronPath])
-                
-                cronPath = "/var/spool/cron/" + website.externalApp
-                tempPath = "/home/cyberpanel/" + website.externalApp + str(randint(10000,99999)) + ".cron.tmp"
-                
-                finalCron = "%s %s %s %s %s %s" % (minute, hour, monthday, month, weekday, command)
-                              
-                o = subprocess.call(['sudo','cp',cronPath,tempPath])
-                if o is not 0:
-                  data_ret = {'addNewCron': 0, 'error_message': 'Unable to copy to temporary files'}
-                  final_json = json.dumps(data_ret)
-                  return HttpResponse(final_json)
-                
-                # Confirming that directory is read/writable
-                o = subprocess.call(['sudo','chown','cyberpanel:cyberpanel',tempPath])
-                if o is not 0:
-                  data_ret = {'addNewCron': 0, 'error_message': 'Error Changing Permissions'}
-                  final_json = json.dumps(data_ret)
-                  return HttpResponse(final_json)
-                
-                with open(tempPath, "a") as file:
-                    file.write(finalCron+"\n")
-                 
-                output = subprocess.call(["sudo","/usr/bin/crontab", "-u", website.externalApp, tempPath])
-                
-                os.remove(tempPath)
-                if output != 0:
-                    data_ret = {'addNewCron': 0, 'error_message': 'Incorrect Syntax cannot be accepted'}
-                    final_json = json.dumps(data_ret)
-                    return HttpResponse(final_json)
-                
-                data_ret = {"addNewCron": 1, 
-                            "user": website.externalApp,
-                            "cron": finalCron}
-                final_json = json.dumps(data_ret)
-                return HttpResponse(final_json)
-            except BaseException,msg:
-                print msg
-                dic = {'addNewCron': 0, 'error_message': str(msg)}
-                json_data = json.dumps(dic)
-                return HttpResponse(json_data)
-
-    except KeyError, msg:
-        status = {"addNewCron":0,"error":"Not Logged in"}
-        final_json = json.dumps(status)
-        return HttpResponse(final_json)    
-
-    
 def createWebsite(request):
     try:
         val = request.session['userID']
@@ -2357,3 +1884,479 @@ def CreateWebsiteFromBackup(request):
         data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+
+def listCron(request):
+    try:
+        val = request.session['userID']
+        try:
+            admin = Administrator.objects.get(pk=request.session['userID'])
+
+            if admin.type == 1:
+                websites = Websites.objects.all()
+                websitesName = []
+
+                for items in websites:
+                    websitesName.append(items.domain)
+            else:
+                if admin.type == 2:
+                    websites = admin.websites_set.all()
+                    admins = Administrator.objects.filter(owner=admin.pk)
+                    websitesName = []
+
+                    for items in websites:
+                        websitesName.append(items.domain)
+
+                    for items in admins:
+                        webs = items.websites_set.all()
+
+                        for web in webs:
+                            websitesName.append(web.domain)
+                else:
+                    websitesName = []
+                    websites = Websites.objects.filter(admin=admin)
+                    for items in websites:
+                        websitesName.append(items.domain)
+
+            return render(request, 'websiteFunctions/listCron.html', {'websiteList': websitesName})
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return HttpResponse(str(msg))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def getWebsiteCron(request):
+    try:
+        val = request.session['userID']
+        if request.method == 'POST':
+            try:
+
+                data = json.loads(request.body)
+                domain = data['domain']
+
+                admin = Administrator.objects.get(pk=request.session['userID'])
+                website = Websites.objects.get(domain=domain)
+
+                if Websites.objects.filter(domain=domain).exists():
+                    pass
+                else:
+                    dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
+                if admin.type != 1:
+                    website = Websites.objects.get(domain=domain)
+                    if website.admin != admin:
+                        dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
+                        json_data = json.dumps(dic)
+                        return HttpResponse(json_data)
+
+                cronPath = "/var/spool/cron/" + website.externalApp
+                cmd = 'sudo test -e ' + cronPath + ' && echo Exists'
+                output = os.popen(cmd).read()
+
+                if "Exists" not in output:
+                    data_ret = {'getWebsiteCron': 1, "user": website.externalApp, "crons": {}}
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+
+                cronPath = "/var/spool/cron/" + website.externalApp
+                crons = []
+
+                try:
+                    f = subprocess.check_output(["sudo", "cat", cronPath])
+                    print f
+                except subprocess.CalledProcessError as error:
+                    dic = {'getWebsiteCron': 0, 'error_message': 'Unable to access Cron file'}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+                counter = 0
+                for line in f.split("\n"):
+                    if line:
+                        split = line.split(" ", 5)
+                        print line
+                        print split
+                        if len(split) == 6:
+                            counter += 1
+                            crons.append({"line": counter,
+                                          "minute": split[0],
+                                          "hour": split[1],
+                                          "monthday": split[2],
+                                          "month": split[3],
+                                          "weekday": split[4],
+                                          "command": split[5]})
+
+                print json.dumps(crons)
+
+                data_ret = {'getWebsiteCron': 1, "user": website.externalApp, "crons": crons}
+                final_json = json.dumps(data_ret)
+                return HttpResponse(final_json)
+            except BaseException, msg:
+                print msg
+                dic = {'getWebsiteCron': 0, 'error_message': str(msg)}
+                json_data = json.dumps(dic)
+                return HttpResponse(json_data)
+
+    except KeyError, msg:
+        status = {"getWebsiteCron": 0, "error": "Not Logged in as admin"}
+        final_json = json.dumps(status)
+        return HttpResponse(final_json)
+
+
+def getCronbyLine(request):
+    try:
+        val = request.session['userID']
+        if request.method == 'POST':
+            try:
+
+                data = json.loads(request.body)
+                domain = data['domain']
+                line = data['line']
+
+                line -= 1
+                admin = Administrator.objects.get(pk=request.session['userID'])
+                website = Websites.objects.get(domain=domain)
+
+                if Websites.objects.filter(domain=domain).exists():
+                    pass
+                else:
+                    dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
+                if admin.type == 1:
+                    pass
+                else:
+                    website = Websites.objects.get(domain=domain)
+                    if website.admin == admin:
+                        pass
+                    else:
+                        dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
+                        json_data = json.dumps(dic)
+                        return HttpResponse(json_data)
+
+                cronPath = "/var/spool/cron/" + website.externalApp
+                crons = []
+
+                try:
+                    f = subprocess.check_output(["sudo", "cat", cronPath])
+                    print f
+                except subprocess.CalledProcessError as error:
+                    dic = {'getWebsiteCron': 0, 'error_message': 'Unable to access Cron file'}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
+                f = f.split("\n")
+                cron = f[line]
+
+                if not cron:
+                    dic = {'getWebsiteCron': 0, 'error_message': 'Cron line empty'}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
+                cron = cron.split(" ", 5)
+                if len(cron) != 6:
+                    dic = {'getWebsiteCron': 0, 'error_message': 'Cron line incorrect'}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
+                data_ret = {"getWebsiteCron": 1,
+                            "user": website.externalApp,
+                            "cron": {
+                                "minute": cron[0],
+                                "hour": cron[1],
+                                "monthday": cron[2],
+                                "month": cron[3],
+                                "weekday": cron[4],
+                                "command": cron[5],
+                            },
+                            "line": line}
+                final_json = json.dumps(data_ret)
+                return HttpResponse(final_json)
+            except BaseException, msg:
+                print msg
+                dic = {'getWebsiteCron': 0, 'error_message': str(msg)}
+                json_data = json.dumps(dic)
+                return HttpResponse(json_data)
+
+    except KeyError, msg:
+        status = {"getWebsiteCron": 0, "error": "Not Logged in"}
+        final_json = json.dumps(status)
+        return HttpResponse(final_json)
+
+
+def saveCronChanges(request):
+    try:
+        val = request.session['userID']
+        if request.method == 'POST':
+            try:
+
+                data = json.loads(request.body)
+                domain = data['domain']
+                line = data['line']
+
+                minute = data['minute']
+                hour = data['hour']
+                monthday = data['monthday']
+                month = data['month']
+                weekday = data['weekday']
+                command = data['command']
+
+                admin = Administrator.objects.get(pk=request.session['userID'])
+                website = Websites.objects.get(domain=domain)
+
+                if Websites.objects.filter(domain=domain).exists():
+                    pass
+                else:
+                    dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
+                if admin.type == 1:
+                    pass
+                else:
+                    website = Websites.objects.get(domain=domain)
+                    if website.admin == admin:
+                        pass
+                    else:
+                        dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
+                        json_data = json.dumps(dic)
+                        return HttpResponse(json_data)
+
+                cronPath = "/var/spool/cron/" + website.externalApp
+                tempPath = "/home/cyberpanel/" + website.externalApp + str(randint(10000, 99999)) + ".cron.tmp"
+
+                finalCron = "%s %s %s %s %s %s" % (minute, hour, monthday, month, weekday, command)
+
+                o = subprocess.call(['sudo', 'cp', cronPath, tempPath])
+                if o is not 0:
+                    data_ret = {'addNewCron': 0, 'error_message': 'Unable to copy to temporary files'}
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+
+                # Confirming that directory is read/writable
+                o = subprocess.call(['sudo', 'chown', 'cyberpanel:cyberpanel', tempPath])
+                if o is not 0:
+                    data_ret = {'addNewCron': 0, 'error_message': 'Error Changing Permissions'}
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+
+                with open(tempPath, 'r') as file:
+                    data = file.readlines()
+
+                data[line] = finalCron + '\n'
+
+                with open(tempPath, 'w') as file:
+                    file.writelines(data)
+                print 'test'
+
+                output = subprocess.call(["sudo", "/usr/bin/crontab", "-u", website.externalApp, tempPath])
+
+                os.remove(tempPath)
+                if output != 0:
+                    data_ret = {'addNewCron': 0, 'error_message': 'Incorrect Syntax cannot be accepted.'}
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+
+                data_ret = {"getWebsiteCron": 1,
+                            "user": website.externalApp,
+                            "cron": finalCron,
+                            "line": line}
+                final_json = json.dumps(data_ret)
+                return HttpResponse(final_json)
+            except BaseException, msg:
+                print msg
+                dic = {'getWebsiteCron': 0, 'error_message': str(msg)}
+                json_data = json.dumps(dic)
+                return HttpResponse(json_data)
+
+    except KeyError, msg:
+        status = {"getWebsiteCron": 0, "error": "Not Logged in"}
+        final_json = json.dumps(status)
+        return HttpResponse(final_json)
+
+
+def remCronbyLine(request):
+    try:
+        val = request.session['userID']
+        if request.method == 'POST':
+            try:
+
+                data = json.loads(request.body)
+                domain = data['domain']
+                line = data['line']
+
+                line -= 1
+
+                admin = Administrator.objects.get(pk=request.session['userID'])
+                website = Websites.objects.get(domain=domain)
+
+                if Websites.objects.filter(domain=domain).exists():
+                    pass
+                else:
+                    dic = {'remCronbyLine': 0, 'error_message': 'You do not own this domain'}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
+                if admin.type == 1:
+                    pass
+                else:
+                    website = Websites.objects.get(domain=domain)
+                    if website.admin == admin:
+                        pass
+                    else:
+                        dic = {'remCronbyLine': 0, 'error_message': 'You do not own this domain'}
+                        json_data = json.dumps(dic)
+                        return HttpResponse(json_data)
+
+                cronPath = "/var/spool/cron/" + website.externalApp
+                cmd = 'sudo test -e ' + cronPath + ' && echo Exists'
+                output = os.popen(cmd).read()
+
+                if "Exists" not in output:
+                    data_ret = {'remCronbyLine': 0, 'error_message': 'No Cron exists for this user'}
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+
+                cronPath = "/var/spool/cron/" + website.externalApp
+                tempPath = "/home/cyberpanel/" + website.externalApp + str(randint(10000, 99999)) + ".cron.tmp"
+
+                o = subprocess.call(['sudo', 'cp', cronPath, tempPath])
+                if o is not 0:
+                    data_ret = {'addNewCron': 0, 'error_message': 'Unable to copy to temporary files'}
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+
+                # Confirming that directory is read/writable
+                o = subprocess.call(['sudo', 'chown', 'cyberpanel:cyberpanel', tempPath])
+                if o is not 0:
+                    data_ret = {'addNewCron': 0, 'error_message': 'Error Changing Permissions'}
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+
+                with open(tempPath, 'r') as file:
+                    data = file.readlines()
+
+                removedLine = data.pop(line)
+
+                with open(tempPath, 'w') as file:
+                    file.writelines(data)
+
+                output = subprocess.call(["sudo", "/usr/bin/crontab", "-u", website.externalApp, tempPath])
+
+                os.remove(tempPath)
+                if output != 0:
+                    data_ret = {'addNewCron': 0, 'error_message': 'Incorrect Syntax cannot be accepted'}
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+
+                data_ret = {"remCronbyLine": 1,
+                            "user": website.externalApp,
+                            "removeLine": removedLine,
+                            "line": line}
+                final_json = json.dumps(data_ret)
+                return HttpResponse(final_json)
+            except BaseException, msg:
+                print msg
+                dic = {'remCronbyLine': 0, 'error_message': str(msg)}
+                json_data = json.dumps(dic)
+                return HttpResponse(json_data)
+
+    except KeyError, msg:
+        status = {"remCronbyLine": 0, "error": "Not Logged in"}
+        final_json = json.dumps(status)
+        return HttpResponse(final_json)
+
+
+def addNewCron(request):
+    try:
+        val = request.session['userID']
+        if request.method == 'POST':
+            try:
+
+                data = json.loads(request.body)
+                domain = data['domain']
+
+                minute = data['minute']
+                hour = data['hour']
+                monthday = data['monthday']
+                month = data['month']
+                weekday = data['weekday']
+                command = data['command']
+
+                admin = Administrator.objects.get(pk=request.session['userID'])
+                website = Websites.objects.get(domain=domain)
+
+                if Websites.objects.filter(domain=domain).exists():
+                    pass
+                else:
+                    dic = {'addNewCron': 0, 'error_message': 'You do not own this domain'}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
+                if admin.type != 1:
+                    website = Websites.objects.get(domain=domain)
+                    if website.admin == admin:
+                        pass
+                    else:
+                        dic = {'addNewCron': 0, 'error_message': 'You do not own this domain'}
+                        json_data = json.dumps(dic)
+                        return HttpResponse(json_data)
+
+                cronPath = "/var/spool/cron/" + website.externalApp
+                cmd = 'sudo test -e ' + cronPath + ' && echo Exists'
+                output = os.popen(cmd).read()
+
+                if "Exists" not in output:
+                    echo = subprocess.Popen(('echo'), stdout=subprocess.PIPE)
+                    output = subprocess.call(('sudo', 'crontab', '-u', website.externalApp, '-'), stdin=echo.stdout)
+                    echo.wait()
+                    echo.stdout.close()
+                    # Confirmation
+                    o = subprocess.call(["sudo", "cp", "/dev/null", cronPath])
+
+                cronPath = "/var/spool/cron/" + website.externalApp
+                tempPath = "/home/cyberpanel/" + website.externalApp + str(randint(10000, 99999)) + ".cron.tmp"
+
+                finalCron = "%s %s %s %s %s %s" % (minute, hour, monthday, month, weekday, command)
+
+                o = subprocess.call(['sudo', 'cp', cronPath, tempPath])
+                if o is not 0:
+                    data_ret = {'addNewCron': 0, 'error_message': 'Unable to copy to temporary files'}
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+
+                # Confirming that directory is read/writable
+                o = subprocess.call(['sudo', 'chown', 'cyberpanel:cyberpanel', tempPath])
+                if o is not 0:
+                    data_ret = {'addNewCron': 0, 'error_message': 'Error Changing Permissions'}
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+
+                with open(tempPath, "a") as file:
+                    file.write(finalCron + "\n")
+
+                output = subprocess.call(["sudo", "/usr/bin/crontab", "-u", website.externalApp, tempPath])
+
+                os.remove(tempPath)
+                if output != 0:
+                    data_ret = {'addNewCron': 0, 'error_message': 'Incorrect Syntax cannot be accepted'}
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+
+                data_ret = {"addNewCron": 1,
+                            "user": website.externalApp,
+                            "cron": finalCron}
+                final_json = json.dumps(data_ret)
+                return HttpResponse(final_json)
+            except BaseException, msg:
+                print msg
+                dic = {'addNewCron': 0, 'error_message': str(msg)}
+                json_data = json.dumps(dic)
+                return HttpResponse(json_data)
+
+    except KeyError, msg:
+        status = {"addNewCron": 0, "error": "Not Logged in"}
+        final_json = json.dumps(status)
+        return HttpResponse(final_json)

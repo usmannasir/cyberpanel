@@ -16,13 +16,18 @@
 
     {% if not error %}
 
-   <div class="panel">
-                <div class="panel-body">
-                    <h3 class="title-hero">
-                        {% trans "Resource Usage" %}
-                    </h3>
-                    <div class="example-box-wrapper">
-                        <div class="row">
+
+    <div class="example-box-wrapper">
+
+         <div style="border-radius: 25px;border-color:#3498db" class="content-box">
+
+             <h3 class="content-box-header bg-blue">
+                 {% trans "Resource Usage" %} <img  ng-hide="domainLoading" src="/static/images/loading.gif">
+             </h3>
+
+
+             <div class="content-box-wrapper">
+                 <div class="row">
 
                             <div class="col-md-6">
                                 <table class="table table-bordered">
@@ -97,9 +102,11 @@
                             </div>
 
                         </div>
-                    </div>
-                </div>
-   </div>
+             </div>
+
+
+         </div>
+    </div>
 
 
 
@@ -250,7 +257,7 @@
            <div class="content-box-wrapper">
                <div class="row">
 
-                        <div class="col-md-6" style="margin-bottom: 2%;">
+                        <div class="col-md-4" style="margin-bottom: 2%;">
                                     <a href="" ng-click="showCreateDomainForm()" title="{% trans 'Add Domains' %}" href="" >
                                         <img  src="{% static 'images/icons/domains.png'  %}">
                                     </a>
@@ -261,12 +268,23 @@
                         </div>
 
 
-                        <div class="col-md-6" style="margin-bottom: 2%;">
+                        <div class="col-md-4" style="margin-bottom: 2%;">
                                     <a href="" ng-click="showListDomains()" title="{% trans 'List Domains' %}" href="" title="{% trans 'List Domains' %}">
                                         <img  src="{% static 'images/icons/sort.png'  %}">
                                     </a>
                                     <a ng-click="showListDomains()" title="{% trans 'List Domains' %}" href="" title="{% trans 'List Domains' %}">
                                         <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "List Domains" %}</span>
+                                    </a>
+
+                        </div>
+
+
+                        <div class="col-md-4" style="margin-bottom: 2%;">
+                                    <a href="{% url 'listCron' %}" target="_blank"  title="{% trans 'Add new Cron Job' %}" href="" title="{% trans 'List Domains' %}">
+                                        <img  src="{% static 'images/icons/repeat.png'  %}">
+                                    </a>
+                                    <a href="{% url 'listCron' %}" target="_blank"  title="{% trans 'List Domains' %}"  title="{% trans 'Add new Cron Job' %}">
+                                        <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Cron Job" %}</span>
                                     </a>
 
                         </div>
