@@ -21,12 +21,18 @@ import subprocess
 import shlex
 import plogical.CyberCPLogFileWriter as logging
 from random import randint
+from xml.etree import ElementTree
 # Create your views here.
 
 
 def loadPHPHome(request):
     try:
         val = request.session['userID']
+
+        admin = Administrator.objects.get(pk=val)
+
+        if admin.type == 3:
+            return HttpResponse("You don't have enough priviliges to access this page.")
 
         return render(request,'managePHP/index.html')
     except KeyError:
@@ -1725,6 +1731,30 @@ def installExtensions(request):
 
             phpExtension.save()
 
+        if PHP.objects.count() == 6:
+
+            newPHP72 = PHP(phpVers="php72")
+            newPHP72.save()
+
+            extensionDetailsPath = os.path.join('/usr','local','CyberCP','managePHP','php72.xml')
+
+            php72 = ElementTree.parse(extensionDetailsPath)
+
+            php72Extensions = php72.findall('extension')
+
+            for extension in php72Extensions:
+
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=newPHP72,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+
         return render(request,'managePHP/installExtensions.html')
     except KeyError:
         return redirect(loadLoginPage)
@@ -1752,6 +1782,8 @@ def getExtensionsInformation(request):
                     phpVers = "php70"
                 elif phpVers == "PHP 7.1":
                     phpVers = "php71"
+                elif phpVers == "PHP 7.2":
+                    phpVers = "php72"
 
                 php = PHP.objects.get(phpVers=phpVers)
 
@@ -1965,6 +1997,8 @@ def getCurrentPHPConfig(request):
                     phpVers = "php70"
                 elif phpVers == "PHP 7.1":
                     phpVers = "php71"
+                elif phpVers == "PHP 7.2":
+                    phpVers = "php72"
 
                 path = "/usr/local/lsws/ls"+phpVers+"/etc/php.ini"
 
@@ -2085,6 +2119,8 @@ def savePHPConfigBasic(request):
                     phpVers = "php70"
                 elif phpVers == "PHP 7.1":
                     phpVers = "php71"
+                elif phpVers == "PHP 7.2":
+                    phpVers = "php72"
 
                 ##
 
@@ -2140,6 +2176,8 @@ def getCurrentAdvancedPHPConfig(request):
                     phpVers = "php70"
                 elif phpVers == "PHP 7.1":
                     phpVers = "php71"
+                elif phpVers == "PHP 7.2":
+                    phpVers = "php72"
 
                 path = "/usr/local/lsws/ls"+phpVers+"/etc/php.ini"
 
@@ -2180,6 +2218,8 @@ def savePHPConfigAdvance(request):
                     phpVers = "php70"
                 elif phpVers == "PHP 7.1":
                     phpVers = "php71"
+                elif phpVers == "PHP 7.2":
+                    phpVers = "php72"
 
                 path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
 

@@ -891,8 +891,6 @@ def saveWebsiteChanges(request):
 
                 execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
 
-
-
                 output = subprocess.check_output(shlex.split(execPath))
 
                 if output.find("1,None") > -1:

@@ -12,6 +12,8 @@ import time
 
 class preFlightsChecks:
 
+    cyberPanelMirror = "mirror.cyberpanel.net"
+
     def __init__(self,rootPath,ip,path,cwd,cyberPanelPath):
         self.ipAddr = ip
         self.path = path

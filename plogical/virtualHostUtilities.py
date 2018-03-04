@@ -31,7 +31,7 @@ class virtualHostUtilities:
 
         ## adding user
 
-        command = "adduser "+virtualHostUser + " -M"
+        command = "adduser "+virtualHostUser + " -M -d " + path
 
         cmd = shlex.split(command)
 
@@ -213,6 +213,8 @@ class virtualHostUtilities:
                 php = "70"
             elif phpVersion == "PHP 7.1":
                 php = "71"
+            elif phpVersion == "PHP 7.2":
+                php = "72"
 
             extprocessor = "extprocessor "+virtualHostUser+" {\n"
             type = "  type                    lsapi\n"
@@ -498,6 +500,8 @@ class virtualHostUtilities:
                 php = "70"
             elif phpVersion == "PHP 7.1":
                 php = "71"
+            elif phpVersion == "PHP 7.2":
+                php = "72"
 
 
             extprocessor = "extprocessor " + virtualHostUser+sockRandomPath + " {\n"
@@ -695,6 +699,8 @@ class virtualHostUtilities:
                 finalphp = 70
             elif phpVersion == "PHP 7.1":
                 finalphp = 71
+            elif phpVersion == "PHP 7.2":
+                finalphp = 72
 
             writeDataToFile = open(vhFile,"w")
 
