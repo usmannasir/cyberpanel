@@ -13,7 +13,7 @@ app.controller('createWebsite', function($scope,$http) {
 
     $scope.createWebsite = function(){
 
-                if ($scope.sslCheck == true){
+                if ($scope.sslCheck === true){
                     var ssl = 1;
                 }
                 else{

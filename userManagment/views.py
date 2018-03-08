@@ -160,7 +160,7 @@ def submitUserCreation(request):
                     return HttpResponse(final_json)
                 else:
                     websitesLimit = data['websitesLimit']
-                    userAccountsLimit = data['userAccountsLimit']
+                    userAccountsLimit = 0
 
                     newAdmin = Administrator(firstName=firstName,
                                              lastName=lastName,
@@ -310,8 +310,8 @@ def saveModifications(request):
 
 
                 if data['accountType'] == "Reseller":
-                    userAccountsLimit = data['userAccountsLimit']
-                    websitesLimit = data['websitesLimit']
+                    userAccountsLimit = 0
+                    websitesLimit = 0
 
                     user.firstName = firstName
                     user.lastName = lastName

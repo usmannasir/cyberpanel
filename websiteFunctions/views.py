@@ -217,6 +217,7 @@ def submitWebsiteCreation(request):
         if request.method == 'POST':
 
             data = json.loads(request.body)
+
             domain = data['domainName']
             adminEmail = data['adminEmail']
             phpSelection = data['phpSelection']

@@ -12,7 +12,7 @@ import time
 
 class preFlightsChecks:
 
-    cyberPanelMirror = "mirror.cyberpanel.net"
+    cyberPanelMirror = "mirror.cyberpanel.net/pip"
 
     def __init__(self,rootPath,ip,path,cwd,cyberPanelPath):
         self.ipAddr = ip
@@ -334,19 +334,97 @@ class preFlightsChecks:
     def install_python_requests(self):
         try:
             import requests
-        except:
+
+            ## Un-install ULRLIB3 and requests
+
+            command = "pip uninstall --yes urllib3"
+            res = subprocess.call(shlex.split(command))
+
+            command = "pip uninstall --yes requests"
+            res = subprocess.call(shlex.split(command))
+
+
+            ## Install specific versions
+
             count = 0
             while (1):
 
-                command = "pip install requests"
+                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/urllib3-1.22.tar.gz"
 
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to install requests module, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to install urllib3 module, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to install requests module, exiting installer! [install_python_requests]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to install urllib3 module, exiting installer! [install_python_requests]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("urllib3 module Successfully installed!")
+                    preFlightsChecks.stdOut("urllib3 module Successfully installed!")
+                    break
+
+            count = 0
+            while (1):
+
+                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/requests-2.18.4.tar.gz"
+
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Unable to install requests module, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Unable to install requests module, exiting installer! [install_python_requests]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("Requests module Successfully installed!")
+                    preFlightsChecks.stdOut("Requests module Successfully installed!")
+                    break
+
+        except:
+
+            count = 0
+            while (1):
+
+                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/urllib3-1.22.tar.gz"
+
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Unable to install urllib3 module, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Unable to install urllib3 module, exiting installer! [install_python_requests]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("urllib3 module Successfully installed!")
+                    preFlightsChecks.stdOut("urllib3 module Successfully installed!")
+                    break
+
+            count = 0
+            while (1):
+
+                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/requests-2.18.4.tar.gz"
+
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Unable to install requests module, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Unable to install requests module, exiting installer! [install_python_requests]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                         sys.exit()
                 else:
@@ -357,10 +435,33 @@ class preFlightsChecks:
     def install_pexpect(self):
         try:
             import pexpect
+
+            command = "pip uninstall --yes pexpect"
+            res = subprocess.call(shlex.split(command))
+
+            count = 0
+
+            while (1):
+                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/pexpect-4.4.0.tar.gz"
+
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to install pexpect, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to install pexpect, exiting installer! [install_pexpect]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("pexpect successfully installed!")
+                    preFlightsChecks.stdOut("pexpect successfully installed!")
+                    break
+
         except:
             count = 0
             while (1):
-                command = "pip install pexpect"
+                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/pexpect-4.4.0.tar.gz"
 
                 res = subprocess.call(shlex.split(command))
 
@@ -497,10 +598,33 @@ class preFlightsChecks:
 
         try:
             import psutil
+
+            ##
+
+            command = "pip uninstall --yes psutil"
+            res = subprocess.call(shlex.split(command))
+
+            count = 0
+            while (1):
+                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/psutil-5.4.3.tar.gz"
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to install psutil, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to install psutil, exiting installer! [install_psutil]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("psutil successfully installed!")
+                    preFlightsChecks.stdOut("psutil successfully installed!")
+                    break
+
         except:
             count = 0
             while (1):
-                command = "easy_install psutil"
+                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/psutil-5.4.3.tar.gz"
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -2237,19 +2361,53 @@ class preFlightsChecks:
             latest = getVersion.json()
         except BaseException,msg:
 
+            command = "pip uninstall --yes urllib3"
+            subprocess.call(shlex.split(command))
+
             command = "pip uninstall --yes requests"
             subprocess.call(shlex.split(command))
 
-            command = "pip install requests==2.2.1"
-            res = subprocess.call(shlex.split(command))
+            count = 0
+            while (1):
 
-            if res == 1:
-                logging.InstallLog.writeToFile("Request test successful!")
-            else:
-                logging.InstallLog.writeToFile("Request test failed!")
+                command = "pip install http://mirror.cyberpanel.net/urllib3-1.22.tar.gz"
 
-            logging.InstallLog.writeToFile(str(msg) + " [test_Requests]")
-            return 0
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Unable to install urllib3 module, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Unable to install urllib3 module, exiting installer! [install_python_requests]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("urllib3 module Successfully installed!")
+                    preFlightsChecks.stdOut("urllib3 module Successfully installed!")
+                    break
+
+            count = 0
+            while (1):
+
+                command = "pip install http://mirror.cyberpanel.net/requests-2.18.4.tar.gz"
+
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Unable to install requests module, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Unable to install requests module, exiting installer! [install_python_requests]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("Requests module Successfully installed!")
+                    preFlightsChecks.stdOut("Requests module Successfully installed!")
+                    break
 
     def installation_successfull(self):
         print("###################################################################")
@@ -2268,101 +2426,51 @@ class preFlightsChecks:
     def installCertBot(self):
         try:
 
-            try:
-                if subprocess.check_output('systemd-detect-virt').find("openvz") > -1:
-                    count = 0
+            command = "pip uninstall --yes pyOpenSSL"
+            res = subprocess.call(shlex.split(command))
 
-                    while (1):
-                        command = "pip install pyOpenSSL==16.2.0"
-                        cmd = shlex.split(command)
-                        res = subprocess.call(cmd)
+            command = "pip uninstall --yes certbot"
+            res = subprocess.call(shlex.split(command))
 
-                        if res == 1:
-                            count = count + 1
-                            preFlightsChecks.stdOut("Trying to install CertBot prerequisites, trying again, try number: " + str(count))
-                            if count == 3:
-                                logging.InstallLog.writeToFile("Failed to install CertBot prerequisites, exiting installer! [installCertBot]")
-                                preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                                sys.exit()
-                        else:
-                            logging.InstallLog.writeToFile("CertBot prerequisites successfully installed! [pyOpenSSL==16.2.0]")
-                            preFlightsChecks.stdOut("CertBot prerequisites successfully installed! [pyOpenSSL==16.2.0]")
-                            break
+            count = 0
+            while (1):
+                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/pyOpenSSL-17.5.0.tar.gz"
 
-                    count = 0
+                res = subprocess.call(shlex.split(command))
 
-                    while(1):
-
-                        command = "pip install certbot"
-                        cmd = shlex.split(command)
-                        res = subprocess.call(cmd)
-
-                        if res == 1:
-                            count = count + 1
-                            preFlightsChecks.stdOut("Trying to install CertBot, trying again, try number: " + str(count))
-                            if count == 3:
-                                logging.InstallLog.writeToFile("Failed to install CertBot, exiting installer! [installCertBot]")
-                                preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                                sys.exit()
-                        else:
-                            logging.InstallLog.writeToFile("CertBot successfully installed! [pip]")
-                            preFlightsChecks.stdOut("CertBot successfully installed! [pip]")
-                            break
-
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Trying to install pyOpenSSL, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Failed to install pyOpenSSL, exiting installer! [installCertBot]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
                 else:
+                    logging.InstallLog.writeToFile("pyOpenSSL successfully installed!  [pip]")
+                    preFlightsChecks.stdOut("pyOpenSSL successfully installed!  [pip]")
+                    break
 
-                    count = 0
+            count = 0
+            while (1):
+                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/certbot-0.21.1.tar.gz"
 
-                    while(1):
-                        cmd = []
+                res = subprocess.call(shlex.split(command))
 
-                        cmd.append("yum")
-                        cmd.append("-y")
-                        cmd.append("install")
-                        cmd.append("certbot")
-
-                        res = subprocess.call(cmd)
-
-                        if res == 1:
-                            count = count + 1
-                            preFlightsChecks.stdOut("Trying to install CertBot, trying again, try number: " + str(count))
-                            if count == 3:
-                                logging.InstallLog.writeToFile("Failed to install CertBot, exiting installer! [installCertBot]")
-                                preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                                sys.exit()
-                        else:
-                            logging.InstallLog.writeToFile("CertBot successfully installed! [yum]")
-                            preFlightsChecks.stdOut("CertBot successfully installed!  [yum]")
-                            break
-
-            except:
-
-                count = 0
-
-                while (1):
-                    cmd = []
-                    cmd.append("yum")
-                    cmd.append("-y")
-                    cmd.append("install")
-                    cmd.append("certbot")
-
-                    res = subprocess.call(cmd)
-
-                    if res == 1:
-                        count = count + 1
-                        preFlightsChecks.stdOut(
-                            "Trying to install CertBot, trying again, try number: " + str(count))
-                        if count == 3:
-                            logging.InstallLog.writeToFile(
-                                "Failed to install CertBot, exiting installer! [installCertBot]")
-                            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                            sys.exit()
-                    else:
-                        logging.InstallLog.writeToFile("CertBot successfully installed!  [yum]")
-                        preFlightsChecks.stdOut("CertBot successfully installed!  [yum]")
-                        break
-
-
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Trying to install CertBot, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Failed to install CertBot, exiting installer! [installCertBot]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("CertBot successfully installed!  [pip]")
+                    preFlightsChecks.stdOut("CertBot successfully installed!  [pip]")
+                    break
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [installCertBot]")
