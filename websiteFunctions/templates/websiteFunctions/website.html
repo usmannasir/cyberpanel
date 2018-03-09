@@ -251,10 +251,11 @@
        <div style="border-radius: 25px;border-color:#3498db" class="content-box">
 
            <h3 class="content-box-header bg-blue">
-                           {% trans "Domains" %} <img  ng-hide="domainLoading" src="/static/images/loading.gif">
-                     </h3>
+               {% trans "Domains" %} <img  ng-hide="domainLoading" src="/static/images/loading.gif">
+           </h3>
 
            <div class="content-box-wrapper">
+
                <div class="row">
 
                         <div class="col-md-4" style="margin-bottom: 2%;">
@@ -294,9 +295,8 @@
 
 
                  <!---------- HTML For creating domains --------------->
-
+                   <div class="col-md-12">
                      <form id="domainCreationForm" name="websiteCreationForm"  action="/" class="form-horizontal bordered-row">
-
 
 
                         <div class="form-group">
@@ -383,7 +383,8 @@
                         </div>
 
 
-            </form>
+                    </form>
+                   </div>
 
                  <!---------- HTML For creating domains --------------->
 
@@ -478,7 +479,7 @@
                     </div>
 
                  <!---------- HTML For Listing domains --------------->
-                    </div>
+               </div>
 
            </div>
        </div>

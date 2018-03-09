@@ -43,7 +43,6 @@ class preFlightsChecks:
                 logging.InstallLog.writeToFile("SELinux is enabled, please disable SELinux and restart the installation!")
                 preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                 sys.exit()
-                return 0
 
         except BaseException,msg:
             logging.InstallLog.writeToFile(str(msg) + "[checkIfSeLinuxDisabled]")

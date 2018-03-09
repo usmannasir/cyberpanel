@@ -412,9 +412,11 @@ def submitDomainCreation(request):
             ####### Limitations check
 
             master = Websites.objects.get(domain=masterDomain)
+            domainsInPackage = master.package.allowedDomains
 
-
-            if master.package.allowedDomains > master.childdomains_set.all().count():
+            if domainsInPackage == 0:
+                pass
+            elif domainsInPackage > master.childdomains_set.all().count():
                 pass
             else:
                 data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
