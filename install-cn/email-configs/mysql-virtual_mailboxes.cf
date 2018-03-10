@@ -1,0 +1,5 @@
+user = cyberpanel
+password = 1qaz@9xvps
+dbname = cyberpanel
+query = SELECT CONCAT(SUBSTRING_INDEX(email,'@',-1),'/',SUBSTRING_INDEX(email,'@',1),'/') FROM e_users WHERE email='%s'
+hosts = 127.0.0.1:3307
