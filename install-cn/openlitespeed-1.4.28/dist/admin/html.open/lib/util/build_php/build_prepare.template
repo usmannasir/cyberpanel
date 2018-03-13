@@ -1,0 +1,195 @@
+###########################################
+#   passed params
+
+DL_METHOD="__dl_method__"
+ENABLE_MAILHEADER=__enable_mailheader__
+LSAPI_VERSION=__lsapi_version__
+
+###########################################
+
+echo "============================================================="
+main_msg "Preparing all source code for building PHP ${PHP_VERSION} with LSAPI ${LSAPI_VERSION}"
+echo "============================================================="
+echo `date`
+echo ""
+
+echo "Changing to build directory ${PHP_BUILD_DIR}" 
+cd ${PHP_BUILD_DIR}
+check_errs $? "Could not get into build directory"
+
+if [ -e "php-${PHP_VERSION}" ] ; then
+	rm -rf php-${PHP_VERSION}
+	check_errs $? "Could not delete old php directory ${PHP_BUILD_DIR}/php-${PHP_VERSION}"
+fi
+
+test_phpsrc_ok()
+{
+	main_msg "Extracting PHP source archive: tar -zxf ${1}" 
+	tar -zxf ${1}
+	if [ "$?" -ne "0" ] ; then
+		## remove bad copy
+		rm -f ${1}
+		main_msg "Could not extract PHP source archive"
+		return 1
+	fi
+	return 0
+}
+
+
+PHP_SRC=php-${PHP_VERSION}.tar.gz
+PHP_SRC_READY=N
+
+if [ -e "${PHP_SRC}" ] ; then
+	main_msg "${PHP_SRC} already downloaded, use the saved copy."
+	test_phpsrc_ok ${PHP_SRC}
+	if [ "$?" -eq "0" ] ; then
+		PHP_SRC_READY=Y
+	fi
+fi
+
+if [ "${PHP_SRC_READY}" = "N" ] && [ `expr ${PHP_VERSION} : ".*alpha\|.*beta\|.*RC"` -gt 0 ] ; then
+	DOWNLOAD_URL="https://downloads.php.net/~ab/${PHP_SRC}"
+	main_msg "Retrieving PHP source archive from ${DOWNLOAD_URL}" 
+	${DL_METHOD} ${PHP_SRC} ${DOWNLOAD_URL}
+
+	test_phpsrc_ok ${PHP_SRC}
+	if [ "$?" -eq "0" ] ; then
+		PHP_SRC_READY=Y
+	fi
+fi
+
+
+if [ "${PHP_SRC_READY}" = "N" ] ; then
+	DOWNLOAD_URL="http://php.net/distributions/${PHP_SRC}"
+	main_msg "Retrieving PHP source archive from ${DOWNLOAD_URL}" 
+	${DL_METHOD} ${PHP_SRC} ${DOWNLOAD_URL}
+
+	test_phpsrc_ok ${PHP_SRC}
+	if [ "$?" -eq "0" ] ; then
+		PHP_SRC_READY=Y
+	fi
+fi
+
+if [ "${PHP_SRC_READY}" = "N" ] ; then
+	DOWNLOAD_URL="http://us1.php.net/distributions/${PHP_SRC}"
+	main_msg "Retrieving PHP source archive from ${DOWNLOAD_URL}" 
+	${DL_METHOD} ${PHP_SRC} ${DOWNLOAD_URL}
+
+	test_phpsrc_ok ${PHP_SRC}
+	if [ "$?" -eq "0" ] ; then
+		PHP_SRC_READY=Y
+	fi
+fi
+
+if [ "${PHP_SRC_READY}" = "N" ] ; then
+	DOWNLOAD_URL="http://us2.php.net/distributions/${PHP_SRC}"
+	main_msg "Retrieving PHP source archive from ${DOWNLOAD_URL}" 
+	${DL_METHOD} ${PHP_SRC} ${DOWNLOAD_URL}
+
+	test_phpsrc_ok ${PHP_SRC}
+	if [ "$?" -eq "0" ] ; then
+		PHP_SRC_READY=Y
+	fi
+fi
+
+if [ "${PHP_SRC_READY}" = "N" ] ; then
+	DOWNLOAD_URL="http://us3.php.net/distributions/${PHP_SRC}"
+	main_msg "Retrieving PHP source archive from ${DOWNLOAD_URL}" 
+	${DL_METHOD} ${PHP_SRC} ${DOWNLOAD_URL}
+
+	test_phpsrc_ok ${PHP_SRC}
+	if [ "$?" -eq "0" ] ; then
+		PHP_SRC_READY=Y
+	fi
+fi
+
+if [ "${PHP_SRC_READY}" = "N" ] ; then
+	MAIN_VER=`expr "${PHP_VERSION}" : "\(.\)"`
+	DOWNLOAD_URL="http://museum.php.net/php${MAIN_VER}/${PHP_SRC}"
+	main_msg "Try again, retrieving PHP source archive from ${DOWNLOAD_URL}" 
+	${DL_METHOD} ${PHP_SRC} ${DOWNLOAD_URL}
+
+	test_phpsrc_ok ${PHP_SRC}
+	if [ "$?" -eq "0" ] ; then
+		PHP_SRC_READY=Y
+	fi
+fi
+
+if [ "${PHP_SRC_READY}" = "N" ] ; then
+	check_errs $? "Fail to retrieve PHP source archive. Please try manually download."
+fi
+	
+echo ""
+
+
+if [ "${ENABLE_MAILHEADER}" -eq 1 ] ; then
+
+	MAILHEADER_VER=`expr ${PHP_VERSION} : "\(.\..\)"`
+	if [ "${MAILHEADER_VER}" = "5.2" ] ; then
+		MAILHEADER_VER=5.2.x
+	elif [ "${MAILHEADER_VER}" = "5.3" ] ; then 
+		MAILHEADER_VER=5.3.x
+	elif [ "${MAILHEADER_VER}" = "5.4" ] ; then 
+		MAILHEADER_VER=5.4.x
+	elif [ "${MAILHEADER_VER}" = "5.5" ] ; then 
+		MAILHEADER_VER=5.5.x
+	elif [ "${MAILHEADER_VER}" = "5.6" ] ; then 
+		MAILHEADER_VER=5.6.x
+	else
+		MAILHEADER_VER=${PHP_VERSION}
+	fi
+	
+	MHPATCH="php-${MAILHEADER_VER}-mail-header.patch"
+	
+	if [ -e ${MHPATCH} ] ; then
+		rm -f ${MHPATCH}
+		check_errs $? "Could not delete old copy ${MHPATCH}"
+	fi
+
+	DOWNLOAD_URL="http://choon.net/opensource/php/${MHPATCH}"
+	main_msg "Retrieving mail header patch from ${DOWNLOAD_URL}"
+	${DL_METHOD} ${MHPATCH} ${DOWNLOAD_URL}
+	check_errs $? "Could not retrieve mail header patch"
+	echo ""
+	
+	main_msg "Patching source with mail header patch"
+	cd php-${PHP_VERSION}
+	patch -p1 < ../${MHPATCH}
+	check_errs $? "Could not patch source with mail header patch"
+	cd ..
+	echo ""
+fi
+
+# get LSAPI
+
+if [ -e php-litespeed-${LSAPI_VERSION}.tgz ] ; then
+	rm -f php-litespeed-${LSAPI_VERSION}.tgz
+	check_errs $? "Could not delete old lsapi copy php-litespeed-${LSAPI_VERSION}.tgz"
+fi
+
+DOWNLOAD_URL="http://www.litespeedtech.com/packages/lsapi/php-litespeed-${LSAPI_VERSION}.tgz"
+main_msg "Retrieving LSAPI from ${DOWNLOAD_URL}"
+${DL_METHOD} "php-litespeed-${LSAPI_VERSION}.tgz" ${DOWNLOAD_URL}
+check_errs $? "Could not retrieve LSAPI archive"
+
+cd php-${PHP_VERSION}/sapi
+check_errs $? "Could not get into php/sapi directory"
+
+if [ -e litespeed/Makefile.frag ] ; then
+	mv -f litespeed/Makefile.frag litespeed/Makefile.frag.package 
+fi
+
+main_msg "Extracting LSAPI archive: tar -xzf php-litespeed-${LSAPI_VERSION}.tgz" 
+tar -xzf "../../php-litespeed-${LSAPI_VERSION}.tgz"
+check_errs $? "Could not extract LSAPI archive"
+
+if [ -e litespeed/Makefile.frag.package ] ; then
+	mv -f litespeed/Makefile.frag.package litespeed/Makefile.frag 
+fi
+
+echo ""
+echo "============================================================="
+main_msg "Finished gathering all source code for building PHP ${PHP_VERSION}"
+echo "============================================================="
+echo `date`
+echo ""

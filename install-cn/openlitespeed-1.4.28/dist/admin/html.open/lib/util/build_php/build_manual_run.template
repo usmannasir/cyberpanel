@@ -1,0 +1,34 @@
+#!/bin/sh
+
+###########################################
+#	Please manually run this script after preparation finished successfully.
+#	You can monitor the log output from web console.
+#	You need to run as root or with root privilege in order to install into system directory.
+###########################################
+
+INSTALL_SCRIPT=__install_script__
+LOG_FILE=__log_file__
+PHP_VERSION=__php_version__
+PHP_BUILD_DIR=__php_build_dir__
+PHP_USR=__php_usr__
+PHP_USRGROUP=__php_usrgroup__
+
+
+echo "Manually running installation script: ${INSTALL_SCRIPT}"
+echo "Running at background with command:"
+echo "${INSTALL_SCRIPT} 1> ${LOG_FILE} 2>&1"
+
+${INSTALL_SCRIPT} 1> ${LOG_FILE} 2>&1
+
+INST_USER=`id`
+INST_USER=`expr "${INST_USER}" : 'uid=.*(\(.*\)) gid=.*'`
+
+if [  "x${INST_USER}" = "xroot" ]; then
+    echo "chown -R ${PHP_USR}:${PHP_USRGROUP} ${PHP_BUILD_DIR}/php-${PHP_VERSION}"
+    chown -R ${PHP_USR}:${PHP_USRGROUP} ${PHP_BUILD_DIR}/php-${PHP_VERSION} 
+fi
+
+if [ -f "/etc/cagefs/cagefs.mp" ] ; then
+# cagefs installed first, need update mount point
+    cagefsctl --update
+fi
