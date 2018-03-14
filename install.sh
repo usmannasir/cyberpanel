@@ -1,4 +1,9 @@
 #!/bin/bash
+yum autoremove epel-release -y
+rm -f /etc/yum.repos.d/epel.repo
+rm -f /etc/yum.repos.d/epel.repo.rpmsave
+yum install epel-release -y
+#some provider's centos7 template come with incorrect or misconfigured epel.repo
 yum clean all
 yum update -y
 yum install wget which curl -y
