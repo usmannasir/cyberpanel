@@ -18,10 +18,16 @@ urlpatterns = [
 
     url(r'^secureSSH', views.secureSSH, name='secureSSH'),
     url(r'^getSSHConfigs', views.getSSHConfigs, name='getSSHConfigs'),
-
     url(r'^saveSSHConfigs', views.saveSSHConfigs, name='saveSSHConfigs'),
-
     url(r'^deleteSSHKey', views.deleteSSHKey, name='deleteSSHKey'),
-
     url(r'^addSSHKey', views.addSSHKey, name='addSSHKey'),
+
+
+    ## ModSecurity
+
+    url(r'^modSecurity', views.loadModSecurityHome, name='modSecurity'),
+    url(r'^installModSec', views.installModSec, name='installModSec'),
+    url(r'^installStatusModSec', views.installStatusModSec, name='installStatusModSec'),
+
+
 ]

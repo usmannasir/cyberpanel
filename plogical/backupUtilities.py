@@ -1,4 +1,3 @@
-import thread
 import pexpect
 import CyberCPLogFileWriter as logging
 import subprocess

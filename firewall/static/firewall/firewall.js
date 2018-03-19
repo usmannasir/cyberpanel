@@ -824,3 +824,406 @@ app.controller('secureSSHCTRL', function($scope,$http) {
 });
 
 /* Java script code to Secure SSH */
+
+/* Java script code for ModSec */
+
+app.controller('modSec', function($scope, $http, $timeout, $window) {
+
+           $scope.modSecNotifyBox  = true;
+           $scope.modeSecInstallBox = true;
+           $scope.modsecLoading = true;
+           $scope.failedToStartInallation = true;
+           $scope.couldNotConnect = true;
+           $scope.modSecSuccessfullyInstalled = true;
+           $scope.installationFailed = true;
+
+
+
+           $scope.installModSec = function(){
+
+               $scope.modSecNotifyBox  = true;
+               $scope.modeSecInstallBox = true;
+               $scope.modsecLoading = false;
+               $scope.failedToStartInallation = true;
+               $scope.couldNotConnect = true;
+               $scope.modSecSuccessfullyInstalled = true;
+               $scope.installationFailed = true;
+
+               url = "/firewall/installModSec";
+
+                        var data = {};
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.installModSec === 1){
+
+                        $scope.modSecNotifyBox  = true;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = false;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+                        $scope.modSecSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+                        getRequestStatus();
+
+                    }
+                    else{
+                        $scope.errorMessage = response.data.error_message;
+
+                        $scope.modSecNotifyBox  = false;
+                        $scope.modeSecInstallBox = true;
+                        $scope.modsecLoading = true;
+                        $scope.failedToStartInallation = false;
+                        $scope.couldNotConnect = true;
+                        $scope.modSecSuccessfullyInstalled = true;
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.modSecNotifyBox  = false;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = true;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = false;
+                        $scope.modSecSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+                }
+
+           };
+
+           function getRequestStatus(){
+
+                        $scope.modSecNotifyBox  = true;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = false;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+                        $scope.modSecSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+                        url = "/firewall/installStatusModSec";
+
+                        var data = {};
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.abort === 0){
+
+                        $scope.modSecNotifyBox  = true;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = false;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+                        $scope.modSecSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+                        $scope.requestData = response.data.requestStatus;
+                        $timeout(getRequestStatus,1000);
+                    }
+                    else{
+                        // Notifications
+                        $timeout.cancel();
+                        $scope.modSecNotifyBox  = false;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = true;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+
+                        $scope.requestData = response.data.requestStatus;
+
+                        if(response.data.installed === 0) {
+                            $scope.installationFailed = false;
+                            $scope.errorMessage = response.data.error_message;
+                        }else{
+                            $scope.modSecSuccessfullyInstalled = false;
+                            $timeout(function() {  $window.location.reload(); }, 3000);
+                        }
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.modSecNotifyBox  = false;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = true;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = false;
+                        $scope.modSecSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+
+                }
+
+           }
+
+
+
+           function getSSHConfigs(){
+
+                        $scope.couldNotSave = true;
+                        $scope.detailsSaved = true;
+                        $scope.couldNotConnect = true;
+                        $scope.secureSSHLoading = false;
+
+                        url = "/firewall/getSSHConfigs";
+
+                        var data = {
+                            type:"1",
+                        };
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.sshPort = response.data.sshPort;
+
+                    if(response.data.permitRootLogin == 1){
+                        $('#rootLogin').bootstrapToggle('on');
+                        $scope.couldNotSave = true;
+                       $scope.detailsSaved = true;
+                       $scope.couldNotConnect = true;
+                       $scope.secureSSHLoading = true;
+                    }
+                    else{
+                        $scope.errorMessage = response.data.error_message;
+                        $scope.couldNotSave = true;
+                        $scope.detailsSaved = true;
+                        $scope.couldNotConnect = true;
+                        $scope.secureSSHLoading = true;
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.couldNotConnect = false;
+
+                }
+
+           };
+
+           $scope.saveChanges = function () {
+
+               $scope.couldNotSave = true;
+               $scope.detailsSaved = true;
+               $scope.couldNotConnect = true;
+               $scope.secureSSHLoading = false;
+
+               url = "/firewall/saveSSHConfigs";
+
+                        var data = {
+                            type:"1",
+                            sshPort:$scope.sshPort,
+                            rootLogin:rootLogin,
+                        };
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.saveStatus == 1){
+                        $scope.couldNotSave = true;
+                        $scope.detailsSaved = false;
+                        $scope.couldNotConnect = true;
+                        $scope.secureSSHLoading = true;
+                    }
+                    else{
+
+                        $scope.couldNotSave = false;
+                       $scope.detailsSaved = true;
+                       $scope.couldNotConnect = true;
+                       $scope.secureSSHLoading = true;
+
+                        $scope.errorMessage = response.data.error_message;
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.couldNotSave = true;
+                    $scope.detailsSaved = true;
+                    $scope.couldNotConnect = false;
+                    $scope.secureSSHLoading = true;
+
+                }
+           };
+
+
+           function populateCurrentKeys(){
+
+                        url = "/firewall/getSSHConfigs";
+
+                        var data = {
+                            type:"2",
+                        };
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.status == 1){
+                        $scope.records = JSON.parse(response.data.data);
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.couldNotConnect = false;
+
+                }
+
+
+           }
+
+           $scope.deleteKey =  function(key){
+
+                        $scope.secureSSHLoading = false;
+
+                        url = "/firewall/deleteSSHKey";
+
+                        var data = {
+                            key:key,
+                        };
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.delete_status == 1){
+                        $scope.secureSSHLoading = true;
+                        $scope.keyDeleted = false;
+                        populateCurrentKeys();
+                    }
+                    else{
+                        $scope.couldNotConnect = false;
+                        $scope.secureSSHLoading = true;
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.couldNotConnect = false;
+                    $scope.secureSSHLoading = true;
+
+                }
+
+
+           }
+
+
+           $scope.saveKey =  function(key){
+
+                        $scope.secureSSHLoading = false;
+
+                        url = "/firewall/addSSHKey";
+
+                        var data = {
+                            key:$scope.keyData,
+                        };
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.add_status == 1){
+                        $scope.secureSSHLoading = true;
+                        $scope.saveKeyBtn = true;
+                        $scope.showKeyBox = false;
+                        $scope.keyBox = true;
+
+
+                        populateCurrentKeys();
+                    }
+                    else{
+                        $scope.secureSSHLoading = true;
+                        $scope.saveKeyBtn = false;
+                        $scope.showKeyBox = true;
+                        $scope.keyBox = true;
+                        $scope.couldNotConnect = false;
+                        $scope.secureSSHLoading = true;
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.secureSSHLoading = true;
+                    $scope.saveKeyBtn = false;
+                    $scope.showKeyBox = true;
+                    $scope.keyBox = true;
+                    $scope.couldNotConnect = false;
+                    $scope.secureSSHLoading = true;
+
+                }
+
+
+           }
+
+});
+
+/* Java script code for ModSec */

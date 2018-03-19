@@ -33,7 +33,7 @@ class sslUtilities:
                 keyFile = "  keyFile                 " + pathToStoreSSL + "/privkey.pem" + "\n"
                 certFile = "  certFile                " + pathToStoreSSL + "/fullchain.pem" + "\n"
                 certChain = "  certChain               1" + "\n"
-                sslProtocol = "  sslProtocol             31" + "\n"
+                sslProtocol = "  sslProtocol             30" + "\n"
                 map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
                 final = "}" + "\n" + "\n"
 
@@ -87,7 +87,7 @@ class sslUtilities:
                     keyFile = "  keyFile                 " + pathToStoreSSL + "/privkey.pem" + "\n"
                     certFile = "  certFile                " + pathToStoreSSL + "/fullchain.pem" + "\n"
                     certChain = "  certChain               1" + "\n"
-                    sslProtocol = "  sslProtocol             31" + "\n"
+                    sslProtocol = "  sslProtocol             30" + "\n"
                     final = "}"
 
                     writeSSLConfig.writelines("\n")
@@ -146,7 +146,7 @@ class sslUtilities:
                 else:
                     command = "certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
                     logging.CyberCPLogFileWriter.writeToFile(
-                        "SSL is issued without 'www' due to DNS error! for domain :" + virtualHostName)
+                        "SSL is issued without 'www' due to DNS error! for domain : " + virtualHostName)
 
             except:
                 command = "certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
@@ -349,7 +349,7 @@ def issueSSLForDomain(domain,adminEmail,sslpath):
             if sslUtilities.installSSLForDomain(domain) == 1:
                 return [1, "None"]
             else:
-                [0, "327 Failed to install SSL for domain. [issueSSLForDomain]"]
+                return [0, "352 Failed to install SSL for domain. [issueSSLForDomain]"]
         else:
             return [0,"347 Failed to obtain SSL [issueSSLForDomain]"]
     except BaseException,msg:

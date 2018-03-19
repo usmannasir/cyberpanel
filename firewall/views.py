@@ -1,8 +1,6 @@
 from django.shortcuts import render,redirect
-from .models import FirewallRules
 from django.http import HttpResponse
 import json
-from plogical.firewallUtilities import FirewallUtilities
 import shlex
 import subprocess
 from loginSystem.views import loadLoginPage
@@ -11,6 +9,10 @@ from .models import FirewallRules
 import os
 from loginSystem.models import Administrator
 import plogical.CyberCPLogFileWriter as logging
+from plogical.virtualHostUtilities import virtualHostUtilities
+import thread
+from plogical.modSec import modSec
+from plogical.installUtilities import installUtilities
 # Create your views here.
 
 
@@ -626,5 +628,87 @@ def addSSHKey(request):
             return HttpResponse(final_json)
     except KeyError,msg:
         final_dic = {'add_status': 0}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def loadModSecurityHome(request):
+    try:
+        userID = request.session['userID']
+
+        admin = Administrator.objects.get(pk=userID)
+
+        if admin.type == 3:
+            return HttpResponse("You don't have enough privileges to access this page.")
+
+        modSecPath = os.path.join(virtualHostUtilities.Server_root,'modules','mod_security.so')
+
+        modSecInstalled = 0
+
+        if os.path.exists(modSecPath):
+            modSecInstalled = 1
+
+        return render(request,'firewall/modSecurity.html', {'modSecInstalled': modSecInstalled})
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def installModSec(request):
+    try:
+        val = request.session['userID']
+        try:
+            thread.start_new_thread(modSec.installModSec, ('Install','modSec'))
+            final_json = json.dumps({'installModSec': 1, 'error_message': "None"})
+            return HttpResponse(final_json)
+
+        except BaseException,msg:
+            final_dic = {'installModSec': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'installModSec': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def installStatusModSec(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                installStatus = unicode(open(modSec.installLogPath, "r").read())
+
+                if installStatus.find("[200]")>-1:
+
+                    final_json = json.dumps({
+                                             'error_message': "None",
+                                             'requestStatus': installStatus,
+                                             'abort':1,
+                                             'installed': 1,
+                                             })
+                    return HttpResponse(final_json)
+                elif installStatus.find("[404]") > -1:
+
+                    final_json = json.dumps({
+                                             'abort':1,
+                                             'installed':0,
+                                             'error_message': "None",
+                                             'requestStatus': installStatus,
+                                             })
+                    return HttpResponse(final_json)
+
+                else:
+                    final_json = json.dumps({
+                                             'abort':0,
+                                             'error_message': "None",
+                                             'requestStatus': installStatus,
+                                             })
+                    return HttpResponse(final_json)
+
+
+        except BaseException,msg:
+            final_dic = {'abort':1,'installed':0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'abort':1,'installed':0, 'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)

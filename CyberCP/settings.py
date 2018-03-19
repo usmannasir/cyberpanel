@@ -102,7 +102,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'cyberpanel',
         'USER': 'cyberpanel',
-        'PASSWORD': 'jFzZwX3fFyYrCo',
+        'PASSWORD': 'Bz9gF7Hr7X4RtD',
         'HOST': '127.0.0.1',
         'PORT':'3307'
     },
@@ -110,10 +110,10 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'mysql',
         'USER': 'root',
-        'PASSWORD': 'b1w3wHi5x0o8t9',
+        'PASSWORD': 'sXm5VlRaAsXkDd',
         'HOST': 'localhost',
         'PORT': '',
-    }
+    },
 }
 
 DATABASE_ROUTERS = ['backup.backupRouter.backupRouter']
@@ -174,4 +174,3 @@ LANGUAGES = (
     ('ru', _('Russian')),
     ('tr', _('Turkish')),
 )
-

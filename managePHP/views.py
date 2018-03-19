@@ -1828,7 +1828,6 @@ def getExtensionsInformation(request):
 
 
 def submitExtensionRequest(request):
-
     try:
         val = request.session['userID']
         try:
