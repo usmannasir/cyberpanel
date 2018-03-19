@@ -1,0 +1,12 @@
+#!/bin/sh
+
+date=`date -u '+%a, %d %b %Y %H:%M:%S %Z'`
+
+cat << EOF
+Content-type: text/plain
+Expires: $date
+
+Hello World
+
+EOF
+

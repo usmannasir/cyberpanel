@@ -1,0 +1,30 @@
+#!/bin/sh
+
+###########################################
+EXTRA_PATH_ENV="__extra_path_env__"
+PROGRESS_F=__progress_f__
+PHP_VERSION=__php_version__
+PHP_BUILD_DIR=__php_build_dir__
+###########################################
+
+PATH=${EXTRA_PATH_ENV}$PATH
+
+check_errs()
+{
+  if [ "${1}" -ne "0" ] ; then
+    echo "**ERROR** ${2}"
+    echo "**ERROR** ${2}" >> ${PROGRESS_F}
+    exit ${1}
+  fi
+}
+
+main_msg()
+{
+	# write to both stdout and progress
+	echo "${1}"
+	echo "${1}" >> ${PROGRESS_F}
+}
+
+# clear out
+echo "**MAIN_STATUS** retrieved from ${PROGRESS_F}" > ${PROGRESS_F}
+

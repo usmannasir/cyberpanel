@@ -1,0 +1,112 @@
+###########################################
+PHP_USR=__php_usr__
+PHP_USRGROUP=__php_usrgroup__
+INSTALL_DIR=__install_dir__
+LSWS_HOME=__lsws_home__
+###########################################
+
+echo ""
+echo "=============================================="
+main_msg "Start building PHP ${PHP_VERSION} with LSAPI"
+echo "=============================================="
+echo `date`
+echo ""
+
+echo "Changing to build directory ${PHP_BUILD_DIR}/php-${PHP_VERSION}" 
+cd ${PHP_BUILD_DIR}/php-${PHP_VERSION}
+check_errs $? "Could not get into build directory"
+
+touch ac*
+check_errs $? "Could not touch ac*"
+
+rm -rf autom4te.*
+
+PHP_MAIN_VER=`expr "${PHP_VERSION}" : '\([0-9]*\.[0-9]*\)'`
+
+PHP_MAIN_VER1=`expr "${PHP_MAIN_VER}" : '\([0-9]*\)\.'`
+PHP_MAIN_VER2=`expr "${PHP_MAIN_VER}" : '[0-9]*\.\([0-9]*\)'`
+
+BUILDCONF_FORCE=N
+if [ "${PHP_MAIN_VER1}" -lt "5" ] ; then
+    BUILDCONF_FORCE=Y
+elif [ "${PHP_MAIN_VER1}" = "5" ] && [ "${PHP_MAIN_VER2}" -lt "3" ] ; then
+    BUILDCONF_FORCE=Y
+fi
+
+if [ "${BUILDCONF_FORCE}" = "Y" ] ; then
+	./buildconf --force
+	check_errs $? "Could not generate configuration script for version prior to 5.3"
+fi
+
+
+main_msg "Configuring PHP build (2-3 minutes)" 
+echo "__compiler_flags__ ./configure __php_conf_options__"
+__compiler_flags__ ./configure __php_conf_options__
+
+check_errs $? "Could not configure PHP build"
+
+PLF=`uname -p`
+if [ "${PLF}" = "x86_64" ] ; then
+        # work around for libtool problem for linux
+        DLSCH=`grep 'sys_lib_dlsearch_path_spec="/lib /usr/lib ' libtool`
+        if [ "${DLSCH}" != "" ] ; then
+                echo "  .. work around for libtool problem: sys_lib_dlsearch_path_spec should use lib64"
+                cp libtool libtool.orig
+                sed -e 's/sys_lib_dlsearch_path_spec=\"\/lib \/usr\/lib /sys_lib_dlsearch_path_spec=\"\/lib64 \/usr\/lib64 /' libtool.orig > libtool
+            if [ "$?" -ne "0" ] ; then
+                        echo "   sed command error, please try to modify libtool manually using lib64 for line: sys_lib_dlsearch_path_spec=\"/lib /usr/lib\" "
+            fi
+        fi
+fi
+
+find . -name '*.1' > /tmp/php-1.lst.$$
+tar -cf /tmp/php-1.tar.$$ -T /tmp/php-1.lst.$$
+make clean
+tar -xf /tmp/php-1.tar.$$
+rm /tmp/php-1.tar.$$ /tmp/php-1.lst.$$
+
+main_msg "Compiling PHP (5-10 minutes)" 
+echo `date`
+make
+check_errs $? "Could not compile PHP"
+
+main_msg "Installing PHP" 
+make -k install
+check_errs $? "Could not install PHP"
+
+main_msg "copy compiled php binary to litespeed directory"
+
+echo "cd ${LSWS_HOME}/fcgi-bin"
+cd ${LSWS_HOME}/fcgi-bin
+check_errs $? "cannot cd to ${LSWS_HOME}/fcgi-bin"
+
+if [ -e "lsphp-${PHP_VERSION}" ] ; then
+	mv lsphp-${PHP_VERSION} lsphp-${PHP_VERSION}.bak
+fi
+
+cp ${PHP_BUILD_DIR}/php-${PHP_VERSION}/sapi/litespeed/php lsphp-${PHP_VERSION}
+check_errs $? "fail to copy lsphp from ${PHP_BUILD_DIR}/php-${PHP_VERSION}/sapi/litespeed/php"
+
+chmod a+rx lsphp-${PHP_VERSION}
+
+PHP_MAIN_VERSION=`expr "${PHP_VERSION}" : '\([0-9]*\)\.'`
+
+echo "ln -sf lsphp-${PHP_VERSION} lsphp${PHP_MAIN_VERSION}"
+ln -sf lsphp-${PHP_VERSION} "lsphp${PHP_MAIN_VERSION}" 
+check_errs $? "fail to creat symbolic link"
+
+INST_USER=`id`
+INST_USER=`expr "${INST_USER}" : 'uid=.*(\(.*\)) gid=.*'`
+
+if [  "${INST_USER}" = "root" ]; then
+   chown -R ${PHP_USR}:${PHP_USRGROUP} ${PHP_BUILD_DIR}/php-${PHP_VERSION} 
+   check_errs $? "Could not chown to ${PHP_USR}:${PHP_USRGROUP} for direcotry ${PHP_BUILD_DIR}/php-${PHP_VERSION}"
+fi
+
+echo ""
+echo "=============================================="
+echo "Finished building PHP ${PHP_VERSION} with LSAPI"
+echo "=============================================="
+echo `date`
+echo ""
+ 
