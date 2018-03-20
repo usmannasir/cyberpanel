@@ -678,6 +678,25 @@ def installStatusModSec(request):
 
                 if installStatus.find("[200]")>-1:
 
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+
+                    execPath = execPath + " installModSecConfigs"
+
+                    output = subprocess.check_output(shlex.split(execPath))
+
+                    if output.find("1,None") > -1:
+                        pass
+                    else:
+                        final_json = json.dumps({
+                            'error_message': "Failed to install ModSecurity configurations.",
+                            'requestStatus': installStatus,
+                            'abort': 1,
+                            'installed': 0,
+                        })
+                        return HttpResponse(final_json)
+
+                    installUtilities.reStartLiteSpeed()
+
                     final_json = json.dumps({
                                              'error_message': "None",
                                              'requestStatus': installStatus,
@@ -712,3 +731,96 @@ def installStatusModSec(request):
         final_dic = {'abort':1,'installed':0, 'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
+
+def fetchModSecSettings(request):
+    try:
+        val = request.session['userID']
+
+        try:
+            if request.method == 'POST':
+
+                modsecurity = 0
+                SecAuditEngine = 0
+                SecRuleEngine = 0
+                SecDebugLogLevel = "9"
+                SecAuditLogRelevantStatus = '^(?:5|4(?!04))'
+                SecAuditLogParts = 'ABIJDEFHZ'
+                SecAuditLogType = 'Serial'
+
+                confPath = os.path.join(virtualHostUtilities.Server_root, 'conf/httpd_config.conf')
+                modSecPath = os.path.join(virtualHostUtilities.Server_root, 'modules', 'mod_security.so')
+
+                if os.path.exists(modSecPath):
+
+                    data = open(confPath, 'r').readlines()
+
+                    for items in data:
+
+                        if items.find('modsecurity ') > -1:
+                            if items.find('on') > -1 or items.find('On') > -1:
+                                modsecurity = 1
+                                continue
+                        if items.find('SecAuditEngine ') > -1:
+                            if items.find('on') > -1 or items.find('On') > -1:
+                                SecAuditEngine = 1
+                                continue
+
+                        if items.find('SecRuleEngine ') > -1:
+                            if items.find('on') > -1 or items.find('On') > -1:
+                                SecRuleEngine = 1
+                                continue
+
+                        if items.find('SecDebugLogLevel') > -1:
+                            result = items.split(' ')
+                            if result[0] == 'SecDebugLogLevel':
+                                SecDebugLogLevel = result[1]
+                                continue
+                        if items.find('SecAuditLogRelevantStatus') > -1:
+                            result = items.split(' ')
+                            if result[0] == 'SecAuditLogRelevantStatus':
+                                SecAuditLogRelevantStatus = result[1]
+                                continue
+                        if items.find('SecAuditLogParts') > -1:
+                            result = items.split(' ')
+                            if result[0] == 'SecAuditLogParts':
+                                SecAuditLogParts = result[1]
+                                continue
+                        if items.find('SecAuditLogType') > -1:
+                            result = items.split(' ')
+                            if result[0] == 'SecAuditLogType':
+                                SecAuditLogType = result[1]
+                                continue
+
+
+                    final_dic = {'fetchStatus': 1,
+                                 'installed': 1,
+                                 'SecRuleEngine': SecRuleEngine,
+                                 'modsecurity': modsecurity,
+                                 'SecAuditEngine': SecAuditEngine,
+                                 'SecDebugLogLevel': SecDebugLogLevel,
+                                 'SecAuditLogParts': SecAuditLogParts,
+                                 'SecAuditLogRelevantStatus': SecAuditLogRelevantStatus,
+                                 'SecAuditLogType': SecAuditLogType,
+                                 }
+
+                else:
+                    final_dic = {'fetchStatus': 1,
+                                 'installed': 0}
+
+
+
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+
+        except BaseException,msg:
+            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+
+            return HttpResponse(final_json)
+
+
+        return render(request,'managePHP/editPHPConfig.html')
+    except KeyError:
+        return redirect(loadLoginPage)

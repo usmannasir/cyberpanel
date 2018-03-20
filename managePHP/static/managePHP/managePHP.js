@@ -59,11 +59,10 @@ app.controller('installExtensions', function($scope,$http,$timeout) {
                 function ListInitialDatas(response) {
 
 
-                    if(response.data.extensionRequestStatus == 1){
+                    if(response.data.extensionRequestStatus === 1){
 
                         getRequestStatus();
                         $scope.canNotPerform = true;
-
 
 
                     }
@@ -170,7 +169,7 @@ app.controller('installExtensions', function($scope,$http,$timeout) {
                 function ListInitialDatas(response) {
 
 
-                    if(response.data.fetchStatus == 1){
+                    if(response.data.fetchStatus === 1){
 
                         $scope.records = JSON.parse(response.data.data);
 
@@ -225,9 +224,9 @@ app.controller('installExtensions', function($scope,$http,$timeout) {
                 function ListInitialDatas(response) {
 
 
-                    if(response.data.extensionRequestStatus == 1){
+                    if(response.data.extensionRequestStatus === 1){
 
-                        if(response.data.finished==1){
+                        if(response.data.finished === 1){
 
                             $scope.loadingExtensions = true;
                             $scope.phpSelectionDisabled = false;
@@ -288,20 +287,20 @@ app.controller('editPHPConfig', function($scope,$http,$timeout) {
 
            $('#allow_url_fopen').change(function() {
                 allow_url_fopen = $(this).prop('checked');
-           })
+           });
 
             $('#display_errors').change(function() {
                 display_errors = $(this).prop('checked');
-           })
+           });
 
 
             $('#file_uploads').change(function() {
                 file_uploads = $(this).prop('checked');
-           })
+           });
 
             $('#allow_url_include').change(function() {
                 allow_url_include = $(this).prop('checked');
-           })
+           });
 
 
 

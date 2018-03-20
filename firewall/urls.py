@@ -28,6 +28,7 @@ urlpatterns = [
     url(r'^modSecurity', views.loadModSecurityHome, name='modSecurity'),
     url(r'^installModSec', views.installModSec, name='installModSec'),
     url(r'^installStatusModSec', views.installStatusModSec, name='installStatusModSec'),
+    url(r'^fetchModSecSettings', views.fetchModSecSettings, name='fetchModSecSettings'),
 
 
 ]

@@ -983,79 +983,46 @@ app.controller('modSec', function($scope, $http, $timeout, $window) {
 
            }
 
+           ///// ModSec configs
+
+           var modsecurity_status = false;
+           var SecAuditEngine = false;
+           var SecRuleEngine = false;
 
 
-           function getSSHConfigs(){
+           $('#modsecurity_status').change(function() {
+                modsecurity_status = $(this).prop('checked');
+           });
 
-                        $scope.couldNotSave = true;
-                        $scope.detailsSaved = true;
-                        $scope.couldNotConnect = true;
-                        $scope.secureSSHLoading = false;
-
-                        url = "/firewall/getSSHConfigs";
-
-                        var data = {
-                            type:"1",
-                        };
-
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
+           $('#SecAuditEngine').change(function() {
+                SecAuditEngine = $(this).prop('checked');
+           });
 
 
+           $('#SecRuleEngine').change(function() {
+                SecRuleEngine = $(this).prop('checked');
+           });
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+           fetchModSecSettings();
+           function fetchModSecSettings(){
 
+               $scope.modsecLoading = false;
 
-                function ListInitialDatas(response) {
+               $('#modsecurity_status').bootstrapToggle('off');
+               $('#SecAuditEngine').bootstrapToggle('off');
+               $('#SecRuleEngine').bootstrapToggle('off');
 
-                    $scope.sshPort = response.data.sshPort;
+               url = "/firewall/fetchModSecSettings";
 
-                    if(response.data.permitRootLogin == 1){
-                        $('#rootLogin').bootstrapToggle('on');
-                        $scope.couldNotSave = true;
-                       $scope.detailsSaved = true;
-                       $scope.couldNotConnect = true;
-                       $scope.secureSSHLoading = true;
-                    }
-                    else{
-                        $scope.errorMessage = response.data.error_message;
-                        $scope.couldNotSave = true;
-                        $scope.detailsSaved = true;
-                        $scope.couldNotConnect = true;
-                        $scope.secureSSHLoading = true;
-                    }
+               var phpSelection = $scope.phpSelection;
 
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.couldNotConnect = false;
+               var data = {};
 
-                }
-
-           };
-
-           $scope.saveChanges = function () {
-
-               $scope.couldNotSave = true;
-               $scope.detailsSaved = true;
-               $scope.couldNotConnect = true;
-               $scope.secureSSHLoading = false;
-
-               url = "/firewall/saveSSHConfigs";
-
-                        var data = {
-                            type:"1",
-                            sshPort:$scope.sshPort,
-                            rootLogin:rootLogin,
-                        };
-
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
+               var config = {
+                   headers : {
+                       'X-CSRFToken': getCookie('csrftoken')
+                   }
+               };
 
 
 
@@ -1064,165 +1031,46 @@ app.controller('modSec', function($scope, $http, $timeout, $window) {
 
                 function ListInitialDatas(response) {
 
-                    if(response.data.saveStatus == 1){
-                        $scope.couldNotSave = true;
-                        $scope.detailsSaved = false;
-                        $scope.couldNotConnect = true;
-                        $scope.secureSSHLoading = true;
-                    }
-                    else{
+                    $scope.modsecLoading = true;
 
-                        $scope.couldNotSave = false;
-                       $scope.detailsSaved = true;
-                       $scope.couldNotConnect = true;
-                       $scope.secureSSHLoading = true;
+                    if(response.data.fetchStatus === 1){
 
-                        $scope.errorMessage = response.data.error_message;
-                    }
-
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.couldNotSave = true;
-                    $scope.detailsSaved = true;
-                    $scope.couldNotConnect = false;
-                    $scope.secureSSHLoading = true;
-
-                }
-           };
+                        if(response.data.installed === 1) {
 
 
-           function populateCurrentKeys(){
+                            if (response.data.modsecurity === 1) {
+                                $('#modsecurity_status').bootstrapToggle('on');
+                            }
+                            if (response.data.SecAuditEngine === 1) {
+                                $('#SecAuditEngine').bootstrapToggle('on');
+                            }
+                            if (response.data.SecRuleEngine === 1) {
+                                $('#SecRuleEngine').bootstrapToggle('on');
+                            }
 
-                        url = "/firewall/getSSHConfigs";
+                            $scope.SecDebugLogLevel = response.data.SecDebugLogLevel;
+                            $scope.SecAuditLogParts = response.data.SecAuditLogParts;
+                            $scope.SecAuditLogRelevantStatus = response.data.SecAuditLogRelevantStatus;
+                            $scope.SecAuditLogType = response.data.SecAuditLogType;
 
-                        var data = {
-                            type:"2",
-                        };
+                        }
 
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
-
-                    if(response.data.status == 1){
-                        $scope.records = JSON.parse(response.data.data);
                     }
 
                 }
                 function cantLoadInitialDatas(response) {
-                    $scope.couldNotConnect = false;
-
+                    $scope.modsecLoading = true;
                 }
-
-
-           }
-
-           $scope.deleteKey =  function(key){
-
-                        $scope.secureSSHLoading = false;
-
-                        url = "/firewall/deleteSSHKey";
-
-                        var data = {
-                            key:key,
-                        };
-
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
-
-                    if(response.data.delete_status == 1){
-                        $scope.secureSSHLoading = true;
-                        $scope.keyDeleted = false;
-                        populateCurrentKeys();
-                    }
-                    else{
-                        $scope.couldNotConnect = false;
-                        $scope.secureSSHLoading = true;
-                    }
-
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.couldNotConnect = false;
-                    $scope.secureSSHLoading = true;
-
-                }
-
 
            }
 
 
-           $scope.saveKey =  function(key){
+           /////
 
-                        $scope.secureSSHLoading = false;
+           /// Save ModSec Changes
 
-                        url = "/firewall/addSSHKey";
-
-                        var data = {
-                            key:$scope.keyData,
-                        };
-
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
-
-                    if(response.data.add_status == 1){
-                        $scope.secureSSHLoading = true;
-                        $scope.saveKeyBtn = true;
-                        $scope.showKeyBox = false;
-                        $scope.keyBox = true;
-
-
-                        populateCurrentKeys();
-                    }
-                    else{
-                        $scope.secureSSHLoading = true;
-                        $scope.saveKeyBtn = false;
-                        $scope.showKeyBox = true;
-                        $scope.keyBox = true;
-                        $scope.couldNotConnect = false;
-                        $scope.secureSSHLoading = true;
-                    }
-
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.secureSSHLoading = true;
-                    $scope.saveKeyBtn = false;
-                    $scope.showKeyBox = true;
-                    $scope.keyBox = true;
-                    $scope.couldNotConnect = false;
-                    $scope.secureSSHLoading = true;
-
-                }
-
-
-           }
+          $scope.failedToSave = true;
+          $scope.successfullySaved = true;
 
 });
 
