@@ -7,6 +7,7 @@ import os
 
 class modSec:
     installLogPath = "/home/cyberpanel/modSecInstallLog"
+    tempRulesFile = "/home/cyberpanel/tempModSecRules"
 
     @staticmethod
     def installModSec(install, modSecInstall):
@@ -87,6 +88,79 @@ SecRule ARGS "\.\./" "t:normalisePathWin,id:99999,severity:4,msg:'Drive Access' 
                 str(msg) + "  [installModSecConfigs]")
             print "0," + str(msg)
 
+    @staticmethod
+    def saveModSecConfigs(tempConfigPath):
+        try:
+
+            data = open(tempConfigPath).readlines()
+            os.remove(tempConfigPath)
+
+            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+
+            confData = open(confFile).readlines()
+
+            conf = open(confFile, 'w')
+
+            for items in confData:
+
+                if items.find('modsecurity ') > -1:
+                    conf.writelines(data[0])
+                    continue
+                elif items.find('SecAuditEngine ') > -1:
+                    conf.writelines(data[1])
+                    continue
+                elif items.find('SecRuleEngine ') > -1:
+                    conf.writelines(data[2])
+                    continue
+                elif items.find('SecDebugLogLevel') > -1:
+                    conf.writelines(data[3])
+                    continue
+                elif items.find('SecAuditLogRelevantStatus ') > -1:
+                    conf.writelines(data[5])
+                    continue
+                elif items.find('SecAuditLogParts ') > -1:
+                    conf.writelines(data[4])
+                    continue
+                elif items.find('SecAuditLogType ') > -1:
+                    conf.writelines(data[6])
+                    continue
+                else:
+                    conf.writelines(items)
+
+            conf.close()
+
+            print "1,None"
+            return
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [saveModSecConfigs]")
+            print "0," + str(msg)
+
+    @staticmethod
+    def saveModSecRules():
+        try:
+
+            rulesFile = open(modSec.tempRulesFile,'r')
+            data = rulesFile.read()
+            rulesFile.close()
+
+            rulesFilePath = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/rules.conf")
+
+            rulesFile = open(rulesFilePath,'w')
+            rulesFile.write(data)
+            rulesFile.close()
+
+            print data
+
+            print "1,None"
+            return
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [saveModSecRules]")
+            print "0," + str(msg)
+
 
 
 def main():
@@ -94,10 +168,16 @@ def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('function', help='Specific a function to call!')
 
+    parser.add_argument('--tempConfigPath', help='Temporary path to configurations data!')
+
     args = parser.parse_args()
 
     if args.function == "installModSecConfigs":
         modSec.installModSecConfigs()
+    elif args.function == "saveModSecConfigs":
+        modSec.saveModSecConfigs(args.tempConfigPath)
+    elif args.function == "saveModSecRules":
+        modSec.saveModSecRules()
 
 if __name__ == "__main__":
     main()

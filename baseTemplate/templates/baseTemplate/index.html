@@ -529,6 +529,7 @@
                 <li><a href="{% url 'errorLogs' %}" title="{% trans 'Error Logs' %}"><span>{% trans "Error Logs" %}</span></a></li>
                 <li><a href="{% url 'emaillogs' %}" title="{% trans 'Email Logs' %}"><span>{% trans "Email Log" %}</span></a></li>
                 <li><a href="{% url 'ftplogs' %}" title="{% trans 'FTP Logs' %}"><span>{% trans "FTP Logs" %}</span></a></li>
+                <li><a href="{% url 'modSecAuditLogs' %}" title="{% trans 'ModSecurity Audit Logs' %}"><span>{% trans "ModSec Audit Logs" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
@@ -545,6 +546,8 @@
             <ul>
                 <li><a href="{% url 'firewallHome' %}" title="{% trans 'Firewall Home' %}"><span>{% trans "Firewall" %}</span></a></li>
                 <li><a href="{% url 'secureSSH' %}" title="{% trans 'Secure SSH' %}"><span>{% trans "Secure SSH" %}</span></a></li>
+                <li><a href="{% url 'modSecurity' %}" title="{% trans 'ModSecurity Configurations' %}"><span>{% trans "ModSecurity Conf" %}</span></a></li>
+                <li><a href="{% url 'modSecRules' %}" title="{% trans 'ModSecurity Rules' %}"><span>{% trans "ModSecurity Rules" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->

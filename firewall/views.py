@@ -13,6 +13,7 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 import thread
 from plogical.modSec import modSec
 from plogical.installUtilities import installUtilities
+from random import randint
 # Create your views here.
 
 
@@ -753,7 +754,9 @@ def fetchModSecSettings(request):
 
                 if os.path.exists(modSecPath):
 
-                    data = open(confPath, 'r').readlines()
+                    command = "sudo cat " + confPath
+
+                    data = subprocess.check_output(shlex.split(command)).splitlines()
 
                     for items in data:
 
@@ -824,3 +827,191 @@ def fetchModSecSettings(request):
         return render(request,'managePHP/editPHPConfig.html')
     except KeyError:
         return redirect(loadLoginPage)
+
+def saveModSecConfigurations(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                data = json.loads(request.body)
+
+                modsecurity = data['modsecurity_status']
+                SecAuditEngine = data['SecAuditEngine']
+                SecRuleEngine = data['SecRuleEngine']
+                SecDebugLogLevel = data['SecDebugLogLevel']
+                SecAuditLogParts = data['SecAuditLogParts']
+                SecAuditLogRelevantStatus = data['SecAuditLogRelevantStatus']
+                SecAuditLogType = data['SecAuditLogType']
+
+                if modsecurity == True:
+                    modsecurity = "modsecurity  on"
+                else:
+                    modsecurity = "modsecurity  off"
+
+                if SecAuditEngine == True:
+                    SecAuditEngine = "SecAuditEngine on"
+                else:
+                    SecAuditEngine = "SecAuditEngine off"
+
+                if SecRuleEngine == True:
+                    SecRuleEngine = "SecRuleEngine On"
+                else:
+                    SecRuleEngine = "SecRuleEngine off"
+
+                SecDebugLogLevel = "SecDebugLogLevel " + str(SecDebugLogLevel)
+                SecAuditLogParts = "SecAuditLogParts " + str(SecAuditLogParts)
+                SecAuditLogRelevantStatus = "SecAuditLogRelevantStatus " + SecAuditLogRelevantStatus
+                SecAuditLogType = "SecAuditLogType " + SecAuditLogType
+
+
+                ## writing data temporary to file
+
+
+                tempConfigPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+                confPath = open(tempConfigPath, "w")
+
+                confPath.writelines(modsecurity + "\n")
+                confPath.writelines(SecAuditEngine + "\n")
+                confPath.writelines(SecRuleEngine + "\n")
+                confPath.writelines(SecDebugLogLevel + "\n")
+                confPath.writelines(SecAuditLogParts + "\n")
+                confPath.writelines(SecAuditLogRelevantStatus + "\n")
+                confPath.writelines(SecAuditLogType + "\n")
+
+                confPath.close()
+
+                ## save configuration data
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+
+                execPath = execPath + " saveModSecConfigs --tempConfigPath " + tempConfigPath
+
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    installUtilities.reStartLiteSpeed()
+                    data_ret = {'saveStatus': 1, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'saveStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+
+        except BaseException,msg:
+            data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError,msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg))
+        data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def modSecRules(request):
+    try:
+        userID = request.session['userID']
+
+        admin = Administrator.objects.get(pk=userID)
+
+        if admin.type == 3:
+            return HttpResponse("You don't have enough privileges to access this page.")
+
+        modSecPath = os.path.join(virtualHostUtilities.Server_root,'modules','mod_security.so')
+
+        modSecInstalled = 0
+
+        if os.path.exists(modSecPath):
+            modSecInstalled = 1
+
+        return render(request, 'firewall/modSecurityRules.html',{'modSecInstalled': modSecInstalled})
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def fetchModSecRules(request):
+    try:
+        userID = request.session['userID']
+
+        admin = Administrator.objects.get(pk=userID)
+
+        if admin.type == 3:
+            return HttpResponse("You don't have enough privileges to access this page.")
+
+        modSecPath = os.path.join(virtualHostUtilities.Server_root,'modules','mod_security.so')
+
+
+        rulesPath = os.path.join(virtualHostUtilities.Server_root + "/conf/modsec/rules.conf")
+
+        if os.path.exists(modSecPath):
+            command = "sudo cat " + rulesPath
+            currentModSecRules = subprocess.check_output(shlex.split(command))
+
+            final_dic = {'modSecInstalled': 1,
+                         'currentModSecRules': currentModSecRules}
+
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+        else:
+            final_dic = {'modSecInstalled': 0}
+
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def saveModSecRules(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                data = json.loads(request.body)
+
+                newModSecRules = data['modSecRules']
+
+                ## writing data temporary to file
+
+                rulesPath = open(modSec.tempRulesFile, "w")
+
+                rulesPath.write(newModSecRules)
+
+                rulesPath.close()
+
+                ## save configuration data
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+
+                execPath = execPath + " saveModSecRules"
+
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    installUtilities.reStartLiteSpeed()
+                    data_ret = {'saveStatus': 1, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'saveStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+
+        except BaseException,msg:
+            data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError,msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg))
+        data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+

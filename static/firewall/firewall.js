@@ -1072,6 +1072,168 @@ app.controller('modSec', function($scope, $http, $timeout, $window) {
           $scope.failedToSave = true;
           $scope.successfullySaved = true;
 
+          $scope.saveModSecConfigurations = function () {
+
+               $scope.failedToSave = true;
+               $scope.successfullySaved = true;
+               $scope.modsecLoading = false;
+               $scope.couldNotConnect = true;
+
+
+                        url = "/firewall/saveModSecConfigurations";
+
+                        var data = {
+                            modsecurity_status:modsecurity_status,
+                            SecAuditEngine:SecAuditEngine,
+                            SecRuleEngine:SecRuleEngine,
+                            SecDebugLogLevel:$scope.SecDebugLogLevel,
+                            SecAuditLogParts:$scope.SecAuditLogParts,
+                            SecAuditLogRelevantStatus:$scope.SecAuditLogRelevantStatus,
+                            SecAuditLogType:$scope.SecAuditLogType,
+                        };
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.saveStatus === 1){
+
+                        $scope.failedToSave = true;
+                        $scope.successfullySaved = false;
+                        $scope.modsecLoading = true;
+                        $scope.couldNotConnect = true;
+
+                    }
+                    else{
+                        $scope.errorMessage = response.data.error_message;
+
+                        $scope.failedToSave = false;
+                        $scope.successfullySaved = true;
+                        $scope.modsecLoading = true;
+                        $scope.couldNotConnect = true;
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                        $scope.failedToSave = true;
+                        $scope.successfullySaved = false;
+                        $scope.modsecLoading = true;
+                        $scope.couldNotConnect = true;
+                }
+
+
+           };
+
+});
+
+
+app.controller('modSecRules', function($scope, $http) {
+
+           $scope.modsecLoading = true;
+           $scope.rulesSaved = true;
+           $scope.couldNotConnect = true;
+           $scope.couldNotSave = true;
+
+
+           fetchModSecRules();
+           function fetchModSecRules(){
+
+               $scope.modsecLoading = false;
+               $scope.modsecLoading = true;
+               $scope.rulesSaved = true;
+               $scope.couldNotConnect = true;
+
+
+               url = "/firewall/fetchModSecRules";
+
+               var data = {};
+
+               var config = {
+                   headers : {
+                       'X-CSRFToken': getCookie('csrftoken')
+                   }
+               };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.modsecLoading = true;
+
+                    if(response.data.modSecInstalled === 1){
+
+                        $scope.currentModSecRules = response.data.currentModSecRules;
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.modsecLoading = true;
+                }
+
+           }
+
+           $scope.saveModSecRules = function(){
+
+               $scope.modsecLoading = false;
+               $scope.rulesSaved = true;
+               $scope.couldNotConnect = true;
+               $scope.couldNotSave = true;
+
+
+               url = "/firewall/saveModSecRules";
+
+               var data = {
+                   modSecRules:$scope.currentModSecRules
+               };
+
+               var config = {
+                   headers : {
+                       'X-CSRFToken': getCookie('csrftoken')
+                   }
+               };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.modsecLoading = true;
+
+                    if(response.data.saveStatus === 1){
+
+                       $scope.rulesSaved = false;
+                       $scope.couldNotConnect = true;
+                       $scope.couldNotSave = true;
+
+                    }else{
+                        $scope.rulesSaved = true;
+                        $scope.couldNotConnect = true;
+                        $scope.couldNotSave = false;
+
+                        $scope.errorMessage = response.data.error_message;
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.modsecLoading = true;
+                    $scope.rulesSaved = true;
+                    $scope.couldNotConnect = false;
+                    $scope.couldNotSave = true;
+                }
+           }
+
 });
 
 /* Java script code for ModSec */

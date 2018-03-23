@@ -1,25 +1,22 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Access Logs - CyberPanel" %}{% endblock %}
+{% block title %}{% trans "ModSecurity Audit Logs - CyberPanel" %}{% endblock %}
 {% block content %}
 
 {% load static %}
 {% get_current_language as LANGUAGE_CODE %}
 <!-- Current language: {{ LANGUAGE_CODE }} -->
 
-
-
-
 <div class="container">
 
 
             <div id="page-title">
-                <h2>{% trans "Access Logs" %}</h2>
-                <p>{% trans "Access Logs for main web server." %}</p>
+                <h2>{% trans "ModSecurity Audit Logs" %}</h2>
+                <p>{% trans "ModSecurity Audit logs" %}</p>
             </div>
 
 
-            <div ng-controller="readAccessLogs" class="row">
+            <div ng-controller="modSecAuditLogs" class="row">
                 <div class="panel">
                 <div class="panel-body">
                     <h3 class="title-hero">
@@ -48,6 +45,7 @@
                             </div>
 
 
+
                             <div ng-hide="logsFeteched" class="alert alert-success">
                                     <p>{% trans "Last 50 Lines Fetched" %}</p>
                                 </div>
@@ -60,9 +58,6 @@
 
 
                         </form>
-
-
-
 
 
                     </div>

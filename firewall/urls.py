@@ -29,6 +29,10 @@ urlpatterns = [
     url(r'^installModSec', views.installModSec, name='installModSec'),
     url(r'^installStatusModSec', views.installStatusModSec, name='installStatusModSec'),
     url(r'^fetchModSecSettings', views.fetchModSecSettings, name='fetchModSecSettings'),
+    url(r'^saveModSecConfigurations', views.saveModSecConfigurations, name='saveModSecConfigurations'),
+    url(r'^modSecRules', views.modSecRules, name='modSecRules'),
+    url(r'^fetchModSecRules', views.fetchModSecRules, name='fetchModSecRules'),
+    url(r'^saveModSecRules', views.saveModSecRules, name='saveModSecRules'),
 
 
 ]

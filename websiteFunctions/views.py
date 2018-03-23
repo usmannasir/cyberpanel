@@ -1573,7 +1573,7 @@ def saveSSL(request):
 
                 vhost = open(tempCertPath, "w")
 
-                vhost.write(data['key'])
+                vhost.write(data['cert'])
 
                 vhost.close()
 
@@ -1590,8 +1590,6 @@ def saveSSL(request):
                     execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
                     execPath = execPath + " saveSSL --virtualHostName " + domain + " --path " + pathToStoreSSL + " --tempKeyPath " + tempKeyPath + " --tempCertPath " + tempCertPath + " --sslCheck 0"
-
-
 
                     output = subprocess.check_output(shlex.split(execPath))
 
