@@ -703,8 +703,8 @@ class preFlightsChecks:
 
         count = 0
         while (1):
-            command = "wget http://cyberpanel.net/CyberPanel.1.6.0.tar.gz"
-            #command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
+            #command = "wget http://cyberpanel.net/CyberPanel.1.6.0.tar.gz"
+            command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
             res = subprocess.call(shlex.split(command))
 
             if res == 1:
@@ -723,8 +723,8 @@ class preFlightsChecks:
 
         count = 0
         while(1):
-            command = "tar zxf CyberPanel.1.6.0.tar.gz"
-            #command = "tar zxf CyberPanelTemp.tar.gz"
+            #command = "tar zxf CyberPanel.1.6.0.tar.gz"
+            command = "tar zxf CyberPanelTemp.tar.gz"
 
             res = subprocess.call(shlex.split(command))
 
@@ -2480,6 +2480,16 @@ class preFlightsChecks:
 
         return 1
 
+    def modSecPreReqs(self):
+        try:
+
+            pathToRemoveGarbageFile = os.path.join(self.server_root_path,"modules/mod_security.so")
+            os.remove(pathToRemoveGarbageFile)
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [modSecPreReqs]")
+            return 0
+
 
 def main():
 
@@ -2552,6 +2562,7 @@ def main():
     checks.test_Requests()
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword)
     checks.setup_cron()
+    checks.modSecPreReqs()
     checks.installation_successfull()
 
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")

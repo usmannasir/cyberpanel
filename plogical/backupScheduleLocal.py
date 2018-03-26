@@ -33,13 +33,18 @@ class backupScheduleLocal:
                 writeToFile.writelines("[" + time.strftime(
                     "%I-%M-%S-%a-%b-%Y") + "]" + " Waiting for backup to complete.. " + "\n")
 
-                if data['status'] == 0:
+                if data['backupStatus'] == 0:
                     writeToFile.writelines("[" + time.strftime(
-                        "%I-%M-%S-%a-%b-%Y") + "]" + " Backup Completed for: " +virtualHost + "\n")
+                        "%I-%M-%S-%a-%b-%Y") + "]" + "An error occurred, Error message: " + data['error_message'] + "\n")
+                    break
+                elif data['abort'] == 1:
+                    writeToFile.writelines("[" + time.strftime(
+                        "%I-%M-%S-%a-%b-%Y") + "]" + " Backup Completed for: " + virtualHost + "\n")
 
                     writeToFile.writelines("[" + time.strftime(
-                        "%I-%M-%S-%a-%b-%Y") + "]" + " #############################################"  + "\n")
+                        "%I-%M-%S-%a-%b-%Y") + "]" + " #############################################" + "\n")
                     break
+
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
