@@ -1015,3 +1015,109 @@ def saveModSecRules(request):
         return HttpResponse(json_data)
 
 
+def modSecRulesPacks(request):
+    try:
+        userID = request.session['userID']
+
+        admin = Administrator.objects.get(pk=userID)
+
+        if admin.type == 3:
+            return HttpResponse("You don't have enough privileges to access this page.")
+
+        modSecPath = os.path.join(virtualHostUtilities.Server_root,'modules','mod_security.so')
+
+        modSecInstalled = 0
+
+        if os.path.exists(modSecPath):
+            modSecInstalled = 1
+
+        return render(request, 'firewall/modSecurityRulesPacks.html',{'modSecInstalled': modSecInstalled})
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def getOWASPAndComodoStatus(request):
+    try:
+        userID = request.session['userID']
+
+        admin = Administrator.objects.get(pk=userID)
+
+        if admin.type == 3:
+            final_dic = {'modSecInstalled': 0}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        modSecPath = os.path.join(virtualHostUtilities.Server_root,'modules','mod_security.so')
+        confPath = os.path.join(virtualHostUtilities.Server_root, 'conf/httpd_config.conf')
+
+        comodoInstalled = 0
+        owaspInstalled = 0
+
+        if os.path.exists(modSecPath):
+            command = "sudo cat " + confPath
+            httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+
+            for items in httpdConfig:
+
+                if items.find('modsec/comodo') > -1:
+                    comodoInstalled = 1
+                elif items.find('modsec/owasp') > -1:
+                    owaspInstalled = 1
+
+                if owaspInstalled == 1 and comodoInstalled == 1:
+                    break
+
+            final_dic = {
+                'modSecInstalled': 1,
+                'owaspInstalled': owaspInstalled,
+                'comodoInstalled': comodoInstalled
+            }
+
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+        else:
+            final_dic = {'modSecInstalled': 0}
+
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def installModSecRulesPack(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                data = json.loads(request.body)
+
+                packName = data['packName']
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+
+                execPath = execPath + " " + packName
+
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    installUtilities.reStartLiteSpeed()
+                    data_ret = {'installStatus': 1, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'installStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+
+        except BaseException, msg:
+            data_ret = {'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError, msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg))
+        data_ret = {'installStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+

@@ -745,7 +745,7 @@ app.controller('secureSSHCTRL', function($scope,$http) {
 
                 function ListInitialDatas(response) {
 
-                    if(response.data.delete_status == 1){
+                    if(response.data.delete_status === 1){
                         $scope.secureSSHLoading = true;
                         $scope.keyDeleted = false;
                         populateCurrentKeys();
@@ -789,7 +789,7 @@ app.controller('secureSSHCTRL', function($scope,$http) {
 
                 function ListInitialDatas(response) {
 
-                    if(response.data.add_status == 1){
+                    if(response.data.add_status === 1){
                         $scope.secureSSHLoading = true;
                         $scope.saveKeyBtn = true;
                         $scope.showKeyBox = false;
@@ -1235,5 +1235,186 @@ app.controller('modSecRules', function($scope, $http) {
            }
 
 });
+
+
+/* Java script code for ModSec */
+
+app.controller('modSecRulesPack', function($scope, $http, $timeout, $window) {
+
+           $scope.modsecLoading = true;
+           $scope.owaspDisable = true;
+           $scope.comodoDisable = true;
+
+
+           //
+
+           $scope.installationQuote = true;
+           $scope.couldNotConnect = true;
+           $scope.installationFailed = true;
+           $scope.installationSuccess = true;
+
+           ///// ModSec configs
+
+           var owaspInstalled = false;
+           var comodoInstalled = false;
+           var counterOWASP = 0;
+           var counterComodo = 0;
+
+
+           $('#owaspInstalled').change(function() {
+                counterOWASP = counterOWASP + 1;
+                owaspInstalled = $(this).prop('checked');
+
+
+                if(counterOWASP > 2) {
+                    if (owaspInstalled === true) {
+                        installModSecRulesPack('installOWASP');
+                    } else {
+                        installModSecRulesPack('disableOWASP')
+                    }
+                }
+           });
+
+           $('#comodoInstalled').change(function() {
+
+               counterComodo = counterComodo + 1;
+               comodoInstalled = $(this).prop('checked');
+
+               if(counterComodo > 2) {
+
+                   if (comodoInstalled === true) {
+                       installModSecRulesPack('installComodo');
+                   } else {
+                       installModSecRulesPack('disableComodo')
+                   }
+               }
+
+           });
+
+
+           getOWASPAndComodoStatus();
+           function getOWASPAndComodoStatus(){
+
+               $scope.modsecLoading = false;
+
+               $('#owaspInstalled').bootstrapToggle('off');
+               $('#comodoInstalled').bootstrapToggle('off');
+
+               url = "/firewall/getOWASPAndComodoStatus";
+
+               var data = {};
+
+               var config = {
+                   headers : {
+                       'X-CSRFToken': getCookie('csrftoken')
+                   }
+               };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.modsecLoading = true;
+
+                    if(response.data.modSecInstalled === 1){
+
+                            if (response.data.owaspInstalled === 1) {
+                                $('#owaspInstalled').bootstrapToggle('on');
+                                $scope.owaspDisable = false;
+                            }else{
+                                $('#owaspInstalled').bootstrapToggle('off');
+                                $scope.owaspDisable = true;
+                            }
+                            if (response.data.comodoInstalled === 1) {
+                                $('#comodoInstalled').bootstrapToggle('on');
+                                $scope.comodoDisable = false;
+                            }else{
+                                $('#comodoInstalled').bootstrapToggle('off');
+                                $scope.comodoDisable = true;
+                            }
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.modsecLoading = true;
+                }
+
+           }
+
+           /////
+
+           function installModSecRulesPack(packName) {
+
+               $scope.modsecLoading = false;
+
+
+
+                url = "/firewall/installModSecRulesPack";
+
+                var data = {
+                            packName:packName
+                        };
+
+                var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.modsecLoading = true;
+
+                    if(response.data.installStatus === 1){
+
+                        $scope.modsecLoading = true;
+
+                        //
+
+                        $scope.installationQuote = true;
+                        $scope.couldNotConnect = true;
+                        $scope.installationFailed = true;
+                        $scope.installationSuccess = false;
+
+                        $timeout(function() {  $window.location.reload(); }, 3000);
+
+                    }else{
+                        $scope.modsecLoading = true;
+
+                        //
+
+                        $scope.installationQuote = true;
+                        $scope.couldNotConnect = true;
+                        $scope.installationFailed = false;
+                        $scope.installationSuccess = true;
+
+                        $scope.errorMessage = response.data.error_message;
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.modsecLoading = true;
+
+                    //
+
+                    $scope.installationQuote = true;
+                    $scope.couldNotConnect = false;
+                    $scope.installationFailed = true;
+                    $scope.installationSuccess = true;
+                }
+
+
+           }
+
+});
+
 
 /* Java script code for ModSec */

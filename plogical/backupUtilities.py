@@ -294,6 +294,7 @@ class backupUtilities:
             status.write("Extracting web home data!")
             status.close()
 
+            # /home/backup/backup-example-06-50-03-Thu-Feb-2018/public_html.tar.gz
 
             tar = tarfile.open(pathToCompressedHome)
             tar.extractall(websiteHome)

@@ -57,7 +57,7 @@ def getAdminStatus(request):
             logging.CyberCPLogFileWriter.writeToFile("Failed to read machine IP, error:" +str(msg))
             serverIPAddress = "192.168.100.1"
 
-        adminName = administrator.firstName + " " + administrator.lastName[0]
+        adminName = administrator.firstName + " " + administrator.lastName[:3]
 
         adminData = {"admin_type":admin_type,"user_name":adminName,"serverIPAddress":serverIPAddress}
 
