@@ -389,6 +389,53 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCL
                 str(msg) + "  [disableOWASP]")
             print "0," + str(msg)
 
+    @staticmethod
+    def disableRuleFile(fileName, packName):
+        try:
+
+            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            confData = open(confFile).readlines()
+            conf = open(confFile, 'w')
+
+            for items in confData:
+                if items.find('modsec/'+packName) > -1 and items.find(fileName) > -1:
+                    conf.write("#" + items)
+                else:
+                    conf.writelines(items)
+
+            conf.close()
+
+            print "1,None"
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [disableRuleFile]")
+            print "0," + str(msg)
+
+    @staticmethod
+    def enableRuleFile(fileName, packName):
+        try:
+
+            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            confData = open(confFile).readlines()
+            conf = open(confFile, 'w')
+
+            for items in confData:
+                if items.find('modsec/' + packName) > -1 and items.find(fileName) > -1:
+                    conf.write(items.lstrip('#'))
+                else:
+                    conf.writelines(items)
+
+            conf.close()
+
+            print "1,None"
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [enableRuleFile]")
+            print "0," + str(msg)
+
+
 
 
 
@@ -399,6 +446,8 @@ def main():
     parser.add_argument('function', help='Specific a function to call!')
 
     parser.add_argument('--tempConfigPath', help='Temporary path to configurations data!')
+    parser.add_argument('--packName', help='ModSecurity supplier name!')
+    parser.add_argument('--fileName', help='Filename to enable or disable!')
 
     args = parser.parse_args()
 
@@ -420,6 +469,10 @@ def main():
         modSec.installComodo()
     elif args.function == "disableComodo":
         modSec.disableComodo()
+    elif args.function == "disableRuleFile":
+        modSec.disableRuleFile(args.fileName, args.packName)
+    elif args.function == "enableRuleFile":
+        modSec.enableRuleFile(args.fileName, args.packName)
 
 if __name__ == "__main__":
     main()

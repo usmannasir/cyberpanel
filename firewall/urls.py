@@ -36,6 +36,8 @@ urlpatterns = [
     url(r'^modSecRulesPacks', views.modSecRulesPacks, name='modSecRulesPacks'),
     url(r'^getOWASPAndComodoStatus', views.getOWASPAndComodoStatus, name='getOWASPAndComodoStatus'),
     url(r'^installModSecRulesPack', views.installModSecRulesPack, name='installModSecRulesPack'),
+    url(r'^getRulesFiles', views.getRulesFiles, name='getRulesFiles'),
+    url(r'^enableDisableRuleFile', views.enableDisableRuleFile, name='enableDisableRuleFile'),
 
 
 
