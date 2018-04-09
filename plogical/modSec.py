@@ -66,12 +66,22 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
 }
 """
 
-
             confFile = os.path.join(virtualHostUtilities.Server_root,"conf/httpd_config.conf")
 
-            conf = open(confFile,'a+')
-            conf.write(initialConfigs)
-            conf.close()
+            confData = open(confFile).readlines()
+            confData.reverse()
+
+            modSecConfigFlag = False
+
+            for items in confData:
+                if items.find('module mod_security') > -1:
+                    modSecConfigFlag = True
+                    break
+
+            if modSecConfigFlag == False:
+                conf = open(confFile,'a+')
+                conf.write(initialConfigs)
+                conf.close()
 
             rulesFilePath = os.path.join(virtualHostUtilities.Server_root,"conf/modsec/rules.conf")
 

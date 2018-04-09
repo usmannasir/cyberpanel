@@ -67,8 +67,8 @@
                     <label class="col-sm-3 control-label">{% trans "Enable GZIP Compression" %}</label>
                     <div class="col-sm-6">
                         <select ng-model="gzipCompression" class="form-control">
-                                <option>{% trans "Enable" %}</option>
-                                <option>{% trans "Disable" %}</option>
+                                <option>Enable</option>
+                                <option>Disable</option>
                         </select>
                     </div>
                      <div class="current-pack">{% trans "Currently:" %} {$ gzipStatus $}</div>
@@ -80,7 +80,6 @@
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
                          <button type="button" ng-click="saveTuningSettings()" class="btn btn-primary btn-lg btn-block">{% trans "Tune Web Server" %}</button>
-
                     </div>
                 </div>
 

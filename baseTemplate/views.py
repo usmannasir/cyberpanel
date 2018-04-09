@@ -72,39 +72,7 @@ def getSystemStatus(request):
     try:
 
         HTTPData = SystemInformation.getSystemInformation()
-
-        try:
-            command = "sudo cat /tmp/lshttpd/.rtreport"
-            data = subprocess.check_output(shlex.split(command)).split("\n")
-
-            httpData = data[3]
-            requestsData = data[4]
-
-            finalHTTP = re.findall(r"[A-Za-z0-9]+", httpData)
-            finalReq = re.findall(r"[A-Za-z0-9]+", requestsData)
-
-
-            HTTPData['RequestProcessing'] = finalReq[4]
-            HTTPData['TotalRequests'] = finalReq[11]
-
-
-            HTTPData['MAXCONN'] = finalHTTP[1]
-            HTTPData['MAXSSL'] = finalHTTP[4]
-            HTTPData['Avail'] = finalHTTP[8]
-            HTTPData['AvailSSL'] = finalHTTP[14]
-
-        except BaseException,msg:
-            #logging.CyberCPLogFileWriter.writeToFile("Failed to read status file, error: " + str(msg))
-            HTTPData['RequestProcessing'] = 0
-            HTTPData['TotalRequests'] = 0
-
-            HTTPData['MAXCONN'] = 2000
-            HTTPData['MAXSSL'] = 1000
-            HTTPData['Avail'] = 2000
-            HTTPData['AvailSSL'] = 1000
-
         json_data = json.dumps(HTTPData)
-
         return HttpResponse(json_data)
 
     except KeyError:
