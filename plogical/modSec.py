@@ -4,10 +4,13 @@ import shlex
 import argparse
 from virtualHostUtilities import virtualHostUtilities
 import os
+import tarfile
+import shutil
 
 class modSec:
     installLogPath = "/home/cyberpanel/modSecInstallLog"
     tempRulesFile = "/home/cyberpanel/tempModSecRules"
+    mirrorPath = "mirror.cyberpanel.net"
 
     @staticmethod
     def installModSec(install, modSecInstall):
@@ -63,18 +66,27 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
 }
 """
 
-
             confFile = os.path.join(virtualHostUtilities.Server_root,"conf/httpd_config.conf")
 
-            conf = open(confFile,'a+')
-            conf.write(initialConfigs)
-            conf.close()
+            confData = open(confFile).readlines()
+            confData.reverse()
+
+            modSecConfigFlag = False
+
+            for items in confData:
+                if items.find('module mod_security') > -1:
+                    modSecConfigFlag = True
+                    break
+
+            if modSecConfigFlag == False:
+                conf = open(confFile,'a+')
+                conf.write(initialConfigs)
+                conf.close()
 
             rulesFilePath = os.path.join(virtualHostUtilities.Server_root,"conf/modsec/rules.conf")
 
             if not os.path.exists(rulesFilePath):
-                initialRules = """
-SecRule ARGS "\.\./" "t:normalisePathWin,id:99999,severity:4,msg:'Drive Access' ,log,auditlog,deny"
+                initialRules = """SecRule ARGS "\.\./" "t:normalisePathWin,id:99999,severity:4,msg:'Drive Access' ,log,auditlog,deny"
 """
                 rule = open(rulesFilePath,'a+')
                 rule.write(initialRules)
@@ -140,7 +152,6 @@ SecRule ARGS "\.\./" "t:normalisePathWin,id:99999,severity:4,msg:'Drive Access' 
     @staticmethod
     def saveModSecRules():
         try:
-
             rulesFile = open(modSec.tempRulesFile,'r')
             data = rulesFile.read()
             rulesFile.close()
@@ -162,6 +173,282 @@ SecRule ARGS "\.\./" "t:normalisePathWin,id:99999,severity:4,msg:'Drive Access' 
             print "0," + str(msg)
 
 
+    @staticmethod
+    def setupComodoRules():
+        try:
+            pathTOOWASPFolder = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/comodo")
+            extractLocation = os.path.join(virtualHostUtilities.Server_root, "conf/modsec")
+
+            if os.path.exists(pathTOOWASPFolder):
+                shutil.rmtree(pathTOOWASPFolder)
+
+            if os.path.exists('comodo.tar.gz'):
+                os.remove('comodo.tar.gz')
+
+            command = "wget https://" + modSec.mirrorPath + "/modsec/comodo.tar.gz"
+            result = subprocess.call(shlex.split(command))
+
+            if result == 1:
+                return 0
+
+            tar = tarfile.open('comodo.tar.gz')
+            tar.extractall(extractLocation)
+            tar.close()
+
+            return 1
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [setupComodoRules]")
+            return 0
+
+    @staticmethod
+    def installComodo():
+        try:
+            if modSec.setupComodoRules() == 0:
+                print '0, Unable to download Comodo Rules.'
+                return
+
+            owaspRulesConf = """modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/modsecurity.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/00_Init_Initialization.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/01_Init_AppsInitialization.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/02_Global_Generic.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/03_Global_Agents.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/04_Global_Domains.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/05_Global_Backdoor.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/06_XSS_XSS.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/07_Global_Other.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/08_Bruteforce_Bruteforce.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/09_HTTP_HTTP.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/10_HTTP_HTTPDoS.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/11_HTTP_Protocol.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/12_HTTP_Request.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/13_Outgoing_FilterGen.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/14_Outgoing_FilterASP.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/15_Outgoing_FilterPHP.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/16_Outgoing_FilterSQL.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/17_Outgoing_FilterOther.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/18_Outgoing_FilterInFrame.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/19_Outgoing_FiltersEnd.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/20_PHP_PHPGen.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/21_SQL_SQLi.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/22_Apps_Joomla.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/23_Apps_JComponent.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/24_Apps_WordPress.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/25_Apps_WPPlugin.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/26_Apps_WHMCS.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/27_Apps_Drupal.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/28_Apps_OtherApps.conf
+"""
+
+            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+
+            confData = open(confFile).readlines()
+
+            conf = open(confFile, 'w')
+
+            for items in confData:
+                if items.find('/usr/local/lsws/conf/modsec/rules.conf') > -1:
+                    conf.writelines(items)
+                    conf.write(owaspRulesConf)
+                    continue
+                else:
+                    conf.writelines(items)
+
+            conf.close()
+
+            print "1,None"
+            return
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [installOWASP]")
+            print "0," + str(msg)
+
+    @staticmethod
+    def disableComodo():
+        try:
+
+            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            confData = open(confFile).readlines()
+            conf = open(confFile, 'w')
+
+            for items in confData:
+                if items.find('modsec/comodo') > -1:
+                    continue
+                else:
+                    conf.writelines(items)
+
+            conf.close()
+
+            print "1,None"
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [disableComodo]")
+            print "0," + str(msg)
+
+    @staticmethod
+    def setupOWASPRules():
+        try:
+            pathTOOWASPFolder = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp")
+            extractLocation = os.path.join(virtualHostUtilities.Server_root, "conf/modsec")
+
+            if os.path.exists(pathTOOWASPFolder):
+                shutil.rmtree(pathTOOWASPFolder)
+
+            if os.path.exists('owasp.tar.gz'):
+                os.remove('owasp.tar.gz')
+
+            command = "wget https://" + modSec.mirrorPath + "/modsec/owasp.tar.gz"
+            result = subprocess.call(shlex.split(command))
+
+            if result == 1:
+                return 0
+
+            tar = tarfile.open('owasp.tar.gz')
+            tar.extractall(extractLocation)
+            tar.close()
+
+            return 1
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [setupOWASPRules]")
+            return 0
+
+    @staticmethod
+    def installOWASP():
+        try:
+            if modSec.setupOWASPRules() == 0:
+                print '0, Unable to download OWASP Rules.'
+                return
+
+            owaspRulesConf = """modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/modsecurity.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/crs-setup.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-901-INITIALIZATION.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-905-COMMON-EXCEPTIONS.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-910-IP-REPUTATION.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-911-METHOD-ENFORCEMENT.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-912-DOS-PROTECTION.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-913-SCANNER-DETECTION.conf
+#modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-920-PROTOCOL-ENFORCEMENT.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-921-PROTOCOL-ATTACK.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-930-APPLICATION-ATTACK-LFI.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-931-APPLICATION-ATTACK-RFI.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-932-APPLICATION-ATTACK-RCE.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-933-APPLICATION-ATTACK-PHP.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-941-APPLICATION-ATTACK-XSS.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-942-APPLICATION-ATTACK-SQLI.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-943-APPLICATION-ATTACK-SESSION-FIXATION.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-949-BLOCKING-EVALUATION.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-950-DATA-LEAKAGES.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-951-DATA-LEAKAGES-SQL.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-952-DATA-LEAKAGES-JAVA.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-953-DATA-LEAKAGES-PHP.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-954-DATA-LEAKAGES-IIS.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-959-BLOCKING-EVALUATION.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-980-CORRELATION.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
+"""
+
+            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+
+            confData = open(confFile).readlines()
+
+            conf = open(confFile, 'w')
+
+            for items in confData:
+                if items.find('/usr/local/lsws/conf/modsec/rules.conf') > -1:
+                    conf.writelines(items)
+                    conf.write(owaspRulesConf)
+                    continue
+                else:
+                    conf.writelines(items)
+
+            conf.close()
+
+            print "1,None"
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [installOWASP]")
+            print "0," + str(msg)
+
+    @staticmethod
+    def disableOWASP():
+        try:
+
+            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            confData = open(confFile).readlines()
+            conf = open(confFile, 'w')
+
+            for items in confData:
+                if items.find('modsec/owasp') > -1:
+                    continue
+                else:
+                    conf.writelines(items)
+
+            conf.close()
+
+            print "1,None"
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [disableOWASP]")
+            print "0," + str(msg)
+
+    @staticmethod
+    def disableRuleFile(fileName, packName):
+        try:
+
+            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            confData = open(confFile).readlines()
+            conf = open(confFile, 'w')
+
+            for items in confData:
+                if items.find('modsec/'+packName) > -1 and items.find(fileName) > -1:
+                    conf.write("#" + items)
+                else:
+                    conf.writelines(items)
+
+            conf.close()
+
+            print "1,None"
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [disableRuleFile]")
+            print "0," + str(msg)
+
+    @staticmethod
+    def enableRuleFile(fileName, packName):
+        try:
+
+            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            confData = open(confFile).readlines()
+            conf = open(confFile, 'w')
+
+            for items in confData:
+                if items.find('modsec/' + packName) > -1 and items.find(fileName) > -1:
+                    conf.write(items.lstrip('#'))
+                else:
+                    conf.writelines(items)
+
+            conf.close()
+
+            print "1,None"
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [enableRuleFile]")
+            print "0," + str(msg)
+
+
+
+
+
 
 def main():
 
@@ -169,6 +456,8 @@ def main():
     parser.add_argument('function', help='Specific a function to call!')
 
     parser.add_argument('--tempConfigPath', help='Temporary path to configurations data!')
+    parser.add_argument('--packName', help='ModSecurity supplier name!')
+    parser.add_argument('--fileName', help='Filename to enable or disable!')
 
     args = parser.parse_args()
 
@@ -178,6 +467,22 @@ def main():
         modSec.saveModSecConfigs(args.tempConfigPath)
     elif args.function == "saveModSecRules":
         modSec.saveModSecRules()
+    elif args.function == "setupOWASPRules":
+        modSec.setupOWASPRules()
+    elif args.function == "installOWASP":
+        modSec.installOWASP()
+    elif args.function == "disableOWASP":
+        modSec.disableOWASP()
+    elif args.function == "setupComodoRules":
+        modSec.setupComodoRules()
+    elif args.function == "installComodo":
+        modSec.installComodo()
+    elif args.function == "disableComodo":
+        modSec.disableComodo()
+    elif args.function == "disableRuleFile":
+        modSec.disableRuleFile(args.fileName, args.packName)
+    elif args.function == "enableRuleFile":
+        modSec.enableRuleFile(args.fileName, args.packName)
 
 if __name__ == "__main__":
     main()

@@ -58,7 +58,7 @@ app.filter('getwebsitename', function() {
 
 app.controller('systemStatusInfo', function($scope,$http,$timeout) {
 
-    getStuff();
+    //getStuff();
 
     function getStuff() {
 
@@ -109,10 +109,10 @@ app.controller('adminController', function($scope,$http,$timeout) {
 
             $("#serverIPAddress").text(response.data.serverIPAddress);
 
-             if (response.data.admin_type != "Administrator")
+             if (response.data.admin_type !== "Administrator")
             {
 
-                if(response.data.admin_type != "Reseller") {
+                if(response.data.admin_type !== "Reseller") {
                     $("#normalUser").hide();
                     $("#normalUserA").hide();
                     $("#normalUserB").hide();
@@ -140,6 +140,7 @@ app.controller('adminController', function($scope,$http,$timeout) {
                     $("#createWebsite").hide();
                     $("#modifyWebSite").hide();
                     $("#deleteWebsite").hide();
+                    $("#versionManagement").hide();
 
             }
         }
@@ -156,7 +157,7 @@ app.controller('adminController', function($scope,$http,$timeout) {
 
 app.controller('loadAvg', function($scope,$http,$timeout) {
 
-    getStuff();
+    //getStuff();
 
     function getStuff() {
 
@@ -179,7 +180,7 @@ app.controller('loadAvg', function($scope,$http,$timeout) {
             console.log("not good");
         }
 
-        $timeout(getStuff, 2000);
+        //$timeout(getStuff, 2000);
 
     }
 });

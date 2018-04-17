@@ -86,10 +86,7 @@
 
 <div class="clear"></div>
 
-<a href="#" title="{% trans '' %}" data-toggle="collapse" data-target="#sidebar-toggle-3" class="popover-title">
-    {% trans "CPU Status" %}
-    <span class="caret"></span>
-</a>
+
 <div ng-controller="systemStatusInfo" id="sidebar-toggle-3" class="collapse in">
 
     <ul class="progress-box">
@@ -215,11 +212,6 @@
             <span class="badge bg-yellow">{$ three $}</span>
         </a>
 
-        <div class="dropdown" id="cloud-btn">
-            <a href="#" data-placement="bottom" class="tooltip-button sb-toggle-right" title="{% trans 'System Status' %}">
-                <i class="glyph-icon icon-linecons-cloud"></i>
-            </a>
-        </div>
         <div class="dropdown" id="dashnav-btn">
             <a href="#" data-toggle="dropdown" data-placement="bottom" class="popover-button-header tooltip-button" title="{% trans 'Dashboard Quick Menu' %}">
                 <i class="glyph-icon icon-linecons-cog"></i>
@@ -292,7 +284,7 @@
             <i class="glyph-icon icon-linecons-tv"></i>
             <span>{% trans "Dashboard" %}</span>
         </a>
-        <a href="{% url 'versionManagment' %}" title="{% trans 'Version Management' %}">
+        <a id="versionManagement" href="{% url 'versionManagment' %}" title="{% trans 'Version Management' %}">
             <i class="glyph-icon tooltip-button icon-cloud-upload" title="{% trans 'Version Management' %}" data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
             <span>{% trans "Version Management" %}</span>
         </a>
@@ -548,6 +540,7 @@
                 <li><a href="{% url 'secureSSH' %}" title="{% trans 'Secure SSH' %}"><span>{% trans "Secure SSH" %}</span></a></li>
                 <li><a href="{% url 'modSecurity' %}" title="{% trans 'ModSecurity Configurations' %}"><span>{% trans "ModSecurity Conf" %}</span></a></li>
                 <li><a href="{% url 'modSecRules' %}" title="{% trans 'ModSecurity Rules' %}"><span>{% trans "ModSecurity Rules" %}</span></a></li>
+                <li><a href="{% url 'modSecRulesPacks' %}" title="{% trans 'ModSecurity Rules Packs' %}"><span>{% trans "ModSecurity Rules Packs" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->

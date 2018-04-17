@@ -1,0 +1,142 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "ModSecurity Rules Packs - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "ModSecurity Rules Packages!" %} </h2>
+   <p>{% trans "Install/Un-install ModSecurity rules packages." %}</p>
+</div>
+
+<div ng-controller="modSecRulesPack" class="example-box-wrapper">
+        <div style="border-radius: 25px;border-color:#3498db" class="content-box">
+            <h3 class="content-box-header bg-blue">
+                {% trans "ModSecurity Rules Packages!" %} <img ng-hide="modsecLoading"  src="/static/images/loading.gif">
+            </h3>
+
+            {% if modSecInstalled == 0 %}
+                <div class="content-box-wrapper">
+                    <div class="row">
+
+                    <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                                <h3>{% trans "ModSecurity is not installed " %}
+                                    <a href="{% url 'modSecurity' %}"><button class="btn btn-alt btn-hover btn-blue-alt">
+                                        <span>{% trans "Install Now." %}</span>
+                                        <i class="glyph-icon icon-arrow-right"></i>
+                                    </button></a>
+                                </h3>
+                    </div>
+                </div>
+                </div>
+
+
+                    <!----- ModeSec Install Log box ----------------->
+                {% else %}
+
+            <div class="content-box-wrapper">
+                <div class="row">
+
+                    <table cellpadding="0" cellspacing="0" border="0" class="table text-center" id="datatable-example">
+                    <thead>
+                    <tr>
+                        <th style="width: 33%" >Package</th>
+                        <th style="width: 33%">Status</th>
+                        <th style="width: 33%"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    <tr>
+                        <td>OWASP ModSecurity Core Rules</td>
+                        <td><input type="checkbox" id="owaspInstalled" data-toggle="toggle"></td>
+                        <td>
+                            <button ng-disabled="owaspDisable" ng-click="fetchRulesFile('owasp')" class="btn btn-alt btn-hover btn-blue-alt">
+                                <span >{% trans "Configure" %}</span>
+                                <i class="glyph-icon icon-arrow-right"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>COMODO ModSecurity 3.0</td>
+                        <td><input type="checkbox" id="comodoInstalled" data-toggle="toggle"></td>
+                        <td>
+                            <button ng-disabled="comodoDisable" ng-click="fetchRulesFile('comodo')" class="btn btn-alt btn-hover btn-blue-alt">
+                                <span>{% trans "Configure" %}</span>
+                                <i class="glyph-icon icon-arrow-right"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                    </table>
+
+                    <div class="col-sm-3"></div>
+
+                    <div class="col-sm-6">
+
+                                    <div ng-hide="installationQuote" class="alert alert-success">
+                                            <p>{% trans "Operation successful." %}</p>
+                                    </div>
+
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                            <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                    </div>
+
+                                    <div ng-hide="installationFailed" class="alert alert-danger">
+                                            <p>{% trans "Operation failed, Error message: " %} {$ errorMessage $}</p>
+                                    </div>
+
+                                    <div ng-hide="installationSuccess" class="alert alert-success">
+                                            <p>{% trans "Operation successful." %}</p>
+                                    </div>
+                     </div>
+
+                    <!------ List of rule files --------------->
+
+                    <div ng-hide="ruleFiles" class="form-group">
+
+                    <div  class="col-sm-12">
+
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Supplier" %}</th>
+                                <th>{% trans "Filename" %}</th>
+                                <th>{% trans "Status" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="record in records track by $index">
+                                <td ng-bind="record.id"></td>
+                                <td ng-bind="record.packName"></td>
+                                <td ng-bind="record.fileName"></td>
+                                <td ><input ng-click="removeRuleFile(record.fileName,record.packName,record.status)" ng-checked="record.status" type="checkbox" ></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                    <!------ List of rule files --------------->
+
+
+
+                </div>
+            </div>
+
+                {% endif %}
+        </div>
+    </div>
+
+
+</div>
+
+
+{% endblock %}

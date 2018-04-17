@@ -26,13 +26,19 @@ urlpatterns = [
     ## ModSecurity
 
     url(r'^modSecurity', views.loadModSecurityHome, name='modSecurity'),
-    url(r'^installModSec', views.installModSec, name='installModSec'),
-    url(r'^installStatusModSec', views.installStatusModSec, name='installStatusModSec'),
+    url(r'^installModSec$', views.installModSec, name='installModSec'),
+    url(r'^installStatusModSec$', views.installStatusModSec, name='installStatusModSec'),
     url(r'^fetchModSecSettings', views.fetchModSecSettings, name='fetchModSecSettings'),
     url(r'^saveModSecConfigurations', views.saveModSecConfigurations, name='saveModSecConfigurations'),
-    url(r'^modSecRules', views.modSecRules, name='modSecRules'),
+    url(r'^modSecRules$', views.modSecRules, name='modSecRules'),
     url(r'^fetchModSecRules', views.fetchModSecRules, name='fetchModSecRules'),
     url(r'^saveModSecRules', views.saveModSecRules, name='saveModSecRules'),
+    url(r'^modSecRulesPacks', views.modSecRulesPacks, name='modSecRulesPacks'),
+    url(r'^getOWASPAndComodoStatus', views.getOWASPAndComodoStatus, name='getOWASPAndComodoStatus'),
+    url(r'^installModSecRulesPack', views.installModSecRulesPack, name='installModSecRulesPack'),
+    url(r'^getRulesFiles', views.getRulesFiles, name='getRulesFiles'),
+    url(r'^enableDisableRuleFile', views.enableDisableRuleFile, name='enableDisableRuleFile'),
+
 
 
 ]

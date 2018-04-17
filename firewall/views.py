@@ -1015,3 +1015,213 @@ def saveModSecRules(request):
         return HttpResponse(json_data)
 
 
+def modSecRulesPacks(request):
+    try:
+        userID = request.session['userID']
+
+        admin = Administrator.objects.get(pk=userID)
+
+        if admin.type == 3:
+            return HttpResponse("You don't have enough privileges to access this page.")
+
+        modSecPath = os.path.join(virtualHostUtilities.Server_root,'modules','mod_security.so')
+
+        modSecInstalled = 0
+
+        if os.path.exists(modSecPath):
+            modSecInstalled = 1
+
+        return render(request, 'firewall/modSecurityRulesPacks.html',{'modSecInstalled': modSecInstalled})
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def getOWASPAndComodoStatus(request):
+    try:
+        userID = request.session['userID']
+
+        admin = Administrator.objects.get(pk=userID)
+
+        if admin.type == 3:
+            final_dic = {'modSecInstalled': 0}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        modSecPath = os.path.join(virtualHostUtilities.Server_root,'modules','mod_security.so')
+        confPath = os.path.join(virtualHostUtilities.Server_root, 'conf/httpd_config.conf')
+
+        comodoInstalled = 0
+        owaspInstalled = 0
+
+        if os.path.exists(modSecPath):
+            command = "sudo cat " + confPath
+            httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+
+            for items in httpdConfig:
+
+                if items.find('modsec/comodo') > -1:
+                    comodoInstalled = 1
+                elif items.find('modsec/owasp') > -1:
+                    owaspInstalled = 1
+
+                if owaspInstalled == 1 and comodoInstalled == 1:
+                    break
+
+            final_dic = {
+                'modSecInstalled': 1,
+                'owaspInstalled': owaspInstalled,
+                'comodoInstalled': comodoInstalled
+            }
+
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+        else:
+            final_dic = {'modSecInstalled': 0}
+
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def installModSecRulesPack(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                data = json.loads(request.body)
+
+                packName = data['packName']
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+
+                execPath = execPath + " " + packName
+
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    installUtilities.reStartLiteSpeed()
+                    data_ret = {'installStatus': 1, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'installStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+
+        except BaseException, msg:
+            data_ret = {'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError, msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg))
+        data_ret = {'installStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def getRulesFiles(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+
+                data = json.loads(request.body)
+                packName = data['packName']
+
+                confPath = os.path.join(virtualHostUtilities.Server_root, 'conf/httpd_config.conf')
+
+                command = "sudo cat " + confPath
+                httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+
+                json_data = "["
+                checker = 0
+                counter = 0
+
+                for items in httpdConfig:
+
+                    if items.find('modsec/'+packName) > -1:
+                        counter = counter + 1
+                        if items[0] == '#':
+                            status = False
+                        else:
+                            status = True
+
+                        fileName = items.lstrip('#')
+                        fileName = fileName.split('/')[-1]
+
+                        dic = {
+                               'id': counter,
+                               'fileName': fileName,
+                               'packName':packName,
+                               'status': status,
+
+                               }
+
+                        if checker == 0:
+                            json_data = json_data + json.dumps(dic)
+                            checker = 1
+                        else:
+                            json_data = json_data + ',' + json.dumps(dic)
+
+
+                json_data = json_data + ']'
+                final_json = json.dumps({'fetchStatus': 1, 'error_message': "None","data":json_data})
+                return HttpResponse(final_json)
+
+        except BaseException,msg:
+            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'fetchStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def enableDisableRuleFile(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                data = json.loads(request.body)
+
+                packName = data['packName']
+                fileName = data['fileName']
+                currentStatus = data['status']
+
+                if currentStatus == True:
+                    functionName = 'disableRuleFile'
+                else:
+                    functionName = 'enableRuleFile'
+
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+
+                execPath = execPath + " " + functionName + ' --packName ' + packName + ' --fileName ' + fileName
+
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    installUtilities.reStartLiteSpeed()
+                    data_ret = {'saveStatus': 1, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'saveStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+
+        except BaseException,msg:
+            data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+    except BaseException, msg:
+        data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+

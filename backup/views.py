@@ -1225,7 +1225,7 @@ def submitRemoteBackups(request):
 
                     Version = version.objects.get(pk=1)
 
-                    if data['currentVersion'] == Version.currentVersion and data['build'] == Version.build:
+                    if data['currentVersion'] == Version.currentVersion and data['build'] >= 0:
                         pass
                     else:
                         data_ret = {'status': 0,
