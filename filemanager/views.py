@@ -11,6 +11,8 @@ from websiteFunctions.models import Websites
 import subprocess
 import shlex
 import os
+from plogical.virtualHostUtilities import virtualHostUtilities
+
 
 # Create your views here.
 
@@ -21,12 +23,28 @@ def loadFileManagerHome(request,domain):
 
         admin = Administrator.objects.get(pk=val)
 
-        viewStatus = 1
+        if Websites.objects.filter(domain=domain).exists():
+            if admin.type == 1:
+                viewStatus = 1
+                if admin.type == 3:
+                    viewStatus = 0
 
-        if admin.type == 3:
-            viewStatus = 0
+                return render(request, 'filemanager/index.html', {"viewStatus": viewStatus})
+            else:
+                website = Websites.objects.get(domain=domain)
+                if website.admin == admin:
+                    viewStatus = 1
 
-        return render(request,'filemanager/index.html',{"viewStatus":viewStatus})
+                    if admin.type == 3:
+                        viewStatus = 0
+
+                    return render(request, 'filemanager/index.html', {"viewStatus": viewStatus})
+                else:
+                    return HttpResponse("Domain ownership error.")
+        else:
+            return HttpResponse("Domain does not exists.")
+
+
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -62,16 +80,80 @@ def changePermissions(request):
         return redirect(loadLoginPage)
 
 def downloadFile(request):
-    data = json.loads(request.body)
-    fileToDownload = data['fileToDownload']
+    try:
 
-    response = ''
-    if os.path.isfile(fileToDownload):
-        try:
-            with open(fileToDownload, 'rb') as f:
-                response = HttpResponse(f.read(), content_type="application/octet-stream")
-                response['Content-Disposition'] = 'inline; filename=' + os.path.basename(fileToDownload)
-        except Exception as e:
-            raise Http404
+        data = json.loads(request.body)
+        fileToDownload = data['fileToDownload']
 
-    return response
+        response = ''
+        if os.path.isfile(fileToDownload):
+            try:
+                with open(fileToDownload, 'rb') as f:
+                    response = HttpResponse(f.read(), content_type="application/octet-stream")
+                    response['Content-Disposition'] = 'inline; filename=' + os.path.basename(fileToDownload)
+            except Exception as e:
+                raise Http404
+        return response
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+
+def createTemporaryFile(request):
+    try:
+        val = request.session['userID']
+
+        data = json.loads(request.body)
+        domainName = data['domainName']
+
+        admin = Administrator.objects.get(pk=val)
+
+        ## Create file manager entry
+
+        if Websites.objects.filter(domain=domainName).exists():
+            if admin.type == 1:
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/filemanager.py"
+
+                execPath = execPath + " createTemporaryFile --domainName " + domainName
+
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("0,") > -1:
+                    data_ret = {'createTemporaryFile': 0, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+                else:
+                    domainRandomSeed = output.rstrip('\n')
+                    data_ret = {'createTemporaryFile': 1, 'error_message': "None", 'domainRandomSeed':domainRandomSeed}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+            else:
+                website = Websites.objects.get(domain=domainName)
+                if website.admin == admin:
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/filemanager.py"
+
+                    execPath = execPath + " createTemporaryFile --domainName " + domainName
+
+                    output = subprocess.check_output(shlex.split(execPath))
+
+                    if output.find("0,") > -1:
+                        data_ret = {'createTemporaryFile': 0, 'error_message': "None"}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+
+                    else:
+                        domainRandomSeed = output.rstrip('\n')
+                        data_ret = {'createTemporaryFile': 1, 'error_message': "None", 'domainRandomSeed': domainRandomSeed}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+                else:
+                    data_ret = {'createTemporaryFile': 0, 'error_message': "Domain ownership error."}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+    except KeyError:
+        return redirect(loadLoginPage)

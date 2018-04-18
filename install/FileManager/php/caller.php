@@ -13,6 +13,25 @@ class Caller{
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' and isset($_POST['method'])) {
 
+            $pathToSeed = '/home/' . $_POST['domainName'] . '/..filemanagerkey';
+            $receivedSeed = $_POST['domainRandomSeed'];
+
+            $myfile = fopen($pathToSeed, "r") or die("Unable to open file!");
+            $seed = fread($myfile,filesize($pathToSeed));
+            fclose($myfile);
+
+            if ($seed != $receivedSeed){
+                $answer = array(
+                    'uploadStatus' => 0,
+                    'answer' => 'Not allowed to upload in this path.',
+                    'error_message' => "None",
+                    'fileName' => $_FILES['file']['name']
+                );
+                $json = json_encode($answer);
+                echo $json;
+                return;
+            }
+
             switch ($_POST['method']) {
                 case 'upload':
                     $this->uploadFile();

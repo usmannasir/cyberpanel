@@ -530,15 +530,22 @@ def deleteDNSZone(request):
     try:
         val = request.session['userID']
 
-        val = request.session['userID']
-
         admin = Administrator.objects.get(pk=val)
         domainsList = []
 
-        domains = Domains.objects.all()
+        if admin.type == 1:
+            domains = Domains.objects.all()
+            for items in domains:
+                domainsList.append(items.name)
+        else:
+            websites = admin.websites_set.all()
 
-        for items in domains:
-            domainsList.append(items.name)
+            for web in websites:
+                try:
+                    tempDomain = Domains.objects.get(name = web.domain)
+                    domainsList.append(web.domain)
+                except:
+                    pass
 
 
         return render(request, 'dns/deleteDNSZone.html',{"domainsList":domainsList})

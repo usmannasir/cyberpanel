@@ -249,7 +249,7 @@ app.controller('deleteEmailAccount', function($scope,$http) {
                 function ListInitialDatas(response) {
 
 
-                    if(response.data.deleteEmailStatus == 1){
+                    if(response.data.deleteEmailStatus === 1){
 
 
                         $scope.emailDetails = true;
