@@ -703,7 +703,7 @@ class preFlightsChecks:
 
         count = 0
         while (1):
-            command = "wget http://cyberpanel.net/CyberPanel.1.6.2.tar.gz"
+            command = "wget http://cyberpanel.net/CyberPanel.1.6.3.tar.gz"
             #command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
             res = subprocess.call(shlex.split(command))
 
@@ -723,7 +723,7 @@ class preFlightsChecks:
 
         count = 0
         while(1):
-            command = "tar zxf CyberPanel.1.6.2.tar.gz"
+            command = "tar zxf CyberPanel.1.6.3.tar.gz"
             #command = "tar zxf CyberPanelTemp.tar.gz"
 
             res = subprocess.call(shlex.split(command))
@@ -2490,6 +2490,31 @@ class preFlightsChecks:
             logging.InstallLog.writeToFile(str(msg) + " [modSecPreReqs]")
             return 0
 
+    def installTLDExtract(self):
+        try:
+            count = 0
+            while (1):
+                command = "pip install tldextract"
+
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Trying to install tldextract, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Failed to install tldextract! [installTLDExtract]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                else:
+                    logging.InstallLog.writeToFile("tldextract successfully installed!  [pip]")
+                    preFlightsChecks.stdOut("tldextract successfully installed!  [pip]")
+                    break
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [installTLDExtract]")
+            return 0
+
+
 
 def main():
 
@@ -2562,6 +2587,7 @@ def main():
     checks.test_Requests()
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword)
     checks.setup_cron()
+    checks.installTLDExtract()
     checks.modSecPreReqs()
     checks.installation_successfull()
 
