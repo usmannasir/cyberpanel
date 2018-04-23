@@ -3,28 +3,12 @@
 # This file is distributed under the same license as the CyberPanel package.
 # FIRST AUTHOR <unasir@litespeedtech.com>, 2017.
 #
-#: baseTemplate/templates/baseTemplate/index.html:95
-#: baseTemplate/templates/baseTemplate/index.html:185
-#: baseTemplate/templates/baseTemplate/index.html:236
-#: baseTemplate/templates/baseTemplate/index.html:242
-#: baseTemplate/templates/baseTemplate/index.html:248
-#: baseTemplate/templates/baseTemplate/index.html:254
-#: baseTemplate/templates/baseTemplate/index.html:260
-#: baseTemplate/templates/baseTemplate/index.html:266
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:198
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:288
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:343
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:349
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:355
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:361
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:367
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:373
 msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-02-15 13:07+0500\n"
-"PO-Revision-Date: 2017-10-31 23:38+0900\n"
+"PO-Revision-Date: 2018-04-23 11:20+0900\n"
 "Last-Translator: @ kazuo210 <kazu.nito@gmail.com>\n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
 "Language: ja\n"
@@ -97,7 +81,7 @@ msgstr "ホーム"
 #: backup/templates/backup/restore.html:62
 #: filemanager/templates/filemanager/index.html:157
 msgid "File Name"
-msgstr "﻿﻿ファイル名"
+msgstr "ファイル名"
 
 #: backup/templates/backup/backup.html:61
 #: backup/templates/backup/backup.html:106
@@ -180,6 +164,8 @@ msgstr "このページでは、バックアップ先を設定できます。 �
 #: backup/templates/backup/backupDestinations.html:21
 msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
 msgstr ""
+"バックアップ先の設定（SSHポートはバックアップサーバー上で22にする必要がありま"
+"す）"
 
 #: backup/templates/backup/backupDestinations.html:30
 #: backup/templates/backup/remoteBackups.html:29
@@ -209,7 +195,7 @@ msgstr "ポート"
 
 #: backup/templates/backup/backupDestinations.html:47
 msgid "Backup server SSH Port, leave empty for 22."
-msgstr ""
+msgstr "バックアップサーバのSSHポート22は空けておいてください。"
 
 #: backup/templates/backup/backupDestinations.html:55
 #: backup/templates/backup/backupSchedule.html:54
@@ -224,8 +210,6 @@ msgid "Connection to"
 msgstr "接続"
 
 #: backup/templates/backup/backupDestinations.html:69
-#, fuzzy
-#| msgid "failed. Please delete and re-add."
 msgid "failed. Please delete and re-add. "
 msgstr "失敗しました。削除して再追加してください。"
 
@@ -279,7 +263,7 @@ msgstr "接続を確認"
 
 #: backup/templates/backup/backupSchedule.html:3
 msgid "Schedule Back up - CyberPanel"
-msgstr "バックアップスケジュール -  Cyber​​Panel"
+msgstr "バックアップスケジュール - CyberPanel"
 
 #: backup/templates/backup/backupSchedule.html:13
 #: backup/templates/backup/backupSchedule.html:20
@@ -380,7 +364,7 @@ msgstr "復元"
 
 #: backup/templates/backup/remoteBackups.html:3
 msgid "Transfer Websites from Remote Server - CyberPanel"
-msgstr "リモートサーバーからWebサイトを転送 -  Cyber​​Panel"
+msgstr "リモートサーバーからWebサイトを転送 - CyberPanel"
 
 #: backup/templates/backup/remoteBackups.html:14
 #: backup/templates/backup/remoteBackups.html:21
@@ -462,7 +446,7 @@ msgstr "メール"
 
 #: backup/templates/backup/restore.html:3
 msgid "Restore Website - CyberPanel"
-msgstr "Web サイトの復元 -  Cyber​​Panel"
+msgstr "Web サイトの復元 - CyberPanel"
 
 #: backup/templates/backup/restore.html:14
 #: backup/templates/backup/restore.html:21
@@ -484,10 +468,8 @@ msgid "Select Back up"
 msgstr "バックアップを選択"
 
 #: backup/templates/backup/restore.html:61
-#, fuzzy
-#| msgid "Configurations"
 msgid "Condition"
-msgstr "設定"
+msgstr "条件"
 
 #: backup/templates/backup/restore.html:86
 #: databases/templates/databases/deleteDatabase.html:64
@@ -800,10 +782,8 @@ msgstr "概要"
 #: baseTemplate/templates/baseTemplate/index.html:294
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:400
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:401
-#, fuzzy
-#| msgid "IP Address"
 msgid "Server IP Address"
-msgstr "IP アドレス"
+msgstr "サーバーの IP アドレス"
 
 #: baseTemplate/templates/baseTemplate/index.html:297
 #: baseTemplate/templates/baseTemplate/index.html:299
@@ -1075,8 +1055,6 @@ msgstr "バックアップ先の追加/削除"
 
 #: baseTemplate/templates/baseTemplate/index.html:449
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:556
-#, fuzzy
-#| msgid "Remote Backups"
 msgid "Remote Back ups"
 msgstr "リモートバックアップ"
 
@@ -1138,14 +1116,12 @@ msgstr "LiteSpeed の状態"
 #: serverStatus/templates/serverStatus/index.html:37
 #: serverStatus/templates/serverStatus/index.html:39
 msgid "CyberPanel Main Log File"
-msgstr "Cyber​​Panel メインログファイル"
+msgstr "CyberPanel メインログファイル"
 
 #: baseTemplate/templates/baseTemplate/index.html:501
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:608
-#, fuzzy
-#| msgid "Server Status"
 msgid "Services Status"
-msgstr "サーバーの状態"
+msgstr "サービスの状態"
 
 #: baseTemplate/templates/baseTemplate/index.html:518
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:625
@@ -1229,7 +1205,7 @@ msgstr "フルスクリーン"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
-msgstr "バージョン管理 -  Cyber​​Panel"
+msgstr "バージョン管理 - CyberPanel"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:11
 msgid ""
@@ -1280,7 +1256,7 @@ msgstr "接続できませんでした。このページを更新してくださ
 
 #: databases/templates/databases/createDatabase.html:3
 msgid "Create New Database - CyberPanel"
-msgstr "新しいデータベースの作成 -  Cyber​​Panel"
+msgstr "新しいデータベースの作成 - CyberPanel"
 
 #: databases/templates/databases/createDatabase.html:13
 msgid "Create a new database on this page."
@@ -1309,7 +1285,7 @@ msgstr "データベースが作成されました。"
 
 #: databases/templates/databases/deleteDatabase.html:3
 msgid "Delete Database - CyberPanel"
-msgstr "データベースの削除 -  Cyber​​Panel"
+msgstr "データベースの削除 - CyberPanel"
 
 #: databases/templates/databases/deleteDatabase.html:13
 msgid "Delete an existing database on this page."
@@ -1325,7 +1301,7 @@ msgstr "データベースが削除されました。"
 
 #: databases/templates/databases/index.html:3
 msgid "Database Functions - CyberPanel"
-msgstr "データベース機能 -  Cyber​​Panel"
+msgstr "データベース機能 - CyberPanel"
 
 #: databases/templates/databases/index.html:13
 msgid "Create, edit and delete databases on this page."
@@ -1333,7 +1309,7 @@ msgstr "このページでデータベースの作成、編集、削除を行い
 
 #: databases/templates/databases/listDataBases.html:3
 msgid "List Databases  - CyberPanel"
-msgstr "データベースの一覧 -  Cyber​​Panel"
+msgstr "データベースの一覧 - CyberPanel"
 
 #: databases/templates/databases/listDataBases.html:14
 msgid "List Databases or change their passwords."
@@ -1464,7 +1440,7 @@ msgstr "レコードが追加されました。"
 
 #: dns/templates/dns/createDNSZone.html:3
 msgid "Create DNS Zone - CyberPanel"
-msgstr "DNSゾーンの作成 -  Cyber​​Panel"
+msgstr "DNSゾーンの作成 - CyberPanel"
 
 #: dns/templates/dns/createDNSZone.html:13
 msgid ""
@@ -1490,7 +1466,7 @@ msgstr "ドメインの DNS ゾーン:"
 
 #: dns/templates/dns/createNameServer.html:3
 msgid "Create Nameserver - CyberPanel"
-msgstr "ネームサーバーの作成 -  Cyber​​Panel"
+msgstr "ネームサーバーの作成 - CyberPanel"
 
 #: dns/templates/dns/createNameServer.html:13
 msgid ""
@@ -1518,7 +1494,7 @@ msgstr "次のネームサーバーが作成されました:"
 
 #: dns/templates/dns/deleteDNSZone.html:3
 msgid "Delete DNS Zone - CyberPanel"
-msgstr "DNSゾーンの削除 -  Cyber​​Panel"
+msgstr "DNSゾーンの削除 - CyberPanel"
 
 #: dns/templates/dns/deleteDNSZone.html:12
 #: dns/templates/dns/deleteDNSZone.html:18
@@ -1560,7 +1536,7 @@ msgstr "消去されました。"
 
 #: dns/templates/dns/index.html:3
 msgid "DNS Functions - CyberPanel"
-msgstr "DNS 機能 -  Cyber​​Panel"
+msgstr "DNS 機能 - CyberPanel"
 
 #: dns/templates/dns/index.html:12
 msgid "DNS Functions"
@@ -1579,78 +1555,64 @@ msgid "Add Delete/Records"
 msgstr "削除/レコードを追加"
 
 #: filemanager/templates/filemanager/index.html:5
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "File Manager - CyberPanel"
-msgstr "SSL の管理 -  Cyber​​Panel"
+msgstr "ファイル管理 - CyberPanel"
 
 #: filemanager/templates/filemanager/index.html:43
-#, fuzzy
-#| msgid "File Manager"
 msgid " File Manager"
-msgstr "ファイル 管理"
+msgstr "ファイル管理"
 
 #: filemanager/templates/filemanager/index.html:63
 #: filemanager/templates/filemanager/index.html:202
 #: filemanager/templates/filemanager/index.html:233
-#, fuzzy
-#| msgid "Reload"
 msgid "Upload"
-msgstr "再読み込み"
+msgstr "アップロード"
 
 #: filemanager/templates/filemanager/index.html:66
-#, fuzzy
-#| msgid "File"
 msgid "New File"
-msgstr "ファイル"
+msgstr "新しいファイル"
 
 #: filemanager/templates/filemanager/index.html:69
 msgid "New Folder"
-msgstr ""
+msgstr "新しいフォルダ"
 
 #: filemanager/templates/filemanager/index.html:75
 #: filemanager/templates/filemanager/index.html:563
 msgid "Copy"
-msgstr ""
+msgstr "複写"
 
 #: filemanager/templates/filemanager/index.html:78
 #: filemanager/templates/filemanager/index.html:528
 msgid "Move"
-msgstr ""
+msgstr "移動"
 
 #: filemanager/templates/filemanager/index.html:81
 #: filemanager/templates/filemanager/index.html:593
-#, fuzzy
-#| msgid "Username"
 msgid "Rename"
-msgstr "ユーザー名"
+msgstr "変名"
 
 #: filemanager/templates/filemanager/index.html:84
 msgid "Edit"
-msgstr ""
+msgstr "編集"
 
 #: filemanager/templates/filemanager/index.html:87
 #: filemanager/templates/filemanager/index.html:438
 #: filemanager/templates/filemanager/index.html:465
 msgid "Compress"
-msgstr ""
+msgstr "圧縮"
 
 #: filemanager/templates/filemanager/index.html:90
 #: filemanager/templates/filemanager/index.html:493
 msgid "Extract"
-msgstr ""
+msgstr "抽出"
 
 #: filemanager/templates/filemanager/index.html:108
-#, fuzzy
-#| msgid "Current Package:"
 msgid "Current Path"
-msgstr "現在のパッケージ:"
+msgstr "現在のパス"
 
 #: filemanager/templates/filemanager/index.html:136
-#, fuzzy
-#| msgid "Back up"
 msgid "Back"
-msgstr "バックアップ"
+msgstr "戻る"
 
 #: filemanager/templates/filemanager/index.html:140
 #: serverLogs/templates/serverLogs/accessLogs.html:42
@@ -1662,96 +1624,80 @@ msgid "Refresh"
 msgstr "更新"
 
 #: filemanager/templates/filemanager/index.html:144
-#, fuzzy
-#| msgid "Select Email"
 msgid "Select All"
-msgstr "メールを選択"
+msgstr "すべてを選択"
 
 #: filemanager/templates/filemanager/index.html:148
-#, fuzzy
-#| msgid "Select Email"
 msgid "UnSelect All"
-msgstr "メールを選択"
+msgstr "すべてを選択解除"
 
 #: filemanager/templates/filemanager/index.html:158
-#, fuzzy
-#| msgid "Size"
 msgid "Size (KB)"
-msgstr "サイズ"
+msgstr "サイズ (KB)"
 
 #: filemanager/templates/filemanager/index.html:159
 msgid "Last Modified"
-msgstr ""
+msgstr "最終更新日"
 
 #: filemanager/templates/filemanager/index.html:160
-#, fuzzy
-#| msgid "PHP version "
 msgid "Permissions"
-msgstr "PHP バージョン "
+msgstr "権限"
 
 #: filemanager/templates/filemanager/index.html:180
 msgid "Upload File"
-msgstr ""
+msgstr "ファイルアップロード"
 
 #: filemanager/templates/filemanager/index.html:187
 msgid "Upload queue"
-msgstr ""
+msgstr "アップロードキュー"
 
 #: filemanager/templates/filemanager/index.html:188
 msgid "Queue length:"
-msgstr ""
+msgstr "キューの長さ:"
 
 #: filemanager/templates/filemanager/index.html:195
 msgid "Drop"
-msgstr ""
+msgstr "ドロップ"
 
 #: filemanager/templates/filemanager/index.html:196
 msgid "Drop Files here to upload them."
-msgstr ""
+msgstr "アップロードするファイルをここにドロップします。"
 
 #: filemanager/templates/filemanager/index.html:211
 msgid "Progress"
-msgstr ""
+msgstr "進捗"
 
 #: filemanager/templates/filemanager/index.html:213
-#, fuzzy
-#| msgid "FTP Functions"
 msgid "Actions"
-msgstr "FTP 機能"
+msgstr "操作"
 
 #: filemanager/templates/filemanager/index.html:239
 msgid "Remove"
-msgstr ""
+msgstr "削除"
 
 #: filemanager/templates/filemanager/index.html:249
 msgid "Queue progress:"
-msgstr ""
+msgstr "キューの進行:"
 
 #: filemanager/templates/filemanager/index.html:258
-#, fuzzy
-#| msgid "Cannot tune. Error message:"
 msgid "can not be uploaded, Error message:"
-msgstr "チューニングできません。エラー メッセージ:"
+msgstr "アップロードできません、エラーメッセージ："
 
 #: filemanager/templates/filemanager/index.html:262
 msgid "Upload all"
-msgstr ""
+msgstr "すべてをアップロードする"
 
 #: filemanager/templates/filemanager/index.html:265
-#, fuzzy
-#| msgid "Cancel"
 msgid "Cancel all"
-msgstr "キャンセル"
+msgstr "すべてをキャンセル"
 
 #: filemanager/templates/filemanager/index.html:268
 msgid "Remove all"
-msgstr ""
+msgstr "すべて削除する"
 
 #: filemanager/templates/filemanager/index.html:304
-#, fuzzy
-#| msgid "Rule successfully added."
 msgid "File Successfully saved."
-msgstr "ルールが追加されました。"
+msgstr "ファイルが保存されました。"
 
 #: filemanager/templates/filemanager/index.html:311
 #: firewall/templates/firewall/secureSSH.html:68
@@ -1761,72 +1707,56 @@ msgid "Save Changes"
 msgstr "変更を保存"
 
 #: filemanager/templates/filemanager/index.html:328
-#, fuzzy
-#| msgid "Create New User"
 msgid "Create new folder!"
-msgstr "新しいユーザーの作成"
+msgstr "新しいフォルダを作成します！"
 
 #: filemanager/templates/filemanager/index.html:336
-#, fuzzy
-#| msgid "File Name"
 msgid "New Folder Name"
-msgstr "﻿﻿ファイル名"
+msgstr "新しいフォルダ名"
 
 #: filemanager/templates/filemanager/index.html:338
 msgid "Folder will be created in your current directory"
-msgstr ""
+msgstr "現在のディレクトリにフォルダが作成されます"
 
 #: filemanager/templates/filemanager/index.html:340
-#, fuzzy
-#| msgid "Create User"
 msgid "Create Folder"
-msgstr "ユーザーを作成"
+msgstr "フォルダ作成"
 
 #: filemanager/templates/filemanager/index.html:353
-#, fuzzy
-#| msgid "is successfully created."
 msgid "Folder Successfully created."
-msgstr "作成されました。"
+msgstr "フォルダが作成されました。"
 
 #: filemanager/templates/filemanager/index.html:372
-#, fuzzy
-#| msgid "Create New User"
 msgid "Create new file!"
-msgstr "新しいユーザーの作成"
+msgstr "新しいファイルを作成します！"
 
 #: filemanager/templates/filemanager/index.html:380
-#, fuzzy
-#| msgid "File Name"
 msgid "New File Name"
-msgstr "﻿﻿ファイル名"
+msgstr "新しいファイル名"
 
 #: filemanager/templates/filemanager/index.html:382
 msgid ""
 "File will be created in your current directory, if it already exists it will "
-"not overwirte."
+"not overwrite."
 msgstr ""
+"ファイルは現在のディレクトリに作成され、すでに存在する場合は上書きされませ"
+"ん。"
 
 #: filemanager/templates/filemanager/index.html:384
-#, fuzzy
-#| msgid "Create Email"
 msgid "Create File"
-msgstr "メールの作成"
+msgstr "ファイル作成"
 
 #: filemanager/templates/filemanager/index.html:397
-#, fuzzy
-#| msgid "is successfully created."
 msgid "File Successfully created."
-msgstr "作成されました。"
+msgstr "ファイルが作成されました。"
 
 #: filemanager/templates/filemanager/index.html:413
-#, fuzzy
-#| msgid "Configurations"
 msgid "Confirm Deletion!"
-msgstr "設定"
+msgstr "削除を確認してください！"
 
 #: filemanager/templates/filemanager/index.html:422
 msgid "Confirm"
-msgstr ""
+msgstr "確認"
 
 #: filemanager/templates/filemanager/index.html:423
 #: filemanager/templates/filemanager/index.html:466
@@ -1839,86 +1769,76 @@ msgstr "閉じる"
 
 #: filemanager/templates/filemanager/index.html:446
 msgid "List of files/folder!"
-msgstr ""
+msgstr "ファイル/フォルダの一覧！"
 
 #: filemanager/templates/filemanager/index.html:450
-#, fuzzy
-#| msgid "File Name"
 msgid "Compressed File Name"
-msgstr "﻿﻿ファイル名"
+msgstr "圧縮ファイル名の"
 
 #: filemanager/templates/filemanager/index.html:452
-#, fuzzy
-#| msgid "Extension Name"
 msgid "Enter without extension name!"
-msgstr "拡張機能名"
+msgstr "拡張名なしで入力してください！"
 
 #: filemanager/templates/filemanager/index.html:456
 msgid "Compression Type"
-msgstr ""
+msgstr "圧縮タイプ"
 
 #: filemanager/templates/filemanager/index.html:481
 msgid "Extracting"
-msgstr ""
+msgstr "抽出する"
 
 #: filemanager/templates/filemanager/index.html:489
 msgid "Extract in"
-msgstr ""
+msgstr "抽出"
 
 #: filemanager/templates/filemanager/index.html:491
 msgid "You can enter . to extract in current directory!"
-msgstr ""
+msgstr ". を入力することができます。 現在のディレクトリに抽出します！"
 
 #: filemanager/templates/filemanager/index.html:509
-#, fuzzy
-#| msgid "Files"
 msgid "Move Files"
-msgstr "ファイル"
+msgstr "ファイル移動"
 
 #: filemanager/templates/filemanager/index.html:517
 #: filemanager/templates/filemanager/index.html:552
 msgid "List of files/folders!"
-msgstr ""
+msgstr "ファイル/フォルダの一覧！"
 
 #: filemanager/templates/filemanager/index.html:521
 msgid "Move to"
-msgstr ""
+msgstr "移動先"
 
 #: filemanager/templates/filemanager/index.html:523
 msgid "Enter a path to move your files!"
-msgstr ""
+msgstr "ファイルを移動するパスを入力してください！"
 
 #: filemanager/templates/filemanager/index.html:544
-#, fuzzy
-#| msgid "Files"
 msgid "Copy Files"
-msgstr "ファイル"
+msgstr "ファイル複写"
 
 #: filemanager/templates/filemanager/index.html:556
 msgid "Copy to"
-msgstr ""
+msgstr "複写先"
 
 #: filemanager/templates/filemanager/index.html:558
 msgid "Enter a path to copy your files to!"
-msgstr ""
+msgstr "ファイルを複写するパスを入力してください！"
 
 #: filemanager/templates/filemanager/index.html:578
 msgid "Renaming"
-msgstr ""
+msgstr "名前の変更"
 
 #: filemanager/templates/filemanager/index.html:586
-#, fuzzy
-#| msgid "File Name"
 msgid "New Name"
-msgstr "﻿﻿ファイル名"
+msgstr "新しい名前"
 
 #: filemanager/templates/filemanager/index.html:588
 msgid "Enter new name of file!"
-msgstr ""
+msgstr "ファイルの新しい名前を入力してください！"
 
 #: firewall/templates/firewall/firewall.html:3
 msgid "Firewall - CyberPanel"
-msgstr "ファイアウォール -  Cyber​​Panel"
+msgstr "ファイアウォール - CyberPanel"
 
 #: firewall/templates/firewall/firewall.html:13
 msgid "Add/Delete Firewall Rules"
@@ -1967,7 +1887,7 @@ msgstr "ルールが追加されました。"
 
 #: firewall/templates/firewall/index.html:3
 msgid "Security - CyberPanel"
-msgstr "セキュリティ -  Cyber​​Panel"
+msgstr "セキュリティ - CyberPanel"
 
 #: firewall/templates/firewall/index.html:12
 msgid "Security Functions"
@@ -1979,7 +1899,7 @@ msgstr "このページでサーバーセキュリティを管理します。"
 
 #: firewall/templates/firewall/secureSSH.html:3
 msgid "Secure SSH - CyberPanel"
-msgstr "SSH のセキュリティ - Cyber​​Panel"
+msgstr "SSH のセキュリティ - CyberPanel"
 
 #: firewall/templates/firewall/secureSSH.html:14
 msgid "Secure or harden SSH Configurations."
@@ -2035,7 +1955,7 @@ msgstr "SSH キーが削除されました"
 
 #: ftp/templates/ftp/createFTPAccount.html:3
 msgid "Create FTP Account - CyberPanel"
-msgstr "FTP アカウントの作成 -  Cyber​​Panel"
+msgstr "FTP アカウントの作成 - CyberPanel"
 
 #: ftp/templates/ftp/createFTPAccount.html:13
 msgid ""
@@ -2079,7 +1999,7 @@ msgstr "作成されました。"
 
 #: ftp/templates/ftp/deleteFTPAccount.html:3
 msgid "Delete FTP Account - CyberPanel"
-msgstr "FTP アカウントの削除 -  Cyber​​Panel"
+msgstr "FTP アカウントの削除 - CyberPanel"
 
 #: ftp/templates/ftp/deleteFTPAccount.html:13
 msgid "Select domain and delete its related FTP accounts."
@@ -2104,7 +2024,7 @@ msgstr "サーバーに接続できませんでした。 このページを更�
 
 #: ftp/templates/ftp/index.html:3
 msgid "FTP Functions - CyberPanel"
-msgstr "FTP 機能 -  Cyber​​Panel"
+msgstr "FTP 機能 - CyberPanel"
 
 #: ftp/templates/ftp/index.html:13
 msgid "Delete and create FTP accounts on this page."
@@ -2167,7 +2087,7 @@ msgstr "現在、このドメインにはメールアカウントはありませ
 
 #: mailServer/templates/mailServer/createEmailAccount.html:3
 msgid "Create Email Account - CyberPanel"
-msgstr "メールアカウントの作成 -  Cyber​​Panel"
+msgstr "メールアカウントの作成 - CyberPanel"
 
 #: mailServer/templates/mailServer/createEmailAccount.html:13
 msgid "Select a website from the list, to create an email account."
@@ -2188,7 +2108,7 @@ msgstr " 作成されました。"
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:3
 msgid "Delete Email Account - CyberPanel"
-msgstr "メールアカウントの削除 -  Cyber​​Panel"
+msgstr "メールアカウントの削除 - CyberPanel"
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:13
 msgid "Select a website from the list, to delete an email account."
@@ -2201,7 +2121,7 @@ msgstr "ID 付きメール: {$ deletedID $}は削除されました。"
 
 #: mailServer/templates/mailServer/index.html:3
 msgid "Mail Functions - CyberPanel"
-msgstr "メール機能 -  Cyber​​Panel"
+msgstr "メール機能 - CyberPanel"
 
 #: mailServer/templates/mailServer/index.html:12
 msgid "Mail Functions"
@@ -2213,7 +2133,7 @@ msgstr "このページでメールアカウントを管理します。"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:3
 msgid "Edit PHP Configurations - CyberPanel"
-msgstr "PHP 設定の編集 -  Cyber​​Panel"
+msgstr "PHP 設定の編集 - CyberPanel"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:14
 #: managePHP/templates/managePHP/editPHPConfig.html:21
@@ -2276,7 +2196,7 @@ msgstr "PHP 設定が保存されました。"
 
 #: managePHP/templates/managePHP/index.html:3
 msgid "Manage PHP Installations - CyberPanel"
-msgstr "PHPインストールの管理 -  Cyber​​Panel"
+msgstr "PHPインストールの管理 - CyberPanel"
 
 #: managePHP/templates/managePHP/index.html:12
 msgid "Manage PHP Installations"
@@ -2288,7 +2208,7 @@ msgstr "必要に応じて PHP 設定を編集します。"
 
 #: managePHP/templates/managePHP/installExtensions.html:3
 msgid "Install PHP Extensions - CyberPanel"
-msgstr "PHP 拡張機能のインストール -  Cyber​​Panel"
+msgstr "PHP 拡張機能のインストール - CyberPanel"
 
 #: managePHP/templates/managePHP/installExtensions.html:14
 msgid "Install/uninstall php extensions on this page."
@@ -2337,7 +2257,7 @@ msgstr "操作を実行できません。エラー メッセージ:"
 
 #: manageSSL/templates/manageSSL/index.html:3
 msgid "SSL Functions - CyberPanel"
-msgstr "SSL 機能 -  Cyber​​Panel"
+msgstr "SSL 機能 - CyberPanel"
 
 #: manageSSL/templates/manageSSL/index.html:13
 msgid "SSL Functions"
@@ -2349,7 +2269,7 @@ msgstr "Web サイトとホスト名で Let’s Encrypt SSL を発行します�
 
 #: manageSSL/templates/manageSSL/manageSSL.html:3
 msgid "Manage SSL - CyberPanel"
-msgstr "SSL の管理 -  Cyber​​Panel"
+msgstr "SSL の管理 - CyberPanel"
 
 #: manageSSL/templates/manageSSL/manageSSL.html:14
 msgid ""
@@ -2375,7 +2295,7 @@ msgstr "SSLが発行されました"
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:3
 msgid "Issue SSL For Hostname - CyberPanel"
-msgstr "ホスト名のSSLを発行 -  Cyber​​Panel"
+msgstr "ホスト名のSSLを発行 - CyberPanel"
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:13
 #: manageSSL/templates/manageSSL/sslForHostName.html:20
@@ -2385,7 +2305,7 @@ msgstr "ホスト名にSSLを発行する"
 #: manageSSL/templates/manageSSL/sslForHostName.html:14
 msgid "Let’s Encrypt SSL for hostname to access CyberPanel on verified SSL."
 msgstr ""
-"検証済みのSSLでCyber​​Panelにアクセスするために、ホスト名でLet’s Encrypt SSLを"
+"検証済みのSSLでCyberPanelにアクセスするために、ホスト名でLet’s Encrypt SSLを"
 "申請する。"
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:56
@@ -2395,7 +2315,7 @@ msgstr "SSL が発行されました。 CyberPanel にアクセスできるよ�
 
 #: packages/templates/packages/createPackage.html:3
 msgid "Create Package - CyberPanel"
-msgstr "パッケージの作成 -  Cyber​​Panel"
+msgstr "パッケージの作成 - CyberPanel"
 
 #: packages/templates/packages/createPackage.html:14
 #: packages/templates/packages/deletePackage.html:13
@@ -2460,7 +2380,7 @@ msgstr "作成されました"
 
 #: packages/templates/packages/deletePackage.html:3
 msgid "Delete Package - CyberPanel"
-msgstr "パッケージの削除 -  Cyber​​Panel"
+msgstr "パッケージの削除 - CyberPanel"
 
 #: packages/templates/packages/deletePackage.html:27
 #: packages/templates/packages/modifyPackage.html:24
@@ -2480,11 +2400,11 @@ msgstr " 削除されました"
 
 #: packages/templates/packages/index.html:3
 msgid "Packages - CyberPanel"
-msgstr "パッケージ -  Cyber​​Panel"
+msgstr "パッケージ - CyberPanel"
 
 #: packages/templates/packages/modifyPackage.html:3
 msgid "Modify Package - CyberPanel"
-msgstr "パッケージの変更 -  Cyber​​Panel"
+msgstr "パッケージの変更 - CyberPanel"
 
 #: packages/templates/packages/modifyPackage.html:104
 msgid "Cannot fetch package details. Error message:"
@@ -2542,7 +2462,7 @@ msgstr ""
 #: serverLogs/templates/serverLogs/emailLogs.html:3
 #: serverLogs/templates/serverLogs/errorLogs.html:3
 msgid "Error Logs - CyberPanel"
-msgstr "エラーログ -  Cyber​​Panel"
+msgstr "エラーログ - CyberPanel"
 
 #: serverLogs/templates/serverLogs/emailLogs.html:15
 msgid "Email Logs for main web server."
@@ -2554,7 +2474,7 @@ msgstr "メイン Web サーバーのエラーログ。"
 
 #: serverLogs/templates/serverLogs/ftplogs.html:3
 msgid "FTP Logs - CyberPanel"
-msgstr "FTP ログ -  Cyber​​Panel"
+msgstr "FTP ログ - CyberPanel"
 
 #: serverLogs/templates/serverLogs/ftplogs.html:15
 msgid "FTP Logs for main web server."
@@ -2562,7 +2482,7 @@ msgstr "メイン Web サーバーの FTP ログ。"
 
 #: serverLogs/templates/serverLogs/index.html:3
 msgid "Server Logs - CyberPanel"
-msgstr "サーバーログ -  Cyber​​Panel"
+msgstr "サーバーログ - CyberPanel"
 
 #: serverLogs/templates/serverLogs/index.html:13
 msgid "Server Logs"
@@ -2578,14 +2498,14 @@ msgstr ""
 
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:3
 msgid "CyberPanel Main Log File - CyberPanel"
-msgstr "Cyber​​Panel メインログファイル -  Cyber​​Panel"
+msgstr "CyberPanel メインログファイル - CyberPanel"
 
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:16
 msgid ""
 "This log file corresponds to errors generated by CyberPanel for your domain "
 "errors log you can look into /home/domain/logs."
 msgstr ""
-"このログファイルは Cyber​​Panel によってドメインエラーログ用に生成されたエラー"
+"このログファイルは CyberPanel によってドメインエラーログ用に生成されたエラー"
 "に対応しており、 /home/domain/logs で調べることができます。"
 
 #: serverStatus/templates/serverStatus/index.html:3
@@ -2598,7 +2518,7 @@ msgstr "LiteSpeed の状態とログファイルを表示します。"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:3
 msgid "LiteSpeed Status - CyberPanel"
-msgstr "LiteSpeed の状態 -  Cyber​​Panel"
+msgstr "LiteSpeed の状態 - CyberPanel"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:16
 msgid "LiteSpeed Status:"
@@ -2635,7 +2555,7 @@ msgid ""
 "occurred, please see CyberPanel Main log file."
 msgstr ""
 "詳細を取得できませんでした.LiteSpeedが実行されていないか、何らかのエラーが発"
-"生しました。Cyber​​Panelメインログファイルを参照してください。"
+"生しました。CyberPanelメインログファイルを参照してください。"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:72
 msgid "Reboot Litespeed"
@@ -2655,14 +2575,12 @@ msgid "Could not connect to server."
 msgstr "サーバーに接続できませんでした。"
 
 #: serverStatus/templates/serverStatus/services.html:3
-#, fuzzy
-#| msgid "Server Logs - CyberPanel"
 msgid "Services - CyberPanel"
-msgstr "サーバーログ -  Cyber​​Panel"
+msgstr "サービス - CyberPanel"
 
 #: tuning/templates/tuning/index.html:3
 msgid "Server Tuning - CyberPanel"
-msgstr "サーバーのチューニング -  Cyber​​Panel"
+msgstr "サーバーのチューニング - CyberPanel"
 
 #: tuning/templates/tuning/index.html:13
 msgid ""
@@ -2674,7 +2592,7 @@ msgstr ""
 
 #: tuning/templates/tuning/liteSpeedTuning.html:3
 msgid "LiteSpeed Tuning - CyberPanel"
-msgstr "LiteSpeed チューニング  -  Cyber​​Panel"
+msgstr "LiteSpeed チューニング - CyberPanel"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:13
 msgid ""
@@ -2750,7 +2668,7 @@ msgstr "Web サーバーをチューニングしました。"
 
 #: tuning/templates/tuning/phpTuning.html:3
 msgid "PHP Tuning - CyberPanel"
-msgstr "PHP チューニング -  Cyber​​Panel"
+msgstr "PHP チューニング - CyberPanel"
 
 #: tuning/templates/tuning/phpTuning.html:14
 msgid "Set how each version of PHP behaves in your server here."
@@ -2793,10 +2711,8 @@ msgid "Details Successfully fetched."
 msgstr "詳細が取得されました。"
 
 #: tuning/templates/tuning/phpTuning.html:124
-#, fuzzy
-#| msgid "PHP version "
 msgid "PHP for "
-msgstr "PHP バージョン "
+msgstr "のPHP "
 
 #: tuning/templates/tuning/phpTuning.html:124
 msgid "Successfully tuned."
@@ -2804,7 +2720,7 @@ msgstr "調整されました。"
 
 #: userManagment/templates/userManagment/createUser.html:3
 msgid "Create New User - CyberPanel"
-msgstr "新しいユーザーの作成する -  Cyber​​Panel"
+msgstr "新しいユーザーの作成する - CyberPanel"
 
 #: userManagment/templates/userManagment/createUser.html:13
 msgid "Create root, reseller or normal users on this page."
@@ -2910,7 +2826,7 @@ msgstr "結合された姓と名の長さは20文字以下でなければなり�
 
 #: userManagment/templates/userManagment/deleteUser.html:3
 msgid "Delete User - CyberPanel"
-msgstr "ユーザーの削除 -  Cyber​​Panel"
+msgstr "ユーザーの削除 - CyberPanel"
 
 #: userManagment/templates/userManagment/deleteUser.html:14
 msgid "Websites owned by this user will automatically transfer to the root."
@@ -2930,7 +2846,7 @@ msgstr "ユーザー "
 
 #: userManagment/templates/userManagment/index.html:3
 msgid "User Functions - CyberPanel"
-msgstr "ユーザ機能 -  Cyber​​Panel"
+msgstr "ユーザ機能 - CyberPanel"
 
 #: userManagment/templates/userManagment/index.html:14
 msgid "Create, edit and delete users on this page."
@@ -2938,7 +2854,7 @@ msgstr "このページでユーザーを作成、編集、削除を行います
 
 #: userManagment/templates/userManagment/modifyUser.html:3
 msgid "Modify User - CyberPanel"
-msgstr "ユーザーの変更 -  Cyber​​Panel"
+msgstr "ユーザーの変更 - CyberPanel"
 
 #: userManagment/templates/userManagment/modifyUser.html:13
 msgid "Modify existing user settings on this page."
@@ -2985,7 +2901,7 @@ msgstr "( 0 = 無制限 )"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:3
 msgid "Create New Website - CyberPanel"
-msgstr "新しい Web サイトの作成する -  Cyber​​Panel"
+msgstr "新しい Web サイトの作成する - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:13
 #: websiteFunctions/templates/websiteFunctions/index.html:14
@@ -3008,7 +2924,7 @@ msgstr "所有者を選択"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:54
 msgid "Do not enter WWW, it will be auto created!"
-msgstr ""
+msgstr "WWW を入力しないでください、自動的に生成されます！"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:56
 #: websiteFunctions/templates/websiteFunctions/website.html:293
@@ -3048,7 +2964,7 @@ msgstr " 作成されました"
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:3
 msgid "Delete Website - CyberPanel"
-msgstr "Web サイトの削除 -  Cyber​​Panel"
+msgstr "Web サイトの削除 - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:13
 msgid ""
@@ -3068,7 +2984,7 @@ msgstr "削除されました。"
 
 #: websiteFunctions/templates/websiteFunctions/index.html:3
 msgid "Website Functions - CyberPanel"
-msgstr "Web サイト機能 -  Cyber​​Panel"
+msgstr "Web サイト機能 - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/index.html:89
 #: websiteFunctions/templates/websiteFunctions/index.html:91
@@ -3079,7 +2995,7 @@ msgstr "Web サイトの休止/休止解除"
 
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:3
 msgid "Websites Hosted - CyberPanel"
-msgstr "ホストされているWebサイト -  Cyber​​Panel"
+msgstr "ホストされているWebサイト - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:53
 msgid "Cannot list websites. Error message:"
@@ -3087,7 +3003,7 @@ msgstr "Web サイトの一覧が表示できません。エラーメッセー�
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:3
 msgid "Modify Website - CyberPanel"
-msgstr "Web サイトの変更 -  Cyber​​Panel"
+msgstr "Web サイトの変更 - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:51
 msgid "Current Package:"
@@ -3111,7 +3027,7 @@ msgstr "Web サイトの詳細が取得されました"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:3
 msgid "Suspend/Unsuspend Website - CyberPanel"
-msgstr "Web サイトの休止/休止解除 -  Cyber​​Panel"
+msgstr "Web サイトの休止/休止解除 - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:14
 msgid "This page can be used to suspend/unsuspend website."
@@ -3142,10 +3058,8 @@ msgid "Successfully "
 msgstr "成功しました "
 
 #: websiteFunctions/templates/websiteFunctions/website.html:13
-#, fuzzy
-#| msgid "Previous"
 msgid "Preview"
-msgstr "前へ"
+msgstr "プレビュー"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:14
 msgid "All functions related to a particular site."
@@ -3285,10 +3199,8 @@ msgstr "現在の設定を取得できませんでした。エラー メッセ�
 
 #: websiteFunctions/templates/websiteFunctions/website.html:593
 #: websiteFunctions/templates/websiteFunctions/website.html:648
-#, fuzzy
-#| msgid "SSH Configurations Saved."
 msgid "Configurations saved."
-msgstr "SSH の設定が保存されました。"
+msgstr "設定が保存されました。"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:634
 msgid "Current rewrite rules in the file fetched."
@@ -3313,7 +3225,7 @@ msgstr "ファイル"
 #: websiteFunctions/templates/websiteFunctions/website.html:698
 #: websiteFunctions/templates/websiteFunctions/website.html:700
 msgid "File Manager"
-msgstr "ファイル 管理"
+msgstr "ファイル管理"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:739
 msgid "Application Installer"
@@ -3328,14 +3240,12 @@ msgid "Wordpress with LSCache"
 msgstr "Wordpress の LSCache"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:756
-#, fuzzy
-#| msgid "Install wordpress with LSCache"
 msgid "Install Joomla with(?) LSCache"
-msgstr "LSCache で Wordpress をインストールする"
+msgstr "LSCache で Joomla をインストールする？"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:758
 msgid "Joomla"
-msgstr ""
+msgstr "Joomla"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:792
 #: websiteFunctions/templates/websiteFunctions/website.html:871
@@ -3349,25 +3259,19 @@ msgstr "インストールに成功しました。 セットアップを完了�
 
 #: websiteFunctions/templates/websiteFunctions/website.html:828
 msgid "Site name"
-msgstr ""
+msgstr "サイト名"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:835
-#, fuzzy
-#| msgid "Username"
 msgid "Admin Username"
-msgstr "ユーザー名"
+msgstr "管理者ユーザー名"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:842
-#, fuzzy
-#| msgid "Password"
 msgid "Admin Password"
-msgstr "パスワード"
+msgstr "管理者パスワード"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:849
-#, fuzzy
-#| msgid "Database Name"
 msgid "Database prefix"
-msgstr "データベース名"
+msgstr "データベースプレフィックス"
 
 #~ msgid "Configuration saved. Restart LiteSpeed put them in effect."
 #~ msgstr "設定が保存されました。 LiteSpeed を再起動して有効にします。"
