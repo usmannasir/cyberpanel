@@ -289,6 +289,7 @@ def getCurrentRecordsForDomain(request):
 
                 data = json.loads(request.body)
                 zoneDomain = data['selectedZone']
+                currentSelection = data['currentSelection']
 
                 domain = Domains.objects.get(name=zoneDomain)
 
@@ -297,21 +298,46 @@ def getCurrentRecordsForDomain(request):
                 json_data = "["
                 checker = 0
 
-                for items in records:
-                    if items.type == "SOA":
-                        continue
-                    dic = {'id': items.id,
-                           'type': items.type,
-                           'name': items.name,
-                           'content': items.content,
-                           'priority': items.prio
-                           }
+                fetchType = ""
 
-                    if checker == 0:
-                        json_data = json_data + json.dumps(dic)
-                        checker = 1
+                if currentSelection == 'aRecord':
+                    fetchType = 'A'
+                elif currentSelection == 'aaaaRecord':
+                    fetchType = 'AAAA'
+                elif currentSelection == 'cNameRecord':
+                    fetchType = 'CNAME'
+                elif currentSelection == 'mxRecord':
+                    fetchType = 'MX'
+                elif currentSelection == 'txtRecord':
+                    fetchType = 'TXT'
+                elif currentSelection == 'spfRecord':
+                    fetchType = 'SPF'
+                elif currentSelection == 'nsRecord':
+                    fetchType = 'NS'
+                elif currentSelection == 'soaRecord':
+                    fetchType = 'SOA'
+                elif currentSelection == 'srvRecord':
+                    fetchType = 'SRV'
+
+
+                for items in records:
+                    if items.type == fetchType:
+                        dic = {'id': items.id,
+                               'type': items.type,
+                               'name': items.name,
+                               'content': items.content,
+                               'priority': items.prio,
+                               'ttl':items.ttl
+                               }
+
+
+                        if checker == 0:
+                            json_data = json_data + json.dumps(dic)
+                            checker = 1
+                        else:
+                            json_data = json_data + ',' + json.dumps(dic)
                     else:
-                        json_data = json_data + ',' + json.dumps(dic)
+                        continue
 
 
                 json_data = json_data + ']'
@@ -339,6 +365,7 @@ def addDNSRecord(request):
                 zoneDomain = data['selectedZone']
                 recordType = data['recordType']
                 recordName = data['recordName']
+                ttl = int(data['ttl'])
 
                 #admin = Administrator.objects.get(pk=val)
 
@@ -363,7 +390,7 @@ def addDNSRecord(request):
                                         name=value,
                                         type="A",
                                         content=recordContentA,
-                                        ttl=3600,
+                                        ttl=ttl,
                                         prio=0,
                                         disabled=0,
                                         auth=1  )
@@ -379,13 +406,14 @@ def addDNSRecord(request):
                         value = recordName + "." + zoneDomain
 
                     recordContentMX = data['recordContentMX']
+                    priority = data['priority']
                     record = Records(domainOwner=zone,
                                      domain_id=zone.id,
-                                     name=zoneDomain,
+                                     name=value,
                                      type="MX",
-                                     content=value,
-                                     ttl=3600,
-                                     prio=recordContentMX,
+                                     content=recordContentMX,
+                                     ttl=ttl,
+                                     prio=priority,
                                      disabled=0,
                                      auth=1)
                     record.save()
@@ -407,12 +435,11 @@ def addDNSRecord(request):
                                         name=value,
                                         type="AAAA",
                                         content=recordContentAAAA,
-                                        ttl=3600,
+                                        ttl=ttl,
                                         prio=0,
                                         disabled=0,
                                         auth=1  )
                     record.save()
-
                 elif recordType == "CNAME":
 
                     if recordName == "@":
@@ -429,13 +456,11 @@ def addDNSRecord(request):
                                         name=value,
                                         type="CNAME",
                                         content=recordContentCNAME,
-                                        ttl=3600,
+                                        ttl=ttl,
                                         prio=0,
                                         disabled=0,
                                         auth=1  )
                     record.save()
-
-
                 elif recordType == "SPF":
 
                     if recordName == "@":
@@ -452,13 +477,11 @@ def addDNSRecord(request):
                                         name=value,
                                         type="SPF",
                                         content=recordContentSPF,
-                                        ttl=3600,
+                                        ttl=ttl,
                                         prio=0,
                                         disabled=0,
                                         auth=1  )
                     record.save()
-
-
                 elif recordType == "TXT":
 
                     if recordName == "@":
@@ -475,17 +498,75 @@ def addDNSRecord(request):
                                         name=value,
                                         type="TXT",
                                         content=recordContentTXT,
-                                        ttl=3600,
+                                        ttl=ttl,
                                         prio=0,
                                         disabled=0,
                                         auth=1  )
+                    record.save()
+                elif recordType == "SOA":
+
+                    recordContentSOA = data['recordContentSOA']
+
+                    records = Records(domainOwner=zone,
+                                        domain_id=zone.id,
+                                        name=zoneDomain,
+                                        type="SOA",
+                                        content=recordContentSOA,
+                                        ttl=ttl,
+                                        prio=0,
+                                        disabled=0,
+                                        auth=1)
+                    records.save()
+                elif recordType == "NS":
+
+                    recordContentNS = data['recordContentNS']
+
+                    if recordContentNS == "@":
+                        recordContentNS = "ns1." + zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordContentNS, M | I):
+                        recordContentNS = recordContentNS
+                    else:
+                        recordContentNS = recordContentNS + "." + zoneDomain
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=zoneDomain,
+                                     type="NS",
+                                     content=recordContentNS,
+                                     ttl=ttl,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+                elif recordType == "SRV":
+
+                    if recordName == "@":
+                        value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
+                    recordContentSRV = data['recordContentSRV']
+                    priority = data['priority']
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=value,
+                                     type="SRV",
+                                     content=recordContentSRV,
+                                     ttl=ttl,
+                                     prio=priority,
+                                     disabled=0,
+                                     auth=1)
                     record.save()
 
 
                 final_dic = {'add_status': 1, 'error_message': "None"}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
-
 
 
         except BaseException,msg:

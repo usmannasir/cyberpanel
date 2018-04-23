@@ -47,7 +47,7 @@ app.controller('createNameserver', function($scope,$http) {
                 function ListInitialDatas(response) {
 
 
-                    if(response.data.NSCreation == 1){
+                    if(response.data.NSCreation === 1){
                         $scope.createNameserverLoading = true;
                         $scope.nameserverCreationFailed = true;
                         $scope.nameserverCreated = false;
@@ -119,7 +119,7 @@ app.controller('createDNSZone', function($scope,$http) {
                 function ListInitialDatas(response) {
 
 
-                    if(response.data.zoneCreation == 1){
+                    if(response.data.zoneCreation === 1){
                         $scope.createDNSZoneLoading = true;
                         $scope.dnsZoneCreationFailed = true;
                         $scope.dnsZoneCreated = false;
@@ -160,23 +160,46 @@ app.controller('createDNSZone', function($scope,$http) {
 
 app.controller('addModifyDNSRecords', function($scope,$http) {
 
-                $scope.addRecordsBox = true;
-                $scope.currentRecords = true;
-                $scope.canNotFetchRecords = true;
-                $scope.recordsFetched = true;
-                $scope.recordDeleted = true;
-                $scope.recordAdded = true;
-                $scope.couldNotConnect = true;
-                $scope.recordsLoading = true;
-                $scope.recordDeleted = true;
-                $scope.couldNotDeleteRecords = true;
-                $scope.couldNotAddRecord = true;
-                $scope.recordValueDefault = false;
-                $scope.recordValueMX = true;
-                $scope.recordValueAAAA = true;
-                $scope.recordValueCNAME = true;
-                $scope.recordValueSPF = true;
-                $scope.recordValueTXT = true;
+           $scope.addRecordsBox = true;
+           $scope.currentRecords = true;
+           $scope.canNotFetchRecords = true;
+           $scope.recordsFetched = true;
+           $scope.recordDeleted = true;
+           $scope.recordAdded = true;
+           $scope.couldNotConnect = true;
+           $scope.recordsLoading = true;
+           $scope.recordDeleted = true;
+           $scope.couldNotDeleteRecords = true;
+           $scope.couldNotAddRecord = true;
+           $scope.recordValueDefault = false;
+
+           // Hide records boxes
+           $(".aaaaRecord").hide();
+           $(".cNameRecord").hide();
+           $(".mxRecord").hide();
+           $(".txtRecord").hide();
+           $(".spfRecord").hide();
+           $(".nsRecord").hide();
+           $(".soaRecord").hide();
+           $(".srvRecord").hide();
+
+
+
+
+
+           var currentSelection = "aRecord";
+           $("#"+currentSelection).addClass("active");
+
+           $scope.fetchRecordsTabs = function (recordType) {
+               $("#"+currentSelection).removeClass("active");
+               $("."+currentSelection).hide();
+               $scope.recordsLoading = false;
+               currentSelection = recordType;
+               $("#"+currentSelection).addClass("active");
+               $("."+currentSelection).show();
+               populateCurrentRecords();
+           };
+
 
 
            $scope.fetchRecords = function(){
@@ -186,7 +209,7 @@ app.controller('addModifyDNSRecords', function($scope,$http) {
            };
 
 
-           $scope.addDNSRecord = function(){
+           $scope.addDNSRecord = function(type){
 
                         $scope.recordsLoading = false;
 
@@ -194,56 +217,82 @@ app.controller('addModifyDNSRecords', function($scope,$http) {
                         url = "/dns/addDNSRecord";
 
 
-                        var selectedZone = $scope.selectedZone;
-                        var recordName = $scope.recordName;
-                        var recordType = $scope.recordType;
-
-                        //specific values
-
-                        var recordContentMX = "";
-                        var recordContentA = "";
-                        var recordContentAAAA = "";
-                        var recordContentCNAME = "";
-                        var recordContentSPF = "";
-                        var recordContentTXT = "";
-
-
-
                         // Record specific values
 
-                        if($scope.recordType=="MX"){
-                            recordContentMX = $scope.recordContentMX;
+                        var data = {};
+
+                        if(type === "MX"){
+                            data.selectedZone = $scope.selectedZone;
+                            data.recordName = $scope.recordName;
+                            data.recordContentMX = $scope.recordContentMX;
+                            data.priority = $scope.priority;
+                            data.ttl = $scope.ttl;
+                            data.recordType = type;
                         }
-                        else if($scope.recordType=="A"){
-                            recordContentA = $scope.recordContentA;
+                        else if(type === "A"){
+
+                            data.selectedZone = $scope.selectedZone;
+                            data.recordName = $scope.recordName;
+                            data.recordContentA = $scope.recordContentA;
+                            data.ttl = $scope.ttl;
+                            data.recordType = type;
+
                         }
-                        else if($scope.recordType=="AAAA"){
-                            recordContentAAAA = $scope.recordContentAAAA;
+                        else if(type === "AAAA"){
+                            data.selectedZone = $scope.selectedZone;
+                            data.recordName = $scope.recordName;
+                            data.recordContentAAAA = $scope.recordContentAAAA;
+                            data.ttl = $scope.ttl;
+                            data.recordType = type;
                         }
-                        else if($scope.recordType=="CNAME"){
-                            recordContentCNAME = $scope.recordContentCNAME;
+                        else if(type === "CNAME"){
+                            data.selectedZone = $scope.selectedZone;
+                            data.recordName = $scope.recordName;
+                            data.recordContentCNAME = $scope.recordContentCNAME;
+                            data.ttl = $scope.ttl;
+                            data.recordType = type;
                         }
-                        else if($scope.recordType=="SPF"){
-                            recordContentSPF = $scope.recordContentSPF;
+                        else if(type === "SPF"){
+                            data.selectedZone = $scope.selectedZone;
+                            data.recordName = $scope.recordName;
+                            data.recordContentSPF = $scope.recordContentSPF;
+                            data.ttl = $scope.ttl;
+                            data.recordType = type;
                         }
-                        else if($scope.recordType=="TXT"){
-                            recordContentTXT = $scope.recordContentTXT;
+                        else if(type === "SOA"){
+                            data.selectedZone = $scope.selectedZone;
+                            data.recordName = $scope.selectedZone;
+                            data.recordContentSOA = $scope.recordContentSOA;
+                            data.ttl = $scope.ttl;
+                            data.recordType = type;
+                        }
+                        else if(type === "TXT"){
+                            data.selectedZone = $scope.selectedZone;
+                            data.recordName = $scope.recordName;
+                            data.recordContentTXT = $scope.recordContentTXT;
+                            data.ttl = $scope.ttl;
+                            data.recordType = type;
+                        }
+                        else if(type === "NS"){
+                            data.selectedZone = $scope.selectedZone;
+                            data.recordName = $scope.selectedZone;
+                            data.recordContentNS = $scope.recordContentNS;
+                            data.ttl = $scope.ttl;
+                            data.recordType = type;
+                        }
+                        else if(type === "SRV"){
+                            data.selectedZone = $scope.selectedZone;
+                            data.recordName = $scope.recordName;
+                            data.recordContentSRV = $scope.recordContentSRV;
+                            data.priority = $scope.priority;
+                            data.ttl = $scope.ttl;
+                            data.recordType = type;
                         }
 
 
 
 
-                        var data = {
-                            selectedZone:selectedZone,
-                            recordName:recordName,
-                            recordType:recordType,
-                            recordContentA:recordContentA,
-                            recordContentMX:recordContentMX,
-                            recordContentAAAA:recordContentAAAA,
-                            recordContentCNAME:recordContentCNAME,
-                            recordContentSPF:recordContentSPF,
-                            recordContentTXT:recordContentTXT,
-                        };
+
 
                         var config = {
                             headers : {
@@ -258,7 +307,7 @@ app.controller('addModifyDNSRecords', function($scope,$http) {
                 function ListInitialDatas(response) {
 
 
-                    if(response.data.add_status == 1){
+                    if(response.data.add_status === 1){
 
 
                         populateCurrentRecords();
@@ -313,6 +362,7 @@ app.controller('addModifyDNSRecords', function($scope,$http) {
 
                         var data = {
                             selectedZone:selectedZone,
+                            currentSelection:currentSelection
                         };
 
                         var config = {
@@ -327,9 +377,7 @@ app.controller('addModifyDNSRecords', function($scope,$http) {
 
 
                 function ListInitialDatas(response) {
-
-
-                    if(response.data.fetchStatus == 1){
+                    if(response.data.fetchStatus === 1){
 
                         $scope.records = JSON.parse(response.data.data);
 
@@ -376,7 +424,6 @@ app.controller('addModifyDNSRecords', function($scope,$http) {
                 }
 
            };
-
 
 
            $scope.deleteRecord = function(id){
@@ -469,66 +516,6 @@ app.controller('addModifyDNSRecords', function($scope,$http) {
 
 
 
-           // MX Record Settings
-
-            $scope.detectType = function(){
-
-
-                if($scope.recordType=="MX")
-                {
-                    $scope.recordValueDefault = true;
-                    $scope.recordValueMX = false;
-                    $scope.recordValueAAAA = true;
-                    $scope.recordValueCNAME = true;
-                    $scope.recordValueSPF = true;
-                    $scope.recordValueTXT = true;
-                }
-                else if($scope.recordType=="A"){
-                    $scope.recordValueDefault = false;
-                    $scope.recordValueMX = true;
-                    $scope.recordValueAAAA = true;
-                    $scope.recordValueCNAME = true;
-                    $scope.recordValueSPF = true;
-                    $scope.recordValueTXT = true;
-                }
-                else if($scope.recordType=="AAAA"){
-                    $scope.recordValueDefault = true;
-                    $scope.recordValueMX = true;
-                    $scope.recordValueAAAA = false;
-                    $scope.recordValueCNAME = true;
-                    $scope.recordValueSPF = true;
-                    $scope.recordValueTXT = true;
-                }
-                else if($scope.recordType=="CNAME"){
-                    $scope.recordValueDefault = true;
-                    $scope.recordValueMX = true;
-                    $scope.recordValueAAAA = true;
-                    $scope.recordValueCNAME = false;
-                    $scope.recordValueSPF = true;
-                    $scope.recordValueTXT = true;
-                }
-                else if($scope.recordType=="SPF"){
-                    $scope.recordValueDefault = true;
-                    $scope.recordValueMX = true;
-                    $scope.recordValueAAAA = true;
-                    $scope.recordValueCNAME = true;
-                    $scope.recordValueSPF = false;
-                    $scope.recordValueTXT = true;
-                }
-                else if($scope.recordType=="TXT"){
-                    $scope.recordValueDefault = true;
-                    $scope.recordValueMX = true;
-                    $scope.recordValueAAAA = true;
-                    $scope.recordValueCNAME = true;
-                    $scope.recordValueSPF = true;
-                    $scope.recordValueTXT = false;
-                }
-
-
-            };
-
-
-
 });
 
 /* Java script code to delete DNS Zone */
@@ -549,7 +536,7 @@ app.controller('deleteDNSZone', function($scope,$http) {
                     $scope.deleteZoneButton = false;
                     $scope.deleteFailure = true;
                     $scope.deleteSuccess = true;
-                }
+                };
 
                 $scope.deleteZoneFinal = function(){
 
