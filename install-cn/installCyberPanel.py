@@ -8,7 +8,10 @@ import shlex
 import randomPassword
 import time
 import sys
+import platform
 
+system=platform.dist()[0]
+version=float(platform.dist()[1])
 
 class InstallCyberPanel:
 
@@ -299,8 +302,16 @@ class InstallCyberPanel:
             logging.InstallLog.writeToFile("Setting up MariaDB Repo..")
             InstallCyberPanel.stdOut("Setting up MariaDB Repo..")
 
-            os.chdir(self.cwd)
-            shutil.copy("mysql/MariaDB.repo","/etc/yum.repos.d/MariaDB.repo")
+            if version >= 7:
+                os.chdir(self.cwd)
+                shutil.copy("mysql/MariaDB7.repo","/etc/yum.repos.d/MariaDB.repo")
+            elif version >= 6:
+                if platform.machine() == 'x86_64':
+                    os.chdir(self.cwd)
+                    shutil.copy("mysql/MariaDB6x86_64.repo","/etc/yum.repos.d/MariaDB.repo")
+                elif platform.machine() == 'x86':
+                    os.chdir(self.cwd)
+                    shutil.copy("mysql/MariaDB6x86.repo","/etc/yum.repos.d/MariaDB.repo")
 
             logging.InstallLog.writeToFile("MariaDB repo set!")
             InstallCyberPanel.stdOut("MariaDB repo set!")
@@ -321,7 +332,7 @@ class InstallCyberPanel:
 
             while (1):
 
-                command = 'yum -y install mariadb-server'
+                command = "yum -y install mariadb-server && yum -y install -y mysql-devel "
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -343,7 +354,10 @@ class InstallCyberPanel:
             InstallCyberPanel.stdOut("Setting up MariaDB configurations!")
 
             pathConf = "/etc/my.cnf"
-            pathServiceFile = "/etc/systemd/system/mysqld@.service"
+            if version >= 7:
+                pathServiceFile = "/etc/systemd/system/mysqld@.service"
+            elif version >= 6:
+                pathServiceFile = "/etc/init.d/mysql1"
 
             if os.path.exists(pathConf):
                 os.remove(pathConf)
@@ -354,7 +368,12 @@ class InstallCyberPanel:
             os.chdir(self.cwd)
 
             shutil.copy("mysql/my.cnf",pathConf)
-            shutil.copy("mysql/mysqld@.service",pathServiceFile)
+            if version >= 7:
+                shutil.copy("mysql/mysqld@.service",pathServiceFile)
+            elif version >= 6:
+                shutil.copy("mysql/mysqld_multi.server",pathServiceFile)
+                command = "chmod +x /etc/init.d/mysql1"
+                res = subprocess.call(shlex.split(command))
 
             logging.InstallLog.writeToFile("MariaDB configurations set!")
             InstallCyberPanel.stdOut("MariaDB configurations set!")
@@ -385,7 +404,10 @@ class InstallCyberPanel:
             count = 0
 
             while(1):
-                command = "systemctl start mysqld@1"
+                if version >= 7:
+                    command = "systemctl start mysqld@1"
+                elif version >= 6:
+                    command = "mysqld_multi start 1"
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -404,7 +426,10 @@ class InstallCyberPanel:
             count = 0
 
             while(1):
-                command = "systemctl enable mysqld@1"
+                if version >= 7:
+                    command = "systemctl enable mysqld@1"
+                elif version >= 6:
+                    command = "chkconfig --add mysql1"
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -440,7 +465,10 @@ class InstallCyberPanel:
 
             while(1):
 
-                command = "systemctl enable mysql"
+                if version >= 7:
+                    command = "systemctl enable mysqld"
+                elif version >= 6:
+                    command = "chkconfig --add mysql"
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -559,7 +587,10 @@ class InstallCyberPanel:
             count = 0
 
             while(1):
-                command = "systemctl start mysql"
+                if version >= 7:
+                    command = "systemctl start mysql"
+                elif version >= 6:
+                    command = "service mysql start"
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -611,7 +642,10 @@ class InstallCyberPanel:
 
             while(1):
 
-                command = "systemctl enable pure-ftpd"
+                if version >= 7:
+                    command = "systemctl enable pure-ftpd"
+                elif version >= 6:
+                    command = "chkconfig --add pure-ftpd"
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -709,9 +743,14 @@ class InstallCyberPanel:
             while(1):
                 cmd = []
 
-                cmd.append("systemctl")
-                cmd.append("start")
-                cmd.append("pure-ftpd")
+                if version >= 7:
+                    cmd.append("systemctl")
+                    cmd.append("start")
+                    cmd.append("pure-ftpd")
+                elif version >= 6:
+                    cmd.append("service")
+                    cmd.append("pure-ftpd")
+                    cmd.append("start")
 
                 res = subprocess.call(cmd)
 
@@ -826,10 +865,14 @@ class InstallCyberPanel:
             count = 0
 
             while(1):
+            
 
-                command = 'curl -o /etc/yum.repos.d/powerdns-auth-master.repo https://mirror.cyberpanel.net/powerdns/powerdns.repo'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+                if version >= 7:
+                    command = 'curl -o /etc/yum.repos.d/powerdns-auth-master.repo https://mirror.cyberpanel.net/powerdns/powerdns.repo'
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
+                elif version >= 6:
+                    res = 0
 
                 if res == 1:
                     count = count + 1
@@ -924,9 +967,14 @@ class InstallCyberPanel:
 
                 cmd = []
 
-                cmd.append("systemctl")
-                cmd.append("enable")
-                cmd.append("pdns")
+                if version >= 7:
+                    cmd.append("systemctl")
+                    cmd.append("enable")
+                    cmd.append("pdns")
+                elif version >= 6:
+                    cmd.append("chkconfig")
+                    cmd.append("--add")
+                    cmd.append("pdns")
 
                 res = subprocess.call(cmd)
 
@@ -945,7 +993,10 @@ class InstallCyberPanel:
             count = 1
 
             while(1):
-                command = 'systemctl start pdns'
+                if version >= 7:
+                    command = 'systemctl start pdns'
+                elif version >= 6:
+                    command = 'service pdns start'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -1148,7 +1199,6 @@ def Main(cwd):
     InstallCyberPanel.mysqlPassword = randomPassword.generate_pass()
 
     InstallCyberPanel.mysql_Root_password = randomPassword.generate_pass()
-
 
     password = open("/etc/cyberpanel/mysqlPassword","w")
     password.writelines(InstallCyberPanel.mysql_Root_password)

@@ -7,6 +7,7 @@ import os
 import shlex
 from firewallUtilities import FirewallUtilities
 import time
+import platform
 
 
 
@@ -132,8 +133,8 @@ class preFlightsChecks:
             writeToFile = open(path, 'w')
 
             for items in data:
-                if items.find("wheel	ALL=(ALL)	NOPASSWD: ALL") > -1:
-                    writeToFile.writelines("%wheel	ALL=(ALL)	NOPASSWD: ALL")
+                if items.find("wheel    ALL=(ALL)   NOPASSWD: ALL") > -1:
+                    writeToFile.writelines("%wheel  ALL=(ALL)   NOPASSWD: ALL")
                 else:
                     writeToFile.writelines(items)
 
@@ -145,10 +146,12 @@ class preFlightsChecks:
 
             while (1):
 
+                pathLetsEncrypt = "/etc/letsencrypt"
+                if os.path.exists(pathLetsEncrypt):
+                    os.remove(pathLetsEncrypt)
+
                 command = "mkdir /etc/letsencrypt"
-
                 cmd = shlex.split(command)
-
                 res = subprocess.call(cmd)
 
                 if res == 1:
@@ -203,9 +206,15 @@ class preFlightsChecks:
         count = 0
 
         while(1):
-            command = 'curl -o /etc/yum.repos.d/litespeed.repo https://'+preFlightsChecks.cyberPanelMirror+'/litespeed/litespeed.repo'
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            if version >= 7:
+                command = 'curl -o /etc/yum.repos.d/litespeed.repo https://'+preFlightsChecks.cyberPanelMirror+'/litespeed/litespeed.repo'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+            elif version >= 6:
+                cmd.append("rpm")
+                cmd.append("-ivh")
+                cmd.append("http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el6.noarch.rpm")
+                res = subprocess.call(cmd)
 
             if res == 1:
                 count = count + 1
@@ -221,16 +230,30 @@ class preFlightsChecks:
 
     def enableEPELRepo(self):
         try:
+
+            command = "yum autoremove epel-release -y || yum remove epel-release"
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+            command = "rm -f /etc/yum.repos.d/epel*"
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+
             cmd = []
 
             count = 0
 
             while (1):
-                cmd.append("yum")
-                cmd.append("-y")
-                cmd.append("install")
-                cmd.append("epel-release")
-                res = subprocess.call(cmd)
+                if version >= 7:
+                    cmd.append("yum")
+                    cmd.append("-y")
+                    cmd.append("install")
+                    cmd.append("epel-release")
+                    res = subprocess.call(cmd)
+                elif version >= 6:
+                    cmd.append("rpm")
+                    cmd.append("-ivh")
+                    cmd.append("https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm")
+                    res = subprocess.call(cmd)
 
                 if res == 1:
                     count = count + 1
@@ -256,7 +279,10 @@ class preFlightsChecks:
         count = 0
 
         while (1):
-            command = "yum -y install python-pip"
+            if os.path.exists("/usr/local/bin/pip") or os.path.exists("/usr/bin/pip"):
+                break
+
+            command = '''yum -y install python-pip || (yum install groupinstall "Development Tools" -y && yum install python-devel python-setuptools -y && easy_install pip)'''
             res = subprocess.call(shlex.split(command))
 
             if res == 1:
@@ -498,8 +524,11 @@ class preFlightsChecks:
     def install_python_mysql_library(self):
         count = 0
         while (1):
-            command = "yum -y install MySQL-python"
+            command = "yum -y install MySQL-python mysql-devel"
             res = subprocess.call(shlex.split(command))
+            if res != 1:
+                command = "pip install mysql-python"
+                res = subprocess.call(shlex.split(command))
             if res == 1:
                 count = count + 1
                 preFlightsChecks.stdOut("Unable to install MySQL-python, trying again, try number: " + str(count))
@@ -538,14 +567,18 @@ class preFlightsChecks:
 
             logging.InstallLog.writeToFile("Configuring Gunicorn..")
 
-            service = "/etc/systemd/system/gunicorn.service"
-            socket = "/etc/systemd/system/gunicorn.socket"
-            conf = "/etc/tmpfiles.d/gunicorn.conf"
-
-
-            shutil.copy("gun-configs/gunicorn.service",service)
-            shutil.copy("gun-configs/gunicorn.socket",socket)
-            shutil.copy("gun-configs/gunicorn.conf", conf)
+            if version >= 7:
+                service = "/etc/systemd/system/gunicorn.service"
+                socket = "/etc/systemd/system/gunicorn.socket"
+                conf = "/etc/tmpfiles.d/gunicorn.conf"
+                shutil.copy("gun-configs/gunicorn.service",service)
+                shutil.copy("gun-configs/gunicorn.socket",socket)
+                shutil.copy("gun-configs/gunicorn.conf", conf)
+            elif version >= 6:
+                service = "/etc/init.d/gunicorn"
+                shutil.copy("gun-configs/gunicorn",service)
+                command = "chmod +x /etc/init.d/gunicorn"
+                res = subprocess.call(shlex.split(command))
 
             logging.InstallLog.writeToFile("Gunicorn Configured!")
 
@@ -554,7 +587,11 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-                command = "systemctl enable gunicorn.socket"
+            
+                if version >= 7:
+                    command = "systemctl enable gunicorn.socket"
+                elif version >= 6:
+                    command = "chkconfig --add gunicorn"
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -574,7 +611,10 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-                command = "systemctl start gunicorn.socket"
+                if version >= 7:
+                    command = "systemctl start gunicorn.socket"
+                elif version >= 6:
+                    command = "service gunicorn start"
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -1611,7 +1651,10 @@ class preFlightsChecks:
 
            while(1):
 
-               command = 'systemctl enable postfix.service'
+               if version >= 7:
+                    command = "systemctl enable postfix.service"
+               elif version >= 6:
+                    command = "chkconfig --add postfix"
 
                cmd = shlex.split(command)
 
@@ -1634,7 +1677,10 @@ class preFlightsChecks:
 
            while(1):
 
-               command = 'systemctl start  postfix.service'
+               if version >= 7:
+                    command = "systemctl start postfix.service"
+               elif version >= 6:
+                    command = "service postfix start"
 
                cmd = shlex.split(command)
 
@@ -1704,8 +1750,10 @@ class preFlightsChecks:
 
            while(1):
 
-               command = 'systemctl enable dovecot.service'
-
+               if version >= 7:
+                    command = "systemctl enable dovecot.service"
+               elif version >= 6:
+                    command = "chkconfig --add dovecot"
                cmd = shlex.split(command)
 
                res = subprocess.call(cmd)
@@ -1729,7 +1777,10 @@ class preFlightsChecks:
 
 
            while(1):
-               command = 'systemctl start dovecot.service'
+               if version >= 7:
+                    command = "systemctl start dovecot.service"
+               elif version >= 6:
+                    command = "service dovecot start"
                cmd = shlex.split(command)
                res = subprocess.call(cmd)
 
@@ -1990,7 +2041,10 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-                command = 'yum -y install firewalld'
+                if version >= 7:
+                    command = "yum -y install firewalld"
+                elif version >= 6:
+                    command = "yum -y install iptables"
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -2010,15 +2064,18 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-                command = 'systemctl start firewalld'
+                if version >= 7:
+                    command = "systemctl start firewalld"
+                elif version >= 6:
+                    command = "service iptables start"
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
                 if res == 1:
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to start FirewallD, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut("Unable to start Firewall, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to start FirewallD, you can manually start it later using systemctl start firewalld! [installFirewalld]")
+                        logging.InstallLog.writeToFile("Unable to start Firewall, you can manually start it later using systemctl start firewalld! [installFirewalld]")
                         break
                 else:
                     logging.InstallLog.writeToFile("FirewallD successfully started!")
@@ -2032,7 +2089,10 @@ class preFlightsChecks:
 
             while(1):
 
-                command = 'systemctl enable firewalld'
+                if version >= 7:
+                    command = "systemctl enable firewalld"
+                elif version >= 6:
+                    command = "chkconfig --add iptables"
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -2048,19 +2108,31 @@ class preFlightsChecks:
                     break
 
 
-            FirewallUtilities.addRule("tcp","8090")
-            FirewallUtilities.addRule("tcp", "80")
-            FirewallUtilities.addRule("tcp", "443")
-            FirewallUtilities.addRule("tcp", "21")
-            FirewallUtilities.addRule("tcp", "25")
-            FirewallUtilities.addRule("tcp", "587")
-            FirewallUtilities.addRule("tcp", "465")
-            FirewallUtilities.addRule("tcp", "110")
-            FirewallUtilities.addRule("tcp", "143")
-            FirewallUtilities.addRule("tcp", "993")
-            FirewallUtilities.addRule("udp", "53")
-            FirewallUtilities.addRule("tcp", "53")
-            FirewallUtilities.addRule("tcp", "40110-40210")
+            if version >= 7:
+                FirewallUtilities.addRule("tcp","8090")
+                FirewallUtilities.addRule("tcp", "80")
+                FirewallUtilities.addRule("tcp", "443")
+                FirewallUtilities.addRule("tcp", "21")
+                FirewallUtilities.addRule("tcp", "25")
+                FirewallUtilities.addRule("tcp", "587")
+                FirewallUtilities.addRule("tcp", "465")
+                FirewallUtilities.addRule("tcp", "110")
+                FirewallUtilities.addRule("tcp", "143")
+                FirewallUtilities.addRule("tcp", "993")
+                FirewallUtilities.addRule("udp", "53")
+                FirewallUtilities.addRule("tcp", "53")
+                FirewallUtilities.addRule("tcp", "40110-40210")
+            elif version >= 6:
+                command = "iptables -I INPUT -p tcp --dport 8090,80,443,21,25,587,465,110,143,993,53 -j ACCEPT"
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+                command = "iptables -I INPUT -p udp --dport 53 -j ACCEPT"
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+                command = "iptables -I INPUT -p udp --dport 40110:40210 -j ACCEPT"
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
 
             logging.InstallLog.writeToFile("FirewallD installed and configured!")
             preFlightsChecks.stdOut("FirewallD installed and configured!")
@@ -2085,7 +2157,12 @@ class preFlightsChecks:
 
             os.chdir(self.cwd)
 
-            shutil.copy("lscpd/lscpd.service","/etc/systemd/system/lscpd.service")
+            if version >= 7:
+                shutil.copy("lscpd/lscpd.service","/etc/systemd/system/lscpd.service")
+            elif version >= 6:
+                shutil.copy("lscpd/lscpd6.service","/etc/init.d/lscpd")
+                command = "chmod +x /etc/init.d/lscpd"
+                res = subprocess.call(shlex.split(command))
             shutil.copy("lscpd/lscpdctrl","/usr/local/lscp/bin/lscpdctrl")
 
             ##
@@ -2117,7 +2194,10 @@ class preFlightsChecks:
 
             while(1):
 
-                command = 'systemctl enable lscpd.service'
+                if version >= 7:
+                    command = 'systemctl enable lscpd.service'
+                elif version >= 6:
+                    command = 'chkconfig --add lscpd && chmod +x /etc/init.d/lscpd'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -2138,7 +2218,10 @@ class preFlightsChecks:
 
             while(1):
 
-                command = 'systemctl start lscpd'
+                if version >= 7:
+                    command = 'systemctl start lscpd'
+                elif version >= 6:
+                    command = 'service lscpd start'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -2200,7 +2283,10 @@ class preFlightsChecks:
 
             while(1):
 
-                command = 'systemctl enable crond'
+                if version >= 7:
+                    command = 'systemctl enable crond'
+                elif version >= 6:
+                    command = 'chkconfig --add crond'
 
                 cmd = shlex.split(command)
 
@@ -2221,7 +2307,10 @@ class preFlightsChecks:
 
             while(1):
 
-                command = 'systemctl start crond'
+                if version >= 7:
+                    command = 'systemctl start crond'
+                elif version >= 6:
+                    command = 'service crond start'
 
                 cmd = shlex.split(command)
 
@@ -2259,7 +2348,10 @@ class preFlightsChecks:
 
             while(1):
 
-                command = 'systemctl restart crond.service'
+                if version >= 7:
+                    command = 'systemctl restart crond'
+                elif version >= 6:
+                    command = 'service crond restart'
 
                 cmd = shlex.split(command)
 
@@ -2492,6 +2584,9 @@ def main():
 
     ## Writing public IP
 
+    pathCyberPanel = "/etc/cyberpanel"
+    if os.path.exists(pathCyberPanel):
+        os.remove(pathCyberPanel)
     os.mkdir("/etc/cyberpanel")
 
     machineIP = open("/etc/cyberpanel/machineIP", "w")
@@ -2510,8 +2605,8 @@ def main():
     checks.checkPythonVersion()
     checks.setup_account_cyberpanel()
     checks.yum_update()
-    checks.installCyberPanelRepo()
     checks.enableEPELRepo()
+    checks.installCyberPanelRepo()
     checks.install_pip()
     checks.install_python_dev()
     checks.install_gcc()
@@ -2558,4 +2653,6 @@ def main():
 
 
 if __name__ == "__main__":
+    system=platform.dist()[0]
+    version=float(platform.dist()[1])
     main()
