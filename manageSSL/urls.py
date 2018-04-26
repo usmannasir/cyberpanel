@@ -9,5 +9,8 @@ urlpatterns = [
     url(r'^issueSSL', views.issueSSL, name='issueSSL'),
 
     url(r'^sslForHostName', views.sslForHostName, name='sslForHostName'),
-    url(r'^obtainHostNameSSL', views.obtainHostNameSSL, name='obtainHostNameSSL'),
+    url(r'^obtainHostNameSSL$', views.obtainHostNameSSL, name='obtainHostNameSSL'),
+
+    url(r'^sslForMailServer', views.sslForMailServer, name='sslForMailServer'),
+    url(r'^obtainMailServerSSL', views.obtainMailServerSSL, name='obtainMailServerSSL'),
 ]
