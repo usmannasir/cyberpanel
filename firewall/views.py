@@ -641,12 +641,17 @@ def loadModSecurityHome(request):
         if admin.type == 3:
             return HttpResponse("You don't have enough privileges to access this page.")
 
-        modSecPath = os.path.join(virtualHostUtilities.Server_root,'modules','mod_security.so')
+        confPath = os.path.join(virtualHostUtilities.Server_root,"conf/httpd_config.conf")
+
+        command = "sudo cat " + confPath
+        httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
 
         modSecInstalled = 0
 
-        if os.path.exists(modSecPath):
-            modSecInstalled = 1
+        for items in httpdConfig:
+            if items.find('module mod_security') > -1:
+                modSecInstalled = 1
+                break
 
         return render(request,'firewall/modSecurity.html', {'modSecInstalled': modSecInstalled})
     except KeyError:
@@ -921,12 +926,17 @@ def modSecRules(request):
         if admin.type == 3:
             return HttpResponse("You don't have enough privileges to access this page.")
 
-        modSecPath = os.path.join(virtualHostUtilities.Server_root,'modules','mod_security.so')
+        confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+
+        command = "sudo cat " + confPath
+        httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
 
         modSecInstalled = 0
 
-        if os.path.exists(modSecPath):
-            modSecInstalled = 1
+        for items in httpdConfig:
+            if items.find('module mod_security') > -1:
+                modSecInstalled = 1
+                break
 
         return render(request, 'firewall/modSecurityRules.html',{'modSecInstalled': modSecInstalled})
 
@@ -943,12 +953,22 @@ def fetchModSecRules(request):
         if admin.type == 3:
             return HttpResponse("You don't have enough privileges to access this page.")
 
-        modSecPath = os.path.join(virtualHostUtilities.Server_root,'modules','mod_security.so')
+        confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+
+        command = "sudo cat " + confPath
+        httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+
+        modSecInstalled = 0
+
+        for items in httpdConfig:
+            if items.find('module mod_security') > -1:
+                modSecInstalled = 1
+                break
 
 
         rulesPath = os.path.join(virtualHostUtilities.Server_root + "/conf/modsec/rules.conf")
 
-        if os.path.exists(modSecPath):
+        if modSecInstalled:
             command = "sudo cat " + rulesPath
             currentModSecRules = subprocess.check_output(shlex.split(command))
 
@@ -1024,12 +1044,17 @@ def modSecRulesPacks(request):
         if admin.type == 3:
             return HttpResponse("You don't have enough privileges to access this page.")
 
-        modSecPath = os.path.join(virtualHostUtilities.Server_root,'modules','mod_security.so')
+        confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+
+        command = "sudo cat " + confPath
+        httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
 
         modSecInstalled = 0
 
-        if os.path.exists(modSecPath):
-            modSecInstalled = 1
+        for items in httpdConfig:
+            if items.find('module mod_security') > -1:
+                modSecInstalled = 1
+                break
 
         return render(request, 'firewall/modSecurityRulesPacks.html',{'modSecInstalled': modSecInstalled})
 
@@ -1047,13 +1072,24 @@ def getOWASPAndComodoStatus(request):
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-        modSecPath = os.path.join(virtualHostUtilities.Server_root,'modules','mod_security.so')
         confPath = os.path.join(virtualHostUtilities.Server_root, 'conf/httpd_config.conf')
+
+        confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+
+        command = "sudo cat " + confPath
+        httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+
+        modSecInstalled = 0
+
+        for items in httpdConfig:
+            if items.find('module mod_security') > -1:
+                modSecInstalled = 1
+                break
 
         comodoInstalled = 0
         owaspInstalled = 0
 
-        if os.path.exists(modSecPath):
+        if modSecInstalled:
             command = "sudo cat " + confPath
             httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
 

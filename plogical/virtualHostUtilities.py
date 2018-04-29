@@ -1586,6 +1586,141 @@ def issueSSLForHostName(virtualHost,path):
             str(msg) + "  [issueSSLForHostName]")
         print "0,"+str(msg)
 
+def issueSSLForMailServer(virtualHost,path):
+    try:
+
+        FNULL = open(os.devnull, 'w')
+
+        srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
+        srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
+
+        pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHost
+
+        pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
+        pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
+
+
+        ## removing old certs
+
+        if os.path.exists(pathToStoreSSLPrivKey):
+            os.remove(pathToStoreSSLPrivKey)
+        if os.path.exists(pathToStoreSSLFullChain):
+            os.remove(pathToStoreSSLFullChain)
+
+
+        adminEmail = "email@" + virtualHost
+
+        if not (os.path.exists(srcPrivKey) and os.path.exists(srcFullChain)):
+
+            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
+
+            if retValues[0] == 0:
+                print "0," + str(retValues[1])
+                return
+
+
+        else:
+            ###### Copy SSL To config location ######
+
+            try:
+                os.mkdir(pathToStoreSSL)
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Directory for SSL already exists.. Continuing [issueSSLForHostName]]")
+
+            srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
+            srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
+
+            shutil.copy(srcPrivKey, pathToStoreSSLPrivKey)
+            shutil.copy(srcFullChain, pathToStoreSSLFullChain)
+
+
+        ## MailServer specific functions
+
+        if os.path.exists("/etc/postfix/cert.pem"):
+            os.remove("/etc/postfix/cert.pem")
+
+        if os.path.exists("/etc/postfix/key.pem"):
+            os.remove("/etc/postfix/key.pem")
+
+        if os.path.exists("/etc/pki/dovecot/private/dovecot.pem"):
+            os.remove("/etc/pki/dovecot/private/dovecot.pem")
+
+        if os.path.exists("/etc/pki/dovecot/certs/dovecot.pem"):
+            os.remove("/etc/pki/dovecot/certs/dovecot.pem")
+
+        if os.path.exists("/etc/dovecot/key.pem"):
+            os.remove("/etc/dovecot/key.pem")
+
+        if os.path.exists("/etc/dovecot/cert.pem"):
+            os.remove("/etc/dovecot/cert.pem")
+
+
+        ## Postfix
+
+        shutil.copy(srcPrivKey, "/etc/postfix/key.pem")
+        shutil.copy(srcFullChain, "/etc/postfix/cert.pem")
+
+        ## Dovecot
+
+        shutil.copy(srcPrivKey, "/etc/pki/dovecot/private/dovecot.pem")
+        shutil.copy(srcFullChain, "/etc/pki/dovecot/certs/dovecot.pem")
+
+        ## Dovecot 2ND
+
+        shutil.copy(srcPrivKey, "/etc/dovecot/key.pem")
+        shutil.copy(srcFullChain, "/etc/dovecot/cert.pem")
+
+
+        vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
+        command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
+        cmd = shlex.split(command)
+        subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+        ## Update postmaster address dovecot
+
+        filePath = "/etc/dovecot/dovecot.conf"
+
+        data = open(filePath,'r').readlines()
+
+        writeFile = open(filePath,'w')
+
+        for items in data:
+            if items.find('postmaster_address') > -1:
+                writeFile.writelines('    postmaster_address = postmaster@' + virtualHost + '\n')
+            else:
+                writeFile.writelines(items)
+
+        writeFile.close()
+
+        ## Update myhostname address postfix
+
+        filePath = "/etc/postfix/main.cf"
+
+        data = open(filePath, 'r').readlines()
+
+        writeFile = open(filePath, 'w')
+
+        for items in data:
+            if items.find('myhostname') > -1:
+                writeFile.writelines('myhostname = ' + virtualHost + '\n')
+            else:
+                writeFile.writelines(items)
+
+        writeFile.close()
+
+        command = 'systemctl restart postfix'
+        subprocess.call(shlex.split(command))
+
+        command = 'systemctl restart dovecot'
+        subprocess.call(shlex.split(command))
+
+        print "1,None"
+
+    except BaseException,msg:
+        logging.CyberCPLogFileWriter.writeToFile(
+            str(msg) + "  [issueSSLForHostName]")
+        print "0,"+str(msg)
+
 
 
 def saveSSL(virtualHost,pathToStoreSSL,keyPath,certPath,sslCheck):
@@ -1702,6 +1837,8 @@ def main():
         installJoomla(args.virtualHostName,args.path,args.virtualHostUser,args.dbName,args.dbUser,args.dbPassword,args.username,args.password,args.prefix,args.sitename)
     elif args.function == "issueSSLForHostName":
         issueSSLForHostName(args.virtualHostName,args.path)
+    elif args.function == "issueSSLForMailServer":
+        issueSSLForMailServer(args.virtualHostName,args.path)
     elif args.function == "findDomainBW":
         virtualHostUtilities.findDomainBW(args.virtualHostName, int(args.bandwidth))
 

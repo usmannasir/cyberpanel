@@ -4,12 +4,6 @@ import CyberCPLogFileWriter as logging
 import subprocess
 import argparse
 import shlex
-import installUtilities
-from random import randint
-import sslUtilities
-from os.path import join
-from os import listdir, rmdir
-from shutil import move
 
 
 class mailUtilities:

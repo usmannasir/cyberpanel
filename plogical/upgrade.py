@@ -1,117 +1,101 @@
-import time
 import thread
 import tarfile
 import os
 import shlex
 import subprocess
-from shutil import rmtree
+import shutil
 import requests
+import json
 import platform
 
 system=platform.dist()[0]
 version=float(platform.dist()[1])
 
+
 class Upgrade:
     logPath = "/usr/local/lscp/logs/upgradeLog"
 
     @staticmethod
-    def upgrade(currentVersion,currentBuild):
-
-        upgradeLog = open(Upgrade.logPath,"w")
-
-        if os.path.exists("/usr/local/CyberCP.tar.gz"):
-            path = "/usr/local/CyberCP.tar.gz"
-            command = 'wget http://cyberpanel.net/CyberCP.tar.gz'
-            tarOpen = "CyberCP.tar.gz"
-        else:
-            path = "/usr/local/CyberPanel.1.4.tar.gz"
-            command = 'wget http://cyberpanel.net/CyberPanel.1.4.tar.gz'
-            tarOpen = "CyberPanel.1.4.tar.gz"
+    def downloadLink():
+        url = "https://cyberpanel.net/version.txt"
+        r = requests.get(url, verify=True)
+        data = json.loads(r.text)
+        version_number = str(data['version'])
+        version_build = str(data['build'])
+        return (version_number + "." + version_build + ".tar.gz")
 
 
 
-        settings = "/usr/local/CyberCP/CyberCP/settings.py"
+    @staticmethod
+    def upgrade():
 
-        try:
-            data = open(settings,'r').readlines()
-        except:
-            pass
+        os.chdir("/usr/local")
 
-        if os.path.exists(path):
-            os.remove(path)
+        versionNumbring = Upgrade.downloadLink()
 
-        if os.path.exists("/usr/local/CyberCP"):
-            rmtree("/usr/local/CyberCP")
+        ## Download latest version.
 
-        ## Downloading CyberCP
+        command = "wget https://cyberpanel.net/CyberPanel." + versionNumbring
+        subprocess.call(shlex.split(command))
 
-        upgradeLog.writelines("Started download for latest Version.. \n")
+        ## Backup settings file.
+
+        shutil.copy("/usr/local/CyberCP/CyberCP/settings.py","/usr/local/settings.py")
+
+        ## Remove Core Files
+
+        command = "rm -rf /usr/local/CyberCP"
+        subprocess.call(shlex.split(command))
+
+        ## Extract Latest files
+
+        command = "tar zxf CyberPanel." + versionNumbring
+        subprocess.call(shlex.split(command))
+
+        ## Copy settings file
+
+        shutil.copy("/usr/local/settings.py", "/usr/local/CyberCP/CyberCP/")
+
+        ## Move static files
+
+        command = "rm -rf /usr/local/lscp/cyberpanel/static"
+        subprocess.call(shlex.split(command))
+
+        command = "mv /usr/local/CyberCP/static /usr/local/lscp/cyberpanel"
+        subprocess.call(shlex.split(command))
+
+        ## Copy File manager files
+
+        command = "rm -rf /usr/local/lsws/Example/html/FileManager"
+        subprocess.call(shlex.split(command))
+
+        command = "mv /usr/local/CyberCP/install/FileManager /usr/local/lsws/Example/html"
+        subprocess.call(shlex.split(command))
 
 
-        cmd = shlex.split(command)
+        ## Install TLDExtract
 
-        res = subprocess.call(cmd)
+        command = "pip install tldextract"
+        subprocess.call(shlex.split(command))
 
+        ## Change File manager permissions
 
-        ## Extracting latest version
+        command = "chmod -R 777 /usr/local/lsws/Example/html/FileManager"
+        subprocess.call(shlex.split(command))
 
-
-        upgradeLog.writelines("Extracting Latest version.. \n")
-
-        tar = tarfile.open(tarOpen)
-        tar.extractall("/usr/local")
-        tar.close()
-
-        if os.path.exists("/usr/local/lscp/cyberpanel/static"):
-            rmtree("/usr/local/lscp/cyberpanel/static")
-
-        command = 'mv /usr/local/CyberCP/static /usr/local/lscp/cyberpanel'
-
-        cmd = shlex.split(command)
-
-        res = subprocess.call(cmd)
-
-
-        ## Adjusting settings
-
-        try:
-            upgradeLog.writelines("Fixing Settings.. \n")
-
-            writeToFile = open(settings,'w')
-
-            for items in data:
-                writeToFile.writelines(items)
-
-            writeToFile.close()
-        except:
-            pass
+        ## Restart Gunicorn
 
         if version >= 7:
             command = "sudo systemctl restart gunicorn.socket"
         elif version >= 6:
             command = "sudo service gunicorn restart"
+        subprocess.call(shlex.split(command))
 
-        cmd = shlex.split(command)
-
-        res = subprocess.call(cmd)
-
-
-        upgradeLog.writelines("Upgrade Completed")
-
+        ## Upgrade version
 
         r = requests.post("http://localhost:5003/base/upgradeVersion")
-
-        upgradeLog.writelines(r.text+"\n")
-
-        upgradeLog.close()
-
-
 
 
         print("Upgrade Completed.")
 
-    @staticmethod
-    def initiateUpgrade(currentVersion,currentBuild):
-        thread.start_new_thread(Upgrade.upgrade, (currentVersion, currentBuild))
-
-Upgrade.upgrade("1","1")
+Upgrade.upgrade()

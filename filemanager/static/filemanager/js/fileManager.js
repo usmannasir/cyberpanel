@@ -15,6 +15,7 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
     var aceEditorMode = '';
 
     var domainName = window.location.pathname.split("/")[2];
+    var domainRandomSeed = "";
 
     var homePathBack = "/home/"+domainName;
     $scope.currentPath = "/home/"+domainName;
@@ -67,7 +68,9 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
 
         var data = {
             completeStartingPath : completePath,
-            method : "list"
+            method : "list",
+            domainRandomSeed:domainRandomSeed,
+            domainName: domainName
         };
 
 
@@ -117,7 +120,6 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
     function finalPrepration(parentNode, path,completePath,dropDown){
         parentNode.appendChild(prepareChildNodeLI(path,completePath,dropDown));
     }
-
 
     function prepareChildNodeLI(path,completePath,dropDown){
 
@@ -364,6 +366,8 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
         var permissionsNode = document.createTextNode(permissions);
 
 
+
+
         //
 
 
@@ -598,6 +602,8 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
 
     // table functions
 
+
+
     $scope.fetchForTableSecondary = function(node,functionName) {
 
         allFilesAndFolders = [];
@@ -632,7 +638,9 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
         var data = {
             completeStartingPath : completePathToFile,
             method : "listForTable",
-            home: homePathBack
+            home: homePathBack,
+            domainRandomSeed:domainRandomSeed,
+            domainName: domainName
         };
 
         var tableBody = document.getElementById("tableBodyFiles");
@@ -666,6 +674,11 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
                         var fileSize = filesData[keys[i]][3];
                         var permissions = filesData[keys[i]][4];
                         var dirCheck = filesData[keys[i]][5];
+                        console.log(fileName);
+                        if(fileName === "..filemanagerkey"){
+
+                                continue;
+                        }
                         tableBody.appendChild(createTR(fileName,fileSize,lastModified,permissions,dirCheck));
 
                     }
@@ -682,11 +695,50 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
         }
 
     };
-    $scope.fetchForTableSecondary(null,"startPoint");
 
     function findFileExtension(fileName){
         return (/[.]/.exec(fileName)) ? /[^.]+$/.exec(fileName) : undefined;
     }
+
+    // Create entry point for domain
+
+    function createEntryPoint(){
+
+        url = "/filemanager/createTemporaryFile";
+
+                var data = {
+                    domainName:domainName
+                };
+
+                var config = {};
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.createTemporaryFile === 1){
+                        domainRandomSeed = response.data.domainRandomSeed;
+                        $scope.fetchForTableSecondary(null,"startPoint");
+                    }
+                    else
+                    {
+                        var notification = alertify.notify(response.data.error_message, 'error', 10, function(){  console.log('dismissed'); });
+                    }
+                }
+                function cantLoadInitialDatas(response) {
+                        var notification = alertify.notify("Could not connec to server, refresh page.", 'error', 10, function(){  console.log('dismissed'); });
+                }
+
+
+
+
+
+
+    }
+    createEntryPoint();
+
+
 
 
     // html editor
@@ -698,7 +750,9 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
 
         var data = {
             fileName : completePathForFile,
-            method : "readFileContents"
+            method : "readFileContents",
+            domainRandomSeed:domainRandomSeed,
+            domainName: domainName
         };
 
 
@@ -738,7 +792,9 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
         var data = {
             fileName : completePathForFile,
             method : "writeFileContents",
-            fileContent: editor.getValue()
+            fileContent: editor.getValue(),
+            domainRandomSeed:domainRandomSeed,
+            domainName: domainName
         };
 
 
@@ -790,7 +846,13 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
 
     uploader.onAfterAddingFile = function(fileItem) {
         $scope.errorMessage = true;
-        fileItem.formData.push({"completePath":$scope.currentPath});
+        fileItem.formData.push(
+            {
+                "completePath":$scope.currentPath,
+                domainRandomSeed:domainRandomSeed,
+                domainName: domainName
+
+            });
     };
 
     // folder functions
@@ -823,6 +885,8 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
         var data = {
             folderName : completePathForFolder,
             method : "createNewFolder",
+            domainRandomSeed:domainRandomSeed,
+            domainName: domainName
         };
 
 
@@ -872,6 +936,8 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
         var data = {
             fileName : completePathForFile,
             method : "createNewFile",
+            domainRandomSeed:domainRandomSeed,
+            domainName: domainName
         };
 
 
@@ -914,6 +980,8 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
             path : $scope.currentPath,
             method : "deleteFolderOrFile",
             fileAndFolders: allFilesAndFolders,
+            domainRandomSeed:domainRandomSeed,
+            domainName: domainName
         };
 
 
@@ -962,7 +1030,9 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
             listOfFiles : allFilesAndFolders,
             compressedFileName: $scope.compressedFileName,
             compressionType: $scope.compressionType,
-            method: 'compress'
+            method: 'compress',
+            domainRandomSeed:domainRandomSeed,
+            domainName: domainName
         };
 
 
@@ -1017,7 +1087,9 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
             fileToExtract: completeFileToExtract,
             extractionType: extractionType,
             extractionLocation: $scope.extractionLocation,
-            method: 'extract'
+            method: 'extract',
+            domainRandomSeed:domainRandomSeed,
+            domainName: domainName
         };
 
 
@@ -1069,7 +1141,9 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
             basePath : $scope.currentPath,
             newPath : $scope.pathToMoveTo,
             fileAndFolders:allFilesAndFolders,
-            method: 'move'
+            method: 'move',
+            domainRandomSeed:domainRandomSeed,
+            domainName: domainName
         };
 
 
@@ -1120,7 +1194,9 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
             basePath : $scope.currentPath,
             newPath : $scope.pathToCopyTo,
             fileAndFolders:allFilesAndFolders,
-            method: 'copy'
+            method: 'copy',
+            domainRandomSeed:domainRandomSeed,
+            domainName: domainName
         };
 
 
@@ -1238,7 +1314,9 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
             basePath : $scope.currentPath,
             existingName: $scope.fileToRename,
             newFileName : $scope.newFileName,
-            method: 'rename'
+            method: 'rename',
+            domainRandomSeed:domainRandomSeed,
+            domainName: domainName
         };
 
 
@@ -1274,6 +1352,8 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
 
         var data = {
             domainName : domainName,
+            domainRandomSeed:domainRandomSeed,
+            domainName: domainName
         };
 
 
@@ -1305,7 +1385,9 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
         url = "/filemanager/downloadFile";
 
         var data = {
-            fileToDownload: $scope.currentPath + "/" + allFilesAndFolders[0]
+            fileToDownload: $scope.currentPath + "/" + allFilesAndFolders[0],
+            domainRandomSeed:domainRandomSeed,
+            domainName: domainName
         };
 
 

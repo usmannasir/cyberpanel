@@ -11,6 +11,25 @@ class fileManager
         $postdata = file_get_contents("php://input");
         $request = json_decode($postdata);
 
+        $pathToSeed = '/home/' . $request->domainName . '/..filemanagerkey';
+        $receivedSeed = $request->domainRandomSeed;
+
+        $myfile = fopen($pathToSeed, "r") or die("Unable to open file!");
+        $seed = fread($myfile,filesize($pathToSeed));
+        fclose($myfile);
+
+        if ($seed != $receivedSeed){
+
+            $json_data = array(
+                "error_message" => "You can not open filemanager for this domain.",
+                "copied" => 1,
+            );
+            $json = json_encode($json_data);
+            echo $json;
+            return;
+        }
+
+
         if (isset($request->method)) {
 
             switch ($request->method) {
@@ -84,7 +103,8 @@ class fileManager
                 if (is_dir($completePath) == true) {
                     array_push($tempDir, $dirFile);
                 } else {
-                    array_push($tempFiles, $dirFile);
+                        array_push($tempFiles, $dirFile);
+
                 }
             }
 
