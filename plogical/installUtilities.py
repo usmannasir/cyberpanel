@@ -6,6 +6,10 @@ import pexpect
 import os
 import thread
 import shlex
+import platform
+
+system=platform.dist()[0]
+version=float(platform.dist()[1])
 
 class installUtilities:
 
@@ -139,7 +143,10 @@ class installUtilities:
 
             FNULL = open(os.devnull, 'w')
 
-            command = "sudo systemctl restart lsws"
+            if version >= 7:
+                command = "sudo systemctl restart lsws"
+            elif version >= 6:
+                command = "sudo service lsws restart"
 
             cmd = shlex.split(command)
 
@@ -171,7 +178,10 @@ class installUtilities:
 
             FNULL = open(os.devnull, 'w')
 
-            command = "sudo systemctl restart lsws"
+            if version >= 7:
+                command = "sudo systemctl restart lsws"
+            elif version >= 6:
+                command = "sudo service lsws restart"
 
             cmd = shlex.split(command)
 
@@ -390,9 +400,14 @@ class installUtilities:
 
             cmd = []
 
-            cmd.append("systemctl")
-            cmd.append("start")
-            cmd.append("mariadb")
+            if version >= 7:
+                cmd.append("systemctl")
+                cmd.append("restart")
+                cmd.append("mariadb")
+            elif version >= 6:
+                cmd.append("service")
+                cmd.append("mysql")
+                cmd.append("restart")
 
             res = subprocess.call(cmd)
 
@@ -466,10 +481,14 @@ class installUtilities:
         try:
 
             cmd = []
-
-            cmd.append("systemctl")
-            cmd.append("enable")
-            cmd.append("mariadb")
+            if version >= 7:
+                cmd.append("systemctl")
+                cmd.append("enable")
+                cmd.append("mysql")
+            elif version >= 6:
+                cmd.append("chkconfig")
+                cmd.append("--add")
+                cmd.append("mysql")
 
             res = subprocess.call(cmd)
 

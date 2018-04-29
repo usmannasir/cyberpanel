@@ -12,6 +12,10 @@ from loginSystem.models import Administrator
 import psutil
 import shlex
 import socket
+import platform
+
+system=platform.dist()[0]
+version=float(platform.dist()[1])
 # Create your views here.
 
 
@@ -294,7 +298,10 @@ def servicesAction(request):
 
                 else:
 
-                    command = 'sudo systemctl %s %s' % (action, service)
+                    if version >= 7:
+                        command = 'sudo systemctl %s %s' % (action, service)
+                    elif version >= 6:
+                        command = 'sudo service %s %s' % (service, action)
                     cmd = shlex.split(command)
                     res = subprocess.call(cmd)
 

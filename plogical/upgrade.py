@@ -6,10 +6,13 @@ import shlex
 import subprocess
 from shutil import rmtree
 import requests
+import platform
+
+system=platform.dist()[0]
+version=float(platform.dist()[1])
 
 class Upgrade:
     logPath = "/usr/local/lscp/logs/upgradeLog"
-
 
     @staticmethod
     def upgrade(currentVersion,currentBuild):
@@ -83,7 +86,10 @@ class Upgrade:
         except:
             pass
 
-        command = 'systemctl restart gunicorn.socket'
+        if version >= 7:
+            command = "sudo systemctl restart gunicorn.socket"
+        elif version >= 6:
+            command = "sudo service gunicorn restart"
 
         cmd = shlex.split(command)
 

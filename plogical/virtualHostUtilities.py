@@ -11,12 +11,15 @@ from os.path import join
 from os import listdir, rmdir
 from shutil import move
 import randomPassword as randomPassword
+import platform
 
+system=platform.dist()[0]
+version=float(platform.dist()[1])
 
 class virtualHostUtilities:
 
     Server_root = "/usr/local/lsws"
-    cyberPanel = "/usr/local/CyberCP"
+    cyberPanel = "/usr/local/CyberCP" #/usr/local/lsws/conf/vhosts/host-rohos.tinycloud.tech
 
     @staticmethod
     def createDirectoryForVirtualHost(virtualHostName,administratorEmail,virtualHostUser, phpVersion):
@@ -91,10 +94,11 @@ class virtualHostUtilities:
 
         try:
             ## For configuration files permissions will be changed later globally.
+            print confPath
             os.makedirs(confPath)
         except OSError,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [45 Not able to directories for virtual host [createDirectoryForVirtualHost]]")
-            return [0, "[45 Not able to directories for virtual host [createDirectoryForVirtualHost]]"]
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [45 Not able to directories for virtual host (unable to create confPath) [createDirectoryForVirtualHost]]")
+            return [0, "[45 Not able to directories for virtual host (unable to create confPath) [createDirectoryForVirtualHost]]"]
 
 
 
@@ -107,8 +111,8 @@ class virtualHostUtilities:
             subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
 
         except IOError,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForVirtualHost]]")
-            return [0, "[45 Not able to directories for virtual host [createDirectoryForVirtualHost]]"]
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "(unable to change owner) [createDirectoryForVirtualHost]]")
+            return [0, "[45 Not able to directories for virtual host (unable to change owner) [createDirectoryForVirtualHost]]"]
 
 
         if virtualHostUtilities.perHostVirtualConf(completePathToConfigFile,administratorEmail,virtualHostUser,phpVersion) == 1:
@@ -1527,8 +1531,10 @@ def issueSSLForHostName(virtualHost,path):
             shutil.copy(srcPrivKey, destPrivKey)
             shutil.copy(srcFullChain, destCert)
 
-            command = 'systemctl restart lscpd'
-
+            if version >= 7:
+                command = "sudo systemctl restart lscpd"
+            elif version >= 6:
+                command = "sudo service lscpd restart"
             cmd = shlex.split(command)
 
             res = subprocess.call(cmd)
@@ -1558,7 +1564,10 @@ def issueSSLForHostName(virtualHost,path):
             shutil.copy(srcPrivKey, destPrivKey)
             shutil.copy(srcFullChain, destCert)
 
-            command = 'systemctl restart lscpd'
+            if version >= 7:
+                command = "sudo systemctl restart lscpd"
+            elif version >= 6:
+                command = "sudo service lscpd restart"
 
             cmd = shlex.split(command)
 

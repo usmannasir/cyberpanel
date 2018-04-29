@@ -2,6 +2,10 @@ import CyberCPLogFileWriter as logging
 import os
 import subprocess
 import shutil
+import platform
+
+system=platform.dist()[0]
+version=float(platform.dist()[1])
 
 class DNS:
 
@@ -240,13 +244,14 @@ class DNS:
         try:
 
             ############## Restart NSD ######################
-
-            cmd = []
-
-            cmd.append("systemctl")
-            cmd.append("restart")
-            cmd.append("nsd")
-
+            if version >= 7:
+                cmd.append("systemctl")
+                cmd.append("restart")
+                cmd.append("nsd")
+            elif version >= 6:
+                cmd.append("service")
+                cmd.append("nsd")
+                cmd.append("restart")
             res = subprocess.call(cmd)
 
             if res == 1:

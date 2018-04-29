@@ -1,8 +1,10 @@
 from CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
+import platform
 
-
+system=platform.dist()[0]
+version=float(platform.dist()[1])
 
 class ProcessUtilities:
     litespeedProcess = "litespeed"
@@ -30,7 +32,10 @@ class ProcessUtilities:
     @staticmethod
     def restartLitespeed():
         try:
-            command = "sudo systemctl restart lsws"
+            if version >= 7:
+                command = "sudo systemctl restart lsws"
+            elif version >= 6:
+                command = "sudo service lsws restart"
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
 
@@ -45,7 +50,11 @@ class ProcessUtilities:
     @staticmethod
     def stopLitespeed():
         try:
-            command = "sudo systemctl stop lsws"
+            if version >= 7:
+                command = "sudo systemctl stop lsws"
+            elif version >= 6:
+                command = "sudo service lsws stop"
+
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
 

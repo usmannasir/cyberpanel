@@ -27,7 +27,10 @@ from xml.dom import minidom
 from dns.models import Domains,Records
 from mailServer.models import Domains as eDomains
 from mailServer.models import EUsers
+import platform
 
+system=platform.dist()[0]
+version=float(platform.dist()[1])
 
 
 def loadBackupHome(request):
@@ -881,7 +884,10 @@ def submitBackupSchedule(request):
 
                             virtualHostUtilities.leaveControl(path)
 
-                            command = "sudo systemctl restart crond"
+                            if version >= 7:
+                                command = "sudo systemctl restart crond"
+                            elif version >= 6:
+                                command = "service crond restart"
 
                             subprocess.call(shlex.split(command))
 
@@ -903,7 +909,10 @@ def submitBackupSchedule(request):
 
                             virtualHostUtilities.leaveControl(path)
 
-                            command = "sudo systemctl restart crond"
+                            if version >= 7:
+                                command = "sudo systemctl restart crond"
+                            elif version >= 6:
+                                command = "service crond restart"
 
                             subprocess.call(shlex.split(command))
 
@@ -925,7 +934,10 @@ def submitBackupSchedule(request):
 
                             virtualHostUtilities.leaveControl(path)
 
-                            command = "sudo systemctl restart crond"
+                            if version >= 7:
+                                command = "sudo systemctl restart crond"
+                            elif version >= 6:
+                                command = "service crond restart"
 
                             subprocess.call(shlex.split(command))
 
@@ -947,7 +959,10 @@ def submitBackupSchedule(request):
 
                             virtualHostUtilities.leaveControl(path)
 
-                            command = "sudo systemctl restart crond"
+                            if version >= 7:
+                                command = "sudo systemctl restart crond"
+                            elif version >= 6:
+                                command = "service crond restart"
 
                             subprocess.call(shlex.split(command))
 
@@ -969,7 +984,10 @@ def submitBackupSchedule(request):
 
                         virtualHostUtilities.leaveControl(path)
 
-                        command = "sudo systemctl restart crond"
+                        if version >= 7:
+                            command = "sudo systemctl restart crond"
+                        elif version >= 6:
+                            command = "service crond restart"
 
                         subprocess.call(shlex.split(command))
 
@@ -991,7 +1009,10 @@ def submitBackupSchedule(request):
 
                         virtualHostUtilities.leaveControl(path)
 
-                        command = "sudo systemctl restart crond"
+                        if version >= 7:
+                            command = "sudo systemctl restart crond"
+                        elif version >= 6:
+                            command = "service crond restart"
 
                         subprocess.call(shlex.split(command))
 
@@ -1013,7 +1034,10 @@ def submitBackupSchedule(request):
 
                         virtualHostUtilities.leaveControl(path)
 
-                        command = "sudo systemctl restart crond"
+                        if version >= 7:
+                            command = "sudo systemctl restart crond"
+                        elif version >= 6:
+                            command = "service crond restart"
 
                         subprocess.call(shlex.split(command))
 
@@ -1035,7 +1059,10 @@ def submitBackupSchedule(request):
 
                         virtualHostUtilities.leaveControl(path)
 
-                        command = "sudo systemctl restart crond"
+                        if version >= 7:
+                            command = "sudo systemctl restart crond"
+                        elif version >= 6:
+                            command = "service crond restart"
 
                         subprocess.call(shlex.split(command))
 
@@ -1085,7 +1112,10 @@ def scheduleDelete(request):
 
                     virtualHostUtilities.leaveControl(path)
 
-                    command = "sudo systemctl restart crond"
+                    if version >= 7:
+                        command = "sudo systemctl restart crond"
+                    elif version >= 6:
+                        command = "service crond restart"
 
                     subprocess.call(shlex.split(command))
 
@@ -1113,7 +1143,10 @@ def scheduleDelete(request):
 
                     virtualHostUtilities.leaveControl(path)
 
-                    command = "sudo systemctl restart crond"
+                    if version >= 7:
+                        command = "sudo systemctl restart crond"
+                    elif version >= 6:
+                        command = "service crond restart"
 
                     subprocess.call(shlex.split(command))
 
@@ -1141,7 +1174,10 @@ def scheduleDelete(request):
 
                     virtualHostUtilities.leaveControl(path)
 
-                    command = "sudo systemctl restart crond"
+                    if version >= 7:
+                        command = "sudo systemctl restart crond"
+                    elif version >= 6:
+                        command = "service crond restart"
 
                     subprocess.call(shlex.split(command))
 
@@ -1169,7 +1205,10 @@ def scheduleDelete(request):
 
                     virtualHostUtilities.leaveControl(path)
 
-                    command = "sudo systemctl restart crond"
+                    if version >= 7:
+                        command = "sudo systemctl restart crond"
+                    elif version >= 6:
+                        command = "service crond restart"
 
                     subprocess.call(shlex.split(command))
 
