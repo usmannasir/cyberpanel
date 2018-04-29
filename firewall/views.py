@@ -14,6 +14,10 @@ import thread
 from plogical.modSec import modSec
 from plogical.installUtilities import installUtilities
 from random import randint
+import platform
+
+system=platform.dist()[0]
+version=float(platform.dist()[1])
 # Create your views here.
 
 
@@ -188,8 +192,10 @@ def startFirewall(request):
         try:
             if request.method == 'POST':
 
-
-                command = 'sudo systemctl start firewalld'
+                if version >= 7:
+                    command = "sudo systemctl start firewalld"
+                elif version >= 6:
+                    command = "sudo service iptables restart"
 
                 cmd = shlex.split(command)
 
@@ -223,8 +229,10 @@ def stopFirewall(request):
         try:
             if request.method == 'POST':
 
-
-                command = 'sudo systemctl stop firewalld'
+                if version >= 7:
+                    command = "sudo systemctl stop firewalld"
+                elif version >= 6:
+                    command = "sudo service iptables stop"
 
                 cmd = shlex.split(command)
 
@@ -258,8 +266,10 @@ def firewallStatus(request):
         try:
             if request.method == 'POST':
 
-
-                status = subprocess.check_output(["systemctl", "status","firewalld"])
+                if version >= 7:
+                    status = subprocess.check_output(["systemctl", "status","firewalld"])
+                elif version >= 6:
+                    status = subprocess.check_output(["service", "iptables","status"])
 
                 if status.find("active") >-1:
                     final_dic = {'status': 1, 'error_message': "none",'firewallStatus':1}
@@ -477,7 +487,10 @@ def saveSSHConfigs(request):
                             writeToFile.writelines(items)
                     writeToFile.close()
 
-                    command = 'sudo systemctl restart sshd'
+                    if version >= 7:
+                        command = 'sudo systemctl restart sshd'
+                    elif version >= 6:
+                        command = "sudo service sshd restart"
 
                     cmd = shlex.split(command)
 
