@@ -82,16 +82,23 @@ if systemctl is-active named | grep -q 'active'; then
   systemctl stop named
   systemctl disable named
   echo "Disabling named to aviod powerdns conflicts..."
-  else
+elif chkconfig --list | grep -q 'named'; then
+  service named stop
+  chkconfig --del named
+  echo "Disabling named to aviod powerdns conflicts..."
+else
   echo "named is not installed or active, to next step..."
 fi
+
 # above if will check if server has named.service running that occupies port 53 which makes powerdns failed to start
 yum clean all
 yum update -y
-yum install wget which curl -y
+yum install wget which curl git -y
 setenforce 0
 sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
-cd install-cn
+cd ~
+git clone https://github.com/jimorsm/cyberpanel.git
+cd cyberpanel/install-cn
 chmod +x install.py
 server_ip="$(wget -qO- http://whatismyip.akamai.com/)"
 python install.py $server_ip
