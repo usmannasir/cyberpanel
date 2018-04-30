@@ -93,7 +93,7 @@ fi
 # above if will check if server has named.service running that occupies port 53 which makes powerdns failed to start
 yum clean all
 yum update -y
-yum install wget which curl git -y
+yum install wget which curl git virt-what -y
 setenforce 0
 sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
 cd ~

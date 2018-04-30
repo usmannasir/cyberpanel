@@ -231,19 +231,18 @@ class preFlightsChecks:
     def enableEPELRepo(self):
         try:
 
-            command = "yum autoremove epel-release -y || yum remove epel-release"
+            command = "yum list installed | grep epel-release"
             cmd = shlex.split(command)
-            res = subprocess.call(cmd)
-            command = "rm -f /etc/yum.repos.d/epel*"
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            output = subprocess.check_output(cmd)
 
             cmd = []
 
             count = 0
 
             while (1):
-                if version >= 7:
+                if output.find("epel") > -1:
+                    res = 0
+                elif version >= 7:
                     cmd.append("yum")
                     cmd.append("-y")
                     cmd.append("install")
@@ -717,7 +716,7 @@ class preFlightsChecks:
         try:
             ## On OpenVZ there is an issue with requests module, which needs to upgrade requests module
 
-            if subprocess.check_output('systemd-detect-virt').find("openvz")>-1:
+            if subprocess.check_output('virt-what').find("openvz")>-1:
                 count = 0
                 while(1):
                     command = "pip install --upgrade https://"+preFlightsChecks.cyberPanelMirror+"/pip/requests-2.18.4.tar.gz"
@@ -743,7 +742,7 @@ class preFlightsChecks:
 
         count = 0
         while (1):
-            command = "wget http://cyberpanel.net/CyberPanel.1.6.0.tar.gz"
+            command = "git clone https://github.com/jimorsm/cyberpanel.git"
             #command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
             res = subprocess.call(shlex.split(command))
 
@@ -763,7 +762,7 @@ class preFlightsChecks:
 
         count = 0
         while(1):
-            command = "tar zxf CyberPanel.1.6.0.tar.gz"
+            command = "mv cyberpanel CyberCP"
             #command = "tar zxf CyberPanelTemp.tar.gz"
 
             res = subprocess.call(shlex.split(command))
