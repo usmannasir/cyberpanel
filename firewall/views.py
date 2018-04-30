@@ -195,7 +195,7 @@ def startFirewall(request):
                 if version >= 7:
                     command = "sudo systemctl start firewalld"
                 elif version >= 6:
-                    command = "sudo service iptables restart"
+                    command = "sudo service iptables start"
 
                 cmd = shlex.split(command)
 

@@ -395,8 +395,7 @@ class virtualHostUtilities:
             return [0, "[351 Not able to directories for virtual host [createDirectoryForDomain]]"]
 
 
-        if virtualHostUtilities.perHostDomainConf(path, masterDomain, completePathToConfigFile,
-                                                  administratorEmail, phpVersion,virtualHostUser) == 1:
+        if virtualHostUtilities.perHostDomainConf(path, masterDomain, completePathToConfigFile, administratorEmail, phpVersion,virtualHostUser) == 1:
             return [1,"None"]
         else:
             return [0, "[359 Not able to create per host virtual configurations [perHostVirtualConf]"]
@@ -1708,10 +1707,16 @@ def issueSSLForMailServer(virtualHost,path):
 
         writeFile.close()
 
-        command = 'systemctl restart postfix'
+        if version >= 7:
+            command = "sudo systemctl restart postfix"
+        elif version >= 6:
+            command = "sudo service postfix restart"
         subprocess.call(shlex.split(command))
 
-        command = 'systemctl restart dovecot'
+        if version >= 7:
+            command = "sudo systemctl restart dovecot"
+        elif version >= 6:
+            command = "sudo service dovecot restart"
         subprocess.call(shlex.split(command))
 
         print "1,None"
