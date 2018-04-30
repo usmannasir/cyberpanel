@@ -302,7 +302,7 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
                             <div class="col-sm-6">
-                                <input ng-pattern="/([\da-z\.-]+\.[a-z\.]{2,6}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?$/i"  name="dom"  type="text" class="form-control" ng-model="domainNameCreate" required>
+                                <input ng-pattern="*"  name="dom"  type="text" class="form-control" ng-model="domainNameCreate" required>
                             </div>
                                 <div ng-show="websiteCreationForm.dom.$error.pattern" class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
                             <div style="margin-bottom: 1%;"  class=" col-sm-1">

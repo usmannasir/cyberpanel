@@ -11,6 +11,7 @@ from os.path import join
 from os import listdir, rmdir
 from shutil import move
 import randomPassword as randomPassword
+from mailUtilities import mailUtilities
 
 
 class virtualHostUtilities:
@@ -726,8 +727,6 @@ class virtualHostUtilities:
                 str(msg) + " [IO Error with per host config file [changePHP]]")
             return [0,str(msg) + " [IO Error with per host config file [changePHP]]"]
 
-
-
     @staticmethod
     def getDiskUsage(path, totalAllowed):
         try:
@@ -904,11 +903,20 @@ class virtualHostUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
 
-def createVirtualHost(virtualHostName,administratorEmail,phpVersion,virtualHostUser,numberOfSites,ssl,sslPath):
+def createVirtualHost(virtualHostName,administratorEmail,phpVersion,virtualHostUser,numberOfSites,ssl,sslPath,dkimCheck):
     try:
         if virtualHostUtilities.checkIfVirtualHostExists(virtualHostName) == 1:
             print "0,Virtual Host Directory already exists!"
             return
+
+        if dkimCheck == 1:
+            if mailUtilities.checkIfDKIMInstalled() == 0:
+                print "0,OpenDKIM is not installed, install OpenDKIM from DKIM Manager."
+                return
+
+            result = mailUtilities.setupDKIM(virtualHostName)
+            if result[0] == 0:
+                raise BaseException(result[1])
 
         FNULL = open(os.devnull, 'w')
 
@@ -944,6 +952,8 @@ def createVirtualHost(virtualHostName,administratorEmail,phpVersion,virtualHostU
         command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
         cmd = shlex.split(command)
         subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+
+
         print "1,None"
 
 
@@ -952,6 +962,8 @@ def createVirtualHost(virtualHostName,administratorEmail,phpVersion,virtualHostU
         logging.CyberCPLogFileWriter.writeToFile(
             str(msg) + "  [createVirtualHost]")
         print "0,"+str(msg)
+
+
 
 def createDomain(masterDomain, virtualHostName, phpVersion, path,administratorEmail,virtualHostUser,restart,numberOfSites,ssl):
     try:
@@ -1761,6 +1773,7 @@ def main():
     parser.add_argument("--numberOfSites", help="Number of sites!")
     parser.add_argument("--ssl", help="Weather to activate SSL")
     parser.add_argument("--sslPath", help="Path to website document root!")
+    parser.add_argument('--dkimCheck', help='To enable or disable DKIM support for domain.')
 
 
     ## arguments for creation child domains
@@ -1803,7 +1816,11 @@ def main():
     args = parser.parse_args()
 
     if args.function == "createVirtualHost":
-        createVirtualHost(args.virtualHostName,args.administratorEmail,args.phpVersion,args.virtualHostUser,int(args.numberOfSites),int(args.ssl),args.sslPath)
+        try:
+            dkimCheck = int(args.dkimCheck)
+        except:
+            dkimCheck = 0
+        createVirtualHost(args.virtualHostName,args.administratorEmail,args.phpVersion,args.virtualHostUser,int(args.numberOfSites),int(args.ssl),args.sslPath,dkimCheck)
     elif args.function == "deleteVirtualHostConfigurations":
         virtualHostUtilities.deleteVirtualHostConfigurations(args.virtualHostName,int(args.numberOfSites))
     elif args.function == "createDomain":

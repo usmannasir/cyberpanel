@@ -42,6 +42,91 @@ class mailUtilities:
             print "0," + str(msg)
 
 
+    @staticmethod
+    def setupDKIM(virtualHostName):
+        try:
+            ## Generate DKIM Keys
+
+            if os.path.exists("/etc/opendkim/keys/" + virtualHostName):
+                return 1, "None"
+
+            os.mkdir("/etc/opendkim/keys/" + virtualHostName)
+
+            ## Generate keys
+
+            command = "opendkim-genkey -D /etc/opendkim/keys/" + virtualHostName + " -d " + virtualHostName + " -s default"
+            subprocess.call(shlex.split(command))
+
+            ## Fix permissions
+
+            command = "chown -R root:opendkim /etc/opendkim/keys/" + virtualHostName
+            subprocess.call(shlex.split(command))
+
+            command = "chmod 640 /etc/opendkim/keys/" + virtualHostName + "/default.private"
+            subprocess.call(shlex.split(command))
+
+            command = "chmod 644 /etc/opendkim/keys/" + virtualHostName + "/default.txt"
+            subprocess.call(shlex.split(command))
+
+            ## Edit key file
+
+            keyTable = "/etc/opendkim/KeyTable"
+            configToWrite = "default._domainkey." + virtualHostName + " " + virtualHostName + ":default:/etc/opendkim/keys/" + virtualHostName + "/default.private\n"
+
+            writeToFile = open(keyTable, 'a')
+            writeToFile.write(configToWrite)
+            writeToFile.close()
+
+            ## Edit signing table
+
+            signingTable = "/etc/opendkim/SigningTable"
+            configToWrite = "*@" + virtualHostName + " default._domainkey." + virtualHostName + "\n"
+
+            writeToFile = open(signingTable, 'a')
+            writeToFile.write(configToWrite)
+            writeToFile.close()
+
+            ## Trusted hosts
+
+            trustedHosts = "/etc/opendkim/TrustedHosts"
+            configToWrite = virtualHostName + "\n"
+
+            writeToFile = open(trustedHosts, 'a')
+            writeToFile.write(configToWrite)
+            writeToFile.close()
+
+            ## Restart postfix and OpenDKIM
+
+            command = "systemctl restart opendkim"
+            subprocess.call(shlex.split(command))
+
+            command = "systemctl restart postfix"
+            subprocess.call(shlex.split(command))
+
+            return 1, "None"
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [setupDKIM]")
+            return 0, str(msg)
+
+    @staticmethod
+    def checkIfDKIMInstalled():
+        try:
+
+            path = "/etc/opendkim.conf"
+
+            if os.path.exists(path):
+                return 1
+            else:
+                return 0
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [checkIfDKIMInstalled]")
+            return 0
+
+
 def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Installer')

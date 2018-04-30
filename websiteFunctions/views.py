@@ -290,7 +290,7 @@ def submitWebsiteCreation(request):
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createVirtualHost --virtualHostName " + domain + " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + " --ssl " + str(
-                data['ssl']) + " --sslPath " + sslpath
+                data['ssl']) + " --sslPath " + sslpath + " --dkimCheck " + str(data['dkimCheck'])
 
 
             output = subprocess.check_output(shlex.split(execPath))
@@ -404,6 +404,68 @@ def submitWebsiteCreation(request):
                                          disabled=0,
                                          auth=1)
                         record.save()
+
+                        ## TXT Records for mail
+
+                        record = Records(domainOwner=zone,
+                                         domain_id=zone.id,
+                                         name=topLevelDomain,
+                                         type="TXT",
+                                         content="v=spf1 a mx ip4:" + ipAddress + " ~all",
+                                         ttl=3600,
+                                         prio=0,
+                                         disabled=0,
+                                         auth=1)
+                        record.save()
+
+                        record = Records(domainOwner=zone,
+                                         domain_id=zone.id,
+                                         name="_dmarc." + topLevelDomain,
+                                         type="TXT",
+                                         content="v=DMARC1; p=none",
+                                         ttl=3600,
+                                         prio=0,
+                                         disabled=0,
+                                         auth=1)
+                        record.save()
+
+                        record = Records(domainOwner=zone,
+                                         domain_id=zone.id,
+                                         name="_domainkey." + topLevelDomain,
+                                         type="TXT",
+                                         content="t=y; o=~;",
+                                         ttl=3600,
+                                         prio=0,
+                                         disabled=0,
+                                         auth=1)
+                        record.save()
+
+
+                        ## DKIM Support
+
+                        if data['dkimCheck'] == 1:
+
+                            path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
+                            command = "sudo cat " + path
+                            output = subprocess.check_output(shlex.split(command))
+
+                            record = Records(domainOwner=zone,
+                                             domain_id=zone.id,
+                                             name="default._domainkey." + topLevelDomain,
+                                             type="TXT",
+                                             content="v=DKIM1; k=rsa; p=" + output[53:269],
+                                             ttl=3600,
+                                             prio=0,
+                                             disabled=0,
+                                             auth=1)
+                            record.save()
+
+
+
+
+
+
+
                 else:
                     if Domains.objects.filter(name=topLevelDomain).count() == 0:
 

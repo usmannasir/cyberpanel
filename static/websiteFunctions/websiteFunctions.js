@@ -20,6 +20,13 @@ app.controller('createWebsite', function($scope,$http) {
                     var ssl = 0
                 }
 
+                if ($scope.dkimCheck === true){
+                    var dkimCheck = 1;
+                }
+                else{
+                    var dkimCheck = 0
+                }
+
 
                 $("#webSiteCreation").fadeIn();
 
@@ -39,6 +46,7 @@ app.controller('createWebsite', function($scope,$http) {
                     phpSelection: phpSelection,
                     ssl:ssl,
                     websiteOwner:websiteOwner,
+                    dkimCheck:dkimCheck
                 };
 
                 var config = {

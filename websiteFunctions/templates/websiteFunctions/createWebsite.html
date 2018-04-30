@@ -83,7 +83,7 @@
 
                  <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
-                    <div class="col-sm-6">
+                    <div class="col-sm-9">
                         <div class="checkbox">
                             <label>
                                 <input ng-model="sslCheck" type="checkbox" value="">
@@ -91,6 +91,15 @@
                                 <div ng-show="sslCheck" style="margin-top: 2%;margin-bottom: -2%" class="alert alert-warning">
                                     <p>{% trans "For SSL to work DNS of domain should point to server, otherwise self signed SSL will be issued, you can add your own SSL later." %}</p>
                                 </div>
+                            </label>
+                        </div>
+                    </div>
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-9">
+                        <div class="checkbox">
+                            <label>
+                                <input ng-model="dkimCheck" type="checkbox" value="">
+                                DKIM Support
                             </label>
                         </div>
                     </div>

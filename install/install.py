@@ -2514,6 +2514,96 @@ class preFlightsChecks:
             logging.InstallLog.writeToFile(str(msg) + " [installTLDExtract]")
             return 0
 
+    def installOpenDKIM(self):
+        try:
+            count = 0
+            while (1):
+
+                command = 'yum -y install opendkim'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Trying to install opendkim, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to install opendkim, your mail may not end up in inbox. [installOpenDKIM]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Succcessfully installed opendkim!")
+                    preFlightsChecks.stdOut("Succcessfully installed opendkim!")
+                    break
+
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [installOpenDKIM]")
+            return 0
+        except ValueError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [installOpenDKIM]")
+            return 0
+
+        return 1
+
+    def configureOpenDKIM(self):
+        try:
+
+            ## Configure OpenDKIM specific settings
+
+            openDKIMConfigurePath = "/etc/opendkim.conf"
+
+            configData = """
+Mode	sv
+Canonicalization	relaxed/simple
+KeyTable	refile:/etc/opendkim/KeyTable
+SigningTable	refile:/etc/opendkim/SigningTable
+ExternalIgnoreList	refile:/etc/opendkim/TrustedHosts
+InternalHosts	refile:/etc/opendkim/TrustedHosts
+"""
+
+            writeToFile = open(openDKIMConfigurePath,'a')
+            writeToFile.write(configData)
+            writeToFile.close()
+
+
+            ## Configure postfix specific settings
+
+            postfixFilePath = "/etc/postfix/main.cf"
+
+            configData = """
+smtpd_milters = inet:127.0.0.1:8891
+non_smtpd_milters = $smtpd_milters
+milter_default_action = accept
+"""
+
+            writeToFile = open(postfixFilePath,'a')
+            writeToFile.write(configData)
+            writeToFile.close()
+
+
+            #### Restarting Postfix and OpenDKIM
+
+            command = "systemctl start opendkim"
+            subprocess.call(shlex.split(command))
+
+            command = "systemctl enable opendkim"
+            subprocess.call(shlex.split(command))
+
+            ##
+
+            command = "systemctl start postfix"
+            subprocess.call(shlex.split(command))
+
+
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [configureOpenDKIM]")
+            return 0
+        except ValueError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [configureOpenDKIM]")
+            return 0
+
+        return 1
+
 
 
 def main():
@@ -2588,6 +2678,12 @@ def main():
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword)
     checks.setup_cron()
     checks.installTLDExtract()
+
+    ## Install and Configure OpenDKIM.
+
+    checks.installOpenDKIM()
+    checks.configureOpenDKIM()
+
     checks.modSecPreReqs()
     checks.installation_successfull()
 
