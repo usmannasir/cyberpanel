@@ -1150,14 +1150,14 @@ app.controller('websitePages', function($scope,$http) {
         $scope.installationDetailsForm = !$scope.installationDetailsForm;
         $scope.installationDetailsFormJoomla = true;
 
-    }
+    };
 
     $scope.installationDetailsJoomla = function(){
 
         $scope.installationDetailsFormJoomla = !$scope.installationDetailsFormJoomla;
         $scope.installationDetailsForm = true;
 
-    }
+    };
 
 
     $scope.installWordpress = function(){
@@ -1550,6 +1550,13 @@ app.controller('websitePages', function($scope,$http) {
                     var ssl = 0
                 }
 
+                if ($scope.dkimCheck === true){
+                    var dkimCheck = 1;
+                }
+                else{
+                    var dkimCheck = 0
+                }
+
 
                 url = "/websites/submitDomainCreation";
                 var domainName = $scope.domainNameCreate;
@@ -1568,6 +1575,7 @@ app.controller('websitePages', function($scope,$http) {
                     ssl:ssl,
                     path:path,
                     masterDomain:$("#domainNamePage").text(),
+                    dkimCheck:dkimCheck
                 };
 
                 var config = {

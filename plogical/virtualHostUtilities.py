@@ -911,7 +911,7 @@ def createVirtualHost(virtualHostName,administratorEmail,phpVersion,virtualHostU
 
         if dkimCheck == 1:
             if mailUtilities.checkIfDKIMInstalled() == 0:
-                print "0,OpenDKIM is not installed, install OpenDKIM from DKIM Manager."
+                print "0, OpenDKIM is not installed, install OpenDKIM from DKIM Manager."
                 return
 
             result = mailUtilities.setupDKIM(virtualHostName)
@@ -963,13 +963,21 @@ def createVirtualHost(virtualHostName,administratorEmail,phpVersion,virtualHostU
             str(msg) + "  [createVirtualHost]")
         print "0,"+str(msg)
 
-
-
-def createDomain(masterDomain, virtualHostName, phpVersion, path,administratorEmail,virtualHostUser,restart,numberOfSites,ssl):
+def createDomain(masterDomain, virtualHostName, phpVersion, path,administratorEmail,virtualHostUser,restart,numberOfSites,ssl, dkimCheck):
     try:
         if virtualHostUtilities.checkIfVirtualHostExists(virtualHostName) == 1:
             print "0,Virtual Host Directory already exists!"
             return
+
+
+        if dkimCheck == 1:
+            if mailUtilities.checkIfDKIMInstalled() == 0:
+                print "0, OpenDKIM is not installed, install OpenDKIM from DKIM Manager."
+                return
+
+            result = mailUtilities.setupDKIM(virtualHostName)
+            if result[0] == 0:
+                raise BaseException(result[1])
 
         FNULL = open(os.devnull, 'w')
 
@@ -1824,7 +1832,11 @@ def main():
     elif args.function == "deleteVirtualHostConfigurations":
         virtualHostUtilities.deleteVirtualHostConfigurations(args.virtualHostName,int(args.numberOfSites))
     elif args.function == "createDomain":
-        createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path,args.administratorEmail,args.virtualHostUser,args.restart,int(args.numberOfSites),int(args.ssl))
+        try:
+            dkimCheck = int(args.dkimCheck)
+        except:
+            dkimCheck = 0
+        createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path,args.administratorEmail,args.virtualHostUser,args.restart,int(args.numberOfSites),int(args.ssl),dkimCheck)
     elif args.function == "issueSSL":
         issueSSL(args.virtualHostName,args.path,args.administratorEmail)
     elif args.function == "changePHP":

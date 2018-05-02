@@ -8,6 +8,8 @@ import shlex
 
 class mailUtilities:
 
+    installLogPath = "/home/cyberpanel/modSecInstallLog"
+
     @staticmethod
     def createEmailAccount(domain):
         try:
@@ -126,6 +128,110 @@ class mailUtilities:
                 str(msg) + "  [checkIfDKIMInstalled]")
             return 0
 
+    @staticmethod
+    def generateKeys(domain):
+        try:
+
+            result = mailUtilities.setupDKIM(domain)
+            if result[0] == 0:
+                raise BaseException(result[1])
+            else:
+                print "1,None"
+
+        except BaseException,msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [generateKeys]")
+            print "0," + str(msg)
+
+
+    @staticmethod
+    def configureOpenDKIM():
+            try:
+
+                ## Configure OpenDKIM specific settings
+
+                openDKIMConfigurePath = "/etc/opendkim.conf"
+
+                configData = """
+Mode	sv
+Canonicalization	relaxed/simple
+KeyTable	refile:/etc/opendkim/KeyTable
+SigningTable	refile:/etc/opendkim/SigningTable
+ExternalIgnoreList	refile:/etc/opendkim/TrustedHosts
+InternalHosts	refile:/etc/opendkim/TrustedHosts
+"""
+
+                writeToFile = open(openDKIMConfigurePath, 'a')
+                writeToFile.write(configData)
+                writeToFile.close()
+
+                ## Configure postfix specific settings
+
+                postfixFilePath = "/etc/postfix/main.cf"
+
+                configData = """
+smtpd_milters = inet:127.0.0.1:8891
+non_smtpd_milters = $smtpd_milters
+milter_default_action = accept
+"""
+
+                writeToFile = open(postfixFilePath, 'a')
+                writeToFile.write(configData)
+                writeToFile.close()
+
+                #### Restarting Postfix and OpenDKIM
+
+                command = "systemctl start opendkim"
+                subprocess.call(shlex.split(command))
+
+                command = "systemctl enable opendkim"
+                subprocess.call(shlex.split(command))
+
+                ##
+
+                command = "systemctl start postfix"
+                subprocess.call(shlex.split(command))
+
+                print "1,None"
+                return
+
+
+
+            except OSError, msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [configureOpenDKIM]")
+                print "0," + str(msg)
+                return
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [configureOpenDKIM]")
+                print "0," + str(msg)
+            return
+
+    @staticmethod
+    def installOpenDKIM(install, openDKIMINstall):
+        try:
+
+            command = 'sudo yum install opendkim -y'
+
+            cmd = shlex.split(command)
+
+            with open(mailUtilities.installLogPath, 'w') as f:
+                res = subprocess.call(cmd, stdout=f)
+
+            if res == 1:
+                writeToFile = open(mailUtilities.installLogPath, 'a')
+                writeToFile.writelines("Can not be installed.[404]\n")
+                writeToFile.close()
+                logging.CyberCPLogFileWriter.writeToFile("[Could not Install]")
+                return 0
+            else:
+                writeToFile = open(mailUtilities.installLogPath, 'a')
+                writeToFile.writelines("OpenDKIM Installed.[200]\n")
+                writeToFile.close()
+
+            return 1
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installOpenDKIM]")
+
 
 def main():
 
@@ -138,6 +244,10 @@ def main():
 
     if args.function == "createEmailAccount":
         mailUtilities.createEmailAccount(args.domain)
+    elif args.function == "generateKeys":
+        mailUtilities.generateKeys(args.domain)
+    elif args.function == "configureOpenDKIM":
+        mailUtilities.configureOpenDKIM()
 
 if __name__ == "__main__":
     main()

@@ -172,6 +172,303 @@ def deleteWebsite(request):
         return redirect(loadLoginPage)
 
 
+def dnsTemplate(request, domain, admin, dkimCheck):
+    try:
+
+        ipFile = "/etc/cyberpanel/machineIP"
+        f = open(ipFile)
+        ipData = f.read()
+        ipAddress = ipData.split('\n', 1)[0]
+
+        import tldextract
+
+        extractDomain = tldextract.extract(domain)
+        topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
+        subDomain = extractDomain.subdomain
+
+        if len(subDomain) == 0:
+
+            if Domains.objects.filter(name=topLevelDomain).count() == 0:
+
+                zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
+                zone.save()
+
+                content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
+
+                soaRecord = Records(domainOwner=zone,
+                                    domain_id=zone.id,
+                                    name=topLevelDomain,
+                                    type="SOA",
+                                    content=content,
+                                    ttl=3600,
+                                    prio=0,
+                                    disabled=0,
+                                    auth=1)
+                soaRecord.save()
+
+                ## Main A record.
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name=topLevelDomain,
+                                 type="A",
+                                 content=ipAddress,
+                                 ttl=3600,
+                                 prio=0,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                # CNAME Records.
+
+                cNameValue = "www." + topLevelDomain
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name=cNameValue,
+                                 type="CNAME",
+                                 content=topLevelDomain,
+                                 ttl=3600,
+                                 prio=0,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                cNameValue = "ftp." + topLevelDomain
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name=cNameValue,
+                                 type="CNAME",
+                                 content=topLevelDomain,
+                                 ttl=3600,
+                                 prio=0,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                ## MX Record.
+
+                mxValue = "mail." + topLevelDomain
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name=topLevelDomain,
+                                 type="MX",
+                                 content=mxValue,
+                                 ttl=3600,
+                                 prio="10",
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name=mxValue,
+                                 type="A",
+                                 content=ipAddress,
+                                 ttl=3600,
+                                 prio=0,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                ## TXT Records for mail
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name=topLevelDomain,
+                                 type="TXT",
+                                 content="v=spf1 a mx ip4:" + ipAddress + " ~all",
+                                 ttl=3600,
+                                 prio=0,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name="_dmarc." + topLevelDomain,
+                                 type="TXT",
+                                 content="v=DMARC1; p=none",
+                                 ttl=3600,
+                                 prio=0,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name="_domainkey." + topLevelDomain,
+                                 type="TXT",
+                                 content="t=y; o=~;",
+                                 ttl=3600,
+                                 prio=0,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                ## DKIM Support
+
+                if dkimCheck == 1:
+                    path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
+                    command = "sudo cat " + path
+                    output = subprocess.check_output(shlex.split(command))
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name="default._domainkey." + topLevelDomain,
+                                     type="TXT",
+                                     content="v=DKIM1; k=rsa; p=" + output[53:269],
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+
+
+        else:
+            if Domains.objects.filter(name=topLevelDomain).count() == 0:
+                zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
+                zone.save()
+
+                content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
+
+                soaRecord = Records(domainOwner=zone,
+                                    domain_id=zone.id,
+                                    name=topLevelDomain,
+                                    type="SOA",
+                                    content=content,
+                                    ttl=3600,
+                                    prio=0,
+                                    disabled=0,
+                                    auth=1)
+                soaRecord.save()
+
+                ## Main A record.
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name=topLevelDomain,
+                                 type="A",
+                                 content=ipAddress,
+                                 ttl=3600,
+                                 prio=0,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                # CNAME Records.
+
+                cNameValue = "www." + topLevelDomain
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name=cNameValue,
+                                 type="CNAME",
+                                 content=topLevelDomain,
+                                 ttl=3600,
+                                 prio=0,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                cNameValue = "ftp." + topLevelDomain
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name=cNameValue,
+                                 type="CNAME",
+                                 content=topLevelDomain,
+                                 ttl=3600,
+                                 prio=0,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                ## MX Record.
+
+                mxValue = "mail." + topLevelDomain
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name=topLevelDomain,
+                                 type="MX",
+                                 content=mxValue,
+                                 ttl=3600,
+                                 prio="10",
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name=mxValue,
+                                 type="A",
+                                 content=ipAddress,
+                                 ttl=3600,
+                                 prio=0,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                ## DKIM Support
+
+                if dkimCheck == 1:
+                    path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
+                    command = "sudo cat " + path
+                    output = subprocess.check_output(shlex.split(command))
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name="default._domainkey." + topLevelDomain,
+                                     type="TXT",
+                                     content="v=DKIM1; k=rsa; p=" + output[53:269],
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+
+            ## Creating sub-domain level record.
+
+            zone = Domains.objects.get(name=topLevelDomain)
+
+            actualSubDomain = subDomain + "." + topLevelDomain
+
+            ## Main A record.
+
+            record = Records(domainOwner=zone,
+                             domain_id=zone.id,
+                             name=actualSubDomain,
+                             type="A",
+                             content=ipAddress,
+                             ttl=3600,
+                             prio=0,
+                             disabled=0,
+                             auth=1)
+            record.save()
+
+            # CNAME Records.
+
+            cNameValue = "www." + actualSubDomain
+
+            record = Records(domainOwner=zone,
+                             domain_id=zone.id,
+                             name=cNameValue,
+                             type="CNAME",
+                             content=actualSubDomain,
+                             ttl=3600,
+                             prio=0,
+                             disabled=0,
+                             auth=1)
+            record.save()
+
+    except BaseException, msg:
+        logging.CyberCPLogFileWriter.writeToFile(
+            "We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
+
+
 def siteState(request):
     try:
         val = request.session['userID']
@@ -306,290 +603,7 @@ def submitWebsiteCreation(request):
 
             ##### Zone creation
 
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            ipAddress = ipData.split('\n', 1)[0]
-
-            try:
-
-                import tldextract
-
-                extractDomain = tldextract.extract(domain)
-                topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
-                subDomain = extractDomain.subdomain
-
-                if len(subDomain) == 0:
-                    if Domains.objects.filter(name=topLevelDomain).count() == 0:
-
-                        zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
-                        zone.save()
-
-                        content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
-
-                        soaRecord = Records(domainOwner=zone,
-                                            domain_id=zone.id,
-                                            name=topLevelDomain,
-                                            type="SOA",
-                                            content=content,
-                                            ttl=3600,
-                                            prio=0,
-                                            disabled=0,
-                                            auth=1)
-                        soaRecord.save()
-
-                        ## Main A record.
-
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=topLevelDomain,
-                                         type="A",
-                                         content=ipAddress,
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
-                        # CNAME Records.
-
-                        cNameValue = "www." + topLevelDomain
-
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=cNameValue,
-                                         type="CNAME",
-                                         content=topLevelDomain,
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
-                        cNameValue = "ftp." + topLevelDomain
-
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=cNameValue,
-                                         type="CNAME",
-                                         content=topLevelDomain,
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
-                        ## MX Record.
-
-                        mxValue = "mail." + topLevelDomain
-
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=topLevelDomain,
-                                         type="MX",
-                                         content=mxValue,
-                                         ttl=3600,
-                                         prio="10",
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=mxValue,
-                                         type="A",
-                                         content=ipAddress,
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
-                        ## TXT Records for mail
-
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=topLevelDomain,
-                                         type="TXT",
-                                         content="v=spf1 a mx ip4:" + ipAddress + " ~all",
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name="_dmarc." + topLevelDomain,
-                                         type="TXT",
-                                         content="v=DMARC1; p=none",
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name="_domainkey." + topLevelDomain,
-                                         type="TXT",
-                                         content="t=y; o=~;",
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
-
-                        ## DKIM Support
-
-                        if data['dkimCheck'] == 1:
-
-                            path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
-                            command = "sudo cat " + path
-                            output = subprocess.check_output(shlex.split(command))
-
-                            record = Records(domainOwner=zone,
-                                             domain_id=zone.id,
-                                             name="default._domainkey." + topLevelDomain,
-                                             type="TXT",
-                                             content="v=DKIM1; k=rsa; p=" + output[53:269],
-                                             ttl=3600,
-                                             prio=0,
-                                             disabled=0,
-                                             auth=1)
-                            record.save()
-
-
-
-
-
-
-
-                else:
-                    if Domains.objects.filter(name=topLevelDomain).count() == 0:
-
-                        zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
-                        zone.save()
-
-                        content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
-
-                        soaRecord = Records(domainOwner=zone,
-                                            domain_id=zone.id,
-                                            name=topLevelDomain,
-                                            type="SOA",
-                                            content=content,
-                                            ttl=3600,
-                                            prio=0,
-                                            disabled=0,
-                                            auth=1)
-                        soaRecord.save()
-
-                        ## Main A record.
-
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=topLevelDomain,
-                                         type="A",
-                                         content=ipAddress,
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
-                        # CNAME Records.
-
-                        cNameValue = "www." + topLevelDomain
-
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=cNameValue,
-                                         type="CNAME",
-                                         content=topLevelDomain,
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
-                        cNameValue = "ftp." + topLevelDomain
-
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=cNameValue,
-                                         type="CNAME",
-                                         content=topLevelDomain,
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
-                        ## MX Record.
-
-                        mxValue = "mail." + topLevelDomain
-
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=topLevelDomain,
-                                         type="MX",
-                                         content=mxValue,
-                                         ttl=3600,
-                                         prio="10",
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=mxValue,
-                                         type="A",
-                                         content=ipAddress,
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
-                    ## Creating sub-domain level record.
-
-                    zone = Domains.objects.get(name=topLevelDomain)
-
-                    actualSubDomain = subDomain + "." + topLevelDomain
-
-                    ## Main A record.
-
-                    record = Records(domainOwner=zone,
-                                     domain_id=zone.id,
-                                     name=actualSubDomain,
-                                     type="A",
-                                     content=ipAddress,
-                                     ttl=3600,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
-
-                    # CNAME Records.
-
-                    cNameValue = "www." + actualSubDomain
-
-                    record = Records(domainOwner=zone,
-                                     domain_id=zone.id,
-                                     name=cNameValue,
-                                     type="CNAME",
-                                     content=actualSubDomain,
-                                     ttl=3600,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
-
-            except BaseException,msg:
-                logging.CyberCPLogFileWriter.writeToFile("We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
-
-
+            dnsTemplate(requests, domain, admin, data['dkimCheck'])
 
             ## zone creation
 
@@ -675,7 +689,7 @@ def submitDomainCreation(request):
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + " --administratorEmail " + master.adminEmail + " --phpVersion '" + phpSelection + "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + " --ssl " + str(
-                data['ssl']) + " --path " + path
+                data['ssl']) + " --path " + path + " --dkimCheck " + str(data['dkimCheck'])
 
             output = subprocess.check_output(shlex.split(execPath))
 
@@ -689,307 +703,13 @@ def submitDomainCreation(request):
 
             ### Zone creation.
 
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            ipAddress = ipData.split('\n', 1)[0]
-
             try:
                 restore = data['restore']
                 restart = 0
             except BaseException,msg:
-                try:
-
-                    val = request.session['userID']
-                    admin = Administrator.objects.get(pk=val)
-
-                    import tldextract
-
-
-                    extractDomain = tldextract.extract(domain)
-                    topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
-                    subDomain = extractDomain.subdomain
-
-                    if len(subDomain) == 0:
-                        if Domains.objects.filter(name=topLevelDomain).count() == 0:
-                            zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
-                            zone.save()
-
-                            content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
-
-                            soaRecord = Records(domainOwner=zone,
-                                                domain_id=zone.id,
-                                                name=topLevelDomain,
-                                                type="SOA",
-                                                content=content,
-                                                ttl=3600,
-                                                prio=0,
-                                                disabled=0,
-                                                auth=1)
-                            soaRecord.save()
-
-                            ## Main A record.
-
-                            record = Records(domainOwner=zone,
-                                             domain_id=zone.id,
-                                             name=topLevelDomain,
-                                             type="A",
-                                             content=ipAddress,
-                                             ttl=3600,
-                                             prio=0,
-                                             disabled=0,
-                                             auth=1)
-                            record.save()
-
-                            # CNAME Records.
-
-                            cNameValue = "www." + topLevelDomain
-
-                            record = Records(domainOwner=zone,
-                                             domain_id=zone.id,
-                                             name=cNameValue,
-                                             type="CNAME",
-                                             content=topLevelDomain,
-                                             ttl=3600,
-                                             prio=0,
-                                             disabled=0,
-                                             auth=1)
-                            record.save()
-
-                            cNameValue = "ftp." + topLevelDomain
-
-                            record = Records(domainOwner=zone,
-                                             domain_id=zone.id,
-                                             name=cNameValue,
-                                             type="CNAME",
-                                             content=topLevelDomain,
-                                             ttl=3600,
-                                             prio=0,
-                                             disabled=0,
-                                             auth=1)
-                            record.save()
-
-                            ## MX Record.
-
-                            mxValue = "mail." + topLevelDomain
-
-                            record = Records(domainOwner=zone,
-                                             domain_id=zone.id,
-                                             name=topLevelDomain,
-                                             type="MX",
-                                             content=mxValue,
-                                             ttl=3600,
-                                             prio="10",
-                                             disabled=0,
-                                             auth=1)
-                            record.save()
-
-                            record = Records(domainOwner=zone,
-                                             domain_id=zone.id,
-                                             name=mxValue,
-                                             type="A",
-                                             content=ipAddress,
-                                             ttl=3600,
-                                             prio=0,
-                                             disabled=0,
-                                             auth=1)
-                            record.save()
-                    else:
-                        if Domains.objects.filter(name=topLevelDomain).count() == 0:
-                            zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
-                            zone.save()
-
-                            content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
-
-                            soaRecord = Records(domainOwner=zone,
-                                                domain_id=zone.id,
-                                                name=topLevelDomain,
-                                                type="SOA",
-                                                content=content,
-                                                ttl=3600,
-                                                prio=0,
-                                                disabled=0,
-                                                auth=1)
-                            soaRecord.save()
-
-                            ## Main A record.
-
-                            record = Records(domainOwner=zone,
-                                             domain_id=zone.id,
-                                             name=topLevelDomain,
-                                             type="A",
-                                             content=ipAddress,
-                                             ttl=3600,
-                                             prio=0,
-                                             disabled=0,
-                                             auth=1)
-                            record.save()
-
-                            # CNAME Records.
-
-                            cNameValue = "www." + topLevelDomain
-
-                            record = Records(domainOwner=zone,
-                                             domain_id=zone.id,
-                                             name=cNameValue,
-                                             type="CNAME",
-                                             content=topLevelDomain,
-                                             ttl=3600,
-                                             prio=0,
-                                             disabled=0,
-                                             auth=1)
-                            record.save()
-
-                            cNameValue = "ftp." + topLevelDomain
-
-                            record = Records(domainOwner=zone,
-                                             domain_id=zone.id,
-                                             name=cNameValue,
-                                             type="CNAME",
-                                             content=topLevelDomain,
-                                             ttl=3600,
-                                             prio=0,
-                                             disabled=0,
-                                             auth=1)
-                            record.save()
-
-                            ## MX Record.
-
-                            mxValue = "mail." + topLevelDomain
-
-                            record = Records(domainOwner=zone,
-                                             domain_id=zone.id,
-                                             name=topLevelDomain,
-                                             type="MX",
-                                             content=mxValue,
-                                             ttl=3600,
-                                             prio="10",
-                                             disabled=0,
-                                             auth=1)
-                            record.save()
-
-                            record = Records(domainOwner=zone,
-                                             domain_id=zone.id,
-                                             name=mxValue,
-                                             type="A",
-                                             content=ipAddress,
-                                             ttl=3600,
-                                             prio=0,
-                                             disabled=0,
-                                             auth=1)
-                            record.save()
-
-                        ## Creating sub-domain level record.
-
-                        zone = Domains.objects.get(name=topLevelDomain)
-
-                        actualSubDomain = subDomain + "." + topLevelDomain
-
-                        ## Main A record.
-
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=actualSubDomain,
-                                         type="A",
-                                         content=ipAddress,
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
-                        # CNAME Records.
-
-                        cNameValue = "www." + actualSubDomain
-
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=cNameValue,
-                                         type="CNAME",
-                                         content=actualSubDomain,
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
-                except BaseException,msg:
-                    try:
-                        ipFile = "/etc/cyberpanel/machineIP"
-                        f = open(ipFile)
-                        ipData = f.read()
-                        recordContentA = ipData.split('\n', 1)[0]
-
-                        try:
-                            zone = Domains.objects.get(name=domain)
-                            record = Records(domainOwner=zone,
-                                             domain_id=zone.id,
-                                             name=domain,
-                                             type="A",
-                                             content=recordContentA,
-                                             ttl=3600,
-                                             prio=0,
-                                             disabled=0,
-                                             auth=1)
-                            record.save()
-                        except:
-
-                            newZone = Domains(admin=admin, name=domain, type="NATIVE")
-                            newZone.save()
-
-                            content = "ns1." + domain + " hostmaster." + domain + " 1 10800 3600 604800 3600"
-
-                            soaRecord = Records(domainOwner=newZone,
-                                                domain_id=newZone.id,
-                                                name=domain,
-                                                type="SOA",
-                                                content=content,
-                                                ttl=3600,
-                                                prio=0,
-                                                disabled=0,
-                                                auth=1)
-                            soaRecord.save()
-
-                            try:
-                                ipFile = "/etc/cyberpanel/machineIP"
-                                f = open(ipFile)
-                                ipData = f.read()
-                                recordContentA = ipData.split('\n', 1)[0]
-
-                                zone = Domains.objects.get(name=domain)
-
-                                record = Records(domainOwner=zone,
-                                                 domain_id=zone.id,
-                                                 name=domain,
-                                                 type="A",
-                                                 content=recordContentA,
-                                                 ttl=3600,
-                                                 prio=0,
-                                                 disabled=0,
-                                                 auth=1)
-                                record.save()
-
-                                # For www part
-
-                                cNameValue = "www." + domain
-
-                                record = Records(domainOwner=zone,
-                                                 domain_id=zone.id,
-                                                 name=cNameValue,
-                                                 type="CNAME",
-                                                 content=domain,
-                                                 ttl=3600,
-                                                 prio=0,
-                                                 disabled=0,
-                                                 auth=1)
-                                record.save()
-                            except BaseException, msg:
-                                logging.CyberCPLogFileWriter.writeToFile(
-                                    "Unable to add A record while creating website, error: " + str(msg))
-
-                    except BaseException,msg:
-                        logging.CyberCPLogFileWriter.writeToFile("Unable to add A record while creating website, error: " + str(msg))
-
+                val = request.session['userID']
+                admin = Administrator.objects.get(pk=val)
+                dnsTemplate(requests, domain, admin, data['dkimCheck'])
 
             ## Zone creation.
 
