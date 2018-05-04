@@ -295,8 +295,6 @@ def getCurrentRecordsForDomain(request):
 
                 records = Records.objects.filter(domain_id=domain.id)
 
-                json_data = "["
-                checker = 0
 
                 fetchType = ""
 
@@ -318,6 +316,9 @@ def getCurrentRecordsForDomain(request):
                     fetchType = 'SOA'
                 elif currentSelection == 'srvRecord':
                     fetchType = 'SRV'
+
+                json_data = "["
+                checker = 0
 
 
                 for items in records:

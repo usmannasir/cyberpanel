@@ -448,6 +448,7 @@ app.controller('websitePages', function($scope,$http) {
     };
 
     $scope.fileManagerURL = "/filemanager/"+$("#domainNamePage").text();
+    $scope.domainAliasURL = "/websites/"+$("#domainNamePage").text()+"/domainAlias";
     $scope.previewUrl = "/preview/"+$("#domainNamePage").text()+"/";
 
     var logType = 0;

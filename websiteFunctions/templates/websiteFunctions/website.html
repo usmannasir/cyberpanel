@@ -258,7 +258,7 @@
 
                <div class="row">
 
-                        <div class="col-md-4" style="margin-bottom: 2%;">
+                        <div class="col-md-3" style="margin-bottom: 2%;">
                                     <a href="" ng-click="showCreateDomainForm()" title="{% trans 'Add Domains' %}" href="" >
                                         <img  src="{% static 'images/icons/domains.png'  %}">
                                     </a>
@@ -269,7 +269,7 @@
                         </div>
 
 
-                        <div class="col-md-4" style="margin-bottom: 2%;">
+                        <div class="col-md-3" style="margin-bottom: 2%;">
                                     <a href="" ng-click="showListDomains()" title="{% trans 'List Domains' %}" href="" title="{% trans 'List Domains' %}">
                                         <img  src="{% static 'images/icons/sort.png'  %}">
                                     </a>
@@ -279,8 +279,18 @@
 
                         </div>
 
+                        <div class="col-md-3" style="margin-bottom: 2%;">
+                                    <a href="{$ domainAliasURL $}" target="_blank" title="{% trans 'Domain Alias' %}" href="" title="{% trans 'Domain Alias' %}">
+                                        <img  src="{% static 'images/icons/web-domain.png'  %}">
+                                    </a>
+                                    <a href="{$ domainAliasURL $}" target="_blank"  title="{% trans 'Domain Alias' %}" href="" title="{% trans 'Domain Alias' %}">
+                                        <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Domain Alias" %}</span>
+                                    </a>
 
-                        <div class="col-md-4" style="margin-bottom: 2%;">
+                        </div>
+
+
+                        <div class="col-md-3" style="margin-bottom: 2%;">
                                     <a href="{% url 'listCron' %}" target="_blank"  title="{% trans 'Add new Cron Job' %}" href="" title="{% trans 'List Domains' %}">
                                         <img  src="{% static 'images/icons/repeat.png'  %}">
                                     </a>
@@ -669,6 +679,7 @@
                                     <form ng-hide="configurationsBoxRewrite"  class="form-horizontal bordered-row">
 
                                          <div ng-hide="rewriteRulesFetched" class="alert alert-success">
+                                         <div ng-hide="rewriteRulesFetched" class="alert alert-success">
                                                 <p>{% trans "Current rewrite rules in the file fetched." %}</p>
                                             </div>
 
@@ -806,7 +817,7 @@
                     </div>
 
 
-                    <div class="col-md-3" style="margin-bottom: 2%;">
+                    <div class="col-md-4" style="margin-bottom: 2%;">
 
                                 <a  href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}">
                                     <img  src="{% static 'images/icons/ftp-upload.png'  %}">
@@ -818,7 +829,7 @@
                     </div>
 
 
-                    <div class="col-md-3" style="margin-bottom: 2%;">
+                    <div class="col-md-4" style="margin-bottom: 2%;">
 
                                 <a  href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}">
                                     <img  src="{% static 'images/icons/delete-ftp.png'  %}">

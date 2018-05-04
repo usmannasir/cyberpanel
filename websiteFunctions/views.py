@@ -2612,3 +2612,51 @@ def addNewCron(request):
         status = {"addNewCron": 0, "error": "Not Logged in"}
         final_json = json.dumps(status)
         return HttpResponse(final_json)
+
+
+def domainAlias(request,domain):
+    try:
+        val = request.session['userID']
+        try:
+            admin = Administrator.objects.get(pk=request.session['userID'])
+
+            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+
+            command = "sudo cat " + confPath
+            httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+
+
+            path = "/home/" + domain + "/public_html"
+
+
+            listenerTrueCheck = 0
+            noAlias = 0
+            aliases = []
+
+            for items in httpdConfig:
+                if items.find("listener Default{") > -1 or items.find("Default {") > -1:
+                    listenerTrueCheck = 1
+                    continue
+                if listenerTrueCheck == 1:
+                    if items.find(domain) > -1 and items.find('map') > -1:
+                        data = filter(None, items.split(" "))
+                        if data[1] == domain:
+                            length = len(data)
+                            if length == 3:
+                                break
+                            else:
+                                noAlias = 1
+                                for i in range(3, length):
+                                    aliases.append(data[i])
+
+            return render(request, 'websiteFunctions/domainAlias.html', {
+                                                                           'masterDomain': domain,
+                                                                           'aliases':aliases,
+                                                                           'path':path,
+                                                                           'noAlias':noAlias
+                                                                        })
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return HttpResponse(str(msg))
+    except KeyError:
+        return redirect(loadLoginPage)

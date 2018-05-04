@@ -67,4 +67,9 @@ urlpatterns = [
     url(r'^addNewCron',views.addNewCron,name="addNewCron"),
 
 
+    ## Domain Alias
+
+    url(r'^(?P<domain>([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)/domainAlias$', views.domainAlias, name='domainAlias'),
+
+
 ]

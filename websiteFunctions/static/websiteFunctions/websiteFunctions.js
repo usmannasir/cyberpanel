@@ -448,6 +448,7 @@ app.controller('websitePages', function($scope,$http) {
     };
 
     $scope.fileManagerURL = "/filemanager/"+$("#domainNamePage").text();
+    $scope.domainAliasURL = "/websites/"+$("#domainNamePage").text()+"/domainAlias";
     $scope.previewUrl = "/preview/"+$("#domainNamePage").text()+"/";
 
     var logType = 0;
@@ -2419,6 +2420,22 @@ app.controller('manageCronController', function($scope,$http) {
 
 });
 
+
+/* Java script code to manage cron ends here */
+
+
+/* Java script code to manage cron */
+
+app.controller('manageAliasController', function($scope,$http) {
+
+    $scope.aliasTable = false;
+    $scope.domainAliasForm = true;
+    $scope.aliasError = true;
+    $scope.couldNotConnect = true;
+    $scope.aliasCreated = true;
+    $scope.manageAliasLoading = true;
+
+});
 
 
 /* Java script code to manage cron ends here */
