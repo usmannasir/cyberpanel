@@ -2505,7 +2505,6 @@ class preFlightsChecks:
                     if count == 3:
                         logging.InstallLog.writeToFile(
                             "Failed to install tldextract! [installTLDExtract]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                 else:
                     logging.InstallLog.writeToFile("tldextract successfully installed!  [pip]")
                     preFlightsChecks.stdOut("tldextract successfully installed!  [pip]")
@@ -2604,6 +2603,29 @@ milter_default_action = accept
 
         return 1
 
+    def installdnsPython(self):
+        try:
+            count = 0
+            while (1):
+                command = "pip install dnspython"
+
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Trying to install dnspython, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Failed to install dnspython! [installdnsPython]")
+                else:
+                    logging.InstallLog.writeToFile("dnspython successfully installed!  [pip]")
+                    preFlightsChecks.stdOut("dnspython successfully installed!  [pip]")
+                    break
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [installdnsPython]")
+            return 0
+
 
 
 def main():
@@ -2678,6 +2700,7 @@ def main():
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword)
     checks.setup_cron()
     checks.installTLDExtract()
+    #checks.installdnsPython()
 
     ## Install and Configure OpenDKIM.
 

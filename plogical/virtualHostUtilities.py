@@ -1048,50 +1048,24 @@ def issueSSL(virtualHost,path,adminEmail):
         if os.path.exists(pathToStoreSSLFullChain):
             os.remove(pathToStoreSSLFullChain)
 
-        if not (os.path.exists(srcPrivKey) and os.path.exists(srcFullChain)):
+        retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
-            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
-
-
-            if retValues[0] == 0:
-                print "0," + str(retValues[1])
-                return
-
-            installUtilities.installUtilities.reStartLiteSpeed()
-
-            vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
-            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-
-            print "1,None"
+        if retValues[0] == 0:
+            print "0," + str(retValues[1])
             return
-        else:
-            ###### Copy SSL To config location ######
 
-            try:
-                os.mkdir(pathToStoreSSL)
-            except BaseException, msg:
-                logging.CyberCPLogFileWriter.writeToFile(
-                    str(msg) + " [Directory for SSL already exists.. Continuing [issueSSL]]")
+        installUtilities.installUtilities.reStartLiteSpeed()
 
-            srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
-            srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
+        vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
+        command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
+        cmd = shlex.split(command)
+        subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-            shutil.copy(srcPrivKey, pathToStoreSSLPrivKey)
-            shutil.copy(srcFullChain, pathToStoreSSLFullChain)
+        print "1,None"
+        return
 
-            sslUtilities.sslUtilities.installSSLForDomain(virtualHost)
-            installUtilities.installUtilities.reStartLiteSpeed()
 
-            vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
-            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-            print "1,None"
-            return
 
 
     except BaseException,msg:

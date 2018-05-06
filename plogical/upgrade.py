@@ -73,6 +73,11 @@ class Upgrade:
         command = "pip install tldextract"
         subprocess.call(shlex.split(command))
 
+        ## Install dnspython
+
+        #command = "pip install dnspython"
+        #subprocess.call(shlex.split(command))
+
         ## Change File manager permissions
 
         command = "chmod -R 777 /usr/local/lsws/Example/html/FileManager"
