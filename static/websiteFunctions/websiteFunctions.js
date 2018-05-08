@@ -2421,5 +2421,266 @@ app.controller('manageCronController', function($scope,$http) {
 });
 
 
+/* Java script code to manage cron ends here */
+
+
+/* Java script code to manage cron */
+
+app.controller('manageAliasController', function($scope,$http, $timeout, $window) {
+
+
+    var masterDomain = "";
+
+    $scope.aliasTable = false;
+    $scope.addAliasButton = false;
+    $scope.domainAliasForm = true;
+    $scope.aliasError = true;
+    $scope.couldNotConnect = true;
+    $scope.aliasCreated = true;
+    $scope.manageAliasLoading = true;
+    $scope.operationSuccess = true;
+
+    $scope.showAliasForm = function (domainName) {
+
+        $scope.domainAliasForm = false;
+        $scope.aliasTable = true;
+        $scope.addAliasButton = true;
+
+        masterDomain = domainName;
+
+    };
+
+    $scope.addAliasFunc = function () {
+
+        $scope.manageAliasLoading = false;
+
+                        var ssl;
+
+                        if ($scope.sslCheck === true){
+                                    ssl = 1;
+                                }
+                                else{
+                                    ssl = 0
+                                }
+
+                        url = "/websites/submitAliasCreation";
+
+                        var data = {
+                            masterDomain: masterDomain,
+                            aliasDomain:$scope.aliasDomain,
+                            ssl:ssl
+
+                        };
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+               $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.createAliasStatus === 1){
+
+                        $scope.aliasTable = true;
+                        $scope.addAliasButton = true;
+                        $scope.domainAliasForm = false;
+                        $scope.aliasError = true;
+                        $scope.couldNotConnect = true;
+                        $scope.aliasCreated = false;
+                        $scope.manageAliasLoading = true;
+                        $scope.operationSuccess = true;
+
+                        $timeout(function() {  $window.location.reload(); }, 3000);
+
+
+                    }
+                    else{
+
+                        $scope.aliasTable = true;
+                        $scope.addAliasButton = true;
+                        $scope.domainAliasForm = false;
+                        $scope.aliasError = false;
+                        $scope.couldNotConnect = true;
+                        $scope.aliasCreated = true;
+                        $scope.manageAliasLoading = true;
+                        $scope.operationSuccess = true;
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.aliasTable = true;
+                        $scope.addAliasButton = true;
+                        $scope.domainAliasForm = false;
+                        $scope.aliasError = true;
+                        $scope.couldNotConnect = false;
+                        $scope.aliasCreated = true;
+                        $scope.manageAliasLoading = true;
+                        $scope.operationSuccess = true;
+
+
+
+
+                }
+
+
+    };
+
+    $scope.issueSSL = function (masterDomain, aliasDomain) {
+
+        $scope.manageAliasLoading = false;
+
+
+                        url = "/websites/issueAliasSSL";
+
+                        var data = {
+                            masterDomain: masterDomain,
+                            aliasDomain:aliasDomain,
+                        };
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+               $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.sslStatus === 1){
+
+                        $scope.aliasTable = false;
+                        $scope.addAliasButton = true;
+                        $scope.domainAliasForm = true;
+                        $scope.aliasError = true;
+                        $scope.couldNotConnect = true;
+                        $scope.aliasCreated = true;
+                        $scope.manageAliasLoading = true;
+                        $scope.operationSuccess = false;
+
+
+                    }
+                    else{
+
+                        $scope.aliasTable = false;
+                        $scope.addAliasButton = true;
+                        $scope.domainAliasForm = true;
+                        $scope.aliasError = false;
+                        $scope.couldNotConnect = true;
+                        $scope.aliasCreated = true;
+                        $scope.manageAliasLoading = true;
+                        $scope.operationSuccess = true;
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.aliasTable = false;
+                        $scope.addAliasButton = true;
+                        $scope.domainAliasForm = true;
+                        $scope.aliasError = true;
+                        $scope.couldNotConnect = false;
+                        $scope.aliasCreated = true;
+                        $scope.manageAliasLoading = true;
+                        $scope.operationSuccess = true;
+
+
+
+
+                }
+
+
+    };
+
+    $scope.removeAlias = function (masterDomain, aliasDomain) {
+
+        $scope.manageAliasLoading = false;
+
+                        url = "/websites/delateAlias";
+
+                        var data = {
+                            masterDomain: masterDomain,
+                            aliasDomain:aliasDomain,
+                        };
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+               $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.deleteAlias === 1){
+
+                        $scope.aliasTable = false;
+                        $scope.addAliasButton = true;
+                        $scope.domainAliasForm = true;
+                        $scope.aliasError = true;
+                        $scope.couldNotConnect = true;
+                        $scope.aliasCreated = true;
+                        $scope.manageAliasLoading = true;
+                        $scope.operationSuccess = false;
+
+                        $timeout(function() {  $window.location.reload(); }, 3000);
+
+
+                    }
+                    else{
+
+                        $scope.aliasTable = false;
+                        $scope.addAliasButton = true;
+                        $scope.domainAliasForm = true;
+                        $scope.aliasError = false;
+                        $scope.couldNotConnect = true;
+                        $scope.aliasCreated = true;
+                        $scope.manageAliasLoading = true;
+                        $scope.operationSuccess = true;
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.aliasTable = false;
+                        $scope.addAliasButton = true;
+                        $scope.domainAliasForm = true;
+                        $scope.aliasError = true;
+                        $scope.couldNotConnect = false;
+                        $scope.aliasCreated = true;
+                        $scope.manageAliasLoading = true;
+                        $scope.operationSuccess = true;
+
+
+
+
+                }
+
+
+    };
+
+
+});
+
 
 /* Java script code to manage cron ends here */

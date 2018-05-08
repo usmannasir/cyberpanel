@@ -24,9 +24,9 @@
             <form action="/" class="form-horizontal bordered-row">
 
             <!------ Modification form that appears after a click --------------->
-            <div class="form-group">
+            <div ng-hide="addAliasButton" class="form-group">
                 <div class="col-sm-4">
-                    <button class="btn ra-100 btn-blue-alt">Create Alias</button>
+                    <button ng-click="showAliasForm('{{ masterDomain }}')" class="btn ra-100 btn-blue-alt">{% trans 'Create Alias'  %}</button>
                 </div>
             </div>
 
@@ -50,9 +50,9 @@
                         <td>{{ masterDomain }}</td>
                         <td>{{ alias }}</td>
                         <td>{{ path }}</td>
-                        <td><button type="button" ng-click="issueSSL(record.childDomain,record.path)" class="btn ra-100 btn-purple">{% trans "Issue" %}</button></td>
+                        <td><button type="button" ng-click="issueSSL('{{ masterDomain }}', '{{ alias }}')" class="btn ra-100 btn-purple">{% trans "Issue" %}</button></td>
                         <td>
-                            <a class="btn btn-warning" ng-click="removeAlias()" href=""><i class="glyph-icon icon-trash" title="{% trans "Delete" %}"></i></a>
+                            <a class="btn btn-warning" ng-click="removeAlias('{{ masterDomain }}', '{{ alias }}')" href=""><i class="glyph-icon icon-trash" title="{% trans "Delete" %}"></i></a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -71,58 +71,63 @@
 
             <!------ Modification form that appears after a click --------------->
 
-            <div ng-hide="domainAliasForm">
-                <form  action="/" class="form-horizontal bordered-row ng-scope ng-dirty ng-valid-parse ng-valid ng-valid-required">
-                    <input type="hidden" ng-value="line" required="">
+                <div ng-hide="domainAliasForm">
+                    <form  action="/" class="form-horizontal bordered-row ng-scope ng-dirty ng-valid-parse ng-valid ng-valid-required">
+                        <input type="hidden" ng-value="line" required="">
 
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">{% trans "Alias Domain" %}</label>
-                        <div class="col-sm-6">
-                            <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="aliasDomain" required="">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Alias Domain" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="aliasDomain" required="">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                                    <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
+                                    <div class="col-sm-9">
+                                        <div class="checkbox">
+                                            <label>
+                                                <input ng-model="sslCheck" type="checkbox" value="">
+                                                SSL
+                                                <div ng-show="sslCheck" style="margin-top: 2%;margin-bottom: -2%" class="alert alert-warning">
+                                                    <p>{% trans "For SSL to work DNS of domain should point to server, otherwise self signed SSL will be issued, you can add your own SSL later." %}</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                        </div>
+                        <hr>
+
+                    </form>
+                    <div  class="form-group">
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-4">
+                            <button type="button" ng-click="addAliasFunc()" class="btn btn-primary btn-lg btn-block">{% trans "Create Alias" %}</button>
                         </div>
                     </div>
-
-                    <div class="form-group">
-                                <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
-                                <div class="col-sm-9">
-                                    <div class="checkbox">
-                                        <label>
-                                            <input ng-model="sslCheck" type="checkbox" value="">
-                                            SSL
-                                            <div ng-show="sslCheck" style="margin-top: 2%;margin-bottom: -2%" class="alert alert-warning">
-                                                <p>{% trans "For SSL to work DNS of domain should point to server, otherwise self signed SSL will be issued, you can add your own SSL later." %}</p>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-                    </div>
-                    <hr>
-
-                </form>
-                <div ng-hide="addAliasButton" class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                        <button type="button" ng-click="addAliasFunc()" class="btn btn-primary btn-lg btn-block">{% trans "Create Alias" %}</button>
-                    </div>
                 </div>
-            </div>
 
-            <div class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                            <div ng-hide="aliasError" class="alert alert-danger">
-                                        <p>{% trans "Operation failed. Error message:" %} {$ errorMessage $}</p>
-                            </div>
+                <div class="form-group">
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-4">
+                                <div ng-hide="aliasError" class="alert alert-danger">
+                                            <p>{% trans "Operation failed. Error message:" %} {$ errorMessage $}</p>
+                                </div>
 
-                            <div ng-hide="aliasCreated" class="alert alert-success">
-                                        <p>{% trans "Alias successfully created." %}</p>
-                            </div>
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                            </div>
-                    </div>
+                                <div ng-hide="aliasCreated" class="alert alert-success">
+                                            <p>{% trans "Alias successfully created. Refreshing page in 3 seconds..." %}</p>
+                                </div>
 
-            </div>
+                                <div ng-hide="operationSuccess" class="alert alert-success">
+                                            <p>{% trans "Operation Successfull." %}</p>
+                                </div>
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                            <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+                        </div>
+
+                </div>
 
 
             </form>

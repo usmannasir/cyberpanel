@@ -305,6 +305,7 @@ def submitPasswordChange(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+#######
 
 def dkimManager(request):
     try:
@@ -450,7 +451,6 @@ def generateDKIMKeys(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def installOpenDKIM(request):
     try:
         val = request.session['userID']
@@ -473,7 +473,8 @@ def installStatusOpenDKIM(request):
         try:
             if request.method == 'POST':
 
-                installStatus = unicode(open(mailUtilities.installLogPath, "r").read())
+                command = "sudo cat " + mailUtilities.installLogPath
+                installStatus = subprocess.check_output(shlex.split(command))
 
                 if installStatus.find("[200]")>-1:
 

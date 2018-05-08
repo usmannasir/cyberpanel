@@ -6,15 +6,19 @@ from virtualHostUtilities import virtualHostUtilities
 import os
 import tarfile
 import shutil
+from mailUtilities import mailUtilities
 
 class modSec:
     installLogPath = "/home/cyberpanel/modSecInstallLog"
     tempRulesFile = "/home/cyberpanel/tempModSecRules"
     mirrorPath = "mirror.cyberpanel.net"
 
+
     @staticmethod
     def installModSec(install, modSecInstall):
         try:
+
+            mailUtilities.checkHome()
 
             command = 'sudo yum install ols-modsecurity -y'
 

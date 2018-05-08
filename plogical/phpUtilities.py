@@ -5,6 +5,7 @@ import thread
 import installUtilities
 import argparse
 import os
+from mailUtilities import mailUtilities
 
 class phpUtilities:
 
@@ -13,6 +14,8 @@ class phpUtilities:
     @staticmethod
     def installPHPExtension(extension,extensions):
         try:
+
+            mailUtilities.checkHome()
 
             command = 'sudo yum install '+extension +' -y'
 
@@ -39,6 +42,8 @@ class phpUtilities:
     @staticmethod
     def unInstallPHPExtension(extension,extensions):
         try:
+
+            mailUtilities.checkHome()
 
             command = 'sudo rpm --nodeps -e  ' + extension + ' -v'
 

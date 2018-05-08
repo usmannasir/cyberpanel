@@ -8,7 +8,8 @@ import shlex
 
 class mailUtilities:
 
-    installLogPath = "/home/cyberpanel/modSecInstallLog"
+    installLogPath = "/home/cyberpanel/openDKIMInstallLog"
+    cyberPanelHome = "/home/cyberpanel"
 
     @staticmethod
     def createEmailAccount(domain):
@@ -118,10 +119,13 @@ class mailUtilities:
 
             path = "/etc/opendkim.conf"
 
-            if os.path.exists(path):
-                return 1
-            else:
+            command = "sudo cat " + path
+            res = subprocess.call(shlex.split(command))
+
+            if res == 1:
                 return 0
+            else:
+                return 1
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
@@ -142,7 +146,6 @@ class mailUtilities:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [generateKeys]")
             print "0," + str(msg)
-
 
     @staticmethod
     def configureOpenDKIM():
@@ -207,8 +210,26 @@ milter_default_action = accept
             return
 
     @staticmethod
+    def checkHome():
+        try:
+            try:
+                command = "sudo mkdir " + mailUtilities.cyberPanelHome
+                subprocess.call(shlex.split(command))
+
+                command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
+                subprocess.call(shlex.split(command))
+            except:
+                command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
+                subprocess.call(shlex.split(command))
+
+        except BaseException,msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [checkHome]")
+
+    @staticmethod
     def installOpenDKIM(install, openDKIMINstall):
         try:
+
+            mailUtilities.checkHome()
 
             command = 'sudo yum install opendkim -y'
 
@@ -221,7 +242,7 @@ milter_default_action = accept
                 writeToFile = open(mailUtilities.installLogPath, 'a')
                 writeToFile.writelines("Can not be installed.[404]\n")
                 writeToFile.close()
-                logging.CyberCPLogFileWriter.writeToFile("[Could not Install]")
+                logging.CyberCPLogFileWriter.writeToFile("[Could not Install OpenDKIM.]")
                 return 0
             else:
                 writeToFile = open(mailUtilities.installLogPath, 'a')
@@ -230,6 +251,9 @@ milter_default_action = accept
 
             return 1
         except BaseException, msg:
+            writeToFile = open(mailUtilities.installLogPath, 'a')
+            writeToFile.writelines("Can not be installed.[404]\n")
+            writeToFile.close()
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installOpenDKIM]")
 
 

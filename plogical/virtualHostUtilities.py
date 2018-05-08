@@ -13,6 +13,8 @@ from shutil import move
 import randomPassword as randomPassword
 from mailUtilities import mailUtilities
 
+## If you want justice, you have come to the wrong place.
+
 
 class virtualHostUtilities:
 
@@ -902,6 +904,66 @@ class virtualHostUtilities:
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
+    @staticmethod
+    def checkIfAliasExists(aliasDomain):
+        try:
+
+            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            data = open(confPath, 'r').readlines()
+
+            for items in data:
+                if items.find(aliasDomain) > -1:
+                    domains = filter(None, items.split(" "))
+                    for domain in domains:
+                        if domain.strip(',').strip('\n') == aliasDomain:
+                            return 1
+
+            return 0
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [checkIfAliasExists]")
+            return 1
+
+    @staticmethod
+    def checkIfSSLAliasExists(data, aliasDomain):
+        try:
+            for items in data:
+                if items.strip(',').strip('\n') == aliasDomain:
+                    return 1
+            return 0
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [checkIfSSLAliasExists]")
+            return 1
+
+    @staticmethod
+    def createAliasSSLMap(confPath, masterDomain, aliasDomain):
+        try:
+
+            data = open(confPath, 'r').readlines()
+            writeToFile = open(confPath, 'w')
+            sslCheck = 0
+
+            for items in data:
+                if (items.find("listener SSL") > -1):
+                    sslCheck = 1
+                if items.find(masterDomain) > -1 and items.find('map') > -1 and sslCheck == 1:
+                    data = filter(None, items.split(" "))
+                    if data[1] == masterDomain:
+                        if virtualHostUtilities.checkIfSSLAliasExists(data, aliasDomain) == 0:
+                            writeToFile.writelines(items.rstrip('\n') + ", " + aliasDomain + "\n")
+                            sslCheck = 0
+                        else:
+                            writeToFile.writelines(items)
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+            installUtilities.installUtilities.reStartLiteSpeed()
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createAliasSSLMap]")
+
+
 
 def createVirtualHost(virtualHostName,administratorEmail,phpVersion,virtualHostUser,numberOfSites,ssl,sslPath,dkimCheck):
     try:
@@ -1035,19 +1097,6 @@ def issueSSL(virtualHost,path,adminEmail):
 
         FNULL = open(os.devnull, 'w')
 
-        srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
-        srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
-
-        pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHost
-
-        pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-        pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
-
-        if os.path.exists(pathToStoreSSLPrivKey):
-            os.remove(pathToStoreSSLPrivKey)
-        if os.path.exists(pathToStoreSSLFullChain):
-            os.remove(pathToStoreSSLFullChain)
-
         retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
         if retValues[0] == 0:
@@ -1063,10 +1112,6 @@ def issueSSL(virtualHost,path,adminEmail):
 
         print "1,None"
         return
-
-
-
-
 
     except BaseException,msg:
         logging.CyberCPLogFileWriter.writeToFile(
@@ -1482,9 +1527,6 @@ def issueSSLForHostName(virtualHost,path):
 
         FNULL = open(os.devnull, 'w')
 
-        srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
-        srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
-
         pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHost
 
         pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
@@ -1492,13 +1534,6 @@ def issueSSLForHostName(virtualHost,path):
 
         destPrivKey = "/usr/local/lscp/key.pem"
         destCert = "/usr/local/lscp/cert.pem"
-
-        ## removing old certs
-
-        if os.path.exists(pathToStoreSSLPrivKey):
-            os.remove(pathToStoreSSLPrivKey)
-        if os.path.exists(pathToStoreSSLFullChain):
-            os.remove(pathToStoreSSLFullChain)
 
         ## removing old certs for lscpd
         if os.path.exists(destPrivKey):
@@ -1508,63 +1543,25 @@ def issueSSLForHostName(virtualHost,path):
 
         adminEmail = "email@" + virtualHost
 
-        if not (os.path.exists(srcPrivKey) and os.path.exists(srcFullChain)):
+        retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
-            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
-
-            if retValues[0] == 0:
-                print "0," + str(retValues[1])
-                return
-
-            ## lcpd specific functions
-
-            shutil.copy(srcPrivKey, destPrivKey)
-            shutil.copy(srcFullChain, destCert)
-
-            command = 'systemctl restart lscpd'
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd)
-
-            vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
-            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            print "1,None"
-        else:
-            ###### Copy SSL To config location ######
-
-            try:
-                os.mkdir(pathToStoreSSL)
-            except BaseException, msg:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Directory for SSL already exists.. Continuing [issueSSLForHostName]]")
-
-            srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
-            srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
-
-            shutil.copy(srcPrivKey, pathToStoreSSLPrivKey)
-            shutil.copy(srcFullChain, pathToStoreSSLFullChain)
-
-            ## lcpd specific functions
-
-            shutil.copy(srcPrivKey, destPrivKey)
-            shutil.copy(srcFullChain, destCert)
-
-            command = 'systemctl restart lscpd'
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd)
-
-            vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
-            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            print "1,None"
+        if retValues[0] == 0:
+            print "0," + str(retValues[1])
             return
+        else:
+            shutil.copy(pathToStoreSSLPrivKey, destPrivKey)
+            shutil.copy(pathToStoreSSLFullChain, destCert)
+
+            command = 'systemctl restart lscpd'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
+
+            vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
+            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            print "1,None"
 
     except BaseException,msg:
         logging.CyberCPLogFileWriter.writeToFile(
@@ -1576,47 +1573,15 @@ def issueSSLForMailServer(virtualHost,path):
 
         FNULL = open(os.devnull, 'w')
 
-        srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
-        srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
-
         pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHost
-
-        pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-        pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
-
-
-        ## removing old certs
-
-        if os.path.exists(pathToStoreSSLPrivKey):
-            os.remove(pathToStoreSSLPrivKey)
-        if os.path.exists(pathToStoreSSLFullChain):
-            os.remove(pathToStoreSSLFullChain)
-
 
         adminEmail = "email@" + virtualHost
 
-        if not (os.path.exists(srcPrivKey) and os.path.exists(srcFullChain)):
+        retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
-            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
-
-            if retValues[0] == 0:
-                print "0," + str(retValues[1])
-                return
-
-
-        else:
-            ###### Copy SSL To config location ######
-
-            try:
-                os.mkdir(pathToStoreSSL)
-            except BaseException, msg:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Directory for SSL already exists.. Continuing [issueSSLForHostName]]")
-
-            srcPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
-            srcFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
-
-            shutil.copy(srcPrivKey, pathToStoreSSLPrivKey)
-            shutil.copy(srcFullChain, pathToStoreSSLFullChain)
+        if retValues[0] == 0:
+            print "0," + str(retValues[1])
+            return
 
 
         ## MailServer specific functions
@@ -1641,6 +1606,9 @@ def issueSSLForMailServer(virtualHost,path):
 
 
         ## Postfix
+
+        srcPrivKey = pathToStoreSSL + "/privkey.pem"
+        srcFullChain = pathToStoreSSL + "/fullchain.pem"
 
         shutil.copy(srcPrivKey, "/etc/postfix/key.pem")
         shutil.copy(srcFullChain, "/etc/postfix/cert.pem")
@@ -1706,6 +1674,117 @@ def issueSSLForMailServer(virtualHost,path):
             str(msg) + "  [issueSSLForHostName]")
         print "0,"+str(msg)
 
+
+def createAlias(masterDomain,aliasDomain,ssl,sslPath, administratorEmail):
+    try:
+
+        if virtualHostUtilities.checkIfAliasExists(aliasDomain) == 0:
+
+            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            data = open(confPath,'r').readlines()
+            writeToFile = open(confPath,'w')
+            listenerTrueCheck = 0
+    
+            for items in data:
+                if items.find("listener Default{") > -1 or items.find("Default {") > -1:
+                    listenerTrueCheck = 1
+                if items.find(masterDomain) > -1 and items.find('map') > -1 and listenerTrueCheck == 1:
+                    data = filter(None, items.split(" "))
+                    if data[1] == masterDomain:
+                        writeToFile.writelines(items.rstrip('\n') + ", " + aliasDomain + "\n")
+                        listenerTrueCheck = 0
+                else:
+                    writeToFile.writelines(items)
+    
+            writeToFile.close()
+    
+            installUtilities.installUtilities.reStartLiteSpeed()
+        else:
+            print "0, This domain already exists as vHost or Alias."
+            return
+
+
+        if ssl == 1:
+            retValues = sslUtilities.issueSSLForDomain(masterDomain, administratorEmail, sslPath, aliasDomain)
+            if retValues[0] == 0:
+                print "0," + str(retValues[1])
+                return
+            else:
+                virtualHostUtilities.createAliasSSLMap(confPath,masterDomain, aliasDomain)
+
+
+        print "1,None"
+
+
+    except BaseException,msg:
+
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createAlias]")
+        print "0,"+str(msg)
+
+def issueAliasSSL(masterDomain, aliasDomain, sslPath, administratorEmail):
+            try:
+
+                confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+
+                retValues = sslUtilities.issueSSLForDomain(masterDomain, administratorEmail, sslPath, aliasDomain)
+
+                if retValues[0] == 0:
+                    print "0," + str(retValues[1])
+                    return
+                else:
+                    virtualHostUtilities.createAliasSSLMap(confPath, masterDomain, aliasDomain)
+
+                print "1,None"
+
+
+            except BaseException, msg:
+
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [issueAliasSSL]")
+                print "0," + str(msg)
+
+
+def deleteAlias(masterDomain, aliasDomain):
+    try:
+
+        confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+
+        data = open(confPath, 'r').readlines()
+        writeToFile = open(confPath, 'w')
+        aliases = []
+
+        for items in data:
+            if items.find(masterDomain) > -1 and items.find('map') > -1:
+                data = filter(None, items.split(" "))
+                if data[1] == masterDomain:
+                    length = len(data)
+                    for i in range(3, length):
+                        currentAlias = data[i].rstrip(',').strip('\n')
+                        if currentAlias != aliasDomain:
+                            aliases.append(currentAlias)
+
+                    aliasString = ""
+
+                    for alias in aliases:
+                        aliasString = ", " + alias
+
+                    writeToFile.writelines('  map                     ' + masterDomain + " " + masterDomain + aliasString + "\n")
+                    aliases = []
+                    aliasString = ""
+                else:
+                    writeToFile.writelines(items)
+
+            else:
+                writeToFile.writelines(items)
+
+        writeToFile.close()
+        installUtilities.installUtilities.reStartLiteSpeed()
+
+        print "1,None"
+
+
+    except BaseException, msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [deleteAlias]")
+        print "0," + str(msg)
 
 
 def saveSSL(virtualHost,pathToStoreSSL,keyPath,certPath,sslCheck):
@@ -1795,6 +1874,12 @@ def main():
     parser.add_argument('--prefix', help='Database Prefix!')
     parser.add_argument('--sitename', help='Site Name!')
 
+    ## Arguments for alias domain
+
+    parser.add_argument('--aliasDomain', help='Alias Domain!')
+
+
+
     args = parser.parse_args()
 
     if args.function == "createVirtualHost":
@@ -1835,6 +1920,12 @@ def main():
         issueSSLForMailServer(args.virtualHostName,args.path)
     elif args.function == "findDomainBW":
         virtualHostUtilities.findDomainBW(args.virtualHostName, int(args.bandwidth))
+    elif args.function == 'createAlias':
+        createAlias(args.masterDomain,args.aliasDomain,int(args.ssl),args.sslPath, args.administratorEmail)
+    elif args.function == 'issueAliasSSL':
+        issueAliasSSL(args.masterDomain, args.aliasDomain, args.sslPath, args.administratorEmail)
+    elif args.function == 'deleteAlias':
+        deleteAlias(args.masterDomain, args.aliasDomain)
 
 if __name__ == "__main__":
     main()

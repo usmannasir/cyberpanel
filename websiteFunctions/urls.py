@@ -70,6 +70,8 @@ urlpatterns = [
     ## Domain Alias
 
     url(r'^(?P<domain>([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)/domainAlias$', views.domainAlias, name='domainAlias'),
-
+    url(r'^submitAliasCreation',views.submitAliasCreation,name="submitAliasCreation"),
+    url(r'^issueAliasSSL',views.issueAliasSSL,name="issueAliasSSL"),
+    url(r'^delateAlias',views.delateAlias,name="delateAlias"),
 
 ]

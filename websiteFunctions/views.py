@@ -24,6 +24,7 @@ import re
 from random import randint
 import hashlib
 from xml.etree import ElementTree
+from plogical.mailUtilities import mailUtilities
 # Create your views here.
 
 
@@ -308,24 +309,6 @@ def dnsTemplate(request, domain, admin, dkimCheck):
                                  auth=1)
                 record.save()
 
-                ## DKIM Support
-
-                if dkimCheck == 1:
-                    path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
-                    command = "sudo cat " + path
-                    output = subprocess.check_output(shlex.split(command))
-
-                    record = Records(domainOwner=zone,
-                                     domain_id=zone.id,
-                                     name="default._domainkey." + topLevelDomain,
-                                     type="TXT",
-                                     content="v=DKIM1; k=rsa; p=" + output[53:269],
-                                     ttl=3600,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
-
 
         else:
             if Domains.objects.filter(name=topLevelDomain).count() == 0:
@@ -412,24 +395,6 @@ def dnsTemplate(request, domain, admin, dkimCheck):
                                  auth=1)
                 record.save()
 
-                ## DKIM Support
-
-                if dkimCheck == 1:
-                    path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
-                    command = "sudo cat " + path
-                    output = subprocess.check_output(shlex.split(command))
-
-                    record = Records(domainOwner=zone,
-                                     domain_id=zone.id,
-                                     name="default._domainkey." + topLevelDomain,
-                                     type="TXT",
-                                     content="v=DKIM1; k=rsa; p=" + output[53:269],
-                                     ttl=3600,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
-
             ## Creating sub-domain level record.
 
             zone = Domains.objects.get(name=topLevelDomain)
@@ -463,6 +428,35 @@ def dnsTemplate(request, domain, admin, dkimCheck):
                              disabled=0,
                              auth=1)
             record.save()
+
+    except BaseException, msg:
+        logging.CyberCPLogFileWriter.writeToFile(
+            "We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
+
+def createDKIMRecords(request, domain, admin):
+    try:
+
+        import tldextract
+
+        extractDomain = tldextract.extract(domain)
+        topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
+
+        zone = Domains.objects.get(name=topLevelDomain)
+
+        path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
+        command = "sudo cat " + path
+        output = subprocess.check_output(shlex.split(command))
+
+        record = Records(domainOwner=zone,
+                         domain_id=zone.id,
+                         name="default._domainkey." + topLevelDomain,
+                         type="TXT",
+                         content="v=DKIM1; k=rsa; p=" + output[53:269],
+                         ttl=3600,
+                         prio=0,
+                         disabled=0,
+                         auth=1)
+        record.save()
 
     except BaseException, msg:
         logging.CyberCPLogFileWriter.writeToFile(
@@ -579,6 +573,12 @@ def submitWebsiteCreation(request):
 
             ####### Limitations Check End
 
+            ##### Zone creation
+
+            dnsTemplate(requests, domain, admin, data['dkimCheck'])
+
+            ## zone creation
+
             numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
             sslpath = "/home/" + domain + "/public_html"
 
@@ -601,11 +601,10 @@ def submitWebsiteCreation(request):
 
             ## Create Configurations ends here
 
-            ##### Zone creation
+            ## DKIM Check
 
-            dnsTemplate(requests, domain, admin, data['dkimCheck'])
-
-            ## zone creation
+            if data['dkimCheck'] == 1:
+                createDKIMRecords(request,domain,admin)
 
             selectedPackage = Package.objects.get(packageName=packageName)
 
@@ -683,6 +682,18 @@ def submitDomainCreation(request):
                 else:
                     path = "/home/" + masterDomain + "/public_html/" + domain
 
+            ### Zone creation.
+
+            try:
+                restore = data['restore']
+                restart = 0
+            except BaseException, msg:
+                val = request.session['userID']
+                admin = Administrator.objects.get(pk=val)
+                dnsTemplate(requests, domain, admin, data['dkimCheck'])
+
+            ## Zone creation.
+
             externalApp = master.externalApp
             numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
 
@@ -700,22 +711,17 @@ def submitDomainCreation(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
+            ## Create Configurations ends here
 
-            ### Zone creation.
+            ## DKIM Check
 
             try:
                 restore = data['restore']
                 restart = 0
-            except BaseException,msg:
-                val = request.session['userID']
-                admin = Administrator.objects.get(pk=val)
-                dnsTemplate(requests, domain, admin, data['dkimCheck'])
 
-            ## Zone creation.
-
-
-
-            ## Create Configurations ends here
+            except BaseException, msg:
+                if data['dkimCheck'] == 1:
+                    createDKIMRecords(request, domain, admin)
 
             website = ChildDomains(master=master, domain=domain, path=path, phpSelection=phpSelection, ssl=ssl)
 
@@ -1811,6 +1817,8 @@ def saveSSL(request):
                 data = json.loads(request.body)
                 domain = data['virtualHost']
 
+                mailUtilities.checkHome()
+
                 ## writing data temporary to file
 
 
@@ -2647,7 +2655,9 @@ def domainAlias(request,domain):
                             else:
                                 noAlias = 1
                                 for i in range(3, length):
-                                    aliases.append(data[i])
+                                    aliases.append(data[i].rstrip(','))
+
+            aliases = list(set(aliases))
 
             return render(request, 'websiteFunctions/domainAlias.html', {
                                                                            'masterDomain': domain,
@@ -2660,3 +2670,146 @@ def domainAlias(request,domain):
             return HttpResponse(str(msg))
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def submitAliasCreation(request):
+    try:
+        if request.method == 'POST':
+
+            data = json.loads(request.body)
+
+            masterDomain = data['masterDomain']
+            aliasDomain = data['aliasDomain']
+            ssl = data['ssl']
+
+            admin = Administrator.objects.get(pk=request.session['userID'])
+
+            ##### Zone creation
+
+            dnsTemplate(requests, aliasDomain, admin, 0)
+
+            ### Zone creation
+
+
+
+            sslpath = "/home/" + masterDomain + "/public_html"
+
+            ## Create Configurations
+
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+            execPath = execPath + " createAlias --masterDomain " + masterDomain + " --aliasDomain " + aliasDomain + " --ssl " + str(
+                ssl) + " --sslPath " + sslpath + " --administratorEmail " + admin.email
+
+            output = subprocess.check_output(shlex.split(execPath))
+
+            if output.find("1,None") > -1:
+                pass
+            else:
+                data_ret = {'createAliasStatus': 0, 'error_message': output, "existsStatus": 0}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            ## Create Configurations ends here
+
+
+
+            data_ret = {'createAliasStatus': 1, 'error_message': "None", "existsStatus": 0}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+
+    except BaseException, msg:
+        data_ret = {'createAliasStatus': 0, 'error_message': str(msg), "existsStatus": 0}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+
+def issueAliasSSL(request):
+    try:
+        if request.method == 'POST':
+
+            data = json.loads(request.body)
+
+            masterDomain = data['masterDomain']
+            aliasDomain = data['aliasDomain']
+
+            admin = Administrator.objects.get(pk=request.session['userID'])
+
+
+            sslpath = "/home/" + masterDomain + "/public_html"
+
+            ## Create Configurations
+
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+            execPath = execPath + " issueAliasSSL --masterDomain " + masterDomain + " --aliasDomain " + aliasDomain + " --sslPath " + sslpath + " --administratorEmail " + admin.email
+
+            output = subprocess.check_output(shlex.split(execPath))
+
+            if output.find("1,None") > -1:
+                pass
+            else:
+                data_ret = {'sslStatus': 0, 'error_message': output, "existsStatus": 0}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            ## Create Configurations ends here
+
+
+
+            data_ret = {'sslStatus': 1, 'error_message': "None", "existsStatus": 0}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+
+    except BaseException, msg:
+        data_ret = {'sslStatus': 0, 'error_message': str(msg), "existsStatus": 0}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def delateAlias(request):
+    try:
+        if request.method == 'POST':
+
+            data = json.loads(request.body)
+
+            masterDomain = data['masterDomain']
+            aliasDomain = data['aliasDomain']
+
+            admin = Administrator.objects.get(pk=request.session['userID'])
+
+
+            sslpath = "/home/" + masterDomain + "/public_html"
+
+            ## Create Configurations
+
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+            execPath = execPath + " deleteAlias --masterDomain " + masterDomain + " --aliasDomain " + aliasDomain
+
+            output = subprocess.check_output(shlex.split(execPath))
+
+            if output.find("1,None") > -1:
+                pass
+            else:
+                data_ret = {'deleteAlias': 0, 'error_message': output, "existsStatus": 0}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            ## Create Configurations ends here
+
+
+
+            data_ret = {'deleteAlias': 1, 'error_message': "None", "existsStatus": 0}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+
+    except BaseException, msg:
+        data_ret = {'deleteAlias': 0, 'error_message': str(msg), "existsStatus": 0}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
