@@ -16,8 +16,12 @@ from shutil import move,copy
 import sys
 from xml.etree import ElementTree
 import time
+from virtualHostUtilities import virtualHostUtilities, createAlias
+from sslUtilities import sslUtilities
 
 
+
+## I am not the monster that you think I am..
 
 class backupUtilities:
 
@@ -80,9 +84,24 @@ class backupUtilities:
                 if mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, tempStoragePath) == 0:
                     raise BaseException
 
+            try:
+                pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + domainName
+                if os.path.exists(pathToStoreSSL):
+                    pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
+                    pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
+
+                    copy(pathToStoreSSLPrivKey, tempStoragePath + "/privkey.pem")
+                    copy(pathToStoreSSLFullChain, tempStoragePath + "/fullchain.pem")
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+
             ## shutil.make_archive, ## shutil.
             make_archive(os.path.join(backupPath,backupName), 'gztar', tempStoragePath)
             rmtree(tempStoragePath)
+
+            ## Saving SSL Certificates if any
+
+
 
             status = open(os.path.join(backupPath,'status'), "w")
             status.write("Completed\n")
@@ -92,7 +111,6 @@ class backupUtilities:
         except BaseException,msg:
             try:
                 os.remove(os.path.join(backupPath,backupName+".tar.gz"))
-
             except:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
@@ -162,7 +180,7 @@ class backupUtilities:
             status.write("Creating Accounts,Databases and DNS records!")
             status.close()
 
-            ## creating website and its dabases
+            ########### Creating website and its dabases
 
             try:
                 finalData = json.dumps({'backupFile': backupName,"dir":dir})
@@ -173,17 +191,17 @@ class backupUtilities:
                     pass
                 else:
                     status = open(os.path.join(completPath,'status'), "w")
-                    status.write("Error Message: " + data['error_message'] +". Not able to create Account, Databasesand DNS Records, aborting. [5009]")
+                    status.write("Error Message: " + data['error_message'] +". Not able to create Account, Databases and DNS Records, aborting. [5009]")
                     status.close()
                     return 0
             except BaseException,msg:
                 status = open(os.path.join(completPath,'status'), "w")
-                status.write("Error Message: " + str(msg) +". Not able to create Account, Databasesand DNS Records, aborting. [5009]")
+                status.write("Error Message: " + str(msg) +". Not able to create Account, Databases and DNS Records, aborting. [5009]")
                 status.close()
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
                 return 0
 
-            ########### creating child/sub/addon/parked domains
+            ###########Ccreating child/sub/addon/parked domains
 
             status = open(os.path.join(completPath,'status'), "w")
             status.write("Creating Child Domains!")
@@ -200,6 +218,21 @@ class backupUtilities:
 
             childDomains = backupMetaData.findall('ChildDomains/domain')
 
+            ## Let us try to restore SSL.
+
+            if os.path.exists(completPath + "/privkey.pem"):
+                sslUtilities.installSSLForDomain(masterDomain)
+
+                pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + masterDomain
+                pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
+                pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
+
+                copy(completPath + "/privkey.pem", pathToStoreSSLPrivKey)
+                copy(completPath + "/fullchain.pem", pathToStoreSSLFullChain)
+
+                command = "chown " + "lsadm" + ":" + "lsadm" + " " + pathToStoreSSL
+                cmd = shlex.split(command)
+
             try:
                 for childDomain in childDomains:
 
@@ -210,7 +243,8 @@ class backupUtilities:
                     finalData = json.dumps(
                         {'masterDomain': masterDomain, 'domainName': domain, 'phpSelection': phpSelection,
                          'path': path,
-                         'ssl': 0, 'restore': 1})
+                         'ssl': 0, 'restore': 1,
+                         'dkimCheck': 0})
                     r = requests.post("http://localhost:5003/websites/submitDomainCreation", data=finalData,
                                       verify=False)
 
@@ -238,6 +272,14 @@ class backupUtilities:
             status = open(os.path.join(completPath, 'status'), "w")
             status.write("Restoring email accounts!")
             status.close()
+
+
+            ## Restore Aliases
+
+            aliases = backupMetaData.findall('Aliases/alias')
+
+            for items in aliases:
+                createAlias(masterDomain, items.text, 0, "", "")
 
             emailAccounts = backupMetaData.findall('emails/emailAccount')
 
@@ -290,6 +332,10 @@ class backupUtilities:
             ## Databases restored
 
 
+            ## Restoring Aliases
+
+            aliases = backupMetaData.findall('Databases/database')
+
             status = open(os.path.join(completPath, 'status'), "w")
             status.write("Extracting web home data!")
             status.close()
@@ -307,7 +353,6 @@ class backupUtilities:
             status.close()
 
             try:
-
                 pathToCompressedEmails = os.path.join(completPath, masterDomain + ".tar.gz")
                 emailHome = os.path.join("/home","vmail",masterDomain)
 
@@ -566,6 +611,31 @@ class backupUtilities:
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [host_key_verification]")
             return 0
+
+    @staticmethod
+    def getAliases(masterDomain):
+        try:
+
+            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            command = "sudo cat " + confPath
+            data = subprocess.check_output(shlex.split(command)).splitlines()
+            aliases = []
+
+            for items in data:
+                if items.find(masterDomain) > -1 and items.find('map') > -1:
+                    data = filter(None, items.split(" "))
+                    if data[1] == masterDomain:
+                        length = len(data)
+                        for i in range(3, length):
+                            currentAlias = data[i].rstrip(',').strip('\n')
+                            aliases.append(currentAlias)
+
+
+            return aliases
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [getAliases]")
+            print 0
 
 
 def submitBackupCreation(tempStoragePath,backupName,backupPath,metaPath):

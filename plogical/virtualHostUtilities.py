@@ -971,6 +971,10 @@ def createVirtualHost(virtualHostName,administratorEmail,phpVersion,virtualHostU
             print "0,Virtual Host Directory already exists!"
             return
 
+        if virtualHostUtilities.checkIfAliasExists(virtualHostName) == 1:
+            print "0,This domain exists as Alias."
+            return
+
         if dkimCheck == 1:
             if mailUtilities.checkIfDKIMInstalled() == 0:
                 print "0, OpenDKIM is not installed, install OpenDKIM from DKIM Manager."
@@ -1029,6 +1033,11 @@ def createDomain(masterDomain, virtualHostName, phpVersion, path,administratorEm
     try:
         if virtualHostUtilities.checkIfVirtualHostExists(virtualHostName) == 1:
             print "0,Virtual Host Directory already exists!"
+            return
+
+
+        if virtualHostUtilities.checkIfAliasExists(virtualHostName) == 1:
+            print "0,This domain exists as Alias."
             return
 
 

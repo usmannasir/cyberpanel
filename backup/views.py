@@ -254,6 +254,23 @@ def submitBackupCreation(request):
 
             metaFileXML.append(databasesXML)
 
+
+            ## Get Aliases
+
+            aliasesXML = Element('Aliases')
+
+            aliases = backupUtil.backupUtilities.getAliases(backupDomain)
+
+            for items in aliases:
+
+                child = SubElement(aliasesXML, 'alias')
+                child.text = items
+
+            metaFileXML.append(aliasesXML)
+
+
+            ## Finish Alias
+
             ## DNS Records XML
 
             try:
