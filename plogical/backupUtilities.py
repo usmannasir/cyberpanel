@@ -33,7 +33,7 @@ class backupUtilities:
     def startBackup(tempStoragePath,backupName,backupPath):
         try:
 
-            ## writing the name of backup file
+            ##### Writing the name of backup file.
 
             ## /home/example.com/backup/backupFileName
             backupFileNamePath = os.path.join(backupPath,"backupFileName")
@@ -41,24 +41,25 @@ class backupUtilities:
             status.write(backupName)
             status.close()
 
+            #####
 
 
             status = open(os.path.join(backupPath,'status'),"w")
-            status.write("Making archive of home directory\n")
+            status.write("Making archive of home directory.\n")
             status.close()
 
-            ## Parsing XML Meta file!
+            ##### Parsing XML Meta file!
 
             ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
             backupMetaData = ElementTree.parse(os.path.join(tempStoragePath,'meta.xml'))
 
-
-            ## Making archive of home directory
+            ##### Making archive of home directory
 
             domainName = backupMetaData.find('masterDomain').text
 
             ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
             ## shutil.make_archive
+
             make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
             ## backup email accounts
@@ -76,6 +77,7 @@ class backupUtilities:
             databases = backupMetaData.findall('Databases/database')
 
             for database in databases:
+
                 dbName = database.find('dbName').text
 
                 status = open(os.path.join(backupPath,'status'), "w")
@@ -83,6 +85,8 @@ class backupUtilities:
                 status.close()
                 if mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, tempStoragePath) == 0:
                     raise BaseException
+
+            ##### Saving SSL Certificates if any
 
             try:
                 pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + domainName
@@ -95,12 +99,40 @@ class backupUtilities:
             except BaseException, msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
-            ## shutil.make_archive, ## shutil.
+
+            ## Child Domains SSL.
+
+
+            childDomains = backupMetaData.findall('ChildDomains/domain')
+
+            try:
+                for childDomain in childDomains:
+
+                    actualChildDomain = childDomain.find('domain').text
+
+                    pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + actualChildDomain
+
+                    if os.path.exists(pathToStoreSSL):
+                        pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
+                        pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
+
+                        tempKeyPath = os.path.join(tempStoragePath, actualChildDomain)
+
+                        if not os.path.exists(tempKeyPath):
+                            os.mkdir(tempKeyPath)
+
+                        copy(pathToStoreSSLPrivKey, tempKeyPath + "/privkey.pem")
+                        copy(pathToStoreSSLFullChain, tempKeyPath + "/fullchain.pem")
+
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+
+            ##### Saving SSL Certificates if any
+
+            ## shutil.make_archive. Creating final package.
+
             make_archive(os.path.join(backupPath,backupName), 'gztar', tempStoragePath)
             rmtree(tempStoragePath)
-
-            ## Saving SSL Certificates if any
-
 
 
             status = open(os.path.join(backupPath,'status'), "w")
@@ -182,12 +214,38 @@ class backupUtilities:
 
             ########### Creating website and its dabases
 
+            ## extracting master domain for later use
+            backupMetaData = ElementTree.parse(os.path.join(completPath, "meta.xml"))
+            masterDomain = backupMetaData.find('masterDomain').text
+
             try:
                 finalData = json.dumps({'backupFile': backupName,"dir":dir})
                 r = requests.post("http://localhost:5003/websites/CreateWebsiteFromBackup", data=finalData,verify=False)
                 data = json.loads(r.text)
 
                 if data['createWebSiteStatus'] == 1:
+
+                    ## Let us try to restore SSL.
+
+                    if os.path.exists(completPath + "/privkey.pem"):
+
+                        pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + masterDomain
+
+                        if not os.path.exists(pathToStoreSSL):
+                            os.mkdir(pathToStoreSSL)
+
+                        sslUtilities.installSSLForDomain(masterDomain)
+
+
+                        pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
+                        pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
+
+                        copy(completPath + "/privkey.pem", pathToStoreSSLPrivKey)
+                        copy(completPath + "/fullchain.pem", pathToStoreSSLFullChain)
+
+                        command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + pathToStoreSSL
+                        cmd = shlex.split(command)
+
                     pass
                 else:
                     status = open(os.path.join(completPath,'status'), "w")
@@ -201,37 +259,21 @@ class backupUtilities:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
                 return 0
 
-            ###########Ccreating child/sub/addon/parked domains
+            ########### Creating child/sub/addon/parked domains
 
             status = open(os.path.join(completPath,'status'), "w")
             status.write("Creating Child Domains!")
             status.close()
 
-            ## reading meta file to create subdomains
+            ## Reading meta file to create subdomains
 
-            backupMetaData = ElementTree.parse(os.path.join(completPath,"meta.xml"))
-
-            ## extracting master domain for later use
-            masterDomain = backupMetaData.find('masterDomain').text
             externalApp = backupMetaData.find('externalApp').text
             websiteHome = os.path.join("/home",masterDomain,"public_html")
 
+
+            ### Restoring Child Domains if any.
+
             childDomains = backupMetaData.findall('ChildDomains/domain')
-
-            ## Let us try to restore SSL.
-
-            if os.path.exists(completPath + "/privkey.pem"):
-                sslUtilities.installSSLForDomain(masterDomain)
-
-                pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + masterDomain
-                pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-                pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
-
-                copy(completPath + "/privkey.pem", pathToStoreSSLPrivKey)
-                copy(completPath + "/fullchain.pem", pathToStoreSSLFullChain)
-
-                command = "chown " + "lsadm" + ":" + "lsadm" + " " + pathToStoreSSL
-                cmd = shlex.split(command)
 
             try:
                 for childDomain in childDomains:
@@ -252,6 +294,29 @@ class backupUtilities:
 
                     if data['createWebSiteStatus'] == 1:
                         rmtree(websiteHome)
+
+                        ## Let us try to restore SSL for Child Domains.
+
+                        tempPath = os.path.join(completPath, domain)
+
+                        if os.path.exists(tempPath + "/privkey.pem"):
+
+                            pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + domain
+
+                            if not os.path.exists(pathToStoreSSL):
+                                os.mkdir(pathToStoreSSL)
+
+                            sslUtilities.installSSLForDomain(domain)
+
+                            pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
+                            pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
+
+                            copy(tempPath + "/privkey.pem", pathToStoreSSLPrivKey)
+                            copy(tempPath + "/fullchain.pem", pathToStoreSSLFullChain)
+
+                            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + pathToStoreSSL
+                            cmd = shlex.split(command)
+
                         continue
                     else:
                         status = open(os.path.join(completPath,'status'), "w")
@@ -267,19 +332,22 @@ class backupUtilities:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
                 return 0
 
-            ## Restoring email accounts
+            ## Restore Aliases
 
             status = open(os.path.join(completPath, 'status'), "w")
-            status.write("Restoring email accounts!")
+            status.write("Restoring Domain Aliases!")
             status.close()
-
-
-            ## Restore Aliases
 
             aliases = backupMetaData.findall('Aliases/alias')
 
             for items in aliases:
                 createAlias(masterDomain, items.text, 0, "", "")
+
+            ## Restoring email accounts
+
+            status = open(os.path.join(completPath, 'status'), "w")
+            status.write("Restoring email accounts!")
+            status.close()
 
             emailAccounts = backupMetaData.findall('emails/emailAccount')
 
@@ -331,10 +399,6 @@ class backupUtilities:
 
             ## Databases restored
 
-
-            ## Restoring Aliases
-
-            aliases = backupMetaData.findall('Databases/database')
 
             status = open(os.path.join(completPath, 'status'), "w")
             status.write("Extracting web home data!")

@@ -47,17 +47,22 @@ class remoteTransferUtilities:
 
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile("For remote transfer, I am not able to write key to auth file, Error Message: "+str(msg))
-            print "0,"+"For remote transfer, I am not able to write key to auth file, Error Message: "+str(msg)
+            print "0,"+"For remote transfer, I am not able to write key to auth file, Error Message: " + str(msg)
 
-    ## house keeping function to run remote backups
+    ## House keeping function to run remote backups
     @staticmethod
-    def remoteTransfer(ipAddress,dir,accountsToTransfer):
+    def remoteTransfer(ipAddress, dir, accountsToTransfer):
         try:
 
             destination = "/home/backup/transfer-" + dir
             backupLogPath = destination + "/backup_log"
 
-            accountsToTransfer = accountsToTransfer.split(",")
+            data = open(accountsToTransfer, 'r').readlines()
+
+            accountsToTransfer = []
+
+            for items in data:
+                accountsToTransfer.append(items.strip('\n'))
 
             if not os.path.exists(destination):
                 os.makedirs(destination)
@@ -108,7 +113,7 @@ class remoteTransferUtilities:
             writeToFile.writelines(str(msg) + " [5010]" + "\n")
             writeToFile.close()
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransfer]")
-            return [0, msg]
+            return [0, str(msg)]
 
 
     ## destination = /home/backup/transfer-2558
@@ -124,9 +129,6 @@ class remoteTransferUtilities:
                 for virtualHost in accountsToTransfer:
 
                     try:
-
-                        if virtualHost == "vmail" or virtualHost == "backup":
-                            continue
 
                         writeToFile = open(backupLogPath, "a")
                         writeToFile.writelines("[" + time.strftime(

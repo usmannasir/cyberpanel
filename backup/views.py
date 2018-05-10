@@ -27,6 +27,7 @@ from xml.dom import minidom
 from dns.models import Domains,Records
 from mailServer.models import Domains as eDomains
 from mailServer.models import EUsers
+from plogical.mailUtilities import mailUtilities
 
 
 
@@ -1278,13 +1279,15 @@ def submitRemoteBackups(request):
                 pubKey = data["pubKey"].strip("\n")
             else:
                 final_json = json.dumps({'status': 0,
-                                         'error_message': "I am sorry, I could not fetch key from remote server. Error Message: " +data['error_message']
+                                         'error_message': "I am sorry, I could not fetch key from remote server. Error Message: " + data['error_message']
                                          })
                 return HttpResponse(final_json)
 
             ## write key
 
             ## Writing key to a temporary location, to be read later by backup process.
+
+            mailUtilities.checkHome()
 
             pathToKey = "/home/cyberpanel/" + str(randint(1000, 9999))
 

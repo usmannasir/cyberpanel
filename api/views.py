@@ -23,6 +23,7 @@ import subprocess
 import shlex
 import re
 from dns.models import Domains,Records
+from plogical.mailUtilities import mailUtilities
 # Create your views here.
 
 
@@ -383,7 +384,6 @@ def fetchSSHkey(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-
     except BaseException, msg:
         data = {'pubKeyStatus': 0,'error_message': str(msg)}
         json_data = json.dumps(data)
@@ -405,10 +405,19 @@ def remoteTransfer(request):
                 dir = str(randint(1000, 9999))
 
                 ##
-                accountsToTransfer = ','.join(accountsToTransfer)
+
+                mailUtilities.checkHome()
+                path = "/home/cyberpanel/accounts-" + str(randint(1000, 9999))
+                writeToFile = open(path,'w')
+
+                for items in accountsToTransfer:
+                    writeToFile.writelines(items + "\n")
+                writeToFile.close()
+
+                ## Accounts to transfer is a path to file, containing accounts.
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
-                execPath = execPath + " remoteTransfer --ipAddress " + ipAddress + " --dir " + dir + " --accountsToTransfer " + accountsToTransfer
+                execPath = execPath + " remoteTransfer --ipAddress " + ipAddress + " --dir " + dir + " --accountsToTransfer " + path
                 subprocess.Popen(shlex.split(execPath))
 
                 return HttpResponse(json.dumps({"transferStatus": 1, "dir": dir}))
@@ -474,6 +483,7 @@ def FetchRemoteTransferStatus(request):
             data = json.loads(request.body)
             username = data['username']
             password = data['password']
+
             dir = "/home/backup/transfer-"+str(data['dir'])+"/backup_log"
 
             try:
