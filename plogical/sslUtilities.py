@@ -17,7 +17,7 @@ class sslUtilities:
             sslCheck = 0
 
             for items in data:
-                if items.find("listener SSL") > -1:
+                if items.find("listener") >-1 and items.find("SSL") > -1:
                     sslCheck = 1
                     continue
                 if sslCheck == 1:
@@ -45,7 +45,8 @@ class sslUtilities:
         try:
             map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
 
-            if(sslUtilities.checkSSLListener()!=1):
+            if sslUtilities.checkSSLListener()!=1:
+
                 writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
 
                 listener = "listener SSL {" + "\n"
@@ -81,12 +82,11 @@ class sslUtilities:
                     sslCheck = 0
 
                     for items in data:
-                        if (items.find("listener SSL")>-1):
+                        if items.find("listener")>-1 and items.find("SSL") > -1:
                             sslCheck = 1
 
-                        writeDataToFile.writelines(items)
-
                         if (sslCheck == 1):
+                            writeDataToFile.writelines(items)
                             writeDataToFile.writelines(map)
                             sslCheck = 0
                     writeDataToFile.close()

@@ -22,6 +22,121 @@ class virtualHostUtilities:
     cyberPanel = "/usr/local/CyberCP"
 
     @staticmethod
+    def addUser(virtualHostUser, path):
+        try:
+
+            FNULL = open(os.devnull, 'w')
+
+            command = "adduser " + virtualHostUser + " -M -d " + path
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            command = "groupadd " + virtualHostUser
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            command = "usermod -a -G " + virtualHostUser + " " + virtualHostUser
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [addingUsers]")
+
+
+    @staticmethod
+    def createDirectories(path, virtualHostUser, pathHTML, pathLogs, confPath, completePathToConfigFile):
+        try:
+
+            FNULL = open(os.devnull, 'w')
+
+            try:
+                os.makedirs(path)
+
+                command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + path
+                cmd = shlex.split(command)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            except OSError, msg:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    str(msg) + " [27 Not able create to directories for virtual host [createDirectories]]")
+                return [0, "[27 Not able to directories for virtual host [createDirectories]]"]
+
+            try:
+                os.makedirs(pathHTML)
+
+                command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + pathHTML
+                cmd = shlex.split(command)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            except OSError, msg:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    str(msg) + " [33 Not able to directories for virtual host [createDirectories]]")
+                return [0, "[33 Not able to directories for virtual host [createDirectories]]"]
+
+            try:
+                os.makedirs(pathLogs)
+
+                command = "chown " + "nobody" + ":" + "nobody" + " " + pathLogs
+                cmd = shlex.split(command)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+                command = "chmod -R 666 " + pathLogs
+                cmd = shlex.split(command)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            except OSError, msg:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    str(msg) + " [39 Not able to directories for virtual host [createDirectories]]")
+                return [0, "[39 Not able to directories for virtual host [createDirectories]]"]
+
+            try:
+                ## For configuration files permissions will be changed later globally.
+                os.makedirs(confPath)
+            except OSError, msg:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    str(msg) + " [45 Not able to directories for virtual host [createDirectories]]")
+                return [0, "[45 Not able to directories for virtual host [createDirectories]]"]
+
+            try:
+                ## For configuration files permissions will be changed later globally.
+                file = open(completePathToConfigFile, "w+")
+
+                command = "chown " + "lsadm" + ":" + "lsadm" + " " + completePathToConfigFile
+                cmd = shlex.split(command)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            except IOError, msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectories]]")
+                return [0, "[45 Not able to directories for virtual host [createDirectories]]"]
+
+            return [1, 'None']
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectories]")
+            return [0, str(msg)]
+
+    @staticmethod
+    def finalizeVhostCreation(virtualHostName, virtualHostUser):
+        try:
+
+            FNULL = open(os.devnull, 'w')
+
+            shutil.copy("/usr/local/CyberCP/index.html", "/home/" + virtualHostName + "/public_html/index.html")
+
+            command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + "/home/" + virtualHostName + "/public_html/index.html"
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
+
+            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [finalizeVhostCreation]")
+
+    @staticmethod
     def createDirectoryForVirtualHost(virtualHostName,administratorEmail,virtualHostUser, phpVersion):
 
         path = "/home/" + virtualHostName
@@ -30,93 +145,23 @@ class virtualHostUtilities:
         confPath = virtualHostUtilities.Server_root + "/conf/vhosts/"+virtualHostName
         completePathToConfigFile = confPath +"/vhost.conf"
 
-        FNULL = open(os.devnull, 'w')
 
         ## adding user
 
-        command = "adduser "+virtualHostUser + " -M -d " + path
+        virtualHostUtilities.addUser(virtualHostUser, path)
 
-        cmd = shlex.split(command)
+        ## Creating Directories
 
-        res = subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+        result = virtualHostUtilities.createDirectories(path, virtualHostUser, pathHTML, pathLogs, confPath, completePathToConfigFile)
 
-        command = "groupadd " + virtualHostUser
-
-        cmd = shlex.split(command)
-
-        res = subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
-
-        command = "usermod -a -G "+virtualHostUser +" "+virtualHostUser
-
-        cmd = shlex.split(command)
-
-        res = subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
-
-        ## adding user ends
+        if result[0] == 0:
+            return [0, result[1]]
 
 
-        try:
-            os.makedirs(path)
-
-            command = "chown "+virtualHostUser+":"+virtualHostUser+" " + path
-            cmd = shlex.split(command)
-            subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
-
-        except OSError,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [27 Not able create to directories for virtual host [createDirectoryForVirtualHost]]")
-            return [0,"[27 Not able to directories for virtual host [createDirectoryForVirtualHost]]"]
-
-        try:
-            os.makedirs(pathHTML)
-
-            command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + pathHTML
-            cmd = shlex.split(command)
-            subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
-
-        except OSError,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [33 Not able to directories for virtual host [createDirectoryForVirtualHost]]")
-            return [0, "[33 Not able to directories for virtual host [createDirectoryForVirtualHost]]"]
-
-        try:
-            os.makedirs(pathLogs)
-
-            command = "chown " + "nobody" + ":" + "nobody" + " " + pathLogs
-            cmd = shlex.split(command)
-            subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
-
-            command = "chmod -R 666 " + pathLogs
-            cmd = shlex.split(command)
-            subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
-
-        except OSError,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [39 Not able to directories for virtual host [createDirectoryForVirtualHost]]")
-            return [0, "[39 Not able to directories for virtual host [createDirectoryForVirtualHost]]"]
-
-        try:
-            ## For configuration files permissions will be changed later globally.
-            os.makedirs(confPath)
-        except OSError,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [45 Not able to directories for virtual host [createDirectoryForVirtualHost]]")
-            return [0, "[45 Not able to directories for virtual host [createDirectoryForVirtualHost]]"]
-
-
-
-        try:
-            ## For configuration files permissions will be changed later globally.
-            file = open(completePathToConfigFile, "w+")
-
-            command = "chown " + "lsadm" + ":" + "lsadm" + " " + completePathToConfigFile
-            cmd = shlex.split(command)
-            subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
-
-        except IOError,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForVirtualHost]]")
-            return [0, "[45 Not able to directories for virtual host [createDirectoryForVirtualHost]]"]
+        ## Creating Per vhost Configuration File
 
 
         if virtualHostUtilities.perHostVirtualConf(completePathToConfigFile,administratorEmail,virtualHostUser,phpVersion) == 1:
-            command = "chmod -R 766 " + pathHTML
-            #subprocess.call(shlex.split(command))
             return [1,"None"]
         else:
             return [0,"[61 Not able to create per host virtual configurations [perHostVirtualConf]"]
@@ -296,6 +341,29 @@ class virtualHostUtilities:
             return 0
         return 1
 
+    @staticmethod
+    def createNONSSLMapEntry(virtualHostName):
+        try:
+            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+            writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
+
+            map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
+
+            mapchecker = 1
+
+            for items in data:
+                if (mapchecker == 1 and (items.find("listener") > -1 and items.find("Default") > -1)):
+                    writeDataToFile.writelines(items)
+                    writeDataToFile.writelines(map)
+                    mapchecker = 0
+                else:
+                    writeDataToFile.writelines(items)
+
+            return 1
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return 0
+
 
     @staticmethod
     def createConfigInMainVirtualHostFile(virtualHostName):
@@ -309,49 +377,24 @@ class virtualHostUtilities:
         #}
 
         try:
-            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
-            writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
 
-            spaceonback = "  "
-            space = "                  "
-            space2 = "              "
-            space3 = "         "
-            space4 = "            "
-            space5 = "              "
+            if virtualHostUtilities.createNONSSLMapEntry(virtualHostName) == 0:
+                return [0, "Failed to create NON SSL Map Entry [createConfigInMainVirtualHostFile]"]
 
+            writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
 
-            firstLine = "virtualHost " + virtualHostName + " {" + "\n"
-            secondLine = spaceonback + "vhRoot"+ space +"/home/" + "$VH_NAME" + "\n"
-            thirdLine = spaceonback + "configFile" + space2 + "$SERVER_ROOT" +"/conf/" +"vhosts/" + "$VH_NAME" +"/vhost.conf" + "\n"
-            forthLine = spaceonback + "allowSymbolLink" + space3 + "1"  + "\n"
-            fifthLine = spaceonback + "enableScript" + space4 + "1"  + "\n"
-            sixthLine = spaceonback + "restrained" + space5 + "1"  + "\n"
-            seventhLine = "}"  + "\n"
-            map = "  map                     "+virtualHostName+" "+virtualHostName+ "\n"
+            writeDataToFile.writelines("\n")
+            writeDataToFile.writelines("virtualHost " + virtualHostName + " {\n")
+            writeDataToFile.writelines("  vhRoot                  /home/$VH_NAME\n")
+            writeDataToFile.writelines("  configFile              $SERVER_ROOT/conf/vhosts/$VH_NAME/vhost.conf\n")
+            writeDataToFile.writelines("  allowSymbolLink         1\n")
+            writeDataToFile.writelines("  enableScript            1\n")
+            writeDataToFile.writelines("  restrained              1\n")
+            writeDataToFile.writelines("}\n")
+            writeDataToFile.writelines("\n")
 
+            writeDataToFile.close()
 
-            checker = 1
-            mapchecker = 1
-
-            for items in data:
-                if ((items.find("virtualHost") > -1 or items.find("virtualhost") > -1)  and checker == 1):
-                    writeDataToFile.writelines(firstLine)
-                    writeDataToFile.writelines(secondLine)
-                    writeDataToFile.writelines(thirdLine)
-                    writeDataToFile.writelines(forthLine)
-                    writeDataToFile.writelines(fifthLine)
-                    writeDataToFile.writelines(sixthLine)
-                    writeDataToFile.writelines(seventhLine)
-                    writeDataToFile.writelines("\n")
-                    writeDataToFile.writelines(items)
-                    checker = 0
-                elif((items.find("listener Default{") > -1 or items.find("Default {")>-1) and mapchecker == 1):
-                    writeDataToFile.writelines(items)
-                    writeDataToFile.writelines(map)
-                    mapchecker=0
-
-                else:
-                    writeDataToFile.writelines(items)
 
             writeDataToFile.close()
             return [1,"None"]
@@ -359,6 +402,29 @@ class virtualHostUtilities:
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "223 [IO Error with main config file [createConfigInMainVirtualHostFile]]")
             return [0,"223 [IO Error with main config file [createConfigInMainVirtualHostFile]]"]
+
+
+    ## Domain Specific Functions
+
+    @staticmethod
+    def finalizeDomainCreation(virtualHostUser, path):
+        try:
+
+            FNULL = open(os.devnull, 'w')
+
+            shutil.copy("/usr/local/CyberCP/index.html", path + "/index.html")
+
+            command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + path + "/index.html"
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
+            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [finalizeDomainCreation]")
 
 
     @staticmethod
@@ -404,14 +470,6 @@ class virtualHostUtilities:
     def perHostDomainConf(path, masterDomain, vhFile, administratorEmail, phpVersion,virtualHostUser):
 
         # General Configurations tab
-
-        # virtualhost project.cyberpersons.com {
-        # vhRoot / home / project.cyberpersons.com
-        # configFile      $SERVER_ROOT / conf / vhosts /$VH_NAME / vhconf.conf
-        # allowSymbolLink 1
-        # enableScript 1
-        # restrained 1
-        # }
 
         try:
             confFile = open(vhFile, "w+")
@@ -556,8 +614,7 @@ class virtualHostUtilities:
         return 1
 
     @staticmethod
-    def createConfigInMainDomainHostFile(domain,masterDomain):
-
+    def createConfigInMainDomainHostFile(domain, masterDomain):
         # virtualhost project.cyberpersons.com {
         # vhRoot / home / project.cyberpersons.com
         # configFile      $SERVER_ROOT / conf / vhosts /$VH_NAME / vhconf.conf
@@ -567,59 +624,33 @@ class virtualHostUtilities:
         # }
 
         try:
-            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
-            writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
 
-            spaceonback = "  "
-            space = "                  "
-            space2 = "              "
-            space3 = "         "
-            space4 = "            "
-            space5 = "              "
+            if virtualHostUtilities.createNONSSLMapEntry(domain) == 0:
+                return [0, "Failed to create NON SSL Map Entry [createConfigInMainVirtualHostFile]"]
 
-            firstLine = "virtualHost " + domain + " {" + "\n"
-            secondLine = spaceonback + "vhRoot" + space + "/home/" + masterDomain + "\n"
-            thirdLine = spaceonback + "configFile" + space2 + "$SERVER_ROOT" + "/conf/" + "vhosts/" + "$VH_NAME" + "/vhost.conf" + "\n"
-            forthLine = spaceonback + "allowSymbolLink" + space3 + "1" + "\n"
-            fifthLine = spaceonback + "enableScript" + space4 + "1" + "\n"
-            sixthLine = spaceonback + "restrained" + space5 + "1" + "\n"
-            seventhLine = "}" + "\n"
-            map = "  map                     " + domain + " " + domain + "\n"
+            writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
 
-            checker = 1
-            mapchecker = 1
-
-            for items in data:
-                if ((items.find("virtualHost") > -1 or items.find("virtualhost") > -1) and checker == 1):
-                    writeDataToFile.writelines(firstLine)
-                    writeDataToFile.writelines(secondLine)
-                    writeDataToFile.writelines(thirdLine)
-                    writeDataToFile.writelines(forthLine)
-                    writeDataToFile.writelines(fifthLine)
-                    writeDataToFile.writelines(sixthLine)
-                    writeDataToFile.writelines(seventhLine)
-                    writeDataToFile.writelines("\n")
-                    writeDataToFile.writelines(items)
-                    checker = 0
-                elif ((items.find("listener Default{") > -1 or items.find("Default {") > -1) and mapchecker == 1):
-                    writeDataToFile.writelines(items)
-                    writeDataToFile.writelines(map)
-                    mapchecker = 0
-
-                else:
-                    writeDataToFile.writelines(items)
+            writeDataToFile.writelines("\n")
+            writeDataToFile.writelines("virtualHost " + domain + " {\n")
+            writeDataToFile.writelines("  vhRoot                  /home/" + masterDomain + "\n")
+            writeDataToFile.writelines("  configFile              $SERVER_ROOT/conf/vhosts/$VH_NAME/vhost.conf\n")
+            writeDataToFile.writelines("  allowSymbolLink         1\n")
+            writeDataToFile.writelines("  enableScript            1\n")
+            writeDataToFile.writelines("  restrained              1\n")
+            writeDataToFile.writelines("}\n")
+            writeDataToFile.writelines("\n")
 
             writeDataToFile.close()
 
-            return [1,"None"]
+            return [1, "None"]
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + " [IO Error with main config file [createConfigInMainVirtualHostFile]]")
-            return [0, "223 [IO Error with main config file [createConfigInMainVirtualHostFile]]"]
+                str(msg) + "223 [IO Error with main config file [createConfigInMainDomainHostFile]]")
+            return [0, "223 [IO Error with main config file [createConfigInMainDomainHostFile]]"]
 
     @staticmethod
-    def deleteVirtualHostConfigurations(virtualHostName,numberOfSites):
+    def deleteVirtualHostConfigurations(virtualHostName, numberOfSites):
 
         virtualHostPath = "/home/" + virtualHostName
         try:
@@ -673,6 +704,7 @@ class virtualHostUtilities:
 
         return 1
 
+    ## Utilities starts here onwards
 
     @staticmethod
     def checkIfVirtualHostExists(virtualHostName):
@@ -907,7 +939,6 @@ class virtualHostUtilities:
     @staticmethod
     def checkIfAliasExists(aliasDomain):
         try:
-
             confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
             data = open(confPath, 'r').readlines()
 
@@ -965,135 +996,94 @@ class virtualHostUtilities:
 
 
 
-def createVirtualHost(virtualHostName,administratorEmail,phpVersion,virtualHostUser,numberOfSites,ssl,sslPath,dkimCheck):
+def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHostUser, numberOfSites, ssl, sslPath, dkimCheck):
     try:
         if virtualHostUtilities.checkIfVirtualHostExists(virtualHostName) == 1:
-            print "0,Virtual Host Directory already exists!"
-            return
+            raise BaseException("Virtual Host Directory already exists!")
 
         if virtualHostUtilities.checkIfAliasExists(virtualHostName) == 1:
-            print "0,This domain exists as Alias."
-            return
+            raise BaseException("This domain exists as Alias.")
 
         if dkimCheck == 1:
             if mailUtilities.checkIfDKIMInstalled() == 0:
-                print "0, OpenDKIM is not installed, install OpenDKIM from DKIM Manager."
-                return
+                raise BaseException("OpenDKIM is not installed, install OpenDKIM from DKIM Manager.")
 
-            result = mailUtilities.setupDKIM(virtualHostName)
-            if result[0] == 0:
-                raise BaseException(result[1])
+            retValues = mailUtilities.setupDKIM(virtualHostName)
+            if retValues[0] == 0:
+                raise BaseException(retValues[1])
 
-        FNULL = open(os.devnull, 'w')
-
-        retValues = virtualHostUtilities.createDirectoryForVirtualHost(virtualHostName, administratorEmail,virtualHostUser, phpVersion)
+        retValues = virtualHostUtilities.createDirectoryForVirtualHost(virtualHostName, administratorEmail, virtualHostUser, phpVersion)
         if retValues[0] == 0:
-            virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostName, numberOfSites)
-            print "0,"+str(retValues[1])
-            return
+            raise BaseException(retValues[1])
 
         retValues = virtualHostUtilities.createConfigInMainVirtualHostFile(virtualHostName)
         if retValues[0] == 0:
-            virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostName, numberOfSites)
-            print "0,"+str(retValues[1])
+            raise BaseException(retValues[1])
 
         if ssl == 1:
             installUtilities.installUtilities.reStartLiteSpeed()
             retValues = sslUtilities.issueSSLForDomain(virtualHostName, administratorEmail, sslPath)
+            installUtilities.installUtilities.reStartLiteSpeed()
             if retValues[0] == 0:
-                virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostName, numberOfSites)
-                print "0,"+str(retValues[1])
-                return
+                raise BaseException(retValues[1])
 
-        installUtilities.installUtilities.reStartLiteSpeed()
-
-        shutil.copy("/usr/local/CyberCP/index.html","/home/" + virtualHostName + "/public_html/index.html")
-
-        command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + "/home/" + virtualHostName + "/public_html/index.html"
-        cmd = shlex.split(command)
-        subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-        vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
-
-        command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
-        cmd = shlex.split(command)
-        subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
-
+        if ssl == 0:
+            installUtilities.installUtilities.reStartLiteSpeed()
+        virtualHostUtilities.finalizeVhostCreation(virtualHostName, virtualHostUser)
 
         print "1,None"
 
-
     except BaseException,msg:
         virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostName, numberOfSites)
-        logging.CyberCPLogFileWriter.writeToFile(
-            str(msg) + "  [createVirtualHost]")
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createVirtualHost]")
         print "0,"+str(msg)
 
 def createDomain(masterDomain, virtualHostName, phpVersion, path,administratorEmail,virtualHostUser,restart,numberOfSites,ssl, dkimCheck):
     try:
         if virtualHostUtilities.checkIfVirtualHostExists(virtualHostName) == 1:
-            print "0,Virtual Host Directory already exists!"
-            return
+            raise BaseException("Virtual Host Directory already exists!")
 
 
         if virtualHostUtilities.checkIfAliasExists(virtualHostName) == 1:
-            print "0,This domain exists as Alias."
-            return
+            raise BaseException("This domain exists as Alias.")
 
 
         if dkimCheck == 1:
             if mailUtilities.checkIfDKIMInstalled() == 0:
-                print "0, OpenDKIM is not installed, install OpenDKIM from DKIM Manager."
-                return
+                raise BaseException("OpenDKIM is not installed, install OpenDKIM from DKIM Manager.")
 
-            result = mailUtilities.setupDKIM(virtualHostName)
-            if result[0] == 0:
-                raise BaseException(result[1])
+            retValues = mailUtilities.setupDKIM(virtualHostName)
+            if retValues[0] == 0:
+                raise BaseException(retValues[1])
 
         FNULL = open(os.devnull, 'w')
 
         retValues = virtualHostUtilities.createDirectoryForDomain(masterDomain, virtualHostName, phpVersion, path,administratorEmail,virtualHostUser)
         if retValues[0] == 0:
-            virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostUtilities,numberOfSites)
-            print "0,"+str(retValues[1])
-            return
+            raise BaseException(retValues[1])
 
         retValues = virtualHostUtilities.createConfigInMainDomainHostFile(virtualHostName, masterDomain)
 
         if retValues[0] == 0:
-            virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostUtilities, numberOfSites)
-            print "0," + str(retValues[1])
-            return
+            raise BaseException(retValues[1])
 
         ## Now restart litespeed after initial configurations are done
 
-        installUtilities.installUtilities.reStartLiteSpeed()
 
         if ssl == 1:
+            installUtilities.installUtilities.reStartLiteSpeed()
             retValues = sslUtilities.issueSSLForDomain(virtualHostName, administratorEmail, path)
+            installUtilities.installUtilities.reStartLiteSpeed()
             if retValues[0] == 0:
-                virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostName, numberOfSites)
-                print "0,"+str(retValues[1])
-                return
+                raise BaseException(retValues[1])
 
 
-        ## final Restart
-
-        installUtilities.installUtilities.reStartLiteSpeed()
-
-        shutil.copy("/usr/local/CyberCP/index.html",path + "/index.html")
-
-        command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + path + "/index.html"
-        cmd = shlex.split(command)
-        subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-        vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
-        command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
-        cmd = shlex.split(command)
-        subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
+        ## Final Restart
+        if ssl == 0:
+            installUtilities.installUtilities.reStartLiteSpeed()
+        virtualHostUtilities.finalizeDomainCreation(virtualHostUser, path)
 
         print "1,None"
-
 
     except BaseException,msg:
         virtualHostUtilities.deleteVirtualHostConfigurations(virtualHostName, numberOfSites)
@@ -1361,7 +1351,6 @@ def installWordPress(domainName,finalPath,virtualHostUser,dbName,dbUser,dbPasswo
 
         print "0," + str(msg)
         return
-
 
 def installJoomla(domainName,finalPath,virtualHostUser,dbName,dbUser,dbPassword,username,password,prefix,sitename):
 

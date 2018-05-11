@@ -1559,29 +1559,20 @@ def cancelRemoteBackup(request):
                 logging.CyberCPLogFileWriter.writeToFile("Some error cancelling at remote server, see the log file for remote server.")
 
             path = "/home/backup/transfer-" + str(dir)
+            pathpid = path + "/pid"
 
-            if os.path.exists(path):
-                try:
-                    pathpid = path + "/pid"
+            command = "sudo cat " + pathpid
+            pid = subprocess.check_output(shlex.split(command))
 
-                    pid = open(pathpid, "r").readlines()[0]
+            command = "sudo kill -KILL " + pid
+            subprocess.call(shlex.split(command))
 
-                    try:
-                        os.kill(int(pid), signal.SIGKILL)
-                    except BaseException, msg:
-                        logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelRemoteBackup]")
+            command = "sudo rm -rf " + path
+            subprocess.call(shlex.split(command))
 
-                    rmtree(path)
-                except:
-                    rmtree(path)
-
-                data = {'cancelStatus': 1, 'error_message': "None"}
-                json_data = json.dumps(data)
-                return HttpResponse(json_data)
-            else:
-                data = {'cancelStatus': 1, 'error_message': "None"}
-                json_data = json.dumps(data)
-                return HttpResponse(json_data)
+            data = {'cancelStatus': 1, 'error_message': "None"}
+            json_data = json.dumps(data)
+            return HttpResponse(json_data)
 
 
     except BaseException, msg:

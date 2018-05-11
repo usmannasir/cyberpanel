@@ -522,27 +522,21 @@ def cancelRemoteTransfer(request):
 
             if hashPassword.check_password(admin.password, password):
 
-                if os.path.exists(dir):
+                path = dir + "/pid"
 
-                    path = dir+"/pid"
+                command = "sudo cat " + path
+                pid = subprocess.check_output(shlex.split(command))
 
-                    pid = open(path, "r").readlines()[0]
+                command = "sudo kill -KILL " + pid
+                subprocess.call(shlex.split(command))
 
-                    try:
-                        os.kill(int(pid), signal.SIGKILL)
-                    except BaseException, msg:
-                        logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelRemoteTransfer]")
+                command = "sudo rm -rf " + dir
+                subprocess.call(shlex.split(command))
 
-                    rmtree(dir)
+                data = {'cancelStatus': 1, 'error_message': "None"}
+                json_data = json.dumps(data)
+                return HttpResponse(json_data)
 
-                    data = {'cancelStatus': 1, 'error_message': "None"}
-                    json_data = json.dumps(data)
-                    return HttpResponse(json_data)
-
-                else:
-                    data = {'cancelStatus': 1, 'error_message': "None"}
-                    json_data = json.dumps(data)
-                    return HttpResponse(json_data)
             else:
                 data_ret = {'cancelStatus': 0, 'error_message': "Invalid Credentials"}
                 json_data = json.dumps(data_ret)
