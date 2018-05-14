@@ -681,7 +681,7 @@ class virtualHostUtilities:
                         continue
                     if (items.find(virtualHostName) > -1 and (items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
                         check = 0
-                    if (items.find("listener SSL {") > -1):
+                    if items.find("listener")>-1 and items.find("SSL") > -1:
                             sslCheck = 0
                     if (check == 1 and sslCheck == 1):
                         writeDataToFile.writelines(items)
@@ -1023,12 +1023,14 @@ def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHo
         if ssl == 1:
             installUtilities.installUtilities.reStartLiteSpeed()
             retValues = sslUtilities.issueSSLForDomain(virtualHostName, administratorEmail, sslPath)
-            installUtilities.installUtilities.reStartLiteSpeed()
             if retValues[0] == 0:
                 raise BaseException(retValues[1])
+            else:
+                installUtilities.installUtilities.reStartLiteSpeed()
 
         if ssl == 0:
             installUtilities.installUtilities.reStartLiteSpeed()
+
         virtualHostUtilities.finalizeVhostCreation(virtualHostName, virtualHostUser)
 
         print "1,None"
@@ -1684,7 +1686,7 @@ def createAlias(masterDomain,aliasDomain,ssl,sslPath, administratorEmail):
             listenerTrueCheck = 0
     
             for items in data:
-                if items.find("listener Default{") > -1 or items.find("Default {") > -1:
+                if items.find("listener") > -1 and items.find("Default") > -1:
                     listenerTrueCheck = 1
                 if items.find(masterDomain) > -1 and items.find('map') > -1 and listenerTrueCheck == 1:
                     data = filter(None, items.split(" "))
@@ -1710,9 +1712,7 @@ def createAlias(masterDomain,aliasDomain,ssl,sslPath, administratorEmail):
             else:
                 virtualHostUtilities.createAliasSSLMap(confPath,masterDomain, aliasDomain)
 
-
         print "1,None"
-
 
     except BaseException,msg:
 

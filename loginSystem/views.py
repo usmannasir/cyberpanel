@@ -79,6 +79,11 @@ def verifyLogin(request):
                         request.session[LANGUAGE_SESSION_KEY] = user_Language
                         request.COOKIES['django_language'] = user_Language
                         settings.LANGUAGE_CODE = user_Language
+                    elif data['languageSelection'] == "Spanish":
+                        user_Language = "es"
+                        request.session[LANGUAGE_SESSION_KEY] = user_Language
+                        request.COOKIES['django_language'] = user_Language
+                        settings.LANGUAGE_CODE = user_Language
                 except:
                     request.session[LANGUAGE_SESSION_KEY] = "en"
                     request.COOKIES['django_language'] = "en"
@@ -129,7 +134,7 @@ def loadLoginPage(request):
                                   firstName="Cyber",lastName="Panel")
             admin.save()
 
-            vers = version(currentVersion="1.6",build=2)
+            vers = version(currentVersion="1.6",build=4)
             vers.save()
 
             package = Package(admin=admin, packageName="Default", diskSpace=1000,

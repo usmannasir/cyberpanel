@@ -6,6 +6,7 @@ import subprocess
 import shutil
 import requests
 import json
+import time
 
 class Upgrade:
     logPath = "/usr/local/lscp/logs/upgradeLog"
@@ -87,6 +88,8 @@ class Upgrade:
 
         command = "systemctl restart gunicorn.socket"
         subprocess.call(shlex.split(command))
+
+        time.sleep(3)
 
         ## Upgrade version
 

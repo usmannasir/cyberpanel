@@ -173,4 +173,5 @@ LANGUAGES = (
     ('gr', _('Greek')),
     ('ru', _('Russian')),
     ('tr', _('Turkish')),
+    ('es', _('Spanish')),
 )

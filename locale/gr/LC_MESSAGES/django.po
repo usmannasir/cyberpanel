@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#: baseTemplate/templates/baseTemplate/index.html:95
-#: baseTemplate/templates/baseTemplate/index.html:185
-#: baseTemplate/templates/baseTemplate/index.html:236
-#: baseTemplate/templates/baseTemplate/index.html:242
-#: baseTemplate/templates/baseTemplate/index.html:248
-#: baseTemplate/templates/baseTemplate/index.html:254
-#: baseTemplate/templates/baseTemplate/index.html:260
-#: baseTemplate/templates/baseTemplate/index.html:266
+#: baseTemplate/templates/baseTemplate/index.html:176
+#: baseTemplate/templates/baseTemplate/index.html:222
+#: baseTemplate/templates/baseTemplate/index.html:228
+#: baseTemplate/templates/baseTemplate/index.html:234
+#: baseTemplate/templates/baseTemplate/index.html:240
+#: baseTemplate/templates/baseTemplate/index.html:246
+#: baseTemplate/templates/baseTemplate/index.html:252
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:198
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:288
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:343
@@ -23,7 +22,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-02-15 13:07+0500\n"
+"POT-Creation-Date: 2018-05-14 14:50+0500\n"
 "PO-Revision-Date: 2018-01-04 22:12+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -57,6 +56,22 @@ msgstr "Ιαπωνικά"
 msgid "Bosnian"
 msgstr ""
 
+#: CyberCP/settings.py:173
+msgid "Greek"
+msgstr ""
+
+#: CyberCP/settings.py:174
+msgid "Russian"
+msgstr ""
+
+#: CyberCP/settings.py:175
+msgid "Turkish"
+msgstr ""
+
+#: CyberCP/settings.py:176
+msgid "Spanish"
+msgstr ""
+
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
 msgid "Back up Website"
@@ -75,9 +90,12 @@ msgstr ""
 #: mailServer/templates/mailServer/changeEmailPassword.html:28
 #: mailServer/templates/mailServer/createEmailAccount.html:28
 #: mailServer/templates/mailServer/deleteEmailAccount.html:28
+#: mailServer/templates/mailServer/dkimManager.html:83
 #: manageSSL/templates/manageSSL/manageSSL.html:29
 #: manageSSL/templates/manageSSL/sslForHostName.html:29
+#: manageSSL/templates/manageSSL/sslForMailServer.html:29
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:28
+#: websiteFunctions/templates/websiteFunctions/listCron.html:28
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:28
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:29
 msgid "Select Website"
@@ -90,24 +108,25 @@ msgstr "Προορισμός"
 
 #: backup/templates/backup/backup.html:44
 #: baseTemplate/templates/baseTemplate/homePage.html:12
-#: filemanager/templates/filemanager/index.html:133
+#: filemanager/templates/filemanager/index.html:136
 msgid "Home"
 msgstr "Αρχική"
 
 #: backup/templates/backup/backup.html:60
 #: backup/templates/backup/restore.html:62
-#: filemanager/templates/filemanager/index.html:157
+#: filemanager/templates/filemanager/index.html:160
 msgid "File Name"
 msgstr "Όνομα Αρχείου"
 
 #: backup/templates/backup/backup.html:61
 #: backup/templates/backup/backup.html:106
 #: backup/templates/backup/restore.html:63
-#: baseTemplate/templates/baseTemplate/index.html:270
+#: baseTemplate/templates/baseTemplate/index.html:256
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:377
-#: filemanager/templates/filemanager/index.html:212
+#: filemanager/templates/filemanager/index.html:215
 #: firewall/templates/firewall/firewall.html:36
-#: managePHP/templates/managePHP/installExtensions.html:65
+#: firewall/templates/firewall/modSecurityRulesPacks.html:112
+#: managePHP/templates/managePHP/installExtensions.html:66
 msgid "Status"
 msgstr "Κατάσταση"
 
@@ -116,7 +135,7 @@ msgid "Running"
 msgstr "Τρέχει..."
 
 #: backup/templates/backup/backup.html:81
-#: baseTemplate/templates/baseTemplate/index.html:445
+#: baseTemplate/templates/baseTemplate/index.html:432
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:552
 msgid "Create Back up"
 msgstr "Δημιουργία αντιγράφων ασφαλείας"
@@ -129,10 +148,11 @@ msgstr "Ακύρωση της δημιουργίας αντιγράφων ασφ
 #: backup/templates/backup/backupDestinations.html:97
 #: backup/templates/backup/backupSchedule.html:89
 #: databases/templates/databases/listDataBases.html:87
-#: dns/templates/dns/addDeleteDNSRecords.html:129
+#: dns/templates/dns/addDeleteDNSRecords.html:294
 #: firewall/templates/firewall/firewall.html:135
+#: firewall/templates/firewall/modSecurityRulesPacks.html:109
 #: ftp/templates/ftp/listFTPAccounts.html:87
-#: managePHP/templates/managePHP/installExtensions.html:61
+#: managePHP/templates/managePHP/installExtensions.html:62
 msgid "ID"
 msgstr "ΙD"
 
@@ -145,7 +165,7 @@ msgid "Date"
 msgstr "Ημερομηνία"
 
 #: backup/templates/backup/backup.html:105
-#: filemanager/templates/filemanager/index.html:210
+#: filemanager/templates/filemanager/index.html:213
 #: ftp/templates/ftp/listFTPAccounts.html:90
 msgid "Size"
 msgstr "Μέγεθος"
@@ -153,11 +173,14 @@ msgstr "Μέγεθος"
 #: backup/templates/backup/backup.html:107
 #: backup/templates/backup/backupDestinations.html:100
 #: backup/templates/backup/backupSchedule.html:92
-#: dns/templates/dns/addDeleteDNSRecords.html:134
+#: dns/templates/dns/addDeleteDNSRecords.html:300
 #: filemanager/templates/filemanager/index.html:72
 #: firewall/templates/firewall/firewall.html:140
 #: firewall/templates/firewall/secureSSH.html:122
-#: websiteFunctions/templates/websiteFunctions/website.html:450
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:40
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:55
+#: websiteFunctions/templates/websiteFunctions/listCron.html:65
+#: websiteFunctions/templates/websiteFunctions/website.html:481
 msgid "Delete"
 msgstr "Διαγραφή"
 
@@ -186,7 +209,7 @@ msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:30
 #: backup/templates/backup/remoteBackups.html:29
-#: dns/templates/dns/addDeleteDNSRecords.html:60
+#: dns/templates/dns/addDeleteDNSRecords.html:67
 #: dns/templates/dns/createNameServer.html:48
 #: dns/templates/dns/createNameServer.html:65
 #: firewall/templates/firewall/firewall.html:138
@@ -200,8 +223,8 @@ msgstr "Διεύθυνση: IP"
 #: ftp/templates/ftp/listFTPAccounts.html:91
 #: mailServer/templates/mailServer/changeEmailPassword.html:52
 #: mailServer/templates/mailServer/createEmailAccount.html:51
-#: userManagment/templates/userManagment/createUser.html:123
-#: userManagment/templates/userManagment/modifyUser.html:106
+#: userManagment/templates/userManagment/createUser.html:113
+#: userManagment/templates/userManagment/modifyUser.html:98
 msgid "Password"
 msgstr "Κωδικός"
 
@@ -216,7 +239,7 @@ msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:55
 #: backup/templates/backup/backupSchedule.html:54
-#: baseTemplate/templates/baseTemplate/index.html:447
+#: baseTemplate/templates/baseTemplate/index.html:434
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:554
 msgid "Add Destination"
 msgstr "Προσθήκη προορισμού"
@@ -249,25 +272,28 @@ msgstr "Προορισμός προστεθεί."
 #: backup/templates/backup/restore.html:95
 #: databases/templates/databases/createDatabase.html:88
 #: databases/templates/databases/deleteDatabase.html:73
-#: dns/templates/dns/addDeleteDNSRecords.html:185
+#: dns/templates/dns/addDeleteDNSRecords.html:352
 #: dns/templates/dns/createDNSZone.html:60
 #: dns/templates/dns/createNameServer.html:100
 #: dns/templates/dns/deleteDNSZone.html:67
 #: mailServer/templates/mailServer/changeEmailPassword.html:80
 #: mailServer/templates/mailServer/createEmailAccount.html:79
 #: mailServer/templates/mailServer/deleteEmailAccount.html:79
+#: mailServer/templates/mailServer/dkimManager.html:156
 #: manageSSL/templates/manageSSL/manageSSL.html:60
-#: userManagment/templates/userManagment/createUser.html:162
-#: userManagment/templates/userManagment/modifyUser.html:138
+#: userManagment/templates/userManagment/createUser.html:152
+#: userManagment/templates/userManagment/modifyUser.html:130
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:126
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:77
-#: websiteFunctions/templates/websiteFunctions/website.html:156
-#: websiteFunctions/templates/websiteFunctions/website.html:362
-#: websiteFunctions/templates/websiteFunctions/website.html:404
-#: websiteFunctions/templates/websiteFunctions/website.html:534
-#: websiteFunctions/templates/websiteFunctions/website.html:589
-#: websiteFunctions/templates/websiteFunctions/website.html:644
-#: websiteFunctions/templates/websiteFunctions/website.html:802
-#: websiteFunctions/templates/websiteFunctions/website.html:881
+#: websiteFunctions/templates/websiteFunctions/website.html:160
+#: websiteFunctions/templates/websiteFunctions/website.html:393
+#: websiteFunctions/templates/websiteFunctions/website.html:434
+#: websiteFunctions/templates/websiteFunctions/website.html:580
+#: websiteFunctions/templates/websiteFunctions/website.html:634
+#: websiteFunctions/templates/websiteFunctions/website.html:686
+#: websiteFunctions/templates/websiteFunctions/website.html:773
+#: websiteFunctions/templates/websiteFunctions/website.html:915
+#: websiteFunctions/templates/websiteFunctions/website.html:994
 msgid "Could not connect to server. Please refresh this page."
 msgstr ""
 "Δεν μπορούσε να συνδεθεί με το διακομιστή. Παρακαλούμε ανανεώστε αυτή τη "
@@ -288,7 +314,7 @@ msgstr "Προγραμματίσετε αντίγραφα ασφαλείας - C
 
 #: backup/templates/backup/backupSchedule.html:13
 #: backup/templates/backup/backupSchedule.html:20
-#: baseTemplate/templates/baseTemplate/index.html:448
+#: baseTemplate/templates/baseTemplate/index.html:435
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:555
 msgid "Schedule Back up"
 msgstr "Προγραμματίσετε αντίγραφα ασφαλείας"
@@ -309,14 +335,6 @@ msgstr "Επιλέξτε προορισμό"
 msgid "Select Frequency"
 msgstr "Επιλέξτε Συχνότητα"
 
-#: backup/templates/backup/backupSchedule.html:43
-msgid "Daily"
-msgstr "Καθημερινά"
-
-#: backup/templates/backup/backupSchedule.html:44
-msgid "Weekly"
-msgstr "Εβδομαδιαία"
-
 #: backup/templates/backup/backupSchedule.html:69
 msgid "Cannot add schedule. Error message:"
 msgstr "Δεν είναι δυνατό να προσθέσετε χρονοδιάγραμμα. Μήνυμα λάθους:"
@@ -335,13 +353,13 @@ msgstr "Δημιουργία αντιγράφων ασφαλείας Home - Cybe
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:29
 #: backup/templates/backup/index.html:45
-#: baseTemplate/templates/baseTemplate/homePage.html:268
-#: baseTemplate/templates/baseTemplate/homePage.html:271
-#: baseTemplate/templates/baseTemplate/homePage.html:463
-#: baseTemplate/templates/baseTemplate/homePage.html:466
-#: baseTemplate/templates/baseTemplate/index.html:438
-#: baseTemplate/templates/baseTemplate/index.html:440
-#: baseTemplate/templates/baseTemplate/index.html:457
+#: baseTemplate/templates/baseTemplate/homePage.html:204
+#: baseTemplate/templates/baseTemplate/homePage.html:207
+#: baseTemplate/templates/baseTemplate/homePage.html:399
+#: baseTemplate/templates/baseTemplate/homePage.html:402
+#: baseTemplate/templates/baseTemplate/index.html:425
+#: baseTemplate/templates/baseTemplate/index.html:427
+#: baseTemplate/templates/baseTemplate/index.html:444
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:545
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:547
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:564
@@ -353,7 +371,7 @@ msgid "Back up and restore sites."
 msgstr " Αντιγράφο Ασφαλείας και Επαναφοράς ιστοσελίδων"
 
 #: backup/templates/backup/index.html:19
-#: baseTemplate/templates/baseTemplate/homePage.html:164
+#: baseTemplate/templates/baseTemplate/homePage.html:100
 #: databases/templates/databases/index.html:19 dns/templates/dns/index.html:19
 #: firewall/templates/firewall/index.html:19 ftp/templates/ftp/index.html:19
 #: mailServer/templates/mailServer/index.html:19
@@ -373,7 +391,7 @@ msgid "Back up Site"
 msgstr "Αντίγραφο ασφαλείας Ιστοσελίδας "
 
 #: backup/templates/backup/index.html:55
-#: baseTemplate/templates/baseTemplate/index.html:446
+#: baseTemplate/templates/baseTemplate/index.html:433
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:553
 msgid "Restore Back up"
 msgstr "Επαναφορά Αντιγράφου ασφαλείας"
@@ -411,8 +429,9 @@ msgid "Start Transfer"
 msgstr ""
 
 #: backup/templates/backup/remoteBackups.html:59
-#: filemanager/templates/filemanager/index.html:236
-#: websiteFunctions/templates/websiteFunctions/website.html:295
+#: filemanager/templates/filemanager/index.html:239
+#: websiteFunctions/templates/websiteFunctions/website.html:319
+#: websiteFunctions/templates/websiteFunctions/website.html:743
 #, fuzzy
 #| msgid "Cancel Backup"
 msgid "Cancel"
@@ -454,12 +473,12 @@ msgid "Website"
 msgstr "Ιστοσελίδα:"
 
 #: backup/templates/backup/remoteBackups.html:108
-#: baseTemplate/templates/baseTemplate/homePage.html:333
-#: baseTemplate/templates/baseTemplate/index.html:511
-#: baseTemplate/templates/baseTemplate/index.html:513
+#: baseTemplate/templates/baseTemplate/homePage.html:269
+#: baseTemplate/templates/baseTemplate/index.html:499
+#: baseTemplate/templates/baseTemplate/index.html:501
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:618
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:620
-#: managePHP/templates/managePHP/installExtensions.html:62
+#: managePHP/templates/managePHP/installExtensions.html:63
 msgid "PHP"
 msgstr "PHP"
 
@@ -471,8 +490,8 @@ msgid "Package"
 msgstr "Πακέτο"
 
 #: backup/templates/backup/remoteBackups.html:110
-#: baseTemplate/templates/baseTemplate/index.html:398
-#: baseTemplate/templates/baseTemplate/index.html:400
+#: baseTemplate/templates/baseTemplate/index.html:384
+#: baseTemplate/templates/baseTemplate/index.html:386
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:505
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:507
 #: userManagment/templates/userManagment/createUser.html:47
@@ -517,7 +536,7 @@ msgstr "Ρυθμίσεις"
 #: databases/templates/databases/deleteDatabase.html:64
 #: databases/templates/databases/listDataBases.html:54
 #: firewall/templates/firewall/firewall.html:166
-#: managePHP/templates/managePHP/editPHPConfig.html:212
+#: managePHP/templates/managePHP/editPHPConfig.html:221
 msgid "Error message:"
 msgstr "Μήνυμα λάθους:"
 
@@ -534,18 +553,18 @@ msgid "Use the tabs to navigate through the control panel."
 msgstr "Χρησιμοποιήστε τις καρτέλες για να περιηγηθείτε στον πίνακα ελέγχου."
 
 #: baseTemplate/templates/baseTemplate/homePage.html:23
-#: websiteFunctions/templates/websiteFunctions/website.html:32
+#: websiteFunctions/templates/websiteFunctions/website.html:37
 msgid "Usage"
 msgstr "Χρήση"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:34
-#: baseTemplate/templates/baseTemplate/index.html:105
+#: baseTemplate/templates/baseTemplate/index.html:96
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:208
 msgid "CPU Usage"
 msgstr "Χρήση επεξεργαστή"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:55
-#: baseTemplate/templates/baseTemplate/index.html:116
+#: baseTemplate/templates/baseTemplate/index.html:107
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:219
 msgid "Ram Usage"
 msgstr "Χρήση RAM"
@@ -554,55 +573,35 @@ msgstr "Χρήση RAM"
 msgid "Disk Usage '/'"
 msgstr "Χρήση δίσκου '/'"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:98
-msgid "HTTP Statistics"
-msgstr "Στατιστικά στοιχεία HTTP"
-
-#: baseTemplate/templates/baseTemplate/homePage.html:107
-msgid "Available/Max Connections"
-msgstr "Διαθέσιμες / Μέγιστες συνδέσεις"
-
-#: baseTemplate/templates/baseTemplate/homePage.html:118
-msgid "Available/Max SSL Connections"
-msgstr "Διαθέσιμες / Μέγιστες SSL Συνδέσεις"
-
-#: baseTemplate/templates/baseTemplate/homePage.html:127
-msgid "Requests Processing"
-msgstr "Αιτήσεις επεξεργασίας"
-
-#: baseTemplate/templates/baseTemplate/homePage.html:136
-msgid "Total Requests"
-msgstr "Σύνολο Αιτημάτων"
-
-#: baseTemplate/templates/baseTemplate/homePage.html:175
-#: baseTemplate/templates/baseTemplate/homePage.html:389
+#: baseTemplate/templates/baseTemplate/homePage.html:111
+#: baseTemplate/templates/baseTemplate/homePage.html:325
 #: userManagment/templates/userManagment/index.html:13
 msgid "User Functions"
 msgstr "Λειτουργίες Χρήστη"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:178
-#: baseTemplate/templates/baseTemplate/homePage.html:392
-#: baseTemplate/templates/baseTemplate/index.html:310
-#: baseTemplate/templates/baseTemplate/index.html:311
-#: baseTemplate/templates/baseTemplate/index.html:312
+#: baseTemplate/templates/baseTemplate/homePage.html:114
+#: baseTemplate/templates/baseTemplate/homePage.html:328
+#: baseTemplate/templates/baseTemplate/index.html:296
+#: baseTemplate/templates/baseTemplate/index.html:297
+#: baseTemplate/templates/baseTemplate/index.html:298
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:417
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:418
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:419
 msgid "Users"
 msgstr "Χρήστες"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:188
-#: baseTemplate/templates/baseTemplate/homePage.html:402
+#: baseTemplate/templates/baseTemplate/homePage.html:124
+#: baseTemplate/templates/baseTemplate/homePage.html:338
 #: websiteFunctions/templates/websiteFunctions/index.html:13
 msgid "Website Functions"
 msgstr "Λειτουργίες της Ιστοσελίδας"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:191
-#: baseTemplate/templates/baseTemplate/homePage.html:405
-#: baseTemplate/templates/baseTemplate/index.html:240
-#: baseTemplate/templates/baseTemplate/index.html:328
-#: baseTemplate/templates/baseTemplate/index.html:329
-#: baseTemplate/templates/baseTemplate/index.html:330
+#: baseTemplate/templates/baseTemplate/homePage.html:127
+#: baseTemplate/templates/baseTemplate/homePage.html:341
+#: baseTemplate/templates/baseTemplate/index.html:226
+#: baseTemplate/templates/baseTemplate/index.html:314
+#: baseTemplate/templates/baseTemplate/index.html:315
+#: baseTemplate/templates/baseTemplate/index.html:316
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:347
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:435
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:436
@@ -611,14 +610,14 @@ msgstr "Λειτουργίες της Ιστοσελίδας"
 msgid "Websites"
 msgstr "Ιστοσελίδες"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:201
+#: baseTemplate/templates/baseTemplate/homePage.html:137
 msgid "Add/Modify Packages"
 msgstr "Προσθήκη/Τροποποίηση πακέτων"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:204
-#: baseTemplate/templates/baseTemplate/index.html:246
-#: baseTemplate/templates/baseTemplate/index.html:345
-#: baseTemplate/templates/baseTemplate/index.html:347
+#: baseTemplate/templates/baseTemplate/homePage.html:140
+#: baseTemplate/templates/baseTemplate/index.html:232
+#: baseTemplate/templates/baseTemplate/index.html:331
+#: baseTemplate/templates/baseTemplate/index.html:333
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:353
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:452
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:454
@@ -626,80 +625,80 @@ msgstr "Προσθήκη/Τροποποίηση πακέτων"
 msgid "Packages"
 msgstr "Πακέτα"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:225
-#: baseTemplate/templates/baseTemplate/homePage.html:415
+#: baseTemplate/templates/baseTemplate/homePage.html:161
+#: baseTemplate/templates/baseTemplate/homePage.html:351
 #: databases/templates/databases/index.html:12
 msgid "Database Functions"
 msgstr "Λειτουργίες βάσης δεδομένων"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:228
-#: baseTemplate/templates/baseTemplate/homePage.html:418
-#: baseTemplate/templates/baseTemplate/index.html:361
-#: baseTemplate/templates/baseTemplate/index.html:362
-#: baseTemplate/templates/baseTemplate/index.html:363
+#: baseTemplate/templates/baseTemplate/homePage.html:164
+#: baseTemplate/templates/baseTemplate/homePage.html:354
+#: baseTemplate/templates/baseTemplate/index.html:347
+#: baseTemplate/templates/baseTemplate/index.html:348
+#: baseTemplate/templates/baseTemplate/index.html:349
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:468
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:469
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:470
 #: packages/templates/packages/createPackage.html:67
 #: packages/templates/packages/modifyPackage.html:73
-#: websiteFunctions/templates/websiteFunctions/website.html:43
+#: websiteFunctions/templates/websiteFunctions/website.html:48
 msgid "Databases"
 msgstr "Βάση δεδομένων"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:237
-#: baseTemplate/templates/baseTemplate/homePage.html:438
+#: baseTemplate/templates/baseTemplate/homePage.html:173
+#: baseTemplate/templates/baseTemplate/homePage.html:374
 msgid "Control DNS"
 msgstr "Control DNS"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:240
-#: baseTemplate/templates/baseTemplate/homePage.html:441
-#: baseTemplate/templates/baseTemplate/index.html:252
-#: baseTemplate/templates/baseTemplate/index.html:379
-#: baseTemplate/templates/baseTemplate/index.html:381
+#: baseTemplate/templates/baseTemplate/homePage.html:176
+#: baseTemplate/templates/baseTemplate/homePage.html:377
+#: baseTemplate/templates/baseTemplate/index.html:238
+#: baseTemplate/templates/baseTemplate/index.html:365
+#: baseTemplate/templates/baseTemplate/index.html:367
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:359
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:486
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:488
 msgid "DNS"
 msgstr "DNS"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:250
-#: baseTemplate/templates/baseTemplate/homePage.html:451
+#: baseTemplate/templates/baseTemplate/homePage.html:186
+#: baseTemplate/templates/baseTemplate/homePage.html:387
 #: ftp/templates/ftp/index.html:12
 msgid "FTP Functions"
 msgstr "Λειτουργίες FTP"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:253
-#: baseTemplate/templates/baseTemplate/homePage.html:454
-#: baseTemplate/templates/baseTemplate/index.html:258
-#: baseTemplate/templates/baseTemplate/index.html:420
-#: baseTemplate/templates/baseTemplate/index.html:422
+#: baseTemplate/templates/baseTemplate/homePage.html:189
+#: baseTemplate/templates/baseTemplate/homePage.html:390
+#: baseTemplate/templates/baseTemplate/index.html:244
+#: baseTemplate/templates/baseTemplate/index.html:407
+#: baseTemplate/templates/baseTemplate/index.html:409
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:365
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:527
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:529
-#: websiteFunctions/templates/websiteFunctions/website.html:38
+#: websiteFunctions/templates/websiteFunctions/website.html:43
 msgid "FTP"
 msgstr "FTP"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:280
-#: baseTemplate/templates/baseTemplate/homePage.html:283
-#: baseTemplate/templates/baseTemplate/homePage.html:483
-#: baseTemplate/templates/baseTemplate/homePage.html:486
+#: baseTemplate/templates/baseTemplate/homePage.html:216
+#: baseTemplate/templates/baseTemplate/homePage.html:219
+#: baseTemplate/templates/baseTemplate/homePage.html:419
+#: baseTemplate/templates/baseTemplate/homePage.html:422
 #: packages/templates/packages/createPackage.html:75
 #: packages/templates/packages/modifyPackage.html:80
 msgid "Emails"
 msgstr "Emails"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:293
-#: baseTemplate/templates/baseTemplate/homePage.html:296
+#: baseTemplate/templates/baseTemplate/homePage.html:229
+#: baseTemplate/templates/baseTemplate/homePage.html:232
 #: tuning/templates/tuning/index.html:12
 msgid "Server Tuning"
 msgstr "Συντονισμός διακομιστή"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:317
-#: baseTemplate/templates/baseTemplate/homePage.html:320
-#: baseTemplate/templates/baseTemplate/index.html:491
-#: baseTemplate/templates/baseTemplate/index.html:493
-#: baseTemplate/templates/baseTemplate/index.html:527
+#: baseTemplate/templates/baseTemplate/homePage.html:253
+#: baseTemplate/templates/baseTemplate/homePage.html:256
+#: baseTemplate/templates/baseTemplate/index.html:479
+#: baseTemplate/templates/baseTemplate/index.html:481
+#: baseTemplate/templates/baseTemplate/index.html:515
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:598
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:600
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:634
@@ -707,72 +706,67 @@ msgstr "Συντονισμός διακομιστή"
 msgid "Server Status"
 msgstr "Κατάσταση Διακομιστή"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:330
+#: baseTemplate/templates/baseTemplate/homePage.html:266
 msgid "PHP Configurations"
 msgstr "Ρυθμίσεις PHP"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:342
-#: baseTemplate/templates/baseTemplate/homePage.html:345
-#: baseTemplate/templates/baseTemplate/index.html:529
+#: baseTemplate/templates/baseTemplate/homePage.html:278
+#: baseTemplate/templates/baseTemplate/homePage.html:281
+#: baseTemplate/templates/baseTemplate/index.html:517
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:636
-#: websiteFunctions/templates/websiteFunctions/website.html:112
+#: websiteFunctions/templates/websiteFunctions/website.html:117
 msgid "Logs"
 msgstr "Αρχεία καταγραφής"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:365
-#: baseTemplate/templates/baseTemplate/homePage.html:368
-#: baseTemplate/templates/baseTemplate/index.html:545
-#: baseTemplate/templates/baseTemplate/index.html:547
+#: baseTemplate/templates/baseTemplate/homePage.html:301
+#: baseTemplate/templates/baseTemplate/homePage.html:304
+#: baseTemplate/templates/baseTemplate/index.html:534
+#: baseTemplate/templates/baseTemplate/index.html:536
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:652
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:654
 msgid "Security"
 msgstr "Ασφάλεια"
 
-#: baseTemplate/templates/baseTemplate/index.html:96
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:199
-msgid "CPU Status"
-msgstr "Κατάσταση Επεξεργαστή"
-
-#: baseTemplate/templates/baseTemplate/index.html:125
+#: baseTemplate/templates/baseTemplate/index.html:116
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:228
-#: websiteFunctions/templates/websiteFunctions/website.html:50
-#: websiteFunctions/templates/websiteFunctions/website.html:71
+#: websiteFunctions/templates/websiteFunctions/website.html:55
+#: websiteFunctions/templates/websiteFunctions/website.html:76
 msgid "Disk Usage"
 msgstr "Χρήση δίσκου"
 
-#: baseTemplate/templates/baseTemplate/index.html:159
-#: baseTemplate/templates/baseTemplate/index.html:162
-#: baseTemplate/templates/baseTemplate/index.html:166
+#: baseTemplate/templates/baseTemplate/index.html:150
+#: baseTemplate/templates/baseTemplate/index.html:153
+#: baseTemplate/templates/baseTemplate/index.html:157
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:262
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:265
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:269
 msgid "CyberPanel"
 msgstr "CyberPanel"
 
-#: baseTemplate/templates/baseTemplate/index.html:164
-#: baseTemplate/templates/baseTemplate/index.html:168
+#: baseTemplate/templates/baseTemplate/index.html:155
+#: baseTemplate/templates/baseTemplate/index.html:159
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:267
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:271
 msgid "Web Hosting Control Panel"
 msgstr "Πίνακας Ελέγχου Φιλοξενίας Ιστοσελίδων"
 
-#: baseTemplate/templates/baseTemplate/index.html:170
+#: baseTemplate/templates/baseTemplate/index.html:161
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:273
 msgid "Close sidebar"
 msgstr "Κλείσιμο πλευρικής εργαλειοθήκης"
 
-#: baseTemplate/templates/baseTemplate/index.html:176
+#: baseTemplate/templates/baseTemplate/index.html:167
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:279
 msgid "My Account"
 msgstr "Ο Λογαριασμός Μου"
 
-#: baseTemplate/templates/baseTemplate/index.html:193
+#: baseTemplate/templates/baseTemplate/index.html:184
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:296
 msgid "Edit profile"
 msgstr "Επεξεργασία προφίλ"
 
-#: baseTemplate/templates/baseTemplate/index.html:194
-#: baseTemplate/templates/baseTemplate/index.html:317
+#: baseTemplate/templates/baseTemplate/index.html:185
+#: baseTemplate/templates/baseTemplate/index.html:303
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:297
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:424
 #: userManagment/templates/userManagment/index.html:26
@@ -780,48 +774,43 @@ msgstr "Επεξεργασία προφίλ"
 msgid "View Profile"
 msgstr "Προβολή Προφίλ"
 
-#: baseTemplate/templates/baseTemplate/index.html:201
-#: baseTemplate/templates/baseTemplate/index.html:278
+#: baseTemplate/templates/baseTemplate/index.html:192
+#: baseTemplate/templates/baseTemplate/index.html:264
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:304
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:385
 msgid "Logout"
 msgstr "Έξοδος"
 
-#: baseTemplate/templates/baseTemplate/index.html:212
-#: baseTemplate/templates/baseTemplate/index.html:216
-#: baseTemplate/templates/baseTemplate/index.html:220
+#: baseTemplate/templates/baseTemplate/index.html:203
+#: baseTemplate/templates/baseTemplate/index.html:207
+#: baseTemplate/templates/baseTemplate/index.html:211
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:315
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:319
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:323
 msgid "CPU Load Average"
 msgstr "Μέσο φορτίο CPU"
 
-#: baseTemplate/templates/baseTemplate/index.html:225
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:332
-msgid "System Status"
-msgstr "Κατάσταση Συστήματος"
-
-#: baseTemplate/templates/baseTemplate/index.html:230
+#: baseTemplate/templates/baseTemplate/index.html:216
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:337
 msgid "Dashboard Quick Menu"
 msgstr "Γρήγορο Μενού του Πίνακα εργαλείων"
 
-#: baseTemplate/templates/baseTemplate/index.html:264
-#: baseTemplate/templates/baseTemplate/index.html:475
-#: baseTemplate/templates/baseTemplate/index.html:477
+#: baseTemplate/templates/baseTemplate/index.html:250
+#: baseTemplate/templates/baseTemplate/index.html:463
+#: baseTemplate/templates/baseTemplate/index.html:465
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:371
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:582
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:584
 msgid "Tuning"
 msgstr "Συντονισμός"
 
-#: baseTemplate/templates/baseTemplate/index.html:291
+#: baseTemplate/templates/baseTemplate/index.html:277
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:398
 msgid "Overview"
 msgstr "Επισκόπηση"
 
-#: baseTemplate/templates/baseTemplate/index.html:293
-#: baseTemplate/templates/baseTemplate/index.html:294
+#: baseTemplate/templates/baseTemplate/index.html:279
+#: baseTemplate/templates/baseTemplate/index.html:280
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:400
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:401
 #, fuzzy
@@ -829,16 +818,16 @@ msgstr "Επισκόπηση"
 msgid "Server IP Address"
 msgstr "Διεύθυνση: IP"
 
-#: baseTemplate/templates/baseTemplate/index.html:297
-#: baseTemplate/templates/baseTemplate/index.html:299
+#: baseTemplate/templates/baseTemplate/index.html:283
+#: baseTemplate/templates/baseTemplate/index.html:285
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:404
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:406
 msgid "Dashboard"
 msgstr "Διαχείριση"
 
-#: baseTemplate/templates/baseTemplate/index.html:301
-#: baseTemplate/templates/baseTemplate/index.html:302
-#: baseTemplate/templates/baseTemplate/index.html:303
+#: baseTemplate/templates/baseTemplate/index.html:287
+#: baseTemplate/templates/baseTemplate/index.html:288
+#: baseTemplate/templates/baseTemplate/index.html:289
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:408
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:409
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:410
@@ -846,27 +835,27 @@ msgstr "Διαχείριση"
 msgid "Version Management"
 msgstr "Τελευταία Έκδοση:"
 
-#: baseTemplate/templates/baseTemplate/index.html:307
+#: baseTemplate/templates/baseTemplate/index.html:293
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:414
 msgid "Main"
 msgstr "Κύριος"
 
-#: baseTemplate/templates/baseTemplate/index.html:318
+#: baseTemplate/templates/baseTemplate/index.html:304
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:425
 #: userManagment/templates/userManagment/createUser.html:12
 msgid "Create New User"
 msgstr "Δημιουργία νέου χρήστη"
 
-#: baseTemplate/templates/baseTemplate/index.html:319
+#: baseTemplate/templates/baseTemplate/index.html:305
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:426
 #: userManagment/templates/userManagment/index.html:52
 #: userManagment/templates/userManagment/index.html:54
 #: userManagment/templates/userManagment/modifyUser.html:12
-#: userManagment/templates/userManagment/modifyUser.html:119
+#: userManagment/templates/userManagment/modifyUser.html:111
 msgid "Modify User"
 msgstr "Τροποποίηση Χρήστη"
 
-#: baseTemplate/templates/baseTemplate/index.html:320
+#: baseTemplate/templates/baseTemplate/index.html:306
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:427
 #: userManagment/templates/userManagment/deleteUser.html:13
 #: userManagment/templates/userManagment/deleteUser.html:20
@@ -876,16 +865,16 @@ msgstr "Τροποποίηση Χρήστη"
 msgid "Delete User"
 msgstr "Διαγραφή Χρήστη"
 
-#: baseTemplate/templates/baseTemplate/index.html:335
+#: baseTemplate/templates/baseTemplate/index.html:321
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:442
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:12
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:102
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:109
 #: websiteFunctions/templates/websiteFunctions/index.html:49
 #: websiteFunctions/templates/websiteFunctions/index.html:51
 msgid "Create Website"
 msgstr "Δημιουργία ιστοσελίδας"
 
-#: baseTemplate/templates/baseTemplate/index.html:336
+#: baseTemplate/templates/baseTemplate/index.html:322
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:443
 #: websiteFunctions/templates/websiteFunctions/index.html:34
 #: websiteFunctions/templates/websiteFunctions/index.html:36
@@ -895,23 +884,23 @@ msgstr "Δημιουργία ιστοσελίδας"
 msgid "List Websites"
 msgstr "Κατάλογος ιστοσελίδων"
 
-#: baseTemplate/templates/baseTemplate/index.html:337
+#: baseTemplate/templates/baseTemplate/index.html:323
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:444
 #: websiteFunctions/templates/websiteFunctions/index.html:73
 #: websiteFunctions/templates/websiteFunctions/index.html:75
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:12
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:19
-#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:95
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:96
 msgid "Modify Website"
 msgstr "Τροποποίηση ιστοτόπου"
 
-#: baseTemplate/templates/baseTemplate/index.html:338
+#: baseTemplate/templates/baseTemplate/index.html:324
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:445
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:41
 msgid "Suspend/Unsuspend"
 msgstr "Αναστολή / Απενεργοποίηση"
 
-#: baseTemplate/templates/baseTemplate/index.html:339
+#: baseTemplate/templates/baseTemplate/index.html:325
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:446
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:12
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:19
@@ -921,7 +910,7 @@ msgstr "Αναστολή / Απενεργοποίηση"
 msgid "Delete Website"
 msgstr "Διαγραφή Ιστοσελίδας"
 
-#: baseTemplate/templates/baseTemplate/index.html:352
+#: baseTemplate/templates/baseTemplate/index.html:338
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:459
 #: packages/templates/packages/createPackage.html:13
 #: packages/templates/packages/createPackage.html:84
@@ -930,7 +919,7 @@ msgstr "Διαγραφή Ιστοσελίδας"
 msgid "Create Package"
 msgstr "Δημιουργία Πακέτου"
 
-#: baseTemplate/templates/baseTemplate/index.html:353
+#: baseTemplate/templates/baseTemplate/index.html:339
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:460
 #: packages/templates/packages/deletePackage.html:12
 #: packages/templates/packages/deletePackage.html:18
@@ -940,7 +929,7 @@ msgstr "Δημιουργία Πακέτου"
 msgid "Delete Package"
 msgstr "Διαγραφή Πακέτου"
 
-#: baseTemplate/templates/baseTemplate/index.html:354
+#: baseTemplate/templates/baseTemplate/index.html:340
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:461
 #: packages/templates/packages/index.html:49
 #: packages/templates/packages/index.html:51
@@ -950,7 +939,7 @@ msgstr "Διαγραφή Πακέτου"
 msgid "Modify Package"
 msgstr "Τροποποίηση πακέτου"
 
-#: baseTemplate/templates/baseTemplate/index.html:368
+#: baseTemplate/templates/baseTemplate/index.html:354
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:475
 #: databases/templates/databases/createDatabase.html:12
 #: databases/templates/databases/createDatabase.html:19
@@ -961,7 +950,7 @@ msgstr "Τροποποίηση πακέτου"
 msgid "Create Database"
 msgstr "Δημιουργία Βάσης Δεδομένων"
 
-#: baseTemplate/templates/baseTemplate/index.html:369
+#: baseTemplate/templates/baseTemplate/index.html:355
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:476
 #: databases/templates/databases/deleteDatabase.html:12
 #: databases/templates/databases/deleteDatabase.html:19
@@ -972,7 +961,7 @@ msgstr "Δημιουργία Βάσης Δεδομένων"
 msgid "Delete Database"
 msgstr "Διαγραφή Βάσης Δεδομένων"
 
-#: baseTemplate/templates/baseTemplate/index.html:370
+#: baseTemplate/templates/baseTemplate/index.html:356
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:477
 #: databases/templates/databases/index.html:53
 #: databases/templates/databases/index.html:55
@@ -981,14 +970,14 @@ msgstr "Διαγραφή Βάσης Δεδομένων"
 msgid "List Databases"
 msgstr "Λίστα Βάσεων Δεδομένων"
 
-#: baseTemplate/templates/baseTemplate/index.html:371
+#: baseTemplate/templates/baseTemplate/index.html:357
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:478
 #: databases/templates/databases/index.html:65
 #: databases/templates/databases/index.html:67
 msgid "PHPMYAdmin"
 msgstr "PHPMYAdmin"
 
-#: baseTemplate/templates/baseTemplate/index.html:386
+#: baseTemplate/templates/baseTemplate/index.html:372
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:493
 #: dns/templates/dns/createNameServer.html:12
 #: dns/templates/dns/createNameServer.html:76 dns/templates/dns/index.html:72
@@ -996,7 +985,7 @@ msgstr "PHPMYAdmin"
 msgid "Create Nameserver"
 msgstr "Δημιουργία Nameserver"
 
-#: baseTemplate/templates/baseTemplate/index.html:387
+#: baseTemplate/templates/baseTemplate/index.html:373
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:494
 #: dns/templates/dns/createDNSZone.html:12
 #: dns/templates/dns/createDNSZone.html:40 dns/templates/dns/index.html:29
@@ -1005,7 +994,7 @@ msgstr "Δημιουργία Nameserver"
 msgid "Create DNS Zone"
 msgstr "Δημιουργία ζώνης DNS"
 
-#: baseTemplate/templates/baseTemplate/index.html:388
+#: baseTemplate/templates/baseTemplate/index.html:374
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:495
 #: dns/templates/dns/deleteDNSZone.html:40 dns/templates/dns/index.html:41
 #: dns/templates/dns/index.html:43 dns/templates/dns/index.html:96
@@ -1013,19 +1002,19 @@ msgstr "Δημιουργία ζώνης DNS"
 msgid "Delete Zone"
 msgstr "Διαγραφή Ζώνης"
 
-#: baseTemplate/templates/baseTemplate/index.html:389
+#: baseTemplate/templates/baseTemplate/index.html:375
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:496
 msgid "Add/Delete Records"
 msgstr "Προσθήκη/Διαγραφή Αρχείων"
 
-#: baseTemplate/templates/baseTemplate/index.html:405
+#: baseTemplate/templates/baseTemplate/index.html:391
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:512
 #: mailServer/templates/mailServer/createEmailAccount.html:12
 #: mailServer/templates/mailServer/createEmailAccount.html:19
 msgid "Create Email Account"
 msgstr "Δημιουργία Λογαριασμού Email "
 
-#: baseTemplate/templates/baseTemplate/index.html:405
+#: baseTemplate/templates/baseTemplate/index.html:391
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:512
 #: mailServer/templates/mailServer/createEmailAccount.html:64
 #: mailServer/templates/mailServer/index.html:25
@@ -1033,14 +1022,14 @@ msgstr "Δημιουργία Λογαριασμού Email "
 msgid "Create Email"
 msgstr "Δημιουργία Email "
 
-#: baseTemplate/templates/baseTemplate/index.html:406
+#: baseTemplate/templates/baseTemplate/index.html:392
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:513
 #: mailServer/templates/mailServer/deleteEmailAccount.html:12
 #: mailServer/templates/mailServer/deleteEmailAccount.html:19
 msgid "Delete Email Account"
 msgstr "Διαγραφή του λογαριασμού Email "
 
-#: baseTemplate/templates/baseTemplate/index.html:406
+#: baseTemplate/templates/baseTemplate/index.html:392
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:513
 #: mailServer/templates/mailServer/deleteEmailAccount.html:56
 #: mailServer/templates/mailServer/index.html:37
@@ -1048,7 +1037,7 @@ msgstr "Διαγραφή του λογαριασμού Email "
 msgid "Delete Email"
 msgstr "Διαγραφή Email "
 
-#: baseTemplate/templates/baseTemplate/index.html:407
+#: baseTemplate/templates/baseTemplate/index.html:393
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:514
 #: databases/templates/databases/listDataBases.html:73
 #: ftp/templates/ftp/listFTPAccounts.html:73
@@ -1058,33 +1047,42 @@ msgstr "Διαγραφή Email "
 msgid "Change Password"
 msgstr "Αλλαγή Κωδικού πρόσβασης"
 
-#: baseTemplate/templates/baseTemplate/index.html:408
+#: baseTemplate/templates/baseTemplate/index.html:394
+#: mailServer/templates/mailServer/dkimManager.html:13
+#: mailServer/templates/mailServer/dkimManager.html:22
+#: mailServer/templates/mailServer/dkimManager.html:75
+#, fuzzy
+#| msgid "File Manager"
+msgid "DKIM Manager"
+msgstr "Διαχείριση Αρχείων"
+
+#: baseTemplate/templates/baseTemplate/index.html:395
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:515
 msgid "Access Webmail"
 msgstr "Πρόσβαση Webmail"
 
-#: baseTemplate/templates/baseTemplate/index.html:427
+#: baseTemplate/templates/baseTemplate/index.html:414
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:534
 #: ftp/templates/ftp/createFTPAccount.html:12
 #: ftp/templates/ftp/createFTPAccount.html:19 ftp/templates/ftp/index.html:25
 #: ftp/templates/ftp/index.html:27
-#: websiteFunctions/templates/websiteFunctions/website.html:709
-#: websiteFunctions/templates/websiteFunctions/website.html:711
+#: websiteFunctions/templates/websiteFunctions/website.html:815
+#: websiteFunctions/templates/websiteFunctions/website.html:818
 msgid "Create FTP Account"
 msgstr "Δημιουργία Λογαριασμού FTP"
 
-#: baseTemplate/templates/baseTemplate/index.html:428
+#: baseTemplate/templates/baseTemplate/index.html:415
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:535
 #: ftp/templates/ftp/deleteFTPAccount.html:12
 #: ftp/templates/ftp/deleteFTPAccount.html:18
 #: ftp/templates/ftp/deleteFTPAccount.html:52 ftp/templates/ftp/index.html:37
 #: ftp/templates/ftp/index.html:39
-#: websiteFunctions/templates/websiteFunctions/website.html:721
-#: websiteFunctions/templates/websiteFunctions/website.html:723
+#: websiteFunctions/templates/websiteFunctions/website.html:827
+#: websiteFunctions/templates/websiteFunctions/website.html:830
 msgid "Delete FTP Account"
 msgstr "Διαγραφή του Λογαριασμού FTP "
 
-#: baseTemplate/templates/baseTemplate/index.html:429
+#: baseTemplate/templates/baseTemplate/index.html:416
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:536
 #: ftp/templates/ftp/index.html:49 ftp/templates/ftp/index.html:51
 #: ftp/templates/ftp/listFTPAccounts.html:13
@@ -1092,26 +1090,27 @@ msgstr "Διαγραφή του Λογαριασμού FTP "
 msgid "List FTP Accounts"
 msgstr "Λίστα Λογαριασμών FTP "
 
-#: baseTemplate/templates/baseTemplate/index.html:447
+#: baseTemplate/templates/baseTemplate/index.html:434
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:554
 msgid "Add/Delete Destination"
 msgstr "Προσθήκη/Διαγραφή Προορισμού"
 
-#: baseTemplate/templates/baseTemplate/index.html:449
+#: baseTemplate/templates/baseTemplate/index.html:436
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:556
 #, fuzzy
 #| msgid "Restore Back up"
 msgid "Remote Back ups"
 msgstr "Επαναφορά Αντιγράφου ασφαλείας"
 
-#: baseTemplate/templates/baseTemplate/index.html:458
-#: baseTemplate/templates/baseTemplate/index.html:459
+#: baseTemplate/templates/baseTemplate/index.html:445
+#: baseTemplate/templates/baseTemplate/index.html:446
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:565
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:566
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:39
 msgid "SSL"
 msgstr "SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:464
+#: baseTemplate/templates/baseTemplate/index.html:451
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:571
 #: manageSSL/templates/manageSSL/index.html:28
 #: manageSSL/templates/manageSSL/manageSSL.html:13
@@ -1119,44 +1118,50 @@ msgstr "SSL"
 msgid "Manage SSL"
 msgstr "Διαχείριση SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:465
+#: baseTemplate/templates/baseTemplate/index.html:452
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:572
 #: manageSSL/templates/manageSSL/index.html:40
 msgid "Hostname SSL"
 msgstr "Όνομα φιλοξενίας SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:473
+#: baseTemplate/templates/baseTemplate/index.html:453
+#, fuzzy
+#| msgid "Server Logs"
+msgid "MailServer SSL"
+msgstr "Αρχεία καταγραφής διακομιστή"
+
+#: baseTemplate/templates/baseTemplate/index.html:461
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:580
 msgid "Server"
 msgstr "Διακομιστής"
 
-#: baseTemplate/templates/baseTemplate/index.html:478
+#: baseTemplate/templates/baseTemplate/index.html:466
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:585
 msgid "NEW"
 msgstr "ΝΕΟΣ"
 
-#: baseTemplate/templates/baseTemplate/index.html:483
+#: baseTemplate/templates/baseTemplate/index.html:471
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:590
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
 #: tuning/templates/tuning/liteSpeedTuning.html:12
 msgid "LiteSpeed Tuning"
 msgstr "Συντονισμός διακομιστή"
 
-#: baseTemplate/templates/baseTemplate/index.html:484
+#: baseTemplate/templates/baseTemplate/index.html:472
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:591
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13
 msgid "PHP Tuning"
 msgstr "Συντονισμός PHP"
 
-#: baseTemplate/templates/baseTemplate/index.html:499
+#: baseTemplate/templates/baseTemplate/index.html:487
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:606
 #: serverStatus/templates/serverStatus/index.html:25
 #: serverStatus/templates/serverStatus/index.html:27
 msgid "LiteSpeed Status"
 msgstr "Κατάσταση Συστήματος"
 
-#: baseTemplate/templates/baseTemplate/index.html:500
+#: baseTemplate/templates/baseTemplate/index.html:488
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:607
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:15
 #: serverStatus/templates/serverStatus/index.html:37
@@ -1164,48 +1169,48 @@ msgstr "Κατάσταση Συστήματος"
 msgid "CyberPanel Main Log File"
 msgstr "Κύριο Aρχείο καταγραφής CyberPanel"
 
-#: baseTemplate/templates/baseTemplate/index.html:501
+#: baseTemplate/templates/baseTemplate/index.html:489
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:608
 #, fuzzy
 #| msgid "Server Status"
 msgid "Services Status"
 msgstr "Κατάσταση Διακομιστή"
 
-#: baseTemplate/templates/baseTemplate/index.html:518
+#: baseTemplate/templates/baseTemplate/index.html:506
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:625
 #: managePHP/templates/managePHP/installExtensions.html:13
 msgid "Install PHP Extensions"
 msgstr "Εγκατάσταση Eπεκτάσεων PHP"
 
-#: baseTemplate/templates/baseTemplate/index.html:518
+#: baseTemplate/templates/baseTemplate/index.html:506
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:625
 #: managePHP/templates/managePHP/index.html:24
 #: managePHP/templates/managePHP/index.html:26
 msgid "Install Extensions"
 msgstr "Εγκατάσταση Eπεκτάσεων"
 
-#: baseTemplate/templates/baseTemplate/index.html:519
+#: baseTemplate/templates/baseTemplate/index.html:507
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:626
 #: managePHP/templates/managePHP/index.html:36
 #: managePHP/templates/managePHP/index.html:38
 msgid "Edit PHP Configs"
 msgstr "Επεξεργασία Ρυθμίσεων PHP"
 
-#: baseTemplate/templates/baseTemplate/index.html:534
+#: baseTemplate/templates/baseTemplate/index.html:522
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:641
 msgid "Access Log"
 msgstr "Αρχείο καταγραφής Πρόσβασης"
 
-#: baseTemplate/templates/baseTemplate/index.html:535
+#: baseTemplate/templates/baseTemplate/index.html:523
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:642
 #: serverLogs/templates/serverLogs/errorLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:37
 #: serverLogs/templates/serverLogs/index.html:39
-#: websiteFunctions/templates/websiteFunctions/website.html:132
+#: websiteFunctions/templates/websiteFunctions/website.html:139
 msgid "Error Logs"
 msgstr "Αρχεία καταγραφής σφαλμάτων"
 
-#: baseTemplate/templates/baseTemplate/index.html:536
+#: baseTemplate/templates/baseTemplate/index.html:524
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:643
 #: serverLogs/templates/serverLogs/emailLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:49
@@ -1213,12 +1218,12 @@ msgstr "Αρχεία καταγραφής σφαλμάτων"
 msgid "Email Logs"
 msgstr "Αρχεία καταγραφής Email "
 
-#: baseTemplate/templates/baseTemplate/index.html:536
+#: baseTemplate/templates/baseTemplate/index.html:524
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:643
 msgid "Email Log"
 msgstr "Αρχείο καταγραφής Email "
 
-#: baseTemplate/templates/baseTemplate/index.html:537
+#: baseTemplate/templates/baseTemplate/index.html:525
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:644
 #: serverLogs/templates/serverLogs/ftplogs.html:14
 #: serverLogs/templates/serverLogs/index.html:61
@@ -1226,19 +1231,30 @@ msgstr "Αρχείο καταγραφής Email "
 msgid "FTP Logs"
 msgstr "Αρχεία καταγραφής FTP"
 
-#: baseTemplate/templates/baseTemplate/index.html:552
+#: baseTemplate/templates/baseTemplate/index.html:526
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:14
+#, fuzzy
+#| msgid "Security Functions"
+msgid "ModSecurity Audit Logs"
+msgstr "Λειτουργίες ασφαλείας"
+
+#: baseTemplate/templates/baseTemplate/index.html:526
+msgid "ModSec Audit Logs"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:541
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:659
 msgid "Firewall Home"
 msgstr "Αρχική σελίδα τείχους προστασίας"
 
-#: baseTemplate/templates/baseTemplate/index.html:552
+#: baseTemplate/templates/baseTemplate/index.html:541
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:659
 #: firewall/templates/firewall/index.html:25
 #: firewall/templates/firewall/index.html:27
 msgid "Firewall"
 msgstr "Τείχος προστασίας"
 
-#: baseTemplate/templates/baseTemplate/index.html:553
+#: baseTemplate/templates/baseTemplate/index.html:542
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:660
 #: firewall/templates/firewall/index.html:36
 #: firewall/templates/firewall/index.html:38
@@ -1247,9 +1263,40 @@ msgstr "Τείχος προστασίας"
 msgid "Secure SSH"
 msgstr "Ασφαλίστε SSH"
 
+#: baseTemplate/templates/baseTemplate/index.html:543
+#, fuzzy
+#| msgid "Edit PHP Configurations"
+msgid "ModSecurity Configurations"
+msgstr "Επεξεργασία Ρυθμίσεων PHP"
+
+#: baseTemplate/templates/baseTemplate/index.html:543
+#, fuzzy
+#| msgid "Security"
+msgid "ModSecurity Conf"
+msgstr "Ασφάλεια"
+
+#: baseTemplate/templates/baseTemplate/index.html:544
+#: firewall/templates/firewall/modSecurityRules.html:20
+#, fuzzy
+#| msgid "Security"
+msgid "ModSecurity Rules"
+msgstr "Ασφάλεια"
+
+#: baseTemplate/templates/baseTemplate/index.html:545
+msgid "ModSecurity Rules Packs"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:199
+msgid "CPU Status"
+msgstr "Κατάσταση Επεξεργαστή"
+
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:327
 msgid "Fullscreen"
 msgstr "Πλήρης οθόνη"
+
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:332
+msgid "System Status"
+msgstr "Κατάσταση Συστήματος"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
@@ -1281,7 +1328,8 @@ msgstr "Πιο πρόσφατη έκδοση"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:66
 #: firewall/templates/firewall/secureSSH.html:78
-#: managePHP/templates/managePHP/editPHPConfig.html:140
+#: mailServer/templates/mailServer/dkimManager.html:40
+#: managePHP/templates/managePHP/editPHPConfig.html:148
 msgid "Error message: "
 msgstr "Μήνυμα λάθους:"
 
@@ -1294,11 +1342,16 @@ msgid "Update finished..."
 msgstr "Ενημέρωση τελείωσε..."
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:79
+#: firewall/templates/firewall/modSecurity.html:47
+#: firewall/templates/firewall/modSecurity.html:177
+#: firewall/templates/firewall/modSecurityRules.html:53
+#: firewall/templates/firewall/modSecurityRulesPacks.html:88
 #: firewall/templates/firewall/secureSSH.html:87
 #: firewall/templates/firewall/secureSSH.html:172
-#: managePHP/templates/managePHP/editPHPConfig.html:149
-#: managePHP/templates/managePHP/editPHPConfig.html:221
-#: managePHP/templates/managePHP/installExtensions.html:113
+#: mailServer/templates/mailServer/dkimManager.html:44
+#: managePHP/templates/managePHP/editPHPConfig.html:157
+#: managePHP/templates/managePHP/editPHPConfig.html:230
+#: managePHP/templates/managePHP/installExtensions.html:114
 msgid "Could not connect. Please refresh this page."
 msgstr "Αδυναμία σύνδεσης. Ανανεώστε αυτή τη σελίδα."
 
@@ -1373,7 +1426,7 @@ msgid "Select Domain"
 msgstr "Επιλέξτε Domain"
 
 #: databases/templates/databases/listDataBases.html:46
-#: dns/templates/dns/addDeleteDNSRecords.html:168
+#: dns/templates/dns/addDeleteDNSRecords.html:335
 #: ftp/templates/ftp/listFTPAccounts.html:46
 msgid "Records successfully fetched for"
 msgstr "Αρχεία που έχουν εξαχθεί με επιτυχία για"
@@ -1425,69 +1478,123 @@ msgstr ""
 msgid "Add Records"
 msgstr "Προσθήκη Αρχείων"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:53
-#: dns/templates/dns/addDeleteDNSRecords.html:131
-#: filemanager/templates/filemanager/index.html:209
+#: dns/templates/dns/addDeleteDNSRecords.html:59
+#: dns/templates/dns/addDeleteDNSRecords.html:82
+#: dns/templates/dns/addDeleteDNSRecords.html:106
+#: dns/templates/dns/addDeleteDNSRecords.html:129
+#: dns/templates/dns/addDeleteDNSRecords.html:157
+#: dns/templates/dns/addDeleteDNSRecords.html:181
+#: dns/templates/dns/addDeleteDNSRecords.html:205
+#: dns/templates/dns/addDeleteDNSRecords.html:229
+#: dns/templates/dns/addDeleteDNSRecords.html:253
+#: dns/templates/dns/addDeleteDNSRecords.html:296
+#: filemanager/templates/filemanager/index.html:212
 #: firewall/templates/firewall/firewall.html:136
 #: serverStatus/templates/serverStatus/litespeedStatus.html:40
 msgid "Name"
 msgstr "Όνομα"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:69
-msgid "IPV6"
-msgstr "IPV6"
-
-#: dns/templates/dns/addDeleteDNSRecords.html:78
+#: dns/templates/dns/addDeleteDNSRecords.html:63
+#: dns/templates/dns/addDeleteDNSRecords.html:86
+#: dns/templates/dns/addDeleteDNSRecords.html:110
 #: dns/templates/dns/addDeleteDNSRecords.html:133
-msgid "Priority"
-msgstr "Προτεραιότητα"
+#: dns/templates/dns/addDeleteDNSRecords.html:161
+#: dns/templates/dns/addDeleteDNSRecords.html:185
+#: dns/templates/dns/addDeleteDNSRecords.html:209
+#: dns/templates/dns/addDeleteDNSRecords.html:233
+#: dns/templates/dns/addDeleteDNSRecords.html:257
+#: dns/templates/dns/addDeleteDNSRecords.html:297
+msgid "TTL"
+msgstr ""
 
-#: dns/templates/dns/addDeleteDNSRecords.html:87
-#: dns/templates/dns/createDNSZone.html:27
-#: dns/templates/dns/createNameServer.html:27
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:52
-#: websiteFunctions/templates/websiteFunctions/website.html:289
-msgid "Domain Name"
-msgstr "Όνομα Domain"
-
-#: dns/templates/dns/addDeleteDNSRecords.html:95
-msgid "Policy"
-msgstr "Πολιτική"
-
-#: dns/templates/dns/addDeleteDNSRecords.html:103
-msgid "Text"
-msgstr "Κείμενο"
-
-#: dns/templates/dns/addDeleteDNSRecords.html:111
+#: dns/templates/dns/addDeleteDNSRecords.html:73
+#: dns/templates/dns/addDeleteDNSRecords.html:96
+#: dns/templates/dns/addDeleteDNSRecords.html:120
+#: dns/templates/dns/addDeleteDNSRecords.html:147
+#: dns/templates/dns/addDeleteDNSRecords.html:172
+#: dns/templates/dns/addDeleteDNSRecords.html:196
+#: dns/templates/dns/addDeleteDNSRecords.html:220
+#: dns/templates/dns/addDeleteDNSRecords.html:244
+#: dns/templates/dns/addDeleteDNSRecords.html:272
 #: firewall/templates/firewall/firewall.html:117
 msgid "Add"
 msgstr "Προσθήκη"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:130
+#: dns/templates/dns/addDeleteDNSRecords.html:90
+#, fuzzy
+#| msgid "IP Address"
+msgid "IPV6 Address"
+msgstr "Διεύθυνση: IP"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:114
+#: dns/templates/dns/addDeleteDNSRecords.html:141
+#: dns/templates/dns/createDNSZone.html:27
+#: dns/templates/dns/createNameServer.html:27
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:52
+#: websiteFunctions/templates/websiteFunctions/website.html:313
+msgid "Domain Name"
+msgstr "Όνομα Domain"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:137
+#: dns/templates/dns/addDeleteDNSRecords.html:299
+msgid "Priority"
+msgstr "Προτεραιότητα"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:166
+msgid "Policy"
+msgstr "Πολιτική"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:190
+msgid "Text"
+msgstr "Κείμενο"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:214
+#, fuzzy
+#| msgid "Value"
+msgid "SOA Value"
+msgstr "Αξία"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:238
+#, fuzzy
+#| msgid "First Nameserver"
+msgid "Name server"
+msgstr "Πρώτος Nameserver"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:261
+#, fuzzy
+#| msgid "Priority"
+msgid "Prioirty"
+msgstr "Προτεραιότητα"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:266
+msgid "Content"
+msgstr ""
+
+#: dns/templates/dns/addDeleteDNSRecords.html:295
 msgid "Type"
 msgstr "Μορφή"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:132
+#: dns/templates/dns/addDeleteDNSRecords.html:298
 msgid "Value"
 msgstr "Αξία"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:160
+#: dns/templates/dns/addDeleteDNSRecords.html:327
 msgid "Cannot fetch records. Error message:"
 msgstr "Δεν είναι δυνατή η λήψη αρχείων. Μήνυμα λάθους:"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:164
+#: dns/templates/dns/addDeleteDNSRecords.html:331
 msgid "Cannot add record. Error message: "
 msgstr "Δεν είναι δυνατή η προσθήκη αρχείων. Μήνυμα λάθους:"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:172
+#: dns/templates/dns/addDeleteDNSRecords.html:339
 msgid "Record Successfully Deleted"
 msgstr "Εγγραφή Διαγράφηκε με Επιτυχία"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:176
+#: dns/templates/dns/addDeleteDNSRecords.html:343
 msgid "Cannot delete record. Error message:"
 msgstr "Δεν είναι δυνατή η διαγραφή αρχείων. Μήνυμα λάθους:"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:180
+#: dns/templates/dns/addDeleteDNSRecords.html:347
 msgid "Record Successfully Added."
 msgstr "Η εγγραφή προστέθηκε με επιτυχία."
 
@@ -1622,8 +1729,8 @@ msgid " File Manager"
 msgstr "Διαχείριση Αρχείων"
 
 #: filemanager/templates/filemanager/index.html:63
-#: filemanager/templates/filemanager/index.html:202
-#: filemanager/templates/filemanager/index.html:233
+#: filemanager/templates/filemanager/index.html:205
+#: filemanager/templates/filemanager/index.html:236
 #, fuzzy
 #| msgid "Reload"
 msgid "Upload"
@@ -1640,310 +1747,319 @@ msgid "New Folder"
 msgstr ""
 
 #: filemanager/templates/filemanager/index.html:75
-#: filemanager/templates/filemanager/index.html:563
+#: filemanager/templates/filemanager/index.html:566
 msgid "Copy"
 msgstr ""
 
 #: filemanager/templates/filemanager/index.html:78
-#: filemanager/templates/filemanager/index.html:528
+#: filemanager/templates/filemanager/index.html:531
 msgid "Move"
 msgstr ""
 
 #: filemanager/templates/filemanager/index.html:81
-#: filemanager/templates/filemanager/index.html:593
+#: filemanager/templates/filemanager/index.html:596
 #, fuzzy
 #| msgid "Username"
 msgid "Rename"
 msgstr "Όνομα Χρήστη"
 
 #: filemanager/templates/filemanager/index.html:84
+#: websiteFunctions/templates/websiteFunctions/listCron.html:66
 msgid "Edit"
 msgstr ""
 
 #: filemanager/templates/filemanager/index.html:87
-#: filemanager/templates/filemanager/index.html:438
-#: filemanager/templates/filemanager/index.html:465
+#: filemanager/templates/filemanager/index.html:441
+#: filemanager/templates/filemanager/index.html:468
 msgid "Compress"
 msgstr ""
 
 #: filemanager/templates/filemanager/index.html:90
-#: filemanager/templates/filemanager/index.html:493
+#: filemanager/templates/filemanager/index.html:496
 msgid "Extract"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:108
+#: filemanager/templates/filemanager/index.html:93
+#, fuzzy
+#| msgid "PHP version "
+msgid "Fix Permissions"
+msgstr "Έκδοση ΡΗΡ"
+
+#: filemanager/templates/filemanager/index.html:111
 #, fuzzy
 #| msgid "Current Package:"
 msgid "Current Path"
 msgstr "Τρέχον Πακέτο"
 
-#: filemanager/templates/filemanager/index.html:136
+#: filemanager/templates/filemanager/index.html:139
 #, fuzzy
 #| msgid "Back up"
 msgid "Back"
 msgstr "Αντίγραφο ασφαλείας"
 
-#: filemanager/templates/filemanager/index.html:140
+#: filemanager/templates/filemanager/index.html:143
 #: serverLogs/templates/serverLogs/accessLogs.html:42
 #: serverLogs/templates/serverLogs/emailLogs.html:39
 #: serverLogs/templates/serverLogs/errorLogs.html:39
 #: serverLogs/templates/serverLogs/ftplogs.html:39
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:39
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:40
+#: websiteFunctions/templates/websiteFunctions/listCron.html:36
 msgid "Refresh"
 msgstr "Ανανέωση"
 
-#: filemanager/templates/filemanager/index.html:144
+#: filemanager/templates/filemanager/index.html:147
 #, fuzzy
 #| msgid "Select Email"
 msgid "Select All"
 msgstr "Επιλέξτε διεύθυνση email"
 
-#: filemanager/templates/filemanager/index.html:148
+#: filemanager/templates/filemanager/index.html:151
 #, fuzzy
 #| msgid "Select Email"
 msgid "UnSelect All"
 msgstr "Επιλέξτε διεύθυνση email"
 
-#: filemanager/templates/filemanager/index.html:158
+#: filemanager/templates/filemanager/index.html:161
 #, fuzzy
 #| msgid "Size"
 msgid "Size (KB)"
 msgstr "Μέγεθος"
 
-#: filemanager/templates/filemanager/index.html:159
+#: filemanager/templates/filemanager/index.html:162
 msgid "Last Modified"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:160
+#: filemanager/templates/filemanager/index.html:163
 #, fuzzy
 #| msgid "PHP version "
 msgid "Permissions"
 msgstr "Έκδοση ΡΗΡ"
 
-#: filemanager/templates/filemanager/index.html:180
+#: filemanager/templates/filemanager/index.html:183
 msgid "Upload File"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:187
+#: filemanager/templates/filemanager/index.html:190
 msgid "Upload queue"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:188
+#: filemanager/templates/filemanager/index.html:191
 msgid "Queue length:"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:195
+#: filemanager/templates/filemanager/index.html:198
 msgid "Drop"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:196
+#: filemanager/templates/filemanager/index.html:199
 msgid "Drop Files here to upload them."
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:211
+#: filemanager/templates/filemanager/index.html:214
 msgid "Progress"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:213
+#: filemanager/templates/filemanager/index.html:216
 #, fuzzy
 #| msgid "FTP Functions"
 msgid "Actions"
 msgstr "Λειτουργίες FTP"
 
-#: filemanager/templates/filemanager/index.html:239
+#: filemanager/templates/filemanager/index.html:242
 msgid "Remove"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:249
+#: filemanager/templates/filemanager/index.html:252
 msgid "Queue progress:"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:258
+#: filemanager/templates/filemanager/index.html:261
 #, fuzzy
 #| msgid "Cannot tune. Error message:"
 msgid "can not be uploaded, Error message:"
 msgstr "Δεν είναι δυνατό να συντονιστείτε. Μήνυμα λάθους:"
 
-#: filemanager/templates/filemanager/index.html:262
+#: filemanager/templates/filemanager/index.html:265
 msgid "Upload all"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:265
+#: filemanager/templates/filemanager/index.html:268
 #, fuzzy
 #| msgid "Cancel Backup"
 msgid "Cancel all"
 msgstr "Ακύρωση της δημιουργίας αντιγράφων ασφαλείας"
 
-#: filemanager/templates/filemanager/index.html:268
+#: filemanager/templates/filemanager/index.html:271
 msgid "Remove all"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:304
+#: filemanager/templates/filemanager/index.html:307
 #, fuzzy
 #| msgid "Rule successfully added."
 msgid "File Successfully saved."
 msgstr "Προστέθηκε με επιτυχία κανόνας."
 
-#: filemanager/templates/filemanager/index.html:311
+#: filemanager/templates/filemanager/index.html:314
 #: firewall/templates/firewall/secureSSH.html:68
-#: managePHP/templates/managePHP/editPHPConfig.html:130
-#: managePHP/templates/managePHP/editPHPConfig.html:203
+#: managePHP/templates/managePHP/editPHPConfig.html:138
+#: managePHP/templates/managePHP/editPHPConfig.html:212
 msgid "Save Changes"
 msgstr "Αποθήκευση Aλλαγών"
 
-#: filemanager/templates/filemanager/index.html:328
+#: filemanager/templates/filemanager/index.html:331
 #, fuzzy
 #| msgid "Create New User"
 msgid "Create new folder!"
 msgstr "Δημιουργία νέου χρήστη"
 
-#: filemanager/templates/filemanager/index.html:336
+#: filemanager/templates/filemanager/index.html:339
 #, fuzzy
 #| msgid "File Name"
 msgid "New Folder Name"
 msgstr "Όνομα Αρχείου"
 
-#: filemanager/templates/filemanager/index.html:338
+#: filemanager/templates/filemanager/index.html:341
 msgid "Folder will be created in your current directory"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:340
+#: filemanager/templates/filemanager/index.html:343
 #, fuzzy
 #| msgid "Create User"
 msgid "Create Folder"
 msgstr "Δημουργία Χρήστη"
 
-#: filemanager/templates/filemanager/index.html:353
+#: filemanager/templates/filemanager/index.html:356
 #, fuzzy
 #| msgid "is successfully created."
 msgid "Folder Successfully created."
 msgstr "δημιουργήθηκε με επιτυχία."
 
-#: filemanager/templates/filemanager/index.html:372
+#: filemanager/templates/filemanager/index.html:375
 #, fuzzy
 #| msgid "Create New User"
 msgid "Create new file!"
 msgstr "Δημιουργία νέου χρήστη"
 
-#: filemanager/templates/filemanager/index.html:380
+#: filemanager/templates/filemanager/index.html:383
 #, fuzzy
 #| msgid "File Name"
 msgid "New File Name"
 msgstr "Όνομα Αρχείου"
 
-#: filemanager/templates/filemanager/index.html:382
+#: filemanager/templates/filemanager/index.html:385
 msgid ""
 "File will be created in your current directory, if it already exists it will "
 "not overwirte."
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:384
+#: filemanager/templates/filemanager/index.html:387
 #, fuzzy
 #| msgid "Create Email"
 msgid "Create File"
 msgstr "Δημιουργία Email "
 
-#: filemanager/templates/filemanager/index.html:397
+#: filemanager/templates/filemanager/index.html:400
 #, fuzzy
 #| msgid "is successfully created."
 msgid "File Successfully created."
 msgstr "δημιουργήθηκε με επιτυχία."
 
-#: filemanager/templates/filemanager/index.html:413
+#: filemanager/templates/filemanager/index.html:416
 #, fuzzy
 #| msgid "Configurations"
 msgid "Confirm Deletion!"
 msgstr "Ρυθμίσεις"
 
-#: filemanager/templates/filemanager/index.html:422
+#: filemanager/templates/filemanager/index.html:425
 msgid "Confirm"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:423
-#: filemanager/templates/filemanager/index.html:466
-#: filemanager/templates/filemanager/index.html:529
-#: filemanager/templates/filemanager/index.html:564
-#: filemanager/templates/filemanager/index.html:594
-#: websiteFunctions/templates/websiteFunctions/website.html:417
+#: filemanager/templates/filemanager/index.html:426
+#: filemanager/templates/filemanager/index.html:469
+#: filemanager/templates/filemanager/index.html:532
+#: filemanager/templates/filemanager/index.html:567
+#: filemanager/templates/filemanager/index.html:597
+#: websiteFunctions/templates/websiteFunctions/website.html:447
 msgid "Close"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:446
+#: filemanager/templates/filemanager/index.html:449
 msgid "List of files/folder!"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:450
+#: filemanager/templates/filemanager/index.html:453
 #, fuzzy
 #| msgid "File Name"
 msgid "Compressed File Name"
 msgstr "Όνομα Αρχείου"
 
-#: filemanager/templates/filemanager/index.html:452
+#: filemanager/templates/filemanager/index.html:455
 #, fuzzy
 #| msgid "Extension Name"
 msgid "Enter without extension name!"
 msgstr "Όνομα Επέκτασης"
 
-#: filemanager/templates/filemanager/index.html:456
+#: filemanager/templates/filemanager/index.html:459
 msgid "Compression Type"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:481
+#: filemanager/templates/filemanager/index.html:484
 msgid "Extracting"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:489
+#: filemanager/templates/filemanager/index.html:492
 msgid "Extract in"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:491
+#: filemanager/templates/filemanager/index.html:494
 msgid "You can enter . to extract in current directory!"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:509
+#: filemanager/templates/filemanager/index.html:512
 #, fuzzy
 #| msgid "Files"
 msgid "Move Files"
 msgstr "Αρχεία"
 
-#: filemanager/templates/filemanager/index.html:517
-#: filemanager/templates/filemanager/index.html:552
+#: filemanager/templates/filemanager/index.html:520
+#: filemanager/templates/filemanager/index.html:555
 msgid "List of files/folders!"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:521
+#: filemanager/templates/filemanager/index.html:524
 msgid "Move to"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:523
+#: filemanager/templates/filemanager/index.html:526
 msgid "Enter a path to move your files!"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:544
+#: filemanager/templates/filemanager/index.html:547
 #, fuzzy
 #| msgid "Files"
 msgid "Copy Files"
 msgstr "Αρχεία"
 
-#: filemanager/templates/filemanager/index.html:556
+#: filemanager/templates/filemanager/index.html:559
 msgid "Copy to"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:558
+#: filemanager/templates/filemanager/index.html:561
 msgid "Enter a path to copy your files to!"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:578
+#: filemanager/templates/filemanager/index.html:581
 msgid "Renaming"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:586
+#: filemanager/templates/filemanager/index.html:589
 #, fuzzy
 #| msgid "File Name"
 msgid "New Name"
 msgstr "Όνομα Αρχείου"
 
-#: filemanager/templates/filemanager/index.html:588
+#: filemanager/templates/filemanager/index.html:591
 msgid "Enter new name of file!"
 msgstr ""
 
@@ -2009,6 +2125,169 @@ msgstr "Λειτουργίες ασφαλείας"
 msgid "Manage the security of the server on this page."
 msgstr "Διαχειριστείτε την ασφάλεια του διακομιστή σε αυτήν τη σελίδα."
 
+#: firewall/templates/firewall/modSecurity.html:3
+#, fuzzy
+#| msgid "Security - CyberPanel"
+msgid "ModSecurity - CyberPanel"
+msgstr "Ασφάλεια - CyberPanel"
+
+#: firewall/templates/firewall/modSecurity.html:13
+#, fuzzy
+#| msgid "Edit PHP Configurations"
+msgid "ModSecurity Configurations!"
+msgstr "Επεξεργασία Ρυθμίσεων PHP"
+
+#: firewall/templates/firewall/modSecurity.html:14
+#, fuzzy
+#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgid "On this page you can configure ModSecurity settings."
+msgstr ""
+"Σε αυτή τη σελίδα μπορείτε να ρυθμίσετε τα αντίγραφα ασφαλείας των "
+"προορισμοί. (SFTP)"
+
+#: firewall/templates/firewall/modSecurity.html:20
+#, fuzzy
+#| msgid "Security"
+msgid "ModSecurity"
+msgstr "Ασφάλεια"
+
+#: firewall/templates/firewall/modSecurity.html:29
+#: firewall/templates/firewall/modSecurityRules.html:70
+#: firewall/templates/firewall/modSecurityRulesPacks.html:28
+msgid "ModSecurity is not installed "
+msgstr ""
+
+#: firewall/templates/firewall/modSecurity.html:31
+#: firewall/templates/firewall/modSecurityRules.html:72
+#: firewall/templates/firewall/modSecurityRulesPacks.html:30
+#, fuzzy
+#| msgid "Install"
+msgid "Install Now."
+msgstr "Εγκατάσταση"
+
+#: firewall/templates/firewall/modSecurity.html:43
+#, fuzzy
+#| msgid "Cannot add destination. Error message:"
+msgid "Failed to start installation, Error message: "
+msgstr "Δεν είναι δυνατή η προσθήκη προορισμού. Μήνυμα λάθους:"
+
+#: firewall/templates/firewall/modSecurity.html:51
+#, fuzzy
+#| msgid "Installation failed. Error message:"
+msgid "Installation failed."
+msgstr "Η εγκατάσταση απέτυχε. Μήνυμα λάθους:"
+
+#: firewall/templates/firewall/modSecurity.html:55
+msgid "ModSecurity successfully installed, refreshing page in 3 seconds.."
+msgstr ""
+
+#: firewall/templates/firewall/modSecurity.html:66
+msgid "Winter is coming, but so is ModSecurity."
+msgstr ""
+
+#: firewall/templates/firewall/modSecurity.html:157
+#, fuzzy
+#| msgid "Save Changes"
+msgid "Save changes."
+msgstr "Αποθήκευση Aλλαγών"
+
+#: firewall/templates/firewall/modSecurity.html:169
+#, fuzzy
+#| msgid "Could not fetch current configuration. Error message:"
+msgid "Failed to save ModSecurity configurations. Error message: "
+msgstr "Δεν ήταν δυνατή η λήψη της τρέχουσας διαμόρφωσης. Μήνυμα λάθους:"
+
+#: firewall/templates/firewall/modSecurity.html:173
+#, fuzzy
+#| msgid " is successfully created."
+msgid "ModSecurity configurations successfully saved."
+msgstr "δημιουργήθηκε με επιτυχία."
+
+#: firewall/templates/firewall/modSecurityRules.html:3
+#, fuzzy
+#| msgid "Security - CyberPanel"
+msgid "ModSecurity Rules - CyberPanel"
+msgstr "Ασφάλεια - CyberPanel"
+
+#: firewall/templates/firewall/modSecurityRules.html:13
+#, fuzzy
+#| msgid "Security"
+msgid "ModSecurity Rules!"
+msgstr "Ασφάλεια"
+
+#: firewall/templates/firewall/modSecurityRules.html:14
+#, fuzzy
+#| msgid ""
+#| "On this page you can launch, list, modify and delete websites from your "
+#| "server."
+msgid "On this page you can add/delete ModSecurity rules."
+msgstr ""
+"Σε αυτήν τη σελίδα μπορείτε να ξεκινήσετε, να καταγράψετε, να τροποποιήσετε "
+"και να διαγράψετε ιστότοπους από το διακομιστή σας."
+
+#: firewall/templates/firewall/modSecurityRules.html:42
+#, fuzzy
+#| msgid "Save Rewrite Rules"
+msgid "Save Rules!"
+msgstr "Αποθήκευση κανόνων επανεγγραφής"
+
+#: firewall/templates/firewall/modSecurityRules.html:49
+msgid "ModSecurity Rules Saved"
+msgstr ""
+
+#: firewall/templates/firewall/modSecurityRules.html:58
+#, fuzzy
+#| msgid "Could not save rewrite rules. Error message:"
+msgid "Could not save rules, Error message: "
+msgstr "Δεν ήταν δυνατή η αποθήκευση κανόνων επανεγγραφής. Μήνυμα λάθους:"
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:3
+#, fuzzy
+#| msgid "Security - CyberPanel"
+msgid "ModSecurity Rules Packs - CyberPanel"
+msgstr "Ασφάλεια - CyberPanel"
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:13
+#: firewall/templates/firewall/modSecurityRulesPacks.html:20
+#, fuzzy
+#| msgid "Modify Package"
+msgid "ModSecurity Rules Packages!"
+msgstr "Τροποποίηση πακέτου"
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:14
+msgid "Install/Un-install ModSecurity rules packages."
+msgstr ""
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:60
+#: firewall/templates/firewall/modSecurityRulesPacks.html:71
+#, fuzzy
+#| msgid "Configurations"
+msgid "Configure"
+msgstr "Ρυθμίσεις"
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:84
+#: firewall/templates/firewall/modSecurityRulesPacks.html:96
+#, fuzzy
+#| msgid "Action successful."
+msgid "Operation successful."
+msgstr "Ενέργεια επιτυχής."
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:92
+#, fuzzy
+#| msgid "Action failed. Error message:"
+msgid "Operation failed, Error message: "
+msgstr "Η ενέργεια απέτυχε. Μήνυμα λάθους:"
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:110
+msgid "Supplier"
+msgstr ""
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:111
+#, fuzzy
+#| msgid "File Name"
+msgid "Filename"
+msgstr "Όνομα Αρχείου"
+
 #: firewall/templates/firewall/secureSSH.html:3
 msgid "Secure SSH - CyberPanel"
 msgstr "Ασφαλής SSH - CyberPanel"
@@ -2058,8 +2337,8 @@ msgstr "Προσθήκη κλειδιού"
 
 #: firewall/templates/firewall/secureSSH.html:158
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:55
-#: websiteFunctions/templates/websiteFunctions/website.html:553
-#: websiteFunctions/templates/websiteFunctions/website.html:613
+#: websiteFunctions/templates/websiteFunctions/website.html:599
+#: websiteFunctions/templates/websiteFunctions/website.html:658
 msgid "Save"
 msgstr "Αποθήκευση"
 
@@ -2107,7 +2386,7 @@ msgstr "Λογαριασμός FTP με όνομα χρήστη:"
 
 #: ftp/templates/ftp/createFTPAccount.html:84
 #: ftp/templates/ftp/createFTPAccount.html:87
-#: userManagment/templates/userManagment/createUser.html:154
+#: userManagment/templates/userManagment/createUser.html:144
 msgid "is successfully created."
 msgstr "δημιουργήθηκε με επιτυχία."
 
@@ -2245,6 +2524,60 @@ msgstr ""
 "Το μήνυμα ηλεκτρονικού ταχυδρομείου με id: {deleted deletedID $} διαγράφεται "
 "με επιτυχία."
 
+#: mailServer/templates/mailServer/dkimManager.html:3
+#, fuzzy
+#| msgid "Manage SSL - CyberPanel"
+msgid "DKIM Manager - CyberPanel"
+msgstr "Διαχείριση SSL - CyberPanel"
+
+#: mailServer/templates/mailServer/dkimManager.html:14
+#, fuzzy
+#| msgid "This page can be used to Back up your websites"
+msgid "This page can be used to generate and view DKIM keys for Domains"
+msgstr ""
+"Αυτή η σελίδα μπορεί να χρησιμοποιηθεί για την δημιουργία αντιγράφων "
+"ασφαλείας των ιστότοπων σας"
+
+#: mailServer/templates/mailServer/dkimManager.html:27
+msgid "OpenDKIM is not installed. "
+msgstr ""
+
+#: mailServer/templates/mailServer/dkimManager.html:28
+#, fuzzy
+#| msgid "Install"
+msgid "Install Now"
+msgstr "Εγκατάσταση"
+
+#: mailServer/templates/mailServer/dkimManager.html:48
+msgid "OpenDKIM successfully installed, refreshing page in 3 seconds.."
+msgstr ""
+
+#: mailServer/templates/mailServer/dkimManager.html:97
+#, fuzzy
+#| msgid "Currently no email accounts exist for this domain."
+msgid "Keys not available for this domain."
+msgstr ""
+"Προσωρινά δεν υπάρχουν λογαριασμοί ηλεκτρονικού ταχυδρομείου για αυτόν τον "
+"τομέα."
+
+#: mailServer/templates/mailServer/dkimManager.html:98
+msgid "Generate Now"
+msgstr ""
+
+#: mailServer/templates/mailServer/dkimManager.html:110
+#, fuzzy
+#| msgid "Domain Name"
+msgid "Domain"
+msgstr "Όνομα Domain"
+
+#: mailServer/templates/mailServer/dkimManager.html:111
+msgid "Private Key"
+msgstr ""
+
+#: mailServer/templates/mailServer/dkimManager.html:112
+msgid "Public Key"
+msgstr ""
+
 #: mailServer/templates/mailServer/index.html:3
 msgid "Mail Functions - CyberPanel"
 msgstr " Λειτουργίες Ταχυδρομείου - CyberPanel"
@@ -2277,48 +2610,55 @@ msgid "Advanced"
 msgstr "Ρυθμίσεις για προχωρημένους"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:48
-#: managePHP/templates/managePHP/editPHPConfig.html:174
+#: managePHP/templates/managePHP/editPHPConfig.html:182
 #: managePHP/templates/managePHP/installExtensions.html:28
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:68
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:74
-#: websiteFunctions/templates/websiteFunctions/website.html:309
+#: websiteFunctions/templates/websiteFunctions/website.html:333
+#: websiteFunctions/templates/websiteFunctions/website.html:729
 msgid "Select PHP"
 msgstr "Επιλέξτε PHP"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:66
+#: managePHP/templates/managePHP/editPHPConfig.html:67
 msgid "display_errors"
 msgstr "ένδειξη_λάθους"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:73
+#: managePHP/templates/managePHP/editPHPConfig.html:74
 msgid "file_uploads"
 msgstr "μεταφορτώσεις_αρχείων"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:81
+#: managePHP/templates/managePHP/editPHPConfig.html:82
 msgid "allow_url_fopen"
 msgstr "επιτρέψτε_url_fopen"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:89
+#: managePHP/templates/managePHP/editPHPConfig.html:90
 msgid "allow_url_include"
 msgstr "allow_url_include"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:97
+#: managePHP/templates/managePHP/editPHPConfig.html:98
 msgid "memory_limit"
 msgstr "Όριο_μνήμης"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:104
+#: managePHP/templates/managePHP/editPHPConfig.html:105
 msgid "max_execution_time"
 msgstr "μέγιστο_όριο_εκτέλεσης"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:111
+#: managePHP/templates/managePHP/editPHPConfig.html:112
 msgid "upload_max_filesize"
 msgstr "upload_max_filesize"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:118
+#: managePHP/templates/managePHP/editPHPConfig.html:119
+#, fuzzy
+#| msgid "upload_max_filesize"
+msgid "post_max_size"
+msgstr "upload_max_filesize"
+
+#: managePHP/templates/managePHP/editPHPConfig.html:126
 msgid "max_input_time"
 msgstr "max_input_time"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:144
-#: managePHP/templates/managePHP/editPHPConfig.html:216
+#: managePHP/templates/managePHP/editPHPConfig.html:152
+#: managePHP/templates/managePHP/editPHPConfig.html:225
 msgid "PHP Configs Saved."
 msgstr "Αποθήκευση Ρυθμίσεων PHP"
 
@@ -2348,39 +2688,39 @@ msgstr "Εγκατάσταση/απεγκατάσταση επεκτάσεων p
 msgid "Select PHP Version"
 msgstr "Επιλέξτε Έκδοση PHP"
 
-#: managePHP/templates/managePHP/installExtensions.html:48
+#: managePHP/templates/managePHP/installExtensions.html:49
 msgid "Search Extensions.."
 msgstr "Αναζήτηση για Επεκτάσεις..."
 
-#: managePHP/templates/managePHP/installExtensions.html:63
+#: managePHP/templates/managePHP/installExtensions.html:64
 msgid "Extension Name"
 msgstr "Όνομα Επέκτασης"
 
-#: managePHP/templates/managePHP/installExtensions.html:64
+#: managePHP/templates/managePHP/installExtensions.html:65
 msgid "Description"
 msgstr "Περιγραφή"
 
-#: managePHP/templates/managePHP/installExtensions.html:66
-#: managePHP/templates/managePHP/installExtensions.html:77
+#: managePHP/templates/managePHP/installExtensions.html:67
+#: managePHP/templates/managePHP/installExtensions.html:78
 msgid "Install"
 msgstr "Εγκατάσταση"
 
-#: managePHP/templates/managePHP/installExtensions.html:67
-#: managePHP/templates/managePHP/installExtensions.html:78
+#: managePHP/templates/managePHP/installExtensions.html:68
+#: managePHP/templates/managePHP/installExtensions.html:79
 msgid "Uninstall"
 msgstr "Απεγκατάσταση"
 
-#: managePHP/templates/managePHP/installExtensions.html:93
+#: managePHP/templates/managePHP/installExtensions.html:94
 msgid "Go Back"
 msgstr "Επιστροφή"
 
-#: managePHP/templates/managePHP/installExtensions.html:104
+#: managePHP/templates/managePHP/installExtensions.html:105
 #: tuning/templates/tuning/phpTuning.html:111
-#: userManagment/templates/userManagment/modifyUser.html:143
+#: userManagment/templates/userManagment/modifyUser.html:135
 msgid "Cannot fetch details. Error message:"
 msgstr "Δεν μπορεί να προσκομίσει στοιχεία. Μήνυμα λάθους:"
 
-#: managePHP/templates/managePHP/installExtensions.html:108
+#: managePHP/templates/managePHP/installExtensions.html:109
 msgid "Cannot perform operation. Error message:"
 msgstr "Δεν μπορεί να εκτελέσει λειτουργία. Μήνυμα λάθους:"
 
@@ -2412,11 +2752,13 @@ msgstr ""
 
 #: manageSSL/templates/manageSSL/manageSSL.html:42
 #: manageSSL/templates/manageSSL/sslForHostName.html:42
+#: manageSSL/templates/manageSSL/sslForMailServer.html:42
 msgid "Issue SSL"
 msgstr "Έκδοση SSL"
 
 #: manageSSL/templates/manageSSL/manageSSL.html:52
 #: manageSSL/templates/manageSSL/sslForHostName.html:52
+#: manageSSL/templates/manageSSL/sslForMailServer.html:52
 msgid "Cannot issue SSL. Error message:"
 msgstr "Δεν είναι δυνατή η έκδοση SSL. Μήνυμα λάθους:"
 
@@ -2446,6 +2788,39 @@ msgstr ""
 "Έκδοση SSL. Τώρα μπορείτε να αποκτήσετε πρόσβαση στο CyberPanel στη "
 "διεύθυνση:"
 
+#: manageSSL/templates/manageSSL/sslForMailServer.html:3
+#, fuzzy
+#| msgid "Issue SSL For Hostname - CyberPanel"
+msgid "Issue SSL For MailServer - CyberPanel"
+msgstr "Έκδοση SSL Για όνομα κεντρικού υπολογιστή - CyberPanel"
+
+#: manageSSL/templates/manageSSL/sslForMailServer.html:13
+#: manageSSL/templates/manageSSL/sslForMailServer.html:20
+#, fuzzy
+#| msgid "Issue SSL For Hostname"
+msgid "Issue SSL For MailServer"
+msgstr "Έκδοση SSL Για όνομα κεντρικού υπολογιστή"
+
+#: manageSSL/templates/manageSSL/sslForMailServer.html:14
+#, fuzzy
+#| msgid "Issue Let’s Encrypt SSLs for websites and hostname."
+msgid "Let’s Encrypt SSL for MailServer (Postfix/Dovecot)."
+msgstr ""
+"Έκδοση Ας κρυπτογραφήσουμε τα SSL για ιστότοπους και όνομα κεντρικού "
+"υπολογιστή."
+
+#: manageSSL/templates/manageSSL/sslForMailServer.html:56
+msgid "SSL Issued, your mail server now uses Lets Encrypt!"
+msgstr ""
+
+#: manageSSL/templates/manageSSL/sslForMailServer.html:60
+#, fuzzy
+#| msgid "Could not connect to server. Please refresh this page."
+msgid "Could not connect to server, please refresh this page."
+msgstr ""
+"Δεν μπορούσε να συνδεθεί με το διακομιστή. Παρακαλούμε ανανεώστε αυτή τη "
+"σελίδα."
+
 #: packages/templates/packages/createPackage.html:3
 msgid "Create Package - CyberPanel"
 msgstr "Δημιουργία Πακέτου - CyberPanel"
@@ -2472,7 +2847,7 @@ msgstr "Όνομα πακέτου"
 
 #: packages/templates/packages/createPackage.html:35
 #: packages/templates/packages/modifyPackage.html:40
-#: websiteFunctions/templates/websiteFunctions/website.html:249
+#: websiteFunctions/templates/websiteFunctions/website.html:254
 #, fuzzy
 #| msgid "Domain Name"
 msgid "Domains"
@@ -2562,7 +2937,7 @@ msgstr "Αρχεία καταγραφής πρόσβασης - CyberPanel"
 #: serverLogs/templates/serverLogs/accessLogs.html:17
 #: serverLogs/templates/serverLogs/index.html:25
 #: serverLogs/templates/serverLogs/index.html:27
-#: websiteFunctions/templates/websiteFunctions/website.html:120
+#: websiteFunctions/templates/websiteFunctions/website.html:128
 msgid "Access Logs"
 msgstr "Αρχεία καταγραφής πρόσβασης"
 
@@ -2574,22 +2949,35 @@ msgstr "Πρόσβαση σε αρχεία καταγραφής για τον κ
 #: serverLogs/templates/serverLogs/emailLogs.html:23
 #: serverLogs/templates/serverLogs/errorLogs.html:23
 #: serverLogs/templates/serverLogs/ftplogs.html:23
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:23
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:24
 msgid "Last 50 Lines"
 msgstr "Τελευταίες 50 γραμμές"
 
-#: serverLogs/templates/serverLogs/accessLogs.html:49
-#: serverLogs/templates/serverLogs/emailLogs.html:46
-#: serverLogs/templates/serverLogs/errorLogs.html:46
-#: serverLogs/templates/serverLogs/ftplogs.html:46
+#: serverLogs/templates/serverLogs/accessLogs.html:45
+#: serverLogs/templates/serverLogs/emailLogs.html:42
+#: serverLogs/templates/serverLogs/errorLogs.html:42
+#: serverLogs/templates/serverLogs/ftplogs.html:42
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:42
+#, fuzzy
+#| msgid "Server Logs"
+msgid "Clear Logs"
+msgstr "Αρχεία καταγραφής διακομιστή"
+
+#: serverLogs/templates/serverLogs/accessLogs.html:52
+#: serverLogs/templates/serverLogs/emailLogs.html:49
+#: serverLogs/templates/serverLogs/errorLogs.html:49
+#: serverLogs/templates/serverLogs/ftplogs.html:49
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:50
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:47
 msgid "Last 50 Lines Fetched"
 msgstr "Οι τελευταίες 50 Γραμμές Έχουν τραβηχτεί"
 
-#: serverLogs/templates/serverLogs/accessLogs.html:54
-#: serverLogs/templates/serverLogs/emailLogs.html:51
-#: serverLogs/templates/serverLogs/errorLogs.html:51
-#: serverLogs/templates/serverLogs/ftplogs.html:51
+#: serverLogs/templates/serverLogs/accessLogs.html:57
+#: serverLogs/templates/serverLogs/emailLogs.html:54
+#: serverLogs/templates/serverLogs/errorLogs.html:54
+#: serverLogs/templates/serverLogs/ftplogs.html:54
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:55
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:52
 msgid "Could not fetch logs. Use the command line to view the log file."
 msgstr ""
@@ -2633,6 +3021,18 @@ msgstr ""
 "Αυτά είναι τα αρχεία καταγραφής από τον κύριο διακομιστή, για να δείτε τα "
 "αρχεία καταγραφής για τον ιστότοπό σας πλοηγηθείτε σε: Ιστοσελίδες -> Λίστα "
 "ιστότοπων -> Επιλογή ιστοτόπου -> Προβολή αρχείων καταγραφής."
+
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:3
+#, fuzzy
+#| msgid "Security - CyberPanel"
+msgid "ModSecurity Audit Logs - CyberPanel"
+msgstr "Ασφάλεια - CyberPanel"
+
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:15
+#, fuzzy
+#| msgid "Security Functions"
+msgid "ModSecurity Audit logs"
+msgstr "Λειτουργίες ασφαλείας"
 
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:3
 msgid "CyberPanel Main Log File - CyberPanel"
@@ -2774,16 +3174,6 @@ msgstr "Μέγεθος προσωρινής μνήμης στη μνήμη"
 msgid "Enable GZIP Compression"
 msgstr "Ενεργοποίηση Συμπίεσης GZIP"
 
-#: tuning/templates/tuning/liteSpeedTuning.html:70
-#: tuning/templates/tuning/phpTuning.html:90
-msgid "Enable"
-msgstr "Ενεργοποίηση"
-
-#: tuning/templates/tuning/liteSpeedTuning.html:71
-#: tuning/templates/tuning/phpTuning.html:91
-msgid "Disable"
-msgstr "Απενεργοποιήση"
-
 #: tuning/templates/tuning/liteSpeedTuning.html:74
 #: tuning/templates/tuning/phpTuning.html:94
 #: userManagment/templates/userManagment/modifyUser.html:77
@@ -2794,7 +3184,7 @@ msgstr "Αυτή τη στιγμή είστε:"
 msgid "Tune Web Server"
 msgstr "Συντονίστε το διακομιστή Web"
 
-#: tuning/templates/tuning/liteSpeedTuning.html:93
+#: tuning/templates/tuning/liteSpeedTuning.html:92
 msgid ""
 "Cannot fetch Current Value, but you can still submit new changes, error "
 "reported from server:"
@@ -2802,11 +3192,11 @@ msgstr ""
 "εν είναι δυνατή η λήψη της τρέχουσας τιμής, αλλά εξακολουθείτε να υποβάλετε "
 "νέες αλλαγές, σφάλμα που αναφέρθηκε από το διακομιστή:"
 
-#: tuning/templates/tuning/liteSpeedTuning.html:97
+#: tuning/templates/tuning/liteSpeedTuning.html:96
 msgid "Cannot save details, Error Message: "
 msgstr "Δεν είναι δυνατή η αποθήκευση λεπτομερειών, Μήνυμα λάθους:"
 
-#: tuning/templates/tuning/liteSpeedTuning.html:102
+#: tuning/templates/tuning/liteSpeedTuning.html:101
 msgid "Web Server Successfully tuned."
 msgstr "Ο διακομιστής Web έχει επιτυχώς ρυθμιστεί."
 
@@ -2841,6 +3231,14 @@ msgstr "Διαδικασία Αυστηρού Ορίου"
 #: tuning/templates/tuning/phpTuning.html:87
 msgid "Persistent Connection"
 msgstr "Συνεχής σύνδεση"
+
+#: tuning/templates/tuning/phpTuning.html:90
+msgid "Enable"
+msgstr "Ενεργοποίηση"
+
+#: tuning/templates/tuning/phpTuning.html:91
+msgid "Disable"
+msgstr "Απενεργοποιήση"
 
 #: tuning/templates/tuning/phpTuning.html:102
 msgid "Tune PHP"
@@ -2907,17 +3305,6 @@ msgstr "Μη έγκυρο email"
 msgid "Account Type"
 msgstr "Τύπος Λογαριασμού"
 
-#: userManagment/templates/userManagment/createUser.html:67
-#: userManagment/templates/userManagment/modifyUser.html:72
-msgid "Admin"
-msgstr "Διαχειριστής"
-
-#: userManagment/templates/userManagment/createUser.html:68
-#: userManagment/templates/userManagment/createUser.html:79
-#: userManagment/templates/userManagment/modifyUser.html:73
-msgid "Normal User"
-msgstr "Απλός Χρήστης"
-
 #: userManagment/templates/userManagment/createUser.html:92
 #: userManagment/templates/userManagment/modifyUser.html:88
 #: userManagment/templates/userManagment/userProfile.html:67
@@ -2926,45 +3313,38 @@ msgid "User Accounts Limit"
 msgstr "Όριο λογαριασμών χρηστών"
 
 #: userManagment/templates/userManagment/createUser.html:96
-#: userManagment/templates/userManagment/createUser.html:107
 msgid "Only Numbers"
 msgstr "Μόνο αριθμούς"
 
 #: userManagment/templates/userManagment/createUser.html:103
-#: userManagment/templates/userManagment/modifyUser.html:98
-#: userManagment/templates/userManagment/userProfile.html:82
-msgid "Websites Limit"
-msgstr "Όριο ιστοσελίδες"
-
-#: userManagment/templates/userManagment/createUser.html:113
 #: userManagment/templates/userManagment/userProfile.html:42
 msgid "Username"
 msgstr "Όνομα Χρήστη"
 
-#: userManagment/templates/userManagment/createUser.html:117
+#: userManagment/templates/userManagment/createUser.html:107
 msgid "Username should be lowercase alphanumeric."
 msgstr "Το όνομα χρήστη πρέπει να είναι με πεζά αλφαριθμητικό."
 
-#: userManagment/templates/userManagment/createUser.html:127
+#: userManagment/templates/userManagment/createUser.html:117
 msgid "Must contain one number and one special character."
 msgstr "Πρέπει να περιέχει έναν αριθμό και έναν ειδικό χαρακτήρα."
 
-#: userManagment/templates/userManagment/createUser.html:143
+#: userManagment/templates/userManagment/createUser.html:133
 #: userManagment/templates/userManagment/index.html:40
 #: userManagment/templates/userManagment/index.html:42
 msgid "Create User"
 msgstr "Δημουργία Χρήστη"
 
-#: userManagment/templates/userManagment/createUser.html:154
-#: userManagment/templates/userManagment/modifyUser.html:130
+#: userManagment/templates/userManagment/createUser.html:144
+#: userManagment/templates/userManagment/modifyUser.html:122
 msgid "Account with username:"
 msgstr "Λογαριασμός με όνομα χρήστη:"
 
-#: userManagment/templates/userManagment/createUser.html:158
+#: userManagment/templates/userManagment/createUser.html:148
 msgid "Cannot create user. Error message:"
 msgstr "Δεν είναι δυνατό να δημιουργήσετε χρήστη. Μήνυμα λάθους:"
 
-#: userManagment/templates/userManagment/createUser.html:166
+#: userManagment/templates/userManagment/createUser.html:156
 msgid ""
 "Length of first and last name combined should be less than or equal to 20 "
 "characters"
@@ -3014,15 +3394,15 @@ msgstr "Τροποποιήστε τις υπάρχουσες ρυθμίσεις 
 msgid "Select Account"
 msgstr "Επιλέξτε λογαριασμό!"
 
-#: userManagment/templates/userManagment/modifyUser.html:130
+#: userManagment/templates/userManagment/modifyUser.html:122
 msgid " is successfully modified."
 msgstr "τροποποιείται με επιτυχία."
 
-#: userManagment/templates/userManagment/modifyUser.html:134
+#: userManagment/templates/userManagment/modifyUser.html:126
 msgid "Cannot modify user. Error message:"
 msgstr "Δεν είναι δυνατή η τροποποίηση του χρήστη. Μήνυμα λάθους:"
 
-#: userManagment/templates/userManagment/modifyUser.html:147
+#: userManagment/templates/userManagment/modifyUser.html:139
 msgid "Details fetched."
 msgstr "Επιτυχής λήψη στοιχείων."
 
@@ -3050,6 +3430,10 @@ msgstr "Επίπεδο λογαριασμού"
 #: userManagment/templates/userManagment/userProfile.html:84
 msgid "( 0 = Unlimited )"
 msgstr "(0 = απεριόριστα)"
+
+#: userManagment/templates/userManagment/userProfile.html:82
+msgid "Websites Limit"
+msgstr "Όριο ιστοσελίδες"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:3
 msgid "Create New Website - CyberPanel"
@@ -3079,39 +3463,30 @@ msgid "Do not enter WWW, it will be auto created!"
 msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:56
-#: websiteFunctions/templates/websiteFunctions/website.html:293
-#: websiteFunctions/templates/websiteFunctions/website.html:304
+#: websiteFunctions/templates/websiteFunctions/website.html:317
+#: websiteFunctions/templates/websiteFunctions/website.html:328
 msgid "Invalid Domain (Note: You don't need to add 'http' or 'https')"
 msgstr ""
 "Μη έγκυρος τομέας (Σημείωση: Δεν χρειάζεται να προσθέσετε 'http' ή 'https')"
 
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:84
-#: websiteFunctions/templates/websiteFunctions/website.html:325
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:85
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:86
+#: websiteFunctions/templates/websiteFunctions/website.html:350
 msgid "Additional Features"
 msgstr "Επιπρόσθετα Χαρακτηριστικά"
 
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:91
-#: websiteFunctions/templates/websiteFunctions/website.html:332
-msgid ""
-"For SSL to work DNS of domain should point to server, otherwise self signed "
-"SSL will be issued, you can add your own SSL later."
-msgstr ""
-"Για να λειτουργεί το SSL, το DNS του τομέα θα πρέπει να δείχνει σε "
-"διακομιστή, διαφορετικά θα εκδοθεί αυτόματα υπογεγραμμένο SSL, μπορείτε να "
-"προσθέσετε το δικό σας SSL αργότερα."
-
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:113
-#: websiteFunctions/templates/websiteFunctions/website.html:354
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:120
+#: websiteFunctions/templates/websiteFunctions/website.html:385
 msgid "Cannot create website. Error message:"
 msgstr "Δεν είναι δυνατή η δημιουργία ιστότοπου. Μήνυμα λάθους:"
 
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:117
-#: websiteFunctions/templates/websiteFunctions/website.html:358
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:124
+#: websiteFunctions/templates/websiteFunctions/website.html:389
 msgid "Website with domain"
 msgstr "Ιστοσελίδα με domain"
 
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:117
-#: websiteFunctions/templates/websiteFunctions/website.html:358
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:124
+#: websiteFunctions/templates/websiteFunctions/website.html:389
 msgid " is Successfully Created"
 msgstr "Δημιουργήθηκε με Επιτυχία"
 
@@ -3135,6 +3510,90 @@ msgstr "Δεν είναι δυνατή η δημιουργία ιστότοπο�
 msgid "Successfully Deleted."
 msgstr "Διαγράφηκε με Επιτυχία!"
 
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:3
+#, fuzzy
+#| msgid "Home - CyberPanel"
+msgid "Domain Aliases - CyberPanel"
+msgstr "Αρχική σελίδα - CyberPanel"
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:12
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:19
+#, fuzzy
+#| msgid "Domain Name"
+msgid "Domain Aliases"
+msgstr "Όνομα Domain"
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:13
+msgid ""
+"With Domain Aliases you can visit example.com using example.net and view the "
+"same content."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:29
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:105
+#, fuzzy
+#| msgid "Create Email"
+msgid "Create Alias"
+msgstr "Δημιουργία Email "
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:36
+#, fuzzy
+#| msgid "Create Email"
+msgid "Master Domain"
+msgstr "Δημιουργία Email "
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:37
+msgid "Alias"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:38
+#, fuzzy
+#| msgid "System Status"
+msgid "File System Path"
+msgstr "Κατάσταση Συστήματος"
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:53
+#: websiteFunctions/templates/websiteFunctions/website.html:480
+#, fuzzy
+#| msgid "Issue SSL"
+msgid "Issue"
+msgstr "Έκδοση SSL"
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:63
+msgid "Domain Aliases not found."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:79
+#, fuzzy
+#| msgid "Select Domain"
+msgid "Alias Domain"
+msgstr "Επιλέξτε Domain"
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:93
+msgid ""
+"For SSL to work DNS of domain should point to server, otherwise self signed "
+"SSL will be issued, you can add your own SSL later."
+msgstr ""
+"Για να λειτουργεί το SSL, το DNS του τομέα θα πρέπει να δείχνει σε "
+"διακομιστή, διαφορετικά θα εκδοθεί αυτόματα υπογεγραμμένο SSL, μπορείτε να "
+"προσθέσετε το δικό σας SSL αργότερα."
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:114
+#, fuzzy
+#| msgid "Action failed. Error message:"
+msgid "Operation failed. Error message:"
+msgstr "Η ενέργεια απέτυχε. Μήνυμα λάθους:"
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:118
+msgid "Alias successfully created. Refreshing page in 3 seconds..."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:122
+#, fuzzy
+#| msgid "Action successful."
+msgid "Operation Successfull."
+msgstr "Ενέργεια επιτυχής."
+
 #: websiteFunctions/templates/websiteFunctions/index.html:3
 msgid "Website Functions - CyberPanel"
 msgstr "Λειτουργίες της Ιστοσελίδας - CyberPanel"
@@ -3145,6 +3604,136 @@ msgstr "Λειτουργίες της Ιστοσελίδας - CyberPanel"
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:20
 msgid "Suspend/Unsuspend Website"
 msgstr "Αναστολή/Απενεργοποίηση Ιστοσελίδας"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:3
+#, fuzzy
+#| msgid "Version Management - CyberPanel"
+msgid "Cron Management - CyberPanel"
+msgstr "Διαχείριση έκδοσης - CyberPanel"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:12
+#: websiteFunctions/templates/websiteFunctions/listCron.html:19
+#, fuzzy
+#| msgid "Version Management"
+msgid "Cron Management"
+msgstr "Τελευταία Έκδοση:"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:13
+#, fuzzy
+#| msgid "Create, edit and delete users on this page."
+msgid "Create, edit or delete your cron jobs from this page."
+msgstr "Δημιουργία, επεξεργασία και διαγραφή χρηστών σε αυτή τη σελίδα."
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:37
+#, fuzzy
+#| msgid "Add Destination"
+msgid "Add Cron"
+msgstr "Προσθήκη προορισμού"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:46
+#: websiteFunctions/templates/websiteFunctions/listCron.html:95
+msgid "Minute"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:47
+#: websiteFunctions/templates/websiteFunctions/listCron.html:101
+msgid "Hour"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:48
+msgid "Day of Month"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:49
+#: websiteFunctions/templates/websiteFunctions/listCron.html:113
+msgid "Month"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:50
+msgid "Day of Week"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:51
+#: websiteFunctions/templates/websiteFunctions/listCron.html:126
+msgid "Command"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:52
+#, fuzzy
+#| msgid "FTP Functions"
+msgid "Action"
+msgstr "Λειτουργίες FTP"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:79
+msgid "Pre defined"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:82
+msgid "Every minute"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:83
+msgid "Every 5 minutes"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:84
+msgid "Every 30 minutes"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:85
+msgid "Every hour"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:86
+msgid "Every day"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:87
+msgid "Every week"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:88
+msgid "Every month"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:89
+msgid "Every year"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:107
+msgid "Day of month"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:119
+msgid "Day of week"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:135
+#, fuzzy
+#| msgid "Save Rewrite Rules"
+msgid "Save edits"
+msgstr "Αποθήκευση κανόνων επανεγγραφής"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:142
+#, fuzzy
+#| msgid "Add Records"
+msgid "Add cron"
+msgstr "Προσθήκη Αρχείων"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:152
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:105
+msgid "Cannot fetch website details. Error message:"
+msgstr "Δεν είναι δυνατή η λήψη των λεπτομερειών του ιστότοπου. Μήνυμα λάθους:"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:156
+#, fuzzy
+#| msgid "Could not save SSL. Error message:"
+msgid "Unable to add/save Cron. Error message:"
+msgstr "Δεν ήταν δυνατή η αποθήκευση του SSL. Μήνυμα λάθους:"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:159
+msgid "Cron job saved"
+msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:3
 msgid "Websites Hosted - CyberPanel"
@@ -3166,15 +3755,11 @@ msgstr "Τρέχον Πακέτο"
 msgid "Current Owner:"
 msgstr "Τρέχων Κάτοχος:"
 
-#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:104
-msgid "Cannot fetch website details. Error message:"
-msgstr "Δεν είναι δυνατή η λήψη των λεπτομερειών του ιστότοπου. Μήνυμα λάθους:"
-
-#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:108
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:109
 msgid "Cannot modify website. Error message:"
 msgstr "Δεν είναι δυνατή η τροποποίηση του ιστότοπου. Μήνυμα λάθους:"
 
-#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:112
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:113
 msgid "Website Details Successfully fetched"
 msgstr "Στοιχεία Ιστοσελίδας Επιτυχής ανάκτηση"
 
@@ -3222,243 +3807,347 @@ msgstr "Προηγούμενο"
 msgid "All functions related to a particular site."
 msgstr "Όλες οι λειτουργίες που σχετίζονται με συγκεκριμένο ιστότοπο."
 
-#: websiteFunctions/templates/websiteFunctions/website.html:22
+#: websiteFunctions/templates/websiteFunctions/website.html:25
 msgid "Resource Usage"
 msgstr "Χρήση Πηγών"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:31
+#: websiteFunctions/templates/websiteFunctions/website.html:36
 msgid "Resource"
 msgstr "Πηγή"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:33
+#: websiteFunctions/templates/websiteFunctions/website.html:38
 msgid "Allowed"
 msgstr "Επιτρέπεται"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:55
-#: websiteFunctions/templates/websiteFunctions/website.html:82
+#: websiteFunctions/templates/websiteFunctions/website.html:60
+#: websiteFunctions/templates/websiteFunctions/website.html:87
 msgid "Bandwidth Usage"
 msgstr "Χρήση Εύρους ζώνης"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:118
+#: websiteFunctions/templates/websiteFunctions/website.html:124
+#: websiteFunctions/templates/websiteFunctions/website.html:127
 msgid "Load Access Logs"
 msgstr "Φόρτωση αρχείων καταγραφής πρόσβασης"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:130
+#: websiteFunctions/templates/websiteFunctions/website.html:135
+#: websiteFunctions/templates/websiteFunctions/website.html:138
 msgid "Load Error Logs"
 msgstr "Φόρτωση καταγραφών σφαλμάτων"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:146
+#: websiteFunctions/templates/websiteFunctions/website.html:150
 msgid "Logs Fetched"
 msgstr "Αρχεία καταγραφής που Έχουν εξαχθεί"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:151
+#: websiteFunctions/templates/websiteFunctions/website.html:155
 msgid ""
 "Could not fetch logs, see the logs file through command line. Error message:"
 msgstr ""
 "Δεν ήταν δυνατή η λήψη αρχείων καταγραφής. Χρησιμοποιήστε τη γραμμή εντολών "
 "για να προβάλετε το αρχείο καταγραφής. Μήνυμα λάθους:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:172
-#: websiteFunctions/templates/websiteFunctions/website.html:211
+#: websiteFunctions/templates/websiteFunctions/website.html:176
+#: websiteFunctions/templates/websiteFunctions/website.html:215
 msgid "Next"
 msgstr "Επόμενο"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:173
-#: websiteFunctions/templates/websiteFunctions/website.html:212
+#: websiteFunctions/templates/websiteFunctions/website.html:177
+#: websiteFunctions/templates/websiteFunctions/website.html:216
 msgid "Previous"
 msgstr "Προηγούμενο"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:256
-#: websiteFunctions/templates/websiteFunctions/website.html:258
+#: websiteFunctions/templates/websiteFunctions/website.html:262
+#: websiteFunctions/templates/websiteFunctions/website.html:265
+#: websiteFunctions/templates/websiteFunctions/website.html:266
 #, fuzzy
 #| msgid "Add Destination"
 msgid "Add Domains"
 msgstr "Προσθήκη προορισμού"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:268
-#: websiteFunctions/templates/websiteFunctions/website.html:270
+#: websiteFunctions/templates/websiteFunctions/website.html:273
+#: websiteFunctions/templates/websiteFunctions/website.html:276
+#: websiteFunctions/templates/websiteFunctions/website.html:277
+#: websiteFunctions/templates/websiteFunctions/website.html:294
+#: websiteFunctions/templates/websiteFunctions/website.html:297
 #, fuzzy
 #| msgid "Select Domain"
 msgid "List Domains"
 msgstr "Επιλέξτε Domain"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:300
-#: websiteFunctions/templates/websiteFunctions/website.html:770
-#: websiteFunctions/templates/websiteFunctions/website.html:821
+#: websiteFunctions/templates/websiteFunctions/website.html:283
+#: websiteFunctions/templates/websiteFunctions/website.html:286
+#: websiteFunctions/templates/websiteFunctions/website.html:287
+#, fuzzy
+#| msgid "Domain Name"
+msgid "Domain Alias"
+msgstr "Όνομα Domain"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:294
+#: websiteFunctions/templates/websiteFunctions/website.html:297
+msgid "Add new Cron Job"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:298
+msgid "Cron Jobs"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:324
+#: websiteFunctions/templates/websiteFunctions/website.html:883
+#: websiteFunctions/templates/websiteFunctions/website.html:934
 msgid "Path"
 msgstr "Διαδρομή"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:302
+#: websiteFunctions/templates/websiteFunctions/website.html:326
 msgid "This path is relative to: "
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:302
+#: websiteFunctions/templates/websiteFunctions/website.html:326
 #, fuzzy
 #| msgid "Leave empty to select default home directory."
 msgid "Leave empty to set default."
 msgstr "Αφήστε κενό για να επιλέξετε προεπιλεγμένο αρχικό κατάλογο."
 
-#: websiteFunctions/templates/websiteFunctions/website.html:343
+#: websiteFunctions/templates/websiteFunctions/website.html:374
 #, fuzzy
 #| msgid "Create Email"
 msgid "Create Domain"
 msgstr "Δημιουργία Email "
 
-#: websiteFunctions/templates/websiteFunctions/website.html:386
+#: websiteFunctions/templates/websiteFunctions/website.html:416
 #, fuzzy
 #| msgid "Version Management"
 msgid "PHP Version Changed to:"
 msgstr "Τελευταία Έκδοση:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:390
+#: websiteFunctions/templates/websiteFunctions/website.html:420
 #, fuzzy
 #| msgid "Delete"
 msgid "Deleted:"
 msgstr "Διαγραφή"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:394
+#: websiteFunctions/templates/websiteFunctions/website.html:424
 #, fuzzy
 #| msgid "SSL Issued for"
 msgid "SSL Issued:"
 msgstr "SSL που Εκδίδονται για"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:449
-#, fuzzy
-#| msgid "Issue SSL"
-msgid "Issue"
-msgstr "Έκδοση SSL"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:477
+#: websiteFunctions/templates/websiteFunctions/website.html:509
 msgid "Configurations"
 msgstr "Ρυθμίσεις"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:483
-msgid "Edit Virtual Host Main Configurations"
-msgstr "Επεξεργασία Κύριων Παραμέτρων Εικονικού ΚεντρικούΥπολογιστή"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:485
+#: websiteFunctions/templates/websiteFunctions/website.html:518
+#: websiteFunctions/templates/websiteFunctions/website.html:521
 msgid "Edit vHost Main Configurations"
 msgstr "Επεξεργασία κύριων παραμέτρων vHost"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:495
-#: websiteFunctions/templates/websiteFunctions/website.html:497
+#: websiteFunctions/templates/websiteFunctions/website.html:522
+msgid "vHost Conf"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:530
 msgid "Add Rewrite Rules (.htaccess)"
 msgstr "Προσθήκη Κανόνων επανεγγραφής (.htaccess)"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:507
+#: websiteFunctions/templates/websiteFunctions/website.html:533
+#, fuzzy
+#| msgid "Add Rewrite Rules (.htaccess)"
+msgid "Rewrite Rules (.htaccess)"
+msgstr "Προσθήκη Κανόνων επανεγγραφής (.htaccess)"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:534
+#, fuzzy
+#| msgid "Save Rewrite Rules"
+msgid "Rewrite Rules"
+msgstr "Αποθήκευση κανόνων επανεγγραφής"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:542
+#: websiteFunctions/templates/websiteFunctions/website.html:545
 msgid "Add Your Own SSL"
 msgstr "Προσθέστε το Δικό σας SSL"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:509
+#: websiteFunctions/templates/websiteFunctions/website.html:546
 msgid "Add SSL"
 msgstr "Προσθέστε το SSL"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:524
+#: websiteFunctions/templates/websiteFunctions/website.html:554
+#: websiteFunctions/templates/websiteFunctions/website.html:557
+#, fuzzy
+#| msgid "Select PHP Version"
+msgid "Change PHP Version"
+msgstr "Επιλέξτε Έκδοση PHP"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:558
+#: websiteFunctions/templates/websiteFunctions/website.html:754
+#, fuzzy
+#| msgid "Change"
+msgid "Change PHP"
+msgstr "Αλλαγή"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:570
 msgid "SSL Saved"
 msgstr "SSL Αποθηκεύθηκε "
 
-#: websiteFunctions/templates/websiteFunctions/website.html:529
+#: websiteFunctions/templates/websiteFunctions/website.html:575
 msgid "Could not save SSL. Error message:"
 msgstr "Δεν ήταν δυνατή η αποθήκευση του SSL. Μήνυμα λάθους:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:579
+#: websiteFunctions/templates/websiteFunctions/website.html:624
 msgid "Current configuration in the file fetched."
 msgstr "Η τρέχουσα διαμόρφωση του αρχείου έχει παραληφθεί."
 
-#: websiteFunctions/templates/websiteFunctions/website.html:584
-#: websiteFunctions/templates/websiteFunctions/website.html:597
+#: websiteFunctions/templates/websiteFunctions/website.html:629
+#: websiteFunctions/templates/websiteFunctions/website.html:642
 msgid "Could not fetch current configuration. Error message:"
 msgstr "Δεν ήταν δυνατή η λήψη της τρέχουσας διαμόρφωσης. Μήνυμα λάθους:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:593
-#: websiteFunctions/templates/websiteFunctions/website.html:648
+#: websiteFunctions/templates/websiteFunctions/website.html:638
+#: websiteFunctions/templates/websiteFunctions/website.html:690
 #, fuzzy
 #| msgid "SSH Configurations Saved."
 msgid "Configurations saved."
 msgstr "Οι ρυθμίσεις SSH αποθηκεύτηκαν."
 
-#: websiteFunctions/templates/websiteFunctions/website.html:634
+#: websiteFunctions/templates/websiteFunctions/website.html:676
 msgid "Current rewrite rules in the file fetched."
 msgstr "Οι τρέχοντες κανόνες επανεγγραφής στο αρχείο που έχουν ληφθεί."
 
-#: websiteFunctions/templates/websiteFunctions/website.html:639
+#: websiteFunctions/templates/websiteFunctions/website.html:681
 msgid "Could not fetch current rewrite rules. Error message:"
 msgstr ""
 "Δεν ήταν δυνατή η εξαγωγή των υφιστάμενων κανόνων επανεγγραφής. Μήνυμα "
 "λάθους:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:652
+#: websiteFunctions/templates/websiteFunctions/website.html:694
 msgid "Could not save rewrite rules. Error message:"
 msgstr "Δεν ήταν δυνατή η αποθήκευση κανόνων επανεγγραφής. Μήνυμα λάθους:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:668
+#: websiteFunctions/templates/websiteFunctions/website.html:710
 msgid "Save Rewrite Rules"
 msgstr "Αποθήκευση κανόνων επανεγγραφής"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:691
+#: websiteFunctions/templates/websiteFunctions/website.html:765
+#, fuzzy
+#| msgid "Cannot create website. Error message:"
+msgid "Failed to change PHP version. Error message:"
+msgstr "Δεν είναι δυνατή η δημιουργία ιστότοπου. Μήνυμα λάθους:"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:769
+#, fuzzy
+#| msgid "Password successfully changed for :"
+msgid "PHP successfully changed for: "
+msgstr "Κωδικός πρόσβασης άλλαξε με επιτυχία για:"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:795
 msgid "Files"
 msgstr "Αρχεία"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:698
-#: websiteFunctions/templates/websiteFunctions/website.html:700
+#: websiteFunctions/templates/websiteFunctions/website.html:803
+#: websiteFunctions/templates/websiteFunctions/website.html:806
+#: websiteFunctions/templates/websiteFunctions/website.html:807
 msgid "File Manager"
 msgstr "Διαχείριση Αρχείων"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:739
+#: websiteFunctions/templates/websiteFunctions/website.html:819
+#, fuzzy
+#| msgid "Create FTP Account"
+msgid "Create FTP Acct"
+msgstr "Δημιουργία Λογαριασμού FTP"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:831
+#, fuzzy
+#| msgid "Delete FTP Account"
+msgid "Delete FTP Acct"
+msgstr "Διαγραφή του Λογαριασμού FTP "
+
+#: websiteFunctions/templates/websiteFunctions/website.html:848
 msgid "Application Installer"
 msgstr "Πρόγραμμα Εγκατάστασης της Εφαρμογής"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:745
+#: websiteFunctions/templates/websiteFunctions/website.html:857
+#: websiteFunctions/templates/websiteFunctions/website.html:860
 #, fuzzy
 #| msgid "Wordpress with LSCache"
 msgid "Install wordpress with LSCache"
 msgstr "WordPress με LSCache"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:747
+#: websiteFunctions/templates/websiteFunctions/website.html:861
 msgid "Wordpress with LSCache"
 msgstr "WordPress με LSCache"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:756
+#: websiteFunctions/templates/websiteFunctions/website.html:869
+#: websiteFunctions/templates/websiteFunctions/website.html:872
 msgid "Install Joomla with(?) LSCache"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:758
+#: websiteFunctions/templates/websiteFunctions/website.html:873
 msgid "Joomla"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:792
-#: websiteFunctions/templates/websiteFunctions/website.html:871
+#: websiteFunctions/templates/websiteFunctions/website.html:905
+#: websiteFunctions/templates/websiteFunctions/website.html:984
 msgid "Installation failed. Error message:"
 msgstr "Η εγκατάσταση απέτυχε. Μήνυμα λάθους:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:796
-#: websiteFunctions/templates/websiteFunctions/website.html:875
+#: websiteFunctions/templates/websiteFunctions/website.html:909
+#: websiteFunctions/templates/websiteFunctions/website.html:988
 msgid "Installation successful. To complete the setup visit:"
 msgstr ""
 "Η εγκατάσταση είναι επιτυχής. Για την ολοκλήρωση της επίσκεψης της "
 "εγκατάστασης (Setup):"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:828
+#: websiteFunctions/templates/websiteFunctions/website.html:941
 msgid "Site name"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:835
+#: websiteFunctions/templates/websiteFunctions/website.html:948
 #, fuzzy
 #| msgid "Username"
 msgid "Admin Username"
 msgstr "Όνομα Χρήστη"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:842
+#: websiteFunctions/templates/websiteFunctions/website.html:955
 #, fuzzy
 #| msgid "Password"
 msgid "Admin Password"
 msgstr "Κωδικός"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:849
+#: websiteFunctions/templates/websiteFunctions/website.html:962
 #, fuzzy
 #| msgid "Database Name"
 msgid "Database prefix"
 msgstr "Όνομα βάσης δεδομένων"
+
+#~ msgid "Daily"
+#~ msgstr "Καθημερινά"
+
+#~ msgid "Weekly"
+#~ msgstr "Εβδομαδιαία"
+
+#~ msgid "HTTP Statistics"
+#~ msgstr "Στατιστικά στοιχεία HTTP"
+
+#~ msgid "Available/Max Connections"
+#~ msgstr "Διαθέσιμες / Μέγιστες συνδέσεις"
+
+#~ msgid "Available/Max SSL Connections"
+#~ msgstr "Διαθέσιμες / Μέγιστες SSL Συνδέσεις"
+
+#~ msgid "Requests Processing"
+#~ msgstr "Αιτήσεις επεξεργασίας"
+
+#~ msgid "Total Requests"
+#~ msgstr "Σύνολο Αιτημάτων"
+
+#~ msgid "IPV6"
+#~ msgstr "IPV6"
+
+#~ msgid "Admin"
+#~ msgstr "Διαχειριστής"
+
+#~ msgid "Normal User"
+#~ msgstr "Απλός Χρήστης"
+
+#~ msgid "Edit Virtual Host Main Configurations"
+#~ msgstr "Επεξεργασία Κύριων Παραμέτρων Εικονικού ΚεντρικούΥπολογιστή"
 
 #~ msgid "Urdu"
 #~ msgstr "Ουρντού"

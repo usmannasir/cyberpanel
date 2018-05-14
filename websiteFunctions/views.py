@@ -975,8 +975,6 @@ def submitDomainDeletion(request):
 
                 execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName + " --numberOfSites " + numberOfWebsites
 
-
-
                 subprocess.check_output(shlex.split(execPath))
 
 
@@ -1656,6 +1654,7 @@ def saveConfigsToFile(request):
 
                 ## writing data temporary to file
 
+                mailUtilities.checkHome()
 
                 tempPath = "/home/cyberpanel/"+str(randint(1000, 9999))
 
@@ -1757,6 +1756,7 @@ def saveRewriteRules(request):
 
                 ## writing data temporary to file
 
+                mailUtilities.checkHome()
 
                 tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 

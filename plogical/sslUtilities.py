@@ -89,6 +89,8 @@ class sslUtilities:
                             writeDataToFile.writelines(items)
                             writeDataToFile.writelines(map)
                             sslCheck = 0
+                        else:
+                            writeDataToFile.writelines(items)
                     writeDataToFile.close()
 
                 ###################### Write per host Configs for SSL ###################

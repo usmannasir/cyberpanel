@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the CyberPanel package.
 # FIRST AUTHOR <unasir@litespeedtech.com>, 2017.
 #
-#: baseTemplate/templates/baseTemplate/index.html:95
-#: baseTemplate/templates/baseTemplate/index.html:185
-#: baseTemplate/templates/baseTemplate/index.html:236
-#: baseTemplate/templates/baseTemplate/index.html:242
-#: baseTemplate/templates/baseTemplate/index.html:248
-#: baseTemplate/templates/baseTemplate/index.html:254
-#: baseTemplate/templates/baseTemplate/index.html:260
-#: baseTemplate/templates/baseTemplate/index.html:266
+#: baseTemplate/templates/baseTemplate/index.html:176
+#: baseTemplate/templates/baseTemplate/index.html:222
+#: baseTemplate/templates/baseTemplate/index.html:228
+#: baseTemplate/templates/baseTemplate/index.html:234
+#: baseTemplate/templates/baseTemplate/index.html:240
+#: baseTemplate/templates/baseTemplate/index.html:246
+#: baseTemplate/templates/baseTemplate/index.html:252
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:198
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:288
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:343
@@ -23,7 +22,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-02-15 13:07+0500\n"
+"POT-Creation-Date: 2018-05-14 14:50+0500\n"
 "PO-Revision-Date: 2017-10-21 00:03+0100\n"
 "Last-Translator: \n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
@@ -57,6 +56,22 @@ msgstr ""
 msgid "Bosnian"
 msgstr ""
 
+#: CyberCP/settings.py:173
+msgid "Greek"
+msgstr ""
+
+#: CyberCP/settings.py:174
+msgid "Russian"
+msgstr ""
+
+#: CyberCP/settings.py:175
+msgid "Turkish"
+msgstr ""
+
+#: CyberCP/settings.py:176
+msgid "Spanish"
+msgstr ""
+
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
 msgid "Back up Website"
@@ -73,9 +88,12 @@ msgstr "Esta página pode ser usada para fazer backup dos seus websites"
 #: mailServer/templates/mailServer/changeEmailPassword.html:28
 #: mailServer/templates/mailServer/createEmailAccount.html:28
 #: mailServer/templates/mailServer/deleteEmailAccount.html:28
+#: mailServer/templates/mailServer/dkimManager.html:83
 #: manageSSL/templates/manageSSL/manageSSL.html:29
 #: manageSSL/templates/manageSSL/sslForHostName.html:29
+#: manageSSL/templates/manageSSL/sslForMailServer.html:29
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:28
+#: websiteFunctions/templates/websiteFunctions/listCron.html:28
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:28
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:29
 msgid "Select Website"
@@ -88,24 +106,25 @@ msgstr "Destino"
 
 #: backup/templates/backup/backup.html:44
 #: baseTemplate/templates/baseTemplate/homePage.html:12
-#: filemanager/templates/filemanager/index.html:133
+#: filemanager/templates/filemanager/index.html:136
 msgid "Home"
 msgstr "Principal"
 
 #: backup/templates/backup/backup.html:60
 #: backup/templates/backup/restore.html:62
-#: filemanager/templates/filemanager/index.html:157
+#: filemanager/templates/filemanager/index.html:160
 msgid "File Name"
 msgstr "Nome do Ficheiro"
 
 #: backup/templates/backup/backup.html:61
 #: backup/templates/backup/backup.html:106
 #: backup/templates/backup/restore.html:63
-#: baseTemplate/templates/baseTemplate/index.html:270
+#: baseTemplate/templates/baseTemplate/index.html:256
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:377
-#: filemanager/templates/filemanager/index.html:212
+#: filemanager/templates/filemanager/index.html:215
 #: firewall/templates/firewall/firewall.html:36
-#: managePHP/templates/managePHP/installExtensions.html:65
+#: firewall/templates/firewall/modSecurityRulesPacks.html:112
+#: managePHP/templates/managePHP/installExtensions.html:66
 msgid "Status"
 msgstr "Estado"
 
@@ -114,7 +133,7 @@ msgid "Running"
 msgstr "A correr"
 
 #: backup/templates/backup/backup.html:81
-#: baseTemplate/templates/baseTemplate/index.html:445
+#: baseTemplate/templates/baseTemplate/index.html:432
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:552
 msgid "Create Back up"
 msgstr "Criar Backup"
@@ -129,10 +148,11 @@ msgstr "Criar Backup"
 #: backup/templates/backup/backupDestinations.html:97
 #: backup/templates/backup/backupSchedule.html:89
 #: databases/templates/databases/listDataBases.html:87
-#: dns/templates/dns/addDeleteDNSRecords.html:129
+#: dns/templates/dns/addDeleteDNSRecords.html:294
 #: firewall/templates/firewall/firewall.html:135
+#: firewall/templates/firewall/modSecurityRulesPacks.html:109
 #: ftp/templates/ftp/listFTPAccounts.html:87
-#: managePHP/templates/managePHP/installExtensions.html:61
+#: managePHP/templates/managePHP/installExtensions.html:62
 msgid "ID"
 msgstr "ID"
 
@@ -145,7 +165,7 @@ msgid "Date"
 msgstr "Data"
 
 #: backup/templates/backup/backup.html:105
-#: filemanager/templates/filemanager/index.html:210
+#: filemanager/templates/filemanager/index.html:213
 #: ftp/templates/ftp/listFTPAccounts.html:90
 msgid "Size"
 msgstr "Tamanho"
@@ -153,11 +173,14 @@ msgstr "Tamanho"
 #: backup/templates/backup/backup.html:107
 #: backup/templates/backup/backupDestinations.html:100
 #: backup/templates/backup/backupSchedule.html:92
-#: dns/templates/dns/addDeleteDNSRecords.html:134
+#: dns/templates/dns/addDeleteDNSRecords.html:300
 #: filemanager/templates/filemanager/index.html:72
 #: firewall/templates/firewall/firewall.html:140
 #: firewall/templates/firewall/secureSSH.html:122
-#: websiteFunctions/templates/websiteFunctions/website.html:450
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:40
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:55
+#: websiteFunctions/templates/websiteFunctions/listCron.html:65
+#: websiteFunctions/templates/websiteFunctions/website.html:481
 msgid "Delete"
 msgstr "Apagar"
 
@@ -184,7 +207,7 @@ msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:30
 #: backup/templates/backup/remoteBackups.html:29
-#: dns/templates/dns/addDeleteDNSRecords.html:60
+#: dns/templates/dns/addDeleteDNSRecords.html:67
 #: dns/templates/dns/createNameServer.html:48
 #: dns/templates/dns/createNameServer.html:65
 #: firewall/templates/firewall/firewall.html:138
@@ -198,8 +221,8 @@ msgstr "Endereço de IP"
 #: ftp/templates/ftp/listFTPAccounts.html:91
 #: mailServer/templates/mailServer/changeEmailPassword.html:52
 #: mailServer/templates/mailServer/createEmailAccount.html:51
-#: userManagment/templates/userManagment/createUser.html:123
-#: userManagment/templates/userManagment/modifyUser.html:106
+#: userManagment/templates/userManagment/createUser.html:113
+#: userManagment/templates/userManagment/modifyUser.html:98
 msgid "Password"
 msgstr "Palavra-Chave"
 
@@ -214,7 +237,7 @@ msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:55
 #: backup/templates/backup/backupSchedule.html:54
-#: baseTemplate/templates/baseTemplate/index.html:447
+#: baseTemplate/templates/baseTemplate/index.html:434
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:554
 msgid "Add Destination"
 msgstr "Adicionar Destino"
@@ -247,25 +270,28 @@ msgstr "Destino Adicionado."
 #: backup/templates/backup/restore.html:95
 #: databases/templates/databases/createDatabase.html:88
 #: databases/templates/databases/deleteDatabase.html:73
-#: dns/templates/dns/addDeleteDNSRecords.html:185
+#: dns/templates/dns/addDeleteDNSRecords.html:352
 #: dns/templates/dns/createDNSZone.html:60
 #: dns/templates/dns/createNameServer.html:100
 #: dns/templates/dns/deleteDNSZone.html:67
 #: mailServer/templates/mailServer/changeEmailPassword.html:80
 #: mailServer/templates/mailServer/createEmailAccount.html:79
 #: mailServer/templates/mailServer/deleteEmailAccount.html:79
+#: mailServer/templates/mailServer/dkimManager.html:156
 #: manageSSL/templates/manageSSL/manageSSL.html:60
-#: userManagment/templates/userManagment/createUser.html:162
-#: userManagment/templates/userManagment/modifyUser.html:138
+#: userManagment/templates/userManagment/createUser.html:152
+#: userManagment/templates/userManagment/modifyUser.html:130
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:126
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:77
-#: websiteFunctions/templates/websiteFunctions/website.html:156
-#: websiteFunctions/templates/websiteFunctions/website.html:362
-#: websiteFunctions/templates/websiteFunctions/website.html:404
-#: websiteFunctions/templates/websiteFunctions/website.html:534
-#: websiteFunctions/templates/websiteFunctions/website.html:589
-#: websiteFunctions/templates/websiteFunctions/website.html:644
-#: websiteFunctions/templates/websiteFunctions/website.html:802
-#: websiteFunctions/templates/websiteFunctions/website.html:881
+#: websiteFunctions/templates/websiteFunctions/website.html:160
+#: websiteFunctions/templates/websiteFunctions/website.html:393
+#: websiteFunctions/templates/websiteFunctions/website.html:434
+#: websiteFunctions/templates/websiteFunctions/website.html:580
+#: websiteFunctions/templates/websiteFunctions/website.html:634
+#: websiteFunctions/templates/websiteFunctions/website.html:686
+#: websiteFunctions/templates/websiteFunctions/website.html:773
+#: websiteFunctions/templates/websiteFunctions/website.html:915
+#: websiteFunctions/templates/websiteFunctions/website.html:994
 msgid "Could not connect to server. Please refresh this page."
 msgstr "Impossível conectar ao servidor. Por favor atualize esta página."
 
@@ -284,7 +310,7 @@ msgstr "Agendar Backup - CyberPanel"
 
 #: backup/templates/backup/backupSchedule.html:13
 #: backup/templates/backup/backupSchedule.html:20
-#: baseTemplate/templates/baseTemplate/index.html:448
+#: baseTemplate/templates/baseTemplate/index.html:435
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:555
 msgid "Schedule Back up"
 msgstr "Agendar Backup"
@@ -305,14 +331,6 @@ msgstr "Selecionar Destino"
 msgid "Select Frequency"
 msgstr "Selecionar Frequência"
 
-#: backup/templates/backup/backupSchedule.html:43
-msgid "Daily"
-msgstr "Diariamente"
-
-#: backup/templates/backup/backupSchedule.html:44
-msgid "Weekly"
-msgstr "Semanalmente"
-
 #: backup/templates/backup/backupSchedule.html:69
 msgid "Cannot add schedule. Error message:"
 msgstr "Impossível adicionar agendamento. Mensagem de erro:"
@@ -331,13 +349,13 @@ msgstr "Backup - CyberPanel"
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:29
 #: backup/templates/backup/index.html:45
-#: baseTemplate/templates/baseTemplate/homePage.html:268
-#: baseTemplate/templates/baseTemplate/homePage.html:271
-#: baseTemplate/templates/baseTemplate/homePage.html:463
-#: baseTemplate/templates/baseTemplate/homePage.html:466
-#: baseTemplate/templates/baseTemplate/index.html:438
-#: baseTemplate/templates/baseTemplate/index.html:440
-#: baseTemplate/templates/baseTemplate/index.html:457
+#: baseTemplate/templates/baseTemplate/homePage.html:204
+#: baseTemplate/templates/baseTemplate/homePage.html:207
+#: baseTemplate/templates/baseTemplate/homePage.html:399
+#: baseTemplate/templates/baseTemplate/homePage.html:402
+#: baseTemplate/templates/baseTemplate/index.html:425
+#: baseTemplate/templates/baseTemplate/index.html:427
+#: baseTemplate/templates/baseTemplate/index.html:444
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:545
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:547
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:564
@@ -349,7 +367,7 @@ msgid "Back up and restore sites."
 msgstr "Faça backup e restaure sites."
 
 #: backup/templates/backup/index.html:19
-#: baseTemplate/templates/baseTemplate/homePage.html:164
+#: baseTemplate/templates/baseTemplate/homePage.html:100
 #: databases/templates/databases/index.html:19 dns/templates/dns/index.html:19
 #: firewall/templates/firewall/index.html:19 ftp/templates/ftp/index.html:19
 #: mailServer/templates/mailServer/index.html:19
@@ -371,7 +389,7 @@ msgid "Back up Site"
 msgstr "Efetuar backup do Website"
 
 #: backup/templates/backup/index.html:55
-#: baseTemplate/templates/baseTemplate/index.html:446
+#: baseTemplate/templates/baseTemplate/index.html:433
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:553
 msgid "Restore Back up"
 msgstr "Restaurar Backup"
@@ -409,8 +427,9 @@ msgid "Start Transfer"
 msgstr ""
 
 #: backup/templates/backup/remoteBackups.html:59
-#: filemanager/templates/filemanager/index.html:236
-#: websiteFunctions/templates/websiteFunctions/website.html:295
+#: filemanager/templates/filemanager/index.html:239
+#: websiteFunctions/templates/websiteFunctions/website.html:319
+#: websiteFunctions/templates/websiteFunctions/website.html:743
 msgid "Cancel"
 msgstr ""
 
@@ -450,12 +469,12 @@ msgid "Website"
 msgstr "Website"
 
 #: backup/templates/backup/remoteBackups.html:108
-#: baseTemplate/templates/baseTemplate/homePage.html:333
-#: baseTemplate/templates/baseTemplate/index.html:511
-#: baseTemplate/templates/baseTemplate/index.html:513
+#: baseTemplate/templates/baseTemplate/homePage.html:269
+#: baseTemplate/templates/baseTemplate/index.html:499
+#: baseTemplate/templates/baseTemplate/index.html:501
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:618
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:620
-#: managePHP/templates/managePHP/installExtensions.html:62
+#: managePHP/templates/managePHP/installExtensions.html:63
 msgid "PHP"
 msgstr "PHP"
 
@@ -467,8 +486,8 @@ msgid "Package"
 msgstr "Pacote"
 
 #: backup/templates/backup/remoteBackups.html:110
-#: baseTemplate/templates/baseTemplate/index.html:398
-#: baseTemplate/templates/baseTemplate/index.html:400
+#: baseTemplate/templates/baseTemplate/index.html:384
+#: baseTemplate/templates/baseTemplate/index.html:386
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:505
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:507
 #: userManagment/templates/userManagment/createUser.html:47
@@ -512,7 +531,7 @@ msgstr "Configurações"
 #: databases/templates/databases/deleteDatabase.html:64
 #: databases/templates/databases/listDataBases.html:54
 #: firewall/templates/firewall/firewall.html:166
-#: managePHP/templates/managePHP/editPHPConfig.html:212
+#: managePHP/templates/managePHP/editPHPConfig.html:221
 msgid "Error message:"
 msgstr "Mensagem de erro:"
 
@@ -529,18 +548,18 @@ msgid "Use the tabs to navigate through the control panel."
 msgstr "Use as abas para navegar pelo painel de controlo."
 
 #: baseTemplate/templates/baseTemplate/homePage.html:23
-#: websiteFunctions/templates/websiteFunctions/website.html:32
+#: websiteFunctions/templates/websiteFunctions/website.html:37
 msgid "Usage"
 msgstr "Uso"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:34
-#: baseTemplate/templates/baseTemplate/index.html:105
+#: baseTemplate/templates/baseTemplate/index.html:96
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:208
 msgid "CPU Usage"
 msgstr "Utilização de CPU"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:55
-#: baseTemplate/templates/baseTemplate/index.html:116
+#: baseTemplate/templates/baseTemplate/index.html:107
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:219
 msgid "Ram Usage"
 msgstr "Utilização de RAM"
@@ -549,55 +568,35 @@ msgstr "Utilização de RAM"
 msgid "Disk Usage '/'"
 msgstr "Uso do Disco '/'"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:98
-msgid "HTTP Statistics"
-msgstr "Estatísticas HTTP"
-
-#: baseTemplate/templates/baseTemplate/homePage.html:107
-msgid "Available/Max Connections"
-msgstr "Disponíveis/Máximo Ligações"
-
-#: baseTemplate/templates/baseTemplate/homePage.html:118
-msgid "Available/Max SSL Connections"
-msgstr "Disponíveis/Máximo Ligações SSL"
-
-#: baseTemplate/templates/baseTemplate/homePage.html:127
-msgid "Requests Processing"
-msgstr "Processamento de Pedidos"
-
-#: baseTemplate/templates/baseTemplate/homePage.html:136
-msgid "Total Requests"
-msgstr "Pedidos Totais"
-
-#: baseTemplate/templates/baseTemplate/homePage.html:175
-#: baseTemplate/templates/baseTemplate/homePage.html:389
+#: baseTemplate/templates/baseTemplate/homePage.html:111
+#: baseTemplate/templates/baseTemplate/homePage.html:325
 #: userManagment/templates/userManagment/index.html:13
 msgid "User Functions"
 msgstr "Funçõoes do Utilizador"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:178
-#: baseTemplate/templates/baseTemplate/homePage.html:392
-#: baseTemplate/templates/baseTemplate/index.html:310
-#: baseTemplate/templates/baseTemplate/index.html:311
-#: baseTemplate/templates/baseTemplate/index.html:312
+#: baseTemplate/templates/baseTemplate/homePage.html:114
+#: baseTemplate/templates/baseTemplate/homePage.html:328
+#: baseTemplate/templates/baseTemplate/index.html:296
+#: baseTemplate/templates/baseTemplate/index.html:297
+#: baseTemplate/templates/baseTemplate/index.html:298
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:417
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:418
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:419
 msgid "Users"
 msgstr "Utilizadores"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:188
-#: baseTemplate/templates/baseTemplate/homePage.html:402
+#: baseTemplate/templates/baseTemplate/homePage.html:124
+#: baseTemplate/templates/baseTemplate/homePage.html:338
 #: websiteFunctions/templates/websiteFunctions/index.html:13
 msgid "Website Functions"
 msgstr "Funções do Website"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:191
-#: baseTemplate/templates/baseTemplate/homePage.html:405
-#: baseTemplate/templates/baseTemplate/index.html:240
-#: baseTemplate/templates/baseTemplate/index.html:328
-#: baseTemplate/templates/baseTemplate/index.html:329
-#: baseTemplate/templates/baseTemplate/index.html:330
+#: baseTemplate/templates/baseTemplate/homePage.html:127
+#: baseTemplate/templates/baseTemplate/homePage.html:341
+#: baseTemplate/templates/baseTemplate/index.html:226
+#: baseTemplate/templates/baseTemplate/index.html:314
+#: baseTemplate/templates/baseTemplate/index.html:315
+#: baseTemplate/templates/baseTemplate/index.html:316
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:347
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:435
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:436
@@ -606,16 +605,16 @@ msgstr "Funções do Website"
 msgid "Websites"
 msgstr "Websites"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:201
+#: baseTemplate/templates/baseTemplate/homePage.html:137
 #, fuzzy
 #| msgid "Modify Package"
 msgid "Add/Modify Packages"
 msgstr "Editar Pacote"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:204
-#: baseTemplate/templates/baseTemplate/index.html:246
-#: baseTemplate/templates/baseTemplate/index.html:345
-#: baseTemplate/templates/baseTemplate/index.html:347
+#: baseTemplate/templates/baseTemplate/homePage.html:140
+#: baseTemplate/templates/baseTemplate/index.html:232
+#: baseTemplate/templates/baseTemplate/index.html:331
+#: baseTemplate/templates/baseTemplate/index.html:333
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:353
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:452
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:454
@@ -623,80 +622,80 @@ msgstr "Editar Pacote"
 msgid "Packages"
 msgstr "Pacotes"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:225
-#: baseTemplate/templates/baseTemplate/homePage.html:415
+#: baseTemplate/templates/baseTemplate/homePage.html:161
+#: baseTemplate/templates/baseTemplate/homePage.html:351
 #: databases/templates/databases/index.html:12
 msgid "Database Functions"
 msgstr "Funções da Base de Dados"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:228
-#: baseTemplate/templates/baseTemplate/homePage.html:418
-#: baseTemplate/templates/baseTemplate/index.html:361
-#: baseTemplate/templates/baseTemplate/index.html:362
-#: baseTemplate/templates/baseTemplate/index.html:363
+#: baseTemplate/templates/baseTemplate/homePage.html:164
+#: baseTemplate/templates/baseTemplate/homePage.html:354
+#: baseTemplate/templates/baseTemplate/index.html:347
+#: baseTemplate/templates/baseTemplate/index.html:348
+#: baseTemplate/templates/baseTemplate/index.html:349
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:468
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:469
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:470
 #: packages/templates/packages/createPackage.html:67
 #: packages/templates/packages/modifyPackage.html:73
-#: websiteFunctions/templates/websiteFunctions/website.html:43
+#: websiteFunctions/templates/websiteFunctions/website.html:48
 msgid "Databases"
 msgstr "Bases de Dados"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:237
-#: baseTemplate/templates/baseTemplate/homePage.html:438
+#: baseTemplate/templates/baseTemplate/homePage.html:173
+#: baseTemplate/templates/baseTemplate/homePage.html:374
 msgid "Control DNS"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/homePage.html:240
-#: baseTemplate/templates/baseTemplate/homePage.html:441
-#: baseTemplate/templates/baseTemplate/index.html:252
-#: baseTemplate/templates/baseTemplate/index.html:379
-#: baseTemplate/templates/baseTemplate/index.html:381
+#: baseTemplate/templates/baseTemplate/homePage.html:176
+#: baseTemplate/templates/baseTemplate/homePage.html:377
+#: baseTemplate/templates/baseTemplate/index.html:238
+#: baseTemplate/templates/baseTemplate/index.html:365
+#: baseTemplate/templates/baseTemplate/index.html:367
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:359
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:486
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:488
 msgid "DNS"
 msgstr "DNS"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:250
-#: baseTemplate/templates/baseTemplate/homePage.html:451
+#: baseTemplate/templates/baseTemplate/homePage.html:186
+#: baseTemplate/templates/baseTemplate/homePage.html:387
 #: ftp/templates/ftp/index.html:12
 msgid "FTP Functions"
 msgstr "Funções do FTP"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:253
-#: baseTemplate/templates/baseTemplate/homePage.html:454
-#: baseTemplate/templates/baseTemplate/index.html:258
-#: baseTemplate/templates/baseTemplate/index.html:420
-#: baseTemplate/templates/baseTemplate/index.html:422
+#: baseTemplate/templates/baseTemplate/homePage.html:189
+#: baseTemplate/templates/baseTemplate/homePage.html:390
+#: baseTemplate/templates/baseTemplate/index.html:244
+#: baseTemplate/templates/baseTemplate/index.html:407
+#: baseTemplate/templates/baseTemplate/index.html:409
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:365
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:527
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:529
-#: websiteFunctions/templates/websiteFunctions/website.html:38
+#: websiteFunctions/templates/websiteFunctions/website.html:43
 msgid "FTP"
 msgstr "FTP"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:280
-#: baseTemplate/templates/baseTemplate/homePage.html:283
-#: baseTemplate/templates/baseTemplate/homePage.html:483
-#: baseTemplate/templates/baseTemplate/homePage.html:486
+#: baseTemplate/templates/baseTemplate/homePage.html:216
+#: baseTemplate/templates/baseTemplate/homePage.html:219
+#: baseTemplate/templates/baseTemplate/homePage.html:419
+#: baseTemplate/templates/baseTemplate/homePage.html:422
 #: packages/templates/packages/createPackage.html:75
 #: packages/templates/packages/modifyPackage.html:80
 msgid "Emails"
 msgstr "E-Mails"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:293
-#: baseTemplate/templates/baseTemplate/homePage.html:296
+#: baseTemplate/templates/baseTemplate/homePage.html:229
+#: baseTemplate/templates/baseTemplate/homePage.html:232
 #: tuning/templates/tuning/index.html:12
 msgid "Server Tuning"
 msgstr "Afinação do Servidor"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:317
-#: baseTemplate/templates/baseTemplate/homePage.html:320
-#: baseTemplate/templates/baseTemplate/index.html:491
-#: baseTemplate/templates/baseTemplate/index.html:493
-#: baseTemplate/templates/baseTemplate/index.html:527
+#: baseTemplate/templates/baseTemplate/homePage.html:253
+#: baseTemplate/templates/baseTemplate/homePage.html:256
+#: baseTemplate/templates/baseTemplate/index.html:479
+#: baseTemplate/templates/baseTemplate/index.html:481
+#: baseTemplate/templates/baseTemplate/index.html:515
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:598
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:600
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:634
@@ -704,44 +703,39 @@ msgstr "Afinação do Servidor"
 msgid "Server Status"
 msgstr "Estado do Servidor"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:330
+#: baseTemplate/templates/baseTemplate/homePage.html:266
 #, fuzzy
 #| msgid "Edit PHP Configurations"
 msgid "PHP Configurations"
 msgstr "Altere as Configurações PHP"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:342
-#: baseTemplate/templates/baseTemplate/homePage.html:345
-#: baseTemplate/templates/baseTemplate/index.html:529
+#: baseTemplate/templates/baseTemplate/homePage.html:278
+#: baseTemplate/templates/baseTemplate/homePage.html:281
+#: baseTemplate/templates/baseTemplate/index.html:517
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:636
-#: websiteFunctions/templates/websiteFunctions/website.html:112
+#: websiteFunctions/templates/websiteFunctions/website.html:117
 msgid "Logs"
 msgstr "Logs"
 
-#: baseTemplate/templates/baseTemplate/homePage.html:365
-#: baseTemplate/templates/baseTemplate/homePage.html:368
-#: baseTemplate/templates/baseTemplate/index.html:545
-#: baseTemplate/templates/baseTemplate/index.html:547
+#: baseTemplate/templates/baseTemplate/homePage.html:301
+#: baseTemplate/templates/baseTemplate/homePage.html:304
+#: baseTemplate/templates/baseTemplate/index.html:534
+#: baseTemplate/templates/baseTemplate/index.html:536
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:652
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:654
 msgid "Security"
 msgstr "Segurança"
 
-#: baseTemplate/templates/baseTemplate/index.html:96
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:199
-msgid "CPU Status"
-msgstr "Estado do CPU"
-
-#: baseTemplate/templates/baseTemplate/index.html:125
+#: baseTemplate/templates/baseTemplate/index.html:116
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:228
-#: websiteFunctions/templates/websiteFunctions/website.html:50
-#: websiteFunctions/templates/websiteFunctions/website.html:71
+#: websiteFunctions/templates/websiteFunctions/website.html:55
+#: websiteFunctions/templates/websiteFunctions/website.html:76
 msgid "Disk Usage"
 msgstr "Uso do Disco"
 
-#: baseTemplate/templates/baseTemplate/index.html:159
-#: baseTemplate/templates/baseTemplate/index.html:162
-#: baseTemplate/templates/baseTemplate/index.html:166
+#: baseTemplate/templates/baseTemplate/index.html:150
+#: baseTemplate/templates/baseTemplate/index.html:153
+#: baseTemplate/templates/baseTemplate/index.html:157
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:262
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:265
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:269
@@ -750,32 +744,32 @@ msgstr "Uso do Disco"
 msgid "CyberPanel"
 msgstr "Principal - CyberPanel"
 
-#: baseTemplate/templates/baseTemplate/index.html:164
-#: baseTemplate/templates/baseTemplate/index.html:168
+#: baseTemplate/templates/baseTemplate/index.html:155
+#: baseTemplate/templates/baseTemplate/index.html:159
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:267
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:271
 msgid "Web Hosting Control Panel"
 msgstr "Painel de Controlo de Alojamento Web"
 
-#: baseTemplate/templates/baseTemplate/index.html:170
+#: baseTemplate/templates/baseTemplate/index.html:161
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:273
 msgid "Close sidebar"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:176
+#: baseTemplate/templates/baseTemplate/index.html:167
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:279
 #, fuzzy
 #| msgid "FTP Accounts"
 msgid "My Account"
 msgstr "Contas de FTP"
 
-#: baseTemplate/templates/baseTemplate/index.html:193
+#: baseTemplate/templates/baseTemplate/index.html:184
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:296
 msgid "Edit profile"
 msgstr "Editar perfil"
 
-#: baseTemplate/templates/baseTemplate/index.html:194
-#: baseTemplate/templates/baseTemplate/index.html:317
+#: baseTemplate/templates/baseTemplate/index.html:185
+#: baseTemplate/templates/baseTemplate/index.html:303
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:297
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:424
 #: userManagment/templates/userManagment/index.html:26
@@ -783,52 +777,45 @@ msgstr "Editar perfil"
 msgid "View Profile"
 msgstr "Ver perfil"
 
-#: baseTemplate/templates/baseTemplate/index.html:201
-#: baseTemplate/templates/baseTemplate/index.html:278
+#: baseTemplate/templates/baseTemplate/index.html:192
+#: baseTemplate/templates/baseTemplate/index.html:264
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:304
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:385
 msgid "Logout"
 msgstr "Sair"
 
-#: baseTemplate/templates/baseTemplate/index.html:212
-#: baseTemplate/templates/baseTemplate/index.html:216
-#: baseTemplate/templates/baseTemplate/index.html:220
+#: baseTemplate/templates/baseTemplate/index.html:203
+#: baseTemplate/templates/baseTemplate/index.html:207
+#: baseTemplate/templates/baseTemplate/index.html:211
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:315
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:319
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:323
 msgid "CPU Load Average"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:225
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:332
-#, fuzzy
-#| msgid "Server Status"
-msgid "System Status"
-msgstr "Estado do Servidor"
-
-#: baseTemplate/templates/baseTemplate/index.html:230
+#: baseTemplate/templates/baseTemplate/index.html:216
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:337
 #, fuzzy
 #| msgid "Dashboard"
 msgid "Dashboard Quick Menu"
 msgstr "Painel de Controlo"
 
-#: baseTemplate/templates/baseTemplate/index.html:264
-#: baseTemplate/templates/baseTemplate/index.html:475
-#: baseTemplate/templates/baseTemplate/index.html:477
+#: baseTemplate/templates/baseTemplate/index.html:250
+#: baseTemplate/templates/baseTemplate/index.html:463
+#: baseTemplate/templates/baseTemplate/index.html:465
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:371
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:582
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:584
 msgid "Tuning"
 msgstr "Afinar"
 
-#: baseTemplate/templates/baseTemplate/index.html:291
+#: baseTemplate/templates/baseTemplate/index.html:277
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:398
 msgid "Overview"
 msgstr "Visão Geral"
 
-#: baseTemplate/templates/baseTemplate/index.html:293
-#: baseTemplate/templates/baseTemplate/index.html:294
+#: baseTemplate/templates/baseTemplate/index.html:279
+#: baseTemplate/templates/baseTemplate/index.html:280
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:400
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:401
 #, fuzzy
@@ -836,16 +823,16 @@ msgstr "Visão Geral"
 msgid "Server IP Address"
 msgstr "Endereço de IP"
 
-#: baseTemplate/templates/baseTemplate/index.html:297
-#: baseTemplate/templates/baseTemplate/index.html:299
+#: baseTemplate/templates/baseTemplate/index.html:283
+#: baseTemplate/templates/baseTemplate/index.html:285
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:404
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:406
 msgid "Dashboard"
 msgstr "Painel de Controlo"
 
-#: baseTemplate/templates/baseTemplate/index.html:301
-#: baseTemplate/templates/baseTemplate/index.html:302
-#: baseTemplate/templates/baseTemplate/index.html:303
+#: baseTemplate/templates/baseTemplate/index.html:287
+#: baseTemplate/templates/baseTemplate/index.html:288
+#: baseTemplate/templates/baseTemplate/index.html:289
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:408
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:409
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:410
@@ -853,27 +840,27 @@ msgstr "Painel de Controlo"
 msgid "Version Management"
 msgstr "Gestão de Versões"
 
-#: baseTemplate/templates/baseTemplate/index.html:307
+#: baseTemplate/templates/baseTemplate/index.html:293
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:414
 msgid "Main"
 msgstr "Principal"
 
-#: baseTemplate/templates/baseTemplate/index.html:318
+#: baseTemplate/templates/baseTemplate/index.html:304
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:425
 #: userManagment/templates/userManagment/createUser.html:12
 msgid "Create New User"
 msgstr "Criar Novo Utilizador"
 
-#: baseTemplate/templates/baseTemplate/index.html:319
+#: baseTemplate/templates/baseTemplate/index.html:305
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:426
 #: userManagment/templates/userManagment/index.html:52
 #: userManagment/templates/userManagment/index.html:54
 #: userManagment/templates/userManagment/modifyUser.html:12
-#: userManagment/templates/userManagment/modifyUser.html:119
+#: userManagment/templates/userManagment/modifyUser.html:111
 msgid "Modify User"
 msgstr "Modificar Utilizador"
 
-#: baseTemplate/templates/baseTemplate/index.html:320
+#: baseTemplate/templates/baseTemplate/index.html:306
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:427
 #: userManagment/templates/userManagment/deleteUser.html:13
 #: userManagment/templates/userManagment/deleteUser.html:20
@@ -883,16 +870,16 @@ msgstr "Modificar Utilizador"
 msgid "Delete User"
 msgstr "Apagar Utilizador"
 
-#: baseTemplate/templates/baseTemplate/index.html:335
+#: baseTemplate/templates/baseTemplate/index.html:321
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:442
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:12
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:102
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:109
 #: websiteFunctions/templates/websiteFunctions/index.html:49
 #: websiteFunctions/templates/websiteFunctions/index.html:51
 msgid "Create Website"
 msgstr "Criar Website"
 
-#: baseTemplate/templates/baseTemplate/index.html:336
+#: baseTemplate/templates/baseTemplate/index.html:322
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:443
 #: websiteFunctions/templates/websiteFunctions/index.html:34
 #: websiteFunctions/templates/websiteFunctions/index.html:36
@@ -902,23 +889,23 @@ msgstr "Criar Website"
 msgid "List Websites"
 msgstr "Listar Websites"
 
-#: baseTemplate/templates/baseTemplate/index.html:337
+#: baseTemplate/templates/baseTemplate/index.html:323
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:444
 #: websiteFunctions/templates/websiteFunctions/index.html:73
 #: websiteFunctions/templates/websiteFunctions/index.html:75
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:12
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:19
-#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:95
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:96
 msgid "Modify Website"
 msgstr "Modificar Websites"
 
-#: baseTemplate/templates/baseTemplate/index.html:338
+#: baseTemplate/templates/baseTemplate/index.html:324
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:445
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:41
 msgid "Suspend/Unsuspend"
 msgstr "Suspender/Reativar"
 
-#: baseTemplate/templates/baseTemplate/index.html:339
+#: baseTemplate/templates/baseTemplate/index.html:325
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:446
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:12
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:19
@@ -928,7 +915,7 @@ msgstr "Suspender/Reativar"
 msgid "Delete Website"
 msgstr "Apagar Website"
 
-#: baseTemplate/templates/baseTemplate/index.html:352
+#: baseTemplate/templates/baseTemplate/index.html:338
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:459
 #: packages/templates/packages/createPackage.html:13
 #: packages/templates/packages/createPackage.html:84
@@ -937,7 +924,7 @@ msgstr "Apagar Website"
 msgid "Create Package"
 msgstr "Criar Pacote"
 
-#: baseTemplate/templates/baseTemplate/index.html:353
+#: baseTemplate/templates/baseTemplate/index.html:339
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:460
 #: packages/templates/packages/deletePackage.html:12
 #: packages/templates/packages/deletePackage.html:18
@@ -947,7 +934,7 @@ msgstr "Criar Pacote"
 msgid "Delete Package"
 msgstr "Apagar Pacote"
 
-#: baseTemplate/templates/baseTemplate/index.html:354
+#: baseTemplate/templates/baseTemplate/index.html:340
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:461
 #: packages/templates/packages/index.html:49
 #: packages/templates/packages/index.html:51
@@ -957,7 +944,7 @@ msgstr "Apagar Pacote"
 msgid "Modify Package"
 msgstr "Editar Pacote"
 
-#: baseTemplate/templates/baseTemplate/index.html:368
+#: baseTemplate/templates/baseTemplate/index.html:354
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:475
 #: databases/templates/databases/createDatabase.html:12
 #: databases/templates/databases/createDatabase.html:19
@@ -968,7 +955,7 @@ msgstr "Editar Pacote"
 msgid "Create Database"
 msgstr "Criar Base de Dados"
 
-#: baseTemplate/templates/baseTemplate/index.html:369
+#: baseTemplate/templates/baseTemplate/index.html:355
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:476
 #: databases/templates/databases/deleteDatabase.html:12
 #: databases/templates/databases/deleteDatabase.html:19
@@ -979,7 +966,7 @@ msgstr "Criar Base de Dados"
 msgid "Delete Database"
 msgstr "Apagar Base de Dados"
 
-#: baseTemplate/templates/baseTemplate/index.html:370
+#: baseTemplate/templates/baseTemplate/index.html:356
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:477
 #: databases/templates/databases/index.html:53
 #: databases/templates/databases/index.html:55
@@ -988,14 +975,14 @@ msgstr "Apagar Base de Dados"
 msgid "List Databases"
 msgstr "Listar Base de Dados"
 
-#: baseTemplate/templates/baseTemplate/index.html:371
+#: baseTemplate/templates/baseTemplate/index.html:357
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:478
 #: databases/templates/databases/index.html:65
 #: databases/templates/databases/index.html:67
 msgid "PHPMYAdmin"
 msgstr "PHPMyAdmin"
 
-#: baseTemplate/templates/baseTemplate/index.html:386
+#: baseTemplate/templates/baseTemplate/index.html:372
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:493
 #: dns/templates/dns/createNameServer.html:12
 #: dns/templates/dns/createNameServer.html:76 dns/templates/dns/index.html:72
@@ -1003,7 +990,7 @@ msgstr "PHPMyAdmin"
 msgid "Create Nameserver"
 msgstr "Criar Nameserver"
 
-#: baseTemplate/templates/baseTemplate/index.html:387
+#: baseTemplate/templates/baseTemplate/index.html:373
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:494
 #: dns/templates/dns/createDNSZone.html:12
 #: dns/templates/dns/createDNSZone.html:40 dns/templates/dns/index.html:29
@@ -1012,7 +999,7 @@ msgstr "Criar Nameserver"
 msgid "Create DNS Zone"
 msgstr "Criar uma Zona DNS"
 
-#: baseTemplate/templates/baseTemplate/index.html:388
+#: baseTemplate/templates/baseTemplate/index.html:374
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:495
 #: dns/templates/dns/deleteDNSZone.html:40 dns/templates/dns/index.html:41
 #: dns/templates/dns/index.html:43 dns/templates/dns/index.html:96
@@ -1020,19 +1007,19 @@ msgstr "Criar uma Zona DNS"
 msgid "Delete Zone"
 msgstr "Apagar Zona"
 
-#: baseTemplate/templates/baseTemplate/index.html:389
+#: baseTemplate/templates/baseTemplate/index.html:375
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:496
 msgid "Add/Delete Records"
 msgstr "Adicionar/Apagar Registos"
 
-#: baseTemplate/templates/baseTemplate/index.html:405
+#: baseTemplate/templates/baseTemplate/index.html:391
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:512
 #: mailServer/templates/mailServer/createEmailAccount.html:12
 #: mailServer/templates/mailServer/createEmailAccount.html:19
 msgid "Create Email Account"
 msgstr "Criar Conta de E-Mail"
 
-#: baseTemplate/templates/baseTemplate/index.html:405
+#: baseTemplate/templates/baseTemplate/index.html:391
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:512
 #: mailServer/templates/mailServer/createEmailAccount.html:64
 #: mailServer/templates/mailServer/index.html:25
@@ -1040,14 +1027,14 @@ msgstr "Criar Conta de E-Mail"
 msgid "Create Email"
 msgstr "Criar E-Mail"
 
-#: baseTemplate/templates/baseTemplate/index.html:406
+#: baseTemplate/templates/baseTemplate/index.html:392
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:513
 #: mailServer/templates/mailServer/deleteEmailAccount.html:12
 #: mailServer/templates/mailServer/deleteEmailAccount.html:19
 msgid "Delete Email Account"
 msgstr "Apagar Conta de E-Mail"
 
-#: baseTemplate/templates/baseTemplate/index.html:406
+#: baseTemplate/templates/baseTemplate/index.html:392
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:513
 #: mailServer/templates/mailServer/deleteEmailAccount.html:56
 #: mailServer/templates/mailServer/index.html:37
@@ -1055,7 +1042,7 @@ msgstr "Apagar Conta de E-Mail"
 msgid "Delete Email"
 msgstr "Apagar E-Mail"
 
-#: baseTemplate/templates/baseTemplate/index.html:407
+#: baseTemplate/templates/baseTemplate/index.html:393
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:514
 #: databases/templates/databases/listDataBases.html:73
 #: ftp/templates/ftp/listFTPAccounts.html:73
@@ -1065,33 +1052,42 @@ msgstr "Apagar E-Mail"
 msgid "Change Password"
 msgstr "Alterar Palavra-Chave"
 
-#: baseTemplate/templates/baseTemplate/index.html:408
+#: baseTemplate/templates/baseTemplate/index.html:394
+#: mailServer/templates/mailServer/dkimManager.html:13
+#: mailServer/templates/mailServer/dkimManager.html:22
+#: mailServer/templates/mailServer/dkimManager.html:75
+#, fuzzy
+#| msgid "File Manager"
+msgid "DKIM Manager"
+msgstr "Gestor de Ficheiros"
+
+#: baseTemplate/templates/baseTemplate/index.html:395
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:515
 msgid "Access Webmail"
 msgstr "Aceder ao Webmail"
 
-#: baseTemplate/templates/baseTemplate/index.html:427
+#: baseTemplate/templates/baseTemplate/index.html:414
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:534
 #: ftp/templates/ftp/createFTPAccount.html:12
 #: ftp/templates/ftp/createFTPAccount.html:19 ftp/templates/ftp/index.html:25
 #: ftp/templates/ftp/index.html:27
-#: websiteFunctions/templates/websiteFunctions/website.html:709
-#: websiteFunctions/templates/websiteFunctions/website.html:711
+#: websiteFunctions/templates/websiteFunctions/website.html:815
+#: websiteFunctions/templates/websiteFunctions/website.html:818
 msgid "Create FTP Account"
 msgstr "Criar Conta de FTP"
 
-#: baseTemplate/templates/baseTemplate/index.html:428
+#: baseTemplate/templates/baseTemplate/index.html:415
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:535
 #: ftp/templates/ftp/deleteFTPAccount.html:12
 #: ftp/templates/ftp/deleteFTPAccount.html:18
 #: ftp/templates/ftp/deleteFTPAccount.html:52 ftp/templates/ftp/index.html:37
 #: ftp/templates/ftp/index.html:39
-#: websiteFunctions/templates/websiteFunctions/website.html:721
-#: websiteFunctions/templates/websiteFunctions/website.html:723
+#: websiteFunctions/templates/websiteFunctions/website.html:827
+#: websiteFunctions/templates/websiteFunctions/website.html:830
 msgid "Delete FTP Account"
 msgstr "Apagar Conta de FTP"
 
-#: baseTemplate/templates/baseTemplate/index.html:429
+#: baseTemplate/templates/baseTemplate/index.html:416
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:536
 #: ftp/templates/ftp/index.html:49 ftp/templates/ftp/index.html:51
 #: ftp/templates/ftp/listFTPAccounts.html:13
@@ -1099,26 +1095,27 @@ msgstr "Apagar Conta de FTP"
 msgid "List FTP Accounts"
 msgstr "Listar Contas de FTP"
 
-#: baseTemplate/templates/baseTemplate/index.html:447
+#: baseTemplate/templates/baseTemplate/index.html:434
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:554
 msgid "Add/Delete Destination"
 msgstr "Adcionar/Apagar Destino"
 
-#: baseTemplate/templates/baseTemplate/index.html:449
+#: baseTemplate/templates/baseTemplate/index.html:436
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:556
 #, fuzzy
 #| msgid "Restore Back up"
 msgid "Remote Back ups"
 msgstr "Restaurar Backup"
 
-#: baseTemplate/templates/baseTemplate/index.html:458
-#: baseTemplate/templates/baseTemplate/index.html:459
+#: baseTemplate/templates/baseTemplate/index.html:445
+#: baseTemplate/templates/baseTemplate/index.html:446
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:565
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:566
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:39
 msgid "SSL"
 msgstr "SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:464
+#: baseTemplate/templates/baseTemplate/index.html:451
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:571
 #: manageSSL/templates/manageSSL/index.html:28
 #: manageSSL/templates/manageSSL/manageSSL.html:13
@@ -1126,44 +1123,50 @@ msgstr "SSL"
 msgid "Manage SSL"
 msgstr "Gerir SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:465
+#: baseTemplate/templates/baseTemplate/index.html:452
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:572
 #: manageSSL/templates/manageSSL/index.html:40
 msgid "Hostname SSL"
 msgstr "SSL do Hostname"
 
-#: baseTemplate/templates/baseTemplate/index.html:473
+#: baseTemplate/templates/baseTemplate/index.html:453
+#, fuzzy
+#| msgid "Server Logs"
+msgid "MailServer SSL"
+msgstr "Logs do Servidor"
+
+#: baseTemplate/templates/baseTemplate/index.html:461
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:580
 msgid "Server"
 msgstr "Servidor"
 
-#: baseTemplate/templates/baseTemplate/index.html:478
+#: baseTemplate/templates/baseTemplate/index.html:466
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:585
 msgid "NEW"
 msgstr "NOVO"
 
-#: baseTemplate/templates/baseTemplate/index.html:483
+#: baseTemplate/templates/baseTemplate/index.html:471
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:590
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
 #: tuning/templates/tuning/liteSpeedTuning.html:12
 msgid "LiteSpeed Tuning"
 msgstr "Afinação do LiteSpeed"
 
-#: baseTemplate/templates/baseTemplate/index.html:484
+#: baseTemplate/templates/baseTemplate/index.html:472
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:591
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13
 msgid "PHP Tuning"
 msgstr "Afinação do PHP"
 
-#: baseTemplate/templates/baseTemplate/index.html:499
+#: baseTemplate/templates/baseTemplate/index.html:487
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:606
 #: serverStatus/templates/serverStatus/index.html:25
 #: serverStatus/templates/serverStatus/index.html:27
 msgid "LiteSpeed Status"
 msgstr "Estado do LiteSpeed"
 
-#: baseTemplate/templates/baseTemplate/index.html:500
+#: baseTemplate/templates/baseTemplate/index.html:488
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:607
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:15
 #: serverStatus/templates/serverStatus/index.html:37
@@ -1171,48 +1174,48 @@ msgstr "Estado do LiteSpeed"
 msgid "CyberPanel Main Log File"
 msgstr "Principal Ficheiro de Log do CyberPanel"
 
-#: baseTemplate/templates/baseTemplate/index.html:501
+#: baseTemplate/templates/baseTemplate/index.html:489
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:608
 #, fuzzy
 #| msgid "Server Status"
 msgid "Services Status"
 msgstr "Estado do Servidor"
 
-#: baseTemplate/templates/baseTemplate/index.html:518
+#: baseTemplate/templates/baseTemplate/index.html:506
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:625
 #: managePHP/templates/managePHP/installExtensions.html:13
 msgid "Install PHP Extensions"
 msgstr "Instalar Extensões do PHP"
 
-#: baseTemplate/templates/baseTemplate/index.html:518
+#: baseTemplate/templates/baseTemplate/index.html:506
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:625
 #: managePHP/templates/managePHP/index.html:24
 #: managePHP/templates/managePHP/index.html:26
 msgid "Install Extensions"
 msgstr "Instalar Extensões"
 
-#: baseTemplate/templates/baseTemplate/index.html:519
+#: baseTemplate/templates/baseTemplate/index.html:507
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:626
 #: managePHP/templates/managePHP/index.html:36
 #: managePHP/templates/managePHP/index.html:38
 msgid "Edit PHP Configs"
 msgstr "Editar configurações do PHP"
 
-#: baseTemplate/templates/baseTemplate/index.html:534
+#: baseTemplate/templates/baseTemplate/index.html:522
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:641
 msgid "Access Log"
 msgstr "Log de Acessos"
 
-#: baseTemplate/templates/baseTemplate/index.html:535
+#: baseTemplate/templates/baseTemplate/index.html:523
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:642
 #: serverLogs/templates/serverLogs/errorLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:37
 #: serverLogs/templates/serverLogs/index.html:39
-#: websiteFunctions/templates/websiteFunctions/website.html:132
+#: websiteFunctions/templates/websiteFunctions/website.html:139
 msgid "Error Logs"
 msgstr "Log de Erros"
 
-#: baseTemplate/templates/baseTemplate/index.html:536
+#: baseTemplate/templates/baseTemplate/index.html:524
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:643
 #: serverLogs/templates/serverLogs/emailLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:49
@@ -1220,12 +1223,12 @@ msgstr "Log de Erros"
 msgid "Email Logs"
 msgstr "Logs de E-Mail"
 
-#: baseTemplate/templates/baseTemplate/index.html:536
+#: baseTemplate/templates/baseTemplate/index.html:524
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:643
 msgid "Email Log"
 msgstr "Log de E-Mail"
 
-#: baseTemplate/templates/baseTemplate/index.html:537
+#: baseTemplate/templates/baseTemplate/index.html:525
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:644
 #: serverLogs/templates/serverLogs/ftplogs.html:14
 #: serverLogs/templates/serverLogs/index.html:61
@@ -1233,21 +1236,32 @@ msgstr "Log de E-Mail"
 msgid "FTP Logs"
 msgstr "Log de FTP"
 
-#: baseTemplate/templates/baseTemplate/index.html:552
+#: baseTemplate/templates/baseTemplate/index.html:526
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:14
+#, fuzzy
+#| msgid "Security Functions"
+msgid "ModSecurity Audit Logs"
+msgstr "Funções de Segurança"
+
+#: baseTemplate/templates/baseTemplate/index.html:526
+msgid "ModSec Audit Logs"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:541
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:659
 #, fuzzy
 #| msgid "Firewall"
 msgid "Firewall Home"
 msgstr "Firewall"
 
-#: baseTemplate/templates/baseTemplate/index.html:552
+#: baseTemplate/templates/baseTemplate/index.html:541
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:659
 #: firewall/templates/firewall/index.html:25
 #: firewall/templates/firewall/index.html:27
 msgid "Firewall"
 msgstr "Firewall"
 
-#: baseTemplate/templates/baseTemplate/index.html:553
+#: baseTemplate/templates/baseTemplate/index.html:542
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:660
 #: firewall/templates/firewall/index.html:36
 #: firewall/templates/firewall/index.html:38
@@ -1256,9 +1270,42 @@ msgstr "Firewall"
 msgid "Secure SSH"
 msgstr "SSH Seguro"
 
+#: baseTemplate/templates/baseTemplate/index.html:543
+#, fuzzy
+#| msgid "Edit PHP Configurations"
+msgid "ModSecurity Configurations"
+msgstr "Altere as Configurações PHP"
+
+#: baseTemplate/templates/baseTemplate/index.html:543
+#, fuzzy
+#| msgid "Security"
+msgid "ModSecurity Conf"
+msgstr "Segurança"
+
+#: baseTemplate/templates/baseTemplate/index.html:544
+#: firewall/templates/firewall/modSecurityRules.html:20
+#, fuzzy
+#| msgid "Security"
+msgid "ModSecurity Rules"
+msgstr "Segurança"
+
+#: baseTemplate/templates/baseTemplate/index.html:545
+msgid "ModSecurity Rules Packs"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:199
+msgid "CPU Status"
+msgstr "Estado do CPU"
+
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:327
 msgid "Fullscreen"
 msgstr ""
+
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:332
+#, fuzzy
+#| msgid "Server Status"
+msgid "System Status"
+msgstr "Estado do Servidor"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
@@ -1290,7 +1337,8 @@ msgstr "Última Build"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:66
 #: firewall/templates/firewall/secureSSH.html:78
-#: managePHP/templates/managePHP/editPHPConfig.html:140
+#: mailServer/templates/mailServer/dkimManager.html:40
+#: managePHP/templates/managePHP/editPHPConfig.html:148
 msgid "Error message: "
 msgstr "Mensagem de erro: "
 
@@ -1303,11 +1351,16 @@ msgid "Update finished..."
 msgstr "Atualização conclída..."
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:79
+#: firewall/templates/firewall/modSecurity.html:47
+#: firewall/templates/firewall/modSecurity.html:177
+#: firewall/templates/firewall/modSecurityRules.html:53
+#: firewall/templates/firewall/modSecurityRulesPacks.html:88
 #: firewall/templates/firewall/secureSSH.html:87
 #: firewall/templates/firewall/secureSSH.html:172
-#: managePHP/templates/managePHP/editPHPConfig.html:149
-#: managePHP/templates/managePHP/editPHPConfig.html:221
-#: managePHP/templates/managePHP/installExtensions.html:113
+#: mailServer/templates/mailServer/dkimManager.html:44
+#: managePHP/templates/managePHP/editPHPConfig.html:157
+#: managePHP/templates/managePHP/editPHPConfig.html:230
+#: managePHP/templates/managePHP/installExtensions.html:114
 msgid "Could not connect. Please refresh this page."
 msgstr "Não foi possível efetuar a ligação. Por favor atualize esta página."
 
@@ -1381,7 +1434,7 @@ msgid "Select Domain"
 msgstr "Selecionar Domínio"
 
 #: databases/templates/databases/listDataBases.html:46
-#: dns/templates/dns/addDeleteDNSRecords.html:168
+#: dns/templates/dns/addDeleteDNSRecords.html:335
 #: ftp/templates/ftp/listFTPAccounts.html:46
 msgid "Records successfully fetched for"
 msgstr "Registos obtidos com sucesso para"
@@ -1431,69 +1484,123 @@ msgstr ""
 msgid "Add Records"
 msgstr "Adicionar Registos"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:53
-#: dns/templates/dns/addDeleteDNSRecords.html:131
-#: filemanager/templates/filemanager/index.html:209
+#: dns/templates/dns/addDeleteDNSRecords.html:59
+#: dns/templates/dns/addDeleteDNSRecords.html:82
+#: dns/templates/dns/addDeleteDNSRecords.html:106
+#: dns/templates/dns/addDeleteDNSRecords.html:129
+#: dns/templates/dns/addDeleteDNSRecords.html:157
+#: dns/templates/dns/addDeleteDNSRecords.html:181
+#: dns/templates/dns/addDeleteDNSRecords.html:205
+#: dns/templates/dns/addDeleteDNSRecords.html:229
+#: dns/templates/dns/addDeleteDNSRecords.html:253
+#: dns/templates/dns/addDeleteDNSRecords.html:296
+#: filemanager/templates/filemanager/index.html:212
 #: firewall/templates/firewall/firewall.html:136
 #: serverStatus/templates/serverStatus/litespeedStatus.html:40
 msgid "Name"
 msgstr "Nome"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:69
-msgid "IPV6"
-msgstr ""
-
-#: dns/templates/dns/addDeleteDNSRecords.html:78
+#: dns/templates/dns/addDeleteDNSRecords.html:63
+#: dns/templates/dns/addDeleteDNSRecords.html:86
+#: dns/templates/dns/addDeleteDNSRecords.html:110
 #: dns/templates/dns/addDeleteDNSRecords.html:133
-msgid "Priority"
-msgstr "Prioridade"
-
-#: dns/templates/dns/addDeleteDNSRecords.html:87
-#: dns/templates/dns/createDNSZone.html:27
-#: dns/templates/dns/createNameServer.html:27
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:52
-#: websiteFunctions/templates/websiteFunctions/website.html:289
-msgid "Domain Name"
-msgstr "Nome de Domínio"
-
-#: dns/templates/dns/addDeleteDNSRecords.html:95
-msgid "Policy"
+#: dns/templates/dns/addDeleteDNSRecords.html:161
+#: dns/templates/dns/addDeleteDNSRecords.html:185
+#: dns/templates/dns/addDeleteDNSRecords.html:209
+#: dns/templates/dns/addDeleteDNSRecords.html:233
+#: dns/templates/dns/addDeleteDNSRecords.html:257
+#: dns/templates/dns/addDeleteDNSRecords.html:297
+msgid "TTL"
 msgstr ""
 
-#: dns/templates/dns/addDeleteDNSRecords.html:103
-msgid "Text"
-msgstr ""
-
-#: dns/templates/dns/addDeleteDNSRecords.html:111
+#: dns/templates/dns/addDeleteDNSRecords.html:73
+#: dns/templates/dns/addDeleteDNSRecords.html:96
+#: dns/templates/dns/addDeleteDNSRecords.html:120
+#: dns/templates/dns/addDeleteDNSRecords.html:147
+#: dns/templates/dns/addDeleteDNSRecords.html:172
+#: dns/templates/dns/addDeleteDNSRecords.html:196
+#: dns/templates/dns/addDeleteDNSRecords.html:220
+#: dns/templates/dns/addDeleteDNSRecords.html:244
+#: dns/templates/dns/addDeleteDNSRecords.html:272
 #: firewall/templates/firewall/firewall.html:117
 msgid "Add"
 msgstr "Adicionar"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:130
+#: dns/templates/dns/addDeleteDNSRecords.html:90
+#, fuzzy
+#| msgid "IP Address"
+msgid "IPV6 Address"
+msgstr "Endereço de IP"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:114
+#: dns/templates/dns/addDeleteDNSRecords.html:141
+#: dns/templates/dns/createDNSZone.html:27
+#: dns/templates/dns/createNameServer.html:27
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:52
+#: websiteFunctions/templates/websiteFunctions/website.html:313
+msgid "Domain Name"
+msgstr "Nome de Domínio"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:137
+#: dns/templates/dns/addDeleteDNSRecords.html:299
+msgid "Priority"
+msgstr "Prioridade"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:166
+msgid "Policy"
+msgstr ""
+
+#: dns/templates/dns/addDeleteDNSRecords.html:190
+msgid "Text"
+msgstr ""
+
+#: dns/templates/dns/addDeleteDNSRecords.html:214
+#, fuzzy
+#| msgid "Value"
+msgid "SOA Value"
+msgstr "Valor"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:238
+#, fuzzy
+#| msgid "First Nameserver"
+msgid "Name server"
+msgstr "Primeiro Nameserver"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:261
+#, fuzzy
+#| msgid "Priority"
+msgid "Prioirty"
+msgstr "Prioridade"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:266
+msgid "Content"
+msgstr ""
+
+#: dns/templates/dns/addDeleteDNSRecords.html:295
 msgid "Type"
 msgstr "Tipo"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:132
+#: dns/templates/dns/addDeleteDNSRecords.html:298
 msgid "Value"
 msgstr "Valor"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:160
+#: dns/templates/dns/addDeleteDNSRecords.html:327
 msgid "Cannot fetch records. Error message:"
 msgstr "Impossível obter registos. Mensagem de erro:"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:164
+#: dns/templates/dns/addDeleteDNSRecords.html:331
 msgid "Cannot add record. Error message: "
 msgstr "Impossível adicionar registo. Mensage de erro: "
 
-#: dns/templates/dns/addDeleteDNSRecords.html:172
+#: dns/templates/dns/addDeleteDNSRecords.html:339
 msgid "Record Successfully Deleted"
 msgstr "Registo Apagado com Sucesso"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:176
+#: dns/templates/dns/addDeleteDNSRecords.html:343
 msgid "Cannot delete record. Error message:"
 msgstr "Impossível apagar registo. Mensage de erro:"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:180
+#: dns/templates/dns/addDeleteDNSRecords.html:347
 msgid "Record Successfully Added."
 msgstr "Registo Criado com Sucesso."
 
@@ -1628,8 +1735,8 @@ msgid " File Manager"
 msgstr "Gestor de Ficheiros"
 
 #: filemanager/templates/filemanager/index.html:63
-#: filemanager/templates/filemanager/index.html:202
-#: filemanager/templates/filemanager/index.html:233
+#: filemanager/templates/filemanager/index.html:205
+#: filemanager/templates/filemanager/index.html:236
 #, fuzzy
 #| msgid "Reload"
 msgid "Upload"
@@ -1646,310 +1753,319 @@ msgid "New Folder"
 msgstr ""
 
 #: filemanager/templates/filemanager/index.html:75
-#: filemanager/templates/filemanager/index.html:563
+#: filemanager/templates/filemanager/index.html:566
 msgid "Copy"
 msgstr ""
 
 #: filemanager/templates/filemanager/index.html:78
-#: filemanager/templates/filemanager/index.html:528
+#: filemanager/templates/filemanager/index.html:531
 msgid "Move"
 msgstr ""
 
 #: filemanager/templates/filemanager/index.html:81
-#: filemanager/templates/filemanager/index.html:593
+#: filemanager/templates/filemanager/index.html:596
 #, fuzzy
 #| msgid "Username"
 msgid "Rename"
 msgstr "Nome de Utilizador"
 
 #: filemanager/templates/filemanager/index.html:84
+#: websiteFunctions/templates/websiteFunctions/listCron.html:66
 msgid "Edit"
 msgstr ""
 
 #: filemanager/templates/filemanager/index.html:87
-#: filemanager/templates/filemanager/index.html:438
-#: filemanager/templates/filemanager/index.html:465
+#: filemanager/templates/filemanager/index.html:441
+#: filemanager/templates/filemanager/index.html:468
 msgid "Compress"
 msgstr ""
 
 #: filemanager/templates/filemanager/index.html:90
-#: filemanager/templates/filemanager/index.html:493
+#: filemanager/templates/filemanager/index.html:496
 msgid "Extract"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:108
+#: filemanager/templates/filemanager/index.html:93
+#, fuzzy
+#| msgid "PHP version "
+msgid "Fix Permissions"
+msgstr "Versão do PHP "
+
+#: filemanager/templates/filemanager/index.html:111
 #, fuzzy
 #| msgid "Current Package:"
 msgid "Current Path"
 msgstr "Pacote Atual:"
 
-#: filemanager/templates/filemanager/index.html:136
+#: filemanager/templates/filemanager/index.html:139
 #, fuzzy
 #| msgid "Back up"
 msgid "Back"
 msgstr "Backup"
 
-#: filemanager/templates/filemanager/index.html:140
+#: filemanager/templates/filemanager/index.html:143
 #: serverLogs/templates/serverLogs/accessLogs.html:42
 #: serverLogs/templates/serverLogs/emailLogs.html:39
 #: serverLogs/templates/serverLogs/errorLogs.html:39
 #: serverLogs/templates/serverLogs/ftplogs.html:39
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:39
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:40
+#: websiteFunctions/templates/websiteFunctions/listCron.html:36
 msgid "Refresh"
 msgstr "Atualizar"
 
-#: filemanager/templates/filemanager/index.html:144
+#: filemanager/templates/filemanager/index.html:147
 #, fuzzy
 #| msgid "Select Email"
 msgid "Select All"
 msgstr "Selecionar E-Mail"
 
-#: filemanager/templates/filemanager/index.html:148
+#: filemanager/templates/filemanager/index.html:151
 #, fuzzy
 #| msgid "Select Email"
 msgid "UnSelect All"
 msgstr "Selecionar E-Mail"
 
-#: filemanager/templates/filemanager/index.html:158
+#: filemanager/templates/filemanager/index.html:161
 #, fuzzy
 #| msgid "Size"
 msgid "Size (KB)"
 msgstr "Tamanho"
 
-#: filemanager/templates/filemanager/index.html:159
+#: filemanager/templates/filemanager/index.html:162
 msgid "Last Modified"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:160
+#: filemanager/templates/filemanager/index.html:163
 #, fuzzy
 #| msgid "PHP version "
 msgid "Permissions"
 msgstr "Versão do PHP "
 
-#: filemanager/templates/filemanager/index.html:180
+#: filemanager/templates/filemanager/index.html:183
 msgid "Upload File"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:187
+#: filemanager/templates/filemanager/index.html:190
 msgid "Upload queue"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:188
+#: filemanager/templates/filemanager/index.html:191
 msgid "Queue length:"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:195
+#: filemanager/templates/filemanager/index.html:198
 msgid "Drop"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:196
+#: filemanager/templates/filemanager/index.html:199
 msgid "Drop Files here to upload them."
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:211
+#: filemanager/templates/filemanager/index.html:214
 msgid "Progress"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:213
+#: filemanager/templates/filemanager/index.html:216
 #, fuzzy
 #| msgid "FTP Functions"
 msgid "Actions"
 msgstr "Funções do FTP"
 
-#: filemanager/templates/filemanager/index.html:239
+#: filemanager/templates/filemanager/index.html:242
 msgid "Remove"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:249
+#: filemanager/templates/filemanager/index.html:252
 msgid "Queue progress:"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:258
+#: filemanager/templates/filemanager/index.html:261
 #, fuzzy
 #| msgid "Cannot tune. Error message:"
 msgid "can not be uploaded, Error message:"
 msgstr "Impossível afinar. Mensagem de erro:"
 
-#: filemanager/templates/filemanager/index.html:262
+#: filemanager/templates/filemanager/index.html:265
 msgid "Upload all"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:265
+#: filemanager/templates/filemanager/index.html:268
 #, fuzzy
 #| msgid "Create Back up"
 msgid "Cancel all"
 msgstr "Criar Backup"
 
-#: filemanager/templates/filemanager/index.html:268
+#: filemanager/templates/filemanager/index.html:271
 msgid "Remove all"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:304
+#: filemanager/templates/filemanager/index.html:307
 #, fuzzy
 #| msgid "Rule successfully added."
 msgid "File Successfully saved."
 msgstr "Regra adicionada com sucesso."
 
-#: filemanager/templates/filemanager/index.html:311
+#: filemanager/templates/filemanager/index.html:314
 #: firewall/templates/firewall/secureSSH.html:68
-#: managePHP/templates/managePHP/editPHPConfig.html:130
-#: managePHP/templates/managePHP/editPHPConfig.html:203
+#: managePHP/templates/managePHP/editPHPConfig.html:138
+#: managePHP/templates/managePHP/editPHPConfig.html:212
 msgid "Save Changes"
 msgstr "Guardar Alterações"
 
-#: filemanager/templates/filemanager/index.html:328
+#: filemanager/templates/filemanager/index.html:331
 #, fuzzy
 #| msgid "Create New User"
 msgid "Create new folder!"
 msgstr "Criar Novo Utilizador"
 
-#: filemanager/templates/filemanager/index.html:336
+#: filemanager/templates/filemanager/index.html:339
 #, fuzzy
 #| msgid "File Name"
 msgid "New Folder Name"
 msgstr "Nome do Ficheiro"
 
-#: filemanager/templates/filemanager/index.html:338
+#: filemanager/templates/filemanager/index.html:341
 msgid "Folder will be created in your current directory"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:340
+#: filemanager/templates/filemanager/index.html:343
 #, fuzzy
 #| msgid "Create User"
 msgid "Create Folder"
 msgstr "Criar Utilizador"
 
-#: filemanager/templates/filemanager/index.html:353
+#: filemanager/templates/filemanager/index.html:356
 #, fuzzy
 #| msgid "is successfully created."
 msgid "Folder Successfully created."
 msgstr "foi criado com sucesso."
 
-#: filemanager/templates/filemanager/index.html:372
+#: filemanager/templates/filemanager/index.html:375
 #, fuzzy
 #| msgid "Create New User"
 msgid "Create new file!"
 msgstr "Criar Novo Utilizador"
 
-#: filemanager/templates/filemanager/index.html:380
+#: filemanager/templates/filemanager/index.html:383
 #, fuzzy
 #| msgid "File Name"
 msgid "New File Name"
 msgstr "Nome do Ficheiro"
 
-#: filemanager/templates/filemanager/index.html:382
+#: filemanager/templates/filemanager/index.html:385
 msgid ""
 "File will be created in your current directory, if it already exists it will "
 "not overwirte."
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:384
+#: filemanager/templates/filemanager/index.html:387
 #, fuzzy
 #| msgid "Create Email"
 msgid "Create File"
 msgstr "Criar E-Mail"
 
-#: filemanager/templates/filemanager/index.html:397
+#: filemanager/templates/filemanager/index.html:400
 #, fuzzy
 #| msgid "is successfully created."
 msgid "File Successfully created."
 msgstr "foi criado com sucesso."
 
-#: filemanager/templates/filemanager/index.html:413
+#: filemanager/templates/filemanager/index.html:416
 #, fuzzy
 #| msgid "Configurations"
 msgid "Confirm Deletion!"
 msgstr "Configurações"
 
-#: filemanager/templates/filemanager/index.html:422
+#: filemanager/templates/filemanager/index.html:425
 msgid "Confirm"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:423
-#: filemanager/templates/filemanager/index.html:466
-#: filemanager/templates/filemanager/index.html:529
-#: filemanager/templates/filemanager/index.html:564
-#: filemanager/templates/filemanager/index.html:594
-#: websiteFunctions/templates/websiteFunctions/website.html:417
+#: filemanager/templates/filemanager/index.html:426
+#: filemanager/templates/filemanager/index.html:469
+#: filemanager/templates/filemanager/index.html:532
+#: filemanager/templates/filemanager/index.html:567
+#: filemanager/templates/filemanager/index.html:597
+#: websiteFunctions/templates/websiteFunctions/website.html:447
 msgid "Close"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:446
+#: filemanager/templates/filemanager/index.html:449
 msgid "List of files/folder!"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:450
+#: filemanager/templates/filemanager/index.html:453
 #, fuzzy
 #| msgid "File Name"
 msgid "Compressed File Name"
 msgstr "Nome do Ficheiro"
 
-#: filemanager/templates/filemanager/index.html:452
+#: filemanager/templates/filemanager/index.html:455
 #, fuzzy
 #| msgid "Extension Name"
 msgid "Enter without extension name!"
 msgstr "Nome da Extensão"
 
-#: filemanager/templates/filemanager/index.html:456
+#: filemanager/templates/filemanager/index.html:459
 msgid "Compression Type"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:481
+#: filemanager/templates/filemanager/index.html:484
 msgid "Extracting"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:489
+#: filemanager/templates/filemanager/index.html:492
 msgid "Extract in"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:491
+#: filemanager/templates/filemanager/index.html:494
 msgid "You can enter . to extract in current directory!"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:509
+#: filemanager/templates/filemanager/index.html:512
 #, fuzzy
 #| msgid "Files"
 msgid "Move Files"
 msgstr "Ficheiros"
 
-#: filemanager/templates/filemanager/index.html:517
-#: filemanager/templates/filemanager/index.html:552
+#: filemanager/templates/filemanager/index.html:520
+#: filemanager/templates/filemanager/index.html:555
 msgid "List of files/folders!"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:521
+#: filemanager/templates/filemanager/index.html:524
 msgid "Move to"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:523
+#: filemanager/templates/filemanager/index.html:526
 msgid "Enter a path to move your files!"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:544
+#: filemanager/templates/filemanager/index.html:547
 #, fuzzy
 #| msgid "Files"
 msgid "Copy Files"
 msgstr "Ficheiros"
 
-#: filemanager/templates/filemanager/index.html:556
+#: filemanager/templates/filemanager/index.html:559
 msgid "Copy to"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:558
+#: filemanager/templates/filemanager/index.html:561
 msgid "Enter a path to copy your files to!"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:578
+#: filemanager/templates/filemanager/index.html:581
 msgid "Renaming"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:586
+#: filemanager/templates/filemanager/index.html:589
 #, fuzzy
 #| msgid "File Name"
 msgid "New Name"
 msgstr "Nome do Ficheiro"
 
-#: filemanager/templates/filemanager/index.html:588
+#: filemanager/templates/filemanager/index.html:591
 msgid "Enter new name of file!"
 msgstr ""
 
@@ -2014,6 +2130,167 @@ msgstr "Funções de Segurança"
 msgid "Manage the security of the server on this page."
 msgstr "Administre a segurança do servidor nesta página."
 
+#: firewall/templates/firewall/modSecurity.html:3
+#, fuzzy
+#| msgid "Security - CyberPanel"
+msgid "ModSecurity - CyberPanel"
+msgstr "Segurança - CyberPaneç"
+
+#: firewall/templates/firewall/modSecurity.html:13
+#, fuzzy
+#| msgid "Edit PHP Configurations"
+msgid "ModSecurity Configurations!"
+msgstr "Altere as Configurações PHP"
+
+#: firewall/templates/firewall/modSecurity.html:14
+#, fuzzy
+#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgid "On this page you can configure ModSecurity settings."
+msgstr "Nesta página, pode definir os seus destinos de backups. (SFTP)"
+
+#: firewall/templates/firewall/modSecurity.html:20
+#, fuzzy
+#| msgid "Security"
+msgid "ModSecurity"
+msgstr "Segurança"
+
+#: firewall/templates/firewall/modSecurity.html:29
+#: firewall/templates/firewall/modSecurityRules.html:70
+#: firewall/templates/firewall/modSecurityRulesPacks.html:28
+msgid "ModSecurity is not installed "
+msgstr ""
+
+#: firewall/templates/firewall/modSecurity.html:31
+#: firewall/templates/firewall/modSecurityRules.html:72
+#: firewall/templates/firewall/modSecurityRulesPacks.html:30
+#, fuzzy
+#| msgid "Install"
+msgid "Install Now."
+msgstr "Instalar"
+
+#: firewall/templates/firewall/modSecurity.html:43
+#, fuzzy
+#| msgid "Cannot add destination. Error message:"
+msgid "Failed to start installation, Error message: "
+msgstr "Impossível adicionar destino. Mensagem de erro:"
+
+#: firewall/templates/firewall/modSecurity.html:51
+#, fuzzy
+#| msgid "Installation failed. Error message:"
+msgid "Installation failed."
+msgstr "Instalação falhou. Mensagem de erro:"
+
+#: firewall/templates/firewall/modSecurity.html:55
+msgid "ModSecurity successfully installed, refreshing page in 3 seconds.."
+msgstr ""
+
+#: firewall/templates/firewall/modSecurity.html:66
+msgid "Winter is coming, but so is ModSecurity."
+msgstr ""
+
+#: firewall/templates/firewall/modSecurity.html:157
+#, fuzzy
+#| msgid "Save Changes"
+msgid "Save changes."
+msgstr "Guardar Alterações"
+
+#: firewall/templates/firewall/modSecurity.html:169
+#, fuzzy
+#| msgid "Could not fetch current configuration. Error message:"
+msgid "Failed to save ModSecurity configurations. Error message: "
+msgstr "Impossível obter configuração atual. Mensagem de erro:"
+
+#: firewall/templates/firewall/modSecurity.html:173
+#, fuzzy
+#| msgid " is successfully created."
+msgid "ModSecurity configurations successfully saved."
+msgstr " foi criado com sucesso."
+
+#: firewall/templates/firewall/modSecurityRules.html:3
+#, fuzzy
+#| msgid "Security - CyberPanel"
+msgid "ModSecurity Rules - CyberPanel"
+msgstr "Segurança - CyberPaneç"
+
+#: firewall/templates/firewall/modSecurityRules.html:13
+#, fuzzy
+#| msgid "Security"
+msgid "ModSecurity Rules!"
+msgstr "Segurança"
+
+#: firewall/templates/firewall/modSecurityRules.html:14
+#, fuzzy
+#| msgid ""
+#| "On this page you can launch, list, modify and delete websites from your "
+#| "server."
+msgid "On this page you can add/delete ModSecurity rules."
+msgstr ""
+"Nesta página poderás abrir, listar, modificar e alterar websites do teu "
+"servidor."
+
+#: firewall/templates/firewall/modSecurityRules.html:42
+#, fuzzy
+#| msgid "Save Rewrite Rules"
+msgid "Save Rules!"
+msgstr "Guardar Regras Rewrite"
+
+#: firewall/templates/firewall/modSecurityRules.html:49
+msgid "ModSecurity Rules Saved"
+msgstr ""
+
+#: firewall/templates/firewall/modSecurityRules.html:58
+#, fuzzy
+#| msgid "Could not save rewrite rules. Error message:"
+msgid "Could not save rules, Error message: "
+msgstr "Impossível guardar regras Rewrite. Mensagem de erro:"
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:3
+#, fuzzy
+#| msgid "Security - CyberPanel"
+msgid "ModSecurity Rules Packs - CyberPanel"
+msgstr "Segurança - CyberPaneç"
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:13
+#: firewall/templates/firewall/modSecurityRulesPacks.html:20
+#, fuzzy
+#| msgid "Modify Package"
+msgid "ModSecurity Rules Packages!"
+msgstr "Editar Pacote"
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:14
+msgid "Install/Un-install ModSecurity rules packages."
+msgstr ""
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:60
+#: firewall/templates/firewall/modSecurityRulesPacks.html:71
+#, fuzzy
+#| msgid "Configurations"
+msgid "Configure"
+msgstr "Configurações"
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:84
+#: firewall/templates/firewall/modSecurityRulesPacks.html:96
+#, fuzzy
+#| msgid "Action successful."
+msgid "Operation successful."
+msgstr "Ação com sucesso."
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:92
+#, fuzzy
+#| msgid "Action failed. Error message:"
+msgid "Operation failed, Error message: "
+msgstr "Ação falhou. Mensagem de erro:"
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:110
+msgid "Supplier"
+msgstr ""
+
+#: firewall/templates/firewall/modSecurityRulesPacks.html:111
+#, fuzzy
+#| msgid "File Name"
+msgid "Filename"
+msgstr "Nome do Ficheiro"
+
 #: firewall/templates/firewall/secureSSH.html:3
 msgid "Secure SSH - CyberPanel"
 msgstr "SSH Seguro - CyberPanel"
@@ -2063,8 +2340,8 @@ msgstr "Adicionar Chave"
 
 #: firewall/templates/firewall/secureSSH.html:158
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:55
-#: websiteFunctions/templates/websiteFunctions/website.html:553
-#: websiteFunctions/templates/websiteFunctions/website.html:613
+#: websiteFunctions/templates/websiteFunctions/website.html:599
+#: websiteFunctions/templates/websiteFunctions/website.html:658
 msgid "Save"
 msgstr "Guardar"
 
@@ -2112,7 +2389,7 @@ msgstr "Conta FTP com nome de utilizador:"
 
 #: ftp/templates/ftp/createFTPAccount.html:84
 #: ftp/templates/ftp/createFTPAccount.html:87
-#: userManagment/templates/userManagment/createUser.html:154
+#: userManagment/templates/userManagment/createUser.html:144
 msgid "is successfully created."
 msgstr "foi criado com sucesso."
 
@@ -2237,6 +2514,56 @@ msgstr "Selecione um website da lista, para apagar uma conta de e-mail."
 msgid "Email with id : {$ deletedID $} is successfully deleted."
 msgstr "E-Mail com o id: {$ deletedID $} foi apagado com sucesso."
 
+#: mailServer/templates/mailServer/dkimManager.html:3
+#, fuzzy
+#| msgid "Manage SSL - CyberPanel"
+msgid "DKIM Manager - CyberPanel"
+msgstr "Gerir SSL - CyberPanel"
+
+#: mailServer/templates/mailServer/dkimManager.html:14
+#, fuzzy
+#| msgid "This page can be used to Back up your websites"
+msgid "This page can be used to generate and view DKIM keys for Domains"
+msgstr "Esta página pode ser usada para fazer backup dos seus websites"
+
+#: mailServer/templates/mailServer/dkimManager.html:27
+msgid "OpenDKIM is not installed. "
+msgstr ""
+
+#: mailServer/templates/mailServer/dkimManager.html:28
+#, fuzzy
+#| msgid "Install"
+msgid "Install Now"
+msgstr "Instalar"
+
+#: mailServer/templates/mailServer/dkimManager.html:48
+msgid "OpenDKIM successfully installed, refreshing page in 3 seconds.."
+msgstr ""
+
+#: mailServer/templates/mailServer/dkimManager.html:97
+#, fuzzy
+#| msgid "Currently no email accounts exist for this domain."
+msgid "Keys not available for this domain."
+msgstr "Atualmente nenhuma conta de e-mail existe para este domínio."
+
+#: mailServer/templates/mailServer/dkimManager.html:98
+msgid "Generate Now"
+msgstr ""
+
+#: mailServer/templates/mailServer/dkimManager.html:110
+#, fuzzy
+#| msgid "Domain Name"
+msgid "Domain"
+msgstr "Nome de Domínio"
+
+#: mailServer/templates/mailServer/dkimManager.html:111
+msgid "Private Key"
+msgstr ""
+
+#: mailServer/templates/mailServer/dkimManager.html:112
+msgid "Public Key"
+msgstr ""
+
 #: mailServer/templates/mailServer/index.html:3
 msgid "Mail Functions - CyberPanel"
 msgstr "Funções do Mail - CyberPanel"
@@ -2267,48 +2594,55 @@ msgid "Advanced"
 msgstr "Avançado"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:48
-#: managePHP/templates/managePHP/editPHPConfig.html:174
+#: managePHP/templates/managePHP/editPHPConfig.html:182
 #: managePHP/templates/managePHP/installExtensions.html:28
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:68
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:74
-#: websiteFunctions/templates/websiteFunctions/website.html:309
+#: websiteFunctions/templates/websiteFunctions/website.html:333
+#: websiteFunctions/templates/websiteFunctions/website.html:729
 msgid "Select PHP"
 msgstr "Selecionar PHP"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:66
+#: managePHP/templates/managePHP/editPHPConfig.html:67
 msgid "display_errors"
 msgstr "display_errors"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:73
+#: managePHP/templates/managePHP/editPHPConfig.html:74
 msgid "file_uploads"
 msgstr "file_uploads"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:81
+#: managePHP/templates/managePHP/editPHPConfig.html:82
 msgid "allow_url_fopen"
 msgstr "allow_url_fopen"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:89
+#: managePHP/templates/managePHP/editPHPConfig.html:90
 msgid "allow_url_include"
 msgstr "allow_url_include"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:97
+#: managePHP/templates/managePHP/editPHPConfig.html:98
 msgid "memory_limit"
 msgstr "memory_limit"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:104
+#: managePHP/templates/managePHP/editPHPConfig.html:105
 msgid "max_execution_time"
 msgstr "max_execution_time"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:111
+#: managePHP/templates/managePHP/editPHPConfig.html:112
 msgid "upload_max_filesize"
 msgstr "upload_max_filesize"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:118
+#: managePHP/templates/managePHP/editPHPConfig.html:119
+#, fuzzy
+#| msgid "upload_max_filesize"
+msgid "post_max_size"
+msgstr "upload_max_filesize"
+
+#: managePHP/templates/managePHP/editPHPConfig.html:126
 msgid "max_input_time"
 msgstr "max_input_time"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:144
-#: managePHP/templates/managePHP/editPHPConfig.html:216
+#: managePHP/templates/managePHP/editPHPConfig.html:152
+#: managePHP/templates/managePHP/editPHPConfig.html:225
 msgid "PHP Configs Saved."
 msgstr "Configurações PHP Guardadas."
 
@@ -2337,41 +2671,41 @@ msgstr "Instale/desinstale extensões do php nesta página."
 msgid "Select PHP Version"
 msgstr "Selecione Versão do PHP"
 
-#: managePHP/templates/managePHP/installExtensions.html:48
+#: managePHP/templates/managePHP/installExtensions.html:49
 #, fuzzy
 #| msgid "Install Extensions"
 msgid "Search Extensions.."
 msgstr "Instalar Extensões"
 
-#: managePHP/templates/managePHP/installExtensions.html:63
+#: managePHP/templates/managePHP/installExtensions.html:64
 msgid "Extension Name"
 msgstr "Nome da Extensão"
 
-#: managePHP/templates/managePHP/installExtensions.html:64
+#: managePHP/templates/managePHP/installExtensions.html:65
 msgid "Description"
 msgstr "Descrição"
 
-#: managePHP/templates/managePHP/installExtensions.html:66
-#: managePHP/templates/managePHP/installExtensions.html:77
+#: managePHP/templates/managePHP/installExtensions.html:67
+#: managePHP/templates/managePHP/installExtensions.html:78
 msgid "Install"
 msgstr "Instalar"
 
-#: managePHP/templates/managePHP/installExtensions.html:67
-#: managePHP/templates/managePHP/installExtensions.html:78
+#: managePHP/templates/managePHP/installExtensions.html:68
+#: managePHP/templates/managePHP/installExtensions.html:79
 msgid "Uninstall"
 msgstr "Desinstalar"
 
-#: managePHP/templates/managePHP/installExtensions.html:93
+#: managePHP/templates/managePHP/installExtensions.html:94
 msgid "Go Back"
 msgstr "Voltar"
 
-#: managePHP/templates/managePHP/installExtensions.html:104
+#: managePHP/templates/managePHP/installExtensions.html:105
 #: tuning/templates/tuning/phpTuning.html:111
-#: userManagment/templates/userManagment/modifyUser.html:143
+#: userManagment/templates/userManagment/modifyUser.html:135
 msgid "Cannot fetch details. Error message:"
 msgstr "Impossível obter os detalhes. Mensagem de erro:"
 
-#: managePHP/templates/managePHP/installExtensions.html:108
+#: managePHP/templates/managePHP/installExtensions.html:109
 msgid "Cannot perform operation. Error message:"
 msgstr "Impossível efetuar a operação. Mensagem de erro:"
 
@@ -2401,11 +2735,13 @@ msgstr ""
 
 #: manageSSL/templates/manageSSL/manageSSL.html:42
 #: manageSSL/templates/manageSSL/sslForHostName.html:42
+#: manageSSL/templates/manageSSL/sslForMailServer.html:42
 msgid "Issue SSL"
 msgstr "Emitir SSL"
 
 #: manageSSL/templates/manageSSL/manageSSL.html:52
 #: manageSSL/templates/manageSSL/sslForHostName.html:52
+#: manageSSL/templates/manageSSL/sslForMailServer.html:52
 msgid "Cannot issue SSL. Error message:"
 msgstr "Impossível emitir SSL. Mensagem de erro:"
 
@@ -2431,6 +2767,35 @@ msgstr ""
 #: manageSSL/templates/manageSSL/sslForHostName.html:60
 msgid "SSL Issued. You can now access CyberPanel at:"
 msgstr "SSL Emitido. Poderá agora aceder ao CyberPanel a partir de:"
+
+#: manageSSL/templates/manageSSL/sslForMailServer.html:3
+#, fuzzy
+#| msgid "Issue SSL For Hostname - CyberPanel"
+msgid "Issue SSL For MailServer - CyberPanel"
+msgstr "Emitir SSL para o Hostname - CyberPanel"
+
+#: manageSSL/templates/manageSSL/sslForMailServer.html:13
+#: manageSSL/templates/manageSSL/sslForMailServer.html:20
+#, fuzzy
+#| msgid "Issue SSL For Hostname"
+msgid "Issue SSL For MailServer"
+msgstr "Emitir SSL para o Hostname"
+
+#: manageSSL/templates/manageSSL/sslForMailServer.html:14
+#, fuzzy
+#| msgid "Issue Let’s Encrypt SSLs for websites and hostname."
+msgid "Let’s Encrypt SSL for MailServer (Postfix/Dovecot)."
+msgstr "Emita SSLs Let's Encrypt para os websites e o hostname."
+
+#: manageSSL/templates/manageSSL/sslForMailServer.html:56
+msgid "SSL Issued, your mail server now uses Lets Encrypt!"
+msgstr ""
+
+#: manageSSL/templates/manageSSL/sslForMailServer.html:60
+#, fuzzy
+#| msgid "Could not connect to server. Please refresh this page."
+msgid "Could not connect to server, please refresh this page."
+msgstr "Impossível conectar ao servidor. Por favor atualize esta página."
 
 #: packages/templates/packages/createPackage.html:3
 msgid "Create Package - CyberPanel"
@@ -2458,7 +2823,7 @@ msgstr "Nome do Pacote"
 
 #: packages/templates/packages/createPackage.html:35
 #: packages/templates/packages/modifyPackage.html:40
-#: websiteFunctions/templates/websiteFunctions/website.html:249
+#: websiteFunctions/templates/websiteFunctions/website.html:254
 #, fuzzy
 #| msgid "Domain Name"
 msgid "Domains"
@@ -2548,7 +2913,7 @@ msgstr "Logs de Acesso - CyberPanel"
 #: serverLogs/templates/serverLogs/accessLogs.html:17
 #: serverLogs/templates/serverLogs/index.html:25
 #: serverLogs/templates/serverLogs/index.html:27
-#: websiteFunctions/templates/websiteFunctions/website.html:120
+#: websiteFunctions/templates/websiteFunctions/website.html:128
 msgid "Access Logs"
 msgstr "Logs de Acesso"
 
@@ -2560,22 +2925,35 @@ msgstr "Logs de Acesso para o servidor web principal."
 #: serverLogs/templates/serverLogs/emailLogs.html:23
 #: serverLogs/templates/serverLogs/errorLogs.html:23
 #: serverLogs/templates/serverLogs/ftplogs.html:23
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:23
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:24
 msgid "Last 50 Lines"
 msgstr "Últimas 50 Linhas"
 
-#: serverLogs/templates/serverLogs/accessLogs.html:49
-#: serverLogs/templates/serverLogs/emailLogs.html:46
-#: serverLogs/templates/serverLogs/errorLogs.html:46
-#: serverLogs/templates/serverLogs/ftplogs.html:46
+#: serverLogs/templates/serverLogs/accessLogs.html:45
+#: serverLogs/templates/serverLogs/emailLogs.html:42
+#: serverLogs/templates/serverLogs/errorLogs.html:42
+#: serverLogs/templates/serverLogs/ftplogs.html:42
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:42
+#, fuzzy
+#| msgid "Server Logs"
+msgid "Clear Logs"
+msgstr "Logs do Servidor"
+
+#: serverLogs/templates/serverLogs/accessLogs.html:52
+#: serverLogs/templates/serverLogs/emailLogs.html:49
+#: serverLogs/templates/serverLogs/errorLogs.html:49
+#: serverLogs/templates/serverLogs/ftplogs.html:49
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:50
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:47
 msgid "Last 50 Lines Fetched"
 msgstr "Últimas 50 Linhas Obtidas"
 
-#: serverLogs/templates/serverLogs/accessLogs.html:54
-#: serverLogs/templates/serverLogs/emailLogs.html:51
-#: serverLogs/templates/serverLogs/errorLogs.html:51
-#: serverLogs/templates/serverLogs/ftplogs.html:51
+#: serverLogs/templates/serverLogs/accessLogs.html:57
+#: serverLogs/templates/serverLogs/emailLogs.html:54
+#: serverLogs/templates/serverLogs/errorLogs.html:54
+#: serverLogs/templates/serverLogs/ftplogs.html:54
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:55
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:52
 msgid "Could not fetch logs. Use the command line to view the log file."
 msgstr ""
@@ -2617,6 +2995,18 @@ msgid ""
 msgstr ""
 "Estes são os logs para o servidor principal, para ver os logs do seu website "
 "nave para: Websites -> Listar Websites -> Selecionar Website -> Ver Logs."
+
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:3
+#, fuzzy
+#| msgid "Security - CyberPanel"
+msgid "ModSecurity Audit Logs - CyberPanel"
+msgstr "Segurança - CyberPaneç"
+
+#: serverLogs/templates/serverLogs/modSecAuditLog.html:15
+#, fuzzy
+#| msgid "Security Functions"
+msgid "ModSecurity Audit logs"
+msgstr "Funções de Segurança"
 
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:3
 msgid "CyberPanel Main Log File - CyberPanel"
@@ -2756,16 +3146,6 @@ msgstr "Tamanho da Cache em memória"
 msgid "Enable GZIP Compression"
 msgstr "Ativar Compressão GZIP"
 
-#: tuning/templates/tuning/liteSpeedTuning.html:70
-#: tuning/templates/tuning/phpTuning.html:90
-msgid "Enable"
-msgstr "Ativar"
-
-#: tuning/templates/tuning/liteSpeedTuning.html:71
-#: tuning/templates/tuning/phpTuning.html:91
-msgid "Disable"
-msgstr "Desativar"
-
 #: tuning/templates/tuning/liteSpeedTuning.html:74
 #: tuning/templates/tuning/phpTuning.html:94
 #: userManagment/templates/userManagment/modifyUser.html:77
@@ -2776,7 +3156,7 @@ msgstr "Atualmente:"
 msgid "Tune Web Server"
 msgstr "Afine o Servidor Web"
 
-#: tuning/templates/tuning/liteSpeedTuning.html:93
+#: tuning/templates/tuning/liteSpeedTuning.html:92
 msgid ""
 "Cannot fetch Current Value, but you can still submit new changes, error "
 "reported from server:"
@@ -2784,11 +3164,11 @@ msgstr ""
 "Impossível obter Valor Atual, mas podes submeter novas alterações, erro "
 "enviado do servidor:"
 
-#: tuning/templates/tuning/liteSpeedTuning.html:97
+#: tuning/templates/tuning/liteSpeedTuning.html:96
 msgid "Cannot save details, Error Message: "
 msgstr "Impossível guardar detalhes, Mensagem de Erro: "
 
-#: tuning/templates/tuning/liteSpeedTuning.html:102
+#: tuning/templates/tuning/liteSpeedTuning.html:101
 msgid "Web Server Successfully tuned."
 msgstr "Servidor Web Afinado com Sucesso."
 
@@ -2823,6 +3203,14 @@ msgstr "Limite de Processos Duro"
 #: tuning/templates/tuning/phpTuning.html:87
 msgid "Persistent Connection"
 msgstr "Ligação Persistente"
+
+#: tuning/templates/tuning/phpTuning.html:90
+msgid "Enable"
+msgstr "Ativar"
+
+#: tuning/templates/tuning/phpTuning.html:91
+msgid "Disable"
+msgstr "Desativar"
 
 #: tuning/templates/tuning/phpTuning.html:102
 msgid "Tune PHP"
@@ -2889,17 +3277,6 @@ msgstr "E-Mail Inválido"
 msgid "Account Type"
 msgstr "Tipo de Conta"
 
-#: userManagment/templates/userManagment/createUser.html:67
-#: userManagment/templates/userManagment/modifyUser.html:72
-msgid "Admin"
-msgstr "Administrador"
-
-#: userManagment/templates/userManagment/createUser.html:68
-#: userManagment/templates/userManagment/createUser.html:79
-#: userManagment/templates/userManagment/modifyUser.html:73
-msgid "Normal User"
-msgstr "Utilizador Normal"
-
 #: userManagment/templates/userManagment/createUser.html:92
 #: userManagment/templates/userManagment/modifyUser.html:88
 #: userManagment/templates/userManagment/userProfile.html:67
@@ -2908,45 +3285,38 @@ msgid "User Accounts Limit"
 msgstr "Limite de Contas de Utilizador"
 
 #: userManagment/templates/userManagment/createUser.html:96
-#: userManagment/templates/userManagment/createUser.html:107
 msgid "Only Numbers"
 msgstr "Apenas Números"
 
 #: userManagment/templates/userManagment/createUser.html:103
-#: userManagment/templates/userManagment/modifyUser.html:98
-#: userManagment/templates/userManagment/userProfile.html:82
-msgid "Websites Limit"
-msgstr "Limite de Websites"
-
-#: userManagment/templates/userManagment/createUser.html:113
 #: userManagment/templates/userManagment/userProfile.html:42
 msgid "Username"
 msgstr "Nome de Utilizador"
 
-#: userManagment/templates/userManagment/createUser.html:117
+#: userManagment/templates/userManagment/createUser.html:107
 msgid "Username should be lowercase alphanumeric."
 msgstr "O Nome de Utilizador deve ser em letras minúsculas e alfanumérico."
 
-#: userManagment/templates/userManagment/createUser.html:127
+#: userManagment/templates/userManagment/createUser.html:117
 msgid "Must contain one number and one special character."
 msgstr "Deverá conter um número e um caracter especial."
 
-#: userManagment/templates/userManagment/createUser.html:143
+#: userManagment/templates/userManagment/createUser.html:133
 #: userManagment/templates/userManagment/index.html:40
 #: userManagment/templates/userManagment/index.html:42
 msgid "Create User"
 msgstr "Criar Utilizador"
 
-#: userManagment/templates/userManagment/createUser.html:154
-#: userManagment/templates/userManagment/modifyUser.html:130
+#: userManagment/templates/userManagment/createUser.html:144
+#: userManagment/templates/userManagment/modifyUser.html:122
 msgid "Account with username:"
 msgstr "Conta com o nome de utilizador:"
 
-#: userManagment/templates/userManagment/createUser.html:158
+#: userManagment/templates/userManagment/createUser.html:148
 msgid "Cannot create user. Error message:"
 msgstr "Impossível criar utilizador. Mensagem de erro:"
 
-#: userManagment/templates/userManagment/createUser.html:166
+#: userManagment/templates/userManagment/createUser.html:156
 msgid ""
 "Length of first and last name combined should be less than or equal to 20 "
 "characters"
@@ -2996,15 +3366,15 @@ msgstr "Altere definições de utilizadores existentes nesta página."
 msgid "Select Account"
 msgstr "Selecionar Conta"
 
-#: userManagment/templates/userManagment/modifyUser.html:130
+#: userManagment/templates/userManagment/modifyUser.html:122
 msgid " is successfully modified."
 msgstr " foi alterado com sucesso."
 
-#: userManagment/templates/userManagment/modifyUser.html:134
+#: userManagment/templates/userManagment/modifyUser.html:126
 msgid "Cannot modify user. Error message:"
 msgstr "Impossível alterar utilizador. Mensagem de erro:"
 
-#: userManagment/templates/userManagment/modifyUser.html:147
+#: userManagment/templates/userManagment/modifyUser.html:139
 msgid "Details fetched."
 msgstr "Detalhes obtidos."
 
@@ -3030,6 +3400,10 @@ msgstr "Nível da Conta"
 #: userManagment/templates/userManagment/userProfile.html:84
 msgid "( 0 = Unlimited )"
 msgstr "( 0 = Ilimitado )"
+
+#: userManagment/templates/userManagment/userProfile.html:82
+msgid "Websites Limit"
+msgstr "Limite de Websites"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:3
 msgid "Create New Website - CyberPanel"
@@ -3059,38 +3433,29 @@ msgid "Do not enter WWW, it will be auto created!"
 msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:56
-#: websiteFunctions/templates/websiteFunctions/website.html:293
-#: websiteFunctions/templates/websiteFunctions/website.html:304
+#: websiteFunctions/templates/websiteFunctions/website.html:317
+#: websiteFunctions/templates/websiteFunctions/website.html:328
 msgid "Invalid Domain (Note: You don't need to add 'http' or 'https')"
 msgstr "Domínio Inválido (Nota: Não é necessãrio adicionar 'http' ou 'https')"
 
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:84
-#: websiteFunctions/templates/websiteFunctions/website.html:325
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:85
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:86
+#: websiteFunctions/templates/websiteFunctions/website.html:350
 msgid "Additional Features"
 msgstr "Funcionalidades Adicionais"
 
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:91
-#: websiteFunctions/templates/websiteFunctions/website.html:332
-msgid ""
-"For SSL to work DNS of domain should point to server, otherwise self signed "
-"SSL will be issued, you can add your own SSL later."
-msgstr ""
-"Para o SSL funcionar o DNS do domínio deverá apontar para o servidor, senão "
-"um cerificado SSL auto-assinado será emitido, poderás adicionar o teu "
-"próprio SSL mais tarde."
-
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:113
-#: websiteFunctions/templates/websiteFunctions/website.html:354
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:120
+#: websiteFunctions/templates/websiteFunctions/website.html:385
 msgid "Cannot create website. Error message:"
 msgstr "Impossível criar website. Mensage de erro:"
 
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:117
-#: websiteFunctions/templates/websiteFunctions/website.html:358
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:124
+#: websiteFunctions/templates/websiteFunctions/website.html:389
 msgid "Website with domain"
 msgstr "Website com o domínio"
 
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:117
-#: websiteFunctions/templates/websiteFunctions/website.html:358
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:124
+#: websiteFunctions/templates/websiteFunctions/website.html:389
 msgid " is Successfully Created"
 msgstr " foi Criado com Sucesso"
 
@@ -3114,6 +3479,90 @@ msgstr "Impossível apagar website, Mensagem de erro: "
 msgid "Successfully Deleted."
 msgstr "Apagado com Sucesso."
 
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:3
+#, fuzzy
+#| msgid "Home - CyberPanel"
+msgid "Domain Aliases - CyberPanel"
+msgstr "Principal - CyberPanel"
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:12
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:19
+#, fuzzy
+#| msgid "Domain Name"
+msgid "Domain Aliases"
+msgstr "Nome de Domínio"
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:13
+msgid ""
+"With Domain Aliases you can visit example.com using example.net and view the "
+"same content."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:29
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:105
+#, fuzzy
+#| msgid "Create Email"
+msgid "Create Alias"
+msgstr "Criar E-Mail"
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:36
+#, fuzzy
+#| msgid "Create Email"
+msgid "Master Domain"
+msgstr "Criar E-Mail"
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:37
+msgid "Alias"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:38
+#, fuzzy
+#| msgid "Server Status"
+msgid "File System Path"
+msgstr "Estado do Servidor"
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:53
+#: websiteFunctions/templates/websiteFunctions/website.html:480
+#, fuzzy
+#| msgid "Issue SSL"
+msgid "Issue"
+msgstr "Emitir SSL"
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:63
+msgid "Domain Aliases not found."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:79
+#, fuzzy
+#| msgid "Select Domain"
+msgid "Alias Domain"
+msgstr "Selecionar Domínio"
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:93
+msgid ""
+"For SSL to work DNS of domain should point to server, otherwise self signed "
+"SSL will be issued, you can add your own SSL later."
+msgstr ""
+"Para o SSL funcionar o DNS do domínio deverá apontar para o servidor, senão "
+"um cerificado SSL auto-assinado será emitido, poderás adicionar o teu "
+"próprio SSL mais tarde."
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:114
+#, fuzzy
+#| msgid "Action failed. Error message:"
+msgid "Operation failed. Error message:"
+msgstr "Ação falhou. Mensagem de erro:"
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:118
+msgid "Alias successfully created. Refreshing page in 3 seconds..."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:122
+#, fuzzy
+#| msgid "Action successful."
+msgid "Operation Successfull."
+msgstr "Ação com sucesso."
+
 #: websiteFunctions/templates/websiteFunctions/index.html:3
 msgid "Website Functions - CyberPanel"
 msgstr "Funções do Website - CyberPaneç"
@@ -3124,6 +3573,136 @@ msgstr "Funções do Website - CyberPaneç"
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:20
 msgid "Suspend/Unsuspend Website"
 msgstr "Suspender/Reativar Website"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:3
+#, fuzzy
+#| msgid "Version Management - CyberPanel"
+msgid "Cron Management - CyberPanel"
+msgstr "Gestão de Versões - CyberPanel"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:12
+#: websiteFunctions/templates/websiteFunctions/listCron.html:19
+#, fuzzy
+#| msgid "Version Management"
+msgid "Cron Management"
+msgstr "Gestão de Versões"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:13
+#, fuzzy
+#| msgid "Create, edit and delete users on this page."
+msgid "Create, edit or delete your cron jobs from this page."
+msgstr "Crie, editE e elimine utilizadores nesta página."
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:37
+#, fuzzy
+#| msgid "Add Destination"
+msgid "Add Cron"
+msgstr "Adicionar Destino"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:46
+#: websiteFunctions/templates/websiteFunctions/listCron.html:95
+msgid "Minute"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:47
+#: websiteFunctions/templates/websiteFunctions/listCron.html:101
+msgid "Hour"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:48
+msgid "Day of Month"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:49
+#: websiteFunctions/templates/websiteFunctions/listCron.html:113
+msgid "Month"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:50
+msgid "Day of Week"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:51
+#: websiteFunctions/templates/websiteFunctions/listCron.html:126
+msgid "Command"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:52
+#, fuzzy
+#| msgid "FTP Functions"
+msgid "Action"
+msgstr "Funções do FTP"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:79
+msgid "Pre defined"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:82
+msgid "Every minute"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:83
+msgid "Every 5 minutes"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:84
+msgid "Every 30 minutes"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:85
+msgid "Every hour"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:86
+msgid "Every day"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:87
+msgid "Every week"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:88
+msgid "Every month"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:89
+msgid "Every year"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:107
+msgid "Day of month"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:119
+msgid "Day of week"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:135
+#, fuzzy
+#| msgid "Save Rewrite Rules"
+msgid "Save edits"
+msgstr "Guardar Regras Rewrite"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:142
+#, fuzzy
+#| msgid "Add Records"
+msgid "Add cron"
+msgstr "Adicionar Registos"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:152
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:105
+msgid "Cannot fetch website details. Error message:"
+msgstr "Impossível obter detalhes do website. Mensagem de erro:"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:156
+#, fuzzy
+#| msgid "Could not save SSL. Error message:"
+msgid "Unable to add/save Cron. Error message:"
+msgstr "Impossível guardar SSL. Mensagem de erro:"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:159
+msgid "Cron job saved"
+msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:3
 msgid "Websites Hosted - CyberPanel"
@@ -3145,15 +3724,11 @@ msgstr "Pacote Atual:"
 msgid "Current Owner:"
 msgstr "Dono Atual:"
 
-#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:104
-msgid "Cannot fetch website details. Error message:"
-msgstr "Impossível obter detalhes do website. Mensagem de erro:"
-
-#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:108
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:109
 msgid "Cannot modify website. Error message:"
 msgstr "Impossível alterar website. Mensagem de erro:"
 
-#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:112
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:113
 msgid "Website Details Successfully fetched"
 msgstr "Detalhes do Website Obtidos com Sucesso"
 
@@ -3199,247 +3774,348 @@ msgstr "Anterior"
 msgid "All functions related to a particular site."
 msgstr "Todas as funções relacionadas com um site específico."
 
-#: websiteFunctions/templates/websiteFunctions/website.html:22
+#: websiteFunctions/templates/websiteFunctions/website.html:25
 msgid "Resource Usage"
 msgstr "Uso de Recursos"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:31
+#: websiteFunctions/templates/websiteFunctions/website.html:36
 msgid "Resource"
 msgstr "Recurso"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:33
+#: websiteFunctions/templates/websiteFunctions/website.html:38
 msgid "Allowed"
 msgstr "Permitido"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:55
-#: websiteFunctions/templates/websiteFunctions/website.html:82
+#: websiteFunctions/templates/websiteFunctions/website.html:60
+#: websiteFunctions/templates/websiteFunctions/website.html:87
 msgid "Bandwidth Usage"
 msgstr "Uso de Banda"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:118
+#: websiteFunctions/templates/websiteFunctions/website.html:124
+#: websiteFunctions/templates/websiteFunctions/website.html:127
 #, fuzzy
 #| msgid "Access Logs"
 msgid "Load Access Logs"
 msgstr "Logs de Acesso"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:130
+#: websiteFunctions/templates/websiteFunctions/website.html:135
+#: websiteFunctions/templates/websiteFunctions/website.html:138
 #, fuzzy
 #| msgid "Error Logs"
 msgid "Load Error Logs"
 msgstr "Log de Erros"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:146
+#: websiteFunctions/templates/websiteFunctions/website.html:150
 msgid "Logs Fetched"
 msgstr "Logs Obtidos"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:151
+#: websiteFunctions/templates/websiteFunctions/website.html:155
 msgid ""
 "Could not fetch logs, see the logs file through command line. Error message:"
 msgstr ""
 "Impossível obter os logs, veja o ficheiro de logs pela linha de comandos. "
 "Mensagem de erro:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:172
-#: websiteFunctions/templates/websiteFunctions/website.html:211
+#: websiteFunctions/templates/websiteFunctions/website.html:176
+#: websiteFunctions/templates/websiteFunctions/website.html:215
 msgid "Next"
 msgstr "Próximo"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:173
-#: websiteFunctions/templates/websiteFunctions/website.html:212
+#: websiteFunctions/templates/websiteFunctions/website.html:177
+#: websiteFunctions/templates/websiteFunctions/website.html:216
 msgid "Previous"
 msgstr "Anterior"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:256
-#: websiteFunctions/templates/websiteFunctions/website.html:258
+#: websiteFunctions/templates/websiteFunctions/website.html:262
+#: websiteFunctions/templates/websiteFunctions/website.html:265
+#: websiteFunctions/templates/websiteFunctions/website.html:266
 #, fuzzy
 #| msgid "Add Destination"
 msgid "Add Domains"
 msgstr "Adicionar Destino"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:268
-#: websiteFunctions/templates/websiteFunctions/website.html:270
+#: websiteFunctions/templates/websiteFunctions/website.html:273
+#: websiteFunctions/templates/websiteFunctions/website.html:276
+#: websiteFunctions/templates/websiteFunctions/website.html:277
+#: websiteFunctions/templates/websiteFunctions/website.html:294
+#: websiteFunctions/templates/websiteFunctions/website.html:297
 #, fuzzy
 #| msgid "Select Domain"
 msgid "List Domains"
 msgstr "Selecionar Domínio"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:300
-#: websiteFunctions/templates/websiteFunctions/website.html:770
-#: websiteFunctions/templates/websiteFunctions/website.html:821
+#: websiteFunctions/templates/websiteFunctions/website.html:283
+#: websiteFunctions/templates/websiteFunctions/website.html:286
+#: websiteFunctions/templates/websiteFunctions/website.html:287
+#, fuzzy
+#| msgid "Domain Name"
+msgid "Domain Alias"
+msgstr "Nome de Domínio"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:294
+#: websiteFunctions/templates/websiteFunctions/website.html:297
+msgid "Add new Cron Job"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:298
+msgid "Cron Jobs"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:324
+#: websiteFunctions/templates/websiteFunctions/website.html:883
+#: websiteFunctions/templates/websiteFunctions/website.html:934
 msgid "Path"
 msgstr "Caminho"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:302
+#: websiteFunctions/templates/websiteFunctions/website.html:326
 msgid "This path is relative to: "
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:302
+#: websiteFunctions/templates/websiteFunctions/website.html:326
 msgid "Leave empty to set default."
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:343
+#: websiteFunctions/templates/websiteFunctions/website.html:374
 #, fuzzy
 #| msgid "Create Email"
 msgid "Create Domain"
 msgstr "Criar E-Mail"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:386
+#: websiteFunctions/templates/websiteFunctions/website.html:416
 #, fuzzy
 #| msgid "Version Management"
 msgid "PHP Version Changed to:"
 msgstr "Gestão de Versões"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:390
+#: websiteFunctions/templates/websiteFunctions/website.html:420
 #, fuzzy
 #| msgid "Delete"
 msgid "Deleted:"
 msgstr "Apagar"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:394
+#: websiteFunctions/templates/websiteFunctions/website.html:424
 #, fuzzy
 #| msgid "SSL Issued for"
 msgid "SSL Issued:"
 msgstr "SSL Emitida para"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:449
-#, fuzzy
-#| msgid "Issue SSL"
-msgid "Issue"
-msgstr "Emitir SSL"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:477
+#: websiteFunctions/templates/websiteFunctions/website.html:509
 msgid "Configurations"
 msgstr "Configurações"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:483
-#, fuzzy
-#| msgid "Edit vHost Main Configurations"
-msgid "Edit Virtual Host Main Configurations"
-msgstr "Alterar as Configurações do vHost Principal"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:485
+#: websiteFunctions/templates/websiteFunctions/website.html:518
+#: websiteFunctions/templates/websiteFunctions/website.html:521
 msgid "Edit vHost Main Configurations"
 msgstr "Alterar as Configurações do vHost Principal"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:495
-#: websiteFunctions/templates/websiteFunctions/website.html:497
+#: websiteFunctions/templates/websiteFunctions/website.html:522
+msgid "vHost Conf"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:530
 msgid "Add Rewrite Rules (.htaccess)"
 msgstr "Adicionar Regras Rewrite (.htaccess)"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:507
+#: websiteFunctions/templates/websiteFunctions/website.html:533
+#, fuzzy
+#| msgid "Add Rewrite Rules (.htaccess)"
+msgid "Rewrite Rules (.htaccess)"
+msgstr "Adicionar Regras Rewrite (.htaccess)"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:534
+#, fuzzy
+#| msgid "Save Rewrite Rules"
+msgid "Rewrite Rules"
+msgstr "Guardar Regras Rewrite"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:542
+#: websiteFunctions/templates/websiteFunctions/website.html:545
 #, fuzzy
 #| msgid "Add SSL"
 msgid "Add Your Own SSL"
 msgstr "Adicionar SSL"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:509
+#: websiteFunctions/templates/websiteFunctions/website.html:546
 msgid "Add SSL"
 msgstr "Adicionar SSL"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:524
+#: websiteFunctions/templates/websiteFunctions/website.html:554
+#: websiteFunctions/templates/websiteFunctions/website.html:557
+#, fuzzy
+#| msgid "Select PHP Version"
+msgid "Change PHP Version"
+msgstr "Selecione Versão do PHP"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:558
+#: websiteFunctions/templates/websiteFunctions/website.html:754
+#, fuzzy
+#| msgid "Change"
+msgid "Change PHP"
+msgstr "Alterar"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:570
 msgid "SSL Saved"
 msgstr "SSL Guardado"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:529
+#: websiteFunctions/templates/websiteFunctions/website.html:575
 msgid "Could not save SSL. Error message:"
 msgstr "Impossível guardar SSL. Mensagem de erro:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:579
+#: websiteFunctions/templates/websiteFunctions/website.html:624
 msgid "Current configuration in the file fetched."
 msgstr "Configuração atual do ficheiro obtida."
 
-#: websiteFunctions/templates/websiteFunctions/website.html:584
-#: websiteFunctions/templates/websiteFunctions/website.html:597
+#: websiteFunctions/templates/websiteFunctions/website.html:629
+#: websiteFunctions/templates/websiteFunctions/website.html:642
 msgid "Could not fetch current configuration. Error message:"
 msgstr "Impossível obter configuração atual. Mensagem de erro:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:593
-#: websiteFunctions/templates/websiteFunctions/website.html:648
+#: websiteFunctions/templates/websiteFunctions/website.html:638
+#: websiteFunctions/templates/websiteFunctions/website.html:690
 #, fuzzy
 #| msgid "SSH Configurations Saved."
 msgid "Configurations saved."
 msgstr "Configurações do SSH Guardadas."
 
-#: websiteFunctions/templates/websiteFunctions/website.html:634
+#: websiteFunctions/templates/websiteFunctions/website.html:676
 msgid "Current rewrite rules in the file fetched."
 msgstr "Regras Rewrite atuais no ficheiro obtidas."
 
-#: websiteFunctions/templates/websiteFunctions/website.html:639
+#: websiteFunctions/templates/websiteFunctions/website.html:681
 msgid "Could not fetch current rewrite rules. Error message:"
 msgstr "Impossível obter regras Rewrite atuais. Mensagem de erro:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:652
+#: websiteFunctions/templates/websiteFunctions/website.html:694
 msgid "Could not save rewrite rules. Error message:"
 msgstr "Impossível guardar regras Rewrite. Mensagem de erro:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:668
+#: websiteFunctions/templates/websiteFunctions/website.html:710
 msgid "Save Rewrite Rules"
 msgstr "Guardar Regras Rewrite"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:691
+#: websiteFunctions/templates/websiteFunctions/website.html:765
+#, fuzzy
+#| msgid "Cannot create website. Error message:"
+msgid "Failed to change PHP version. Error message:"
+msgstr "Impossível criar website. Mensage de erro:"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:769
+#, fuzzy
+#| msgid "Password successfully changed for :"
+msgid "PHP successfully changed for: "
+msgstr "Palavra-Chave alterada com sucesso para :"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:795
 msgid "Files"
 msgstr "Ficheiros"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:698
-#: websiteFunctions/templates/websiteFunctions/website.html:700
+#: websiteFunctions/templates/websiteFunctions/website.html:803
+#: websiteFunctions/templates/websiteFunctions/website.html:806
+#: websiteFunctions/templates/websiteFunctions/website.html:807
 msgid "File Manager"
 msgstr "Gestor de Ficheiros"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:739
+#: websiteFunctions/templates/websiteFunctions/website.html:819
+#, fuzzy
+#| msgid "Create FTP Account"
+msgid "Create FTP Acct"
+msgstr "Criar Conta de FTP"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:831
+#, fuzzy
+#| msgid "Delete FTP Account"
+msgid "Delete FTP Acct"
+msgstr "Apagar Conta de FTP"
+
+#: websiteFunctions/templates/websiteFunctions/website.html:848
 msgid "Application Installer"
 msgstr "Instalador de Aplicações"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:745
+#: websiteFunctions/templates/websiteFunctions/website.html:857
+#: websiteFunctions/templates/websiteFunctions/website.html:860
 #, fuzzy
 #| msgid "Wordpress with LSCache"
 msgid "Install wordpress with LSCache"
 msgstr "Wordpress com LSCache"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:747
+#: websiteFunctions/templates/websiteFunctions/website.html:861
 msgid "Wordpress with LSCache"
 msgstr "Wordpress com LSCache"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:756
+#: websiteFunctions/templates/websiteFunctions/website.html:869
+#: websiteFunctions/templates/websiteFunctions/website.html:872
 #, fuzzy
 #| msgid "Wordpress with LSCache"
 msgid "Install Joomla with(?) LSCache"
 msgstr "Wordpress com LSCache"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:758
+#: websiteFunctions/templates/websiteFunctions/website.html:873
 msgid "Joomla"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:792
-#: websiteFunctions/templates/websiteFunctions/website.html:871
+#: websiteFunctions/templates/websiteFunctions/website.html:905
+#: websiteFunctions/templates/websiteFunctions/website.html:984
 msgid "Installation failed. Error message:"
 msgstr "Instalação falhou. Mensagem de erro:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:796
-#: websiteFunctions/templates/websiteFunctions/website.html:875
+#: websiteFunctions/templates/websiteFunctions/website.html:909
+#: websiteFunctions/templates/websiteFunctions/website.html:988
 msgid "Installation successful. To complete the setup visit:"
 msgstr "Instalação com sucesso. Para completar:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:828
+#: websiteFunctions/templates/websiteFunctions/website.html:941
 msgid "Site name"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:835
+#: websiteFunctions/templates/websiteFunctions/website.html:948
 #, fuzzy
 #| msgid "Username"
 msgid "Admin Username"
 msgstr "Nome de Utilizador"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:842
+#: websiteFunctions/templates/websiteFunctions/website.html:955
 #, fuzzy
 #| msgid "Password"
 msgid "Admin Password"
 msgstr "Palavra-Chave"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:849
+#: websiteFunctions/templates/websiteFunctions/website.html:962
 #, fuzzy
 #| msgid "Database Name"
 msgid "Database prefix"
 msgstr "Nome da Base de Dados"
+
+#~ msgid "Daily"
+#~ msgstr "Diariamente"
+
+#~ msgid "Weekly"
+#~ msgstr "Semanalmente"
+
+#~ msgid "HTTP Statistics"
+#~ msgstr "Estatísticas HTTP"
+
+#~ msgid "Available/Max Connections"
+#~ msgstr "Disponíveis/Máximo Ligações"
+
+#~ msgid "Available/Max SSL Connections"
+#~ msgstr "Disponíveis/Máximo Ligações SSL"
+
+#~ msgid "Requests Processing"
+#~ msgstr "Processamento de Pedidos"
+
+#~ msgid "Total Requests"
+#~ msgstr "Pedidos Totais"
+
+#~ msgid "Admin"
+#~ msgstr "Administrador"
+
+#~ msgid "Normal User"
+#~ msgstr "Utilizador Normal"
+
+#, fuzzy
+#~| msgid "Edit vHost Main Configurations"
+#~ msgid "Edit Virtual Host Main Configurations"
+#~ msgstr "Alterar as Configurações do vHost Principal"
 
 #~ msgid "Configuration saved. Restart LiteSpeed put them in effect."
 #~ msgstr ""
