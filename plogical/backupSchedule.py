@@ -1,14 +1,12 @@
-import thread
-import pexpect
 import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
-from shutil import rmtree
 import os
 import requests
 import json
 import time
 from backupUtilities import backupUtilities
+from re import match,I,M
 
 class backupSchedule:
 
@@ -26,7 +24,7 @@ class backupSchedule:
     def createBackup(virtualHost, ipAddress, backupLogPath , port):
         try:
 
-            backupSchedule.remoteBackupLogging(backupLogPath, "Preparing to create backup for: "+virtualHost)
+            backupSchedule.remoteBackupLogging(backupLogPath, "Preparing to create backup for: " + virtualHost)
             backupSchedule.remoteBackupLogging(backupLogPath, "Backup started for: " + virtualHost)
 
             finalData = json.dumps({'websiteToBeBacked': virtualHost})
@@ -132,9 +130,8 @@ class backupSchedule:
                 return 0
 
             for virtualHost in os.listdir("/home"):
-                if virtualHost == "vmail" or virtualHost == "cyberpanel" or virtualHost == "backup":
-                    continue
-                backupSchedule.createBackup(virtualHost, ipAddress, backupLogPath, port)
+                if match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', virtualHost, M | I):
+                    backupSchedule.createBackup(virtualHost, ipAddress, backupLogPath, port)
 
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [prepare]")

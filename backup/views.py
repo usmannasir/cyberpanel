@@ -641,7 +641,7 @@ def submitDestinationCreation(request):
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
                 except:
-                    setupKeys = backupUtil.backupUtilities.setupSSHKeys(ipAddress,password,port)
+                    setupKeys = backupUtil.backupUtilities.setupSSHKeys(ipAddress, password, port)
 
                     if setupKeys[0] == 1:
                         backupUtil.backupUtilities.createBackupDir(ipAddress,port)

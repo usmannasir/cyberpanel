@@ -497,17 +497,24 @@ class backupUtilities:
             else:
                 return [0,"Host is Down."]
 
-            expectation = "password:"
+            expectation = []
+            expectation.append("password:")
+            expectation.append("Permission denied")
 
-            command = "ssh -o StrictHostKeyChecking=no -p "+ port +" root@"+IPAddress+" mkdir /root/.ssh"
+            command = "sudo ssh -o StrictHostKeyChecking=no -p "+ port +" root@"+IPAddress+" mkdir /root/.ssh"
 
             setupKeys = pexpect.spawn(command,timeout=3)
 
-            setupKeys.expect(expectation)
+            index = setupKeys.expect(expectation)
 
             ## on first login attempt send password
 
-            setupKeys.sendline(password)
+            if index == 0:
+                setupKeys.sendline(password)
+            elif index == 1:
+                return [0, 'Please enable password authentication on your remote server.']
+            else:
+                raise BaseException
 
             ## if it again give you password, than provided password is wrong
 
@@ -534,7 +541,7 @@ class backupUtilities:
             logging.CyberCPLogFileWriter.writeToFile(setupKeys.before + " " + str(msg) + " [setupSSHKeys]")
             return [0, str(msg) + " [TIMEOUT setupSSHKeys]"]
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [setupSSHKeys]")
+            logging.CyberCPLogFileWriter.writeToFile(setupKeys.before + " " + str(msg) + " [setupSSHKeys]")
             return [0, str(msg) + " [setupSSHKeys]"]
 
     @staticmethod
@@ -670,8 +677,9 @@ class backupUtilities:
     @staticmethod
     def host_key_verification(IPAddress):
         try:
-            command = 'sudo ssh-keygen -R '+IPAddress
+            command = 'sudo ssh-keygen -R ' + IPAddress
             subprocess.call(shlex.split(command))
+            return 1
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [host_key_verification]")
             return 0

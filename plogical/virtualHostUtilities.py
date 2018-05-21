@@ -161,17 +161,15 @@ class virtualHostUtilities:
         ## Creating Per vhost Configuration File
 
 
-        if virtualHostUtilities.perHostVirtualConf(completePathToConfigFile,administratorEmail,virtualHostUser,phpVersion) == 1:
+        if virtualHostUtilities.perHostVirtualConf(completePathToConfigFile,administratorEmail,virtualHostUser,phpVersion, virtualHostName) == 1:
             return [1,"None"]
         else:
             return [0,"[61 Not able to create per host virtual configurations [perHostVirtualConf]"]
 
 
     @staticmethod
-    def perHostVirtualConf(vhFile, administratorEmail,virtualHostUser, phpVersion):
-
+    def perHostVirtualConf(vhFile, administratorEmail,virtualHostUser, phpVersion, virtualHostName):
         # General Configurations tab
-
         try:
             confFile = open(vhFile, "w+")
 
@@ -317,6 +315,10 @@ class virtualHostUtilities:
             deny = "    deny                  0.0.0.0/0\n"
             accessControlEnds = "  }\n"
 
+            phpIniOverride = "phpIniOverride  {\n"
+            php_admin_value = 'php_admin_value open_basedir "/tmp:/usr/local/lsws/Example/html/FileManager:/home/' + virtualHostName + '"\n'
+            endPHPIniOverride = "}\n"
+
 
             defaultCharSet = "  addDefaultCharset       off\n"
             contextEnds = "}\n"
@@ -330,8 +332,21 @@ class virtualHostUtilities:
             confFile.writelines(allow)
             confFile.writelines(deny)
             confFile.writelines(accessControlEnds)
+            #confFile.writelines(phpIniOverride)
+            #confFile.writelines(php_admin_value)
+            #confFile.writelines(endPHPIniOverride)
             confFile.writelines(defaultCharSet)
             confFile.writelines(contextEnds)
+
+            ## OpenBase Dir Protection
+
+            #phpIniOverride = "phpIniOverride  {\n"
+            #php_admin_value = 'php_admin_value open_basedir "/tmp:/home/' + virtualHostName + '"\n'
+            #endPHPIniOverride = "}\n"
+
+            #confFile.writelines(phpIniOverride)
+            #confFile.writelines(php_admin_value)
+            #confFile.writelines(endPHPIniOverride)
 
             confFile.close()
 
@@ -535,12 +550,22 @@ class virtualHostUtilities:
             confFile.writelines(compressArchive)
             confFile.writelines(access_Log_end)
 
+            ## OpenBase Dir Protection
+
+            #phpIniOverride = "phpIniOverride  {\n"
+            #php_admin_value = 'php_admin_value open_basedir "/tmp:' + path + '"\n'
+            #endPHPIniOverride = "}\n"
+
+            #confFile.writelines(phpIniOverride)
+            #confFile.writelines(php_admin_value)
+            #confFile.writelines(endPHPIniOverride)
+
             # php settings
 
             sockRandomPath = str(randint(1000, 9999))
 
             scripthandler = "scripthandler  {" + "\n"
-            add = "  add                     lsapi:" + virtualHostUser+sockRandomPath + " php" + "\n"
+            add = "  add                     lsapi:" + virtualHostUser + sockRandomPath + " php" + "\n"
             php_end = "}" + "\n" + "\n"
 
             confFile.writelines(scripthandler)
@@ -604,6 +629,7 @@ class virtualHostUtilities:
             confFile.writelines(procSoftLimit)
             confFile.writelines(procHardLimit)
             confFile.writelines(extprocessorEnd)
+
 
             confFile.close()
 
@@ -1541,27 +1567,33 @@ def issueSSLForHostName(virtualHost,path):
         if os.path.exists(destCert):
             os.remove(destCert)
 
-        adminEmail = "email@" + virtualHost
+        letsEncryptPath = "/etc/letsencrypt/live/" + virtualHost
 
-        retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
-
-        if retValues[0] == 0:
-            print "0," + str(retValues[1])
-            return
+        if os.path.exists(letsEncryptPath) and os.path.exists(pathToStoreSSL):
+            pass
         else:
-            shutil.copy(pathToStoreSSLPrivKey, destPrivKey)
-            shutil.copy(pathToStoreSSLFullChain, destCert)
+            adminEmail = "email@" + virtualHost
 
-            command = 'systemctl restart lscpd'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
-            vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
-            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            if retValues[0] == 0:
+                print "0," + str(retValues[1])
+                return
 
-            print "1,None"
+        shutil.copy(pathToStoreSSLPrivKey, destPrivKey)
+        shutil.copy(pathToStoreSSLFullChain, destCert)
+
+        command = 'systemctl restart lscpd'
+        cmd = shlex.split(command)
+        subprocess.call(cmd)
+
+        vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
+        command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
+        cmd = shlex.split(command)
+        subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+        print "1,None"
+
 
     except BaseException,msg:
         logging.CyberCPLogFileWriter.writeToFile(
@@ -1575,13 +1607,22 @@ def issueSSLForMailServer(virtualHost,path):
 
         pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHost
 
-        adminEmail = "email@" + virtualHost
+        srcPrivKey = pathToStoreSSL + "/privkey.pem"
+        srcFullChain = pathToStoreSSL + "/fullchain.pem"
 
-        retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
-        if retValues[0] == 0:
-            print "0," + str(retValues[1])
-            return
+        letsEncryptPath = "/etc/letsencrypt/live/" + virtualHost
+
+        if os.path.exists(letsEncryptPath) and os.path.exists(pathToStoreSSL):
+            pass
+        else:
+            adminEmail = "email@" + virtualHost
+
+            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
+
+            if retValues[0] == 0:
+                print "0," + str(retValues[1])
+                return
 
 
         ## MailServer specific functions
@@ -1606,9 +1647,6 @@ def issueSSLForMailServer(virtualHost,path):
 
 
         ## Postfix
-
-        srcPrivKey = pathToStoreSSL + "/privkey.pem"
-        srcFullChain = pathToStoreSSL + "/fullchain.pem"
 
         shutil.copy(srcPrivKey, "/etc/postfix/key.pem")
         shutil.copy(srcFullChain, "/etc/postfix/cert.pem")

@@ -36,8 +36,6 @@ def createNameserver(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
-
 def NSCreation(request):
     try:
         val = request.session['userID']
