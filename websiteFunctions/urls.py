@@ -74,4 +74,9 @@ urlpatterns = [
     url(r'^issueAliasSSL',views.issueAliasSSL,name="issueAliasSSL"),
     url(r'^delateAlias',views.delateAlias,name="delateAlias"),
 
+
+    ## Openbasedir
+    url(r'^changeOpenBasedir$',views.changeOpenBasedir,name="changeOpenBasedir"),
+
+
 ]

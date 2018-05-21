@@ -27,6 +27,13 @@ app.controller('createWebsite', function($scope,$http) {
                     var dkimCheck = 0
                 }
 
+                if ($scope.openBasedir === true){
+                    var openBasedir = 1;
+                }
+                else{
+                    var openBasedir = 0
+                }
+
 
                 $("#webSiteCreation").fadeIn();
 
@@ -46,7 +53,8 @@ app.controller('createWebsite', function($scope,$http) {
                     phpSelection: phpSelection,
                     ssl:ssl,
                     websiteOwner:websiteOwner,
-                    dkimCheck:dkimCheck
+                    dkimCheck:dkimCheck,
+                    openBasedir:openBasedir
                 };
 
                 var config = {
@@ -1558,6 +1566,13 @@ app.controller('websitePages', function($scope,$http) {
                     var dkimCheck = 0
                 }
 
+                if ($scope.openBasedir === true){
+                    var openBasedir = 1;
+                }
+                else{
+                    var openBasedir = 0
+                }
+
 
                 url = "/websites/submitDomainCreation";
                 var domainName = $scope.domainNameCreate;
@@ -1576,7 +1591,8 @@ app.controller('websitePages', function($scope,$http) {
                     ssl:ssl,
                     path:path,
                     masterDomain:$("#domainNamePage").text(),
-                    dkimCheck:dkimCheck
+                    dkimCheck:dkimCheck,
+                    openBasedir:openBasedir
                 };
 
                 var config = {
@@ -1645,6 +1661,7 @@ app.controller('websitePages', function($scope,$http) {
     $scope.couldNotConnect = true;
     $scope.domainDeleted = true;
     $scope.sslIssued = true;
+    $scope.childBaseDirChanged = true;
 
     $("#listDomains").hide();
 
@@ -1713,6 +1730,7 @@ app.controller('websitePages', function($scope,$http) {
                 $scope.domainDeleted = true;
                 $scope.sslIssued = true;
                 $scope.domainLoading = false;
+                $scope.childBaseDirChanged = true;
 
                 var url = "/websites/changePHP";
 
@@ -1747,6 +1765,7 @@ app.controller('websitePages', function($scope,$http) {
                         $scope.couldNotConnect = true;
                         $scope.domainDeleted = true;
                         $scope.sslIssued = true;
+                        $scope.childBaseDirChanged = true;
 
 
                     }
@@ -1761,6 +1780,7 @@ app.controller('websitePages', function($scope,$http) {
                         $scope.couldNotConnect = true;
                         $scope.domainDeleted = true;
                         $scope.sslIssued = true;
+                        $scope.childBaseDirChanged = true;
                     }
 
 
@@ -1776,6 +1796,81 @@ app.controller('websitePages', function($scope,$http) {
                         $scope.couldNotConnect = true;
                         $scope.domainDeleted = true;
                         $scope.sslIssued = true;
+                        $scope.childBaseDirChanged = true;
+
+                }
+
+    };
+
+    $scope.changeChildBaseDir = function(childDomain,openBasedirValue){
+
+                // notifcations
+
+                $scope.phpChanged = true;
+                $scope.domainError = true;
+                $scope.couldNotConnect = true;
+                $scope.domainDeleted = true;
+                $scope.sslIssued = true;
+                $scope.domainLoading = false;
+                $scope.childBaseDirChanged = true;
+
+
+                var url = "/websites/changeOpenBasedir";
+
+                var data = {
+                    domainName:childDomain,
+                    openBasedirValue:openBasedirValue
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.changeOpenBasedir === 1){
+
+                        $scope.phpChanged = true;
+                        $scope.domainError = true;
+                        $scope.couldNotConnect = true;
+                        $scope.domainDeleted = true;
+                        $scope.sslIssued = true;
+                        $scope.domainLoading = true;
+                        $scope.childBaseDirChanged = false;
+
+                    }
+                    else{
+
+                        $scope.phpChanged = true;
+                        $scope.domainError = false;
+                        $scope.couldNotConnect = true;
+                        $scope.domainDeleted = true;
+                        $scope.sslIssued = true;
+                        $scope.domainLoading = true;
+                        $scope.childBaseDirChanged = true;
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.phpChanged = true;
+                        $scope.domainError = true;
+                        $scope.couldNotConnect = false;
+                        $scope.domainDeleted = true;
+                        $scope.sslIssued = true;
+                        $scope.domainLoading = true;
+                        $scope.childBaseDirChanged = true;
+
 
                 }
 
@@ -1858,7 +1953,7 @@ app.controller('websitePages', function($scope,$http) {
 
                 }
 
-    }
+    };
 
     $scope.issueSSL = function(childDomain,path){
                 $scope.domainLoading = false;
@@ -1870,6 +1965,7 @@ app.controller('websitePages', function($scope,$http) {
                 $scope.couldNotConnect = true;
                 $scope.domainDeleted = true;
                 $scope.sslIssued = true;
+                $scope.childBaseDirChanged = true;
 
                 var url = "/manageSSL/issueSSL";
 
@@ -1891,7 +1987,7 @@ app.controller('websitePages', function($scope,$http) {
                 function ListInitialDatas(response) {
 
 
-                    if(response.data.SSL == 1){
+                    if(response.data.SSL === 1){
 
                         $scope.domainLoading = true;
 
@@ -1902,6 +1998,7 @@ app.controller('websitePages', function($scope,$http) {
                         $scope.couldNotConnect = true;
                         $scope.domainDeleted = true;
                         $scope.sslIssued = false;
+                        $scope.childBaseDirChanged = true;
 
 
 
@@ -1923,6 +2020,7 @@ app.controller('websitePages', function($scope,$http) {
                         $scope.couldNotConnect = true;
                         $scope.domainDeleted = true;
                         $scope.sslIssued = true;
+                        $scope.childBaseDirChanged = true;
 
                     }
 
@@ -1938,6 +2036,7 @@ app.controller('websitePages', function($scope,$http) {
                     $scope.couldNotConnect = false;
                     $scope.domainDeleted = true;
                     $scope.sslIssued = true;
+                    $scope.childBaseDirChanged = true;
 
 
                 }
@@ -1947,6 +2046,90 @@ app.controller('websitePages', function($scope,$http) {
 
 
     };
+
+
+    /// Open_basedir protection
+
+    $scope.baseDirLoading = true;
+    $scope.operationFailed = true;
+    $scope.operationSuccessfull = true;
+    $scope.couldNotConnect = true;
+    $scope.openBaseDirBox = true;
+
+
+    $scope.openBaseDirView = function(){
+        $scope.openBaseDirBox = false;
+    };
+
+    $scope.hideOpenBasedir = function () {
+        $scope.openBaseDirBox = true;
+    };
+
+    $scope.applyOpenBasedirChanges = function(childDomain,phpSelection){
+
+                // notifcations
+
+                $scope.baseDirLoading = false;
+                $scope.operationFailed = true;
+                $scope.operationSuccessfull = true;
+                $scope.couldNotConnect = true;
+                $scope.openBaseDirBox = false;
+
+
+                var url = "/websites/changeOpenBasedir";
+
+                var data = {
+                    domainName:$("#domainNamePage").text(),
+                    openBasedirValue:$scope.openBasedirValue
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.changeOpenBasedir === 1){
+
+                        $scope.baseDirLoading = true;
+                        $scope.operationFailed = true;
+                        $scope.operationSuccessfull = false;
+                        $scope.couldNotConnect = true;
+                        $scope.openBaseDirBox = false;
+
+                    }
+                    else{
+
+                        $scope.baseDirLoading = true;
+                        $scope.operationFailed = false;
+                        $scope.operationSuccessfull = true;
+                        $scope.couldNotConnect = true;
+                        $scope.openBaseDirBox = false;
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    $scope.baseDirLoading = true;
+                    $scope.operationFailed = true;
+                    $scope.operationSuccessfull = true;
+                    $scope.couldNotConnect = false;
+                    $scope.openBaseDirBox = false;
+
+
+                }
+
+    }
 
 
 

@@ -365,6 +365,15 @@
                                      </label>
                                  </div>
                              </div>
+                             <label class="col-sm-3 control-label"></label>
+                             <div class="col-sm-9">
+                                 <div class="checkbox">
+                                     <label>
+                                         <input ng-model="openBasedir" type="checkbox" value="">
+                                         open_basedir Protection
+                                     </label>
+                                 </div>
+                             </div>
                         </div>
 
 
@@ -424,6 +433,10 @@
                                     <p>{% trans "SSL Issued:" %} {$ sslDomainIssued $} </p>
                                 </div>
 
+                                <div ng-hide="childBaseDirChanged" class="alert alert-success">
+                                    <p>{% trans "Changes applied successfully." %} </p>
+                                </div>
+
 
                                 <div ng-hide="domainError" class="alert alert-danger">
                                     <p>{$ errorMessage $}</p>
@@ -457,6 +470,7 @@
                                         <tr>
                                             <th>Domain</th>
                                             <th>Path</th>
+                                            <th>open_basedir</th>
                                             <th>PHP</th>
                                             <th>SSL</th>
                                             <th>Delete</th>
@@ -466,6 +480,12 @@
                                         <tr ng-repeat="record in childDomains | filter:logSearch">
                                             <td ng-bind="record.childDomain"></td>
                                             <td ng-bind="record.path"></td>
+                                            <td >
+                                                <select ng-change="changeChildBaseDir(record.childDomain,childBaseDir)" ng-model="childBaseDir" class="form-control">
+                                                    <option>Enable</option>
+                                                    <option>Disable</option>
+                                                </select>
+                                            </td>
                                             <td >
                                                 <select ng-change="changePHP(record.childDomain,phpSelection)" ng-model="phpSelection" class="form-control">
                                                     <option>PHP 5.3</option>
@@ -487,10 +507,6 @@
 
 
                         </form>
-
-
-
-
 
                     </div>
 
@@ -798,7 +814,7 @@
             <div class="content-box-wrapper">
                 <div class="row">
 
-                    <div class="col-md-4" style="margin-bottom: 2%;">
+                    <div class="col-md-3" style="margin-bottom: 2%;">
 
                                 <a href="{$ fileManagerURL $}" target="_blank" title="{% trans 'File Manager' %}">
                                     <img  src="{% static 'images/icons/office-material.png'  %}">
@@ -809,8 +825,19 @@
 
                     </div>
 
+                    <div class="col-md-3" style="margin-bottom: 2%;">
 
-                    <div class="col-md-4" style="margin-bottom: 2%;">
+                                <a ng-click="openBaseDirView()" href="" title="{% trans 'open_basedir Protection' %}">
+                                    <img  src="{% static 'images/icons/open_basedir.png'  %}">
+                                </a>
+                                <a ng-click="openBaseDirView()" href="" title="{% trans 'open_basedir Protection' %}">
+                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "open_basedir" %}</span>
+                                </a>
+
+                    </div>
+
+
+                    <div class="col-md-3" style="margin-bottom: 2%;">
 
                                 <a  href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}">
                                     <img  src="{% static 'images/icons/ftp-upload.png'  %}">
@@ -822,7 +849,7 @@
                     </div>
 
 
-                    <div class="col-md-4" style="margin-bottom: 2%;">
+                    <div class="col-md-3" style="margin-bottom: 2%;">
 
                                 <a  href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}">
                                     <img  src="{% static 'images/icons/delete-ftp.png'  %}">
@@ -832,6 +859,64 @@
                                 </a>
 
                             </div>
+
+
+                    <!--- HTML To change open_basedir --->
+
+                    <div ng-hide="openBaseDirBox" class="col-md-12">
+
+                        <form  action="/" class="form-horizontal bordered-row">
+
+                            <div class="form-group">
+                                            <label class="col-sm-3 control-label">{% trans "open_basedir Protection" %}</label>
+                                            <div class="col-sm-6">
+                                                <select ng-model="openBasedirValue" class="form-control">
+                                                        <option>Enable</option>
+                                                        <option>Disable</option>
+                                                </select>
+                                            </div>
+
+                                            <div ng-hide="baseDirLoading" style="margin-bottom: 1%;"  class=" col-sm-1">
+                                                <img src="{% static 'images/loading.gif' %}">
+                                            </div>
+
+                                            <div style="margin-bottom: 2%;"  class=" col-sm-1">
+                                                <a title="{% trans 'Cancel' %}" ng-click="hideOpenBasedir()" href=""><img src="/static/images/close-32.png"></a>
+                                            </div>
+
+                                         </div>
+
+
+                            <div class="form-group">
+                                            <label class="col-sm-3 control-label"></label>
+                                            <div class="col-sm-4">
+                                                 <button type="button" ng-click="applyOpenBasedirChanges()" class="btn btn-primary btn-lg btn-block">{% trans "Apply Changes" %}</button>
+                                            </div>
+                            </div>
+                            <div class="form-group">
+
+                                            <label class="col-sm-3 control-label"></label>
+                                            <div class="col-sm-4">
+                                                    <div ng-hide="operationFailed" class="alert alert-danger">
+                                                                <p>{% trans "Error message:" %} {$ errorMessage $} </p>
+                                                    </div>
+
+                                                     <div ng-hide="operationSuccessfull" class="alert alert-success">
+                                                        <p>{% trans "Changes successfully saved." %}</p>
+                                                    </div>
+
+                                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                                    </div>
+                                            </div>
+
+                            </div>
+
+
+                        </form>
+                    </div>
+
+                    <!--- HTML To change open_basedir --->
 
 
 

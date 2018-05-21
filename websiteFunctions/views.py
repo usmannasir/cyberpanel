@@ -587,7 +587,7 @@ def submitWebsiteCreation(request):
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createVirtualHost --virtualHostName " + domain + " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + " --ssl " + str(
-                data['ssl']) + " --sslPath " + sslpath + " --dkimCheck " + str(data['dkimCheck'])
+                data['ssl']) + " --sslPath " + sslpath + " --dkimCheck " + str(data['dkimCheck']) + " --openBasedir " + str(data['openBasedir'])
 
 
             output = subprocess.check_output(shlex.split(execPath))
@@ -700,7 +700,7 @@ def submitDomainCreation(request):
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + " --administratorEmail " + master.adminEmail + " --phpVersion '" + phpSelection + "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + " --ssl " + str(
-                data['ssl']) + " --path " + path + " --dkimCheck " + str(data['dkimCheck'])
+                data['ssl']) + " --path " + path + " --dkimCheck " + str(data['dkimCheck']) + " --openBasedir " + str(data['openBasedir'])
 
             output = subprocess.check_output(shlex.split(execPath))
 
@@ -1952,7 +1952,6 @@ def changePHP(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def CreateWebsiteFromBackup(request):
     try:
         if request.method == 'POST':
@@ -2811,5 +2810,46 @@ def delateAlias(request):
 
     except BaseException, msg:
         data_ret = {'deleteAlias': 0, 'error_message': str(msg), "existsStatus": 0}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+
+def changeOpenBasedir(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                data = json.loads(request.body)
+                domainName = data['domainName']
+                openBasedirValue = data['openBasedirValue']
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+                execPath = execPath + " changeOpenBasedir --virtualHostName '" + domainName + "' --openBasedirValue " + openBasedirValue
+
+
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    pass
+                else:
+                    data_ret = {'changeOpenBasedir': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+
+
+                data_ret = {'changeOpenBasedir': 1,'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException,msg:
+            data_ret = {'changeOpenBasedir': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError,msg:
+        data_ret = {'changeOpenBasedir': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

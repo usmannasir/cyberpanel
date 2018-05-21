@@ -224,6 +224,20 @@ class sslUtilities:
                     return 1
 
                 elif output.find('no action taken.') > -1:
+
+                    ###### Copy SSL To config location ######
+
+                    srcPrivKey = "/etc/letsencrypt/live/" + virtualHostName + "/privkey.pem"
+                    srcFullChain = "/etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem"
+
+                    if os.path.exists(pathToStoreSSLPrivKey):
+                        os.remove(pathToStoreSSLPrivKey)
+                    if os.path.exists(pathToStoreSSLFullChain):
+                        os.remove(pathToStoreSSLFullChain)
+
+                    shutil.copy(srcPrivKey, pathToStoreSSLPrivKey)
+                    shutil.copy(srcFullChain, pathToStoreSSLFullChain)
+
                     return 1
                 elif output.find('Failed authorization procedure') > -1:
                     logging.CyberCPLogFileWriter.writeToFile(

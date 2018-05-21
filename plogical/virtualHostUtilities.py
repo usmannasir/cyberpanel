@@ -137,7 +137,7 @@ class virtualHostUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [finalizeVhostCreation]")
 
     @staticmethod
-    def createDirectoryForVirtualHost(virtualHostName,administratorEmail,virtualHostUser, phpVersion):
+    def createDirectoryForVirtualHost(virtualHostName,administratorEmail,virtualHostUser, phpVersion, openBasedir):
 
         path = "/home/" + virtualHostName
         pathHTML = "/home/" + virtualHostName + "/public_html"
@@ -161,14 +161,14 @@ class virtualHostUtilities:
         ## Creating Per vhost Configuration File
 
 
-        if virtualHostUtilities.perHostVirtualConf(completePathToConfigFile,administratorEmail,virtualHostUser,phpVersion, virtualHostName) == 1:
+        if virtualHostUtilities.perHostVirtualConf(completePathToConfigFile,administratorEmail,virtualHostUser,phpVersion, virtualHostName, openBasedir) == 1:
             return [1,"None"]
         else:
             return [0,"[61 Not able to create per host virtual configurations [perHostVirtualConf]"]
 
 
     @staticmethod
-    def perHostVirtualConf(vhFile, administratorEmail,virtualHostUser, phpVersion, virtualHostName):
+    def perHostVirtualConf(vhFile, administratorEmail,virtualHostUser, phpVersion, virtualHostName, openBasedir):
         # General Configurations tab
         try:
             confFile = open(vhFile, "w+")
@@ -316,7 +316,7 @@ class virtualHostUtilities:
             accessControlEnds = "  }\n"
 
             phpIniOverride = "phpIniOverride  {\n"
-            php_admin_value = 'php_admin_value open_basedir "/tmp:/usr/local/lsws/Example/html/FileManager:/home/' + virtualHostName + '"\n'
+            php_admin_value = 'php_admin_value open_basedir "/tmp:/usr/local/lsws/Example/html/FileManager:$VH_ROOT"\n'
             endPHPIniOverride = "}\n"
 
 
@@ -332,21 +332,23 @@ class virtualHostUtilities:
             confFile.writelines(allow)
             confFile.writelines(deny)
             confFile.writelines(accessControlEnds)
-            #confFile.writelines(phpIniOverride)
-            #confFile.writelines(php_admin_value)
-            #confFile.writelines(endPHPIniOverride)
+            if openBasedir == 1:
+                confFile.writelines(phpIniOverride)
+                confFile.writelines(php_admin_value)
+                confFile.writelines(endPHPIniOverride)
             confFile.writelines(defaultCharSet)
             confFile.writelines(contextEnds)
 
             ## OpenBase Dir Protection
 
-            #phpIniOverride = "phpIniOverride  {\n"
-            #php_admin_value = 'php_admin_value open_basedir "/tmp:/home/' + virtualHostName + '"\n'
-            #endPHPIniOverride = "}\n"
+            phpIniOverride = "phpIniOverride  {\n"
+            php_admin_value = 'php_admin_value open_basedir "/tmp:$VH_ROOT"\n'
+            endPHPIniOverride = "}\n"
 
-            #confFile.writelines(phpIniOverride)
-            #confFile.writelines(php_admin_value)
-            #confFile.writelines(endPHPIniOverride)
+            if openBasedir == 1:
+                confFile.writelines(phpIniOverride)
+                confFile.writelines(php_admin_value)
+                confFile.writelines(endPHPIniOverride)
 
             confFile.close()
 
@@ -443,7 +445,7 @@ class virtualHostUtilities:
 
 
     @staticmethod
-    def createDirectoryForDomain(masterDomain, domain, phpVersion, path, administratorEmail,virtualHostUser):
+    def createDirectoryForDomain(masterDomain, domain, phpVersion, path, administratorEmail,virtualHostUser, openBasedir):
 
         FNULL = open(os.devnull, 'w')
 
@@ -476,13 +478,13 @@ class virtualHostUtilities:
 
 
         if virtualHostUtilities.perHostDomainConf(path, masterDomain, completePathToConfigFile,
-                                                  administratorEmail, phpVersion,virtualHostUser) == 1:
+                                                  administratorEmail, phpVersion,virtualHostUser, openBasedir) == 1:
             return [1,"None"]
         else:
             return [0, "[359 Not able to create per host virtual configurations [perHostVirtualConf]"]
 
     @staticmethod
-    def perHostDomainConf(path, masterDomain, vhFile, administratorEmail, phpVersion,virtualHostUser):
+    def perHostDomainConf(path, masterDomain, vhFile, administratorEmail, phpVersion,virtualHostUser, openBasedir):
 
         # General Configurations tab
 
@@ -552,13 +554,14 @@ class virtualHostUtilities:
 
             ## OpenBase Dir Protection
 
-            #phpIniOverride = "phpIniOverride  {\n"
-            #php_admin_value = 'php_admin_value open_basedir "/tmp:' + path + '"\n'
-            #endPHPIniOverride = "}\n"
+            phpIniOverride = "phpIniOverride  {\n"
+            php_admin_value = 'php_admin_value open_basedir "/tmp:' + path + '"\n'
+            endPHPIniOverride = "}\n"
 
-            #confFile.writelines(phpIniOverride)
-            #confFile.writelines(php_admin_value)
-            #confFile.writelines(endPHPIniOverride)
+            if openBasedir == 1:
+                confFile.writelines(phpIniOverride)
+                confFile.writelines(php_admin_value)
+                confFile.writelines(endPHPIniOverride)
 
             # php settings
 
@@ -1022,7 +1025,7 @@ class virtualHostUtilities:
 
 
 
-def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHostUser, numberOfSites, ssl, sslPath, dkimCheck):
+def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHostUser, numberOfSites, ssl, sslPath, dkimCheck, openBasedir):
     try:
         if virtualHostUtilities.checkIfVirtualHostExists(virtualHostName) == 1:
             raise BaseException("Virtual Host Directory already exists!")
@@ -1038,7 +1041,7 @@ def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHo
             if retValues[0] == 0:
                 raise BaseException(retValues[1])
 
-        retValues = virtualHostUtilities.createDirectoryForVirtualHost(virtualHostName, administratorEmail, virtualHostUser, phpVersion)
+        retValues = virtualHostUtilities.createDirectoryForVirtualHost(virtualHostName, administratorEmail, virtualHostUser, phpVersion, openBasedir)
         if retValues[0] == 0:
             raise BaseException(retValues[1])
 
@@ -1066,7 +1069,7 @@ def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHo
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createVirtualHost]")
         print "0,"+str(msg)
 
-def createDomain(masterDomain, virtualHostName, phpVersion, path,administratorEmail,virtualHostUser,restart,numberOfSites,ssl, dkimCheck):
+def createDomain(masterDomain, virtualHostName, phpVersion, path,administratorEmail,virtualHostUser,restart,numberOfSites,ssl, dkimCheck, openBasedir):
     try:
         if virtualHostUtilities.checkIfVirtualHostExists(virtualHostName) == 1:
             raise BaseException("Virtual Host Directory already exists!")
@@ -1086,7 +1089,7 @@ def createDomain(masterDomain, virtualHostName, phpVersion, path,administratorEm
 
         FNULL = open(os.devnull, 'w')
 
-        retValues = virtualHostUtilities.createDirectoryForDomain(masterDomain, virtualHostName, phpVersion, path,administratorEmail,virtualHostUser)
+        retValues = virtualHostUtilities.createDirectoryForDomain(masterDomain, virtualHostName, phpVersion, path,administratorEmail,virtualHostUser, openBasedir)
         if retValues[0] == 0:
             raise BaseException(retValues[1])
 
@@ -1822,6 +1825,69 @@ def deleteAlias(masterDomain, aliasDomain):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [deleteAlias]")
         print "0," + str(msg)
 
+def changeOpenBasedir(domainName, openBasedirValue):
+    try:
+
+        confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domainName
+        completePathToConfigFile = confPath + "/vhost.conf"
+
+        data = open(completePathToConfigFile, 'r').readlines()
+        skip = 0
+        if openBasedirValue == 'Disable':
+            writeToFile = open(completePathToConfigFile, 'w')
+            for items in data:
+                if items.find('phpIniOverride') > -1:
+                    skip = 1
+
+                if skip == 1 and items.find('}') > -1:
+                    skip = 0
+                    continue
+
+                if skip == 1:
+                    continue
+
+                writeToFile.writelines(items)
+            writeToFile.close()
+        else:
+
+            ## Check if phpini already active
+
+            inistatus = 0
+            for items in data:
+                if items.find('phpIniOverride') > -1:
+                    inistatus = 1
+
+            if inistatus == 0:
+                writeToFile = open(completePathToConfigFile, 'w')
+                for items in data:
+                    if items.find('context /.filemanager') > -1:
+                        writeToFile.writelines(items)
+                        phpIniOverride = "phpIniOverride  {\n"
+                        php_admin_value = 'php_admin_value open_basedir "/tmp:/usr/local/lsws/Example/html/FileManager:$VH_ROOT"\n'
+                        endPHPIniOverride = "}\n"
+                        writeToFile.writelines(phpIniOverride)
+                        writeToFile.writelines(php_admin_value)
+                        writeToFile.writelines(endPHPIniOverride)
+                    else:
+                        writeToFile.writelines(items)
+
+                phpIniOverride = "phpIniOverride  {\n"
+                php_admin_value = 'php_admin_value open_basedir "/tmp:$VH_ROOT"\n'
+                endPHPIniOverride = "}\n"
+
+                writeToFile.writelines(phpIniOverride)
+                writeToFile.writelines(php_admin_value)
+                writeToFile.writelines(endPHPIniOverride)
+
+                writeToFile.close()
+        installUtilities.installUtilities.reStartLiteSpeed()
+        print "1,None"
+
+
+    except BaseException, msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [changeOpenBasedir]")
+        print "0," + str(msg)
+
 
 def saveSSL(virtualHost,pathToStoreSSL,keyPath,certPath,sslCheck):
     try:
@@ -1871,6 +1937,7 @@ def main():
     parser.add_argument("--ssl", help="Weather to activate SSL")
     parser.add_argument("--sslPath", help="Path to website document root!")
     parser.add_argument('--dkimCheck', help='To enable or disable DKIM support for domain.')
+    parser.add_argument('--openBasedir', help='To enable or disable open_basedir protection for domain.')
 
 
     ## arguments for creation child domains
@@ -1914,6 +1981,10 @@ def main():
 
     parser.add_argument('--aliasDomain', help='Alias Domain!')
 
+    ## Arguments for OpenBasedir
+
+    parser.add_argument('--openBasedirValue', help='open_base dir protection value!')
+
 
 
     args = parser.parse_args()
@@ -1923,7 +1994,13 @@ def main():
             dkimCheck = int(args.dkimCheck)
         except:
             dkimCheck = 0
-        createVirtualHost(args.virtualHostName,args.administratorEmail,args.phpVersion,args.virtualHostUser,int(args.numberOfSites),int(args.ssl),args.sslPath,dkimCheck)
+
+        try:
+            openBasedir = int(args.openBasedir)
+        except:
+            openBasedir = 0
+
+        createVirtualHost(args.virtualHostName, args.administratorEmail, args.phpVersion, args.virtualHostUser, int(args.numberOfSites), int(args.ssl), args.sslPath, dkimCheck, openBasedir)
     elif args.function == "deleteVirtualHostConfigurations":
         virtualHostUtilities.deleteVirtualHostConfigurations(args.virtualHostName,int(args.numberOfSites))
     elif args.function == "createDomain":
@@ -1931,7 +2008,14 @@ def main():
             dkimCheck = int(args.dkimCheck)
         except:
             dkimCheck = 0
-        createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path,args.administratorEmail,args.virtualHostUser,args.restart,int(args.numberOfSites),int(args.ssl),dkimCheck)
+
+        try:
+            openBasedir = int(args.openBasedir)
+        except:
+            openBasedir = 0
+
+
+        createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path,args.administratorEmail,args.virtualHostUser,args.restart,int(args.numberOfSites),int(args.ssl),dkimCheck, openBasedir)
     elif args.function == "issueSSL":
         issueSSL(args.virtualHostName,args.path,args.administratorEmail)
     elif args.function == "changePHP":
@@ -1962,6 +2046,8 @@ def main():
         issueAliasSSL(args.masterDomain, args.aliasDomain, args.sslPath, args.administratorEmail)
     elif args.function == 'deleteAlias':
         deleteAlias(args.masterDomain, args.aliasDomain)
+    elif args.function == 'changeOpenBasedir':
+        changeOpenBasedir(args.virtualHostName, args.openBasedirValue)
 
 if __name__ == "__main__":
     main()
