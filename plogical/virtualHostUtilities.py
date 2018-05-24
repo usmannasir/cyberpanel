@@ -12,6 +12,7 @@ from os import listdir, rmdir
 from shutil import move
 import randomPassword as randomPassword
 from mailUtilities import mailUtilities
+from multiprocessing import Process
 
 ## If you want justice, you have come to the wrong place.
 
@@ -555,7 +556,7 @@ class virtualHostUtilities:
             ## OpenBase Dir Protection
 
             phpIniOverride = "phpIniOverride  {\n"
-            php_admin_value = 'php_admin_value open_basedir "/tmp:$VH_ROOT"\n'
+            php_admin_value = 'php_admin_value open_basedir "/tmp:/usr/local/lsws/Example/html/FileManager:$VH_ROOT"\n'
             endPHPIniOverride = "}\n"
 
             if openBasedir == 1:
@@ -807,14 +808,20 @@ class virtualHostUtilities:
             return [int(0), int(0)]
 
     @staticmethod
-    def addRewriteRules(virtualHostName):
+    def addRewriteRules(virtualHostName, fileName = None):
 
         try:
             path = virtualHostUtilities.Server_root + "/conf/vhosts/" + virtualHostName + "/vhost.conf"
 
             data = open(path, "r").readlines()
 
-            dataToWritten = "rewriteFile           /home/"+virtualHostName+"/public_html/.htaccess"+"\n"
+            if fileName == None:
+                dataToWritten = "rewriteFile           /home/"+virtualHostName+"/public_html/.htaccess"+"\n"
+            else:
+                dataToWritten = "rewriteFile           " + fileName + "\n"
+
+
+
 
             ### Data if re-writes are not already enabled
 
@@ -1236,7 +1243,7 @@ def saveVHostConfigs(fileName,tempPath):
 def saveRewriteRules(virtualHost,fileName,tempPath):
     try:
 
-        virtualHostUtilities.addRewriteRules(virtualHost)
+        virtualHostUtilities.addRewriteRules(virtualHost, fileName)
 
         vhost = open(fileName, "w")
 
@@ -1702,11 +1709,8 @@ def issueSSLForMailServer(virtualHost,path):
 
         writeFile.close()
 
-        command = 'systemctl restart postfix'
-        subprocess.call(shlex.split(command))
-
-        command = 'systemctl restart dovecot'
-        subprocess.call(shlex.split(command))
+        p = Process(target=mailUtilities.restartServices, args=('restart',))
+        p.start()
 
         print "1,None"
 

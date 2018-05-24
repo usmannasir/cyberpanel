@@ -256,6 +256,17 @@ milter_default_action = accept
             writeToFile.close()
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installOpenDKIM]")
 
+    @staticmethod
+    def restartServices():
+        try:
+            command = 'systemctl restart postfix'
+            subprocess.call(shlex.split(command))
+
+            command = 'systemctl restart dovecot'
+            subprocess.call(shlex.split(command))
+        except BaseException,msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [restartServices]")
+
 
 def main():
 

@@ -24,7 +24,7 @@ urlpatterns = [
     url(r'^getWebsiteDetails', views.submitWebsiteModify, name='getWebsiteDetails'),
     url(r'^saveWebsiteChanges', views.saveWebsiteChanges, name='saveWebsiteChanges'),
 
-
+    url(r'^(?P<domain>([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)/(?P<childDomain>([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)$', views.launchChild, name='launchChild'),
     url(r'^(?P<domain>([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)$', views.domain, name='domain'),
     url(r'^getDataFromLogFile', views.getDataFromLogFile, name='getDataFromLogFile'),
     url(r'^fetchErrorLogs', views.fetchErrorLogs, name='fetchErrorLogs'),

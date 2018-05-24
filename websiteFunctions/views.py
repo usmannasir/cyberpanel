@@ -716,6 +716,7 @@ def fetchDomains(request):
                     dic = {
                            'childDomain': items.domain,
                            'path': items.path,
+                           'childLunch': '/websites/' + masterDomain + '/' + items.domain
                            }
 
                     if checker == 0:
@@ -1236,6 +1237,103 @@ def domain(request,domain):
     except KeyError:
         return redirect(loadLoginPage)
 
+def launchChild(request,domain, childDomain):
+    try:
+        val = request.session['userID']
+
+        admin = Administrator.objects.get(pk=val)
+
+
+        if ChildDomains.objects.filter(domain=childDomain).exists():
+            if admin.type == 1:
+                website = Websites.objects.get(domain=domain)
+
+                Data = {}
+
+                Data['ftpTotal'] = website.package.ftpAccounts
+                Data['ftpUsed'] = website.users_set.all().count()
+
+                Data['databasesUsed'] = website.databases_set.all().count()
+                Data['databasesTotal'] = website.package.dataBases
+
+                Data['domain'] = domain
+                Data['childDomain'] = childDomain
+
+                diskUsageDetails = virtualHostUtilities.getDiskUsage("/home/"+domain,website.package.diskSpace)
+
+                ## bw usage calculation
+
+                try:
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                    execPath = execPath + " findDomainBW --virtualHostName " + domain + " --bandwidth " + str(website.package.bandwidth)
+
+                    output = subprocess.check_output(shlex.split(execPath))
+                    bwData = output.split(",")
+                except BaseException,msg:
+                    logging.CyberCPLogFileWriter.writeToFile(str(msg))
+                    bwData = [0,0]
+
+                ## bw usage calculations
+
+                Data['bwInMBTotal'] = website.package.bandwidth
+                Data['bwInMB'] = bwData[0]
+                Data['bwUsage'] = bwData[1]
+
+
+
+                if diskUsageDetails!=None:
+                    if diskUsageDetails[1] > 100:
+                        diskUsageDetails[1] = 100
+
+                    Data['diskUsage'] = diskUsageDetails[1]
+                    Data['diskInMB'] = diskUsageDetails[0]
+                    Data['diskInMBTotal'] = website.package.diskSpace
+                else:
+                    Data['diskUsage'] = 0
+                    Data['diskInMB'] = 0
+                    Data['diskInMBTotal'] = website.package.diskSpace
+
+
+                return render(request, 'websiteFunctions/launchChild.html', Data)
+            else:
+                website = Websites.objects.get(domain=domain)
+                if website.admin == admin:
+
+                    Data = {}
+
+                    Data['ftpTotal'] = website.package.ftpAccounts
+                    Data['ftpUsed'] = website.users_set.all().count()
+
+                    Data['databasesUsed'] = website.databases_set.all().count()
+                    Data['databasesTotal'] = website.package.dataBases
+
+                    Data['domain'] = domain
+                    Data['childDomain'] = childDomain
+
+                    diskUsageDetails = virtualHostUtilities.getDiskUsage("/home/" + domain, website.package.diskSpace)
+
+                    if diskUsageDetails != None:
+                        if diskUsageDetails[1] > 100:
+                            diskUsageDetails[1] = 100
+
+                        Data['diskUsage'] = diskUsageDetails[1]
+                        Data['diskInMB'] = diskUsageDetails[0]
+                        Data['diskInMBTotal'] = website.package.diskSpace
+                    else:
+                        Data['diskUsage'] = 0
+                        Data['diskInMB'] = 0
+                        Data['diskInMBTotal'] = website.package.diskSpace
+
+                    return render(request, 'websiteFunctions/launchChild.html', Data)
+                else:
+                    return render(request, 'websiteFunctions/launchChild.html',
+                                  {"error": 1, "domain": "You do not own this domain."})
+
+        else:
+            return render(request, 'websiteFunctions/launchChild.html', {"error":1,"domain": "This child domain does not exists"})
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def getDataFromLogFile(request):
     data = json.loads(request.body)
     logType = data['logType']
@@ -1714,8 +1812,11 @@ def saveRewriteRules(request):
 
                 ## writing data temporary to file
 
-
-                filePath = "/home/" + virtualHost + "/public_html/.htaccess"
+                try:
+                    childDomain = ChildDomains.objects.get(domain=virtualHost)
+                    filePath = childDomain.path + '/.htaccess'
+                except:
+                    filePath = "/home/" + virtualHost + "/public_html/.htaccess"
 
                 ## save configuration data
 

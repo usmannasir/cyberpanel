@@ -2867,3 +2867,975 @@ app.controller('manageAliasController', function($scope,$http, $timeout, $window
 
 
 /* Java script code to manage cron ends here */
+
+app.controller('launchChild', function($scope,$http) {
+
+    $scope.logFileLoading = true;
+    $scope.logsFeteched = true;
+    $scope.couldNotFetchLogs = true;
+    $scope.couldNotConnect = true;
+    $scope.fetchedData = true;
+    $scope.hideLogs = true;
+    $scope.hideErrorLogs = true;
+
+    $scope.hidelogsbtn = function(){
+        $scope.hideLogs = true;
+    };
+
+    $scope.hideErrorLogsbtn = function(){
+        $scope.hideLogs = true;
+    };
+
+    $scope.fileManagerURL = "/filemanager/"+$("#domainNamePage").text();
+    $scope.previewUrl = "/preview/"+$("#childDomain").text()+"/";
+
+    var logType = 0;
+    $scope.pageNumber = 1;
+
+    $scope.fetchLogs = function(type){
+
+                var pageNumber = $scope.pageNumber;
+
+
+                if(type==3){
+                    pageNumber = $scope.pageNumber+1;
+                    $scope.pageNumber = pageNumber;
+                }
+                else if(type==4){
+                    pageNumber = $scope.pageNumber-1;
+                    $scope.pageNumber = pageNumber;
+                }
+                else{
+                    logType = type;
+                }
+
+
+                $scope.logFileLoading = false;
+                $scope.logsFeteched = true;
+                $scope.couldNotFetchLogs = true;
+                $scope.couldNotConnect = true;
+                $scope.fetchedData = false;
+                $scope.hideErrorLogs = true;
+
+
+
+                url = "/websites/getDataFromLogFile";
+
+                var domainNamePage = $("#domainNamePage").text();
+
+
+                var data = {
+                    logType: logType,
+                    virtualHost:domainNamePage,
+                    page:pageNumber,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.logstatus == 1){
+
+
+                        $scope.logFileLoading = true;
+                        $scope.logsFeteched = false;
+                        $scope.couldNotFetchLogs = true;
+                        $scope.couldNotConnect = true;
+                        $scope.fetchedData = false;
+                        $scope.hideLogs = false;
+
+
+                        $scope.records = JSON.parse(response.data.data);
+
+                    }
+
+                    else
+                    {
+
+                        $scope.logFileLoading = true;
+                        $scope.logsFeteched = true;
+                        $scope.couldNotFetchLogs = false;
+                        $scope.couldNotConnect = true;
+                        $scope.fetchedData = true;
+                        $scope.hideLogs = false;
+
+
+                        $scope.errorMessage = response.data.error_message;
+                        console.log(domainNamePage)
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    $scope.logFileLoading = true;
+                    $scope.logsFeteched = true;
+                    $scope.couldNotFetchLogs = true;
+                    $scope.couldNotConnect = false;
+                    $scope.fetchedData = true;
+                    $scope.hideLogs = false;
+
+                }
+
+
+
+    };
+
+    $scope.errorPageNumber = 1;
+
+
+    $scope.fetchErrorLogs = function(type){
+
+                var errorPageNumber = $scope.errorPageNumber;
+
+
+                if(type==3){
+                    errorPageNumber = $scope.errorPageNumber+1;
+                    $scope.errorPageNumber = errorPageNumber;
+                }
+                else if(type==4){
+                    errorPageNumber = $scope.errorPageNumber-1;
+                    $scope.errorPageNumber = errorPageNumber;
+                }
+                else{
+                    logType = type;
+                }
+
+                // notifications
+
+                $scope.logFileLoading = false;
+                $scope.logsFeteched = true;
+                $scope.couldNotFetchLogs = true;
+                $scope.couldNotConnect = true;
+                $scope.fetchedData = true;
+                $scope.hideErrorLogs = true;
+                $scope.hideLogs = false;
+
+
+
+                url = "/websites/fetchErrorLogs";
+
+                var domainNamePage = $("#domainNamePage").text();
+
+
+                var data = {
+                    virtualHost:domainNamePage,
+                    page:errorPageNumber,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.logstatus == 1){
+
+
+                        // notifications
+
+                        $scope.logFileLoading = true;
+                        $scope.logsFeteched = false;
+                        $scope.couldNotFetchLogs = true;
+                        $scope.couldNotConnect = true;
+                        $scope.fetchedData = true;
+                        $scope.hideLogs = false;
+                        $scope.hideErrorLogs = false;
+
+
+                        $scope.errorLogsData = response.data.data;
+
+                    }
+
+                    else
+                    {
+
+                        // notifications
+
+                        $scope.logFileLoading = true;
+                        $scope.logsFeteched = true;
+                        $scope.couldNotFetchLogs = false;
+                        $scope.couldNotConnect = true;
+                        $scope.fetchedData = true;
+                        $scope.hideLogs = true;
+                        $scope.hideErrorLogs = true;
+
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    // notifications
+
+                    $scope.logFileLoading = true;
+                    $scope.logsFeteched = true;
+                    $scope.couldNotFetchLogs = true;
+                    $scope.couldNotConnect = false;
+                    $scope.fetchedData = true;
+                    $scope.hideLogs = true;
+                    $scope.hideErrorLogs = true;
+
+                }
+
+
+
+    };
+
+    ///////// Configurations Part
+
+    $scope.configurationsBox = true;
+    $scope.configsFetched = true;
+    $scope.couldNotFetchConfigs = true;
+    $scope.couldNotConnect = true;
+    $scope.fetchedConfigsData = true;
+    $scope.configFileLoading = true;
+    $scope.configSaved = true;
+    $scope.couldNotSaveConfigurations = true;
+
+    $scope.hideconfigbtn = function(){
+
+        $scope.configurationsBox = true;
+    };
+
+    $scope.fetchConfigurations = function(){
+
+
+                $scope.hidsslconfigs = true;
+                $scope.configurationsBoxRewrite = true;
+                $scope.changePHPView = true;
+
+
+                //Rewrite rules
+                $scope.configurationsBoxRewrite = true;
+                $scope.rewriteRulesFetched = true;
+                $scope.couldNotFetchRewriteRules = true;
+                $scope.rewriteRulesSaved = true;
+                $scope.couldNotSaveRewriteRules = true;
+                $scope.fetchedRewriteRules = true;
+                $scope.saveRewriteRulesBTN = true;
+
+                ///
+
+                $scope.configFileLoading = false;
+
+
+
+                url = "/websites/getDataFromConfigFile";
+
+                var virtualHost = $("#childDomain").text();
+
+
+
+                var data = {
+                    virtualHost: virtualHost,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.configstatus === 1){
+
+                        //Rewrite rules
+
+                            $scope.configurationsBoxRewrite = true;
+                            $scope.rewriteRulesFetched = true;
+                            $scope.couldNotFetchRewriteRules = true;
+                            $scope.rewriteRulesSaved = true;
+                            $scope.couldNotSaveRewriteRules = true;
+                            $scope.fetchedRewriteRules = true;
+                            $scope.saveRewriteRulesBTN = true;
+
+                        ///
+
+                        $scope.configurationsBox = false;
+                        $scope.configsFetched = false;
+                        $scope.couldNotFetchConfigs = true;
+                        $scope.couldNotConnect = true;
+                        $scope.fetchedConfigsData = false;
+                        $scope.configFileLoading = true;
+                        $scope.configSaved = true;
+                        $scope.couldNotSaveConfigurations = true;
+                        $scope.saveConfigBtn = false;
+
+
+
+                        $scope.configData = response.data.configData;
+
+                    }
+
+                    else
+                    {
+
+                        //Rewrite rules
+                            $scope.configurationsBoxRewrite = true;
+                            $scope.rewriteRulesFetched = true;
+                            $scope.couldNotFetchRewriteRules = true;
+                            $scope.rewriteRulesSaved = true;
+                            $scope.couldNotSaveRewriteRules = true;
+                            $scope.fetchedRewriteRules = true;
+                            $scope.saveRewriteRulesBTN = true;
+
+                        ///
+                        $scope.configurationsBox = false;
+                        $scope.configsFetched = true;
+                        $scope.couldNotFetchConfigs = false;
+                        $scope.couldNotConnect = true;
+                        $scope.fetchedConfigsData = true;
+                        $scope.configFileLoading = true;
+                        $scope.configSaved = true;
+                        $scope.couldNotSaveConfigurations = true;
+
+
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    //Rewrite rules
+                        $scope.configurationsBoxRewrite = true;
+                        $scope.rewriteRulesFetched = true;
+                        $scope.couldNotFetchRewriteRules = true;
+                        $scope.rewriteRulesSaved = true;
+                        $scope.couldNotSaveRewriteRules = true;
+                        $scope.fetchedRewriteRules = true;
+                        $scope.saveRewriteRulesBTN = true;
+                ///
+
+                    $scope.configurationsBox = false;
+                    $scope.configsFetched = true;
+                    $scope.couldNotFetchConfigs = true;
+                    $scope.couldNotConnect = false;
+                    $scope.fetchedConfigsData = true;
+                    $scope.configFileLoading = true;
+                    $scope.configSaved = true;
+                    $scope.couldNotSaveConfigurations = true;
+
+
+                }
+
+
+
+    };
+
+    $scope.saveCongiruations = function(){
+
+                $scope.configFileLoading = false;
+
+
+
+                url = "/websites/saveConfigsToFile";
+
+                var virtualHost = $("#childDomain").text();
+                var configData = $scope.configData;
+
+
+
+                var data = {
+                    virtualHost: virtualHost,
+                    configData:configData,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.configstatus == 1){
+
+                        $scope.configurationsBox = false;
+                        $scope.configsFetched = true;
+                        $scope.couldNotFetchConfigs = true;
+                        $scope.couldNotConnect = true;
+                        $scope.fetchedConfigsData = true;
+                        $scope.configFileLoading = true;
+                        $scope.configSaved = false;
+                        $scope.couldNotSaveConfigurations = true;
+                        $scope.saveConfigBtn = true;
+
+
+                    }
+
+                    else
+                    {
+                        $scope.configurationsBox = false;
+                        $scope.configsFetched = true;
+                        $scope.couldNotFetchConfigs = true;
+                        $scope.couldNotConnect = true;
+                        $scope.fetchedConfigsData = false;
+                        $scope.configFileLoading = true;
+                        $scope.configSaved = true;
+                        $scope.couldNotSaveConfigurations = false;
+
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    $scope.configurationsBox = false;
+                        $scope.configsFetched = true;
+                        $scope.couldNotFetchConfigs = true;
+                        $scope.couldNotConnect = false;
+                        $scope.fetchedConfigsData = true;
+                        $scope.configFileLoading = true;
+                        $scope.configSaved = true;
+                        $scope.couldNotSaveConfigurations = true;
+
+
+                }
+
+
+
+    };
+
+
+    ///////// Rewrite Rules
+
+    $scope.configurationsBoxRewrite = true;
+    $scope.rewriteRulesFetched = true;
+    $scope.couldNotFetchRewriteRules = true;
+    $scope.rewriteRulesSaved = true;
+    $scope.couldNotSaveRewriteRules = true;
+    $scope.fetchedRewriteRules = true;
+    $scope.saveRewriteRulesBTN = true;
+
+    $scope.hideRewriteRulesbtn = function() {
+        $scope.configurationsBoxRewrite = true;
+    };
+
+
+    $scope.fetchRewriteFules = function(){
+
+                $scope.hidsslconfigs = true;
+                $scope.configurationsBox = true;
+                $scope.changePHPView = true;
+
+
+                $scope.configurationsBox = true;
+                $scope.configsFetched = true;
+                $scope.couldNotFetchConfigs = true;
+                $scope.couldNotConnect = true;
+                $scope.fetchedConfigsData = true;
+                $scope.configFileLoading = true;
+                $scope.configSaved = true;
+                $scope.couldNotSaveConfigurations = true;
+                $scope.saveConfigBtn = true;
+
+                $scope.configFileLoading = false;
+
+
+
+                url = "/websites/getRewriteRules";
+
+                var virtualHost = $("#childDomain").text();
+
+
+
+                var data = {
+                    virtualHost: virtualHost,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.rewriteStatus == 1){
+
+
+                        // from main
+
+                        $scope.configurationsBox = true;
+                        $scope.configsFetched = true;
+                        $scope.couldNotFetchConfigs = true;
+                        $scope.fetchedConfigsData = true;
+                        $scope.configSaved = true;
+                        $scope.couldNotSaveConfigurations = true;
+                        $scope.saveConfigBtn = true;
+
+                        // main ends
+
+                        $scope.configFileLoading = true;
+
+                        //
+
+
+                        $scope.configurationsBoxRewrite = false;
+                        $scope.rewriteRulesFetched = false;
+                        $scope.couldNotFetchRewriteRules = true;
+                        $scope.rewriteRulesSaved = true;
+                        $scope.couldNotSaveRewriteRules = true;
+                        $scope.fetchedRewriteRules = false;
+                        $scope.saveRewriteRulesBTN = false;
+                        $scope.couldNotConnect = true;
+
+
+
+                        $scope.rewriteRules = response.data.rewriteRules;
+
+                    }
+
+                    else
+                    {
+                        // from main
+                        $scope.configurationsBox = true;
+                        $scope.configsFetched = true;
+                        $scope.couldNotFetchConfigs = true;
+                        $scope.fetchedConfigsData = true;
+                        $scope.configFileLoading = true;
+                        $scope.configSaved = true;
+                        $scope.couldNotSaveConfigurations = true;
+                        $scope.saveConfigBtn = true;
+                        // from main
+
+                        $scope.configFileLoading = true;
+
+                        ///
+
+                        $scope.configurationsBoxRewrite = true;
+                        $scope.rewriteRulesFetched = true;
+                        $scope.couldNotFetchRewriteRules = false;
+                        $scope.rewriteRulesSaved = true;
+                        $scope.couldNotSaveRewriteRules = true;
+                        $scope.fetchedRewriteRules = true;
+                        $scope.saveRewriteRulesBTN = true;
+                        $scope.couldNotConnect = true;
+
+
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+                        // from main
+
+                        $scope.configurationsBox = true;
+                        $scope.configsFetched = true;
+                        $scope.couldNotFetchConfigs = true;
+                        $scope.fetchedConfigsData = true;
+                        $scope.configFileLoading = true;
+                        $scope.configSaved = true;
+                        $scope.couldNotSaveConfigurations = true;
+                        $scope.saveConfigBtn = true;
+
+                        // from main
+
+                        $scope.configFileLoading = true;
+
+                        ///
+
+                        $scope.configurationsBoxRewrite = true;
+                        $scope.rewriteRulesFetched = true;
+                        $scope.couldNotFetchRewriteRules = true;
+                        $scope.rewriteRulesSaved = true;
+                        $scope.couldNotSaveRewriteRules = true;
+                        $scope.fetchedRewriteRules = true;
+                        $scope.saveRewriteRulesBTN = true;
+
+                        $scope.couldNotConnect = false;
+
+
+                }
+
+
+
+    };
+
+    $scope.saveRewriteRules = function(){
+
+                $scope.configFileLoading = false;
+
+
+
+                url = "/websites/saveRewriteRules";
+
+                var virtualHost = $("#childDomain").text();
+                var rewriteRules = $scope.rewriteRules;
+
+
+
+                var data = {
+                    virtualHost: virtualHost,
+                    rewriteRules:rewriteRules,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.rewriteStatus == 1){
+
+                        $scope.configurationsBoxRewrite = false;
+                        $scope.rewriteRulesFetched = true;
+                        $scope.couldNotFetchRewriteRules = true;
+                        $scope.rewriteRulesSaved = false;
+                        $scope.couldNotSaveRewriteRules = true;
+                        $scope.fetchedRewriteRules = true;
+                        $scope.saveRewriteRulesBTN = true;
+                        $scope.configFileLoading = true;
+
+
+                    }
+
+                    else
+                    {
+                        $scope.configurationsBoxRewrite = false;
+                        $scope.rewriteRulesFetched = false;
+                        $scope.couldNotFetchRewriteRules = true;
+                        $scope.rewriteRulesSaved = true;
+                        $scope.couldNotSaveRewriteRules = false;
+                        $scope.fetchedRewriteRules = true;
+                        $scope.saveRewriteRulesBTN = false;
+
+                        $scope.configFileLoading = true;
+
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.configurationsBoxRewrite = false;
+                        $scope.rewriteRulesFetched = false;
+                        $scope.couldNotFetchRewriteRules = true;
+                        $scope.rewriteRulesSaved = true;
+                        $scope.couldNotSaveRewriteRules = true;
+                        $scope.fetchedRewriteRules = true;
+                        $scope.saveRewriteRulesBTN = false;
+
+                        $scope.configFileLoading = true;
+
+                        $scope.couldNotConnect = false;
+
+
+                }
+
+
+
+    };
+
+
+    //////// SSL Part
+
+    $scope.sslSaved = true;
+    $scope.couldNotSaveSSL = true;
+    $scope.hidsslconfigs = true;
+    $scope.couldNotConnect = true;
+
+
+    $scope.hidesslbtn = function(){
+        $scope.hidsslconfigs = true;
+    };
+
+    $scope.addSSL = function(){
+        $scope.hidsslconfigs = false;
+        $scope.configurationsBox = true;
+        $scope.configurationsBoxRewrite = true;
+        $scope.changePHPView = true;
+    };
+
+
+    $scope.saveSSL = function(){
+
+
+                $scope.configFileLoading = false;
+
+                url = "/websites/saveSSL";
+
+                var virtualHost = $("#childDomain").text();
+                var cert = $scope.cert;
+                var key = $scope.key;
+
+
+
+                var data = {
+                    virtualHost: virtualHost,
+                    cert:cert,
+                    key:key,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if(response.data.sslStatus == 1){
+
+                        $scope.sslSaved = false;
+                        $scope.couldNotSaveSSL = true;
+                        $scope.couldNotConnect = true;
+                        $scope.configFileLoading = true;
+
+
+                    }
+
+                    else
+                    {
+
+                        $scope.sslSaved = true;
+                        $scope.couldNotSaveSSL = false;
+                        $scope.couldNotConnect = true;
+                        $scope.configFileLoading = true;
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.sslSaved = true;
+                        $scope.couldNotSaveSSL = true;
+                        $scope.couldNotConnect = false;
+                        $scope.configFileLoading = true;
+
+
+
+
+                }
+
+    };
+
+
+    //// Change PHP Master
+
+    $scope.failedToChangePHPMaster = true;
+    $scope.phpChangedMaster = true;
+    $scope.couldNotConnect = true;
+
+    $scope.changePHPView = true;
+
+
+    $scope.hideChangePHPMaster = function(){
+        $scope.changePHPView = true;
+    };
+
+    $scope.changePHPMaster = function(){
+        $scope.hidsslconfigs = true;
+        $scope.configurationsBox = true;
+        $scope.configurationsBoxRewrite = true;
+        $scope.changePHPView = false;
+    };
+
+
+    $scope.changePHPVersionMaster = function(childDomain,phpSelection){
+
+                // notifcations
+
+                $scope.configFileLoading = false;
+
+                var url = "/websites/changePHP";
+
+                var data = {
+                    childDomain:$("#childDomain").text(),
+                    phpSelection:$scope.phpSelectionMaster,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.changePHP === 1){
+
+                        $scope.configFileLoading = true;
+                        $scope.websiteDomain = $("#childDomain").text();
+
+
+                        // notifcations
+
+                        $scope.failedToChangePHPMaster = true;
+                        $scope.phpChangedMaster = false;
+                        $scope.couldNotConnect = true;
+
+
+                    }
+                    else{
+
+                        $scope.configFileLoading = true;
+                        $scope.errorMessage = response.data.error_message;
+
+                        // notifcations
+
+                        $scope.failedToChangePHPMaster = false;
+                        $scope.phpChangedMaster = true;
+                        $scope.couldNotConnect = true;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.configFileLoading = true;
+
+                         // notifcations
+
+                        $scope.failedToChangePHPMaster = true;
+                        $scope.phpChangedMaster = true;
+                        $scope.couldNotConnect = false;
+
+                }
+
+    }
+
+
+
+    /// Open_basedir protection
+
+    $scope.baseDirLoading = true;
+    $scope.operationFailed = true;
+    $scope.operationSuccessfull = true;
+    $scope.couldNotConnect = true;
+    $scope.openBaseDirBox = true;
+
+
+    $scope.openBaseDirView = function(){
+        $scope.openBaseDirBox = false;
+    };
+
+    $scope.hideOpenBasedir = function () {
+        $scope.openBaseDirBox = true;
+    };
+
+    $scope.applyOpenBasedirChanges = function(childDomain,phpSelection){
+
+                // notifcations
+
+                $scope.baseDirLoading = false;
+                $scope.operationFailed = true;
+                $scope.operationSuccessfull = true;
+                $scope.couldNotConnect = true;
+                $scope.openBaseDirBox = false;
+
+
+                var url = "/websites/changeOpenBasedir";
+
+                var data = {
+                    domainName:$("#childDomain").text(),
+                    openBasedirValue:$scope.openBasedirValue
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.changeOpenBasedir === 1){
+
+                        $scope.baseDirLoading = true;
+                        $scope.operationFailed = true;
+                        $scope.operationSuccessfull = false;
+                        $scope.couldNotConnect = true;
+                        $scope.openBaseDirBox = false;
+
+                    }
+                    else{
+
+                        $scope.baseDirLoading = true;
+                        $scope.operationFailed = false;
+                        $scope.operationSuccessfull = true;
+                        $scope.couldNotConnect = true;
+                        $scope.openBaseDirBox = false;
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    $scope.baseDirLoading = true;
+                    $scope.operationFailed = true;
+                    $scope.operationSuccessfull = true;
+                    $scope.couldNotConnect = false;
+                    $scope.openBaseDirBox = false;
+
+
+                }
+
+    }
+
+
+
+
+});
