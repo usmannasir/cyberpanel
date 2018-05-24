@@ -555,7 +555,7 @@ class virtualHostUtilities:
             ## OpenBase Dir Protection
 
             phpIniOverride = "phpIniOverride  {\n"
-            php_admin_value = 'php_admin_value open_basedir "/tmp:' + path + '"\n'
+            php_admin_value = 'php_admin_value open_basedir "/tmp:$VH_ROOT"\n'
             endPHPIniOverride = "}\n"
 
             if openBasedir == 1:
@@ -1715,7 +1715,6 @@ def issueSSLForMailServer(virtualHost,path):
             str(msg) + "  [issueSSLForHostName]")
         print "0,"+str(msg)
 
-
 def createAlias(masterDomain,aliasDomain,ssl,sslPath, administratorEmail):
     try:
 
@@ -2001,6 +2000,7 @@ def main():
             openBasedir = 0
 
         createVirtualHost(args.virtualHostName, args.administratorEmail, args.phpVersion, args.virtualHostUser, int(args.numberOfSites), int(args.ssl), args.sslPath, dkimCheck, openBasedir)
+
     elif args.function == "deleteVirtualHostConfigurations":
         virtualHostUtilities.deleteVirtualHostConfigurations(args.virtualHostName,int(args.numberOfSites))
     elif args.function == "createDomain":

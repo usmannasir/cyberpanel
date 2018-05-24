@@ -38,7 +38,6 @@ def loadWebsitesHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def createWebsite(request):
     try:
         val = request.session['userID']
@@ -79,7 +78,6 @@ def createWebsite(request):
 
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def modifyWebsite(request):
     try:
@@ -126,7 +124,6 @@ def modifyWebsite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def deleteWebsite(request):
     try:
         val = request.session['userID']
@@ -172,8 +169,7 @@ def deleteWebsite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
-def dnsTemplate(request, domain, admin, dkimCheck):
+def dnsTemplate(request, domain, admin):
     try:
 
         ipFile = "/etc/cyberpanel/machineIP"
@@ -308,7 +304,6 @@ def dnsTemplate(request, domain, admin, dkimCheck):
                                  disabled=0,
                                  auth=1)
                 record.save()
-
 
         else:
             if Domains.objects.filter(name=topLevelDomain).count() == 0:
@@ -462,7 +457,6 @@ def createDKIMRecords(request, domain, admin):
         logging.CyberCPLogFileWriter.writeToFile(
             "We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
 
-
 def siteState(request):
     try:
         val = request.session['userID']
@@ -516,23 +510,19 @@ def submitWebsiteCreation(request):
             websiteOwner = data['websiteOwner']
             externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:7]
 
-            try:
-                website = Websites.objects.get(domain=domain)
-                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                            'error_message': "Website Already Exists"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            except:
-                pass
 
-            try:
-                website = ChildDomains.objects.get(domain=domain)
+            if Websites.objects.filter(domain=domain).count() > 0:
                 data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                            'error_message': "Website Already Exists"}
+                            'error_message': "This website already exists."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-            except:
-                pass
+
+
+            if ChildDomains.objects.filter(domain=domain).count() > 0:
+                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
+                            'error_message': "This website already exists as child domain."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             ####### Limitations check
 
@@ -540,42 +530,18 @@ def submitWebsiteCreation(request):
 
             if admin.type == 1:
                 pass
-            elif admin.type == 3:
-                if admin.initWebsitesLimit == 0:
-                    pass
-                elif admin.websites_set.all().count() == admin.initWebsitesLimit:
-                    data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                                'error_message': "Selected owner have reached maximum websites limit"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-                else:
-                    pass
 
             else:
-
-                initialLimit = admin.initWebsitesLimit
-                try:
-                    subaccounts = Administrator.objects.filter(owner=admin.pk)
-                    for items in subaccounts:
-                        initialLimit = initialLimit - items.initWebsitesLimit
-                except:
-                    pass
-
-                if admin.initWebsitesLimit == 0:
-                    pass
-                elif admin.websites_set.all().count() == initialLimit:
-                    data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                                'error_message': "Selected owner have reached maximum websites limit"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-                else:
-                    pass
+                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
+                            'error_message': "Only administrators are allowed to create websites."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             ####### Limitations Check End
 
             ##### Zone creation
 
-            dnsTemplate(requests, domain, admin, data['dkimCheck'])
+            dnsTemplate(requests, domain, admin)
 
             ## zone creation
 
@@ -604,7 +570,7 @@ def submitWebsiteCreation(request):
             ## DKIM Check
 
             if data['dkimCheck'] == 1:
-                createDKIMRecords(request,domain,admin)
+                createDKIMRecords(request, domain, admin)
 
             selectedPackage = Package.objects.get(packageName=packageName)
 
@@ -630,23 +596,21 @@ def submitDomainCreation(request):
             domain = data['domainName']
             phpSelection = data['phpSelection']
 
-            try:
-                website = Websites.objects.get(domain=domain)
-                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                            'error_message': "Website Already Exists"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            except:
-                pass
 
-            try:
-                website = ChildDomains.objects.get(domain=domain)
+            ## Check if this domain either exists as website or child domain
+
+            if Websites.objects.filter(domain=domain).count() > 0:
                 data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                            'error_message': "Website Already Exists"}
+                            'error_message': "This Domain already exists as a website."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-            except:
-                pass
+
+
+            if ChildDomains.objects.filter(domain=domain).count() > 0:
+                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
+                            'error_message': "This domain already exists as child domain."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             ####### Limitations check
 
@@ -682,17 +646,12 @@ def submitDomainCreation(request):
                 else:
                     path = "/home/" + masterDomain + "/public_html/" + domain
 
-            ### Zone creation.
+                ### Zone creation.
 
-            try:
-                restore = data['restore']
-                restart = 0
-            except BaseException, msg:
                 val = request.session['userID']
                 admin = Administrator.objects.get(pk=val)
-                dnsTemplate(requests, domain, admin, data['dkimCheck'])
+                dnsTemplate(requests, domain, admin)
 
-            ## Zone creation.
 
             externalApp = master.externalApp
             numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
@@ -718,9 +677,9 @@ def submitDomainCreation(request):
             try:
                 restore = data['restore']
                 restart = 0
-
             except BaseException, msg:
                 if data['dkimCheck'] == 1:
+                    admin = Administrator.objects.get(pk=val)
                     createDKIMRecords(request, domain, admin)
 
             website = ChildDomains(master=master, domain=domain, path=path, phpSelection=phpSelection, ssl=ssl)
@@ -780,8 +739,6 @@ def fetchDomains(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
-
 def listWebsites(request):
     try:
         val = request.session['userID']
@@ -818,7 +775,6 @@ def listWebsites(request):
 
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def getFurtherAccounts(request):
     try:
@@ -890,7 +846,6 @@ def getFurtherAccounts(request):
         dic = {'listWebSiteStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
-
 
 def submitWebsiteDeletion(request):
     try:
@@ -1045,7 +1000,6 @@ def submitWebsiteStatus(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def submitWebsiteModify(request):
     try:
         val = request.session['userID']
@@ -1127,8 +1081,6 @@ def submitWebsiteModify(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
-
 def saveWebsiteChanges(request):
     try:
         val = request.session['userID']
@@ -1188,7 +1140,6 @@ def saveWebsiteChanges(request):
         data_ret = {'saveStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
-
 
 def domain(request,domain):
     try:
@@ -1285,8 +1236,6 @@ def domain(request,domain):
     except KeyError:
         return redirect(loadLoginPage)
 
-
-
 def getDataFromLogFile(request):
     data = json.loads(request.body)
     logType = data['logType']
@@ -1382,7 +1331,6 @@ def fetchErrorLogs(request):
     except BaseException,msg:
         final_json = json.dumps({'logstatus': 0, 'error_message': str(msg)})
         return HttpResponse(final_json)
-
 
 def installWordpress(request):
     try:
@@ -1602,7 +1550,6 @@ def installJoomla(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installJoomla]")
         return HttpResponse("Not Logged in as admin")
 
-
 def getDataFromConfigFile(request):
     try:
         val = request.session['userID']
@@ -1702,7 +1649,6 @@ def saveConfigsToFile(request):
         status = {"configstatus":0,"error":"Could not save, see CyberPanel main log file."}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[saveConfigsToFile]")
         return HttpResponse("Not Logged in as admin")
-
 
 def getRewriteRules(request):
     try:
@@ -1806,8 +1752,6 @@ def saveRewriteRules(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[saveConfigsToFile]")
         return HttpResponse("Not Logged in as admin")
 
-
-
 def saveSSL(request):
     try:
         val = request.session['userID']
@@ -1906,7 +1850,6 @@ def saveSSL(request):
         data_ret = {'sslStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
 
-
 def changePHP(request):
     try:
         val = request.session['userID']
@@ -1958,9 +1901,7 @@ def CreateWebsiteFromBackup(request):
 
             data = json.loads(request.body)
             backupFile = data['backupFile'].strip(".tar.gz")
-
             originalFile = "/home/backup/" + data['backupFile']
-
 
 
             if not os.path.exists(originalFile):
@@ -1982,7 +1923,24 @@ def CreateWebsiteFromBackup(request):
             phpSelection = backupMetaData.find('phpSelection').text
             externalApp = backupMetaData.find('externalApp').text
 
-            ####### Limitations Check End
+
+            ## Pre-creation checks
+
+            if Websites.objects.filter(domain=domain).count() > 0:
+                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
+                            'error_message': "This website already exists."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+            if ChildDomains.objects.filter(domain=domain).count() > 0:
+                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
+                            'error_message': "This website already exists as child domain."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+            ####### Pre-creation checks ends
 
             numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
 
@@ -2144,7 +2102,6 @@ def CreateWebsiteFromBackup(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def listCron(request):
     try:
         val = request.session['userID']
@@ -2183,7 +2140,6 @@ def listCron(request):
             return HttpResponse(str(msg))
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def getWebsiteCron(request):
     try:
@@ -2261,7 +2217,6 @@ def getWebsiteCron(request):
         status = {"getWebsiteCron": 0, "error": "Not Logged in as admin"}
         final_json = json.dumps(status)
         return HttpResponse(final_json)
-
 
 def getCronbyLine(request):
     try:
@@ -2343,7 +2298,6 @@ def getCronbyLine(request):
         status = {"getWebsiteCron": 0, "error": "Not Logged in"}
         final_json = json.dumps(status)
         return HttpResponse(final_json)
-
 
 def saveCronChanges(request):
     try:
@@ -2435,7 +2389,6 @@ def saveCronChanges(request):
         final_json = json.dumps(status)
         return HttpResponse(final_json)
 
-
 def remCronbyLine(request):
     try:
         val = request.session['userID']
@@ -2526,7 +2479,6 @@ def remCronbyLine(request):
         status = {"remCronbyLine": 0, "error": "Not Logged in"}
         final_json = json.dumps(status)
         return HttpResponse(final_json)
-
 
 def addNewCron(request):
     try:
@@ -2620,7 +2572,6 @@ def addNewCron(request):
         final_json = json.dumps(status)
         return HttpResponse(final_json)
 
-
 def domainAlias(request,domain):
     try:
         val = request.session['userID']
@@ -2670,7 +2621,6 @@ def domainAlias(request,domain):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def submitAliasCreation(request):
     try:
         if request.method == 'POST':
@@ -2685,7 +2635,7 @@ def submitAliasCreation(request):
 
             ##### Zone creation
 
-            dnsTemplate(requests, aliasDomain, admin, 0)
+            dnsTemplate(requests, aliasDomain, admin)
 
             ### Zone creation
 
@@ -2723,7 +2673,6 @@ def submitAliasCreation(request):
         data_ret = {'createAliasStatus': 0, 'error_message': str(msg), "existsStatus": 0}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
-
 
 def issueAliasSSL(request):
     try:
@@ -2812,7 +2761,6 @@ def delateAlias(request):
         data_ret = {'deleteAlias': 0, 'error_message': str(msg), "existsStatus": 0}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
-
 
 def changeOpenBasedir(request):
     try:
