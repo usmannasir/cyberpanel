@@ -377,7 +377,7 @@ app.controller('servicesManager', function($scope,$http) {
            $scope.serviceAction = function(serviceName, action){
                 $scope.ActionProgress = true;
                 $scope.btnDisable = true;
-                $scope.ActionSuccessfull = false;
+                $scope.ActionSuccessful = false;
                 $scope.ActionFailed = false;
                 $scope.couldNotConnect = false;
                 $scope.actionLoader = true;
@@ -403,32 +403,32 @@ app.controller('servicesManager', function($scope,$http) {
                     if(response.data.serviceAction == 1){
                         setTimeout(function() {
                             getServiceStatus();
-                            setTimeout(function() {
-                                $scope.ActionSuccessfull = true;
-                                $scope.ActionFailed = false;
-                                $scope.couldNotConnect = false;
-                                $scope.actionLoader = false;
-                                $scope.btnDisable = false;
-                            },1000)
-                        }, 3000);
+                            //setTimeout(function() {
+                            $scope.ActionSuccessful = true;
+                            $scope.ActionFailed = false;
+                            $scope.couldNotConnect = false;
+                            $scope.actionLoader = false;
+                            $scope.btnDisable = false;
+                            //},1000)
+                        }, 1000);
                     }
                     else{
                         setTimeout(function() {
                             getServiceStatus();
-                            setTimeout(function() {
-                                $scope.ActionSuccessfull = false;
+                            //setTimeout(function() {
+                                $scope.ActionSuccessful = false;
                                 $scope.ActionFailed = true;
                                 $scope.couldNotConnect = false;
                                 $scope.actionLoader = false;
                                 $scope.btnDisable = false;
-                            },1000)
-                        }, 5000);
+                            //},1000)
+                        }, 1000);
 
                     }
 
                 }
                 function cantLoadInitialDatas(response) {
-                    $scope.ActionSuccessfull = false;
+                    $scope.ActionSuccessful = false;
                     $scope.ActionFailed = false;
                     $scope.couldNotConnect = true;
                     $scope.actionLoader = false;
