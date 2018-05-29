@@ -293,11 +293,8 @@ def servicesAction(request):
                     return HttpResponse(final_json)
 
                 else:
-                    
-                    if service == "lsws":
-                        command = "sudo /usr/local/lsws/bin/lswsctrl %s" % (action)
-                    else:
-                        command = 'sudo systemctl %s %s' % (action, service)
+
+                    command = 'sudo systemctl %s %s' % (action, service)
                     cmd = shlex.split(command)
                     res = subprocess.call(cmd)
 

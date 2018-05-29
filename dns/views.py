@@ -384,16 +384,9 @@ def addDNSRecord(request):
                     else:
                         value = recordName + "." + zoneDomain
 
-                    record = Records(   domainOwner=zone,
-                                        domain_id=zone.id,
-                                        name=value,
-                                        type="A",
-                                        content=recordContentA,
-                                        ttl=ttl,
-                                        prio=0,
-                                        disabled=0,
-                                        auth=1  )
-                    record.save()
+
+                    createDNSRecord(request, zone, value, recordType, recordContentA, 0, ttl )
+
                 elif recordType == "MX":
 
                     if recordName == "@":
@@ -406,19 +399,11 @@ def addDNSRecord(request):
 
                     recordContentMX = data['recordContentMX']
                     priority = data['priority']
-                    record = Records(domainOwner=zone,
-                                     domain_id=zone.id,
-                                     name=value,
-                                     type="MX",
-                                     content=recordContentMX,
-                                     ttl=ttl,
-                                     prio=priority,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
+
+                    createDNSRecord(request, zone, value, recordType, recordContentMX, priority, ttl)
+
                 elif recordType == "AAAA":
 
-                    recordContentAAAA = data['recordContentAAAA']  ## IP or ponting value
 
                     if recordName == "@":
                         value = zoneDomain
@@ -428,17 +413,10 @@ def addDNSRecord(request):
                     else:
                         value = recordName + "." + zoneDomain
 
+                    recordContentAAAA = data['recordContentAAAA']  ## IP or ponting value
 
-                    record = Records(   domainOwner=zone,
-                                        domain_id=zone.id,
-                                        name=value,
-                                        type="AAAA",
-                                        content=recordContentAAAA,
-                                        ttl=ttl,
-                                        prio=0,
-                                        disabled=0,
-                                        auth=1  )
-                    record.save()
+                    createDNSRecord(request, zone, value, recordType, recordContentAAAA, 0, ttl)
+
                 elif recordType == "CNAME":
 
                     if recordName == "@":
@@ -449,17 +427,11 @@ def addDNSRecord(request):
                     else:
                         value = recordName + "." + zoneDomain
 
+
                     recordContentCNAME = data['recordContentCNAME']  ## IP or ponting value
-                    record = Records(   domainOwner=zone,
-                                        domain_id=zone.id,
-                                        name=value,
-                                        type="CNAME",
-                                        content=recordContentCNAME,
-                                        ttl=ttl,
-                                        prio=0,
-                                        disabled=0,
-                                        auth=1  )
-                    record.save()
+
+                    createDNSRecord(request, zone, value, recordType, recordContentCNAME, 0, ttl)
+
                 elif recordType == "SPF":
 
                     if recordName == "@":
@@ -471,16 +443,9 @@ def addDNSRecord(request):
                         value = recordName + "." + zoneDomain
 
                     recordContentSPF = data['recordContentSPF']  ## IP or ponting value
-                    record = Records(   domainOwner=zone,
-                                        domain_id=zone.id,
-                                        name=value,
-                                        type="SPF",
-                                        content=recordContentSPF,
-                                        ttl=ttl,
-                                        prio=0,
-                                        disabled=0,
-                                        auth=1  )
-                    record.save()
+
+                    createDNSRecord(request, zone, value, recordType, recordContentSPF, 0, ttl)
+
                 elif recordType == "TXT":
 
                     if recordName == "@":
@@ -492,30 +457,15 @@ def addDNSRecord(request):
                         value = recordName + "." + zoneDomain
 
                     recordContentTXT = data['recordContentTXT']  ## IP or ponting value
-                    record = Records(   domainOwner=zone,
-                                        domain_id=zone.id,
-                                        name=value,
-                                        type="TXT",
-                                        content=recordContentTXT,
-                                        ttl=ttl,
-                                        prio=0,
-                                        disabled=0,
-                                        auth=1  )
-                    record.save()
+
+                    createDNSRecord(request, zone, value, recordType, recordContentTXT, 0, ttl)
+
                 elif recordType == "SOA":
 
                     recordContentSOA = data['recordContentSOA']
 
-                    records = Records(domainOwner=zone,
-                                        domain_id=zone.id,
-                                        name=zoneDomain,
-                                        type="SOA",
-                                        content=recordContentSOA,
-                                        ttl=ttl,
-                                        prio=0,
-                                        disabled=0,
-                                        auth=1)
-                    records.save()
+                    createDNSRecord(request, zone, value, recordType, recordContentSOA, 0, ttl)
+
                 elif recordType == "NS":
 
                     recordContentNS = data['recordContentNS']
@@ -528,16 +478,8 @@ def addDNSRecord(request):
                     else:
                         recordContentNS = recordContentNS + "." + zoneDomain
 
-                    record = Records(domainOwner=zone,
-                                     domain_id=zone.id,
-                                     name=zoneDomain,
-                                     type="NS",
-                                     content=recordContentNS,
-                                     ttl=ttl,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
+                    createDNSRecord(request, zone, value, recordType, recordContentNS, 0, ttl)
+
                 elif recordType == "SRV":
 
                     if recordName == "@":
@@ -551,16 +493,7 @@ def addDNSRecord(request):
                     recordContentSRV = data['recordContentSRV']
                     priority = data['priority']
 
-                    record = Records(domainOwner=zone,
-                                     domain_id=zone.id,
-                                     name=value,
-                                     type="SRV",
-                                     content=recordContentSRV,
-                                     ttl=ttl,
-                                     prio=priority,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
+                    createDNSRecord(request, zone, value, recordType, recordContentSRV, priority, ttl)
 
 
                 final_dic = {'add_status': 1, 'error_message': "None"}
@@ -659,6 +592,29 @@ def submitZoneDeletion(request):
         final_dic = {'delete_status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
+def createDNSRecord(request, zone, name, type, value, priority, ttl):
+    try:
+        val = request.session['userID']
+
+        if Records.objects.filter(name=name, type=type).count() == 0:
+            record = Records(domainOwner=zone,
+                             domain_id=zone.id,
+                             name=name,
+                             type=type,
+                             content=value,
+                             ttl=ttl,
+                             prio=priority,
+                             disabled=0,
+                             auth=1)
+            record.save()
+    except KeyError,msg:
+        final_dic = {'add_status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+
+
 
 
 

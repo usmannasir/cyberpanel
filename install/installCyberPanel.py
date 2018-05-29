@@ -312,7 +312,7 @@ class InstallCyberPanel:
             logging.InstallLog.writeToFile(str(msg) + " [setup_mariadb_repo]")
             return 0
 
-    def installMySQL(self):
+    def installMySQL(self, mysql):
 
         try:
             ############## Install mariadb ######################
@@ -337,87 +337,95 @@ class InstallCyberPanel:
                     InstallCyberPanel.stdOut("MariaDB successfully installed!")
                     break
 
-            ## fix configurations
+            ## Fix configurations if two MYSQL are used
 
-            logging.InstallLog.writeToFile("Setting up MariaDB configurations!")
-            InstallCyberPanel.stdOut("Setting up MariaDB configurations!")
+            if mysql == 'Two':
+                logging.InstallLog.writeToFile("Setting up MariaDB configurations!")
+                InstallCyberPanel.stdOut("Setting up MariaDB configurations!")
 
-            pathConf = "/etc/my.cnf"
-            pathServiceFile = "/etc/systemd/system/mysqld@.service"
+                pathConf = "/etc/my.cnf"
+                pathServiceFile = "/etc/systemd/system/mysqld@.service"
 
-            if os.path.exists(pathConf):
-                os.remove(pathConf)
+                if os.path.exists(pathConf):
+                    os.remove(pathConf)
 
-            if os.path.exists(pathServiceFile):
-                os.remove(pathServiceFile)
+                if os.path.exists(pathServiceFile):
+                    os.remove(pathServiceFile)
 
-            os.chdir(self.cwd)
+                os.chdir(self.cwd)
 
-            shutil.copy("mysql/my.cnf",pathConf)
-            shutil.copy("mysql/mysqld@.service",pathServiceFile)
+                shutil.copy("mysql/my.cnf", pathConf)
+                shutil.copy("mysql/mysqld@.service", pathServiceFile)
 
-            logging.InstallLog.writeToFile("MariaDB configurations set!")
-            InstallCyberPanel.stdOut("MariaDB configurations set!")
+                logging.InstallLog.writeToFile("MariaDB configurations set!")
+                InstallCyberPanel.stdOut("MariaDB configurations set!")
 
-            ##
+                ##
 
-            count = 0
+                count = 0
 
-            while(1):
-                command = "mysql_install_db --user=mysql --datadir=/var/lib/mysql1"
+                while (1):
+                    command = "mysql_install_db --user=mysql --datadir=/var/lib/mysql1"
 
-                res = subprocess.call(shlex.split(command))
+                    res = subprocess.call(shlex.split(command))
 
-                if res == 1:
-                    count = count + 1
-                    InstallCyberPanel.stdOut("Trying to create data directories for second MariaDB instance, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Failed to create data directories for second MariaDB instance, exiting installer! [installMySQL]")
-                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
-                else:
-                    logging.InstallLog.writeToFile("Data directories created for second MariaDB instance!")
-                    InstallCyberPanel.stdOut("Data directories created for second MariaDB instance!")
-                    break
+                    if res == 1:
+                        count = count + 1
+                        InstallCyberPanel.stdOut(
+                            "Trying to create data directories for second MariaDB instance, trying again, try number: " + str(
+                                count))
+                        if count == 3:
+                            logging.InstallLog.writeToFile(
+                                "Failed to create data directories for second MariaDB instance, exiting installer! [installMySQL]")
+                            InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                            sys.exit()
+                    else:
+                        logging.InstallLog.writeToFile("Data directories created for second MariaDB instance!")
+                        InstallCyberPanel.stdOut("Data directories created for second MariaDB instance!")
+                        break
 
-            ##
+                ##
 
-            count = 0
+                count = 0
 
-            while(1):
-                command = "systemctl start mysqld@1"
-                res = subprocess.call(shlex.split(command))
+                while (1):
+                    command = "systemctl start mysqld@1"
+                    res = subprocess.call(shlex.split(command))
 
-                if res == 1:
-                    count = count + 1
-                    InstallCyberPanel.stdOut("Trying to start first MariaDB instance, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Failed to start first MariaDB instance, exiting installer! [installMySQL]")
-                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
-                else:
-                    logging.InstallLog.writeToFile("First MariaDB instance successfully started!")
-                    InstallCyberPanel.stdOut("First MariaDB instance successfully started!")
-                    break
+                    if res == 1:
+                        count = count + 1
+                        InstallCyberPanel.stdOut(
+                            "Trying to start first MariaDB instance, trying again, try number: " + str(count))
+                        if count == 3:
+                            logging.InstallLog.writeToFile(
+                                "Failed to start first MariaDB instance, exiting installer! [installMySQL]")
+                            InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                            sys.exit()
+                    else:
+                        logging.InstallLog.writeToFile("First MariaDB instance successfully started!")
+                        InstallCyberPanel.stdOut("First MariaDB instance successfully started!")
+                        break
 
+                count = 0
 
-            count = 0
+                while (1):
+                    command = "systemctl enable mysqld@1"
+                    res = subprocess.call(shlex.split(command))
 
-            while(1):
-                command = "systemctl enable mysqld@1"
-                res = subprocess.call(shlex.split(command))
-
-                if res == 1:
-                    count = count + 1
-                    InstallCyberPanel.stdOut("Trying to enable first MariaDB instance to start and system restart, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Failed to enable first MariaDB instance to run at system restart, exiting installer! [installMySQL]")
-                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
-                else:
-                    logging.InstallLog.writeToFile("First MariaDB instance successfully enabled at system restart!")
-                    InstallCyberPanel.stdOut("First MariaDB instance successfully enabled at system restart!")
-                    break
+                    if res == 1:
+                        count = count + 1
+                        InstallCyberPanel.stdOut(
+                            "Trying to enable first MariaDB instance to start and system restart, trying again, try number: " + str(
+                                count))
+                        if count == 3:
+                            logging.InstallLog.writeToFile(
+                                "Failed to enable first MariaDB instance to run at system restart, exiting installer! [installMySQL]")
+                            InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                            sys.exit()
+                    else:
+                        logging.InstallLog.writeToFile("First MariaDB instance successfully enabled at system restart!")
+                        InstallCyberPanel.stdOut("First MariaDB instance successfully enabled at system restart!")
+                        break
 
 
         except OSError, msg:
@@ -508,14 +516,18 @@ class InstallCyberPanel:
 
         return 0
 
-    def changeMYSQLRootPasswordCyberPanel(self):
+    def changeMYSQLRootPasswordCyberPanel(self, mysql):
         try:
 
             logging.InstallLog.writeToFile("Changing CyberPanel MariaDB root password..")
             InstallCyberPanel.stdOut("Changing CyberPanel MariaDB root password..")
 
             expectation = "Enter password:"
-            securemysql = pexpect.spawn("mysql --host=127.0.0.1 --port=3307 -u root -p", timeout=5)
+            if mysql == 'Two':
+                securemysql = pexpect.spawn("mysql --host=127.0.0.1 --port=3307 -u root -p", timeout=5)
+            else:
+                securemysql = pexpect.spawn("mysql -u root -p", timeout=5)
+
             securemysql.expect(expectation)
             securemysql.sendline("")
 
@@ -736,7 +748,7 @@ class InstallCyberPanel:
 
         return 1
 
-    def installPureFTPDConfigurations(self):
+    def installPureFTPDConfigurations(self, mysql):
 
         try:
             ## setup ssl for ftp
@@ -772,9 +784,15 @@ class InstallCyberPanel:
 
             if os.path.exists(ftpdPath):
                 shutil.rmtree(ftpdPath)
-                shutil.copytree("pure-ftpd",ftpdPath)
+                if mysql == 'Two':
+                    shutil.copytree("pure-ftpd",ftpdPath)
+                else:
+                    shutil.copytree("pure-ftpd-one", ftpdPath)
             else:
-                shutil.copytree("pure-ftpd", ftpdPath)
+                if mysql == 'Two':
+                    shutil.copytree("pure-ftpd",ftpdPath)
+                else:
+                    shutil.copytree("pure-ftpd-one", ftpdPath)
 
             data = open(ftpdPath+"/pureftpd-mysql.conf","r").readlines()
 
@@ -873,7 +891,7 @@ class InstallCyberPanel:
 
         return 1
 
-    def installPowerDNSConfigurations(self,mysqlPassword):
+    def installPowerDNSConfigurations(self,mysqlPassword, mysql):
         try:
 
             logging.InstallLog.writeToFile("Configuring PowerDNS..")
@@ -884,9 +902,15 @@ class InstallCyberPanel:
 
             if os.path.exists(dnsPath):
                 os.remove(dnsPath)
-                shutil.copy("dns/pdns.conf", dnsPath)
+                if mysql == 'Two':
+                    shutil.copy("dns/pdns.conf", dnsPath)
+                else:
+                    shutil.copy("dns-one/pdns.conf", dnsPath)
             else:
-                shutil.copy("dns/pdns.conf", dnsPath)
+                if mysql == 'Two':
+                    shutil.copy("dns/pdns.conf", dnsPath)
+                else:
+                    shutil.copy("dns-one/pdns.conf", dnsPath)
 
             data = open(dnsPath, "r").readlines()
 
@@ -1143,10 +1167,9 @@ class InstallCyberPanel:
 
 
 
-def Main(cwd):
+def Main(cwd, mysql):
 
     InstallCyberPanel.mysqlPassword = randomPassword.generate_pass()
-
     InstallCyberPanel.mysql_Root_password = randomPassword.generate_pass()
 
 
@@ -1154,9 +1177,7 @@ def Main(cwd):
     password.writelines(InstallCyberPanel.mysql_Root_password)
     password.close()
 
-
     installer = InstallCyberPanel("/usr/local/lsws/",cwd)
-
 
     installer.installLiteSpeed()
     installer.changePortTo80()
@@ -1166,20 +1187,20 @@ def Main(cwd):
 
 
     installer.setup_mariadb_repo()
-    installer.installMySQL()
+    installer.installMySQL(mysql)
     installer.changeMYSQLRootPassword()
-    installer.changeMYSQLRootPasswordCyberPanel()
+    installer.changeMYSQLRootPasswordCyberPanel(mysql)
     installer.startMariaDB()
 
-    mysqlUtilities.createDatabaseCyberPanel("cyberpanel","cyberpanel",InstallCyberPanel.mysqlPassword)
+    mysqlUtilities.createDatabaseCyberPanel("cyberpanel","cyberpanel",InstallCyberPanel.mysqlPassword, mysql)
 
 
     installer.installPureFTPD()
-    installer.installPureFTPDConfigurations()
+    installer.installPureFTPDConfigurations(mysql)
     installer.startPureFTPD()
 
     installer.installPowerDNS()
-    installer.installPowerDNSConfigurations(InstallCyberPanel.mysqlPassword)
+    installer.installPowerDNSConfigurations(InstallCyberPanel.mysqlPassword, mysql)
     installer.startPowerDNS()
 
     installer.installLSCPD()

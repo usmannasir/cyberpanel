@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<installCommands>
+    <installSudo>
+        <centos7>yum install sudo -y</centos7>
+        <ubuntu16.04>apt-get install sudo -y</ubuntu16.04>
+    </installSudo>
+    <addUser>
+        <centos7>adduser cyberpanel</centos7>
+        <ubuntu16.04>adduser --disabled-password --gecos "" cyberpanel</ubuntu16.04>
+    </addUser>
+    <giveSudo>
+        <centos7>usermod -aG wheel cyberpanel</centos7>
+        <ubuntu16.04>usermod -aG sudo cyberpanel</ubuntu16.04>
+    </giveSudo>
+</installCommands>

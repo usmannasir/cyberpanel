@@ -8,7 +8,7 @@ import shlex
 from firewallUtilities import FirewallUtilities
 import time
 
-
+# There can not be peace without first a great suffering.
 
 class preFlightsChecks:
 
@@ -673,7 +673,7 @@ class preFlightsChecks:
                 preFlightsChecks.stdOut("psmisc successfully installed!")
                 break
 
-    def download_install_CyberPanel(self,mysqlPassword):
+    def download_install_CyberPanel(self,mysqlPassword, mysql):
         try:
             ## On OpenVZ there is an issue with requests module, which needs to upgrade requests module
 
@@ -703,8 +703,8 @@ class preFlightsChecks:
 
         count = 0
         while (1):
-            command = "wget http://cyberpanel.net/CyberPanel.1.6.4.tar.gz"
-            #command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
+            #command = "wget http://cyberpanel.net/CyberPanel.1.6.4.tar.gz"
+            command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
             res = subprocess.call(shlex.split(command))
 
             if res == 1:
@@ -723,8 +723,8 @@ class preFlightsChecks:
 
         count = 0
         while(1):
-            command = "tar zxf CyberPanel.1.6.4.tar.gz"
-            #command = "tar zxf CyberPanelTemp.tar.gz"
+            #command = "tar zxf CyberPanel.1.6.4.tar.gz"
+            command = "tar zxf CyberPanelTemp.tar.gz"
 
             res = subprocess.call(shlex.split(command))
 
@@ -763,15 +763,30 @@ class preFlightsChecks:
         counter = 0
 
         for items in data:
-            if items.find("'PASSWORD':") > -1:
-                if counter == 0:
-                    writeDataToFile.writelines("        'PASSWORD': '" + mysqlPassword + "'," + "\n")
-                    counter = counter + 1
-                else:
-                    writeDataToFile.writelines("        'PASSWORD': '" + password + "'," + "\n")
+            if mysql == 'Two':
+                if items.find("'PASSWORD':") > -1:
+                    if counter == 0:
+                        writeDataToFile.writelines("        'PASSWORD': '" + mysqlPassword + "'," + "\n")
+                        counter = counter + 1
+                    else:
+                        writeDataToFile.writelines("        'PASSWORD': '" + password + "'," + "\n")
 
+                else:
+                    writeDataToFile.writelines(items)
             else:
-                writeDataToFile.writelines(items)
+                if items.find("'PASSWORD':") > -1:
+                    if counter == 0:
+                        writeDataToFile.writelines("        'PASSWORD': '" + mysqlPassword + "'," + "\n")
+                        counter = counter + 1
+
+                    else:
+                        writeDataToFile.writelines("        'PASSWORD': '" + password + "'," + "\n")
+                elif items.find('127.0.0.1') > -1:
+                    writeDataToFile.writelines("        'HOST': 'localhost',\n")
+                elif items.find("'PORT':'3307'") > -1:
+                    writeDataToFile.writelines("        'PORT': '',\n")
+                else:
+                    writeDataToFile.writelines(items)
 
         writeDataToFile.close()
 
@@ -1087,18 +1102,25 @@ class preFlightsChecks:
         return 1
 
 
-    def setup_email_Passwords(self,mysqlPassword):
+    def setup_email_Passwords(self,mysqlPassword, mysql):
         try:
 
            logging.InstallLog.writeToFile("Setting up authentication for Postfix and Dovecot...")
 
            os.chdir(self.cwd)
 
-           mysql_virtual_domains = "email-configs/mysql-virtual_domains.cf"
-           mysql_virtual_forwardings = "email-configs/mysql-virtual_forwardings.cf"
-           mysql_virtual_mailboxes = "email-configs/mysql-virtual_mailboxes.cf"
-           mysql_virtual_email2email = "email-configs/mysql-virtual_email2email.cf"
-           davecotmysql = "email-configs/dovecot-sql.conf.ext"
+           if mysql == 'Two':
+               mysql_virtual_domains = "email-configs/mysql-virtual_domains.cf"
+               mysql_virtual_forwardings = "email-configs/mysql-virtual_forwardings.cf"
+               mysql_virtual_mailboxes = "email-configs/mysql-virtual_mailboxes.cf"
+               mysql_virtual_email2email = "email-configs/mysql-virtual_email2email.cf"
+               davecotmysql = "email-configs/dovecot-sql.conf.ext"
+           else:
+               mysql_virtual_domains = "email-configs-one/mysql-virtual_domains.cf"
+               mysql_virtual_forwardings = "email-configs-one/mysql-virtual_forwardings.cf"
+               mysql_virtual_mailboxes = "email-configs-one/mysql-virtual_mailboxes.cf"
+               mysql_virtual_email2email = "email-configs-one/mysql-virtual_email2email.cf"
+               davecotmysql = "email-configs-one/dovecot-sql.conf.ext"
 
            ### update password:
 
@@ -1106,7 +1128,10 @@ class preFlightsChecks:
 
            writeDataToFile = open(davecotmysql, "w")
 
-           dataWritten = "connect = host=127.0.0.1 dbname=cyberpanel user=cyberpanel password="+mysqlPassword+" port=3307\n"
+           if mysql == 'Two':
+               dataWritten = "connect = host=127.0.0.1 dbname=cyberpanel user=cyberpanel password="+mysqlPassword+" port=3307\n"
+           else:
+               dataWritten = "connect = host=localhost dbname=cyberpanel user=cyberpanel password=" + mysqlPassword + " port=3306\n"
 
            for items in data:
                if items.find("connect") > -1:
@@ -1192,11 +1217,12 @@ class preFlightsChecks:
         return 1
 
 
-    def setup_postfix_davecot_config(self):
+    def setup_postfix_davecot_config(self, mysql):
         try:
            logging.InstallLog.writeToFile("Configuring postfix and dovecot...")
 
            os.chdir(self.cwd)
+
 
            mysql_virtual_domains = "/etc/postfix/mysql-virtual_domains.cf"
            mysql_virtual_forwardings = "/etc/postfix/mysql-virtual_forwardings.cf"
@@ -1283,14 +1309,25 @@ class preFlightsChecks:
 
            ########### Copy config files
 
-           shutil.copy("email-configs/mysql-virtual_domains.cf","/etc/postfix/mysql-virtual_domains.cf")
-           shutil.copy("email-configs/mysql-virtual_forwardings.cf", "/etc/postfix/mysql-virtual_forwardings.cf")
-           shutil.copy("email-configs/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
-           shutil.copy("email-configs/mysql-virtual_email2email.cf", "/etc/postfix/mysql-virtual_email2email.cf")
-           shutil.copy("email-configs/main.cf", main)
-           shutil.copy("email-configs/master.cf",master)
-           shutil.copy("email-configs/dovecot.conf",davecot)
-           shutil.copy("email-configs/dovecot-sql.conf.ext",davecotmysql)
+           if mysql == 'Two':
+               shutil.copy("email-configs/mysql-virtual_domains.cf","/etc/postfix/mysql-virtual_domains.cf")
+               shutil.copy("email-configs/mysql-virtual_forwardings.cf", "/etc/postfix/mysql-virtual_forwardings.cf")
+               shutil.copy("email-configs/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
+               shutil.copy("email-configs/mysql-virtual_email2email.cf", "/etc/postfix/mysql-virtual_email2email.cf")
+               shutil.copy("email-configs/main.cf", main)
+               shutil.copy("email-configs/master.cf",master)
+               shutil.copy("email-configs/dovecot.conf",davecot)
+               shutil.copy("email-configs/dovecot-sql.conf.ext",davecotmysql)
+           else:
+               shutil.copy("email-configs-one/mysql-virtual_domains.cf", "/etc/postfix/mysql-virtual_domains.cf")
+               shutil.copy("email-configs-one/mysql-virtual_forwardings.cf", "/etc/postfix/mysql-virtual_forwardings.cf")
+               shutil.copy("email-configs-one/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
+               shutil.copy("email-configs-one/mysql-virtual_email2email.cf", "/etc/postfix/mysql-virtual_email2email.cf")
+               shutil.copy("email-configs-one/main.cf", main)
+               shutil.copy("email-configs-one/master.cf", master)
+               shutil.copy("email-configs-one/dovecot.conf", davecot)
+               shutil.copy("email-configs-one/dovecot-sql.conf.ext", davecotmysql)
+
 
 
            ######################################## Permissions
@@ -2632,6 +2669,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('publicip', help='Please enter public IP for your VPS or dedicated server.')
+    parser.add_argument('mysql', help='Specify number of MySQL instances to be used.')
     args = parser.parse_args()
 
     logging.InstallLog.writeToFile("Starting CyberPanel installation..")
@@ -2649,10 +2687,6 @@ def main():
 
     checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd,"/usr/local/CyberCP")
 
-    if checks.checkIfSeLinuxDisabled() == 1:
-        pass
-    else:
-        return
 
     checks.checkPythonVersion()
     checks.setup_account_cyberpanel()
@@ -2672,12 +2706,12 @@ def main():
 
     import installCyberPanel
 
-    installCyberPanel.Main(cwd)
+    installCyberPanel.Main(cwd, args.mysql)
     checks.fix_selinux_issue()
     checks.install_psmisc()
     checks.install_postfix_davecot()
-    checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword)
-    checks.setup_postfix_davecot_config()
+    checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, args.mysql)
+    checks.setup_postfix_davecot_config(args.mysql)
 
 
     checks.install_unzip()
@@ -2697,7 +2731,7 @@ def main():
 
     checks.installCertBot()
     checks.test_Requests()
-    checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword)
+    checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, args.mysql)
     checks.setup_cron()
     checks.installTLDExtract()
     #checks.installdnsPython()

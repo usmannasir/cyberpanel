@@ -89,7 +89,7 @@ class mysqlUtilities:
             logging.InstallLog.writeToFile(str(msg) + "[createDatabase]")
 
     @staticmethod
-    def createDatabaseCyberPanel(dbname,dbuser,dbpassword):
+    def createDatabaseCyberPanel(dbname,dbuser,dbpassword, mysql):
 
         try:
 
@@ -100,7 +100,10 @@ class mysqlUtilities:
             password = data.split('\n', 1)[0]
 
             expectation = "Enter password:"
-            securemysql = pexpect.spawn("mysql --host=127.0.0.1 --port=3307 -u root -p")
+            if mysql == 'Two':
+                securemysql = pexpect.spawn("mysql --host=127.0.0.1 --port=3307 -u root -p")
+            else:
+                securemysql = pexpect.spawn("mysql -u root -p", timeout=5)
             securemysql.expect(expectation)
             securemysql.sendline(password)
 

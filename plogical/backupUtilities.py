@@ -570,6 +570,7 @@ class backupUtilities:
             expectation.append("password:")
             expectation.append("Last login")
             expectation.append(pexpect.EOF)
+            expectation.append(pexpect.TIMEOUT)
 
             checkConn = pexpect.spawn("sudo ssh -i /root/.ssh/cyberpanel -o StrictHostKeyChecking=no -p "+ port+" root@"+IPAddress, timeout=3)
             index = checkConn.expect(expectation)
@@ -581,11 +582,12 @@ class backupUtilities:
             elif index == 1:
                 subprocess.call(['kill', str(checkConn.pid)])
                 return [1, "None"]
+            elif index == 3:
+                subprocess.call(['kill', str(checkConn.pid)])
+                return [1, "None"]
             else:
                 subprocess.call(['kill', str(checkConn.pid)])
-                logging.CyberCPLogFileWriter.writeToFile(
-                    "Remote Server is not able to authenticate for transfer to initiate, IP Address:" + IPAddress)
-                return [0, "Remote Server is not able to authenticate for transfer to initiate, IP Address:" + IPAddress]
+                return [1, "None"]
 
         except pexpect.TIMEOUT, msg:
             logging.CyberCPLogFileWriter.writeToFile("Timeout "+IPAddress+ " [checkConnection]")

@@ -14,7 +14,6 @@ Webhosting control panel that uses OpenLiteSpeed as web server.
 * PHP Managment.
 * Firewall.
 * One click Backup and Restore.
-* Remote Backups.
 
 # Supported PHPs
 
@@ -24,13 +23,17 @@ Webhosting control panel that uses OpenLiteSpeed as web server.
 * PHP 5.6
 * PHP 7.0
 * PHP 7.1
-* PHP 7.2
+
 
 # Installation Instructions
 
 
 ```
-sh <(curl https://cyberpanel.net/install.sh || wget -O - https://cyberpanel.net/install.sh)
+wget http://cyberpanel.net/install.tar.gz
+tar zxf install.tar.gz
+cd install
+chmod +x install.py
+python install.py [IP Address]
 ```
 
 # Resources
@@ -38,5 +41,5 @@ sh <(curl https://cyberpanel.net/install.sh || wget -O - https://cyberpanel.net/
 * [Official Site.](https://cyberpanel.net)
 * [Documentation.](https://docs.cyberpanel.net)
 * [Forums.](https://forums.cyberpanel.net)
-* [Blog.](https://blog.cyberpanel.net)
+
 

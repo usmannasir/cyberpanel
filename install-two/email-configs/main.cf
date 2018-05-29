@@ -1,0 +1,65 @@
+# Global Postfix configuration file. This file lists only a subset
+# of all parameters. For the syntax, and for a complete parameter
+# list, see the postconf(5) manual page (command: "man 5 postconf").
+#
+# For common configuration examples, see BASIC_CONFIGURATION_README
+# and STANDARD_CONFIGURATION_README. To find these documents, use
+# the command "postconf html_directory readme_directory", or go to
+# http://www.postfix.org/.
+#
+# For best results, change no more than 2-3 parameters at a time,
+# and test if Postfix still works after every change.
+
+
+
+queue_directory = /var/spool/postfix
+command_directory = /usr/sbin
+daemon_directory = /usr/libexec/postfix
+data_directory = /var/lib/postfix
+mail_owner = postfix
+inet_protocols = all
+mydestination = localhost, localhost.localdomain
+unknown_local_recipient_reject_code = 550
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+debug_peer_level = 2
+debugger_command =
+	 PATH=/bin:/usr/bin:/usr/local/bin:/usr/X11R6/bin
+	 ddd $daemon_directory/$process_name $process_id & sleep 5
+
+sendmail_path = /usr/sbin/sendmail.postfix
+newaliases_path = /usr/bin/newaliases.postfix
+mailq_path = /usr/bin/mailq.postfix
+setgid_group = postdrop
+html_directory = no
+manpage_directory = /usr/share/man
+sample_directory = /usr/share/doc/postfix-2.10.1/samples
+readme_directory = /usr/share/doc/postfix-2.10.1/README_FILES
+
+
+myhostname = server.example.com
+mynetworks = 127.0.0.0/8
+message_size_limit = 30720000
+virtual_alias_domains = 
+virtual_alias_maps = proxy:mysql:/etc/postfix/mysql-virtual_forwardings.cf, mysql:/etc/postfix/mysql-virtual_email2email.cf
+virtual_mailbox_domains = proxy:mysql:/etc/postfix/mysql-virtual_domains.cf
+virtual_mailbox_maps = proxy:mysql:/etc/postfix/mysql-virtual_mailboxes.cf
+virtual_mailbox_base = /home/vmail
+virtual_uid_maps = static:5000
+virtual_gid_maps = static:5000
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+smtpd_sasl_auth_enable = yes
+broken_sasl_auth_clients = yes
+smtpd_sasl_authenticated_header = yes
+smtpd_recipient_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination
+smtpd_use_tls = yes
+smtpd_tls_cert_file = /etc/pki/dovecot/certs/dovecot.pem
+smtpd_tls_key_file = /etc/pki/dovecot/private/dovecot.pem
+virtual_create_maildirsize = yes
+virtual_maildir_extended = yes
+proxy_read_maps = $local_recipient_maps $mydestination $virtual_alias_maps $virtual_alias_domains $virtual_mailbox_maps $virtual_mailbox_domains $relay_recipient_maps $relay_domains $canonical_maps $sender_canonical_maps $recipient_canonical_maps $relocated_maps $transport_maps $mynetworks $virtual_mailbox_limit_maps
+virtual_transport = dovecot
+dovecot_destination_recipient_limit = 1
+inet_interfaces = all
+smtp_tls_security_level = may

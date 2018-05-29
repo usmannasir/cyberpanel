@@ -25,6 +25,7 @@ from random import randint
 import hashlib
 from xml.etree import ElementTree
 from plogical.mailUtilities import mailUtilities
+from dns.views import createDNSRecord
 # Create your views here.
 
 
@@ -396,33 +397,16 @@ def dnsTemplate(request, domain, admin):
 
             actualSubDomain = subDomain + "." + topLevelDomain
 
+
             ## Main A record.
 
-            record = Records(domainOwner=zone,
-                             domain_id=zone.id,
-                             name=actualSubDomain,
-                             type="A",
-                             content=ipAddress,
-                             ttl=3600,
-                             prio=0,
-                             disabled=0,
-                             auth=1)
-            record.save()
+            createDNSRecord(request, zone, actualSubDomain, "A", ipAddress, 0, 3600)
 
             # CNAME Records.
 
             cNameValue = "www." + actualSubDomain
 
-            record = Records(domainOwner=zone,
-                             domain_id=zone.id,
-                             name=cNameValue,
-                             type="CNAME",
-                             content=actualSubDomain,
-                             ttl=3600,
-                             prio=0,
-                             disabled=0,
-                             auth=1)
-            record.save()
+            createDNSRecord(request, zone, cNameValue, "CNAME", actualSubDomain, 0, 3600)
 
     except BaseException, msg:
         logging.CyberCPLogFileWriter.writeToFile(

@@ -1,0 +1,123 @@
+<interface>
+        <name>Get LiteSpeed General</name>
+        <description>list litespeed general</description>
+        <oid_index>.1.3.6.1.4.1.22253.100</oid_index>
+        <index_order>Index</index_order>
+        <index_order_type>numeric</index_order_type>
+        <index_title_format>|chosen_order_field|</index_title_format>
+
+        <fields>
+                <Index>
+                        <name>Index</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>input</direction>
+                        <oid>.1.3.6.1.4.1.22253.100</oid>
+                </Index>
+                <Product>
+                        <name>Product</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>input</direction>
+                        <oid>.1.3.6.1.4.1.22253.101</oid>
+                </Product>
+                <Edition>
+                        <name>Edition</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>input</direction>
+                        <oid>.1.3.6.1.4.1.22253.102</oid>
+                </Edition>
+                <Version>
+                        <name>Version</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>input</direction>
+                        <oid>.1.3.6.1.4.1.22253.103</oid>
+                </Version>  
+                <UpTime>
+                        <name>UpTime</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>input</direction>
+                        <oid>.1.3.6.1.4.1.22253.104</oid>
+                </UpTime> 
+                <BpsIn>
+                        <name>Bps (In)</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.105</oid>
+                </BpsIn> 
+                <BpsOut>
+                        <name>Bps (Out)</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.106</oid>
+                </BpsOut>
+                <SSLBpsIn>
+                        <name>SSL Bps (In)</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.107</oid>
+                </SSLBpsIn> 
+                <SSLBpsOut>
+                        <name>SSL Bps (Out)</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.108</oid>
+                </SSLBpsOut> 
+                <MaxConn>
+                        <name>Max Connections</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.109</oid>
+                </MaxConn>  
+                <MaxSSLConn>
+                        <name>Max SSL Connections</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.110</oid>
+                </MaxSSLConn>  
+                <PlainConn>
+                        <name>Plain Connections</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.111</oid>
+                </PlainConn> 
+                <AvailConn>
+                        <name>Available Plain Connections</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.112</oid>
+                </AvailConn> 
+                <IdleConn>
+                        <name>Idle Connections</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.113</oid>
+                </IdleConn> 
+                <SSLConn>
+                        <name>SSL Connections</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.114</oid>
+                </SSLConn> 
+                <AvailSSLConn>
+                        <name>Available SSL Connections</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.115</oid>
+                </AvailSSLConn> 
+		</fields>
+</interface>

@@ -1,0 +1,29 @@
+#!/sbin/runscript
+
+depend()
+{
+	need net
+	use mysql dns netmount postgres
+	after sshd
+}
+
+start()
+{
+	ebegin "Starting LiteSpeed Web Server"
+	"%LSWS_CTRL%" start 2>/dev/null 1>&2
+	eend $?
+}
+
+stop()
+{
+	ebegin "Stopping LiteSped Web Server"
+	"%LSWS_CTRL%" stop 2>/dev/null 1>&2
+	eend $?
+}
+
+restart()
+{
+	ebegin "Restarting LiteSpeed Web Server"
+	"%LSWS_CTRL%" restart 2>/dev/null 1>&2
+	eend $?
+}

@@ -1,0 +1,4 @@
+driver = mysql
+connect = host=localhost dbname=cyberpanel user=cyberpanel password=1qaz@9xvps
+default_pass_scheme = PLAIN
+password_query = SELECT email as user, password FROM e_users WHERE email='%u';

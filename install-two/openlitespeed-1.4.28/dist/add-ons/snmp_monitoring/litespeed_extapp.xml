@@ -1,0 +1,95 @@
+<interface>
+        <name>Get LiteSpeed External Applications</name>
+        <oid_index>.1.3.6.1.4.1.22253.300</oid_index>
+        <index_order>ExtApp:Type:Vhost:Index</index_order>
+        <index_order_type>numeric</index_order_type>
+        <index_title_format>|chosen_order_field|</index_title_format>
+
+        <fields>
+                <Index>
+                        <name>Index</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>input</direction>
+                        <oid>.1.3.6.1.4.1.22253.300</oid>
+                </Index>
+                <Vhost>
+                        <name>Vhost Name</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>input</direction>
+                        <oid>.1.3.6.1.4.1.22253.301</oid>
+                </Vhost>
+                <Type>
+                        <name>Type</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>input</direction>
+                        <oid>.1.3.6.1.4.1.22253.302</oid>
+                </Type>
+                <ExtApp>
+                        <name>Ext App</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>input</direction>
+                        <oid>.1.3.6.1.4.1.22253.303</oid>
+                </ExtApp>
+                <ConfMaxConn>
+                        <name>Config Max Conn</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.304</oid>
+                </ConfMaxConn>
+                <EffMaxConn>
+                        <name>Effective Max Conn</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.305</oid>
+                </EffMaxConn>
+                <PoolSize>
+                        <name>Pool Size</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.306</oid>
+                </PoolSize>
+                <InuseConn>
+                        <name>InUse Conn</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.307</oid>
+                </InuseConn>
+                <IdleConn>
+                        <name>Idle Conn</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.308</oid>
+                </IdleConn>
+                <WaitQueueDepth>
+                        <name>Wait-Queue Depth</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.309</oid>
+                </WaitQueueDepth>
+                <Req_Second>
+                        <name>Requests Per Second</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.310</oid>
+                </Req_Second>
+                <Req_Total>
+                        <name>Requests Total</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.311</oid>
+                </Req_Total>
+               
+		</fields>
+</interface>
