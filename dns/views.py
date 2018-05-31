@@ -593,26 +593,6 @@ def submitZoneDeletion(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-def createDNSRecord(request, zone, name, type, value, priority, ttl):
-    try:
-        val = request.session['userID']
-
-        if Records.objects.filter(name=name, type=type).count() == 0:
-            record = Records(domainOwner=zone,
-                             domain_id=zone.id,
-                             name=name,
-                             type=type,
-                             content=value,
-                             ttl=ttl,
-                             prio=priority,
-                             disabled=0,
-                             auth=1)
-            record.save()
-    except KeyError,msg:
-        final_dic = {'add_status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
-
 
 
 

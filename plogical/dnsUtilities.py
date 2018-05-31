@@ -1,7 +1,14 @@
+#!/usr/bin/env python2.7
+import os,sys
+sys.path.append('/usr/local/CyberCP')
+import django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+django.setup()
 import CyberCPLogFileWriter as logging
-import os
 import subprocess
-import shutil
+import shlex
+from dns.models import Domains,Records
+
 
 class DNS:
 
@@ -9,373 +16,298 @@ class DNS:
     zones_base_dir = "/usr/local/lsws/conf/zones/"
     create_zone_dir = "/usr/local/lsws/conf/zones"
 
+    ## DNS Functions
+
     @staticmethod
-    def createNameServer(virtualHostName, firstNS, firstNSIP, secondNS, secondNSIP):
+    def dnsTemplate(domain, admin):
         try:
 
-            if not os.path.exists(DNS.zones_base_dir):
-                os.mkdir(DNS.create_zone_dir)
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
 
-            zonePath = DNS.zones_base_dir + virtualHostName
-            zoneFilePath = zonePath + "/zone.conf"
+            import tldextract
 
+            extractDomain = tldextract.extract(domain)
+            topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
+            subDomain = extractDomain.subdomain
 
+            if len(subDomain) == 0:
 
-            data = open(DNS.nsd_base, "r").readlines()
+                if Domains.objects.filter(name=topLevelDomain).count() == 0:
+                    zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
+                    zone.save()
 
-            if DNS.checkIfZoneExists(virtualHostName, data) == 1:
+                    content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
 
-                os.mkdir(zonePath)
-                zoneFileToWrite = open(zoneFilePath, "w")
+                    soaRecord = Records(domainOwner=zone,
+                                        domain_id=zone.id,
+                                        name=topLevelDomain,
+                                        type="SOA",
+                                        content=content,
+                                        ttl=3600,
+                                        prio=0,
+                                        disabled=0,
+                                        auth=1)
+                    soaRecord.save()
 
-                if DNS.addEntryInMainZone(virtualHostName, data) == 1:
-                    if DNS.perVirtualHostZoneFile(virtualHostName, zoneFileToWrite) == 1:
-                        if DNS.addNSRecord(firstNS, firstNSIP, secondNS, secondNSIP, zoneFileToWrite) == 1:
-                            DNS.restartNSD()
-                            zoneFileToWrite.close()
-                            return 1
-                        else:
-                            zoneFileToWrite.close()
-                            return 0
-                    else:
-                        zoneFileToWrite.close()
-                        return 0
-                else:
-                    zoneFileToWrite.close()
-                    return 0
+                    ## Main A record.
 
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=topLevelDomain,
+                                     type="A",
+                                     content=ipAddress,
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+
+                    # CNAME Records.
+
+                    cNameValue = "www." + topLevelDomain
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=cNameValue,
+                                     type="CNAME",
+                                     content=topLevelDomain,
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+
+                    cNameValue = "ftp." + topLevelDomain
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=cNameValue,
+                                     type="CNAME",
+                                     content=topLevelDomain,
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+
+                    ## MX Record.
+
+                    mxValue = "mail." + topLevelDomain
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=topLevelDomain,
+                                     type="MX",
+                                     content=mxValue,
+                                     ttl=3600,
+                                     prio="10",
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=mxValue,
+                                     type="A",
+                                     content=ipAddress,
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+
+                    ## TXT Records for mail
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=topLevelDomain,
+                                     type="TXT",
+                                     content="v=spf1 a mx ip4:" + ipAddress + " ~all",
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name="_dmarc." + topLevelDomain,
+                                     type="TXT",
+                                     content="v=DMARC1; p=none",
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name="_domainkey." + topLevelDomain,
+                                     type="TXT",
+                                     content="t=y; o=~;",
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
 
             else:
-                if not os.path.exists(zonePath):
-                    os.mkdir(zonePath)
-                    zoneFileToWrite = open(zoneFilePath, "w")
+                if Domains.objects.filter(name=topLevelDomain).count() == 0:
+                    zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
+                    zone.save()
 
+                    content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
 
-                    if DNS.perVirtualHostZoneFile(virtualHostName, zoneFileToWrite) == 1:
-                        if DNS.addNSRecord(firstNS, firstNSIP, secondNS, secondNSIP, zoneFileToWrite) == 1:
-                            DNS.restartNSD()
-                            zoneFileToWrite.close()
-                            return 1
-                        else:
-                            zoneFileToWrite.close()
-                            return 0
-                    else:
-                        zoneFileToWrite.close()
-                        return 0
+                    soaRecord = Records(domainOwner=zone,
+                                        domain_id=zone.id,
+                                        name=topLevelDomain,
+                                        type="SOA",
+                                        content=content,
+                                        ttl=3600,
+                                        prio=0,
+                                        disabled=0,
+                                        auth=1)
+                    soaRecord.save()
 
-                else:
+                    ## Main A record.
 
-                    zoneFileToWrite = open(zoneFilePath, "a")
-                    if DNS.addNSRecord(firstNS, firstNSIP, secondNS, secondNSIP, zoneFileToWrite) == 1:
-                        DNS.restartNSD()
-                        zoneFileToWrite.close()
-                        return 1
-                    else:
-                        zoneFileToWrite.close()
-                        return 0
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=topLevelDomain,
+                                     type="A",
+                                     content=ipAddress,
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
 
-                zoneFileToWrite.close()
-                logging.CyberCPLogFileWriter.writeToFile(
-                    "Zone file for virtualhost already exists. " + "[createNameServer]")
-                return 1
+                    # CNAME Records.
 
-        except IOError, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [addEntryInMainZone]")
-            return 0
+                    cNameValue = "www." + topLevelDomain
 
-    @staticmethod
-    def checkIfZoneExists(virtualHostName,data):
-        for items in data:
-            if items.find(virtualHostName) > -1:
-                return 0
-        return 1
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=cNameValue,
+                                     type="CNAME",
+                                     content=topLevelDomain,
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
 
+                    cNameValue = "ftp." + topLevelDomain
 
-    @staticmethod
-    def addEntryInMainZone(virtualHostName,data):
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=cNameValue,
+                                     type="CNAME",
+                                     content=topLevelDomain,
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
 
-        # Defining zone to be added
-        zone = "zone:" + "\n"
-        zoneName = "    name: " + virtualHostName + "\n"
-        zoneFile = "    zonefile: "+virtualHostName+"/zone.conf" + "\n"
+                    ## MX Record.
 
+                    mxValue = "mail." + topLevelDomain
 
-        try:
-            mainZoneFile = open(DNS.nsd_base,"w")
-            zoneCheck = 1
-            noZones = 1
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=topLevelDomain,
+                                     type="MX",
+                                     content=mxValue,
+                                     ttl=3600,
+                                     prio="10",
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
 
-            for items in data:
-                if items.find("zone:")>-1 and zoneCheck==1:
-                    mainZoneFile.writelines(zone)
-                    mainZoneFile.writelines(zoneName)
-                    mainZoneFile.writelines(zoneFile)
-                    mainZoneFile.writelines("\n")
-                    mainZoneFile.writelines(items)
-                    noZones = 0
-                    zoneCheck = 0
-                else:
-                    mainZoneFile.writelines(items)
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=mxValue,
+                                     type="A",
+                                     content=ipAddress,
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
 
-            if noZones ==1:
-                mainZoneFile.writelines(zone)
-                mainZoneFile.writelines(zoneName)
-                mainZoneFile.writelines(zoneFile)
-                mainZoneFile.writelines("\n")
+                ## Creating sub-domain level record.
 
-            mainZoneFile.close()
-            return 1
-        except IOError,msg:
-            mainZoneFile.close()
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [addEntryInMainZone]")
-            return 0
+                zone = Domains.objects.get(name=topLevelDomain)
 
-    @staticmethod
-    def perVirtualHostZoneFile(virtualHostName, zoneFileToWrite):
+                actualSubDomain = subDomain + "." + topLevelDomain
 
-        # Make zone directory
+                ## Main A record.
 
-        origin = "$ORIGIN " + virtualHostName + "." + "\n"
-        ttl = "$TTL 86400" + "\n"
+                DNS.createDNSRecord(zone, actualSubDomain, "A", ipAddress, 0, 3600)
 
-        try:
-            zoneFileToWrite.writelines(origin)
-            zoneFileToWrite.writelines(ttl)
-            zoneFileToWrite.writelines("\n")
+                # CNAME Records.
 
-            # Create SOA Record
+                cNameValue = "www." + actualSubDomain
 
-            DNS.createSOARecord(virtualHostName, zoneFileToWrite)
-
-            return 1
-
+                DNS.createDNSRecord(zone, cNameValue, "CNAME", actualSubDomain, 0, 3600)
 
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [perVirtualHostZoneFile]")
-            return 0
+            logging.CyberCPLogFileWriter.writeToFile(
+                "We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
 
     @staticmethod
-    def createSOARecord(virtualHostName,fileHandle):
-
-        # Define SOA Record
-
-        soa = "@ IN SOA ns1 admin@"+virtualHostName+" (" + "\n"
-        serialNumber = "	2012082703" + "\n"
-        refreshRate = "	28800" + "\n"
-        retryRate = "	1400" + "\n"
-        expiry = "	864000" + "\n"
-        minTTL = "	86400" + "\n"
-        endSOA = "	)" + "\n"
-
-
+    def createDKIMRecords(domain):
         try:
-            fileHandle.writelines("\n")
 
-            fileHandle.writelines(soa)
-            fileHandle.writelines(serialNumber)
-            fileHandle.writelines(refreshRate)
-            fileHandle.writelines(retryRate)
-            fileHandle.writelines(expiry)
-            fileHandle.writelines(minTTL)
-            fileHandle.writelines(endSOA)
+            import tldextract
 
+            extractDomain = tldextract.extract(domain)
+            topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
 
-            fileHandle.writelines("\n")
+            zone = Domains.objects.get(name=topLevelDomain)
 
+            path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
+            command = "sudo cat " + path
+            output = subprocess.check_output(shlex.split(command))
 
-            return 1
-        except IOError,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createSOARecord]")
-            return 0
+            record = Records(domainOwner=zone,
+                             domain_id=zone.id,
+                             name="default._domainkey." + topLevelDomain,
+                             type="TXT",
+                             content="v=DKIM1; k=rsa; p=" + output[53:269],
+                             ttl=3600,
+                             prio=0,
+                             disabled=0,
+                             auth=1)
+            record.save()
 
-
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                "We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
 
     @staticmethod
-    def addNSRecord(nsRecordOne,firstNSIP, nsRecordTwo, secondNSIP, fileHandle):
-        # Defining NS Record
-
-        NSARecordOne = nsRecordOne.split(".")[0]
-        NSARecordTwo = nsRecordTwo.split(".")[0]
-
-        NS1 = "\t\t" + "NS" + "\t" + nsRecordOne + "." "\n"
-        NS2 = "\t\t" + "NS" + "\t" + nsRecordTwo + "."
-
-        try:
-            fileHandle.writelines("\n")
-            fileHandle.writelines("\n")
-
-            fileHandle.writelines(NS1)
-            fileHandle.writelines(NS2)
-
-            DNS.addRecord(NSARecordOne, "A", firstNSIP, fileHandle)
-            DNS.addRecord(NSARecordTwo, "A", secondNSIP, fileHandle)
-
-            fileHandle.writelines("\n")
-            return 1
-        except IOError, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [addRecord]")
-            return 0
-
+    def createDNSRecord(zone, name, type, value, priority, ttl):
+        if Records.objects.filter(name=name, type=type).count() == 0:
+            record = Records(domainOwner=zone,
+                             domain_id=zone.id,
+                             name=name,
+                             type=type,
+                             content=value,
+                             ttl=ttl,
+                             prio=priority,
+                             disabled=0,
+                             auth=1)
+            record.save()
 
     @staticmethod
-    def addRecord(recordValue, recordType, recordIP, fileHandle):
-
-        # Define Record
-
-        recordString = recordValue +"\t" + "IN" + "\t" + recordType + "\t" + recordIP
-
+    def deleteDNSZone(virtualHostName):
         try:
-            fileHandle.writelines("\n")
-            fileHandle.writelines(recordString)
-            fileHandle.writelines("\n")
-            return 1
-        except IOError, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [addRecord]")
-            return 0
-
-
-    @staticmethod
-    def restartNSD():
-
-        try:
-
-            ############## Restart NSD ######################
-
-            cmd = []
-
-            cmd.append("systemctl")
-            cmd.append("restart")
-            cmd.append("nsd")
-
-            res = subprocess.call(cmd)
-
-            if res == 1:
-                print("###############################################")
-                print("           Could restart NSD                   ")
-                print("###############################################")
-                logging.CyberCPLogFileWriter.writeToFile("[Failed to restart NSD]")
-                return 0
-            else:
-                print("###############################################")
-                print("              NSD Restarted                    ")
-                print("###############################################")
-                return 1
-
-
-        except OSError, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [restartNSD]")
-            return 0
-
-    @staticmethod
-    def deleteZone(virtualHostname):
-        try:
-            if os.path.exists(DNS.zones_base_dir+virtualHostname):
-                shutil.rmtree(DNS.zones_base_dir+virtualHostname)
-
-            data = open(DNS.nsd_base, "r").readlines()
-
-            writeDataToFile = open(DNS.nsd_base,"w")
-
-            index = 0
-
-            for items in data:
-                if items.find(virtualHostname) >-1:
-                    try:
-                        del data[index-1]
-                        del data[index-1]
-                        del data[index-1]
-                    except:
-                        break
-                    break
-                index = index+1
-
-            for items in data:
-                writeDataToFile.writelines(items)
-
-            writeDataToFile.close()
-
-
-
-        except OSError,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [deleteZone]")
-
-    @staticmethod
-    def addARecord(virtualHostName,recordValue,recordIP):
-        try:
-
-            if not os.path.exists(DNS.zones_base_dir):
-                os.mkdir(DNS.create_zone_dir)
-
-            data = open(DNS.nsd_base, "r").readlines()
-
-            zonePath = DNS.zones_base_dir + virtualHostName
-            zoneFilePath = zonePath + "/zone.conf"
-
-            if DNS.checkIfZoneExists(virtualHostName,data) == 1:
-
-                DNS.addEntryInMainZone(virtualHostName,data)
-
-                os.mkdir(zonePath)
-                zoneFileToWrite = open(zoneFilePath, "w")
-
-                DNS.perVirtualHostZoneFile(virtualHostName, zoneFileToWrite)
-                DNS.addRecord(recordValue,"A",recordIP,zoneFileToWrite)
-
-
-            else:
-
-                if not os.path.exists(zonePath):
-                    os.mkdir(zonePath)
-                    zoneFileToWrite = open(zoneFilePath, "w")
-
-
-                    if DNS.perVirtualHostZoneFile(virtualHostName, zoneFileToWrite) == 1:
-                        if DNS.addRecord(recordValue,"A",recordIP,zoneFileToWrite) == 1:
-                            DNS.restartNSD()
-                            zoneFileToWrite.close()
-                            return 1
-                        else:
-                            zoneFileToWrite.close()
-                            return 0
-                    else:
-                        zoneFileToWrite.close()
-                        return 0
-
-                else:
-
-                    zoneFileToWrite = open(zoneFilePath, "a")
-                    if DNS.addRecord(recordValue,"A",recordIP,zoneFileToWrite) == 1:
-                        DNS.restartNSD()
-                        zoneFileToWrite.close()
-                        return 1
-                    else:
-                        zoneFileToWrite.close()
-                        return 0
-
-        except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [addARecord]')
-
-
-    @staticmethod
-    def deleteRecord(recordValue, recordType, recordIP, virtualHostName):
-
-        try:
-            zonePath = DNS.zones_base_dir + virtualHostName
-            zoneFilePath = zonePath + "/zone.conf"
-
-            data = open(zoneFilePath, "r").readlines()
-
-            writeDataToFile = open(zoneFilePath, "w")
-
-            for items in data:
-                if items.find(recordIP) > -1 and items.find(recordValue) > -1 and items.find(recordType)>-1:
-                    continue
-                else:
-                    writeDataToFile.writelines(items)
-
-            writeDataToFile.close()
-
-            return 1
-        except IOError, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [addRecord]")
-            return 0
+            delZone = Domains.objects.get(name=virtualHostName)
+            delZone.delete()
+        except:
+            ## There does not exist a zone for this domain.
+            pass

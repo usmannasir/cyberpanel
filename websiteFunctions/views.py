@@ -25,7 +25,6 @@ from random import randint
 import hashlib
 from xml.etree import ElementTree
 from plogical.mailUtilities import mailUtilities
-from dns.views import createDNSRecord
 # Create your views here.
 
 
@@ -170,248 +169,6 @@ def deleteWebsite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-def dnsTemplate(request, domain, admin):
-    try:
-
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        ipAddress = ipData.split('\n', 1)[0]
-
-        import tldextract
-
-        extractDomain = tldextract.extract(domain)
-        topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
-        subDomain = extractDomain.subdomain
-
-        if len(subDomain) == 0:
-
-            if Domains.objects.filter(name=topLevelDomain).count() == 0:
-
-                zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
-                zone.save()
-
-                content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
-
-                soaRecord = Records(domainOwner=zone,
-                                    domain_id=zone.id,
-                                    name=topLevelDomain,
-                                    type="SOA",
-                                    content=content,
-                                    ttl=3600,
-                                    prio=0,
-                                    disabled=0,
-                                    auth=1)
-                soaRecord.save()
-
-                ## Main A record.
-
-                record = Records(domainOwner=zone,
-                                 domain_id=zone.id,
-                                 name=topLevelDomain,
-                                 type="A",
-                                 content=ipAddress,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                # CNAME Records.
-
-                cNameValue = "www." + topLevelDomain
-
-                record = Records(domainOwner=zone,
-                                 domain_id=zone.id,
-                                 name=cNameValue,
-                                 type="CNAME",
-                                 content=topLevelDomain,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                cNameValue = "ftp." + topLevelDomain
-
-                record = Records(domainOwner=zone,
-                                 domain_id=zone.id,
-                                 name=cNameValue,
-                                 type="CNAME",
-                                 content=topLevelDomain,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                ## MX Record.
-
-                mxValue = "mail." + topLevelDomain
-
-                record = Records(domainOwner=zone,
-                                 domain_id=zone.id,
-                                 name=topLevelDomain,
-                                 type="MX",
-                                 content=mxValue,
-                                 ttl=3600,
-                                 prio="10",
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                record = Records(domainOwner=zone,
-                                 domain_id=zone.id,
-                                 name=mxValue,
-                                 type="A",
-                                 content=ipAddress,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                ## TXT Records for mail
-
-                record = Records(domainOwner=zone,
-                                 domain_id=zone.id,
-                                 name=topLevelDomain,
-                                 type="TXT",
-                                 content="v=spf1 a mx ip4:" + ipAddress + " ~all",
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                record = Records(domainOwner=zone,
-                                 domain_id=zone.id,
-                                 name="_dmarc." + topLevelDomain,
-                                 type="TXT",
-                                 content="v=DMARC1; p=none",
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                record = Records(domainOwner=zone,
-                                 domain_id=zone.id,
-                                 name="_domainkey." + topLevelDomain,
-                                 type="TXT",
-                                 content="t=y; o=~;",
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-        else:
-            if Domains.objects.filter(name=topLevelDomain).count() == 0:
-                zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
-                zone.save()
-
-                content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
-
-                soaRecord = Records(domainOwner=zone,
-                                    domain_id=zone.id,
-                                    name=topLevelDomain,
-                                    type="SOA",
-                                    content=content,
-                                    ttl=3600,
-                                    prio=0,
-                                    disabled=0,
-                                    auth=1)
-                soaRecord.save()
-
-                ## Main A record.
-
-                record = Records(domainOwner=zone,
-                                 domain_id=zone.id,
-                                 name=topLevelDomain,
-                                 type="A",
-                                 content=ipAddress,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                # CNAME Records.
-
-                cNameValue = "www." + topLevelDomain
-
-                record = Records(domainOwner=zone,
-                                 domain_id=zone.id,
-                                 name=cNameValue,
-                                 type="CNAME",
-                                 content=topLevelDomain,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                cNameValue = "ftp." + topLevelDomain
-
-                record = Records(domainOwner=zone,
-                                 domain_id=zone.id,
-                                 name=cNameValue,
-                                 type="CNAME",
-                                 content=topLevelDomain,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                ## MX Record.
-
-                mxValue = "mail." + topLevelDomain
-
-                record = Records(domainOwner=zone,
-                                 domain_id=zone.id,
-                                 name=topLevelDomain,
-                                 type="MX",
-                                 content=mxValue,
-                                 ttl=3600,
-                                 prio="10",
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                record = Records(domainOwner=zone,
-                                 domain_id=zone.id,
-                                 name=mxValue,
-                                 type="A",
-                                 content=ipAddress,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-            ## Creating sub-domain level record.
-
-            zone = Domains.objects.get(name=topLevelDomain)
-
-            actualSubDomain = subDomain + "." + topLevelDomain
-
-
-            ## Main A record.
-
-            createDNSRecord(request, zone, actualSubDomain, "A", ipAddress, 0, 3600)
-
-            # CNAME Records.
-
-            cNameValue = "www." + actualSubDomain
-
-            createDNSRecord(request, zone, cNameValue, "CNAME", actualSubDomain, 0, 3600)
-
-    except BaseException, msg:
-        logging.CyberCPLogFileWriter.writeToFile(
-            "We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
-
 def createDKIMRecords(request, domain, admin):
     try:
 
@@ -495,19 +252,6 @@ def submitWebsiteCreation(request):
             externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:7]
 
 
-            if Websites.objects.filter(domain=domain).count() > 0:
-                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                            'error_message': "This website already exists."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-
-            if ChildDomains.objects.filter(domain=domain).count() > 0:
-                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                            'error_message': "This website already exists as child domain."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
             ####### Limitations check
 
             admin = Administrator.objects.get(userName=websiteOwner)
@@ -523,12 +267,6 @@ def submitWebsiteCreation(request):
 
             ####### Limitations Check End
 
-            ##### Zone creation
-
-            dnsTemplate(requests, domain, admin)
-
-            ## zone creation
-
             numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
             sslpath = "/home/" + domain + "/public_html"
 
@@ -536,9 +274,12 @@ def submitWebsiteCreation(request):
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-            execPath = execPath + " createVirtualHost --virtualHostName " + domain + " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + " --ssl " + str(
-                data['ssl']) + " --sslPath " + sslpath + " --dkimCheck " + str(data['dkimCheck']) + " --openBasedir " + str(data['openBasedir'])
-
+            execPath = execPath + " createVirtualHost --virtualHostName " + domain + \
+                       " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + \
+                       "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + \
+                       " --ssl " + str(data['ssl']) + " --sslPath " + sslpath + " --dkimCheck " + str(data['dkimCheck'])\
+                       + " --openBasedir " + str(data['openBasedir']) + ' --websiteOwner ' + websiteOwner \
+                       + ' --package ' + packageName
 
             output = subprocess.check_output(shlex.split(execPath))
 
@@ -549,18 +290,6 @@ def submitWebsiteCreation(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            ## Create Configurations ends here
-
-            ## DKIM Check
-
-            if data['dkimCheck'] == 1:
-                createDKIMRecords(request, domain, admin)
-
-            selectedPackage = Package.objects.get(packageName=packageName)
-
-            website = Websites(admin=admin, package=selectedPackage, domain=domain, adminEmail=adminEmail,phpSelection=phpSelection, ssl=data['ssl'], externalApp=externalApp)
-
-            website.save()
 
             data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
             json_data = json.dumps(data_ret)
@@ -579,71 +308,45 @@ def submitDomainCreation(request):
             masterDomain = data['masterDomain']
             domain = data['domainName']
             phpSelection = data['phpSelection']
-
-
-            ## Check if this domain either exists as website or child domain
-
-            if Websites.objects.filter(domain=domain).count() > 0:
-                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                            'error_message': "This Domain already exists as a website."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-
-            if ChildDomains.objects.filter(domain=domain).count() > 0:
-                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                            'error_message': "This domain already exists as child domain."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            ####### Limitations check
-
-            master = Websites.objects.get(domain=masterDomain)
-            domainsInPackage = master.package.allowedDomains
-
-            if domainsInPackage == 0:
-                pass
-            elif domainsInPackage > master.childdomains_set.all().count():
-                pass
-            else:
-                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                            'error_message': "Exceeded maximum number of domains for this package"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            ####### Limitations Check End
-
-            ssl = data['ssl']
             path = data['path']
 
-            restart = 1
-
-            ## Create Configurations
 
             try:
                 restore = data['restore']
-                restart = 0
-            except:
+                restore = '1'
+
                 if len(path) > 0:
                     path = path.lstrip("/")
                     path = "/home/" + masterDomain + "/public_html/" + path
                 else:
                     path = "/home/" + masterDomain + "/public_html/" + domain
 
-                ### Zone creation.
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+                execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
+                           " --phpVersion '" + phpSelection + "' --ssl " + str(data['ssl']) + " --dkimCheck " + \
+                           str(data['dkimCheck']) + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path \
+                           + ' --restore ' + restore
+
+            except:
+                restore = '0'
+
+                if len(path) > 0:
+                    path = path.lstrip("/")
+                    path = "/home/" + masterDomain + "/public_html/" + path
+                else:
+                    path = "/home/" + masterDomain + "/public_html/" + domain
 
                 val = request.session['userID']
                 admin = Administrator.objects.get(pk=val)
-                dnsTemplate(requests, domain, admin)
 
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-            externalApp = master.externalApp
-            numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
+                execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
+                           " --phpVersion '" + phpSelection + "' --ssl " + str(data['ssl']) + " --dkimCheck " + str(data['dkimCheck']) \
+                           + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path \
+                           + ' --restore ' + restore + ' --websiteOwner ' + admin.userName
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-
-            execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + " --administratorEmail " + master.adminEmail + " --phpVersion '" + phpSelection + "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + " --ssl " + str(
-                data['ssl']) + " --path " + path + " --dkimCheck " + str(data['dkimCheck']) + " --openBasedir " + str(data['openBasedir'])
 
             output = subprocess.check_output(shlex.split(execPath))
 
@@ -654,21 +357,6 @@ def submitDomainCreation(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            ## Create Configurations ends here
-
-            ## DKIM Check
-
-            try:
-                restore = data['restore']
-                restart = 0
-            except BaseException, msg:
-                if data['dkimCheck'] == 1:
-                    admin = Administrator.objects.get(pk=val)
-                    createDKIMRecords(request, domain, admin)
-
-            website = ChildDomains(master=master, domain=domain, path=path, phpSelection=phpSelection, ssl=ssl)
-
-            website.save()
 
             data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
             json_data = json.dumps(data_ret)
@@ -850,41 +538,6 @@ def submitWebsiteDeletion(request):
 
                 subprocess.check_output(shlex.split(execPath))
 
-                delWebsite = Websites.objects.get(domain=websiteName)
-                databases = Databases.objects.filter(website=delWebsite)
-
-                childDomains = delWebsite.childdomains_set.all()
-
-                ## Deleting child domains
-
-                for items in childDomains:
-                    numberOfWebsites = str(Websites.objects.count()+ChildDomains.objects.count())
-                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                    execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + items.domain + " --numberOfSites " + numberOfWebsites
-
-                    subprocess.check_output(shlex.split(execPath))
-
-
-                for items in databases:
-                    mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
-
-
-                delWebsite.delete()
-
-                try:
-                    delZone = Domains.objects.get(name=websiteName)
-                    delZone.delete()
-                except:
-                    ## There does not exist a zone for this domain.
-                    pass
-
-                installUtilities.reStartLiteSpeed()
-
-                ## Delete mail accounts
-
-                command = "sudo rm -rf /home/vmail/" + websiteName
-                subprocess.call(shlex.split(command))
-
 
                 data_ret = {'websiteDeleteStatus': 1,'error_message': "None"}
                 json_data = json.dumps(data_ret)
@@ -909,24 +562,11 @@ def submitDomainDeletion(request):
                 data = json.loads(request.body)
                 websiteName = data['websiteName']
 
-                numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
-
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-                execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName + " --numberOfSites " + numberOfWebsites
+                execPath = execPath + " deleteDomain --virtualHostName " + websiteName
 
                 subprocess.check_output(shlex.split(execPath))
-
-
-                delWebsite = ChildDomains.objects.get(domain=websiteName)
-
-                delWebsite.delete()
-
-
-                installUtilities.reStartLiteSpeed()
-
-
-
 
                 data_ret = {'websiteDeleteStatus': 1,'error_message': "None"}
                 json_data = json.dumps(data_ret)
@@ -2718,14 +2358,6 @@ def submitAliasCreation(request):
 
             admin = Administrator.objects.get(pk=request.session['userID'])
 
-            ##### Zone creation
-
-            dnsTemplate(requests, aliasDomain, admin)
-
-            ### Zone creation
-
-
-
             sslpath = "/home/" + masterDomain + "/public_html"
 
             ## Create Configurations
@@ -2733,7 +2365,7 @@ def submitAliasCreation(request):
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createAlias --masterDomain " + masterDomain + " --aliasDomain " + aliasDomain + " --ssl " + str(
-                ssl) + " --sslPath " + sslpath + " --administratorEmail " + admin.email
+                ssl) + " --sslPath " + sslpath + " --administratorEmail " + admin.email + ' --websiteOwner ' + admin.userName
 
             output = subprocess.check_output(shlex.split(execPath))
 
@@ -2745,8 +2377,6 @@ def submitAliasCreation(request):
                 return HttpResponse(json_data)
 
             ## Create Configurations ends here
-
-
 
             data_ret = {'createAliasStatus': 1, 'error_message': "None", "existsStatus": 0}
             json_data = json.dumps(data_ret)

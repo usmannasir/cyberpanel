@@ -143,7 +143,7 @@ class installUtilities:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd)
+            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             if res == 1:
                 print("###############################################")

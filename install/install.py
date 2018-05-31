@@ -2669,7 +2669,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('publicip', help='Please enter public IP for your VPS or dedicated server.')
-    parser.add_argument('mysql', help='Specify number of MySQL instances to be used.')
+    parser.add_argument('--mysql', help='Specify number of MySQL instances to be used.')
     args = parser.parse_args()
 
     logging.InstallLog.writeToFile("Starting CyberPanel installation..")
@@ -2686,6 +2686,11 @@ def main():
     cwd = os.getcwd()
 
     checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd,"/usr/local/CyberCP")
+
+    try:
+        mysql = args.mysql
+    except:
+        mysql = 'One'
 
 
     checks.checkPythonVersion()
@@ -2706,12 +2711,12 @@ def main():
 
     import installCyberPanel
 
-    installCyberPanel.Main(cwd, args.mysql)
+    installCyberPanel.Main(cwd, mysql)
     checks.fix_selinux_issue()
     checks.install_psmisc()
     checks.install_postfix_davecot()
-    checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, args.mysql)
-    checks.setup_postfix_davecot_config(args.mysql)
+    checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
+    checks.setup_postfix_davecot_config(mysql)
 
 
     checks.install_unzip()
@@ -2731,7 +2736,7 @@ def main():
 
     checks.installCertBot()
     checks.test_Requests()
-    checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, args.mysql)
+    checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
     checks.setup_cron()
     checks.installTLDExtract()
     #checks.installdnsPython()

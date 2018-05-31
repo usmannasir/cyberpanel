@@ -1,23 +1,14 @@
 import subprocess
 import time
 
-class CyberCPLogFileWriter:
+class cliLogger:
     fileName = "/home/cyberpanel/error-logs.txt"
 
-    @staticmethod
-    def writeToFile(message):
-        try:
-            file = open(CyberCPLogFileWriter.fileName,'a')
-            file.writelines("[" + time.strftime(
-                    "%I-%M-%S-%a-%b-%Y") + "] "+ message + "\n")
-            file.close()
-        except IOError,msg:
-            return "Can not write to error file."
 
     @staticmethod
     def writeforCLI(message, level, method):
         try:
-            file = open(CyberCPLogFileWriter.fileName, 'a')
+            file = open(cliLogger.fileName, 'a')
             file.writelines("[" + time.strftime(
                 "%I-%M-%S-%a-%b-%Y") + "] [" + level + ":" + method + "] " + message + "\n")
             file.close()
