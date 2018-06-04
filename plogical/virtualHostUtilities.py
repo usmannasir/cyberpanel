@@ -88,7 +88,7 @@ class virtualHostUtilities:
             if ssl == 0:
                 installUtilities.installUtilities.reStartLiteSpeed()
 
-                vhost.finalizeVhostCreation(virtualHostName, virtualHostUser)
+            vhost.finalizeVhostCreation(virtualHostName, virtualHostUser)
 
             ## Create Configurations ends here
 
@@ -134,12 +134,13 @@ class virtualHostUtilities:
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             print "1,None"
-            return
+            return 1, None
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [issueSSL]")
             print "0," + str(msg)
+            return 0, str(msg)
 
     @staticmethod
     def getAccessLogs(fileName, page):
@@ -579,7 +580,7 @@ class virtualHostUtilities:
 
                 if retValues[0] == 0:
                     print "0," + str(retValues[1])
-                    return
+                    return 0,retValues[1]
 
             shutil.copy(pathToStoreSSLPrivKey, destPrivKey)
             shutil.copy(pathToStoreSSLFullChain, destCert)
@@ -594,12 +595,14 @@ class virtualHostUtilities:
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             print "1,None"
+            return 1,'None'
 
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [issueSSLForHostName]")
             print "0," + str(msg)
+            return 0, str(msg)
 
     @staticmethod
     def issueSSLForMailServer(virtualHost, path):
@@ -623,7 +626,7 @@ class virtualHostUtilities:
 
                 if retValues[0] == 0:
                     print "0," + str(retValues[1])
-                    return
+                    return 0,retValues[1]
 
             ## MailServer specific functions
 
@@ -701,11 +704,13 @@ class virtualHostUtilities:
             p.start()
 
             print "1,None"
+            return 1,'None'
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [issueSSLForHostName]")
             print "0," + str(msg)
+            return 0,str(msg)
 
     @staticmethod
     def createAlias(masterDomain, aliasDomain, ssl, sslPath, administratorEmail, owner=None):
@@ -868,7 +873,7 @@ class virtualHostUtilities:
                         else:
                             writeToFile.writelines(items)
 
-                    phpIniOverride = "phpIniOverride  {\n"
+                    phpIniOverride = "\nphpIniOverride  {\n"
                     php_admin_value = 'php_admin_value open_basedir "/tmp:$VH_ROOT"\n'
                     endPHPIniOverride = "}\n"
 
@@ -1009,7 +1014,7 @@ class virtualHostUtilities:
 
         except BaseException, msg:
             numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-            vhost.deleteVirtualHostConfigurations(virtualHostName, numberOfWebsites)
+            vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [createDomain]")
             print "0," + str(msg)
@@ -1026,11 +1031,29 @@ class virtualHostUtilities:
             installUtilities.installUtilities.reStartLiteSpeed()
 
             print "1,None"
+            return 1,'None'
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [deleteDomain]")
             print "0," + str(msg)
+            return 0,str(msg)
+
+    @staticmethod
+    def getDiskUsage(path, totalAllowed):
+        try:
+
+            totalUsageInMB = subprocess.check_output(["sudo", "du", "-hs", path, "--block-size=1M"]).split()[0]
+
+            percentage = float(100) / float(totalAllowed)
+
+            percentage = float(percentage) * float(totalUsageInMB)
+
+            data = [int(totalUsageInMB), int(percentage)]
+            return data
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [getDiskUsage]")
+            return [int(0), int(0)]
 
 def main():
 

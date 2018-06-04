@@ -2663,6 +2663,32 @@ milter_default_action = accept
             logging.InstallLog.writeToFile(str(msg) + " [installdnsPython]")
             return 0
 
+    def setupCLI(self):
+        try:
+            count = 0
+            while (1):
+                command = "ln -s /usr/local/CyberCP/cli/cyberPanel.py /usr/bin/cyberpanel"
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Trying to setup CLI, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Failed to setup CLI! [setupCLI]")
+                else:
+                    logging.InstallLog.writeToFile("CLI setup successfull!")
+                    preFlightsChecks.stdOut("CLI setup successfull!")
+                    break
+
+            command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
+            res = subprocess.call(shlex.split(command))
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [setupCLI]")
+            return 0
+
 
 
 def main():
@@ -2737,6 +2763,7 @@ def main():
     checks.installCertBot()
     checks.test_Requests()
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
+    checks.setupCLI()
     checks.setup_cron()
     checks.installTLDExtract()
     #checks.installdnsPython()

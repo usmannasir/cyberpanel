@@ -17,7 +17,6 @@ from plogical.mailUtilities import mailUtilities
 import thread
 from dns.models import Domains as dnsDomains
 from dns.models import Records as dnsRecords
-import os
 
 def loadEmailHome(request):
     try:
@@ -61,61 +60,18 @@ def submitEmailCreation(request):
             userName = data['username']
             password = data['password']
 
-            ## Check if already exists
-
-            finalEmailUsername = userName + "@" + domainName
-
-            if EUsers.objects.filter(email=finalEmailUsername).exists():
-                data_ret = {'createEmailStatus': 0, 'error_message': "This account already exists!"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            ## Check for email limits.
-
-            website = Websites.objects.get(domain=domainName)
-
-            try:
-
-                newEmailDomain = Domains(domainOwner=website, domain=domainName)
-                newEmailDomain.save()
-
-                if website.package.emailAccounts == 0 or (
-                            newEmailDomain.eusers_set.all().count() < website.package.emailAccounts):
-                    pass
-                else:
-                    data_ret = {'createEmailStatus': 0,
-                                'error_message': "Exceeded maximum amount of email accounts allowed for the package."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-            except:
-
-                emailDomain = Domains.objects.get(domain=domainName)
-
-                if website.package.emailAccounts == 0 or (
-                    emailDomain.eusers_set.all().count() < website.package.emailAccounts):
-                    pass
-                else:
-                    data_ret = {'createEmailStatus': 0,
-                                'error_message': "Exceeded maximum amount of email accounts allowed for the package."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
 
 
             ## Create email entry
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
 
-            execPath = execPath + " createEmailAccount --domain " + domainName
+            execPath = execPath + " createEmailAccount --domain " + domainName + " --userName " \
+                       + userName + " --password " + password
 
             output = subprocess.check_output(shlex.split(execPath))
 
             if output.find("1,None") > -1:
-
-                emailDomain = Domains.objects.get(domain=domainName)
-
-                emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
-                emailAcct.save()
 
                 data_ret = {'createEmailStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)
@@ -222,9 +178,7 @@ def submitEmailDeletion(request):
                 data = json.loads(request.body)
                 email = data['email']
 
-                email = EUsers(email=email)
-
-                email.delete()
+                mailUtilities.deleteEmailAccount(email)
 
                 data_ret = {'deleteEmailStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)

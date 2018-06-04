@@ -13,10 +13,8 @@ from loginSystem.views import loadLoginPage
 import os
 import time
 import plogical.backupUtilities as backupUtil
-from shutil import rmtree
 import shlex
 import subprocess
-import signal
 import requests
 from baseTemplate.models import version
 from plogical.virtualHostUtilities import virtualHostUtilities
@@ -26,7 +24,6 @@ from xml.etree import ElementTree
 from xml.dom import minidom
 from dns.models import Domains,Records
 from mailServer.models import Domains as eDomains
-from mailServer.models import EUsers
 from plogical.mailUtilities import mailUtilities
 
 
@@ -180,12 +177,11 @@ def submitBackupCreation(request):
         if request.method == 'POST':
 
             data = json.loads(request.body)
-            backupDomain = data['websiteToBeBacked']
 
+            backupDomain = data['websiteToBeBacked']
             website = Websites.objects.get(domain=backupDomain)
 
             ## defining paths
-
 
             ## /home/example.com/backup
             backupPath = os.path.join("/home",backupDomain,"backup/")
@@ -195,159 +191,11 @@ def submitBackupCreation(request):
             ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018
             tempStoragePath = os.path.join(backupPath,backupName)
 
-            ## Generating meta
-
-            ## XML Generation
-
-            metaFileXML = Element('metaFile')
-
-            child = SubElement(metaFileXML, 'masterDomain')
-            child.text = backupDomain
-
-            child = SubElement(metaFileXML, 'phpSelection')
-            child.text = website.phpSelection
-
-            child = SubElement(metaFileXML, 'externalApp')
-            child.text = website.externalApp
-
-
-            childDomains = website.childdomains_set.all()
-
-            databases = website.databases_set.all()
-
-            ## Child domains XML
-
-            childDomainsXML = Element('ChildDomains')
-
-            for items in childDomains:
-
-                childDomainXML = Element('domain')
-
-                child = SubElement(childDomainXML, 'domain')
-                child.text = items.domain
-                child = SubElement(childDomainXML, 'phpSelection')
-                child.text = items.phpSelection
-                child = SubElement(childDomainXML, 'path')
-                child.text = items.path
-
-                childDomainsXML.append(childDomainXML)
-
-
-            metaFileXML.append(childDomainsXML)
-
-            ## Databases XML
-
-            databasesXML = Element('Databases')
-
-            for items in databases:
-                dbuser = DBUsers.objects.get(user=items.dbUser)
-
-                databaseXML = Element('database')
-
-                child = SubElement(databaseXML, 'dbName')
-                child.text = items.dbName
-                child = SubElement(databaseXML, 'dbUser')
-                child.text = items.dbUser
-                child = SubElement(databaseXML, 'password')
-                child.text = dbuser.password
-
-                databasesXML.append(databaseXML)
-
-            metaFileXML.append(databasesXML)
-
-
-            ## Get Aliases
-
-            aliasesXML = Element('Aliases')
-
-            aliases = backupUtil.backupUtilities.getAliases(backupDomain)
-
-            for items in aliases:
-
-                child = SubElement(aliasesXML, 'alias')
-                child.text = items
-
-            metaFileXML.append(aliasesXML)
-
-
-            ## Finish Alias
-
-            ## DNS Records XML
-
-            try:
-                dnsRecordsXML = Element("dnsrecords")
-                domain = Domains.objects.get(name=backupDomain)
-                dnsRecords = Records.objects.filter(domain_id=domain.id)
-
-                for items in dnsRecords:
-                    dnsRecordXML = Element('dnsrecord')
-
-                    child = SubElement(dnsRecordXML, 'type')
-                    child.text = items.type
-                    child = SubElement(dnsRecordXML, 'name')
-                    child.text = items.name
-                    child = SubElement(dnsRecordXML, 'content')
-                    child.text = items.content
-                    child = SubElement(dnsRecordXML, 'priority')
-                    child.text = str(items.prio)
-
-                    dnsRecordsXML.append(dnsRecordXML)
-
-                metaFileXML.append(dnsRecordsXML)
-
-            except BaseException,msg:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg))
-
-            ## Email accounts XML
-
-            try:
-                emailRecordsXML = Element('emails')
-                eDomain = eDomains.objects.get(domain=backupDomain)
-                emailAccounts = eDomain.eusers_set.all()
-
-                for items in emailAccounts:
-                    emailRecordXML = Element('emailAccount')
-
-                    child = SubElement(emailRecordXML, 'email')
-                    child.text = items.email
-                    child = SubElement(emailRecordXML, 'password')
-                    child.text = items.password
-
-                    emailRecordsXML.append(emailRecordXML)
-
-                metaFileXML.append(emailRecordsXML)
-
-            except BaseException,msg:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg))
-
-            ## Email meta generated!
-
-
-            def prettify(elem):
-                """Return a pretty-printed XML string for the Element.
-                """
-                rough_string = ElementTree.tostring(elem, 'utf-8')
-                reparsed = minidom.parseString(rough_string)
-                return reparsed.toprettyxml(indent="  ")
-
-            ## /home/cyberpanel/1047.xml
-            metaPath = os.path.join("/home", "cyberpanel", str(randint(1000, 9999)) + ".xml")
-
-            xmlpretty = prettify(metaFileXML).encode('ascii', 'ignore')
-            metaFile = open(metaPath,'w')
-            metaFile.write(xmlpretty)
-            metaFile.close()
-
-            ## meta generated
-
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " submitBackupCreation --tempStoragePath " + tempStoragePath + " --backupName " + backupName + " --backupPath " + backupPath + " --metaPath " + metaPath
+            execPath = execPath + " submitBackupCreation --tempStoragePath " + tempStoragePath + " --backupName " \
+                       + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain
 
             subprocess.Popen(shlex.split(execPath))
-
-            newBackup = Backups(website=website, fileName=backupName, date=time.strftime("%I-%M-%S-%a-%b-%Y"),
-                                size=0, status=0)
-            newBackup.save()
 
             time.sleep(2)
 
@@ -557,6 +405,8 @@ def restoreStatus(request):
 
             if os.path.exists(path):
                 path = os.path.join("/home","backup",backupFile)
+            elif os.path.exists(data['backupFile']):
+                path = data['backupFile'].strip(".tar.gz")
             else:
                 dir = data['dir']
                 path = "/home/backup/transfer-" + str(dir) + "/" + backupFile

@@ -290,7 +290,30 @@ class DNS:
                 "We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
 
     @staticmethod
+    def getZoneObject(virtualHostName):
+        try:
+            return Domains.objects.get(name=virtualHostName)
+        except:
+            return 0
+
+    @staticmethod
     def createDNSRecord(zone, name, type, value, priority, ttl):
+
+        if type == 'NS':
+            if Records.objects.filter(name=name, type=type, content=value).count() == 0:
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name=name,
+                                 type=type,
+                                 content=value,
+                                 ttl=ttl,
+                                 prio=priority,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+            return
+
+
         if Records.objects.filter(name=name, type=type).count() == 0:
             record = Records(domainOwner=zone,
                              domain_id=zone.id,
@@ -308,6 +331,41 @@ class DNS:
         try:
             delZone = Domains.objects.get(name=virtualHostName)
             delZone.delete()
+        except:
+            ## There does not exist a zone for this domain.
+            pass
+
+    @staticmethod
+    def createDNSZone(virtualHostName, admin):
+        try:
+            zone = Domains(admin=admin, name=virtualHostName, type="NATIVE")
+            zone.save()
+        except:
+            ## There does not exist a zone for this domain.
+            pass
+
+    @staticmethod
+    def getDNSRecords(virtualHostName):
+        try:
+            zone = Domains.objects.get(name=virtualHostName)
+            zone.save()
+            return zone.records_set.all()
+        except:
+            ## There does not exist a zone for this domain.
+            pass
+
+    @staticmethod
+    def getDNSZones():
+        try:
+            return Domains.objects.all()
+        except:
+            pass
+
+    @staticmethod
+    def deleteDNSRecord(recordID):
+        try:
+            delRecord = Records.objects.get(id=recordID)
+            delRecord.delete()
         except:
             ## There does not exist a zone for this domain.
             pass

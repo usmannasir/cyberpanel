@@ -559,9 +559,6 @@ class vhost:
 
             writeDataToFile = open(vhFile, "w")
 
-            sockRandomPath = str(randint(1000, 9999))
-
-            address = "  address                 UDS://tmp/lshttpd/" + sockRandomPath + ".sock\n"
             path = "  path                    /usr/local/lsws/lsphp" + str(finalphp) + "/bin/lsphp\n"
 
             for items in data:
@@ -575,27 +572,13 @@ class vhost:
             installUtilities.installUtilities.reStartLiteSpeed()
 
             print "1,None"
+            return 1,'None'
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + " [IO Error with per host config file [changePHP]]")
+            print 0,str(msg)
             return [0, str(msg) + " [IO Error with per host config file [changePHP]]"]
-
-    @staticmethod
-    def getDiskUsage(path, totalAllowed):
-        try:
-
-            totalUsageInMB = subprocess.check_output(["sudo", "du", "-hs", path, "--block-size=1M"]).split()[0]
-
-            percentage = float(100) / float(totalAllowed)
-
-            percentage = float(percentage) * float(totalUsageInMB)
-
-            data = [int(totalUsageInMB), int(percentage)]
-            return data
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [getDiskUsage]")
-            return [int(0), int(0)]
 
     @staticmethod
     def addRewriteRules(virtualHostName, fileName=None):
@@ -652,41 +635,6 @@ class vhost:
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + " [IO Error with per host config file [checkIfRewriteEnabled]]")
-            return 0
-        return 1
-
-    @staticmethod
-    def suspendVirtualHost(virtualHostName):
-        try:
-
-            confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
-
-            command = "sudo mv " + confPath + " " + confPath + "-suspended"
-            subprocess.call(shlex.split(command))
-
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + "  [suspendVirtualHost]")
-            return 0
-        return 1
-
-    @staticmethod
-    def UnsuspendVirtualHost(virtualHostName):
-        try:
-
-            confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
-
-            command = "sudo mv " + confPath + "-suspended" + " " + confPath
-            subprocess.call(shlex.split(command))
-
-            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + confPath
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
-
-
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + "  [UnsuspendVirtualHost]")
             return 0
         return 1
 

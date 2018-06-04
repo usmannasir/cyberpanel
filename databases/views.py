@@ -86,46 +86,16 @@ def submitDBCreation(request):
                 dbName = webUsername+"_"+dbName
                 dbUsername = webUsername+"_"+dbUsername
 
-                if len(dbName) > 16 or len(dbUsername) > 16:
-                    data_ret = {'createDBStatus': 0,
-                                'error_message': "Length of Database name or Database user should be 16 at max."}
+                result = mysqlUtilities.submitDBCreation(dbName, dbUsername, dbPassword, databaseWebsite)
+
+                if result[0] == 1:
+                    data_ret = {'createDBStatus': 1, 'error_message': "None"}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
-
-                website = Websites.objects.get(domain=databaseWebsite)
-
-                if website.package.dataBases == 0:
-                    pass
-                elif website.package.dataBases > website.databases_set.all().count():
-                    pass
                 else:
-                    data_ret = {'createDBStatus': 0, 'error_message': "Maximum database limit reached for this website."}
+                    data_ret = {'createDBStatus': 0, 'error_message': result[1]}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
-
-                if Databases.objects.filter(dbName=dbName).exists() or Databases.objects.filter(dbUser=dbUsername).exists() :
-                    data_ret = {'createDBStatus': 0,
-                                'error_message': "This database or user is already taken."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                result = mysqlUtilities.createDatabase(dbName, dbUsername, dbPassword)
-
-                if result == 1:
-                    pass
-                else:
-                    data_ret = {'createDBStatus': 0,
-                                'error_message': result}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                db = Databases(website=website,dbName=dbName,dbUser=dbUsername)
-                db.save()
-
-                data_ret = {'createDBStatus': 1, 'error_message': "None"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
 
         except BaseException,msg:
             data_ret = {'createDBStatus': 0, 'error_message': str(msg)}
@@ -234,16 +204,14 @@ def submitDatabaseDeletion(request):
                 dbName = data['dbName']
 
 
-                databaseToBeDeleted = Databases.objects.get(dbName=dbName)
-                result = mysqlUtilities.deleteDatabase(dbName,databaseToBeDeleted.dbUser)
+                result = mysqlUtilities.submitDBDeletion(dbName)
 
-                if  result == 1:
+                if  result[0] == 1:
                     data_ret = {'deleteStatus': 1, 'error_message': "None"}
-                    databaseToBeDeleted.delete()
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
                 else:
-                    data_ret = {'deleteStatus': 0, 'error_message': result}
+                    data_ret = {'deleteStatus': 0, 'error_message': result[1]}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 

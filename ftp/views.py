@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from datetime import datetime
 import hashlib
 import json
-
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from models import Users
@@ -11,12 +9,10 @@ from loginSystem.models import Administrator
 import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 from websiteFunctions.models import Websites
-from websiteFunctions.models import ChildDomains
-import pwd
-import grp
 import subprocess
 from plogical.virtualHostUtilities import virtualHostUtilities
 import shlex
+from plogical.ftpUtilities import FTPUtilities
 # Create your views here.
 
 def loadFTPHome(request):
@@ -75,96 +71,36 @@ def submitFTPCreation(request):
             if request.method == 'POST':
 
 
-
                 data = json.loads(request.body)
                 userName = data['ftpUserName']
                 password = data['ftpPassword']
                 path = data['path']
 
-                ## need to get gid and uid
+                admin = Administrator.objects.get(id=val)
 
-                try:
-                    website = ChildDomains.objects.get(domain=data['ftpDomain'])
-                    externalApp = website.master.externalApp
-                except:
-                    website = Websites.objects.get(domain=data['ftpDomain'])
-                    externalApp = website.externalApp
-
-                uid = pwd.getpwnam(externalApp).pw_uid
-                gid = grp.getgrnam(externalApp).gr_gid
-
-                ## gid , uid ends
-
-                path = path.lstrip("/")
-
-                if len(path)>0:
-
-                    path = "/home/" + data['ftpDomain']+"/public_html/"+path
-
-                    ## Security Check
-
-                    if path.find("..") > -1:
-                        data_ret = {'creatFTPStatus': 0,
-                                    'error_message': "Specified path must be inside virtual host home!"}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-
-                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/ftpUtilities.py"
-
-                    execPath = execPath + " ftpFunctions --path " + path + " --externalApp " + externalApp
-
-                    output = subprocess.check_output(shlex.split(execPath))
-
-                    if output.find("1,None") > -1:
-                        pass
-                    else:
-                        data_ret = {'creatFTPStatus': 0, 'error_message': "Not able to create the directory specified, for more information see CyberPanel main log file."}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-
+                if len(path) > 0:
+                    pass
                 else:
-                    path = "/home/" + data['ftpDomain']
+                    path = 'None'
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/ftpUtilities.py"
+
+                execPath = execPath + " submitFTPCreation --domainName " + data['ftpDomain'] + " --userName " + userName \
+                           + " --password " + password + " --path " + path + " --owner " + admin.userName
 
 
-                hash = hashlib.md5()
-                hash.update(password)
+                output = subprocess.check_output(shlex.split(execPath))
 
-                admin = Administrator.objects.get(pk=request.session['userID'])
-
-                userName = admin.userName + "_" + userName
-
-                if website.package.ftpAccounts == 0:
-                    user = Users(domain=website, user=userName, password=hash.hexdigest(), uid=uid, gid=gid, dir=path,
-                                 quotasize=website.package.diskSpace,
-                                 status="1",
-                                 ulbandwidth=500000,
-                                 dlbandwidth=500000,
-                                 date=datetime.now())
-
-                    user.save()
-
-
-
-                    data_ret = {'creatFTPStatus': 1, 'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                elif website.users_set.all().count() < website.package.ftpAccounts:
-                    user = Users(domain=website,user=userName, password=hash.hexdigest(), uid=uid, gid=gid, dir=path, quotasize=website.package.diskSpace,
-                                 status="1",
-                                 ulbandwidth=500000,
-                                 dlbandwidth=500000,
-                                 date=datetime.now())
-
-                    user.save()
-
-                    data_ret = {'creatFTPStatus': 1,'error_message': "None"}
+                if output.find("1,None") > -1:
+                    data_ret = {'creatFTPStatus': 1, 'error_message': 'None'}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
                 else:
-                    data_ret = {'creatFTPStatus': 0, 'error_message': "Exceeded maximum amount of FTP accounts allowed for the package."}
+                    data_ret = {'creatFTPStatus': 0, 'error_message': output}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
+
+
 
         except BaseException,msg:
             data_ret = {'creatFTPStatus': 0, 'error_message': str(msg)}
@@ -268,8 +204,7 @@ def submitFTPDelete(request):
                 data = json.loads(request.body)
                 ftpUserName = data['ftpUsername']
 
-                ftp = Users.objects.get(user=ftpUserName)
-                ftp.delete()
+                FTPUtilities.submitFTPDeletion(ftpUserName)
 
                 final_json = json.dumps({'deleteStatus': 1, 'error_message': "None"})
                 return HttpResponse(final_json)
@@ -383,15 +318,7 @@ def changePassword(request):
                 userName = data['ftpUserName']
                 password = data['ftpPassword']
 
-
-                hash = hashlib.md5()
-                hash.update(password)
-
-                admin = Administrator.objects.get(pk=request.session['userID'])
-
-                ftp = Users.objects.get(user=userName)
-                ftp.password = hash.hexdigest()
-                ftp.save()
+                FTPUtilities.changeFTPPassword(userName, password)
 
                 data_ret = {'changePasswordStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)

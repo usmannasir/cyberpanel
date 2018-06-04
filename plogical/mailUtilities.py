@@ -1,9 +1,16 @@
+import os,sys
+sys.path.append('/usr/local/CyberCP')
+import django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+django.setup()
 import os.path
 import shutil
 import CyberCPLogFileWriter as logging
 import subprocess
 import argparse
 import shlex
+from mailServer.models import Domains,EUsers
+from websiteFunctions.models import Websites
 
 
 class mailUtilities:
@@ -12,8 +19,44 @@ class mailUtilities:
     cyberPanelHome = "/home/cyberpanel"
 
     @staticmethod
-    def createEmailAccount(domain):
+    def createEmailAccount(domain, userName, password):
         try:
+
+            ## Check if already exists
+
+            finalEmailUsername = userName + "@" + domain
+
+            if EUsers.objects.filter(email=finalEmailUsername).exists():
+                raise BaseException("This account already exists!")
+
+            ## Check for email limits.
+
+            website = Websites.objects.get(domain=domain)
+
+            try:
+
+                newEmailDomain = Domains(domainOwner=website, domain=domain)
+                newEmailDomain.save()
+
+                if website.package.emailAccounts == 0 or (
+                            newEmailDomain.eusers_set.all().count() < website.package.emailAccounts):
+                    pass
+                else:
+                    raise BaseException("Exceeded maximum amount of email accounts allowed for the package.")
+
+            except:
+
+                emailDomain = Domains.objects.get(domain=domain)
+
+                if website.package.emailAccounts == 0 or (
+                            emailDomain.eusers_set.all().count() < website.package.emailAccounts):
+                    pass
+                else:
+                    raise BaseException("Exceeded maximum amount of email accounts allowed for the package.")
+
+
+            ## After effects
+
 
             path = "/usr/local/CyberCP/install/rainloop/cyberpanel.net.ini"
 
@@ -25,7 +68,7 @@ class mailUtilities:
             if not os.path.exists(finalPath):
                 shutil.copy(path, finalPath)
 
-            command = 'chown -R nobody:nobody /usr/local/lscp/rainloop'
+            command = 'chown -R nobody:nobody /usr/local/lscp/cyberpanel/rainloop'
 
             cmd = shlex.split(command)
 
@@ -37,13 +80,53 @@ class mailUtilities:
 
             res = subprocess.call(cmd)
 
+            ## After effects ends
+
+            emailDomain = Domains.objects.get(domain=domain)
+
+            emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
+            emailAcct.save()
+
             print "1,None"
+            return 1,"None"
 
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [createEmailAccount]")
             print "0," + str(msg)
+            return 0, str(msg)
 
+    @staticmethod
+    def deleteEmailAccount(email):
+        try:
+
+            email = EUsers(email=email)
+            email.delete()
+
+            return 1, 'None'
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [deleteEmailAccount]")
+            return 0, str(msg)
+
+    @staticmethod
+    def getEmailAccounts(virtualHostName):
+        try:
+            emailDomain = Domains.objects.get(domain=virtualHostName)
+            return emailDomain.eusers_set.all()
+        except:
+            return 0
+
+    @staticmethod
+    def changeEmailPassword(email, newPassword):
+        try:
+            changePass = EUsers.objects.get(email=email)
+            changePass.password = newPassword
+            changePass.save()
+            return 0,'None'
+        except BaseException, msg:
+            return 0, str(msg)
 
     @staticmethod
     def setupDKIM(virtualHostName):
@@ -57,8 +140,10 @@ class mailUtilities:
 
             ## Generate keys
 
+            FNULL = open(os.devnull, 'w')
+
             command = "opendkim-genkey -D /etc/opendkim/keys/" + virtualHostName + " -d " + virtualHostName + " -s default"
-            subprocess.call(shlex.split(command))
+            subprocess.call(shlex.split(command),stdout=FNULL, stderr=subprocess.STDOUT)
 
             ## Fix permissions
 
@@ -273,12 +358,15 @@ def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('function', help='Specific a function to call!')
     parser.add_argument('--domain', help='Domain name!')
+    parser.add_argument('--userName', help='Email Username!')
+    parser.add_argument('--password', help='Email password!')
+
 
 
     args = parser.parse_args()
 
     if args.function == "createEmailAccount":
-        mailUtilities.createEmailAccount(args.domain)
+        mailUtilities.createEmailAccount(args.domain, args.userName, args.password)
     elif args.function == "generateKeys":
         mailUtilities.generateKeys(args.domain)
     elif args.function == "configureOpenDKIM":

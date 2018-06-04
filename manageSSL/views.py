@@ -91,8 +91,6 @@ def issueSSL(request):
 
                 execPath = execPath + " issueSSL --virtualHostName " + virtualHost + " --administratorEmail " + adminEmail + " --path " + path
 
-
-
                 output = subprocess.check_output(shlex.split(execPath))
 
                 if output.find("1,None") > -1:

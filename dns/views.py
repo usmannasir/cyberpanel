@@ -385,7 +385,7 @@ def addDNSRecord(request):
                         value = recordName + "." + zoneDomain
 
 
-                    createDNSRecord(request, zone, value, recordType, recordContentA, 0, ttl )
+                    DNS.createDNSRecord(zone, value, recordType, recordContentA, 0, ttl )
 
                 elif recordType == "MX":
 
@@ -400,7 +400,7 @@ def addDNSRecord(request):
                     recordContentMX = data['recordContentMX']
                     priority = data['priority']
 
-                    createDNSRecord(request, zone, value, recordType, recordContentMX, priority, ttl)
+                    DNS.createDNSRecord(zone, value, recordType, recordContentMX, priority, ttl)
 
                 elif recordType == "AAAA":
 
@@ -415,7 +415,7 @@ def addDNSRecord(request):
 
                     recordContentAAAA = data['recordContentAAAA']  ## IP or ponting value
 
-                    createDNSRecord(request, zone, value, recordType, recordContentAAAA, 0, ttl)
+                    DNS.createDNSRecord(zone, value, recordType, recordContentAAAA, 0, ttl)
 
                 elif recordType == "CNAME":
 
@@ -430,7 +430,7 @@ def addDNSRecord(request):
 
                     recordContentCNAME = data['recordContentCNAME']  ## IP or ponting value
 
-                    createDNSRecord(request, zone, value, recordType, recordContentCNAME, 0, ttl)
+                    DNS.createDNSRecord(zone, value, recordType, recordContentCNAME, 0, ttl)
 
                 elif recordType == "SPF":
 
@@ -444,7 +444,7 @@ def addDNSRecord(request):
 
                     recordContentSPF = data['recordContentSPF']  ## IP or ponting value
 
-                    createDNSRecord(request, zone, value, recordType, recordContentSPF, 0, ttl)
+                    DNS.createDNSRecord(zone, value, recordType, recordContentSPF, 0, ttl)
 
                 elif recordType == "TXT":
 
@@ -458,13 +458,13 @@ def addDNSRecord(request):
 
                     recordContentTXT = data['recordContentTXT']  ## IP or ponting value
 
-                    createDNSRecord(request, zone, value, recordType, recordContentTXT, 0, ttl)
+                    DNS.createDNSRecord(zone, value, recordType, recordContentTXT, 0, ttl)
 
                 elif recordType == "SOA":
 
                     recordContentSOA = data['recordContentSOA']
 
-                    createDNSRecord(request, zone, value, recordType, recordContentSOA, 0, ttl)
+                    DNS.createDNSRecord(zone, value, recordType, recordContentSOA, 0, ttl)
 
                 elif recordType == "NS":
 
@@ -478,7 +478,7 @@ def addDNSRecord(request):
                     else:
                         recordContentNS = recordContentNS + "." + zoneDomain
 
-                    createDNSRecord(request, zone, value, recordType, recordContentNS, 0, ttl)
+                    DNS.createDNSRecord(zone, recordName, recordType, recordContentNS, 0, ttl)
 
                 elif recordType == "SRV":
 
@@ -493,7 +493,7 @@ def addDNSRecord(request):
                     recordContentSRV = data['recordContentSRV']
                     priority = data['priority']
 
-                    createDNSRecord(request, zone, value, recordType, recordContentSRV, priority, ttl)
+                    DNS.createDNSRecord(zone, value, recordType, recordContentSRV, priority, ttl)
 
 
                 final_dic = {'add_status': 1, 'error_message': "None"}

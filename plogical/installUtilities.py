@@ -145,16 +145,6 @@ class installUtilities:
 
             res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-            if res == 1:
-                print("###############################################")
-                print("         Could not restart Litespeed serve     ")
-                print("###############################################")
-                sys.exit()
-            else:
-                print("###############################################")
-                print("          Litespeed Re-Started                 ")
-                print("###############################################")
-
 
         except OSError, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")

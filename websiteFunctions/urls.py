@@ -44,9 +44,6 @@ urlpatterns = [
 
     url(r'^saveSSL', views.saveSSL, name='saveSSL'),
 
-
-    url(r'^CreateWebsiteFromBackup', views.CreateWebsiteFromBackup, name='CreateWebsiteFromBackup'),
-
     ## sub/add/park domains
 
     url(r'^submitDomainCreation', views.submitDomainCreation, name='submitDomainCreation'),

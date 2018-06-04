@@ -169,35 +169,6 @@ def deleteWebsite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-def createDKIMRecords(request, domain, admin):
-    try:
-
-        import tldextract
-
-        extractDomain = tldextract.extract(domain)
-        topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
-
-        zone = Domains.objects.get(name=topLevelDomain)
-
-        path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
-        command = "sudo cat " + path
-        output = subprocess.check_output(shlex.split(command))
-
-        record = Records(domainOwner=zone,
-                         domain_id=zone.id,
-                         name="default._domainkey." + topLevelDomain,
-                         type="TXT",
-                         content="v=DKIM1; k=rsa; p=" + output[53:269],
-                         ttl=3600,
-                         prio=0,
-                         disabled=0,
-                         auth=1)
-        record.save()
-
-    except BaseException, msg:
-        logging.CyberCPLogFileWriter.writeToFile(
-            "We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
-
 def siteState(request):
     try:
         val = request.session['userID']
@@ -240,6 +211,7 @@ def siteState(request):
 
 def submitWebsiteCreation(request):
     try:
+
         if request.method == 'POST':
 
             data = json.loads(request.body)
@@ -314,12 +286,6 @@ def submitDomainCreation(request):
             try:
                 restore = data['restore']
                 restore = '1'
-
-                if len(path) > 0:
-                    path = path.lstrip("/")
-                    path = "/home/" + masterDomain + "/public_html/" + path
-                else:
-                    path = "/home/" + masterDomain + "/public_html/" + domain
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
@@ -501,9 +467,7 @@ def getFurtherAccounts(request):
                     json_data = json_data +',' + json.dumps(dic)
 
             json_data = json_data + ']'
-
             final_dic = {'listWebSiteStatus': 1, 'error_message': "None", "data": json_data}
-
             final_json = json.dumps(final_dic)
 
 
@@ -534,7 +498,8 @@ def submitWebsiteDeletion(request):
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-                execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName "+ websiteName+" --numberOfSites "+numberOfWebsites
+                execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName + \
+                           " --numberOfSites " + numberOfWebsites
 
                 subprocess.check_output(shlex.split(execPath))
 
@@ -573,8 +538,6 @@ def submitDomainDeletion(request):
                 return HttpResponse(json_data)
 
         except BaseException,msg:
-
-
             data_ret = {'websiteDeleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -596,18 +559,25 @@ def submitWebsiteStatus(request):
 
 
                 if state == "Suspend":
-                    virtualHostUtilities.suspendVirtualHost(websiteName)
+                    confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
+                    command = "sudo mv " + confPath + " " + confPath + "-suspended"
+                    subprocess.call(shlex.split(command))
                     installUtilities.reStartLiteSpeed()
                     website.state = 0
                 else:
-                    virtualHostUtilities.UnsuspendVirtualHost(websiteName)
+                    confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
+
+                    command = "sudo mv " + confPath + "-suspended" + " " + confPath
+                    subprocess.call(shlex.split(command))
+
+                    command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + confPath
+                    cmd = shlex.split(command)
+                    subprocess.call(cmd)
+
                     installUtilities.reStartLiteSpeed()
                     website.state = 1
 
-
                 website.save()
-
-
 
 
                 data_ret = {'websiteStatus': 1,'error_message': "None"}
@@ -1172,6 +1142,8 @@ def installJoomla(request):
                 password = data['password']
                 prefix = data['prefix']
 
+                mailUtilities.checkHome()
+
                 finalPath = ""
 
                 if home == '0':
@@ -1342,8 +1314,6 @@ def saveConfigsToFile(request):
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
                 execPath = execPath + " saveVHostConfigs --path " + filePath + " --tempPath " + tempPath
-
-
 
                 output = subprocess.check_output(shlex.split(execPath))
 
@@ -1593,8 +1563,6 @@ def changePHP(request):
 
                 execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
 
-
-
                 output = subprocess.check_output(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
@@ -1620,212 +1588,6 @@ def changePHP(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-def CreateWebsiteFromBackup(request):
-    try:
-        if request.method == 'POST':
-
-            data = json.loads(request.body)
-            backupFile = data['backupFile'].strip(".tar.gz")
-            originalFile = "/home/backup/" + data['backupFile']
-
-
-            if not os.path.exists(originalFile):
-                dir = data['dir']
-                path = "/home/backup/transfer-"+str(dir)+"/"+backupFile
-            else:
-                path = "/home/backup/" + backupFile
-
-            admin = Administrator.objects.get(pk=1)
-            adminEmail = admin.email
-
-            ## open meta file to read data
-
-            ## Parsing XML Meta file!
-
-            backupMetaData = ElementTree.parse(os.path.join(path,'meta.xml'))
-
-            domain = backupMetaData.find('masterDomain').text
-            phpSelection = backupMetaData.find('phpSelection').text
-            externalApp = backupMetaData.find('externalApp').text
-
-
-            ## Pre-creation checks
-
-            if Websites.objects.filter(domain=domain).count() > 0:
-                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                            'error_message': "This website already exists."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-
-            if ChildDomains.objects.filter(domain=domain).count() > 0:
-                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                            'error_message': "This website already exists as child domain."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-
-            ####### Pre-creation checks ends
-
-            numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
-
-            ## Create Configurations
-
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-
-            execPath = execPath + " createVirtualHost --virtualHostName " + domain + " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + " --ssl " + str(
-                0) + " --sslPath " + "CyberPanel"
-
-            output = subprocess.check_output(shlex.split(execPath))
-
-            if output.find("1,None") > -1:
-                selectedPackage = Package.objects.get(packageName="Default")
-                website = Websites(admin=admin, package=selectedPackage, domain=domain, adminEmail=adminEmail,
-                                   phpSelection=phpSelection, ssl=0, externalApp=externalApp)
-                website.save()
-            else:
-                data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            ## Create Configurations ends here
-
-            ## Create databases
-
-            databases = backupMetaData.findall('Databases/database')
-            website = Websites.objects.get(domain=domain)
-
-            for database in databases:
-                dbName = database.find('dbName').text
-                dbUser = database.find('dbUser').text
-
-                if mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
-                    data_ret = {'createWebSiteStatus': 0, 'error_message': "Failed to create Databases!", "existsStatus": 0}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
-                newDB.save()
-
-
-            ## Create dns zone
-
-            dnsrecords = backupMetaData.findall('dnsrecords/dnsrecord')
-
-            zone = Domains(admin=admin, name=domain, type="NATIVE")
-            zone.save()
-
-            for dnsrecord in dnsrecords:
-
-                recordType = dnsrecord.find('type').text
-                value = dnsrecord.find('name').text
-                content =  dnsrecord.find('content').text
-                prio = int(dnsrecord.find('priority').text)
-
-                if recordType == "SOA":
-                    record = Records(domainOwner=zone,
-                                     domain_id=zone.id,
-                                     name=value,
-                                     type="SOA",
-                                     content=content,
-                                     ttl=3600,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
-                elif recordType == "NS":
-                    record = Records(   domainOwner=zone,
-                                        domain_id=zone.id,
-                                        name=value,
-                                        type="NS",
-                                        content=content,
-                                        ttl=3600,
-                                        prio=0,
-                                        disabled=0,
-                                        auth=1  )
-                    record.save()
-
-                elif recordType == "A":
-                    record = Records(   domainOwner=zone,
-                                        domain_id=zone.id,
-                                        name=value,
-                                        type="A",
-                                        content=content,
-                                        ttl=3600,
-                                        prio=0,
-                                        disabled=0,
-                                        auth=1  )
-                    record.save()
-                elif recordType == "MX":
-                    record = Records(domainOwner=zone,
-                                     domain_id=zone.id,
-                                     name=value,
-                                     type="MX",
-                                     content=content,
-                                     ttl=3600,
-                                     prio=prio,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
-                elif recordType == "AAAA":
-                    record = Records(   domainOwner=zone,
-                                        domain_id=zone.id,
-                                        name=value,
-                                        type="AAAA",
-                                        content=content,
-                                        ttl=3600,
-                                        prio=0,
-                                        disabled=0,
-                                        auth=1  )
-                    record.save()
-
-                elif recordType == "CNAME":
-                    record = Records(   domainOwner=zone,
-                                        domain_id=zone.id,
-                                        name=value,
-                                        type="CNAME",
-                                        content=content,
-                                        ttl=3600,
-                                        prio=0,
-                                        disabled=0,
-                                        auth=1  )
-                    record.save()
-
-
-                elif recordType == "SPF":
-                    record = Records(   domainOwner=zone,
-                                        domain_id=zone.id,
-                                        name=value,
-                                        type="SPF",
-                                        content=content,
-                                        ttl=3600,
-                                        prio=0,
-                                        disabled=0,
-                                        auth=1  )
-                    record.save()
-
-
-                elif recordType == "TXT":
-                    record = Records(   domainOwner=zone,
-                                        domain_id=zone.id,
-                                        name=value,
-                                        type="TXT",
-                                        content=content,
-                                        ttl=3600,
-                                        prio=0,
-                                        disabled=0,
-                                        auth=1  )
-                    record.save()
-
-
-            data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-    except BaseException, msg:
-        data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
-        json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
 
 def listCron(request):
     try:
