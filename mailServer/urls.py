@@ -7,6 +7,13 @@ urlpatterns = [
     url(r'^submitEmailCreation', views.submitEmailCreation, name='submitEmailCreation'),
 
 
+    ## Mail Forwardings
+    url(r'^emailForwarding$', views.emailForwarding, name='emailForwarding'),
+    url(r'^submitEmailForwardingCreation$', views.submitEmailForwardingCreation, name='submitEmailForwardingCreation'),
+    url(r'^fetchCurrentForwardings$', views.fetchCurrentForwardings, name='fetchCurrentForwardings'),
+    url(r'^submitForwardDeletion$', views.submitForwardDeletion, name='submitForwardDeletion'),
+
+
     ## Delete email
     url(r'^deleteEmailAccount', views.deleteEmailAccount, name='deleteEmailAccount'),
     url(r'^getEmailsForDomain$', views.getEmailsForDomain, name='getEmailsForDomain'),

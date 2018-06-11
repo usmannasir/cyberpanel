@@ -28,7 +28,7 @@ class EUsers(models.Model):
 
 
 class Forwardings(models.Model):
-    source = models.CharField(primary_key=True, max_length=80)
+    source = models.CharField(max_length=80)
     destination = models.TextField()
 
     class Meta:

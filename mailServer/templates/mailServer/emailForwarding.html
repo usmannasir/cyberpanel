@@ -1,0 +1,132 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Setup Email Forwarding - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Setup Email Forwarding" %}</h2>
+   <p>{% trans "This page help you setup email forwarding for your emails." %}</p>
+</div>
+
+<div ng-controller="emailForwarding" class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Setup Email Forwarding" %} <img ng-hide="forwardLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+
+            <form  action="/" class="form-horizontal bordered-row">
+
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
+                    <div class="col-sm-6">
+                        <select ng-change="showEmailDetails()" ng-model="emailDomain" class="form-control">
+                            {% for items in websiteList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+
+            <!------ Modification form that appears after a click --------------->
+
+                <div ng-hide="emailDetails" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Email" %} </label>
+                    <div class="col-sm-6">
+                        <select ng-change="selectForwardingEmail()" ng-model="selectedEmail" class="form-control">
+                                <option ng-repeat="email in emails track by $index">{$ email.email $}</option>
+                        </select>
+                    </div>
+                </div>
+
+            <!------ Modification form that appears after a click --------------->
+
+            <div ng-hide="notifyBox" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div ng-hide="forwardError" class="alert alert-danger">
+                                        <p>{$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="forwardSuccess" class="alert alert-success">
+                                        <p>{$ successMessage $}</p>
+                            </div>
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+
+                    </div>
+
+
+
+                </div>
+
+            <!------ List of records --------------->
+
+            <div ng-hide="creationBox" class="form-group">
+
+                    <div class="col-sm-4">
+                        <input placeholder="{% trans 'Source' %}"  type="email" class="form-control" ng-model="selectedEmail" readonly>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <input placeholder="{% trans 'Destination' %}"   type="email" class="form-control" ng-model="destinationEmail" required>
+                    </div>
+
+
+                    <div class="col-sm-4">
+                        <button style="width: 100%;"  type="button" ng-click="forwardEmail()" class="btn btn-primary">{% trans "Forward Email" %}</button>
+                    </div>
+            </div>
+
+            <div ng-hide="creationBox" class="form-group">
+
+                    <div  class="col-sm-12">
+
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Source" %}</th>
+                                <th>{% trans "Destination" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="record in records track by $index">
+                                <td ng-bind="record.id"></td>
+                                <td ng-bind="record.source"></td>
+                                <td ng-bind="record.destination"></td>
+                                <td ng-click="deleteForwarding(record.destination)"><img src="{% static 'images/delete.png' %}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            <!------ List of records --------------->
+
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

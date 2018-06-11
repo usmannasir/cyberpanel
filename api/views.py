@@ -220,15 +220,16 @@ def deleteWebsite(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
-
-            ## Deleting master domain
-
             website = Websites.objects.get(domain=websiteName)
             websiteOwner = website.admin
 
             if admin.websites_set.all().count() == 0:
                 websiteOwner.delete()
+
+            ## Deleting master domain
+
+            numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
+
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
@@ -245,7 +246,6 @@ def deleteWebsite(request):
         data_ret = {'websiteDeleteStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
-
 
 def submitWebsiteStatus(request):
     try:

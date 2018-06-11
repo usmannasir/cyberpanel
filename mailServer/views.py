@@ -17,6 +17,7 @@ from plogical.mailUtilities import mailUtilities
 import thread
 from dns.models import Domains as dnsDomains
 from dns.models import Records as dnsRecords
+from mailServer.models import Forwardings
 
 def loadEmailHome(request):
     try:
@@ -192,6 +193,142 @@ def submitEmailDeletion(request):
             return HttpResponse(json_data)
     except KeyError,msg:
         data_ret = {'deleteEmailStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def emailForwarding(request):
+    try:
+        val = request.session['userID']
+        try:
+            admin = Administrator.objects.get(pk=request.session['userID'])
+
+            if admin.type == 1:
+                websites = admin.websites_set.all()
+            else:
+                websites = Websites.objects.filter(admin=admin)
+
+            websitesName = []
+
+            for items in websites:
+                websitesName.append(items.domain)
+
+            return render(request, 'mailServer/emailForwarding.html', {'websiteList':websitesName})
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return HttpResponse(str(msg))
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def fetchCurrentForwardings(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                data = json.loads(request.body)
+                emailAddress = data['emailAddress']
+
+                currentForwardings = Forwardings.objects.filter(source=emailAddress)
+
+                json_data = "["
+                checker = 0
+                id = 1
+                for items in currentForwardings:
+                    if items.source == items.destination:
+                        continue
+                    dic = {'id': id,
+                           'source': items.source,
+                           'destination':items.destination}
+
+                    id = id + 1
+
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
+
+                json_data = json_data + ']'
+
+                final_dic = {'fetchStatus': 1, 'error_message': "None", "data": json_data}
+
+                final_json = json.dumps(final_dic)
+
+                return HttpResponse(final_json)
+
+
+        except BaseException,msg:
+            data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+    except KeyError,msg:
+        data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def submitForwardDeletion(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                data = json.loads(request.body)
+                destination = data['destination']
+
+                forwarding = Forwardings.objects.get(destination=destination)
+                forwarding.delete()
+
+                data_ret = {'deleteForwardingStatus': 1, 'error_message': "None", 'successMessage':'Successfully deleted!'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+        except BaseException,msg:
+            data_ret = {'deleteForwardingStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+    except KeyError,msg:
+        data_ret = {'deleteEmailStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def submitEmailForwardingCreation(request):
+    try:
+        val = request.session['userID']
+        try:
+
+            if request.method == 'POST':
+
+                data = json.loads(request.body)
+                source = data['source']
+                destination = data['destination']
+
+                if Forwardings.objects.filter(source=source, destination=destination).count() > 0:
+                    data_ret = {'createStatus': 0, 'error_message': "You have already forwared to this destination."}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+                if Forwardings.objects.filter(source=source).count() == 0:
+                    forwarding = Forwardings(source=source, destination=source)
+                    forwarding.save()
+
+
+                forwarding = Forwardings(source=source, destination=destination)
+                forwarding.save()
+
+                data_ret = {'createStatus': 1, 'error_message': "None", 'successMessage':'Successfully Created!'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+        except BaseException,msg:
+            data_ret = {'createStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+    except KeyError,msg:
+        data_ret = {'createStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 

@@ -827,3 +827,351 @@ app.controller('dkimManager', function($scope, $http, $timeout, $window) {
 
 });
 
+/* Java script code for email forwarding */
+app.controller('emailForwarding', function($scope,$http) {
+
+    $scope.creationBox = true;
+    $scope.emailDetails = true;
+    $scope.forwardLoading = true;
+    $scope.forwardError = true;
+    $scope.forwardSuccess = true;
+    $scope.couldNotConnect = true;
+    $scope.notifyBox = true;
+
+
+    $scope.showEmailDetails = function(){
+
+        $scope.creationBox = true;
+        $scope.emailDetails = true;
+        $scope.forwardLoading = false;
+        $scope.forwardError = true;
+        $scope.forwardSuccess = true;
+        $scope.couldNotConnect = true;
+        $scope.notifyBox = true;
+
+        var url = "/email/getEmailsForDomain";
+
+
+                var data = {
+                    domain:$scope.emailDomain
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.fetchStatus === 1){
+
+                        $scope.emails = JSON.parse(response.data.data);
+
+                        $scope.creationBox = true;
+                        $scope.emailDetails = false;
+                        $scope.forwardLoading = true;
+                        $scope.forwardError = true;
+                        $scope.forwardSuccess = true;
+                        $scope.couldNotConnect = true;
+                        $scope.notifyBox = false;
+
+                    }
+
+                    else
+                    {
+                        $scope.creationBox = true;
+                        $scope.emailDetails = true;
+                        $scope.forwardLoading = true;
+                        $scope.forwardError = false;
+                        $scope.forwardSuccess = true;
+                        $scope.couldNotConnect = true;
+                        $scope.notifyBox = false;
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    $scope.creationBox = true;
+                    $scope.emailDetails = true;
+                    $scope.forwardLoading = true;
+                    $scope.forwardError = true;
+                    $scope.forwardSuccess = true;
+                    $scope.couldNotConnect = false;
+                    $scope.notifyBox = false;
+
+
+                }
+
+
+
+
+
+
+    };
+
+    $scope.selectForwardingEmail = function () {
+
+        $scope.creationBox = true;
+        $scope.emailDetails = false;
+        $scope.forwardLoading = false;
+        $scope.forwardError = true;
+        $scope.forwardSuccess = true;
+        $scope.couldNotConnect = true;
+        $scope.notifyBox = true;
+        $scope.fetchCurrentForwardings();
+    };
+
+    $scope.fetchCurrentForwardings = function(){
+
+        $scope.creationBox = false;
+        $scope.emailDetails = false;
+        $scope.forwardLoading = false;
+        $scope.forwardError = true;
+        $scope.forwardSuccess = true;
+        $scope.couldNotConnect = true;
+        $scope.notifyBox = true;
+
+        var url = "/email/fetchCurrentForwardings";
+
+
+                var data = {
+                    emailAddress:$scope.selectedEmail
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.fetchStatus === 1){
+
+                        $scope.records = JSON.parse(response.data.data);
+
+                        $scope.creationBox = false;
+                        $scope.emailDetails = false;
+                        $scope.forwardLoading = true;
+                        $scope.forwardError = true;
+                        $scope.forwardSuccess = true;
+                        $scope.couldNotConnect = true;
+                        $scope.notifyBox = true;
+
+                    }
+
+                    else
+                    {
+                        $scope.creationBox = true;
+                        $scope.emailDetails = true;
+                        $scope.forwardLoading = true;
+                        $scope.forwardError = false;
+                        $scope.forwardSuccess = true;
+                        $scope.couldNotConnect = true;
+                        $scope.notifyBox = false;
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    $scope.creationBox = true;
+                    $scope.emailDetails = true;
+                    $scope.forwardLoading = true;
+                    $scope.forwardError = true;
+                    $scope.forwardSuccess = true;
+                    $scope.couldNotConnect = false;
+                    $scope.notifyBox = false;
+
+
+                }
+
+
+
+
+
+
+    };
+
+    $scope.deleteForwarding = function(destination){
+
+        $scope.creationBox = true;
+        $scope.emailDetails = true;
+        $scope.forwardLoading = false;
+        $scope.forwardError = true;
+        $scope.forwardSuccess = true;
+        $scope.couldNotConnect = true;
+        $scope.notifyBox = true;
+
+        var url = "/email/submitForwardDeletion";
+
+
+                var data = {
+                    destination:destination
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.deleteForwardingStatus === 1){
+
+                        $scope.creationBox = false;
+                        $scope.emailDetails = false;
+                        $scope.forwardLoading = true;
+                        $scope.forwardError = true;
+                        $scope.forwardSuccess = true;
+                        $scope.couldNotConnect = true;
+                        $scope.notifyBox = true;
+
+                        $scope.fetchCurrentForwardings();
+
+                    }
+
+                    else
+                    {
+                        $scope.creationBox = false;
+                        $scope.emailDetails = false;
+                        $scope.forwardLoading = true;
+                        $scope.forwardError = false;
+                        $scope.forwardSuccess = true;
+                        $scope.couldNotConnect = true;
+                        $scope.notifyBox = false;
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    $scope.creationBox = true;
+                    $scope.emailDetails = true;
+                    $scope.forwardLoading = true;
+                    $scope.forwardError = true;
+                    $scope.forwardSuccess = true;
+                    $scope.couldNotConnect = false;
+                    $scope.notifyBox = false;
+
+
+                }
+
+
+
+
+
+
+    };
+
+    $scope.forwardEmail = function(){
+
+        $scope.creationBox = false;
+        $scope.emailDetails = false;
+        $scope.forwardLoading = false;
+        $scope.forwardError = true;
+        $scope.forwardSuccess = true;
+        $scope.couldNotConnect = true;
+        $scope.notifyBox = true;
+
+        var url = "/email/submitEmailForwardingCreation";
+
+
+                var data = {
+                    source: $scope.selectedEmail,
+                    destination:$scope.destinationEmail
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.createStatus === 1){
+
+                        $scope.creationBox = false;
+                        $scope.emailDetails = false;
+                        $scope.forwardLoading = true;
+                        $scope.forwardError = true;
+                        $scope.forwardSuccess = true;
+                        $scope.couldNotConnect = true;
+                        $scope.notifyBox = true;
+
+                        $scope.fetchCurrentForwardings();
+
+                    }
+
+                    else
+                    {
+                        $scope.creationBox = false;
+                        $scope.emailDetails = false;
+                        $scope.forwardLoading = true;
+                        $scope.forwardError = false;
+                        $scope.forwardSuccess = true;
+                        $scope.couldNotConnect = true;
+                        $scope.notifyBox = false;
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    $scope.creationBox = true;
+                    $scope.emailDetails = true;
+                    $scope.forwardLoading = true;
+                    $scope.forwardError = true;
+                    $scope.forwardSuccess = true;
+                    $scope.couldNotConnect = false;
+                    $scope.notifyBox = false;
+
+
+                }
+
+
+
+
+
+
+    };
+
+
+});
+/* Java script for email forwarding */
