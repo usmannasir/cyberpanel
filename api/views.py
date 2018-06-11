@@ -68,24 +68,6 @@ def createWebsite(request):
             externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:7]
 
 
-            try:
-                website = Websites.objects.get(domain=domain)
-                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                            'error_message': "Website Already Exists"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            except:
-                pass
-
-            try:
-                website = ChildDomains.objects.get(domain=domain)
-                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                            'error_message': "Website Already Exists"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            except:
-                pass
-
             phpSelection = "PHP 7.0"
 
             admin = Administrator.objects.get(userName=adminUser)
@@ -109,40 +91,34 @@ def createWebsite(request):
             except BaseException,msg:
                 pass
 
+
             ## Create Configurations
 
             numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
             sslpath = "/home/" + domain + "/public_html"
 
+            ## Create Configurations
+
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-            execPath = execPath + " createVirtualHost --virtualHostName " + domain + " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + " --ssl " + str(
-                '0') + " --sslPath " + sslpath
+            execPath = execPath + " createVirtualHost --virtualHostName " + domain + \
+                       " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + \
+                       "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + \
+                       " --ssl " + str(data['ssl']) + " --sslPath " + sslpath + " --dkimCheck " + str(data['dkimCheck']) \
+                       + " --openBasedir " + str(data['openBasedir']) + ' --websiteOwner ' + websiteOwner \
+                       + ' --package ' + packageName
 
             output = subprocess.check_output(shlex.split(execPath))
 
             if output.find("1,None") > -1:
-                pass
+                data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
             else:
                 data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            ## Create Configurations ends here
-
-
-            selectedPackage = Package.objects.get(packageName=packageName)
-
-            websiteOwn = Administrator.objects.get(userName=websiteOwner)
-
-            website = Websites(admin=websiteOwn, package=selectedPackage, domain=domain, adminEmail=adminEmail,
-                               phpSelection=phpSelection, ssl=0,externalApp=externalApp)
-
-            website.save()
-
-            data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
 
     except BaseException, msg:
         data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
@@ -248,38 +224,18 @@ def deleteWebsite(request):
 
             ## Deleting master domain
 
+            website = Websites.objects.get(domain=websiteName)
+            websiteOwner = website.admin
+
+            if admin.websites_set.all().count() == 0:
+                websiteOwner.delete()
+
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-            execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName + " --numberOfSites " + numberOfWebsites
+            execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName + \
+                       " --numberOfSites " + numberOfWebsites
 
             subprocess.check_output(shlex.split(execPath))
-
-            delWebsite = Websites.objects.get(domain=websiteName)
-            databases = Databases.objects.filter(website=delWebsite)
-
-            childDomains = delWebsite.childdomains_set.all()
-
-            ## Deleting child domains
-
-            for items in childDomains:
-                numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + items.domain + " --numberOfSites " + numberOfWebsites
-
-                subprocess.check_output(shlex.split(execPath))
-
-            for items in databases:
-                mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
-
-            delWebsite.delete()
-
-            try:
-                delZone = Domains.objects.get(name=websiteName)
-                delZone.delete()
-            except:
-                pass
-
-            installUtilities.reStartLiteSpeed()
 
             data_ret = {'websiteDeleteStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)

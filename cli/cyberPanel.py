@@ -38,7 +38,7 @@ class cyberPanel:
     def createWebsite(self, package, owner, domainName, email, php, ssl, dkim, openBasedir):
         try:
             externalApp = "".join(re.findall("[a-zA-Z]+", domainName))[:7]
-            numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
+            numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
             sslpath = "/home/" + domainName + "/public_html"
             phpSelection = 'PHP ' + php
 
@@ -821,17 +821,17 @@ def main():
             return
 
         if args.ssl:
-            ssl = args.ssl
+            ssl = int(args.ssl)
         else:
             ssl = 0
 
         if args.dkim:
-            dkim = args.dkim
+            dkim = int(args.dkim)
         else:
             dkim = 0
 
         if args.openBasedir:
-            openBasedir = args.openBasedir
+            openBasedir = int(args.openBasedir)
         else:
             openBasedir = 0
 
@@ -867,17 +867,17 @@ def main():
             return
 
         if args.ssl:
-            ssl = args.ssl
+            ssl = int(args.ssl)
         else:
             ssl = 0
 
         if args.dkim:
-            dkim = args.dkim
+            dkim = int(args.dkim)
         else:
             dkim = 0
 
         if args.openBasedir:
-            openBasedir = args.openBasedir
+            openBasedir = int(args.openBasedir)
         else:
             openBasedir = 0
 

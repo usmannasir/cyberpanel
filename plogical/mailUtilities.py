@@ -133,6 +133,11 @@ class mailUtilities:
         try:
             ## Generate DKIM Keys
 
+            import tldextract
+
+            extractDomain = tldextract.extract(virtualHostName)
+            virtualHostName = extractDomain.domain + '.' + extractDomain.suffix
+
             if os.path.exists("/etc/opendkim/keys/" + virtualHostName):
                 return 1, "None"
 

@@ -230,7 +230,6 @@ def submitWebsiteCreation(request):
 
             if admin.type == 1:
                 pass
-
             else:
                 data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
                             'error_message': "Only administrators are allowed to create websites."}
@@ -256,17 +255,13 @@ def submitWebsiteCreation(request):
             output = subprocess.check_output(shlex.split(execPath))
 
             if output.find("1,None") > -1:
-                pass
+                data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
             else:
                 data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-
-
-            data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
     except BaseException, msg:
         data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
         json_data = json.dumps(data_ret)
@@ -317,16 +312,13 @@ def submitDomainCreation(request):
             output = subprocess.check_output(shlex.split(execPath))
 
             if output.find("1,None") > -1:
-                pass
+                data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
             else:
                 data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-
-
-            data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
 
     except BaseException, msg:
         data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}

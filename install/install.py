@@ -7,6 +7,8 @@ import os
 import shlex
 from firewallUtilities import FirewallUtilities
 import time
+import string
+import random
 
 # There can not be peace without first a great suffering.
 
@@ -961,7 +963,7 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-                command = 'wget https://files.phpmyadmin.net/phpMyAdmin/4.7.7/phpMyAdmin-4.7.7-all-languages.zip'
+                command = 'wget https://files.phpmyadmin.net/phpMyAdmin/4.8.1/phpMyAdmin-4.8.1-all-languages.zip'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -982,7 +984,7 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-                command = 'unzip phpMyAdmin-4.7.7-all-languages.zip'
+                command = 'unzip phpMyAdmin-4.8.1-all-languages.zip'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -1005,12 +1007,12 @@ class preFlightsChecks:
 
             ###
 
-            os.remove("phpMyAdmin-4.7.7-all-languages.zip")
+            os.remove("phpMyAdmin-4.8.1-all-languages.zip")
 
             count = 0
 
             while(1):
-                command = 'mv phpMyAdmin-4.7.7-all-languages phpmyadmin'
+                command = 'mv phpMyAdmin-4.8.1-all-languages phpmyadmin'
 
                 cmd = shlex.split(command)
 
@@ -1032,6 +1034,31 @@ class preFlightsChecks:
                     print(
                         "[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + "PHPMYAdmin Successfully installed!")
                     break
+
+            ## Write secret phrase
+
+
+            rString = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])
+
+            data = open('phpmyadmin/config.sample.inc.php', 'r').readlines()
+
+            writeToFile = open('phpmyadmin/config.inc.php', 'w')
+
+
+            for items in data:
+                if items.find('blowfish_secret') > -1:
+                    writeToFile.writelines("$cfg['blowfish_secret'] = '" + rString + "'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */\n")
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.writelines("$cfg['TempDir'] = '/usr/local/lscp/cyberpanel/phpmyadmin/tmp';\n")
+
+            writeToFile.close()
+
+            os.mkdir('/usr/local/lscp/cyberpanel/phpmyadmin/tmp')
+
+            command = 'chown -R nobody:nobody /usr/local/lscp/cyberpanel/phpmyadmin'
+            subprocess.call(shlex.split(command))
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [download_install_phpmyadmin]")

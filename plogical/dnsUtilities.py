@@ -239,6 +239,41 @@ class DNS:
                                      auth=1)
                     record.save()
 
+                    ## TXT Records for mail
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=topLevelDomain,
+                                     type="TXT",
+                                     content="v=spf1 a mx ip4:" + ipAddress + " ~all",
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name="_dmarc." + topLevelDomain,
+                                     type="TXT",
+                                     content="v=DMARC1; p=none",
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name="_domainkey." + topLevelDomain,
+                                     type="TXT",
+                                     content="t=y; o=~;",
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+
                 ## Creating sub-domain level record.
 
                 zone = Domains.objects.get(name=topLevelDomain)
@@ -287,7 +322,7 @@ class DNS:
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
-                "We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
+                "We had errors while creating DKIM record for: " + domain + ". Error message: " + str(msg))
 
     @staticmethod
     def getZoneObject(virtualHostName):
@@ -298,9 +333,23 @@ class DNS:
 
     @staticmethod
     def createDNSRecord(zone, name, type, value, priority, ttl):
+        try:
+            if type == 'NS':
+                if Records.objects.filter(name=name, type=type, content=value).count() == 0:
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=name,
+                                     type=type,
+                                     content=value,
+                                     ttl=ttl,
+                                     prio=priority,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+                return
 
-        if type == 'NS':
-            if Records.objects.filter(name=name, type=type, content=value).count() == 0:
+
+            if Records.objects.filter(name=name, type=type).count() == 0:
                 record = Records(domainOwner=zone,
                                  domain_id=zone.id,
                                  name=name,
@@ -311,20 +360,8 @@ class DNS:
                                  disabled=0,
                                  auth=1)
                 record.save()
-            return
-
-
-        if Records.objects.filter(name=name, type=type).count() == 0:
-            record = Records(domainOwner=zone,
-                             domain_id=zone.id,
-                             name=name,
-                             type=type,
-                             content=value,
-                             ttl=ttl,
-                             prio=priority,
-                             disabled=0,
-                             auth=1)
-            record.save()
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDNSRecord]")
 
     @staticmethod
     def deleteDNSZone(virtualHostName):

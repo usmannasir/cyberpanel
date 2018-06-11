@@ -19,11 +19,6 @@ import requests
 from baseTemplate.models import version
 from plogical.virtualHostUtilities import virtualHostUtilities
 from random import randint
-from xml.etree.ElementTree import Element, SubElement
-from xml.etree import ElementTree
-from xml.dom import minidom
-from dns.models import Domains,Records
-from mailServer.models import Domains as eDomains
 from plogical.mailUtilities import mailUtilities
 
 
