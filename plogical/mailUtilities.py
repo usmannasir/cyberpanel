@@ -10,6 +10,7 @@ import subprocess
 import argparse
 import shlex
 from mailServer.models import Domains,EUsers
+from emailPremium.models import DomainLimits, EmailLimits
 from websiteFunctions.models import Websites
 
 
@@ -35,8 +36,13 @@ class mailUtilities:
 
             try:
 
-                newEmailDomain = Domains(domainOwner=website, domain=domain)
-                newEmailDomain.save()
+                if not Domains.objects.filter(domain=domain).exists():
+                    newEmailDomain = Domains(domainOwner=website, domain=domain)
+                    newEmailDomain.save()
+
+                if not DomainLimits.objects.filter(domain=newEmailDomain).exists():
+                    domainLimits = DomainLimits(domain=newEmailDomain)
+                    domainLimits.save()
 
                 if website.package.emailAccounts == 0 or (
                             newEmailDomain.eusers_set.all().count() < website.package.emailAccounts):
@@ -86,6 +92,9 @@ class mailUtilities:
 
             emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
             emailAcct.save()
+
+            emailLimits = EmailLimits(email=emailAcct)
+            emailLimits.save()
 
             print "1,None"
             return 1,"None"

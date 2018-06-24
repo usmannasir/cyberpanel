@@ -26,7 +26,6 @@ class EUsers(models.Model):
     class Meta:
         db_table = 'e_users'
 
-
 class Forwardings(models.Model):
     source = models.CharField(max_length=80)
     destination = models.TextField()

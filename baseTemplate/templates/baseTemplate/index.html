@@ -464,7 +464,6 @@
         <a href="#" title="{% trans 'Tuning' %}">
             <i class="glyph-icon icon-linecons-fire"></i>
             <span>{% trans "Tuning" %}</span>
-            <span class="bs-label badge-yellow">{% trans "NEW" %}</span>
         </a>
         <div class="sidebar-submenu">
 
@@ -549,6 +548,21 @@
         </div><!-- .sidebar-submenu -->
     </li>
 
+    <li id="normalUserE">
+        <a href="#" title="{% trans 'Mail Settings' %}">
+            <i class="glyph-icon icon-linecons-fire"></i>
+            <span>{% trans "Mail Settings" %}</span>
+            <span class="bs-label badge-yellow">{% trans "NEW" %}</span>
+        </a>
+        <div class="sidebar-submenu">
+
+            <ul>
+                <li><a href="{% url 'listDomains' %}" title="{% trans 'Email Limits' %}"><span>{% trans "Email Limits" %}</span></a></li>
+            </ul>
+
+        </div><!-- .sidebar-submenu -->
+    </li>
+
 
     </ul><!-- #sidebar-menu -->
 
@@ -586,6 +600,7 @@
 <script src="{% static 'databases/databases.js' %}"></script>
 <script src="{% static 'mailServer/mailServer.js' %}"></script>
 <script src="{% static 'serverLogs/serverLogs.js' %}"></script>
+<script src="{% static 'emailPremium/emailPremium.js' %}"></script>
 
 <!-- PieGage charts -->
 

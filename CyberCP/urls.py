@@ -35,4 +35,5 @@ urlpatterns = [
     url(r'^manageSSL/',include('manageSSL.urls')),
     url(r'^api/',include('api.urls')),
     url(r'^filemanager/',include('filemanager.urls')),
+    url(r'^emailPremium/',include('emailPremium.urls')),
 ]

@@ -40,5 +40,10 @@ urlpatterns = [
     url(r'^enableDisableRuleFile', views.enableDisableRuleFile, name='enableDisableRuleFile'),
 
 
+    ## SpamAssassin
+
+    url(r'^spamAssassin', views.spamAssassin, name='spamAssassin'),
+
+
 
 ]

@@ -1,5 +1,3 @@
-import thread
-import tarfile
 import os
 import shlex
 import subprocess
@@ -18,7 +16,7 @@ class Upgrade:
         data = json.loads(r.text)
         version_number = str(data['version'])
         version_build = str(data['build'])
-        return (version_number + "." + version_build + ".tar.gz")
+        return ("Temp.tar.gz")
 
 
 
@@ -31,7 +29,7 @@ class Upgrade:
 
         ## Download latest version.
 
-        command = "wget https://cyberpanel.net/CyberPanel." + versionNumbring
+        command = "wget https://cyberpanel.net/CyberPanel" + versionNumbring
         subprocess.call(shlex.split(command))
 
         ## Backup settings file.
@@ -45,7 +43,7 @@ class Upgrade:
 
         ## Extract Latest files
 
-        command = "tar zxf CyberPanel." + versionNumbring
+        command = "tar zxf CyberPanel" + versionNumbring
         subprocess.call(shlex.split(command))
 
         ## Copy settings file
@@ -84,6 +82,13 @@ class Upgrade:
         command = "chmod -R 777 /usr/local/lsws/Example/html/FileManager"
         subprocess.call(shlex.split(command))
 
+        ## MailServer Model Changes
+
+        os.chdir('/usr/local/CyberCP')
+
+        command = "echo 'ALTER TABLE e_forwardings DROP PRIMARY KEY;ALTER TABLE e_forwardings ADD id INT AUTO_INCREMENT PRIMARY KEY;' | python manage.py dbshell"
+        subprocess.check_output(command, shell=True)
+
         ## Restart Gunicorn
 
         command = "systemctl restart gunicorn.socket"
@@ -97,5 +102,7 @@ class Upgrade:
 
 
         print("Upgrade Completed.")
+
+
 
 Upgrade.upgrade()

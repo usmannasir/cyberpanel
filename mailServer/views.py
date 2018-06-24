@@ -118,7 +118,6 @@ def deleteEmailAccount(request):
         return redirect(loadLoginPage)
 
 
-
 def getEmailsForDomain(request):
     try:
         val = request.session['userID']
@@ -128,15 +127,18 @@ def getEmailsForDomain(request):
                 data = json.loads(request.body)
                 domain = data['domain']
 
-                domain = Domains.objects.get(domain=domain)
+                try:
+                    domain = Domains.objects.get(domain=domain)
+                except:
+                    final_dic = {'fetchStatus': 0, 'error_message': "No email accounts exists!"}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 emails = domain.eusers_set.all()
 
                 if emails.count() == 0:
-                    final_dic = {'fetchStatus': 0, 'error_message': "No email accounts exits"}
-
+                    final_dic = {'fetchStatus': 0, 'error_message': "No email accounts exists!"}
                     final_json = json.dumps(final_dic)
-
                     return HttpResponse(final_json)
 
                 json_data = "["
@@ -620,4 +622,5 @@ def installStatusOpenDKIM(request):
         final_dic = {'abort':1,'installed':0, 'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
 
