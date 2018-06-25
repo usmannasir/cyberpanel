@@ -81,7 +81,7 @@ class HandleRequest(multi.Thread):
             #logging.writeToFile('Email Monthly Used: ' + str(emailObj.monthlyUsed))
 
             if domainObj.limitStatus == 1 and emailObj.limitStatus == 1:
-                if emailObj.monthlyLimits < emailObj.monthlyUsed or emailObj.hourlyLimits < emailObj.hourlyUsed:
+                if emailObj.monthlyLimits <= emailObj.monthlyUsed or emailObj.hourlyLimits <= emailObj.hourlyUsed:
                     logging.writeToFile(emailAddress + ' either exceeded monthly or hourly sending limit.')
                     self.connection.sendall('action=defer_if_permit Service temporarily unavailable\n\n')
                 else:

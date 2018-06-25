@@ -17,6 +17,7 @@ from websiteFunctions.models import Websites
 class mailUtilities:
 
     installLogPath = "/home/cyberpanel/openDKIMInstallLog"
+    spamassassinInstallLogPath = "/home/cyberpanel/spamassassinInstallLogPath"
     cyberPanelHome = "/home/cyberpanel"
 
     @staticmethod
@@ -366,6 +367,159 @@ milter_default_action = accept
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [restartServices]")
 
+    @staticmethod
+    def installSpamAssassin(install, SpamAssassin):
+        try:
+
+            mailUtilities.checkHome()
+
+            command = 'sudo yum install spamassassin -y'
+
+            cmd = shlex.split(command)
+
+            with open(mailUtilities.spamassassinInstallLogPath, 'w') as f:
+                res = subprocess.call(cmd, stdout=f)
+
+            if res == 1:
+                writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
+                writeToFile.writelines("Can not be installed.[404]\n")
+                writeToFile.close()
+                logging.CyberCPLogFileWriter.writeToFile("[Could not Install SpamAssassin.]")
+                return 0
+            else:
+                writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
+                writeToFile.writelines("SpamAssassin Installed.[200]\n")
+                writeToFile.close()
+
+            return 1
+        except BaseException, msg:
+            writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
+            writeToFile.writelines("Can not be installed.[404]\n")
+            writeToFile.close()
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installSpamAssassin]")
+
+    @staticmethod
+    def checkIfSpamAssassinInstalled():
+        try:
+
+            path = "/etc/mail/spamassassin/local.cf"
+
+            command = "sudo cat " + path
+            res = subprocess.call(shlex.split(command))
+
+            if res == 1:
+                return 0
+            else:
+                return 1
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [checkIfSpamAssassinInstalled]")
+            return 0
+
+    @staticmethod
+    def configureSpamAssassin():
+        try:
+
+            command = "groupadd spamd"
+            subprocess.call(shlex.split(command))
+
+            command = "useradd -g spamd -s /bin/false -d /var/log/spamassassin spamd"
+            subprocess.call(shlex.split(command))
+
+            ##
+
+            command = "chown spamd:spamd /var/log/spamassassin"
+            subprocess.call(shlex.split(command))
+
+            command = "systemctl enable spamassassin"
+            subprocess.call(shlex.split(command))
+
+            command = "systemctl start spamassassin"
+            subprocess.call(shlex.split(command))
+
+            ## Configuration to postfix
+
+            postfixConf = '/etc/postfix/master.cf'
+            data = open(postfixConf, 'r').readlines()
+
+            writeToFile = open(postfixConf, 'w')
+            checker = 1
+
+            for items in data:
+                if items.find('smtp') > - 1 and items.find('inet') > - 1 and items.find('smtpd') > - 1 and checker == 1:
+                    writeToFile.writelines(items.strip('\n') + ' -o content_filter=spamassassin\n')
+                    checker = 0
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.writelines('spamassassin unix - n n - - pipe flags=R user=spamd argv=/usr/bin/spamc -e /usr/sbin/sendmail -oi -f ${sender} ${recipient}')
+            writeToFile.close()
+
+            command = 'systemctl restart postfix'
+            subprocess.call(shlex.split(command))
+
+
+            print "1,None"
+            return
+
+
+        except OSError, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [configureSpamAssassin]")
+            print "0," + str(msg)
+            return
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [configureSpamAssassin]")
+            print "0," + str(msg)
+        return
+
+    @staticmethod
+    def saveSpamAssassinConfigs(tempConfigPath):
+        try:
+
+            data = open(tempConfigPath).readlines()
+            os.remove(tempConfigPath)
+
+            confFile = "/etc/mail/spamassassin/local.cf"
+            confData = open(confFile).readlines()
+
+            conf = open(confFile, 'w')
+
+            rsCheck = 0
+
+            for items in confData:
+
+                if items.find('report_safe ') > -1:
+                    conf.writelines(data[0])
+                    continue
+                elif items.find('required_hits ') > -1:
+                    conf.writelines(data[1])
+                    continue
+                elif items.find('rewrite_header ') > -1:
+                    conf.writelines(data[2])
+                    continue
+                elif items.find('required_score ') > -1:
+                    conf.writelines(data[3])
+                    rsCheck = 1
+                    continue
+
+            if rsCheck == 0:
+                conf.writelines(data[3])
+
+
+            conf.close()
+
+            command = 'systemctl restart spamassassin'
+            subprocess.call(shlex.split(command))
+
+            print "1,None"
+            return
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [saveSpamAssassinConfigs]")
+            print "0," + str(msg)
+
 
 def main():
 
@@ -374,6 +528,7 @@ def main():
     parser.add_argument('--domain', help='Domain name!')
     parser.add_argument('--userName', help='Email Username!')
     parser.add_argument('--password', help='Email password!')
+    parser.add_argument('--tempConfigPath', help='Temporary Configuration Path!')
 
 
 
@@ -385,6 +540,10 @@ def main():
         mailUtilities.generateKeys(args.domain)
     elif args.function == "configureOpenDKIM":
         mailUtilities.configureOpenDKIM()
+    elif args.function == "configureSpamAssassin":
+        mailUtilities.configureSpamAssassin()
+    elif args.function == "saveSpamAssassinConfigs":
+        mailUtilities.saveSpamAssassinConfigs(args.tempConfigPath)
 
 if __name__ == "__main__":
     main()

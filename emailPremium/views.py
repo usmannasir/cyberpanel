@@ -10,9 +10,16 @@ from websiteFunctions.models import Websites
 from loginSystem.views import loadLoginPage
 import plogical.CyberCPLogFileWriter as logging
 import json
-from .models import DomainLimits, EmailLimits, EmailLogs
+from .models import DomainLimits, EmailLimits
 from math import ceil
 from postfixSenderPolicy.client import cacheClient
+import thread
+from plogical.mailUtilities import mailUtilities
+import subprocess
+import shlex
+from plogical.virtualHostUtilities import virtualHostUtilities
+from random import randint
+
 
 
 # Create your views here.
@@ -572,4 +579,236 @@ def flushEmailLogs(request):
     except KeyError,msg:
         dic = {'statusa': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
+        return HttpResponse(json_data)
+
+
+### SpamAssassin
+
+def spamAssassinHome(request):
+    try:
+        val = request.session['userID']
+
+        checkIfSpamAssassinInstalled = 0
+
+        if mailUtilities.checkIfSpamAssassinInstalled() == 1:
+            checkIfSpamAssassinInstalled = 1
+
+        return render(request, 'emailPremium/SpamAssassin.html',{'checkIfSpamAssassinInstalled': checkIfSpamAssassinInstalled})
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def installSpamAssassin(request):
+    try:
+        val = request.session['userID']
+        try:
+            thread.start_new_thread(mailUtilities.installSpamAssassin, ('Install','SpamAssassin'))
+            final_json = json.dumps({'status': 1, 'error_message': "None"})
+            return HttpResponse(final_json)
+        except BaseException,msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def installStatusSpamAssassin(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                command = "sudo cat " + mailUtilities.spamassassinInstallLogPath
+                installStatus = subprocess.check_output(shlex.split(command))
+
+                if installStatus.find("[200]")>-1:
+
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+
+                    execPath = execPath + " configureSpamAssassin"
+
+                    output = subprocess.check_output(shlex.split(execPath))
+
+                    if output.find("1,None") > -1:
+                        pass
+                    else:
+                        final_json = json.dumps({
+                            'error_message': "Failed to install SpamAssassin configurations.",
+                            'requestStatus': installStatus,
+                            'abort': 1,
+                            'installed': 0,
+                        })
+                        return HttpResponse(final_json)
+
+                    final_json = json.dumps({
+                                             'error_message': "None",
+                                             'requestStatus': installStatus,
+                                             'abort':1,
+                                             'installed': 1,
+                                             })
+                    return HttpResponse(final_json)
+                elif installStatus.find("[404]") > -1:
+
+                    final_json = json.dumps({
+                                             'abort':1,
+                                             'installed':0,
+                                             'error_message': "None",
+                                             'requestStatus': installStatus,
+                                             })
+                    return HttpResponse(final_json)
+
+                else:
+                    final_json = json.dumps({
+                                             'abort':0,
+                                             'error_message': "None",
+                                             'requestStatus': installStatus,
+                                             })
+                    return HttpResponse(final_json)
+
+
+        except BaseException,msg:
+            final_dic = {'abort':1,'installed':0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'abort':1,'installed':0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+
+def fetchSpamAssassinSettings(request):
+    try:
+        val = request.session['userID']
+
+        try:
+            if request.method == 'POST':
+
+                report_safe = 0
+                required_hits = '5.0'
+                rewrite_header = 'Subject [SPAM]'
+                required_score = '5'
+
+                confPath = "/etc/mail/spamassassin/local.cf"
+
+                if mailUtilities.checkIfSpamAssassinInstalled() == 1:
+
+                    command = "sudo cat " + confPath
+
+                    data = subprocess.check_output(shlex.split(command)).splitlines()
+
+                    for items in data:
+                        if items.find('report_safe ') > -1:
+                            if items.find('0') > -1:
+                                report_safe = 0
+                                continue
+                            else:
+                                report_safe = 1
+                        if items.find('rewrite_header ') > -1:
+                            tempData = items.split(' ')
+                            rewrite_header = tempData[1] + " " + tempData[2].strip('\n')
+                            continue
+                        if items.find('required_score ') > -1:
+                            required_score = items.split(' ')[1].strip('\n')
+                            continue
+                        if items.find('required_hits ') > -1:
+                            required_hits = items.split(' ')[1].strip('\n')
+                            continue
+
+                    final_dic = {'fetchStatus': 1,
+                                 'installed': 1,
+                                 'report_safe': report_safe,
+                                 'rewrite_header': rewrite_header,
+                                 'required_score': required_score,
+                                 'required_hits': required_hits,
+                                 }
+
+                else:
+                    final_dic = {'fetchStatus': 1,
+                                 'installed': 0}
+
+
+
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+
+        except BaseException,msg:
+            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+
+            return HttpResponse(final_json)
+
+
+        return render(request,'managePHP/editPHPConfig.html')
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def saveSpamAssassinConfigurations(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                data = json.loads(request.body)
+
+                report_safe = data['report_safe']
+                required_hits = data['required_hits']
+                rewrite_header = data['rewrite_header']
+                required_score = data['required_score']
+
+                if report_safe == True:
+                    report_safe = "report_safe 1"
+                else:
+                    report_safe = "report_safe 0"
+
+                print report_safe
+
+                required_hits = "required_hits " + required_hits
+                rewrite_header = "rewrite_header " + rewrite_header
+                required_score = "required_score " + required_score
+
+
+                ## writing data temporary to file
+
+
+                tempConfigPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+                confPath = open(tempConfigPath, "w")
+
+                confPath.writelines(report_safe + "\n")
+                confPath.writelines(required_hits + "\n")
+                confPath.writelines(rewrite_header + "\n")
+                confPath.writelines(required_score + "\n")
+
+                confPath.close()
+
+                ## save configuration data
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+
+                execPath = execPath + " saveSpamAssassinConfigs --tempConfigPath " + tempConfigPath
+
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    data_ret = {'saveStatus': 1, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'saveStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+
+        except BaseException,msg:
+            data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError,msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg))
+        data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

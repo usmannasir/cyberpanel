@@ -37,20 +37,6 @@ def firewallHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-def spamAssassin(request):
-    try:
-        userID = request.session['userID']
-
-        admin = Administrator.objects.get(pk=userID)
-
-        if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
-
-        return render(request,'firewall/spamassassin.html')
-    except KeyError:
-        return redirect(loadLoginPage)
-
-
 
 def getCurrentRules(request):
     try:

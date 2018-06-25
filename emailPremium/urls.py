@@ -22,6 +22,14 @@ urlpatterns = [
     url(r'^getEmailLogs$', views.getEmailLogs, name='getEmailLogs'),
     url(r'^flushEmailLogs$', views.flushEmailLogs, name='flushEmailLogs'),
 
+    ## SpamAssassin
+
+    url(r'^SpamAssassin$', views.spamAssassinHome, name='SpamAssassin'),
+
+    url(r'^installSpamAssassin$', views.installSpamAssassin, name='installSpamAssassin'),
+    url(r'^installStatusSpamAssassin$', views.installStatusSpamAssassin, name='installStatusSpamAssassin'),
+    url(r'^fetchSpamAssassinSettings$', views.fetchSpamAssassinSettings, name='fetchSpamAssassinSettings'),
+    url(r'^saveSpamAssassinConfigurations$', views.saveSpamAssassinConfigurations, name='saveSpamAssassinConfigurations'),
 
 
 

@@ -666,8 +666,292 @@ app.controller('emailPage', function($scope,$http, $timeout, $window) {
 
         };
 
-
-
 });
 
 /* Java script code for Email Page */
+
+
+/* Java script code for SpamAssassin */
+
+app.controller('SpamAssassin', function($scope, $http, $timeout, $window) {
+
+           $scope.SpamAssassinNotifyBox  = true;
+           $scope.SpamAssassinInstallBox = true;
+           $scope.SpamAssassinLoading = true;
+           $scope.failedToStartInallation = true;
+           $scope.couldNotConnect = true;
+           $scope.SpamAssassinSuccessfullyInstalled = true;
+           $scope.installationFailed = true;
+
+
+
+           $scope.installSpamAssassin = function(){
+
+               $scope.SpamAssassinNotifyBox  = true;
+               $scope.SpamAssassinInstallBox = true;
+               $scope.SpamAssassinLoading = false;
+               $scope.failedToStartInallation = true;
+               $scope.couldNotConnect = true;
+               $scope.SpamAssassinSuccessfullyInstalled = true;
+               $scope.installationFailed = true;
+
+               url = "/emailPremium/installSpamAssassin";
+
+                        var data = {};
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.status === 1){
+
+                        $scope.SpamAssassinNotifyBox  = true;
+                        $scope.SpamAssassinInstallBox = false;
+                        $scope.SpamAssassinLoading = false;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+                        $scope.SpamAssassinSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+                        getRequestStatus();
+
+                    }
+                    else{
+                        $scope.errorMessage = response.data.error_message;
+
+                        $scope.SpamAssassinNotifyBox  = false;
+                        $scope.SpamAssassinInstallBox = true;
+                        $scope.SpamAssassinLoading = true;
+                        $scope.failedToStartInallation = false;
+                        $scope.couldNotConnect = true;
+                        $scope.SpamAssassinSuccessfullyInstalled = true;
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.SpamAssassinNotifyBox  = false;
+                        $scope.SpamAssassinInstallBox = false;
+                        $scope.SpamAssassinLoading = true;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = false;
+                        $scope.SpamAssassinSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+                }
+
+           };
+
+           function getRequestStatus(){
+
+                        $scope.SpamAssassinNotifyBox  = true;
+                        $scope.SpamAssassinInstallBox = false;
+                        $scope.SpamAssassinLoading = false;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+                        $scope.SpamAssassinSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+                        url = "/emailPremium/installStatusSpamAssassin";
+
+                        var data = {};
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.abort === 0){
+
+                        $scope.SpamAssassinNotifyBox  = true;
+                        $scope.SpamAssassinInstallBox = false;
+                        $scope.SpamAssassinLoading = false;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+                        $scope.SpamAssassinSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+                        $scope.requestData = response.data.requestStatus;
+                        $timeout(getRequestStatus,1000);
+                    }
+                    else{
+                        // Notifications
+                        $timeout.cancel();
+                        $scope.SpamAssassinNotifyBox  = false;
+                        $scope.SpamAssassinInstallBox = false;
+                        $scope.SpamAssassinLoading = true;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+
+                        $scope.requestData = response.data.requestStatus;
+
+                        if(response.data.installed === 0) {
+                            $scope.installationFailed = false;
+                            $scope.errorMessage = response.data.error_message;
+                        }else{
+                            $scope.SpamAssassinSuccessfullyInstalled = false;
+                            $timeout(function() {  $window.location.reload(); }, 3000);
+                        }
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.SpamAssassinNotifyBox  = false;
+                        $scope.SpamAssassinInstallBox = false;
+                        $scope.SpamAssassinLoading = true;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = false;
+                        $scope.SpamAssassinSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+
+                }
+
+           }
+
+           ///// SpamAssassin configs
+
+           var report_safe = false;
+
+
+           $('#report_safe').change(function() {
+                report_safe = $(this).prop('checked');
+           });
+
+           fetchSpamAssassinSettings();
+           function fetchSpamAssassinSettings(){
+
+               $scope.SpamAssassinLoading = false;
+
+               $('#report_safe').bootstrapToggle('off');
+
+               url = "/emailPremium/fetchSpamAssassinSettings";
+
+               var data = {};
+
+               var config = {
+                   headers : {
+                       'X-CSRFToken': getCookie('csrftoken')
+                   }
+               };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.SpamAssassinLoading = true;
+
+                    if(response.data.fetchStatus === 1){
+
+                        if(response.data.installed === 1) {
+
+                            if (response.data.report_safe === 1) {
+                                $('#report_safe').bootstrapToggle('on');
+                            }
+
+                            $scope.required_hits = response.data.required_hits;
+                            $scope.rewrite_header = response.data.rewrite_header;
+                            $scope.required_score = response.data.required_score;
+
+                        }
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.SpamAssassinLoading = true;
+                }
+
+           }
+
+
+           /////
+
+           /// Save SpamAssassin Changes
+
+          $scope.failedToSave = true;
+          $scope.successfullySaved = true;
+
+          $scope.saveSpamAssassinConfigurations = function () {
+
+               $scope.failedToSave = true;
+               $scope.successfullySaved = true;
+               $scope.SpamAssassinLoading = false;
+               $scope.couldNotConnect = true;
+
+
+                        url = "/emailPremium/saveSpamAssassinConfigurations";
+
+                        var data = {
+                            report_safe:report_safe,
+                            required_hits:$scope.required_hits,
+                            rewrite_header:$scope.rewrite_header,
+                            required_score:$scope.required_score
+                        };
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.saveStatus === 1){
+
+                        $scope.failedToSave = true;
+                        $scope.successfullySaved = false;
+                        $scope.SpamAssassinLoading = true;
+                        $scope.couldNotConnect = true;
+
+                    }
+                    else{
+                        $scope.errorMessage = response.data.error_message;
+
+                        $scope.failedToSave = false;
+                        $scope.successfullySaved = true;
+                        $scope.SpamAssassinLoading = true;
+                        $scope.couldNotConnect = true;
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                        $scope.failedToSave = true;
+                        $scope.successfullySaved = false;
+                        $scope.SpamAssassinLoading = true;
+                        $scope.couldNotConnect = true;
+                }
+
+
+           };
+
+});
