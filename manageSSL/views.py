@@ -271,9 +271,6 @@ def obtainMailServerSSL(request):
 
                 execPath = execPath + " issueSSLForMailServer --virtualHostName " + virtualHost + " --path " + path
 
-                logging.writeToFile(execPath)
-
-
                 output = subprocess.check_output(shlex.split(execPath))
 
                 if output.find("1,None") > -1:

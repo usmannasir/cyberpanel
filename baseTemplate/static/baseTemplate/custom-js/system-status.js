@@ -125,6 +125,7 @@ app.controller('adminController', function($scope,$http,$timeout) {
                     $("#normalUserG").hide();
                     $("#normalUserH").hide();
                     $("#normalUserP").hide();
+                    $("#normalUserI").hide();
 
                     $("#ssl").hide();
                     $("#sslA").hide();

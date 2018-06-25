@@ -1055,6 +1055,30 @@ class virtualHostUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [getDiskUsage]")
             return [int(0), int(0)]
 
+    @staticmethod
+    def permissionControl(path):
+        try:
+            command = 'sudo chown -R  cyberpanel:cyberpanel ' + path
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
+    @staticmethod
+    def leaveControl(path):
+        try:
+            command = 'sudo chown -R  root:root ' + path
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd)
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
 def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Installer')

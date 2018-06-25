@@ -34,7 +34,7 @@ def listDomains(request):
             if admin.type == 1:
                 websites = Websites.objects.all()
             else:
-                websites = Websites.objects.filter(admin=admin)
+                return HttpResponse("Only administrator can view this page.")
 
 
             pages = float(len(websites)) / float(10)
@@ -84,15 +84,14 @@ def getFurtherDomains(request):
                 websites = Websites.objects.all()[finalPageNumber:endPageNumber]
 
             else:
-                finalPageNumber = ((pageNumber * 10)) - 10
-                endPageNumber = finalPageNumber + 10
-                websites = Websites.objects.filter(admin=admin)[finalPageNumber:endPageNumber]
+                final_dic = {'listWebSiteStatus': 0, 'error_message': "Only administrator can view this page."}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
 
             json_data = "["
             checker = 0
 
             for items in websites:
-
                 try:
                     domain = Domains.objects.get(domainOwner=items)
                     domainLimits = DomainLimits.objects.get(domain=domain)
@@ -112,8 +111,6 @@ def getFurtherDomains(request):
             json_data = json_data + ']'
             final_dic = {'listWebSiteStatus': 1, 'error_message': "None", "data": json_data}
             final_json = json.dumps(final_dic)
-
-
             return HttpResponse(final_json)
 
         except BaseException,msg:
@@ -134,6 +131,13 @@ def enableDisableEmailLimits(request):
             if request.method == 'POST':
 
                 admin = Administrator.objects.get(pk=request.session['userID'])
+
+                if admin.type != 1:
+                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
+
                 data = json.loads(request.body)
                 operationVal = data['operationVal']
                 domainName = data['domainName']
@@ -166,8 +170,12 @@ def enableDisableEmailLimits(request):
 def emailLimits(request,domain):
     try:
         val = request.session['userID']
-
         admin = Administrator.objects.get(pk=val)
+
+        admin = Administrator.objects.get(pk=request.session['userID'])
+
+        if admin.type != 1:
+            return HttpResponse("Only administrator can view this page.")
 
 
         if Websites.objects.filter(domain=domain).exists():
@@ -188,7 +196,6 @@ def emailLimits(request,domain):
                 else:
                     Data['limitsOn'] = 0
                     Data['limitsOff'] = 1
-
 
                 ## Pagination for emails
 
@@ -226,6 +233,12 @@ def changeDomainLimit(request):
             if request.method == 'POST':
 
                 admin = Administrator.objects.get(pk=request.session['userID'])
+
+                if admin.type != 1:
+                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
                 data = json.loads(request.body)
                 newLimit = data['newLimit']
                 domainName = data['domainName']
@@ -260,6 +273,12 @@ def getFurtherEmail(request):
         try:
             if request.method == 'POST':
                 admin = Administrator.objects.get(pk=request.session['userID'])
+
+                if admin.type != 1:
+                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
                 data = json.loads(request.body)
                 status = data['page']
                 domainName = data['domainName']
@@ -314,6 +333,13 @@ def enableDisableIndividualEmailLimits(request):
         try:
             if request.method == 'POST':
 
+                admin = Administrator.objects.get(pk=request.session['userID'])
+
+                if admin.type != 1:
+                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
                 data = json.loads(request.body)
                 operationVal = data['operationVal']
                 emailAddress = data['emailAddress']
@@ -343,8 +369,10 @@ def enableDisableIndividualEmailLimits(request):
 def emailPage(request, emailAddress):
     try:
         val = request.session['userID']
-
         admin = Administrator.objects.get(pk=val)
+
+        if admin.type != 1:
+            return HttpResponse("Only administrator can view this page.")
 
         Data = {}
         Data['emailAddress'] = emailAddress
@@ -376,7 +404,14 @@ def getEmailStats(request):
         val = request.session['userID']
         try:
             if request.method == 'POST':
+
                 admin = Administrator.objects.get(pk=request.session['userID'])
+
+                if admin.type != 1:
+                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
                 data = json.loads(request.body)
                 emailAddress = data['emailAddress']
 
@@ -411,6 +446,13 @@ def enableDisableIndividualEmailLogs(request):
         try:
             if request.method == 'POST':
 
+                admin = Administrator.objects.get(pk=request.session['userID'])
+
+                if admin.type != 1:
+                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
                 data = json.loads(request.body)
                 operationVal = data['operationVal']
                 emailAddress = data['emailAddress']
@@ -444,6 +486,12 @@ def changeDomainEmailLimitsIndividual(request):
             if request.method == 'POST':
 
                 admin = Administrator.objects.get(pk=request.session['userID'])
+
+                if admin.type != 1:
+                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
                 data = json.loads(request.body)
                 emailAddress = data['emailAddress']
                 monthlyLimit = data['monthlyLimit']
@@ -511,6 +559,12 @@ def getEmailLogs(request):
             if request.method == 'POST':
 
                 admin = Administrator.objects.get(pk=request.session['userID'])
+
+                if admin.type != 1:
+                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
                 data = json.loads(request.body)
                 status = data['page']
                 emailAddress = data['emailAddress']
@@ -559,6 +613,13 @@ def flushEmailLogs(request):
         try:
             if request.method == 'POST':
 
+                admin = Administrator.objects.get(pk=request.session['userID'])
+
+                if admin.type != 1:
+                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
                 data = json.loads(request.body)
                 emailAddress = data['emailAddress']
 
@@ -587,6 +648,10 @@ def flushEmailLogs(request):
 def spamAssassinHome(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+
+        if admin.type != 1:
+            return HttpResponse("Only administrator can view this page.")
 
         checkIfSpamAssassinInstalled = 0
 
@@ -602,6 +667,14 @@ def installSpamAssassin(request):
     try:
         val = request.session['userID']
         try:
+
+            admin = Administrator.objects.get(pk=request.session['userID'])
+
+            if admin.type != 1:
+                dic = {'status': 0, 'error_message': "Only administrator can view this page."}
+                json_data = json.dumps(dic)
+                return HttpResponse(json_data)
+
             thread.start_new_thread(mailUtilities.installSpamAssassin, ('Install','SpamAssassin'))
             final_json = json.dumps({'status': 1, 'error_message': "None"})
             return HttpResponse(final_json)
@@ -619,6 +692,13 @@ def installStatusSpamAssassin(request):
         val = request.session['userID']
         try:
             if request.method == 'POST':
+
+                admin = Administrator.objects.get(pk=request.session['userID'])
+
+                if admin.type != 1:
+                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
 
                 command = "sudo cat " + mailUtilities.spamassassinInstallLogPath
                 installStatus = subprocess.check_output(shlex.split(command))
@@ -750,6 +830,13 @@ def saveSpamAssassinConfigurations(request):
         val = request.session['userID']
         try:
             if request.method == 'POST':
+
+                admin = Administrator.objects.get(pk=request.session['userID'])
+
+                if admin.type != 1:
+                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
 
                 data = json.loads(request.body)
 
