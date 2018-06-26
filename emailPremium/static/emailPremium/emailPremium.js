@@ -955,3 +955,138 @@ app.controller('SpamAssassin', function($scope, $http, $timeout, $window) {
            };
 
 });
+
+
+/* Java script code for SpamAssassin */
+
+
+/* Java script code for Email Policy Server */
+
+app.controller('policyServer', function($scope, $http, $timeout, $window) {
+
+           $scope.policyServerLoading = true;
+           $scope.failedToFetch = true;
+           $scope.couldNotConnect = true;
+           $scope.changesApplied = true;
+
+
+           ///// SpamAssassin configs
+
+           var report_safe = false;
+
+
+           $('#policServerStatus').change(function() {
+                policServerStatus = $(this).prop('checked');
+           });
+
+           fetchPolicServerStatus();
+           function fetchPolicServerStatus(){
+
+               $scope.policyServerLoading = false;
+
+               $('#policServerStatus').bootstrapToggle('off');
+
+               url = "/emailPremium/fetchPolicyServerStatus";
+
+               var data = {};
+
+               var config = {
+                   headers : {
+                       'X-CSRFToken': getCookie('csrftoken')
+                   }
+               };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.policyServerLoading = true;
+
+                    if(response.data.status === 1){
+
+                        if (response.data.installCheck === 1) {
+                                $('#policServerStatus').bootstrapToggle('on');
+                            }
+
+                    }else{
+                       $scope.failedToFetch = false;
+                       $scope.couldNotConnect = true;
+                       $scope.changesApplied = true;
+
+                       $scope.errorMessage = response.data.error_message;
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.policyServerLoading = true;
+                    $scope.failedToFetch = true;
+                    $scope.couldNotConnect = false;
+                    $scope.changesApplied = true;
+                }
+
+           }
+
+
+           $scope.savePolicServerStatus = function () {
+
+               $scope.policyServerLoading = false;
+               $scope.failedToFetch = true;
+               $scope.couldNotConnect = true;
+               $scope.changesApplied = true;
+
+
+
+                        url = "/emailPremium/savePolicyServerStatus";
+
+                        var data = {
+                            policServerStatus:policServerStatus
+                        };
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+                    $scope.policyServerLoading = true;
+
+                    if(response.data.status === 1){
+
+                        $scope.failedToFetch = true;
+                        $scope.couldNotConnect = true;
+                        $scope.changesApplied = false;
+
+                    }
+                    else{
+                        $scope.errorMessage = response.data.error_message;
+
+                        $scope.failedToFetch = false;
+                        $scope.couldNotConnect = true;
+                        $scope.changesApplied = true;
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                        $scope.policyServerLoading = true;
+                        $scope.failedToFetch = true;
+                        $scope.couldNotConnect = false;
+                        $scope.changesApplied = true;
+                }
+
+
+           };
+
+});
+
+
+/* Java script code for Email Policy Server */

@@ -30,6 +30,10 @@ urlpatterns = [
     url(r'^installStatusSpamAssassin$', views.installStatusSpamAssassin, name='installStatusSpamAssassin'),
     url(r'^fetchSpamAssassinSettings$', views.fetchSpamAssassinSettings, name='fetchSpamAssassinSettings'),
     url(r'^saveSpamAssassinConfigurations$', views.saveSpamAssassinConfigurations, name='saveSpamAssassinConfigurations'),
+    url(r'^emailPolicyServer$', views.emailPolicyServer, name='emailPolicyServer'),
+    url(r'^fetchPolicyServerStatus$', views.fetchPolicyServerStatus, name='fetchPolicyServerStatus'),
+
+    url(r'^savePolicyServerStatus$', views.savePolicyServerStatus, name='savePolicyServerStatus'),
 
 
 

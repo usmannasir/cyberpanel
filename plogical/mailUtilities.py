@@ -520,6 +520,52 @@ milter_default_action = accept
                 str(msg) + "  [saveSpamAssassinConfigs]")
             print "0," + str(msg)
 
+    @staticmethod
+    def savePolicyServerStatus(install):
+        try:
+
+            postfixPath = '/etc/postfix/main.cf'
+
+            if install == '1':
+                if not os.path.exists('/etc/systemd/system/cpecs.service'):
+                    shutil.copy("/usr/local/CyberCP/postfixSenderPolicy/cpecs.service", "/etc/systemd/system/cpecs.service")
+
+                command = 'systemctl start cpecs'
+                subprocess.call(shlex.split(command))
+
+                writeToFile = open(postfixPath, 'a')
+                writeToFile.writelines('smtpd_data_restrictions = check_policy_service inet:localhost:1089\n')
+                writeToFile.close()
+
+                command = 'systemctl restart postfix'
+                subprocess.call(shlex.split(command))
+            else:
+
+                data = open(postfixPath, 'r').readlines()
+                writeToFile = open(postfixPath, 'w')
+
+                for items in data:
+                    if items.find('check_policy_service inet:localhost:1089') > -1:
+                        continue
+                    else:
+                        writeToFile.writelines(items)
+
+                writeToFile.close()
+
+                command = 'systemctl stop cpecs'
+                subprocess.call(shlex.split(command))
+
+                command = 'systemctl restart postfix'
+                subprocess.call(shlex.split(command))
+
+            print "1,None"
+            return
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [savePolicyServerStatus]")
+            print "0," + str(msg)
+
 
 def main():
 
@@ -529,6 +575,7 @@ def main():
     parser.add_argument('--userName', help='Email Username!')
     parser.add_argument('--password', help='Email password!')
     parser.add_argument('--tempConfigPath', help='Temporary Configuration Path!')
+    parser.add_argument('--install', help='Enable/Disable Policy Server!')
 
 
 
@@ -544,6 +591,8 @@ def main():
         mailUtilities.configureSpamAssassin()
     elif args.function == "saveSpamAssassinConfigs":
         mailUtilities.saveSpamAssassinConfigs(args.tempConfigPath)
+    elif args.function == 'savePolicyServerStatus':
+        mailUtilities.savePolicyServerStatus(args.install)
 
 if __name__ == "__main__":
     main()

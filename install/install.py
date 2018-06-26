@@ -2716,6 +2716,112 @@ milter_default_action = accept
             logging.InstallLog.writeToFile(str(msg) + " [setupCLI]")
             return 0
 
+    @staticmethod
+    def setupVirtualEnv():
+        try:
+
+            ##
+
+            count = 0
+            while (1):
+                command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Trying to install project dependant modules, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Failed to install project dependant modules! [setupVirtualEnv]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("Project dependant modules installed successfully!")
+                    preFlightsChecks.stdOut("Project dependant modules installed successfully!!")
+                    break
+
+            ##
+
+
+            count = 0
+            while (1):
+                command = "pip install virtualenv"
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Trying to install virtualenv, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Failed install virtualenv! [setupVirtualEnv]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("virtualenv installed successfully!")
+                    preFlightsChecks.stdOut("virtualenv installed successfully!")
+                    break
+
+            ####
+
+            count = 0
+            while (1):
+                command = "virtualenv /usr/local/CyberCP"
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Trying to setup virtualenv, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Failed to setup virtualenv! [setupVirtualEnv]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("virtualenv setuped successfully!")
+                    preFlightsChecks.stdOut("virtualenv setuped successfully!")
+                    break
+
+            ##
+
+            env_path = '/usr/local/CyberCP'
+            subprocess.call(['virtualenv', env_path])
+            activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
+            execfile(activate_this, dict(__file__=activate_this))
+
+            ##
+
+            count = 0
+            while (1):
+                command = "pip install -r /usr/local/CyberCP/requirments.txt"
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Trying to install project dependant modules, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Failed to install project dependant modules! [setupVirtualEnv]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                else:
+                    logging.InstallLog.writeToFile("Project dependant modules installed successfully!")
+                    preFlightsChecks.stdOut("Project dependant modules installed successfully!!")
+                    break
+
+            command = "systemctl restart gunicorn.socket"
+            res = subprocess.call(shlex.split(command))
+
+
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [setupVirtualEnv]")
+            return 0
+
+
 
 
 def main():
@@ -2801,6 +2907,7 @@ def main():
     checks.configureOpenDKIM()
 
     checks.modSecPreReqs()
+    checks.setupVirtualEnv()
     checks.installation_successfull()
 
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")

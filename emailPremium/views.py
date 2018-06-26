@@ -36,6 +36,24 @@ def listDomains(request):
             else:
                 return HttpResponse("Only administrator can view this page.")
 
+            ## Check if Policy Server is installed.
+
+            command = 'sudo cat /etc/postfix/main.cf'
+            output = subprocess.check_output(shlex.split(command)).split('\n')
+
+            installCheck = 0
+
+            for items in output:
+                if items.find('check_policy_service inet:localhost:1089') > -1:
+                    installCheck = 1
+                    break
+
+            if installCheck == 0:
+                return render(request, 'emailPremium/listDomains.html', {"installCheck": installCheck})
+
+            ###
+
+
 
             pages = float(len(websites)) / float(10)
             pagination = []
@@ -51,7 +69,7 @@ def listDomains(request):
                     pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
 
 
-            return render(request,'emailPremium/listDomains.html',{"pagination":pagination})
+            return render(request,'emailPremium/listDomains.html',{"pagination":pagination, "installCheck": installCheck})
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -850,8 +868,6 @@ def saveSpamAssassinConfigurations(request):
                 else:
                     report_safe = "report_safe 0"
 
-                print report_safe
-
                 required_hits = "required_hits " + required_hits
                 rewrite_header = "rewrite_header " + rewrite_header
                 required_score = "required_score " + required_score
@@ -897,5 +913,112 @@ def saveSpamAssassinConfigurations(request):
     except KeyError,msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+## Email Policy Server
+
+def emailPolicyServer(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+
+        if admin.type != 1:
+            return HttpResponse("Only administrator can view this page.")
+
+        return render(request, 'emailPremium/policyServer.html')
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def fetchPolicyServerStatus(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                admin = Administrator.objects.get(pk=request.session['userID'])
+
+                if admin.type != 1:
+                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
+                command = 'sudo cat /etc/postfix/main.cf'
+                output = subprocess.check_output(shlex.split(command)).split('\n')
+
+                installCheck = 0
+
+                for items in output:
+                    if items.find('check_policy_service inet:localhost:1089') > -1:
+                        installCheck = 1
+                        break
+
+
+                data_ret = {'status': 1, 'error_message': 'None', 'installCheck' : installCheck}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+        except BaseException,msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError,msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg))
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def savePolicyServerStatus(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                admin = Administrator.objects.get(pk=request.session['userID'])
+
+                if admin.type != 1:
+                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
+                data = json.loads(request.body)
+
+                policServerStatus = data['policServerStatus']
+
+                install = '0'
+
+                if policServerStatus == True:
+                    install = "1"
+
+                ## save configuration data
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+
+                execPath = execPath + " savePolicyServerStatus --install " + install
+
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    data_ret = {'status': 1, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'status': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+
+        except BaseException,msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError,msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg))
+        data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
