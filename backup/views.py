@@ -26,11 +26,8 @@ from plogical.mailUtilities import mailUtilities
 def loadBackupHome(request):
     try:
         val = request.session['userID']
-
         admin = Administrator.objects.get(pk=val)
-
         viewStatus = 1
-
         if admin.type == 3:
             viewStatus = 0
 
@@ -79,8 +76,8 @@ def restoreSite(request):
 def backupSite(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
-            admin = Administrator.objects.get(pk=request.session['userID'])
 
             if admin.type == 1:
                 websites = Websites.objects.all()
@@ -118,14 +115,20 @@ def backupSite(request):
 def getCurrentBackups(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
 
                 data = json.loads(request.body)
                 backupDomain = data['websiteToBeBacked']
-
                 website = Websites.objects.get(domain=backupDomain)
+
+                if admin.type != 1:
+                    if website.admin != admin:
+                        dic = {'fetchStatus': 0, 'error_message': "Only administrator can view this page."}
+                        json_data = json.dumps(dic)
+                        return HttpResponse(json_data)
 
                 backups = website.backups_set.all()
 
@@ -165,7 +168,6 @@ def getCurrentBackups(request):
         final_dic = {'fetchStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
-
 
 def submitBackupCreation(request):
     try:
@@ -308,8 +310,6 @@ def cancelBackupCreation(request):
 
                 final_json = json.dumps({'abortStatus': 1, 'error_message': "None", "status": 0})
                 return HttpResponse(final_json)
-
-
         except BaseException,msg:
             final_dic = {'abortStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -324,14 +324,20 @@ def cancelBackupCreation(request):
 def deleteBackup(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
-
                 data = json.loads(request.body)
                 backupID = data['backupID']
-
                 backup = Backups.objects.get(id=backupID)
+
+                if admin.type != 1:
+                    if backup.website.admin != admin:
+                        dic = {'deleteStatus': 0, 'error_message': "Only administrator can view this page."}
+                        json_data = json.dumps(dic)
+                        return HttpResponse(json_data)
+
                 domainName = backup.website.domain
 
                 path = "/home/"+domainName+"/backup/"+backup.fileName+".tar.gz"
@@ -461,8 +467,16 @@ def backupDestinations(request):
 
 def submitDestinationCreation(request):
     try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    dic = {'destStatus': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
 
                 destinations = backupUtil.backupUtilities.destinationsPath
 
@@ -524,8 +538,14 @@ def submitDestinationCreation(request):
 def getCurrentBackupDestinations(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    dic = {'fetchStatus': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
 
                 records = dest.objects.all()
 
@@ -566,7 +586,6 @@ def getConnectionStatus(request):
         try:
             if request.method == 'POST':
 
-
                 data = json.loads(request.body)
                 ipAddress = data['IPAddress']
 
@@ -593,8 +612,15 @@ def getConnectionStatus(request):
 
 def deleteDestination(request):
     try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    dic = {'delStatus': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
 
 
                 data = json.loads(request.body)
@@ -680,8 +706,14 @@ def scheduleBackup(request):
 def getCurrentBackupSchedules(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    dic = {'fetchStatus': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
 
                 records = backupSchedules.objects.all()
 
@@ -718,11 +750,17 @@ def getCurrentBackupSchedules(request):
 def submitBackupSchedule(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
                 backupDest = data['backupDest']
                 backupFreq = data['backupFreq']
+
+                if admin.type != 1:
+                    dic = {'scheduleStatus': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
 
                 path = "/etc/crontab"
 
@@ -922,11 +960,19 @@ def submitBackupSchedule(request):
 def scheduleDelete(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    dic = {'delStatus': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
                 data = json.loads(request.body)
                 backupDest = data['destLoc']
                 backupFreq = data['frequency']
+
 
                 path = "/etc/crontab"
 
@@ -1067,7 +1113,14 @@ def remoteBackups(request):
 
 def submitRemoteBackups(request):
     try:
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
         if request.method == 'POST':
+
+            if admin.type != 1:
+                dic = {'status': 0, 'error_message': "Only administrator can view this page."}
+                json_data = json.dumps(dic)
+                return HttpResponse(json_data)
 
             data = json.loads(request.body)
             ipAddress = data['ipAddress']
@@ -1191,9 +1244,15 @@ def submitRemoteBackups(request):
 def starRemoteTransfer(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
+
+                if admin.type != 1:
+                    dic = {'remoteTransferStatus': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
 
                 ipAddress = data['ipAddress']
                 password = data['password']
@@ -1256,7 +1315,16 @@ def starRemoteTransfer(request):
 
 def getRemoteTransferStatus(request):
     try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+
         if request.method == "POST":
+
+            if admin.type != 1:
+                dic = {'remoteTransferStatus': 0, 'error_message': "Only administrator can view this page."}
+                json_data = json.dumps(dic)
+                return HttpResponse(json_data)
+
             data = json.loads(request.body)
             ipAddress = data['ipAddress']
             password = data['password']
@@ -1300,8 +1368,15 @@ def getRemoteTransferStatus(request):
 def remoteBackupRestore(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == "POST":
+
+                if admin.type != 1:
+                    dic = {'remoteRestoreStatus': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
                 data = json.loads(request.body)
                 backupDir = data['backupDir']
 
@@ -1337,7 +1412,15 @@ def remoteBackupRestore(request):
 
 def localRestoreStatus(request):
     try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         if request.method == "POST":
+
+            if admin.type != 1:
+                data_ret = {'remoteTransferStatus': 0, 'error_message': "No such log found", "status": "None",
+                            "complete": 0}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             data = json.loads(request.body)
             backupDir = data['backupDir']
@@ -1383,6 +1466,13 @@ def localRestoreStatus(request):
 
 def cancelRemoteBackup(request):
     try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+
+        if admin.type != 1:
+            dic = {'cancelStatus': 0, 'error_message': "Only administrator can view this page."}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
 
         if request.method == "POST":
 

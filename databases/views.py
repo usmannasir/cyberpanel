@@ -31,7 +31,7 @@ def createDatabase(request):
     try:
         val = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=request.session['userID'])
+            admin = Administrator.objects.get(pk=val)
 
             if admin.type == 1:
                 websites = Websites.objects.all()
@@ -72,9 +72,9 @@ def createDatabase(request):
 def submitDBCreation(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
-
 
                 data = json.loads(request.body)
                 databaseWebsite = data['databaseWebsite']
@@ -82,6 +82,13 @@ def submitDBCreation(request):
                 dbUsername = data['dbUsername']
                 dbPassword = data['dbPassword']
                 webUsername = data['webUserName']
+
+                if admin.type != 1:
+                    website = Websites.objects.get(domain=databaseWebsite)
+                    if website.admin != admin:
+                        dic = {'createDBStatus': 0, 'error_message': "Only administrator can view this page."}
+                        json_data = json.dumps(dic)
+                        return HttpResponse(json_data)
 
                 dbName = webUsername+"_"+dbName
                 dbUsername = webUsername+"_"+dbUsername
@@ -112,7 +119,7 @@ def deleteDatabase(request):
         val = request.session['userID']
         try:
 
-            admin = Administrator.objects.get(pk=request.session['userID'])
+            admin = Administrator.objects.get(pk=val)
 
             if admin.type == 1:
                 websites = Websites.objects.all()
@@ -152,11 +159,19 @@ def deleteDatabase(request):
 def fetchDatabases(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
 
             data = json.loads(request.body)
 
             databaseWebsite = data['databaseWebsite']
+
+            if admin.type != 1:
+                website = Websites.objects.get(domain=databaseWebsite)
+                if website.admin != admin:
+                    dic = {'fetchStatus': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
 
             website = Websites.objects.get(domain=databaseWebsite)
 
@@ -196,6 +211,7 @@ def fetchDatabases(request):
 def submitDatabaseDeletion(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
@@ -203,6 +219,12 @@ def submitDatabaseDeletion(request):
                 data = json.loads(request.body)
                 dbName = data['dbName']
 
+                if admin.type != 1:
+                    db = Databases.objects.get(dbName=dbName)
+                    if db.website.admin != admin:
+                        dic = {'deleteStatus': 0, 'error_message': "Only administrator can view this page."}
+                        json_data = json.dumps(dic)
+                        return HttpResponse(json_data)
 
                 result = mysqlUtilities.submitDBDeletion(dbName)
 
@@ -230,7 +252,7 @@ def listDBs(request):
     try:
         val = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=request.session['userID'])
+            admin = Administrator.objects.get(pk=val)
 
             if admin.type == 1:
                 websites = Websites.objects.all()
@@ -270,14 +292,20 @@ def listDBs(request):
 def changePassword(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
-
-
 
                 data = json.loads(request.body)
                 userName = data['dbUserName']
                 dbPassword = data['dbPassword']
+
+                if admin.type != 1:
+                    db = Databases.objects.get(dbName=userName)
+                    if db.website.admin != admin:
+                        dic = {'changePasswordStatus': 0, 'error_message': "Only administrator can view this page."}
+                        json_data = json.dumps(dic)
+                        return HttpResponse(json_data)
 
                 passFile = "/etc/cyberpanel/mysqlPassword"
 

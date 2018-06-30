@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/local/CyberCP/bin/python2
 import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -15,6 +15,7 @@ from cacheManager import cacheManager
 limitThreads = multi.BoundedSemaphore(10)
 
 class HandleRequest(multi.Thread):
+    cleaningPath = '/home/cyberpanel/purgeCache'
     def __init__(self, conn):
         multi.Thread.__init__(self)
         self.connection = conn
@@ -24,24 +25,27 @@ class HandleRequest(multi.Thread):
         dataComplete = ""
         try:
             try:
-
                 while True:
+                    # Wait for a connection
+                    if os.path.exists(HandleRequest.cleaningPath):
+                        readFromFile = open(HandleRequest.cleaningPath, 'r')
+                        command = readFromFile.read()
+                        cacheManager.handlePurgeRequest(command)
+                        readFromFile.close()
+                        logging.writeToFile(command + 'nCommand')
+                        os.remove(HandleRequest.cleaningPath)
+
                     Data = self.connection.recv(64)
                     if Data:
                         if len(Data) < 64:
                             dataComplete = dataComplete + Data
-
-                            if dataComplete.find('cyberpanelCleaner') > -1:
-                                logging.writeToFile(dataComplete)
-                                cacheManager.handlePurgeRequest(dataComplete)
-                            else:
-                                self.manageRequest(dataComplete)
-
+                            self.manageRequest(dataComplete)
                             dataComplete = ''
                         else:
                             dataComplete = dataComplete + Data
                     else:
                         self.connection.close()
+                        break
             finally:
             # Clean up the connection
                 self.connection.close()
@@ -55,10 +59,9 @@ class HandleRequest(multi.Thread):
 
             for items in completeData:
                 tempData = items.split('=')
-                if tempData[0] == 'client_name':
-                    domainName = tempData[1]
-                elif tempData[0] == 'sender':
+                if tempData[0] == 'sender':
                     emailAddress = tempData[1]
+                    domainName = emailAddress.split('@')[1]
                 elif tempData[0] == 'recipient':
                     destination = tempData[1]
 
@@ -81,7 +84,7 @@ class HandleRequest(multi.Thread):
             #logging.writeToFile('Email Monthly Used: ' + str(emailObj.monthlyUsed))
 
             if domainObj.limitStatus == 1 and emailObj.limitStatus == 1:
-                if emailObj.monthlyLimits <= emailObj.monthlyUsed or emailObj.hourlyLimits <= emailObj.hourlyUsed:
+                if domainObj.monthlyLimits <= domainObj.monthlyLimits or emailObj.monthlyLimits <= emailObj.monthlyUsed or emailObj.hourlyLimits <= emailObj.hourlyUsed:
                     logging.writeToFile(emailAddress + ' either exceeded monthly or hourly sending limit.')
                     self.connection.sendall('action=defer_if_permit Service temporarily unavailable\n\n')
                 else:
@@ -91,6 +94,7 @@ class HandleRequest(multi.Thread):
                         logEntry.save()
                     emailObj.monthlyUsed = emailObj.monthlyUsed + 1
                     emailObj.hourlyUsed = emailObj.hourlyUsed + 1
+                    domainObj.monthlyUsed = domainObj.monthlyUsed + 1
                     self.connection.sendall('action=dunno\n\n')
             else:
                 email = EUsers.objects.get(email=emailAddress)
@@ -104,5 +108,6 @@ class HandleRequest(multi.Thread):
 
 
         except BaseException, msg:
+            logging.writeToFile(completeData)
             self.connection.sendall('action=dunno\n\n')
             logging.writeToFile(str(msg))

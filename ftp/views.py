@@ -27,7 +27,7 @@ def createFTPAccount(request):
     try:
         val = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=request.session['userID'])
+            admin = Administrator.objects.get(pk=val)
 
             if admin.type == 1:
                 websites = Websites.objects.all()
@@ -75,8 +75,16 @@ def submitFTPCreation(request):
                 userName = data['ftpUserName']
                 password = data['ftpPassword']
                 path = data['path']
+                domainName = data['ftpDomain']
 
                 admin = Administrator.objects.get(id=val)
+                website = Websites.objects.get(domain=domainName)
+
+                if admin.type != 1:
+                    if website.admin != admin:
+                        data_ret = {'creatFTPStatus': 0, 'error_message': 'Not enough privileges.'}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
 
                 if len(path) > 0:
                     pass
@@ -85,7 +93,7 @@ def submitFTPCreation(request):
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/ftpUtilities.py"
 
-                execPath = execPath + " submitFTPCreation --domainName " + data['ftpDomain'] + " --userName " + userName \
+                execPath = execPath + " submitFTPCreation --domainName " + domainName + " --userName " + userName \
                            + " --password " + password + " --path " + path + " --owner " + admin.userName
 
 
@@ -163,6 +171,13 @@ def fetchFTPAccounts(request):
                 domain = data['ftpDomain']
 
                 website = Websites.objects.get(domain=domain)
+                admin = Administrator.objects.get(id=val)
+
+                if admin.type != 1:
+                    if website.admin != admin:
+                        data_ret = {'fetchStatus': 0, 'error_message': 'Not enough privileges.'}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
 
 
                 ftpAccounts = website.users_set.all()
@@ -198,11 +213,20 @@ def fetchFTPAccounts(request):
 def submitFTPDelete(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(id=val)
         try:
             if request.method == 'POST':
 
                 data = json.loads(request.body)
                 ftpUserName = data['ftpUsername']
+
+                ftp = Users.objects.get(user=ftpUserName)
+
+                if admin.type != 1:
+                    if ftp.domain.admin != admin:
+                        data_ret = {'deleteStatus': 0, 'error_message': 'Not enough privileges.'}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
 
                 FTPUtilities.submitFTPDeletion(ftpUserName)
 
@@ -223,7 +247,7 @@ def listFTPAccounts(request):
     try:
         val = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=request.session['userID'])
+            admin = Administrator.objects.get(pk=val)
 
             if admin.type == 1:
                 websites = Websites.objects.all()
@@ -271,6 +295,13 @@ def getAllFTPAccounts(request):
                 selectedDomain = data['selectedDomain']
 
                 domain = Websites.objects.get(domain=selectedDomain)
+                admin = Administrator.objects.get(id=val)
+
+                if admin.type != 1:
+                    if domain.admin != admin:
+                        data_ret = {'fetchStatus': 0, 'error_message': 'Not enough privileges.'}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
 
                 records = Users.objects.filter(domain=domain)
 
@@ -309,14 +340,21 @@ def getAllFTPAccounts(request):
 def changePassword(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(id=val)
         try:
             if request.method == 'POST':
-
-
 
                 data = json.loads(request.body)
                 userName = data['ftpUserName']
                 password = data['ftpPassword']
+
+                ftp = Users.objects.get(user=userName)
+
+                if admin.type != 1:
+                    if ftp.domain.admin != admin:
+                        data_ret = {'changePasswordStatus': 0, 'error_message': 'Not enough privileges.'}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
 
                 FTPUtilities.changeFTPPassword(userName, password)
 

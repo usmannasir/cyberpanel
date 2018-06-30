@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/local/CyberCP/bin/python2
 import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -19,7 +19,8 @@ class cacheManager:
                 domaindb = Domains.objects.get(domain=domain)
                 dbDomain = DomainLimits.objects.get(domain=domaindb)
 
-                totalDomainUsed = 0
+                dbDomain.monthlyUsed = domainOBJ.monthlyUsed
+                dbDomain.save()
 
                 for email, emailOBJ in domainOBJ.emails.iteritems():
                     emailID = EUsers.objects.get(email=email)
@@ -27,12 +28,7 @@ class cacheManager:
 
                     dbEmail.monthlyUsed = emailOBJ.monthlyUsed
                     dbEmail.hourlyUsed = emailOBJ.hourlyUsed
-
-                    totalDomainUsed = totalDomainUsed + emailOBJ.monthlyUsed
                     dbEmail.save()
-
-                dbDomain.monthlyUsed = totalDomainUsed
-                dbDomain.save()
 
         except BaseException, msg:
             logging.writeToFile(str(msg))
@@ -130,6 +126,13 @@ class cacheManager:
 
             for domain, domainOBJ in cacheManager.domains.iteritems():
                 for email, emailOBJ in domainOBJ.emails.iteritems():
+
+                    emailID = EUsers.objects.get(email=email)
+                    dbEmail = EmailLimits.objects.get(email=emailID)
+
+                    dbEmail.hourlyUsed = 0
+                    dbEmail.save()
+
                     emailID = EUsers.objects.get(email=email)
                     dbEmail = EmailLimits.objects.get(email=emailID)
 

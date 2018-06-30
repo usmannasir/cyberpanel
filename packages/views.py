@@ -72,6 +72,7 @@ def deletePacakge(request):
 def submitPackage(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
@@ -83,25 +84,30 @@ def submitPackage(request):
                 emails = int(data['emails'])
                 allowedDomains = int(data['allowedDomains'])
 
-                if packageSpace < 0 or packageBandwidth < 0 or packageDatabases < 0 or ftpAccounts < 0 or emails < 0 or allowedDomains < 0:
-                    data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
+                if admin.type == 1:
+
+                    if packageSpace < 0 or packageBandwidth < 0 or packageDatabases < 0 or ftpAccounts < 0 or emails < 0 or allowedDomains < 0:
+                        data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+
+
+                    admin = Administrator.objects.get(pk=val)
+
+                    packageName = admin.userName+"_"+packageName
+
+                    package = Package(admin=admin, packageName=packageName, diskSpace=packageSpace,
+                                      bandwidth=packageBandwidth, ftpAccounts=ftpAccounts, dataBases=packageDatabases,emailAccounts=emails,allowedDomains=allowedDomains)
+
+                    package.save()
+
+                    data_ret = {'saveStatus': 1,'error_message': "None"}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
-
-
-
-                admin = Administrator.objects.get(pk=request.session['userID'])
-
-                packageName = admin.userName+"_"+packageName
-
-                package = Package(admin=admin, packageName=packageName, diskSpace=packageSpace,
-                                  bandwidth=packageBandwidth, ftpAccounts=ftpAccounts, dataBases=packageDatabases,emailAccounts=emails,allowedDomains=allowedDomains)
-
-                package.save()
-
-                data_ret = {'saveStatus': 1,'error_message': "None"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+                else:
+                    data_ret = {'saveStatus': 0, 'error_message': "Not enough privileges."}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
 
         except BaseException,msg:
             data_ret = {'saveStatus': 0, 'error_message': str(msg)}
@@ -115,15 +121,21 @@ def submitPackage(request):
 def submitDelete(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
-            if request.method == 'POST':
-                data = json.loads(request.body)
-                packageName = data['packageName']
+            if admin.type == 1:
+                if request.method == 'POST':
+                    data = json.loads(request.body)
+                    packageName = data['packageName']
 
-                delPackage = Package.objects.get(packageName=packageName)
-                delPackage.delete()
+                    delPackage = Package.objects.get(packageName=packageName)
+                    delPackage.delete()
 
-                data_ret = {'deleteStatus': 1,'error_message': "None"}
+                    data_ret = {'deleteStatus': 1,'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+            else:
+                data_ret = {'deleteStatus': 0, 'error_message': "Not enough privileges."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -156,7 +168,7 @@ def modifyPackage(request):
                 packageList.append(items.packageName)
 
         except BaseException,msg:
-            logging.writeToFile(str(msg))
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse("Please see CyberCP Main Log File")
 
     except KeyError:
@@ -173,24 +185,31 @@ def modifyPackage(request):
 def submitModify(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
-            if request.method == 'POST':
+            if admin.type == 1:
+                if request.method == 'POST':
 
-                data = json.loads(request.body)
-                packageName = data['packageName']
+                    data = json.loads(request.body)
+                    packageName = data['packageName']
 
-                modifyPack = Package.objects.get(packageName=packageName)
+                    modifyPack = Package.objects.get(packageName=packageName)
 
-                diskSpace = modifyPack.diskSpace
-                bandwidth = modifyPack.bandwidth
-                ftpAccounts = modifyPack.ftpAccounts
-                dataBases = modifyPack.dataBases
-                emails = modifyPack.emailAccounts
+                    diskSpace = modifyPack.diskSpace
+                    bandwidth = modifyPack.bandwidth
+                    ftpAccounts = modifyPack.ftpAccounts
+                    dataBases = modifyPack.dataBases
+                    emails = modifyPack.emailAccounts
 
-                data_ret = {'emails':emails,'modifyStatus': 1,'error_message': "None",
-                            "diskSpace":diskSpace,"bandwidth":bandwidth,"ftpAccounts":ftpAccounts,"dataBases":dataBases,"allowedDomains":modifyPack.allowedDomains}
+                    data_ret = {'emails':emails,'modifyStatus': 1,'error_message': "None",
+                                "diskSpace":diskSpace,"bandwidth":bandwidth,"ftpAccounts":ftpAccounts,"dataBases":dataBases,"allowedDomains":modifyPack.allowedDomains}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+            else:
+                data_ret = {'modifyStatus': 0, 'error_message': "Not enough privileges."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
+
 
         except BaseException,msg:
             data_ret = {'modifyStatus': 0, 'error_message': str(msg)}
@@ -205,28 +224,33 @@ def submitModify(request):
 def saveChanges(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
-            if request.method == 'POST':
+            if admin.type == 1:
+                if request.method == 'POST':
+                    data = json.loads(request.body)
+                    packageName = data['packageName']
 
-                data = json.loads(request.body)
-                packageName = data['packageName']
+                    if data['diskSpace'] < 0 or data['bandwidth'] < 0 or data['ftpAccounts'] < 0 or data['dataBases'] < 0 or data['emails'] < 0 or data['allowedDomains'] < 0:
+                        data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
 
-                if data['diskSpace'] < 0 or data['bandwidth'] < 0 or data['ftpAccounts'] < 0 or data['dataBases'] < 0 or data['emails'] < 0 or data['allowedDomains'] < 0:
-                    data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
+                    modifyPack = Package.objects.get(packageName=packageName)
+
+                    modifyPack.diskSpace = data['diskSpace']
+                    modifyPack.bandwidth = data['bandwidth']
+                    modifyPack.ftpAccounts = data['ftpAccounts']
+                    modifyPack.dataBases = data['dataBases']
+                    modifyPack.emailAccounts = data['emails']
+                    modifyPack.allowedDomains = data['allowedDomains']
+                    modifyPack.save()
+
+                    data_ret = {'saveStatus': 1,'error_message': "None"}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
-
-                modifyPack = Package.objects.get(packageName=packageName)
-
-                modifyPack.diskSpace = data['diskSpace']
-                modifyPack.bandwidth = data['bandwidth']
-                modifyPack.ftpAccounts = data['ftpAccounts']
-                modifyPack.dataBases = data['dataBases']
-                modifyPack.emailAccounts = data['emails']
-                modifyPack.allowedDomains = data['allowedDomains']
-                modifyPack.save()
-
-                data_ret = {'saveStatus': 1,'error_message': "None"}
+            else:
+                data_ret = {'saveStatus': 0,'error_message': "Not enough privileges."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 

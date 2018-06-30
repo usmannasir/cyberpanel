@@ -1,10 +1,9 @@
-#!/usr/bin/env python2.7
+#!/usr/local/CyberCP/bin/python2
 import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
-import argparse
 from inspect import stack
 from cliLogger import cliLogger as logger
 import json

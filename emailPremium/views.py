@@ -779,9 +779,14 @@ def installStatusSpamAssassin(request):
 def fetchSpamAssassinSettings(request):
     try:
         val = request.session['userID']
-
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    final_dic = {'fetchStatus': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 report_safe = 0
                 required_hits = '5.0'
@@ -835,7 +840,6 @@ def fetchSpamAssassinSettings(request):
         except BaseException,msg:
             final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
-
             return HttpResponse(final_json)
 
 
@@ -846,10 +850,9 @@ def fetchSpamAssassinSettings(request):
 def saveSpamAssassinConfigurations(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
-
-                admin = Administrator.objects.get(pk=request.session['userID'])
 
                 if admin.type != 1:
                     dic = {'status': 0, 'error_message': "Only administrator can view this page."}
@@ -935,10 +938,9 @@ def emailPolicyServer(request):
 def fetchPolicyServerStatus(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
-
-                admin = Administrator.objects.get(pk=request.session['userID'])
 
                 if admin.type != 1:
                     dic = {'status': 0, 'error_message': "Only administrator can view this page."}
@@ -975,10 +977,9 @@ def fetchPolicyServerStatus(request):
 def savePolicyServerStatus(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
-
-                admin = Administrator.objects.get(pk=request.session['userID'])
 
                 if admin.type != 1:
                     dic = {'status': 0, 'error_message': "Only administrator can view this page."}

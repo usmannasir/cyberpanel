@@ -17,6 +17,9 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 def logsHome(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        if admin.type == 3:
+            return HttpResponse("You don't have enough privileges to access this page.")
 
     except KeyError:
         return redirect(loadLoginPage)
@@ -29,10 +32,8 @@ def accessLogs(request):
         val = request.session['userID']
 
         admin = Administrator.objects.get(pk=val)
-
         if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
-
+            return HttpResponse("You don't have enough privileges to access this page.")
 
         return render(request,'serverLogs/accessLogs.html')
 
@@ -48,7 +49,7 @@ def errorLogs(request):
         admin = Administrator.objects.get(pk=val)
 
         if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+            return HttpResponse("You don't have enough privileges to access this page.")
 
 
         return render(request,'serverLogs/errorLogs.html')
@@ -64,7 +65,7 @@ def ftplogs(request):
         admin = Administrator.objects.get(pk=val)
 
         if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+            return HttpResponse("You don't have enough privileges to access this page.")
 
 
         return render(request,'serverLogs/ftplogs.html')
@@ -80,7 +81,7 @@ def emailLogs(request):
         admin = Administrator.objects.get(pk=val)
 
         if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+            return HttpResponse("You don't have enough privileges to access this page.")
 
 
         return render(request,'serverLogs/emailLogs.html')
@@ -96,7 +97,7 @@ def modSecAuditLogs(request):
         admin = Administrator.objects.get(pk=val)
 
         if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+            return HttpResponse("You don't have enough privileges to access this page.")
 
 
         return render(request,'serverLogs/modSecAuditLog.html')
@@ -110,30 +111,36 @@ def getLogsFromFile(request):
     try:
         val = request.session['userID']
 
-        data = json.loads(request.body)
-        type = data['type']
+        admin = Administrator.objects.get(id=val)
 
-        if type=="access":
-            fileName = installUtilities.Server_root_path+"/logs/access.log"
-        elif type=="error":
-            fileName = installUtilities.Server_root_path + "/logs/error.log"
-        elif type=="email":
-            fileName="/var/log/maillog"
-        elif type=="ftp":
-            fileName="/var/log/messages"
-        elif type == "modSec":
-            fileName = "/usr/local/lsws/logs/auditmodsec.log"
+        if admin.type == 1:
+            data = json.loads(request.body)
+            type = data['type']
+
+            if type=="access":
+                fileName = installUtilities.Server_root_path+"/logs/access.log"
+            elif type=="error":
+                fileName = installUtilities.Server_root_path + "/logs/error.log"
+            elif type=="email":
+                fileName="/var/log/maillog"
+            elif type=="ftp":
+                fileName="/var/log/messages"
+            elif type == "modSec":
+                fileName = "/usr/local/lsws/logs/auditmodsec.log"
 
 
-        command = "sudo tail -50 " + fileName
+            command = "sudo tail -50 " + fileName
 
-        fewLinesOfLogFile = subprocess.check_output(shlex.split(command))
+            fewLinesOfLogFile = subprocess.check_output(shlex.split(command))
 
-        status = {"logstatus":1,"logsdata":fewLinesOfLogFile}
+            status = {"logstatus":1,"logsdata":fewLinesOfLogFile}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
 
-        final_json = json.dumps(status)
-        return HttpResponse(final_json)
-
+        else:
+            status = {"logstatus": 0, 'error': "You don't have enough privileges to access this page."}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
 
 
     except KeyError, msg:
@@ -144,27 +151,33 @@ def getLogsFromFile(request):
 def clearLogFile(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
-            if request.method == 'POST':
+            if admin.type == 1:
+                if request.method == 'POST':
 
-                data = json.loads(request.body)
+                    data = json.loads(request.body)
 
-                fileName = data['fileName']
+                    fileName = data['fileName']
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/serverLogs.py"
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/serverLogs.py"
 
-                execPath = execPath + " cleanLogFile --fileName " + fileName
+                    execPath = execPath + " cleanLogFile --fileName " + fileName
 
-                output = subprocess.check_output(shlex.split(execPath))
+                    output = subprocess.check_output(shlex.split(execPath))
 
-                if output.find("1,None") > -1:
-                    data_ret = {'cleanStatus': 1, 'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-                else:
-                    data_ret = {'cleanStatus': 0, 'error_message': output}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                    if output.find("1,None") > -1:
+                        data_ret = {'cleanStatus': 1, 'error_message': "None"}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+                    else:
+                        data_ret = {'cleanStatus': 0, 'error_message': output}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+            else:
+                data_ret = {'cleanStatus': 0, 'error_message': 'Not enough privileges.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
         except BaseException,msg:
             data_ret = {'cleanStatus': 0, 'error_message': str(msg)}

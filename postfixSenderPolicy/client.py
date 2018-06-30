@@ -1,29 +1,23 @@
-#!/usr/bin/env python2.7
+#!/usr/local/CyberCP/bin/python2
 import socket
 import sys
 sys.path.append('/usr/local/CyberCP')
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import argparse
+from plogical.mailUtilities import mailUtilities
 
 class cacheClient:
-    def __init__(self, serverAddr):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.serverAddr = serverAddr
-        self.sock.connect(self.serverAddr)
-
-    def sendData(self, data):
-        self.sock.sendall(data)
-
-    def __del__(self):
-        self.sock.close()
-
+    cleaningPath = '/home/cyberpanel/purgeCache'
 
     @staticmethod
     def handleCachePurgeRequest(command):
         try:
-            serverAddr = ('localhost', 1089)
-            cachePurger = cacheClient(serverAddr)
-            cachePurger.sendData(command)
+            mailUtilities.checkHome()
+
+            writeToFile = open(cacheClient.cleaningPath, 'w')
+            writeToFile.write(command)
+            writeToFile.close()
+
         except BaseException, msg:
             logging.writeToFile(str(msg))
 

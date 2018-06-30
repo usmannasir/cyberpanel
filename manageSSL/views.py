@@ -21,7 +21,6 @@ import subprocess
 def loadSSLHome(request):
     try:
         val = request.session['userID']
-
         return render(request, 'manageSSL/index.html')
     except KeyError:
         return redirect(loadLoginPage)
@@ -29,8 +28,7 @@ def loadSSLHome(request):
 def manageSSL(request):
     try:
         val = request.session['userID']
-
-        admin = Administrator.objects.get(pk=request.session['userID'])
+        admin = Administrator.objects.get(pk=val)
 
         if admin.type == 1:
             websites = Websites.objects.all()
@@ -67,6 +65,7 @@ def manageSSL(request):
 def issueSSL(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
@@ -76,14 +75,31 @@ def issueSSL(request):
                 adminEmail = ""
                 path = ""
 
+
                 try:
                     website = ChildDomains.objects.get(domain=virtualHost)
                     adminEmail = website.master.adminEmail
                     path = data['path']
+
+                    if admin.type != 1:
+                        if admin != website.master.admin:
+                            data_ret = {"SSL": 0,
+                                        'error_message': 'You do not own this domain.'}
+                            json_data = json.dumps(data_ret)
+                            return HttpResponse(json_data)
+
                 except:
                     website = Websites.objects.get(domain=virtualHost)
                     adminEmail = website.adminEmail
                     path = "/home/" + virtualHost + "/public_html"
+
+                    if admin.type != 1:
+                        if admin != website.admin:
+                            data_ret = {"SSL": 0,
+                                        'error_message': 'You do not own this website.'}
+                            json_data = json.dumps(data_ret)
+                            return HttpResponse(json_data)
+
 
                 ## ssl issue
 
@@ -128,7 +144,7 @@ def sslForHostName(request):
     try:
         val = request.session['userID']
 
-        admin = Administrator.objects.get(pk=request.session['userID'])
+        admin = Administrator.objects.get(pk=val)
 
         if admin.type==1:
             pass
@@ -168,37 +184,42 @@ def sslForHostName(request):
 def obtainHostNameSSL(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
-            if request.method == 'POST':
+            if admin.type == 1:
+                if request.method == 'POST':
 
-                data = json.loads(request.body)
-                virtualHost = data['virtualHost']
+                    data = json.loads(request.body)
+                    virtualHost = data['virtualHost']
 
-                website = Websites.objects.get(domain=virtualHost)
+                    path = "/home/" + virtualHost + "/public_html"
 
-                path = "/home/" + virtualHost + "/public_html"
+                    ## ssl issue
 
-                ## ssl issue
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-
-                execPath = execPath + " issueSSLForHostName --virtualHostName " + virtualHost + " --path " + path
+                    execPath = execPath + " issueSSLForHostName --virtualHostName " + virtualHost + " --path " + path
 
 
-                output = subprocess.check_output(shlex.split(execPath))
+                    output = subprocess.check_output(shlex.split(execPath))
 
-                if output.find("1,None") > -1:
-                    data_ret = {"SSL": 1,
-                                'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-                else:
-                    data_ret = {"SSL": 0,
-                                'error_message': output}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                    if output.find("1,None") > -1:
+                        data_ret = {"SSL": 1,
+                                    'error_message': "None"}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+                    else:
+                        data_ret = {"SSL": 0,
+                                    'error_message': output}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
 
-                ## ssl issue ends
+                    ## ssl issue ends
+            else:
+                data_ret = {"SSL": 0,
+                            'error_message': 'Only administrators can issue Hostname SSL.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
         except BaseException,msg:
             data_ret = {"SSL": 0,
@@ -220,7 +241,7 @@ def sslForMailServer(request):
         if admin.type==1:
             pass
         else:
-            return HttpResponse("You should be admin to issue SSL For Hostname.")
+            return HttpResponse("You should be admin to issue SSL For Mail Server.")
 
         if admin.type == 1:
             websites = Websites.objects.all()
@@ -255,36 +276,42 @@ def sslForMailServer(request):
 def obtainMailServerSSL(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
-            if request.method == 'POST':
+            if admin.type == 1:
+                if request.method == 'POST':
 
-                data = json.loads(request.body)
-                virtualHost = data['virtualHost']
+                    data = json.loads(request.body)
+                    virtualHost = data['virtualHost']
 
-                website = Websites.objects.get(domain=virtualHost)
+                    path = "/home/" + virtualHost + "/public_html"
 
-                path = "/home/" + virtualHost + "/public_html"
+                    ## ssl issue
 
-                ## ssl issue
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                    execPath = execPath + " issueSSLForMailServer --virtualHostName " + virtualHost + " --path " + path
 
-                execPath = execPath + " issueSSLForMailServer --virtualHostName " + virtualHost + " --path " + path
+                    output = subprocess.check_output(shlex.split(execPath))
 
-                output = subprocess.check_output(shlex.split(execPath))
+                    if output.find("1,None") > -1:
+                        data_ret = {"SSL": 1,
+                                    'error_message': "None"}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+                    else:
+                        data_ret = {"SSL": 0,
+                                    'error_message': output}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
 
-                if output.find("1,None") > -1:
-                    data_ret = {"SSL": 1,
-                                'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                    ## ssl issue ends
                 else:
                     data_ret = {"SSL": 0,
-                                'error_message': output}
+                                'error_message': 'Only administrators can issue Mail Server SSL.'}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
-                ## ssl issue ends
 
         except BaseException,msg:
             data_ret = {"SSL": 0,

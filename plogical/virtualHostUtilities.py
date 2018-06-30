@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/local/CyberCP/bin/python2
 import os
 import os.path
 import sys
@@ -237,9 +237,7 @@ class virtualHostUtilities:
             vhost.addRewriteRules(virtualHost, fileName)
 
             vhostFile = open(fileName, "w")
-
             vhostFile.write(open(tempPath, "r").read())
-
             vhostFile.close()
 
             if os.path.exists(tempPath):

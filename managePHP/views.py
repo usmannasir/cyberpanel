@@ -1764,56 +1764,61 @@ def getExtensionsInformation(request):
 
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
-            if request.method == 'POST':
+            if admin.type == 1:
+                if request.method == 'POST':
 
-                data = json.loads(request.body)
-                phpVers = data['phpSelection']
+                    data = json.loads(request.body)
+                    phpVers = data['phpSelection']
 
-                if phpVers == "PHP 5.3":
-                    phpVers = "php53"
-                elif phpVers == "PHP 5.4":
-                    phpVers = "php54"
-                elif phpVers == "PHP 5.5":
-                    phpVers = "php55"
-                elif phpVers == "PHP 5.6":
-                    phpVers = "php56"
-                elif phpVers == "PHP 7.0":
-                    phpVers = "php70"
-                elif phpVers == "PHP 7.1":
-                    phpVers = "php71"
-                elif phpVers == "PHP 7.2":
-                    phpVers = "php72"
+                    if phpVers == "PHP 5.3":
+                        phpVers = "php53"
+                    elif phpVers == "PHP 5.4":
+                        phpVers = "php54"
+                    elif phpVers == "PHP 5.5":
+                        phpVers = "php55"
+                    elif phpVers == "PHP 5.6":
+                        phpVers = "php56"
+                    elif phpVers == "PHP 7.0":
+                        phpVers = "php70"
+                    elif phpVers == "PHP 7.1":
+                        phpVers = "php71"
+                    elif phpVers == "PHP 7.2":
+                        phpVers = "php72"
 
-                php = PHP.objects.get(phpVers=phpVers)
+                    php = PHP.objects.get(phpVers=phpVers)
 
-                records = php.installedpackages_set.all()
+                    records = php.installedpackages_set.all()
 
-                json_data = "["
-                checker = 0
+                    json_data = "["
+                    checker = 0
 
-                for items in records:
+                    for items in records:
 
-                    if items.status == 0:
-                        status = "Not-Installed"
-                    else:
-                        status = "Installed"
+                        if items.status == 0:
+                            status = "Not-Installed"
+                        else:
+                            status = "Installed"
 
-                    dic = {'id': items.id,
-                           'phpVers': items.phpVers.phpVers,
-                           'extensionName': items.extensionName,
-                           'description': items.description,
-                           'status': status
-                           }
+                        dic = {'id': items.id,
+                               'phpVers': items.phpVers.phpVers,
+                               'extensionName': items.extensionName,
+                               'description': items.description,
+                               'status': status
+                               }
 
-                    if checker == 0:
-                        json_data = json_data + json.dumps(dic)
-                        checker = 1
-                    else:
-                        json_data = json_data + ',' + json.dumps(dic)
+                        if checker == 0:
+                            json_data = json_data + json.dumps(dic)
+                            checker = 1
+                        else:
+                            json_data = json_data + ',' + json.dumps(dic)
 
-                json_data = json_data + ']'
-                final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+                    json_data = json_data + ']'
+                    final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+                    return HttpResponse(final_json)
+            else:
+                final_json = json.dumps({'fetchStatus': 0, 'error_message': "Not enough privileges."})
                 return HttpResponse(final_json)
 
         except BaseException,msg:
@@ -1830,22 +1835,27 @@ def getExtensionsInformation(request):
 def submitExtensionRequest(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
-            if request.method == 'POST':
+            if admin.type == 1:
+                if request.method == 'POST':
 
-                data = json.loads(request.body)
-                extensionName = data['extensionName']
-                type = data['type']
+                    data = json.loads(request.body)
+                    extensionName = data['extensionName']
+                    type = data['type']
 
 
 
-                if type=="install":
-                    phpUtilities.initiateInstall(extensionName)
+                    if type=="install":
+                        phpUtilities.initiateInstall(extensionName)
 
-                else:
-                    phpUtilities.initiateRemoval(extensionName)
+                    else:
+                        phpUtilities.initiateRemoval(extensionName)
 
-                final_json = json.dumps({'extensionRequestStatus': 1, 'error_message': "None"})
+                    final_json = json.dumps({'extensionRequestStatus': 1, 'error_message': "None"})
+                    return HttpResponse(final_json)
+            else:
+                final_json = json.dumps({'extensionRequestStatus': 0, 'error_message': "Not enough privileges."})
                 return HttpResponse(final_json)
 
         except BaseException,msg:
@@ -1862,91 +1872,98 @@ def submitExtensionRequest(request):
 def getRequestStatus(request):
     try:
         val = request.session['userID']
+        admin= Administrator.objects.get(pk=val)
         try:
-            if request.method == 'POST':
+            if admin.type == 1:
+                if request.method == 'POST':
+                    data = json.loads(request.body)
+                    size = data['size']
+                    extensionName = data['extensionName']
 
-                data = json.loads(request.body)
-                size = data['size']
-                extensionName = data['extensionName']
+
+                    requestStatus = unicode(open(phpUtilities.installLogPath, "r").read())
+                    requestStatusSize = len(requestStatus)
+
+                    if requestStatus.find("PHP Extension Installed")>-1:
+                        if subprocess.check_output(["yum", "list", "installed"]).find(extensionName) > -1:
+                            ext = installedPackages.objects.get(extensionName=extensionName)
+                            ext.status = 1
+                            ext.save()
+                        else:
+                            ext = installedPackages.objects.get(extensionName=extensionName)
+                            ext.status = 0
+                            ext.save()
 
 
-                requestStatus = unicode(open(phpUtilities.installLogPath, "r").read())
-                requestStatusSize = len(requestStatus)
+                        installUtilities.reStartLiteSpeed()
+                        final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
+                                                 'error_message': "None",
+                                                 'requestStatus': requestStatus,
+                                                 'size': requestStatusSize})
+                        return HttpResponse(final_json)
+                    elif requestStatus.find("Can not be installed") > -1:
 
-                if requestStatus.find("PHP Extension Installed")>-1:
-                    if subprocess.check_output(["yum", "list", "installed"]).find(extensionName) > -1:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 1
-                        ext.save()
+                        if subprocess.check_output(["yum", "list", "installed"]).find(extensionName) > -1:
+                            ext = installedPackages.objects.get(extensionName=extensionName)
+                            ext.status = 1
+                            ext.save()
+                        else:
+                            ext = installedPackages.objects.get(extensionName=extensionName)
+                            ext.status = 0
+                            ext.save()
+
+                        installUtilities.reStartLiteSpeed()
+                        final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
+                                                 'error_message': "None",
+                                                 'requestStatus': requestStatus,
+                                                 'size': requestStatusSize})
+                        return HttpResponse(final_json)
+                    elif requestStatus.find("Can not un-install Extension") > -1:
+
+                        if subprocess.check_output(["yum", "list", "installed"]).find(extensionName) > -1:
+                            ext = installedPackages.objects.get(extensionName=extensionName)
+                            ext.status = 1
+                            ext.save()
+                        else:
+                            ext = installedPackages.objects.get(extensionName=extensionName)
+                            ext.status = 0
+                            ext.save()
+
+                        installUtilities.reStartLiteSpeed()
+                        final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
+                                                 'error_message': "None",
+                                                 'requestStatus': requestStatus,
+                                                 'size': requestStatusSize})
+                        return HttpResponse(final_json)
+                    elif requestStatus.find("PHP Extension Removed") > -1:
+
+                        if subprocess.check_output(["yum", "list", "installed"]).find(extensionName) > -1:
+                            ext = installedPackages.objects.get(extensionName=extensionName)
+                            ext.status = 1
+                            ext.save()
+                        else:
+                            ext = installedPackages.objects.get(extensionName=extensionName)
+                            ext.status = 0
+                            ext.save()
+
+                        installUtilities.reStartLiteSpeed()
+                        final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
+                                                 'error_message': "None",
+                                                 'requestStatus': requestStatus,
+                                                 'size': requestStatusSize})
+                        return HttpResponse(final_json)
                     else:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 0
-                        ext.save()
+                        final_json = json.dumps({'finished': 0, 'extensionRequestStatus': 1,
+                                                 'error_message': "None",
+                                                 'requestStatus': requestStatus,
+                                                 'size': requestStatusSize})
+                        return HttpResponse(final_json)
 
+            else:
+                final_json = json.dumps({'finished': 0, 'extensionRequestStatus': 0,
+                                         'error_message': "Not enough privileges."})
+                return HttpResponse(final_json)
 
-                    installUtilities.reStartLiteSpeed()
-                    final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
-                                             'error_message': "None",
-                                             'requestStatus': requestStatus,
-                                             'size': requestStatusSize})
-                    return HttpResponse(final_json)
-                elif requestStatus.find("Can not be installed") > -1:
-
-                    if subprocess.check_output(["yum", "list", "installed"]).find(extensionName) > -1:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 1
-                        ext.save()
-                    else:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 0
-                        ext.save()
-
-                    installUtilities.reStartLiteSpeed()
-                    final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
-                                             'error_message': "None",
-                                             'requestStatus': requestStatus,
-                                             'size': requestStatusSize})
-                    return HttpResponse(final_json)
-                elif requestStatus.find("Can not un-install Extension") > -1:
-
-                    if subprocess.check_output(["yum", "list", "installed"]).find(extensionName) > -1:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 1
-                        ext.save()
-                    else:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 0
-                        ext.save()
-
-                    installUtilities.reStartLiteSpeed()
-                    final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
-                                             'error_message': "None",
-                                             'requestStatus': requestStatus,
-                                             'size': requestStatusSize})
-                    return HttpResponse(final_json)
-                elif requestStatus.find("PHP Extension Removed") > -1:
-
-                    if subprocess.check_output(["yum", "list", "installed"]).find(extensionName) > -1:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 1
-                        ext.save()
-                    else:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 0
-                        ext.save()
-
-                    installUtilities.reStartLiteSpeed()
-                    final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
-                                             'error_message': "None",
-                                             'requestStatus': requestStatus,
-                                             'size': requestStatusSize})
-                    return HttpResponse(final_json)
-                else:
-                    final_json = json.dumps({'finished': 0, 'extensionRequestStatus': 1,
-                                             'error_message': "None",
-                                             'requestStatus': requestStatus,
-                                             'size': requestStatusSize})
-                    return HttpResponse(final_json)
 
 
         except BaseException,msg:
@@ -1967,7 +1984,7 @@ def editPHPConfigs(request):
         admin = Administrator.objects.get(pk=val)
 
         if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+            return HttpResponse("You don't have enough privileges to access this page.")
 
         return render(request,'managePHP/editPHPConfig.html')
     except KeyError:
@@ -1977,77 +1994,86 @@ def editPHPConfigs(request):
 def getCurrentPHPConfig(request):
     try:
         val = request.session['userID']
-
+        admin = Administrator.objects.get(pk=val)
         try:
-            if request.method == 'POST':
+            if admin.type == 1:
+                if request.method == 'POST':
 
-                data = json.loads(request.body)
-                phpVers = data['phpSelection']
+                    data = json.loads(request.body)
+                    phpVers = data['phpSelection']
 
-                if phpVers == "PHP 5.3":
-                    phpVers = "php53"
-                elif phpVers == "PHP 5.4":
-                    phpVers = "php54"
-                elif phpVers == "PHP 5.5":
-                    phpVers = "php55"
-                elif phpVers == "PHP 5.6":
-                    phpVers = "php56"
-                elif phpVers == "PHP 7.0":
-                    phpVers = "php70"
-                elif phpVers == "PHP 7.1":
-                    phpVers = "php71"
-                elif phpVers == "PHP 7.2":
-                    phpVers = "php72"
+                    if phpVers == "PHP 5.3":
+                        phpVers = "php53"
+                    elif phpVers == "PHP 5.4":
+                        phpVers = "php54"
+                    elif phpVers == "PHP 5.5":
+                        phpVers = "php55"
+                    elif phpVers == "PHP 5.6":
+                        phpVers = "php56"
+                    elif phpVers == "PHP 7.0":
+                        phpVers = "php70"
+                    elif phpVers == "PHP 7.1":
+                        phpVers = "php71"
+                    elif phpVers == "PHP 7.2":
+                        phpVers = "php72"
 
-                path = "/usr/local/lsws/ls"+phpVers+"/etc/php.ini"
+                    path = "/usr/local/lsws/ls"+phpVers+"/etc/php.ini"
 
-                allow_url_fopen = "0"
-                display_errors = "0"
-                file_uploads = "0"
-                allow_url_include = "0"
-                memory_limit = ""
-                max_execution_time = ""
-                upload_max_filesize = ""
-                max_input_time = ""
+                    allow_url_fopen = "0"
+                    display_errors = "0"
+                    file_uploads = "0"
+                    allow_url_include = "0"
+                    memory_limit = ""
+                    max_execution_time = ""
+                    upload_max_filesize = ""
+                    max_input_time = ""
 
-                data = open(path,'r').readlines()
+                    data = open(path,'r').readlines()
 
-                for items in data:
-                    if items.find("allow_url_fopen")>-1 and items.find("=")>-1:
-                        if items.find("On") > -1:
-                            allow_url_fopen = "1"
-                    if items.find("display_errors")>-1 and items.find("=")>-1:
-                        if items.find("On") > -1:
-                            display_errors = "1"
-                    if items.find("file_uploads")>-1 and items.find("=")>-1:
-                        if items.find("On") > -1:
-                            file_uploads = "1"
-                    if items.find("allow_url_include")>-1 and items.find("=")>-1:
-                        if items.find("On") > -1:
-                            allow_url_include = "1"
-                    if items.find("memory_limit")>-1 and items.find("=")>-1:
-                        memory_limit = re.findall(r"[A-Za-z0-9_]+", items)[1]
-                    if items.find("max_execution_time")>-1 and items.find("=")>-1:
-                        max_execution_time = re.findall(r"[A-Za-z0-9_]+", items)[1]
-                    if items.find("upload_max_filesize")>-1 and items.find("=")>-1:
-                        upload_max_filesize = re.findall(r"[A-Za-z0-9_]+", items)[1]
-                    if items.find("max_input_time")>-1 and items.find("=")>-1:
-                        max_input_time = re.findall(r"[A-Za-z0-9_]+", items)[1]
-                    if items.find("post_max_size") > -1 and items.find("=") > -1:
-                        post_max_size = re.findall(r"[A-Za-z0-9_]+", items)[1]
+                    for items in data:
+                        if items.find("allow_url_fopen")>-1 and items.find("=")>-1:
+                            if items.find("On") > -1:
+                                allow_url_fopen = "1"
+                        if items.find("display_errors")>-1 and items.find("=")>-1:
+                            if items.find("On") > -1:
+                                display_errors = "1"
+                        if items.find("file_uploads")>-1 and items.find("=")>-1:
+                            if items.find("On") > -1:
+                                file_uploads = "1"
+                        if items.find("allow_url_include")>-1 and items.find("=")>-1:
+                            if items.find("On") > -1:
+                                allow_url_include = "1"
+                        if items.find("memory_limit")>-1 and items.find("=")>-1:
+                            memory_limit = re.findall(r"[A-Za-z0-9_]+", items)[1]
+                        if items.find("max_execution_time")>-1 and items.find("=")>-1:
+                            max_execution_time = re.findall(r"[A-Za-z0-9_]+", items)[1]
+                        if items.find("upload_max_filesize")>-1 and items.find("=")>-1:
+                            upload_max_filesize = re.findall(r"[A-Za-z0-9_]+", items)[1]
+                        if items.find("max_input_time")>-1 and items.find("=")>-1:
+                            max_input_time = re.findall(r"[A-Za-z0-9_]+", items)[1]
+                        if items.find("post_max_size") > -1 and items.find("=") > -1:
+                            post_max_size = re.findall(r"[A-Za-z0-9_]+", items)[1]
 
 
 
-                final_dic = {'fetchStatus': 1,
-                             'allow_url_fopen': allow_url_fopen,
-                             'display_errors': display_errors,
-                             'file_uploads': file_uploads,
-                             'allow_url_include': allow_url_include,
-                             'memory_limit': memory_limit,
-                             'max_execution_time': max_execution_time,
-                             'upload_max_filesize': upload_max_filesize,
-                             'max_input_time': max_input_time,
-                             'post_max_size':post_max_size}
+                    final_dic = {'fetchStatus': 1,
+                                 'allow_url_fopen': allow_url_fopen,
+                                 'display_errors': display_errors,
+                                 'file_uploads': file_uploads,
+                                 'allow_url_include': allow_url_include,
+                                 'memory_limit': memory_limit,
+                                 'max_execution_time': max_execution_time,
+                                 'upload_max_filesize': upload_max_filesize,
+                                 'max_input_time': max_input_time,
+                                 'post_max_size':post_max_size}
+
+                    final_json = json.dumps(final_dic)
+
+                    return HttpResponse(final_json)
+            else:
+                final_dic = {'fetchStatus': 0,
+                             'error_message': 'Not enough privileges.'
+                            }
 
                 final_json = json.dumps(final_dic)
 
@@ -2068,77 +2094,83 @@ def getCurrentPHPConfig(request):
 def savePHPConfigBasic(request):
     try:
         val = request.session['userID']
-
+        admin = Administrator.objects.get(id=val)
         try:
-            if request.method == 'POST':
+            if admin.type == 1:
+                if request.method == 'POST':
 
-                data = json.loads(request.body)
-                phpVers = data['phpSelection']
-                allow_url_fopen = data['allow_url_fopen']
-                display_errors = data['display_errors']
-                file_uploads = data['file_uploads']
-                allow_url_include = data['allow_url_include']
-                memory_limit = data['memory_limit']
-                max_execution_time = data['max_execution_time']
-                upload_max_filesize = data['upload_max_filesize']
-                max_input_time = data['max_input_time']
-                post_max_size = data['post_max_size']
+                    data = json.loads(request.body)
+                    phpVers = data['phpSelection']
+                    allow_url_fopen = data['allow_url_fopen']
+                    display_errors = data['display_errors']
+                    file_uploads = data['file_uploads']
+                    allow_url_include = data['allow_url_include']
+                    memory_limit = data['memory_limit']
+                    max_execution_time = data['max_execution_time']
+                    upload_max_filesize = data['upload_max_filesize']
+                    max_input_time = data['max_input_time']
+                    post_max_size = data['post_max_size']
 
-                if allow_url_fopen == True:
-                    allow_url_fopen = "allow_url_fopen = On"
-                else:
-                    allow_url_fopen = "allow_url_fopen = Off"
+                    if allow_url_fopen == True:
+                        allow_url_fopen = "allow_url_fopen = On"
+                    else:
+                        allow_url_fopen = "allow_url_fopen = Off"
 
-                if display_errors == True:
-                    display_errors = "display_errors = On"
-                else:
-                    display_errors = "display_errors = Off"
-
-
-                if file_uploads == True:
-                    file_uploads = "file_uploads = On"
-                else:
-                    file_uploads = "file_uploads = Off"
+                    if display_errors == True:
+                        display_errors = "display_errors = On"
+                    else:
+                        display_errors = "display_errors = Off"
 
 
-                if allow_url_include == True:
-                    allow_url_include = "allow_url_include = On"
-                else:
-                    allow_url_include = "allow_url_include = Off"
-
-                if phpVers == "PHP 5.3":
-                    phpVers = "php53"
-                elif phpVers == "PHP 5.4":
-                    phpVers = "php54"
-                elif phpVers == "PHP 5.5":
-                    phpVers = "php55"
-                elif phpVers == "PHP 5.6":
-                    phpVers = "php56"
-                elif phpVers == "PHP 7.0":
-                    phpVers = "php70"
-                elif phpVers == "PHP 7.1":
-                    phpVers = "php71"
-                elif phpVers == "PHP 7.2":
-                    phpVers = "php72"
-
-                ##
-
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
-
-                execPath = execPath + " savePHPConfigBasic --phpVers " + phpVers + " --allow_url_fopen '" + allow_url_fopen + "' --display_errors '" + display_errors + "' --file_uploads '" + file_uploads + "' --allow_url_include '" + allow_url_include + "' --memory_limit " + memory_limit+ " --max_execution_time " + max_execution_time + " --upload_max_filesize " + upload_max_filesize + " --max_input_time " + max_input_time + " --post_max_size " + post_max_size
+                    if file_uploads == True:
+                        file_uploads = "file_uploads = On"
+                    else:
+                        file_uploads = "file_uploads = Off"
 
 
+                    if allow_url_include == True:
+                        allow_url_include = "allow_url_include = On"
+                    else:
+                        allow_url_include = "allow_url_include = Off"
 
-                output = subprocess.check_output(shlex.split(execPath))
+                    if phpVers == "PHP 5.3":
+                        phpVers = "php53"
+                    elif phpVers == "PHP 5.4":
+                        phpVers = "php54"
+                    elif phpVers == "PHP 5.5":
+                        phpVers = "php55"
+                    elif phpVers == "PHP 5.6":
+                        phpVers = "php56"
+                    elif phpVers == "PHP 7.0":
+                        phpVers = "php70"
+                    elif phpVers == "PHP 7.1":
+                        phpVers = "php71"
+                    elif phpVers == "PHP 7.2":
+                        phpVers = "php72"
 
-                if output.find("1,None") > -1:
-                    data_ret = {'saveStatus': 1}
-                    final_json = json.dumps(data_ret)
-                    return HttpResponse(final_json)
-                else:
-                    final_dic = {'saveStatus': 0, 'error_message': output}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
+                    ##
+
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+
+                    execPath = execPath + " savePHPConfigBasic --phpVers " + phpVers + " --allow_url_fopen '" + allow_url_fopen + "' --display_errors '" + display_errors + "' --file_uploads '" + file_uploads + "' --allow_url_include '" + allow_url_include + "' --memory_limit " + memory_limit+ " --max_execution_time " + max_execution_time + " --upload_max_filesize " + upload_max_filesize + " --max_input_time " + max_input_time + " --post_max_size " + post_max_size
+
+
+
+                    output = subprocess.check_output(shlex.split(execPath))
+
+                    if output.find("1,None") > -1:
+                        data_ret = {'saveStatus': 1}
+                        final_json = json.dumps(data_ret)
+                        return HttpResponse(final_json)
+                    else:
+                        final_dic = {'saveStatus': 0, 'error_message': output}
+                        final_json = json.dumps(final_dic)
+                        return HttpResponse(final_json)
+
+            else:
+                final_dic = {'saveStatus': 0, 'error_message': 'Not enough privileges.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
 
         except BaseException,msg:
             final_dic = {'saveStatus': 0, 'error_message': str(msg)}
@@ -2156,34 +2188,39 @@ def savePHPConfigBasic(request):
 def getCurrentAdvancedPHPConfig(request):
     try:
         val = request.session['userID']
-
+        admin = Administrator.objects.get(id=val)
         try:
-            if request.method == 'POST':
+            if admin.type == 1:
+                if request.method == 'POST':
 
-                data = json.loads(request.body)
-                phpVers = data['phpSelection']
+                    data = json.loads(request.body)
+                    phpVers = data['phpSelection']
 
-                if phpVers == "PHP 5.3":
-                    phpVers = "php53"
-                elif phpVers == "PHP 5.4":
-                    phpVers = "php54"
-                elif phpVers == "PHP 5.5":
-                    phpVers = "php55"
-                elif phpVers == "PHP 5.6":
-                    phpVers = "php56"
-                elif phpVers == "PHP 7.0":
-                    phpVers = "php70"
-                elif phpVers == "PHP 7.1":
-                    phpVers = "php71"
-                elif phpVers == "PHP 7.2":
-                    phpVers = "php72"
+                    if phpVers == "PHP 5.3":
+                        phpVers = "php53"
+                    elif phpVers == "PHP 5.4":
+                        phpVers = "php54"
+                    elif phpVers == "PHP 5.5":
+                        phpVers = "php55"
+                    elif phpVers == "PHP 5.6":
+                        phpVers = "php56"
+                    elif phpVers == "PHP 7.0":
+                        phpVers = "php70"
+                    elif phpVers == "PHP 7.1":
+                        phpVers = "php71"
+                    elif phpVers == "PHP 7.2":
+                        phpVers = "php72"
 
-                path = "/usr/local/lsws/ls"+phpVers+"/etc/php.ini"
+                    path = "/usr/local/lsws/ls"+phpVers+"/etc/php.ini"
 
-                configData = open(path, "r").read()
+                    configData = open(path, "r").read()
 
-                status = {"fetchStatus": 1, "configData": configData}
+                    status = {"fetchStatus": 1, "configData": configData}
+                    final_json = json.dumps(status)
+                    return HttpResponse(final_json)
 
+            else:
+                status = {"fetchStatus": 1, "error_message": 'Not enough privileges.'}
                 final_json = json.dumps(status)
                 return HttpResponse(final_json)
 
@@ -2199,59 +2236,66 @@ def getCurrentAdvancedPHPConfig(request):
 def savePHPConfigAdvance(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
 
-        if request.method == 'POST':
-            try:
-                data = json.loads(request.body)
-                phpVers = data['phpSelection']
+        if admin.type == 1:
 
-                if phpVers == "PHP 5.3":
-                    phpVers = "php53"
-                elif phpVers == "PHP 5.4":
-                    phpVers = "php54"
-                elif phpVers == "PHP 5.5":
-                    phpVers = "php55"
-                elif phpVers == "PHP 5.6":
-                    phpVers = "php56"
-                elif phpVers == "PHP 7.0":
-                    phpVers = "php70"
-                elif phpVers == "PHP 7.1":
-                    phpVers = "php71"
-                elif phpVers == "PHP 7.2":
-                    phpVers = "php72"
+            if request.method == 'POST':
+                try:
+                    data = json.loads(request.body)
+                    phpVers = data['phpSelection']
 
-                path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
+                    if phpVers == "PHP 5.3":
+                        phpVers = "php53"
+                    elif phpVers == "PHP 5.4":
+                        phpVers = "php54"
+                    elif phpVers == "PHP 5.5":
+                        phpVers = "php55"
+                    elif phpVers == "PHP 5.6":
+                        phpVers = "php56"
+                    elif phpVers == "PHP 7.0":
+                        phpVers = "php70"
+                    elif phpVers == "PHP 7.1":
+                        phpVers = "php71"
+                    elif phpVers == "PHP 7.2":
+                        phpVers = "php72"
 
-                tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+                    path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
 
-                vhost = open(tempPath, "w")
+                    tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-                vhost.write(data['configData'])
+                    vhost = open(tempPath, "w")
 
-                vhost.close()
+                    vhost.write(data['configData'])
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+                    vhost.close()
 
-                execPath = execPath + " savePHPConfigAdvance --phpVers " + path + " --tempPath " + tempPath
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+
+                    execPath = execPath + " savePHPConfigAdvance --phpVers " + path + " --tempPath " + tempPath
 
 
 
-                output = subprocess.check_output(shlex.split(execPath))
+                    output = subprocess.check_output(shlex.split(execPath))
 
-                if output.find("1,None") > -1:
-                    status = {"saveStatus": 1, "configData": data['configData']}
-                    final_json = json.dumps(status)
-                    return HttpResponse(final_json)
-                else:
-                    data_ret = {'saveStatus': 0, 'error_message': output}
+                    if output.find("1,None") > -1:
+                        status = {"saveStatus": 1, "configData": data['configData']}
+                        final_json = json.dumps(status)
+                        return HttpResponse(final_json)
+                    else:
+                        data_ret = {'saveStatus': 0, 'error_message': output}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+
+                except BaseException, msg:
+                    data_ret = {'saveStatus': 0, 'error_message': str(msg)}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
+        else:
+            data_ret = {'saveStatus': 0, 'error_message': 'Not enough privileges.'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
-
-            except BaseException, msg:
-                data_ret = {'saveStatus': 0, 'error_message': str(msg)}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
     except KeyError, msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[saveConfigsToFile]")
         return HttpResponse("Not Logged in as admin")

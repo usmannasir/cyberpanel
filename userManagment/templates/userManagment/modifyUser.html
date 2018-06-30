@@ -65,11 +65,24 @@
                 {% if adminType == 1 %}
 
 
-                <div ng-hide="accountTypeView" class="form-group">
+                    <div ng-hide="accountTypeView" class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Account Type" %}</label>
+                        <div class="col-sm-6">
+                            <select ng-change="showLimitsBox()" ng-model="accountType" class="form-control">
+                                    <option>Admin</option>
+                                    <option>Normal User</option>
+
+                            </select>
+                        </div>
+                        <div class="current-pack">{% trans "Currently:" %} {$ currentAccountType $}</div>
+                    </div>
+
+                {% else %}
+
+                    <div ng-hide="accountTypeView" class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Account Type" %}</label>
                     <div class="col-sm-6">
                         <select ng-change="showLimitsBox()" ng-model="accountType" class="form-control">
-                                <option>Admin</option>
                                 <option>Normal User</option>
 
                         </select>

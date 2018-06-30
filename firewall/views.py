@@ -41,10 +41,14 @@ def firewallHome(request):
 def getCurrentRules(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
-                data = json.loads(request.body)
+                if admin.type != 1:
+                    final_dic = {'fetchStatus': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 rules = FirewallRules.objects.all()
 
@@ -84,8 +88,14 @@ def getCurrentRules(request):
 def addRule(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    final_dic = {'add_status': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 data = json.loads(request.body)
                 ruleName = data['ruleName']
@@ -117,8 +127,14 @@ def addRule(request):
 def deleteRule(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(val=val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    final_dic = {'delete_status': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 data = json.loads(request.body)
                 ruleID = data['id']
@@ -149,14 +165,17 @@ def deleteRule(request):
 def reloadFirewall(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
+                if admin.type != 1:
+                    final_dic = {'reload_status': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 command = 'sudo firewall-cmd --reload'
-
                 cmd = shlex.split(command)
-
                 res = subprocess.call(cmd)
 
                 if res == 0:
@@ -184,9 +203,14 @@ def reloadFirewall(request):
 def startFirewall(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
+                if admin.type != 1:
+                    final_dic = {'start_status': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 command = 'sudo systemctl start firewalld'
 
@@ -219,9 +243,14 @@ def startFirewall(request):
 def stopFirewall(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
+                if admin.type != 1:
+                    final_dic = {'stop_status': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 command = 'sudo systemctl stop firewalld'
 
@@ -238,9 +267,6 @@ def stopFirewall(request):
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
 
-
-
-
         except BaseException,msg:
             final_dic = {'stop_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -254,9 +280,14 @@ def stopFirewall(request):
 def firewallStatus(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
+                if admin.type != 1:
+                    final_dic = {'status': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 status = subprocess.check_output(["systemctl", "status","firewalld"])
 
@@ -297,11 +328,16 @@ def secureSSH(request):
 def getSSHConfigs(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
                 type = data['type']
 
+                if admin.type != 1:
+                    final_dic = {'status': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 if type=="1":
 
@@ -406,10 +442,16 @@ def getSSHConfigs(request):
 def saveSSHConfigs(request):
     try:
         val = request.session['userID']
+        admin= Administrator.objects.get(val=val)
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
                 type = data['type']
+
+                if admin.type != 1:
+                    final_dic = {'saveStatus': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
 
                 if type=="1":
@@ -510,10 +552,16 @@ def saveSSHConfigs(request):
 def deleteSSHKey(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
                 key = data['key']
+
+                if admin.type != 1:
+                    final_dic = {'delete_status': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 # temp change of permissions
 
@@ -568,10 +616,16 @@ def deleteSSHKey(request):
 def addSSHKey(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
                 key = data['key']
+
+                if admin.type != 1:
+                    final_dic = {'add_status': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 # temp change of permissions
 
@@ -659,7 +713,14 @@ def loadModSecurityHome(request):
 def installModSec(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
+
+            if admin.type != 1:
+                final_dic = {'installModSec': 0, 'error_message': 'Not enough privileges.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
             thread.start_new_thread(modSec.installModSec, ('Install','modSec'))
             final_json = json.dumps({'installModSec': 1, 'error_message': "None"})
             return HttpResponse(final_json)
@@ -676,8 +737,15 @@ def installModSec(request):
 def installStatusModSec(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    final_dic = {'abort': 1, 'installed': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
 
                 installStatus = unicode(open(modSec.installLogPath, "r").read())
 
@@ -741,9 +809,14 @@ def installStatusModSec(request):
 def fetchModSecSettings(request):
     try:
         val = request.session['userID']
-
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    final_dic = {'fetchStatus': 0, 'installed': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 modsecurity = 0
                 SecAuditEngine = 0
@@ -835,8 +908,14 @@ def fetchModSecSettings(request):
 def saveModSecConfigurations(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    final_dic = {'saveStatus': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 data = json.loads(request.body)
 
@@ -919,7 +998,6 @@ def saveModSecConfigurations(request):
 def modSecRules(request):
     try:
         userID = request.session['userID']
-
         admin = Administrator.objects.get(pk=userID)
 
         if admin.type == 3:
@@ -946,7 +1024,6 @@ def modSecRules(request):
 def fetchModSecRules(request):
     try:
         userID = request.session['userID']
-
         admin = Administrator.objects.get(pk=userID)
 
         if admin.type == 3:
@@ -988,8 +1065,14 @@ def fetchModSecRules(request):
 def saveModSecRules(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    final_dic = {'saveStatus': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 data = json.loads(request.body)
 
@@ -1063,7 +1146,6 @@ def modSecRulesPacks(request):
 def getOWASPAndComodoStatus(request):
     try:
         userID = request.session['userID']
-
         admin = Administrator.objects.get(pk=userID)
 
         if admin.type == 3:
@@ -1121,8 +1203,14 @@ def getOWASPAndComodoStatus(request):
 def installModSecRulesPack(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    final_dic = {'installStatus': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 data = json.loads(request.body)
 
@@ -1159,8 +1247,14 @@ def installModSecRulesPack(request):
 def getRulesFiles(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    final_dic = {'fetchStatus': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
 
                 data = json.loads(request.body)
@@ -1219,8 +1313,14 @@ def getRulesFiles(request):
 def enableDisableRuleFile(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk = val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    final_dic = {'saveStatus': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 data = json.loads(request.body)
 

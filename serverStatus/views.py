@@ -57,9 +57,6 @@ def litespeedStatus(request):
                 else:
                     loadedModules.append(items)
 
-
-
-
         except subprocess.CalledProcessError,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
             return render(request,"serverStatus/litespeedStatus.html",{"processList":processList,"liteSpeedVersionStatus":"For some reaons not able to load version details, see CyberCP main log file."})
@@ -121,7 +118,7 @@ def cyberCPMainLogFile(request):
         admin = Administrator.objects.get(pk=val)
 
         if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+            return HttpResponse("You don't have enough privileges to access this page.")
 
 
         return render(request,'serverStatus/cybercpmainlogfile.html')
@@ -131,23 +128,23 @@ def cyberCPMainLogFile(request):
         return redirect(loadLoginPage)
 
 
-
-
 def getFurtherDataFromLogFile(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
 
-        fewLinesOfLogFile = logging.CyberCPLogFileWriter.readLastNFiles(50,logging.CyberCPLogFileWriter.fileName)
+        if admin.type == 1:
 
-        fewLinesOfLogFile = str(fewLinesOfLogFile)
+            fewLinesOfLogFile = logging.CyberCPLogFileWriter.readLastNFiles(50,logging.CyberCPLogFileWriter.fileName)
+            fewLinesOfLogFile = str(fewLinesOfLogFile)
+            status = {"logstatus": 1, "logsdata": fewLinesOfLogFile}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
 
-
-        status = {"logstatus":1,"logsdata":fewLinesOfLogFile}
-
-        final_json = json.dumps(status)
-        return HttpResponse(final_json)
-
-
+        else:
+            status = {"logstatus": 0,'error':"You don't have enough privilege to view logs."}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
 
     except KeyError, msg:
         status = {"logstatus":0,"error":"Could not fetch data from log file, please see CyberCP main log file through command line."}
@@ -268,7 +265,7 @@ def servicesAction(request):
         admin = Administrator.objects.get(pk=val)
 
         if admin.type == 3:
-            final = {'serviceAction': 0, "error_message": "Not enough privilege"}
+            final = {'serviceAction': 0, "error_message": "Not enough privileges."}
             final_json = json.dumps(final)
             return HttpResponse(final_json)
 

@@ -31,10 +31,10 @@ def createEmailAccount(request):
     try:
         val = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=request.session['userID'])
+            admin = Administrator.objects.get(pk=val)
 
             if admin.type == 1:
-                websites = admin.websites_set.all()
+                websites = Websites.objects.all()
             else:
                 websites = Websites.objects.filter(admin=admin)
 
@@ -56,12 +56,12 @@ def submitEmailCreation(request):
     try:
         if request.method == 'POST':
 
+            val = request.session['userID']
+
             data = json.loads(request.body)
             domainName = data['domain']
             userName = data['username']
             password = data['password']
-
-
 
             ## Create email entry
 
@@ -97,10 +97,10 @@ def deleteEmailAccount(request):
     try:
         val = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=request.session['userID'])
+            admin = Administrator.objects.get(pk=val)
 
             if admin.type == 1:
-                websites = admin.websites_set.all()
+                websites = Websites.objects.all()
             else:
                 websites = Websites.objects.filter(admin=admin)
 
@@ -121,6 +121,7 @@ def deleteEmailAccount(request):
 def getEmailsForDomain(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
@@ -133,6 +134,12 @@ def getEmailsForDomain(request):
                     final_dic = {'fetchStatus': 0, 'error_message': "No email accounts exists!"}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
+
+                if admin.type != 1:
+                    if domain.domainOwner.admin != admin:
+                        final_dic = {'fetchStatus': 0, 'error_message': "Not enough privileges." }
+                        final_json = json.dumps(final_dic)
+                        return HttpResponse(final_json)
 
                 emails = domain.eusers_set.all()
 
@@ -154,13 +161,10 @@ def getEmailsForDomain(request):
                         json_data = json_data + ',' + json.dumps(dic)
 
                 json_data = json_data + ']'
-
                 final_dic = {'fetchStatus': 1, 'error_message': "None", "data": json_data}
-
                 final_json = json.dumps(final_dic)
 
                 return HttpResponse(final_json)
-
 
         except BaseException,msg:
             data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
@@ -171,23 +175,27 @@ def getEmailsForDomain(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def submitEmailDeletion(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
                 data = json.loads(request.body)
                 email = data['email']
+                emailDB = EUsers.objects.get(email=email)
+
+                if admin.type != 1:
+                    if emailDB.emailOwner.domainOwner.admin != admin:
+                        final_dic = {'deleteEmailStatus': 0, 'error_message': "Not enough privileges."}
+                        final_json = json.dumps(final_dic)
+                        return HttpResponse(final_json)
 
                 mailUtilities.deleteEmailAccount(email)
-
                 data_ret = {'deleteEmailStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-
-
 
         except BaseException,msg:
             data_ret = {'deleteEmailStatus': 0, 'error_message': str(msg)}
@@ -202,10 +210,10 @@ def emailForwarding(request):
     try:
         val = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=request.session['userID'])
+            admin = Administrator.objects.get(pk=val)
 
             if admin.type == 1:
-                websites = admin.websites_set.all()
+                websites = Websites.objects.all()
             else:
                 websites = Websites.objects.filter(admin=admin)
 
@@ -222,15 +230,23 @@ def emailForwarding(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def fetchCurrentForwardings(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
                 data = json.loads(request.body)
                 emailAddress = data['emailAddress']
+
+                emailDB = EUsers.objects.get(email=emailAddress)
+
+                if admin.type != 1:
+                    if emailDB.emailOwner.domainOwner.admin != admin:
+                        final_dic = {'fetchStatus': 1, 'error_message': "Not enough privileges."}
+                        final_json = json.dumps(final_dic)
+                        return HttpResponse(final_json)
 
                 currentForwardings = Forwardings.objects.filter(source=emailAddress)
 
@@ -242,7 +258,7 @@ def fetchCurrentForwardings(request):
                         continue
                     dic = {'id': id,
                            'source': items.source,
-                           'destination':items.destination}
+                           'destination': items.destination}
 
                     id = id + 1
 
@@ -253,13 +269,10 @@ def fetchCurrentForwardings(request):
                         json_data = json_data + ',' + json.dumps(dic)
 
                 json_data = json_data + ']'
-
                 final_dic = {'fetchStatus': 1, 'error_message': "None", "data": json_data}
-
                 final_json = json.dumps(final_dic)
 
                 return HttpResponse(final_json)
-
 
         except BaseException,msg:
             data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
@@ -286,7 +299,6 @@ def submitForwardDeletion(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-
         except BaseException,msg:
             data_ret = {'deleteForwardingStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
@@ -299,6 +311,7 @@ def submitForwardDeletion(request):
 def submitEmailForwardingCreation(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
 
             if request.method == 'POST':
@@ -306,6 +319,14 @@ def submitEmailForwardingCreation(request):
                 data = json.loads(request.body)
                 source = data['source']
                 destination = data['destination']
+
+                email = EUsers.objects.get(email=source)
+
+                if admin.type != 1:
+                    if email.emailOwner.domainOwner.admin != admin:
+                        final_dic = {'createStatus': 0, 'error_message': "Not enough privileges." }
+                        final_json = json.dumps(final_dic)
+                        return HttpResponse(final_json)
 
                 if Forwardings.objects.filter(source=source, destination=destination).count() > 0:
                     data_ret = {'createStatus': 0, 'error_message': "You have already forwared to this destination."}
@@ -335,7 +356,6 @@ def submitEmailForwardingCreation(request):
         return HttpResponse(json_data)
 
 
-
 #######
 
 
@@ -346,7 +366,7 @@ def changeEmailAccountPassword(request):
             admin = Administrator.objects.get(pk=request.session['userID'])
 
             if admin.type == 1:
-                websites = admin.websites_set.all()
+                websites = Websites.objects.all()
             else:
                 websites = Websites.objects.filter(admin=admin)
 
@@ -367,6 +387,7 @@ def changeEmailAccountPassword(request):
 def submitPasswordChange(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
@@ -375,10 +396,17 @@ def submitPasswordChange(request):
                 email = data['email']
                 password = data['password']
 
-                dom = Domains(domain=domain)
+                emailDB = EUsers(email=email)
 
-                emailAcct = EUsers(email=email)
-                emailAcct.delete()
+                if admin.type != 1:
+                    if emailDB.emailOwner.domainOwner.admin != admin:
+                        final_dic = {'passChangeStatus': 0, 'error_message': "Not enough privileges." }
+                        final_json = json.dumps(final_dic)
+                        return HttpResponse(final_json)
+
+                emailDB.delete()
+
+                dom = Domains(domain=domain)
 
                 emailAcct = EUsers(emailOwner=dom, email=email, password=password)
                 emailAcct.save()
@@ -386,7 +414,6 @@ def submitPasswordChange(request):
                 data_ret = {'passChangeStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-
 
 
         except BaseException,msg:
@@ -454,11 +481,20 @@ def dkimManager(request):
 def fetchDKIMKeys(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
 
                 domainName = data['domainName']
+
+                if admin.type != 1:
+                    website = Websites.objects.get(domain=domainName)
+                    if website.admin != admin:
+                        data_ret = {'fetchStatus': 0, 'keysAvailable': 0, 'error_message': 'Not enough privileges.'}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+
 
                 try:
                     path = "/etc/opendkim/keys/" + domainName + "/default.txt"
@@ -489,21 +525,25 @@ def fetchDKIMKeys(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def generateDKIMKeys(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
                 data = json.loads(request.body)
-
                 domainName = data['domainName']
 
+                if admin.type != 1:
+                    website = Websites.objects.get(domain=domainName)
+                    if website.admin != admin:
+                        data_ret = {'generateStatus': 0, 'error_message': 'Not enough privileges.'}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
-
                 execPath = execPath + " generateKeys --domain " + domainName
-
                 output = subprocess.check_output(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
@@ -547,7 +587,12 @@ def generateDKIMKeys(request):
 def installOpenDKIM(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
+            if admin.type != 1:
+                final_json = json.dumps({'installOpenDKIM': 0, 'error_message': "Not enough privileges."})
+                return HttpResponse(final_json)
+
             thread.start_new_thread(mailUtilities.installOpenDKIM, ('Install','openDKIM'))
             final_json = json.dumps({'installOpenDKIM': 1, 'error_message': "None"})
             return HttpResponse(final_json)
@@ -563,8 +608,14 @@ def installOpenDKIM(request):
 def installStatusOpenDKIM(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
+
+                if admin.type != 1:
+                    final_dic = {'abort': 1, 'installed': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
                 command = "sudo cat " + mailUtilities.installLogPath
                 installStatus = subprocess.check_output(shlex.split(command))

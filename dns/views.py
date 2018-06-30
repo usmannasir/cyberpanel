@@ -10,13 +10,13 @@ import os
 from loginSystem.views import loadLoginPage
 from models import Domains,Records
 from re import match,I,M
+from websiteFunctions.models import Websites
 
 # Create your views here.
 
 def loadDNSHome(request):
     try:
         userID = request.session['userID']
-
         admin = Administrator.objects.get(pk=userID)
 
         return render(request,'dns/index.html',{"type":admin.type})
@@ -26,7 +26,6 @@ def loadDNSHome(request):
 def createNameserver(request):
     try:
         userID = request.session['userID']
-
         admin = Administrator.objects.get(pk=userID)
 
         if admin.type == 3:
@@ -42,6 +41,12 @@ def NSCreation(request):
         try:
             if request.method == 'POST':
                 admin = Administrator.objects.get(pk=val)
+
+                if admin.type != 1:
+                    dic = {'NSCreation': 0, 'error_message': "Only administrator can view this page."}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+
 
                 data = json.loads(request.body)
                 domainForNS = data['domainForNS']
@@ -196,9 +201,7 @@ def NSCreation(request):
 def createDNSZone(request):
     try:
         userID = request.session['userID']
-
         admin = Administrator.objects.get(pk=userID)
-
         return render(request,'dns/createDNSZone.html')
     except KeyError:
         return redirect(loadLoginPage)
@@ -281,13 +284,21 @@ def addDeleteDNSRecords(request):
 def getCurrentRecordsForDomain(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
-
 
                 data = json.loads(request.body)
                 zoneDomain = data['selectedZone']
                 currentSelection = data['currentSelection']
+
+                if admin.type != 1:
+                    website = Websites.objects.get(domain=zoneDomain)
+                    if website.admin != admin:
+                        dic = {'fetchStatus': 0, 'error_message': "Only administrator can view this page."}
+                        json_data = json.dumps(dic)
+                        return HttpResponse(json_data)
+
 
                 domain = Domains.objects.get(name=zoneDomain)
 
@@ -357,6 +368,7 @@ def getCurrentRecordsForDomain(request):
 def addDNSRecord(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
@@ -366,7 +378,12 @@ def addDNSRecord(request):
                 recordName = data['recordName']
                 ttl = int(data['ttl'])
 
-                #admin = Administrator.objects.get(pk=val)
+                if admin.type != 1:
+                    website = Websites.objects.get(domain=zoneDomain)
+                    if website.admin != admin:
+                        dic = {'add_status': 0, 'error_message': "Only administrator can view this page."}
+                        json_data = json.dumps(dic)
+                        return HttpResponse(json_data)
 
                 zone = Domains.objects.get(name=zoneDomain)
                 value = ""
@@ -514,6 +531,7 @@ def addDNSRecord(request):
 def deleteDNSRecord(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
@@ -521,6 +539,13 @@ def deleteDNSRecord(request):
                 id = data['id']
 
                 delRecord = Records.objects.get(id=id)
+
+                if admin.type != 1:
+                    if delRecord.domainOwner.admin != admin:
+                        dic = {'delete_status': 0, 'error_message': "Only administrator can view this page."}
+                        json_data = json.dumps(dic)
+                        return HttpResponse(json_data)
+
                 delRecord.delete()
 
                 final_dic = {'delete_status': 1, 'error_message': "None"}
@@ -570,6 +595,7 @@ def deleteDNSZone(request):
 def submitZoneDeletion(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 
@@ -577,6 +603,13 @@ def submitZoneDeletion(request):
                 zoneDomain = data['zoneDomain']
 
                 delZone = Domains.objects.get(name=zoneDomain)
+
+                if admin.type != 1:
+                    if delZone.admin != admin:
+                        dic = {'delete_status': 0, 'error_message': "Only administrator can view this page."}
+                        json_data = json.dumps(dic)
+                        return HttpResponse(json_data)
+
                 delZone.delete()
 
                 final_dic = {'delete_status': 1, 'error_message': "None"}

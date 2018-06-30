@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/local/CyberCP/bin/python2
 import subprocess, signal
 import shlex
 import argparse
@@ -10,6 +10,7 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 class policyCTRL:
     applicationPath = '/usr/local/CyberCP/postfixSenderPolicy/pid'
+    cleaningPID = '/usr/local/CyberCP/postfixSenderPolicy/cpid'
 
     def prepareArguments(self):
 
@@ -27,12 +28,24 @@ class policyCTRL:
         subprocess.Popen(shlex.split(command))
 
     def stop(self):
+
         path = policyCTRL.applicationPath
-        pid = open(path, "r").readlines()[0]
-        try:
-            os.kill(int(pid), signal.SIGTERM)
-        except BaseException, msg:
-            logging.writeToFile(str(msg))
+        if os.path.exists(path):
+
+            pid = open(path, "r").readlines()[0]
+            try:
+                os.kill(int(pid), signal.SIGTERM)
+            except BaseException, msg:
+                logging.writeToFile(str(msg))
+
+        ## Cleaning PID
+        path = policyCTRL.cleaningPID
+        if os.path.exists(path):
+            pid = open(path, "r").readlines()[0]
+            try:
+                os.kill(int(pid), signal.SIGTERM)
+            except BaseException, msg:
+                logging.writeToFile(str(msg))
 
 
 

@@ -24,7 +24,6 @@ def verifyLogin(request):
         username = "not logged in"
         password = ""
 
-
         try:
             if request.method == "POST":
                 data = json.loads(request.body)
@@ -124,7 +123,6 @@ def loadLoginPage(request):
     except KeyError:
 
         numberOfAdministrator = Administrator.objects.count()
-
 
         password = hashPassword.hash_password('1234567')
 
