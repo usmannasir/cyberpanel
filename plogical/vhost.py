@@ -309,7 +309,6 @@ class vhost:
             ## File Manager defination
 
             context = "context /.filemanager {\n"
-            type = "  type                    NULL\n"
             location = "  location                /usr/local/lsws/Example/html/FileManager\n"
             allowBrowse = "  allowBrowse             1\n"
             autoIndex = "  autoIndex               1\n\n"
@@ -319,8 +318,17 @@ class vhost:
             deny = "    deny                  0.0.0.0/0\n"
             accessControlEnds = "  }\n"
 
+            rewriteInherit = """  rewrite  {
+    inherit               0
+
+  }
+  """
+
             phpIniOverride = "phpIniOverride  {\n"
             php_admin_value = 'php_admin_value open_basedir "/tmp:/usr/local/lsws/Example/html/FileManager:$VH_ROOT"\n'
+            php_value = 'php_value display_errors "Off"\n'
+            php_value_upload_max_size = 'php_value upload_max_filesize "200M"\n'
+            php_value_post_max_size = 'php_value post_max_size "250M"\n'
             endPHPIniOverride = "}\n"
 
 
@@ -328,7 +336,6 @@ class vhost:
             contextEnds = "}\n"
 
             confFile.writelines(context)
-            confFile.writelines(type)
             confFile.writelines(location)
             confFile.writelines(allowBrowse)
             confFile.writelines(autoIndex)
@@ -336,10 +343,16 @@ class vhost:
             confFile.writelines(allow)
             confFile.writelines(deny)
             confFile.writelines(accessControlEnds)
+            confFile.write(rewriteInherit)
+
+            confFile.writelines(phpIniOverride)
             if openBasedir == 1:
-                confFile.writelines(phpIniOverride)
                 confFile.writelines(php_admin_value)
-                confFile.writelines(endPHPIniOverride)
+            confFile.write(php_value)
+            confFile.write(php_value_upload_max_size)
+            confFile.write(php_value_post_max_size)
+            confFile.writelines(endPHPIniOverride)
+
             confFile.writelines(defaultCharSet)
             confFile.writelines(contextEnds)
 
@@ -349,10 +362,26 @@ class vhost:
             php_admin_value = 'php_admin_value open_basedir "/tmp:$VH_ROOT"\n'
             endPHPIniOverride = "}\n"
 
+            confFile.writelines(phpIniOverride)
             if openBasedir == 1:
-                confFile.writelines(phpIniOverride)
                 confFile.writelines(php_admin_value)
-                confFile.writelines(endPHPIniOverride)
+            confFile.writelines(endPHPIniOverride)
+
+
+            slashContext = """
+context / {
+  location                $DOC_ROOT/
+  allowBrowse             1
+
+  rewrite  {
+    enable                1
+RewriteFile .htaccess
+
+  }
+  addDefaultCharset       off
+}
+"""
+            confFile.write(slashContext)
 
             confFile.close()
 
@@ -584,40 +613,7 @@ class vhost:
     def addRewriteRules(virtualHostName, fileName=None):
 
         try:
-            path = vhost.Server_root + "/conf/vhosts/" + virtualHostName + "/vhost.conf"
-
-            data = open(path, "r").readlines()
-
-            if fileName == None:
-                dataToWritten = "rewriteFile           /home/" + virtualHostName + "/public_html/.htaccess" + "\n"
-            else:
-                dataToWritten = "rewriteFile           " + fileName + "\n"
-
-            ### Data if re-writes are not already enabled
-
-            rewrite = "rewrite  {\n"
-            enables = "  enable                  1\n"
-            rules = "  rules                   <<<END_rules\n"
-            endRules = "  END_rules\n"
-            end = "}\n\n"
-
-            if vhost.checkIfRewriteEnabled(data) == 1:
-                pass
-            else:
-                writeDataToFile = open(path, "a")
-
-                writeDataToFile.writelines("\n")
-                writeDataToFile.writelines("\n")
-                writeDataToFile.writelines(rewrite)
-                writeDataToFile.writelines(enables)
-                writeDataToFile.writelines(rules)
-                writeDataToFile.writelines(dataToWritten)
-                writeDataToFile.writelines(endRules)
-                writeDataToFile.writelines(end)
-
-                writeDataToFile.close()
-
-
+            pass
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [IO Error with per host config file [changePHP]]")
             return 0
@@ -898,10 +894,10 @@ class vhost:
             php_admin_value = 'php_admin_value open_basedir "/tmp:/usr/local/lsws/Example/html/FileManager:$VH_ROOT"\n'
             endPHPIniOverride = "}\n"
 
+            confFile.writelines(phpIniOverride)
             if openBasedir == 1:
-                confFile.writelines(phpIniOverride)
                 confFile.writelines(php_admin_value)
-                confFile.writelines(endPHPIniOverride)
+            confFile.writelines(endPHPIniOverride)
 
             # php settings
 
@@ -971,6 +967,21 @@ class vhost:
             confFile.writelines(procSoftLimit)
             confFile.writelines(procHardLimit)
             confFile.writelines(extprocessorEnd)
+
+            slashContext = """
+context / {
+  location                $DOC_ROOT/
+  allowBrowse             1
+
+  rewrite  {
+    enable                1
+RewriteFile .htaccess
+
+  }
+  addDefaultCharset       off
+}
+"""
+            confFile.write(slashContext)
 
             confFile.close()
 

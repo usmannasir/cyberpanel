@@ -31,7 +31,7 @@ from backup.models import DBUsers
 from mailServer.models import Domains as eDomains
 from random import randint
 import time
-
+from plogical.mailUtilities import mailUtilities
 
 ## I am not the monster that you think I am..
 
@@ -614,21 +614,9 @@ class backupUtilities:
                     username = email.split("@")[0]
                     password = emailAccount.find('password').text
 
-
-                    finalData = json.dumps({'domain': masterDomain, 'username': username, 'password': password})
-
-                    r = requests.post("http://localhost:5003/email/submitEmailCreation", data=finalData,verify=False)
-
-                    data = json.loads(r.text)
-
-                    if data['createEmailStatus'] == 1:
-                        continue
-                    else:
-                        status = open(os.path.join(completPath,'status'), "w")
-                        status.write("Error Message: " + data[
-                            'error_message'] + ". Not able to create email accounts, aborting. [5009]")
-                        status.close()
-                        return 0
+                    result = mailUtilities.createEmailAccount(masterDomain, username, password)
+                    if result[0] == 0:
+                        raise BaseException(result[1])
 
             except BaseException, msg:
                 status = open(os.path.join(completPath,'status'), "w")

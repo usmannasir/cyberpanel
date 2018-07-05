@@ -44,7 +44,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to install OpenLiteSpeed, exiting installer! [installLiteSpeed]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("OpenLiteSpeed successfully installed!")
                     InstallCyberPanel.stdOut("OpenLiteSpeed successfully installed!")
@@ -98,7 +98,7 @@ class InstallCyberPanel:
 
             ## cache module settings
             cacheStart = "module cache {\n"
-            param = "  param                   <<<END_param\n"
+            ls_enabled = "ls_enabled 1\n"
             enableCache = "enableCache 0\n"
             qsCache = "qsCache 1\n"
             reqCookieCache = "reqCookieCache 1\n"
@@ -111,13 +111,12 @@ class InstallCyberPanel:
             storagePath = "storagePath cachedata\n"
             checkPrivateCache = "checkPrivateCache 1\n"
             checkPublicCache = "checkPublicCache 1\n"
-            END_param = "  END_param\n"
             cacheEnd = "}\n"
 
             writeDataToFile = open(self.server_root_path+"conf/httpd_config.conf", 'a')
 
             writeDataToFile.writelines(cacheStart)
-            writeDataToFile.writelines(param)
+            writeDataToFile.writelines(ls_enabled)
             writeDataToFile.writelines(enableCache)
             writeDataToFile.writelines(qsCache)
             writeDataToFile.writelines(reqCookieCache)
@@ -130,7 +129,6 @@ class InstallCyberPanel:
             writeDataToFile.writelines(storagePath)
             writeDataToFile.writelines(checkPrivateCache)
             writeDataToFile.writelines(checkPublicCache)
-            writeDataToFile.writelines(END_param)
             writeDataToFile.writelines(cacheEnd)
             writeDataToFile.writelines("\n")
             writeDataToFile.writelines("\n")
@@ -236,7 +234,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to install LiteSpeed PHPs, exiting installer! [installAllPHPVersions]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("LiteSpeed PHPs successfully installed!")
                     InstallCyberPanel.stdOut("LiteSpeed PHPs successfully installed!")
@@ -253,7 +251,7 @@ class InstallCyberPanel:
                             if count == 3:
                                 logging.InstallLog.writeToFile("Failed to install LiteSpeed PHP 7.1, exiting installer! [installAllPHPVersions]")
                                 InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                                sys.exit()
+                                os._exit(0)
                         else:
                             logging.InstallLog.writeToFile("LiteSpeed PHP 7.1 successfully installed!")
                             InstallCyberPanel.stdOut("LiteSpeed PHP 7.1 successfully installed!")
@@ -273,7 +271,7 @@ class InstallCyberPanel:
                                 logging.InstallLog.writeToFile(
                                         "Failed to install LiteSpeed PHP 7.1, exiting installer! [installAllPHPVersions]")
                                 InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                                sys.exit()
+                                os._exit(0)
                         else:
                             logging.InstallLog.writeToFile("LiteSpeed PHP 7.1 successfully installed!")
                             InstallCyberPanel.stdOut("LiteSpeed PHP 7.1 successfully installed!")
@@ -331,7 +329,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to install MariaDB, exiting installer! [installMySQL]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("MariaDB successfully installed!")
                     InstallCyberPanel.stdOut("MariaDB successfully installed!")
@@ -378,7 +376,7 @@ class InstallCyberPanel:
                             logging.InstallLog.writeToFile(
                                 "Failed to create data directories for second MariaDB instance, exiting installer! [installMySQL]")
                             InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                            sys.exit()
+                            os._exit(0)
                     else:
                         logging.InstallLog.writeToFile("Data directories created for second MariaDB instance!")
                         InstallCyberPanel.stdOut("Data directories created for second MariaDB instance!")
@@ -400,7 +398,7 @@ class InstallCyberPanel:
                             logging.InstallLog.writeToFile(
                                 "Failed to start first MariaDB instance, exiting installer! [installMySQL]")
                             InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                            sys.exit()
+                            os._exit(0)
                     else:
                         logging.InstallLog.writeToFile("First MariaDB instance successfully started!")
                         InstallCyberPanel.stdOut("First MariaDB instance successfully started!")
@@ -421,7 +419,7 @@ class InstallCyberPanel:
                             logging.InstallLog.writeToFile(
                                 "Failed to enable first MariaDB instance to run at system restart, exiting installer! [installMySQL]")
                             InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                            sys.exit()
+                            os._exit(0)
                     else:
                         logging.InstallLog.writeToFile("First MariaDB instance successfully enabled at system restart!")
                         InstallCyberPanel.stdOut("First MariaDB instance successfully enabled at system restart!")
@@ -580,7 +578,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to start MariaDB instance, exiting installer! [startMariaDB]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("MariaDB instance successfully started!")
                     InstallCyberPanel.stdOut("MariaDB instance successfully started!")
@@ -610,7 +608,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to install PureFTPD, exiting installer! [installPureFTPD]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("PureFTPD successfully installed!")
                     InstallCyberPanel.stdOut("PureFTPD successfully installed!")
@@ -632,7 +630,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to enable PureFTPD to run at system restart, exiting installer! [installPureFTPD]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("PureFTPD successfully enabled at system restart!")
                     InstallCyberPanel.stdOut("PureFTPD successfully enabled at system restart!")
@@ -660,7 +658,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to create group for FTP, exiting installer! [installPureFTPD]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("System group for FTP successfully created!")
                     InstallCyberPanel.stdOut("System group for FTP successfully created!")
@@ -694,7 +692,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to create user for FTP, exiting installer! [installPureFTPD]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("System user for FTP successfully created!")
                     InstallCyberPanel.stdOut("System user for FTP successfully created!")
@@ -835,7 +833,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to install PowerDNS Repositories, exiting installer! [installPowerDNS]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("PowerDNS Repositories successfully installed!")
                     InstallCyberPanel.stdOut("PowerDNS Repositories successfully installed!")
@@ -857,7 +855,7 @@ class InstallCyberPanel:
                         logging.InstallLog.writeToFile(
                             "Failed to install PowerDNS Repositories, exiting installer! [installPowerDNS]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("PowerDNS Repositories successfully installed!")
                     InstallCyberPanel.stdOut("PowerDNS Repositories successfully installed!")
@@ -876,7 +874,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to install PowerDNS, exiting installer! [installPowerDNS]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("PowerDNS successfully installed!")
                     InstallCyberPanel.stdOut("PowerDNS successfully installed!")
@@ -979,7 +977,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to start PowerDNS instance, exiting installer! [startPowerDNS]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("PowerDNS instance successfully started!")
                     InstallCyberPanel.stdOut("PowerDNS instance successfully started!")
@@ -1016,7 +1014,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to install LSCPD prerequisites, exiting installer! [installLSCPD]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("LSCPD prerequisites successfully installed!")
                     InstallCyberPanel.stdOut("LSCPD prerequisites successfully installed!")
@@ -1035,7 +1033,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to install LSCPD prerequisites, exiting installer! [installLSCPD]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("LSCPD prerequisites successfully installed!")
                     InstallCyberPanel.stdOut("LSCPD prerequisites successfully installed!")
@@ -1055,7 +1053,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to extract LSCPD, exiting installer! [installLSCPD]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("LSCPD successfully extracted!")
                     InstallCyberPanel.stdOut("LSCPD successfully extracted!")
@@ -1077,7 +1075,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to configure LSCPD, exiting installer! [installLSCPD]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("LSCPD successfully configured!")
                     InstallCyberPanel.stdOut("LSCPD successfully extracted!")
@@ -1099,7 +1097,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to compile LSCPD, exiting installer! [installLSCPD]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("LSCPD successfully complied!")
                     InstallCyberPanel.stdOut("LSCPD successfully compiled!")
@@ -1121,7 +1119,7 @@ class InstallCyberPanel:
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to compile LSCPD, exiting installer! [installLSCPD]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("LSCPD successfully complied!")
                     InstallCyberPanel.stdOut("LSCPD successfully compiled!")

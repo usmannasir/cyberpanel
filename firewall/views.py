@@ -442,7 +442,7 @@ def getSSHConfigs(request):
 def saveSSHConfigs(request):
     try:
         val = request.session['userID']
-        admin= Administrator.objects.get(val=val)
+        admin= Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
@@ -460,9 +460,7 @@ def saveSSHConfigs(request):
                     rootLogin = data['rootLogin']
 
                     command = 'sudo semanage port -a -t ssh_port_t -p tcp ' +sshPort
-
                     cmd = shlex.split(command)
-
                     res = subprocess.call(cmd)
 
 

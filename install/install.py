@@ -44,7 +44,7 @@ class preFlightsChecks:
             else:
                 logging.InstallLog.writeToFile("SELinux is enabled, please disable SELinux and restart the installation!")
                 preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                sys.exit()
+                os._exit(0)
 
         except BaseException,msg:
             logging.InstallLog.writeToFile(str(msg) + "[checkIfSeLinuxDisabled]")
@@ -57,7 +57,7 @@ class preFlightsChecks:
             return 1
         else:
             preFlightsChecks.stdOut("You are running Unsupported python version, please install python 2.7")
-            sys.exit()
+            os._exit(0)
 
     def setup_account_cyberpanel(self):
         try:
@@ -74,7 +74,7 @@ class preFlightsChecks:
                     if count == 3:
                         logging.InstallLog.writeToFile("We are not able to install SUDO, exiting the installer. [setup_account_cyberpanel]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("SUDO successfully installed!")
                     preFlightsChecks.stdOut("SUDO successfully installed!")
@@ -95,7 +95,7 @@ class preFlightsChecks:
                     if count == 3:
                         logging.InstallLog.writeToFile("We are not able add user cyberpanel to system, exiting the installer. [setup_account_cyberpanel]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("CyberPanel user added!")
                     preFlightsChecks.stdOut("CyberPanel user added!")
@@ -117,7 +117,7 @@ class preFlightsChecks:
                     if count == 3:
                         logging.InstallLog.writeToFile("Not able to add user CyberPanel to SUDO group, exiting the installer. [setup_account_cyberpanel]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("CyberPanel user was successfully added to SUDO group!")
                     preFlightsChecks.stdOut("CyberPanel user was successfully added to SUDO group!")
@@ -166,6 +166,8 @@ class preFlightsChecks:
 
         except:
             logging.InstallLog.writeToFile("[116] setup_account_cyberpanel")
+            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+            os._exit(0)
 
     def yum_update(self):
         try:
@@ -198,9 +200,7 @@ class preFlightsChecks:
         return 1
 
     def installCyberPanelRepo(self):
-
         cmd = []
-
         count = 0
 
         while(1):
@@ -215,7 +215,7 @@ class preFlightsChecks:
                 if count == 3:
                     logging.InstallLog.writeToFile("Unable to add CyberPanel official repository, exiting installer! [installCyberPanelRepo]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    sys.exit()
+                    os._exit(0)
             else:
                 logging.InstallLog.writeToFile("CyberPanel Repo added!")
                 preFlightsChecks.stdOut("CyberPanel Repo added!")
@@ -224,7 +224,6 @@ class preFlightsChecks:
     def enableEPELRepo(self):
         try:
             cmd = []
-
             count = 0
 
             while (1):
@@ -240,6 +239,7 @@ class preFlightsChecks:
                     if count == 3:
                         logging.InstallLog.writeToFile("Unable to add EPEL repository, exiting installer! [enableEPELRepo]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("EPEL Repo added!")
                     preFlightsChecks.stdOut("EPEL Repo added!")
@@ -247,16 +247,19 @@ class preFlightsChecks:
 
         except OSError,msg:
             logging.InstallLog.writeToFile(str(msg) + " [enableEPELRepo]")
+            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+            os._exit(0)
             return 0
         except ValueError,msg:
             logging.InstallLog.writeToFile(str(msg) + " [enableEPELRepo]")
+            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+            os._exit(0)
             return 0
 
         return 1
 
     def install_pip(self):
         count = 0
-
         while (1):
             command = "yum -y install python-pip"
             res = subprocess.call(shlex.split(command))
@@ -267,7 +270,7 @@ class preFlightsChecks:
                 if count == 3:
                     logging.InstallLog.writeToFile("Unable to install PIP, exiting installer! [install_pip]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    sys.exit()
+                    os._exit(0)
             else:
                 logging.InstallLog.writeToFile("PIP successfully installed!")
                 preFlightsChecks.stdOut("PIP successfully installed!")
@@ -285,7 +288,7 @@ class preFlightsChecks:
                 if count == 3:
                     logging.InstallLog.writeToFile("Unable to install python development tools, exiting installer! [install_python_dev]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    sys.exit()
+                    os._exit(0)
             else:
                 logging.InstallLog.writeToFile("Python development tools successfully installed!")
                 preFlightsChecks.stdOut("Python development tools successfully installed!")
@@ -304,7 +307,7 @@ class preFlightsChecks:
                 if count == 3:
                     logging.InstallLog.writeToFile("Unable to install GCC, exiting installer! [install_gcc]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    sys.exit()
+                    os._exit(0)
             else:
                 logging.InstallLog.writeToFile("GCC Successfully installed!")
                 preFlightsChecks.stdOut("GCC Successfully installed!")
@@ -324,9 +327,8 @@ class preFlightsChecks:
                 if count == 3:
                     logging.InstallLog.writeToFile(
                         "Unable to install Python setup tools, exiting installer! [install_python_setup_tools]")
-                    print("[" + time.strftime(
-                        "%I-%M-%S-%a-%b-%Y") + "] " + "Installation failed, consult: /var/log/installLogs.txt")
-                    sys.exit()
+                    preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                    os._exit(0)
             else:
                 logging.InstallLog.writeToFile("Python setup tools Successfully installed!")
                 print("[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + "Python setup tools Successfully installed!")
@@ -362,7 +364,7 @@ class preFlightsChecks:
                         logging.InstallLog.writeToFile(
                             "Unable to install urllib3 module, exiting installer! [install_python_requests]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("urllib3 module Successfully installed!")
                     preFlightsChecks.stdOut("urllib3 module Successfully installed!")
@@ -383,7 +385,7 @@ class preFlightsChecks:
                         logging.InstallLog.writeToFile(
                             "Unable to install requests module, exiting installer! [install_python_requests]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("Requests module Successfully installed!")
                     preFlightsChecks.stdOut("Requests module Successfully installed!")
@@ -406,7 +408,7 @@ class preFlightsChecks:
                         logging.InstallLog.writeToFile(
                             "Unable to install urllib3 module, exiting installer! [install_python_requests]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("urllib3 module Successfully installed!")
                     preFlightsChecks.stdOut("urllib3 module Successfully installed!")
@@ -427,7 +429,7 @@ class preFlightsChecks:
                         logging.InstallLog.writeToFile(
                             "Unable to install requests module, exiting installer! [install_python_requests]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("Requests module Successfully installed!")
                     preFlightsChecks.stdOut("Requests module Successfully installed!")
@@ -453,7 +455,7 @@ class preFlightsChecks:
                     if count == 3:
                         logging.InstallLog.writeToFile("Unable to install pexpect, exiting installer! [install_pexpect]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("pexpect successfully installed!")
                     preFlightsChecks.stdOut("pexpect successfully installed!")
@@ -472,7 +474,7 @@ class preFlightsChecks:
                     if count == 3:
                         logging.InstallLog.writeToFile("Unable to install pexpect, exiting installer! [install_pexpect]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("pexpect successfully installed!")
                     preFlightsChecks.stdOut("pexpect successfully installed!")
@@ -491,7 +493,7 @@ class preFlightsChecks:
                 if count == 3:
                     logging.InstallLog.writeToFile("Unable to install DJANGO, exiting installer! [install_django]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    sys.exit()
+                    os._exit(0)
             else:
                 logging.InstallLog.writeToFile("DJANGO successfully installed!")
                 preFlightsChecks.stdOut("DJANGO successfully installed!")
@@ -508,7 +510,7 @@ class preFlightsChecks:
                 if count == 3:
                     logging.InstallLog.writeToFile("Unable to install MySQL-python, exiting installer! [install_python_mysql_library]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    sys.exit()
+                    os._exit(0)
             else:
                 logging.InstallLog.writeToFile("MySQL-python successfully installed!")
                 preFlightsChecks.stdOut("MySQL-python successfully installed!")
@@ -525,7 +527,7 @@ class preFlightsChecks:
                 if count == 3:
                     logging.InstallLog.writeToFile("Unable to install GUNICORN, exiting installer! [install_gunicorn]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    sys.exit()
+                    os._exit(0)
             else:
                 logging.InstallLog.writeToFile("GUNICORN successfully installed!")
                 preFlightsChecks.stdOut("GUNICORN successfully installed!")
@@ -571,26 +573,6 @@ class preFlightsChecks:
                     preFlightsChecks.stdOut("Gunicorn can now start after system restart!")
                     break
 
-            ##
-
-            count = 0
-
-            while(1):
-                command = "systemctl start gunicorn.socket"
-                res = subprocess.call(shlex.split(command))
-
-                if res == 1:
-                    count = count + 1
-                    preFlightsChecks.stdOut("Starting Gunicorn now, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Unable to start Gunicorn, exiting installer! [setup_gunicorn]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
-                else:
-                    logging.InstallLog.writeToFile("Gunicorn successfully started!")
-                    preFlightsChecks.stdOut("Gunicorn successfully started!")
-                    break
-
         except BaseException, msg:
             logging.InstallLog.writeToFile(str(msg) + " [setup_gunicorn]")
             preFlightsChecks.stdOut("Not able to setup gunicorn, see install log.")
@@ -616,7 +598,7 @@ class preFlightsChecks:
                     if count == 3:
                         logging.InstallLog.writeToFile("Unable to install psutil, exiting installer! [install_psutil]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("psutil successfully installed!")
                     preFlightsChecks.stdOut("psutil successfully installed!")
@@ -634,7 +616,7 @@ class preFlightsChecks:
                     if count == 3:
                         logging.InstallLog.writeToFile("Unable to install psutil, exiting installer! [install_psutil]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("psutil successfully installed!")
                     preFlightsChecks.stdOut("psutil successfully installed!")
@@ -669,7 +651,7 @@ class preFlightsChecks:
                 if count == 3:
                     logging.InstallLog.writeToFile("Unable to install psmisc, exiting installer! [install_psmisc]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    sys.exit()
+                    os._exit(0)
             else:
                 logging.InstallLog.writeToFile("psmisc successfully installed!")
                 preFlightsChecks.stdOut("psmisc successfully installed!")
@@ -691,7 +673,7 @@ class preFlightsChecks:
                         if count == 3:
                             logging.InstallLog.writeToFile("Unable to install upgrade requests, exiting installer! [download_install_CyberPanel]")
                             preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                            sys.exit()
+                            os._exit(0)
                     else:
                         logging.InstallLog.writeToFile("requests module successfully upgraded!")
                         preFlightsChecks.stdOut("requests module successfully upgraded!")
@@ -715,7 +697,7 @@ class preFlightsChecks:
                 if count == 3:
                     logging.InstallLog.writeToFile("Unable to download CyberPanel, exiting installer! [download_install_CyberPanel]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    sys.exit()
+                    os._exit(0)
             else:
                 logging.InstallLog.writeToFile("CyberPanel successfully downloaded!")
                 preFlightsChecks.stdOut("CyberPanel successfully downloaded!")
@@ -736,7 +718,7 @@ class preFlightsChecks:
                 if count == 3:
                     logging.InstallLog.writeToFile("Unable to extract CyberPanel. You can try to install on fresh OS again, exiting installer! [download_install_CyberPanel]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    sys.exit()
+                    os._exit(0)
             else:
                 logging.InstallLog.writeToFile("Successfully extracted CyberPanel!")
                 preFlightsChecks.stdOut("Successfully extracted CyberPanel!")
@@ -811,7 +793,7 @@ class preFlightsChecks:
                 if count == 3:
                     logging.InstallLog.writeToFile("Unable to prepare migrations file. You can try to install on fresh OS again, exiting installer! [download_install_CyberPanel]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    sys.exit()
+                    os._exit(0)
             else:
                 logging.InstallLog.writeToFile("Successfully prepared migrations file!")
                 preFlightsChecks.stdOut("Successfully prepared migrations file!")
@@ -832,7 +814,7 @@ class preFlightsChecks:
                 if count == 3:
                     logging.InstallLog.writeToFile("Unable to execute the migrations file, exiting installer! [download_install_CyberPanel]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    sys.exit()
+                    os._exit(0)
             else:
                 logging.InstallLog.writeToFile("Migrations file successfully executed!")
                 preFlightsChecks.stdOut("Migrations file successfully executed!")
@@ -846,7 +828,7 @@ class preFlightsChecks:
         if res == 1:
             logging.InstallLog.writeToFile("Could not move static content!")
             preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-            sys.exit()
+            os._exit(0)
         else:
             logging.InstallLog.writeToFile("Static content moved!")
             preFlightsChecks.stdOut("Static content moved!")
@@ -906,7 +888,7 @@ class preFlightsChecks:
                     if count == 3:
                         logging.InstallLog.writeToFile("Unable to install unzip, exiting installer! [install_unzip]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("unzip successfully installed!")
                     preFlightsChecks.stdOut("unzip Successfully installed!")
@@ -924,9 +906,7 @@ class preFlightsChecks:
 
     def install_zip(self):
         try:
-
             count = 0
-
             while (1):
 
                 command = 'yum -y install zip'
@@ -941,7 +921,7 @@ class preFlightsChecks:
                     if count == 3:
                         logging.InstallLog.writeToFile("Unable to install zip, exiting installer! [install_zip]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("zip successfully installed!")
                     preFlightsChecks.stdOut("zip successfully installed!")
@@ -963,7 +943,7 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-                command = 'wget https://files.phpmyadmin.net/phpMyAdmin/4.8.1/phpMyAdmin-4.8.1-all-languages.zip'
+                command = 'wget https://files.phpmyadmin.net/phpMyAdmin/4.8.2/phpMyAdmin-4.8.2-all-languages.zip'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -973,7 +953,7 @@ class preFlightsChecks:
                     if count == 3:
                         logging.InstallLog.writeToFile("Unable to download PYPMYAdmin, exiting installer! [download_install_phpmyadmin]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("PHPMYAdmin successfully downloaded!")
                     preFlightsChecks.stdOut("PHPMYAdmin successfully downloaded!")
@@ -984,7 +964,7 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-                command = 'unzip phpMyAdmin-4.8.1-all-languages.zip'
+                command = 'unzip phpMyAdmin-4.8.2-all-languages.zip'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -996,9 +976,8 @@ class preFlightsChecks:
                     if count == 3:
                         logging.InstallLog.writeToFile(
                             "Unable to unzip PHPMYAdmin, exiting installer! [download_install_phpmyadmin]")
-                        print("[" + time.strftime(
-                            "%I-%M-%S-%a-%b-%Y") + "] " + "Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("PHPMYAdmin unzipped!")
                     print(
@@ -1007,12 +986,12 @@ class preFlightsChecks:
 
             ###
 
-            os.remove("phpMyAdmin-4.8.1-all-languages.zip")
+            os.remove("phpMyAdmin-4.8.2-all-languages.zip")
 
             count = 0
 
             while(1):
-                command = 'mv phpMyAdmin-4.8.1-all-languages phpmyadmin'
+                command = 'mv phpMyAdmin-4.8.2-all-languages phpmyadmin'
 
                 cmd = shlex.split(command)
 
@@ -1026,9 +1005,8 @@ class preFlightsChecks:
                     if count == 3:
                         logging.InstallLog.writeToFile(
                             "Unable to install PHPMYAdmin, exiting installer! [download_install_phpmyadmin]")
-                        print("[" + time.strftime(
-                            "%I-%M-%S-%a-%b-%Y") + "] " + "Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("PHPMYAdmin Successfully installed!")
                     print(
@@ -1303,7 +1281,7 @@ class preFlightsChecks:
                    count = count + 1
                    preFlightsChecks.stdOut("Unable to generate SSL for Postfix, trying again, try number: " + str(count))
                    if count == 3:
-                       logging.InstallLog.writeToFile("Unable to generate SSL for Postfix, you will not be able to send emails and rest should work fine!! [setup_postfix_davecot_config]")
+                       logging.InstallLog.writeToFile("Unable to generate SSL for Postfix, you will not be able to send emails and rest should work fine! [setup_postfix_davecot_config]")
                        return
                else:
                    logging.InstallLog.writeToFile("SSL for Postfix generated!")
@@ -1373,7 +1351,7 @@ class preFlightsChecks:
                    count = count + 1
                    preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_domains.cf, trying again, try number: " + str(count))
                    if count == 3:
-                       logging.InstallLog.writeToFile("Unable change permissions for mysql-virtual_domains.cf. [setup_postfix_davecot_config]")
+                       logging.InstallLog.writeToFile("Unable to change permissions for mysql-virtual_domains.cf. [setup_postfix_davecot_config]")
                        break
                else:
                    logging.InstallLog.writeToFile("Permissions changed for mysql-virtual_domains.cf!")
@@ -2157,11 +2135,8 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-
                 command = 'chmod +x /usr/local/lscp/bin/lscpdctrl'
-
                 cmd = shlex.split(command)
-
                 res = subprocess.call(cmd)
 
                 if res == 1:
@@ -2235,11 +2210,8 @@ class preFlightsChecks:
 
         try:
             ## first install crontab
-
             file = open("installLogs.txt", 'a')
-
             count = 0
-
             while(1):
 
                 command = 'yum install cronie -y'
@@ -2265,9 +2237,7 @@ class preFlightsChecks:
             while(1):
 
                 command = 'systemctl enable crond'
-
                 cmd = shlex.split(command)
-
                 res = subprocess.call(cmd, stdout=file)
 
                 if res == 1:
@@ -2284,11 +2254,8 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-
                 command = 'systemctl start crond'
-
                 cmd = shlex.split(command)
-
                 res = subprocess.call(cmd, stdout=file)
 
                 if res == 1:
@@ -2312,6 +2279,12 @@ class preFlightsChecks:
 
             command = 'chmod +x /usr/local/CyberCP/plogical/findBWUsage.py'
             cmd = shlex.split(command)
+            res = subprocess.call(cmd, stdout=file)
+
+            if res == 1:
+                logging.InstallLog.writeToFile("1427 [setup_cron]")
+            else:
+                pass
 
             command = 'chmod +x /usr/local/CyberCP/postfixSenderPolicy/client.py'
             cmd = shlex.split(command)
@@ -2326,11 +2299,8 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-
                 command = 'systemctl restart crond.service'
-
                 cmd = shlex.split(command)
-
                 res = subprocess.call(cmd, stdout=file)
 
                 if res == 1:
@@ -2449,7 +2419,7 @@ class preFlightsChecks:
                         logging.InstallLog.writeToFile(
                             "Unable to install urllib3 module, exiting installer! [install_python_requests]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("urllib3 module Successfully installed!")
                     preFlightsChecks.stdOut("urllib3 module Successfully installed!")
@@ -2470,7 +2440,7 @@ class preFlightsChecks:
                         logging.InstallLog.writeToFile(
                             "Unable to install requests module, exiting installer! [install_python_requests]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("Requests module Successfully installed!")
                     preFlightsChecks.stdOut("Requests module Successfully installed!")
@@ -2513,7 +2483,7 @@ class preFlightsChecks:
                         logging.InstallLog.writeToFile(
                             "Failed to install pyOpenSSL, exiting installer! [installCertBot]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("pyOpenSSL successfully installed!  [pip]")
                     preFlightsChecks.stdOut("pyOpenSSL successfully installed!  [pip]")
@@ -2533,7 +2503,7 @@ class preFlightsChecks:
                         logging.InstallLog.writeToFile(
                             "Failed to install CertBot, exiting installer! [installCertBot]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("CertBot successfully installed!  [pip]")
                     preFlightsChecks.stdOut("CertBot successfully installed!  [pip]")
@@ -2739,7 +2709,7 @@ milter_default_action = accept
                         logging.InstallLog.writeToFile(
                             "Failed to install project dependant modules! [setupVirtualEnv]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("Project dependant modules installed successfully!")
                     preFlightsChecks.stdOut("Project dependant modules installed successfully!!")
@@ -2761,7 +2731,7 @@ milter_default_action = accept
                         logging.InstallLog.writeToFile(
                             "Failed install virtualenv! [setupVirtualEnv]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("virtualenv installed successfully!")
                     preFlightsChecks.stdOut("virtualenv installed successfully!")
@@ -2771,7 +2741,7 @@ milter_default_action = accept
 
             count = 0
             while (1):
-                command = "virtualenv /usr/local/CyberCP"
+                command = "virtualenv --system-site-packages /usr/local/CyberCP"
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -2782,7 +2752,7 @@ milter_default_action = accept
                         logging.InstallLog.writeToFile(
                             "Failed to setup virtualenv! [setupVirtualEnv]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        os._exit(0)
                 else:
                     logging.InstallLog.writeToFile("virtualenv setuped successfully!")
                     preFlightsChecks.stdOut("virtualenv setuped successfully!")
@@ -2799,7 +2769,7 @@ milter_default_action = accept
 
             count = 0
             while (1):
-                command = "pip install -r /usr/local/CyberCP/requirments.txt"
+                command = "pip install --ignore-installed -r /usr/local/CyberCP/requirments.txt"
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -2809,14 +2779,16 @@ milter_default_action = accept
                     if count == 3:
                         logging.InstallLog.writeToFile(
                             "Failed to install project dependant modules! [setupVirtualEnv]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        sys.exit()
+                        break
                 else:
                     logging.InstallLog.writeToFile("Project dependant modules installed successfully!")
                     preFlightsChecks.stdOut("Project dependant modules installed successfully!!")
                     break
 
             command = "systemctl restart gunicorn.socket"
+            res = subprocess.call(shlex.split(command))
+
+            command = "virtualenv --system-site-packages /usr/local/CyberCP"
             res = subprocess.call(shlex.split(command))
 
 

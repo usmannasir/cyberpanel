@@ -38,15 +38,6 @@ class policyCTRL:
             except BaseException, msg:
                 logging.writeToFile(str(msg))
 
-        ## Cleaning PID
-        path = policyCTRL.cleaningPID
-        if os.path.exists(path):
-            pid = open(path, "r").readlines()[0]
-            try:
-                os.kill(int(pid), signal.SIGTERM)
-            except BaseException, msg:
-                logging.writeToFile(str(msg))
-
 
 
 def main():

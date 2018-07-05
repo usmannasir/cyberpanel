@@ -7,7 +7,7 @@ django.setup()
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from policyConstraint import policyConstraints
-from emailPremium.models import DomainLimits, EmailLimits, EmailLogs
+from emailPremium.models import DomainLimits, EmailLogs
 from mailServer.models import Domains, EUsers
 import time
 from cacheManager import cacheManager
@@ -20,37 +20,44 @@ class HandleRequest(multi.Thread):
         multi.Thread.__init__(self)
         self.connection = conn
 
+    def __del__(self):
+        try:
+            self.connection.close()
+        except BaseException, msg:
+            logging.writeToFile(str(msg) + ' [HandleRequest.__del__]')
+
     def run(self):
         limitThreads.acquire()
         dataComplete = ""
+
         try:
-            try:
-                while True:
-                    # Wait for a connection
-                    if os.path.exists(HandleRequest.cleaningPath):
-                        readFromFile = open(HandleRequest.cleaningPath, 'r')
-                        command = readFromFile.read()
-                        cacheManager.handlePurgeRequest(command)
-                        readFromFile.close()
-                        logging.writeToFile(command + 'nCommand')
-                        os.remove(HandleRequest.cleaningPath)
+            while True:
 
-                    Data = self.connection.recv(64)
-                    if Data:
-                        if len(Data) < 64:
-                            dataComplete = dataComplete + Data
-                            self.manageRequest(dataComplete)
-                            dataComplete = ''
-                        else:
-                            dataComplete = dataComplete + Data
+                Data = self.connection.recv(64)
+
+                # Wait for a connection
+                if os.path.exists(HandleRequest.cleaningPath):
+                    readFromFile = open(HandleRequest.cleaningPath, 'r')
+                    command = readFromFile.read()
+                    cacheManager.handlePurgeRequest(command)
+                    readFromFile.close()
+                    os.remove(HandleRequest.cleaningPath)
+                    cacheManager.flushCache()
+
+                if Data:
+                    if len(Data) < 64:
+                        dataComplete = dataComplete + Data
+                        self.manageRequest(dataComplete)
+                        dataComplete = ''
                     else:
-                        self.connection.close()
-                        break
-            finally:
-            # Clean up the connection
-                self.connection.close()
+                        dataComplete = dataComplete + Data
+                else:
+                    self.connection.close()
+                    break
 
-        finally:
+            limitThreads.release()
+        except BaseException, msg:
+            logging.writeToFile(str(msg) + ' [HandleRequest.run]')
             limitThreads.release()
 
     def manageRequest(self, completeData):
@@ -69,14 +76,17 @@ class HandleRequest(multi.Thread):
                 domainObj = cacheManager.domains[domainName]
                 emailObj = domainObj.findEmailOBJ(emailAddress)
             else:
-                domain = Domains.objects.get(domain=domainName)
-                domainLTS = DomainLimits.objects.get(domain=domain)
+                try:
+                    domain = Domains.objects.get(domain=domainName)
+                    domainLTS = DomainLimits.objects.get(domain=domain)
 
-                newDomain = policyConstraints(domainName, domainLTS.monthlyLimit, domainLTS.monthlyUsed, domainLTS.limitStatus)
-                cacheManager.domains[domainName] = newDomain
-                domainObj = newDomain
+                    newDomain = policyConstraints(domainName, domainLTS.monthlyLimit, domainLTS.monthlyUsed, domainLTS.limitStatus)
+                    cacheManager.domains[domainName] = newDomain
+                    domainObj = newDomain
 
-                emailObj = newDomain.findEmailOBJ(emailAddress)
+                    emailObj = newDomain.findEmailOBJ(emailAddress)
+                except:
+                    raise BaseException
 
             #logging.writeToFile('Domain Limit Status: ' + str(domainObj.limitStatus))
             #logging.writeToFile('Email Limit Status: ' + str(domainObj.limitStatus))
@@ -84,7 +94,7 @@ class HandleRequest(multi.Thread):
             #logging.writeToFile('Email Monthly Used: ' + str(emailObj.monthlyUsed))
 
             if domainObj.limitStatus == 1 and emailObj.limitStatus == 1:
-                if domainObj.monthlyLimits <= domainObj.monthlyLimits or emailObj.monthlyLimits <= emailObj.monthlyUsed or emailObj.hourlyLimits <= emailObj.hourlyUsed:
+                if domainObj.monthlyLimits <= domainObj.monthlyUsed or emailObj.monthlyLimits <= emailObj.monthlyUsed or emailObj.hourlyLimits <= emailObj.hourlyUsed:
                     logging.writeToFile(emailAddress + ' either exceeded monthly or hourly sending limit.')
                     self.connection.sendall('action=defer_if_permit Service temporarily unavailable\n\n')
                 else:
@@ -108,6 +118,6 @@ class HandleRequest(multi.Thread):
 
 
         except BaseException, msg:
-            logging.writeToFile(completeData)
             self.connection.sendall('action=dunno\n\n')
+            limitThreads.release()
             logging.writeToFile(str(msg))

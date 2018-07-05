@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.shortcuts import HttpResponse
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 class secMiddleware:
 
@@ -9,6 +10,6 @@ class secMiddleware:
     def __call__(self, request):
         if request.method == 'POST':
             if request.body.find(';') > -1 or request.body.find('&&') > -1 or request.body.find('|') > -1 or request.body.find('...') > -1:
-                return HttpResponse('Bad input.')
+                logging.writeToFile('Bad Input on.')
         response = self.get_response(request)
         return response

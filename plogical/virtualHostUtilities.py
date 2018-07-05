@@ -832,54 +832,43 @@ class virtualHostUtilities:
             completePathToConfigFile = confPath + "/vhost.conf"
 
             data = open(completePathToConfigFile, 'r').readlines()
-            skip = 0
+
+
             if openBasedirValue == 'Disable':
                 writeToFile = open(completePathToConfigFile, 'w')
                 for items in data:
-                    if items.find('phpIniOverride') > -1:
-                        skip = 1
-
-                    if skip == 1 and items.find('}') > -1:
-                        skip = 0
+                    if items.find('php_admin_value') > -1:
                         continue
-
-                    if skip == 1:
-                        continue
-
                     writeToFile.writelines(items)
                 writeToFile.close()
             else:
 
                 ## Check if phpini already active
 
-                inistatus = 0
+                fileManagerCheck = 0
+
+                writeToFile = open(completePathToConfigFile, 'w')
                 for items in data:
+
+                    if items.find('context /.filemanager') > -1:
+                        writeToFile.writelines(items)
+                        fileManagerCheck = 1
+                        continue
+
                     if items.find('phpIniOverride') > -1:
-                        inistatus = 1
-
-                if inistatus == 0:
-                    writeToFile = open(completePathToConfigFile, 'w')
-                    for items in data:
-                        if items.find('context /.filemanager') > -1:
-                            writeToFile.writelines(items)
-                            phpIniOverride = "phpIniOverride  {\n"
-                            php_admin_value = 'php_admin_value open_basedir "/tmp:/usr/local/lsws/Example/html/FileManager:$VH_ROOT"\n'
-                            endPHPIniOverride = "}\n"
-                            writeToFile.writelines(phpIniOverride)
-                            writeToFile.writelines(php_admin_value)
-                            writeToFile.writelines(endPHPIniOverride)
+                        writeToFile.writelines(items)
+                        if fileManagerCheck == 1:
+                            writeToFile.writelines('php_admin_value open_basedir "/tmp:/usr/local/lsws/Example/html/FileManager:$VH_ROOT"\n')
+                            fileManagerCheck = 0
+                            continue
                         else:
-                            writeToFile.writelines(items)
+                            writeToFile.writelines('php_admin_value open_basedir "/tmp:$VH_ROOT"\n')
+                            continue
 
-                    phpIniOverride = "\nphpIniOverride  {\n"
-                    php_admin_value = 'php_admin_value open_basedir "/tmp:$VH_ROOT"\n'
-                    endPHPIniOverride = "}\n"
+                    writeToFile.writelines(items)
 
-                    writeToFile.writelines(phpIniOverride)
-                    writeToFile.writelines(php_admin_value)
-                    writeToFile.writelines(endPHPIniOverride)
+                writeToFile.close()
 
-                    writeToFile.close()
             installUtilities.installUtilities.reStartLiteSpeed()
             print "1,None"
 
