@@ -14,10 +14,12 @@
       <file leaf-file-name="fileManager.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/php/fileManager.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="18">
-              <caret line="40" column="52" lean-forward="false" selection-start-line="40" selection-start-column="52" selection-end-line="40" selection-end-column="52" />
+            <state relative-caret-position="489">
+              <caret line="281" column="30" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="707" selection-end-column="26" />
               <folding>
-                <element signature="n#listForTable#0;n#fileManager#0;n#!!top" expanded="false" />
+                <element signature="n#requestHandler#0;n#fileManager#0;n#!!top" expanded="false" />
+                <element signature="n#listDir#0;n#fileManager#0;n#!!top" expanded="false" />
+                <element signature="e#5438#6176#0#PHP" expanded="false" />
                 <element signature="n#readFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
                 <element signature="n#writeFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
                 <element signature="n#createNewFolder#0;n#fileManager#0;n#!!top" expanded="false" />
@@ -62,6 +64,7 @@
       <find>AbnTestController</find>
       <find>AbnTest</find>
       <find>listAction</find>
+      <find>$commandToExecute</find>
     </findStrings>
     <replaceStrings>
       <replace>assets</replace>
@@ -78,8 +81,8 @@
         <option value="$PROJECT_DIR$/js/fileManager.js" />
         <option value="$PROJECT_DIR$/css/fileManager.css" />
         <option value="$PROJECT_DIR$/index.html" />
-        <option value="$PROJECT_DIR$/php/fileManager.php" />
         <option value="$PROJECT_DIR$/php/caller.php" />
+        <option value="$PROJECT_DIR$/php/fileManager.php" />
       </list>
     </option>
   </component>
@@ -91,10 +94,10 @@
   </component>
   <component name="PhpWorkspaceProjectConfiguration" backward_compatibility_performed="true" />
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="1466" />
+    <option name="x" value="65" />
     <option name="y" value="-4" />
-    <option name="width" value="1287" />
-    <option name="height" value="696" />
+    <option name="width" value="1301" />
+    <option name="height" value="772" />
   </component>
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1">
@@ -111,7 +114,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -128,12 +130,13 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
       <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$USER_HOME$/sample-provisioning-module" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="DefaultHtmlFileTemplate" value="HTML File" />
     <property name="list.type.of.created.stylesheet" value="CSS" />
   </component>
@@ -170,17 +173,18 @@
       <workItem from="1525683960581" duration="13000" />
       <workItem from="1526291898810" duration="13000" />
       <workItem from="1526512471223" duration="71000" />
+      <workItem from="1530908210451" duration="3236000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="36489000" />
+    <option name="totallyTimeSpent" value="39725000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1466" y="-4" width="1303" height="780" extended-state="6" />
+    <frame x="65" y="-4" width="1301" height="772" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.23443505" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.08762491" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -217,7 +221,9 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="n#listForTable#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#requestHandler#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#listDir#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="e#5438#6176#0#PHP" expanded="false" />
             <element signature="n#readFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#writeFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#createNewFolder#0;n#fileManager#0;n#!!top" expanded="false" />
@@ -246,7 +252,9 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="n#listForTable#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#requestHandler#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#listDir#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="e#5438#6176#0#PHP" expanded="false" />
             <element signature="n#readFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#writeFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#createNewFolder#0;n#fileManager#0;n#!!top" expanded="false" />
@@ -275,7 +283,9 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="n#listForTable#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#requestHandler#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#listDir#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="e#5438#6176#0#PHP" expanded="false" />
             <element signature="n#readFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#writeFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#createNewFolder#0;n#fileManager#0;n#!!top" expanded="false" />
@@ -304,7 +314,9 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="n#listForTable#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#requestHandler#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#listDir#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="e#5438#6176#0#PHP" expanded="false" />
             <element signature="n#readFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#writeFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#createNewFolder#0;n#fileManager#0;n#!!top" expanded="false" />
@@ -333,7 +345,9 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="n#listForTable#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#requestHandler#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#listDir#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="e#5438#6176#0#PHP" expanded="false" />
             <element signature="n#readFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#writeFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#createNewFolder#0;n#fileManager#0;n#!!top" expanded="false" />
@@ -362,7 +376,9 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="n#listForTable#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#requestHandler#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#listDir#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="e#5438#6176#0#PHP" expanded="false" />
             <element signature="n#readFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#writeFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#createNewFolder#0;n#fileManager#0;n#!!top" expanded="false" />
@@ -391,7 +407,40 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="n#listForTable#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#requestHandler#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#listDir#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="e#5438#6176#0#PHP" expanded="false" />
+            <element signature="n#readFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#writeFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#createNewFolder#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#createNewFile#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#deleteFolderOrFile#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#compress#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#extract#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#moveFileAndFolders#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#copyFileAndFolders#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#renameFileOrFolder#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#cleanInput#0;n#fileManager#0;n#!!top" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/php/caller.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="558">
+          <caret line="31" column="23" lean-forward="false" selection-start-line="31" selection-start-column="23" selection-end-line="31" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/php/fileManager.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="n#requestHandler#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#listDir#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="e#5438#6176#0#PHP" expanded="false" />
             <element signature="n#readFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#writeFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#createNewFolder#0;n#fileManager#0;n#!!top" expanded="false" />
@@ -412,7 +461,9 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="n#listForTable#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#requestHandler#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#listDir#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="e#5438#6176#0#PHP" expanded="false" />
             <element signature="n#readFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#writeFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#createNewFolder#0;n#fileManager#0;n#!!top" expanded="false" />
@@ -448,10 +499,12 @@
     <entry file="file://$USER_HOME$/.cache/.fr-Tsiwv1/CyberCP/install/FileManager/php/fileManager.php" />
     <entry file="file://$PROJECT_DIR$/php/fileManager.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="18">
-          <caret line="40" column="52" lean-forward="false" selection-start-line="40" selection-start-column="52" selection-end-line="40" selection-end-column="52" />
+        <state relative-caret-position="489">
+          <caret line="281" column="30" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="707" selection-end-column="26" />
           <folding>
-            <element signature="n#listForTable#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#requestHandler#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="n#listDir#0;n#fileManager#0;n#!!top" expanded="false" />
+            <element signature="e#5438#6176#0#PHP" expanded="false" />
             <element signature="n#readFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#writeFileContents#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#createNewFolder#0;n#fileManager#0;n#!!top" expanded="false" />

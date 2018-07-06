@@ -55,9 +55,10 @@ class HandleRequest(multi.Thread):
                     self.connection.close()
                     break
 
-            limitThreads.release()
         except BaseException, msg:
-            logging.writeToFile(str(msg) + ' [HandleRequest.run]')
+            logging.writeToFile( str(msg) + ' [HandleRequest.run]')
+
+        finally:
             limitThreads.release()
 
     def manageRequest(self, completeData):
@@ -66,7 +67,7 @@ class HandleRequest(multi.Thread):
 
             for items in completeData:
                 tempData = items.split('=')
-                if tempData[0] == 'sender':
+                if tempData[0] == 'sasl_username':
                     emailAddress = tempData[1]
                     domainName = emailAddress.split('@')[1]
                 elif tempData[0] == 'recipient':
@@ -118,6 +119,5 @@ class HandleRequest(multi.Thread):
 
 
         except BaseException, msg:
-            self.connection.sendall('action=dunno\n\n')
-            limitThreads.release()
-            logging.writeToFile(str(msg))
+            self.connection.sendall('action=defer_if_permit Service temporarily unavailable\n\n')
+            logging.writeToFile(str(msg) + " [HandleRequest.manageRequest")
