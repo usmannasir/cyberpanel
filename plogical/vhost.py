@@ -271,7 +271,7 @@ class vhost:
             address = "  address                 UDS://tmp/lshttpd/"+virtualHostUser+".sock\n"
             maxConns = "  maxConns                10\n"
             env = "  env                     LSAPI_CHILDREN=10\n"
-            initTimeout = "  initTimeout             60\n"
+            initTimeout = "  initTimeout             600\n"
             retryTimeout = "  retryTimeout            0\n"
             persistConn = "  persistConn             1\n"
             persistConnTimeout = "  pcKeepAliveTimeout      1\n"

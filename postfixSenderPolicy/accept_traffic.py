@@ -87,7 +87,8 @@ class HandleRequest(multi.Thread):
 
                     emailObj = newDomain.findEmailOBJ(emailAddress)
                 except:
-                    raise BaseException
+                    self.connection.sendall('action=dunno\n\n')
+                    return
 
             #logging.writeToFile('Domain Limit Status: ' + str(domainObj.limitStatus))
             #logging.writeToFile('Email Limit Status: ' + str(domainObj.limitStatus))

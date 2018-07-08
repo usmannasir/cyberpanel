@@ -572,35 +572,69 @@
 
 <!--- copy modal -->
 
-<!-- rename modal -->
+<!-- Permissions modal -->
 
-<div id="showRename" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+<div id="showPermissions" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div id="htmlEditorLable" class="modal-header">
-                <h5 class="modal-title">{% trans "Renaming" %} {$ fileToRename $} <img ng-hide="renameLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
+                <h5 class="modal-title">{% trans "Changing permissions for" %} {$ permissionsPath $} <img ng-hide="changePermissionsLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <form>
-                    <div class="form-group">
-                        <label>{% trans "New Name" %}</label>
-                        <input ng-model="newFileName" type="text" class="form-control">
-                        <small class="form-text text-muted">{% trans "Enter new name of file!" %}</small>
-                    </div>
-                </form>
+                <table class="table text-center">
+                    <thead id="tableHead">
+                    <tr>
+                        <th scope="col">{% trans "Mode" %}</th>
+                        <th scope="col">{% trans "User" %}</th>
+                        <th scope="col">{% trans "Group" %}</th>
+                        <th scope="col">{% trans "World" %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{% trans "Read" %}</td>
+                            <td><input ng-click="updateReadPermissions('userRead')" ng-model="userRead" type="checkbox" class="form-check-input" value=""></td>
+                            <td><input ng-click="updateReadPermissions('groupRead')" ng-model="groupRead" type="checkbox" class="form-check-input" value=""></td>
+                            <td><input ng-click="updateReadPermissions('worldRead')" ng-model="worldRead" type="checkbox" class="form-check-input" value=""></td>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Write" %}</td>
+                            <td><input ng-click="updateWritePermissions('userWrite')" ng-model="userWrite" type="checkbox" class="form-check-input" value=""></td>
+                            <td><input ng-click="updateWritePermissions('groupWrite')" ng-model="groupWrite" type="checkbox" class="form-check-input" value=""></td>
+                            <td><input ng-click="updateWritePermissions('worldWrite')" ng-model="worldWrite" type="checkbox" class="form-check-input" value=""></td>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Execute" %}</td>
+                            <td><input ng-click="updateExecutePermissions('userExecute')" ng-model="userExecute" type="checkbox" class="form-check-input" value=""></td>
+                            <td><input ng-click="updateExecutePermissions('groupExecute')" ng-model="groupExecute" type="checkbox" class="form-check-input" value=""></td>
+                            <td><input ng-click="updateExecutePermissions('worldExecute')" ng-model="worldExecute" type="checkbox" class="form-check-input" value=""></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><input ng-model="userPermissions" type="number" class="form-control" readonly></td>
+                            <td><input ng-model="groupPermissions" type="number" class="form-control" readonly></td>
+                            <td><input ng-model="wordlPermissions" type="number" class="form-control" readonly></td>
+                        </tr>
+                    </tbody>
+                </table>
+
             </div>
             <div class="modal-footer">
-                <button ng-click="renameFile()" type="button" class="btn btn-primary">{% trans "Rename" %}</button>
+                <button ng-click="changePermissions(0)" type="button" class="btn btn-primary">{% trans "Change Permissions" %}</button>
+                <button ng-click="changePermissionsRecursively()" type="button" class="btn btn-primary">{% trans "Change Recursively" %}</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Close" %}</button>
             </div>
         </div>
     </div>
 </div>
 
-<!--- rename modal -->
+<!--- Permissions modal -->
+
+
+
 
 
 
@@ -637,6 +671,7 @@
         <a style="border-bottom: 1px solid #007bff;" id="downloadOnRight" onclick="return false;" ng-click="downloadFile()" href="#"><li  class="list-group-item"><i class="fa fa-download" aria-hidden="true"></i>  Download</li></a>
         <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showCopyModal()" href="#"><li  class="list-group-item"><i class="fa fa-files-o" aria-hidden="true"></i>  Copy</li></a>
         <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showRenameModal()" href="#"><li  class="list-group-item"><i class="fa fa-file-text-o" aria-hidden="true"></i>  Rename</li></a>
+        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showPermissionsModal()" href="#"><li  class="list-group-item"><i class="fa fa-lock" aria-hidden="true"></i>  Change Permissions</li></a>
         <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showDeleteModal()" href="#"><li class="list-group-item"><i class="fa fa-trash" aria-hidden="true"></i>  Delete</li></a>
         <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showCompressionModal()" href="#"><li class="list-group-item"><i class="fa fa-compress" aria-hidden="true"></i>  Compress</li></a>
         <a style="border-bottom: 1px solid #007bff;" id="extractOnRight" onclick="return false;" ng-click="showExtractionModal()" href="#"><li class="list-group-item"><i class="fa fa-expand" aria-hidden="true"></i>  Extract</li></a>

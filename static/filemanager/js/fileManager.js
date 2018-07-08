@@ -1252,7 +1252,7 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
 
 
         $scope.addFileOrFolderToListForRightClick(trNode);
-    }
+    };
 
     $scope.addFileOrFolderToListForRightClick = function(nodeName){
 
@@ -1292,7 +1292,7 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
         $scope.buttonActivator();
 
 
-    }
+    };
 
     // rename
 
@@ -1421,6 +1421,192 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
         }
 
         function cantLoadInitialDatas(response) {}
+
+    };
+
+
+    // Change permissions
+
+    $scope.changePermissionsLoading = true;
+
+    $scope.userPermissions = 0;
+    $scope.groupPermissions = 0;
+    $scope.wordlPermissions = 0;
+
+
+    $scope.showPermissionsModal = function () {
+        $('#showPermissions').modal('show');
+        $scope.permissionsPath = allFilesAndFolders[0];
+    };
+
+
+
+    $scope.updateReadPermissions = function (value) {
+
+        switch (value) {
+
+            case 'userRead':
+
+                if($scope.userRead === true)
+                {
+                    $scope.userPermissions = $scope.userPermissions + 4;
+                }
+                else
+                {
+                    if ($scope.userRead !== undefined) {
+                        $scope.userPermissions = $scope.userPermissions - 4;
+                    }
+                }
+                break;
+
+
+            case  'groupRead':
+                if ($scope.groupRead === true) {
+                    $scope.groupPermissions = $scope.groupPermissions + 4;
+                } else {
+                    if ($scope.groupRead !== undefined) {
+                        $scope.groupPermissions = $scope.groupPermissions - 4;
+                    }
+                }
+                break;
+
+
+            case 'worldRead':
+                if ($scope.worldRead === true) {
+                    $scope.wordlPermissions = $scope.wordlPermissions + 4;
+                } else {
+                    if ($scope.worldRead !== undefined) {
+                        $scope.wordlPermissions = $scope.wordlPermissions - 4;
+                    }
+                }
+                break;
+        }
+    };
+
+    $scope.updateWritePermissions = function (value) {
+
+        switch (value) {
+
+            case 'userWrite':
+
+                if($scope.userWrite === true)
+                {
+                    $scope.userPermissions = $scope.userPermissions + 2;
+                }
+                else
+                {
+                    if ($scope.userWrite !== undefined) {
+                        $scope.userPermissions = $scope.userPermissions - 2;
+                    }
+                }
+                break;
+
+
+            case  'groupWrite':
+                if ($scope.groupWrite === true) {
+                    $scope.groupPermissions = $scope.groupPermissions + 2;
+                } else {
+                    if ($scope.groupWrite !== undefined) {
+                        $scope.groupPermissions = $scope.groupPermissions - 2;
+                    }
+                }
+                break;
+
+
+            case 'worldWrite':
+                if ($scope.worldWrite === true) {
+                    $scope.wordlPermissions = $scope.wordlPermissions + 2;
+                } else {
+                    if ($scope.worldWrite !== undefined) {
+                        $scope.wordlPermissions = $scope.wordlPermissions - 2;
+                    }
+                }
+                break;
+        }
+    };
+
+    $scope.updateExecutePermissions = function (value) {
+
+        switch (value) {
+
+            case 'userExecute':
+
+                if($scope.userExecute === true)
+                {
+                    $scope.userPermissions = $scope.userPermissions + 1;
+                }
+                else
+                {
+                    if ($scope.userExecute !== undefined) {
+                        $scope.userPermissions = $scope.userPermissions - 1;
+                    }
+                }
+                break;
+
+
+            case  'groupExecute':
+                if ($scope.groupExecute === true) {
+                    $scope.groupPermissions = $scope.groupPermissions + 1;
+                } else {
+                    if ($scope.groupExecute !== undefined) {
+                        $scope.groupPermissions = $scope.groupPermissions - 1;
+                    }
+                }
+                break;
+
+
+            case 'worldExecute':
+                if ($scope.worldExecute === true) {
+                    $scope.wordlPermissions = $scope.wordlPermissions + 1;
+                } else {
+                    if ($scope.worldExecute !== undefined) {
+                        $scope.wordlPermissions = $scope.wordlPermissions - 1;
+                    }
+                }
+                break;
+        }
+    };
+
+
+    $scope.changePermissionsRecursively = function () {
+        $scope.changePermissions(1);
+    };
+
+
+    $scope.changePermissions = function (recursive) {
+
+        $scope.changePermissionsLoading = false;
+        var newPermissions = String($scope.userPermissions) + String($scope.groupPermissions) + String($scope.wordlPermissions);
+
+        var data = {
+            basePath : $scope.currentPath,
+            permissionsPath: $scope.permissionsPath,
+            method: 'changePermissions',
+            domainRandomSeed:domainRandomSeed,
+            recursive: recursive,
+            newPermissions: newPermissions,
+            domainName: domainName
+        };
+
+
+        $http.post(url, data).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+            $scope.changePermissionsLoading = true;
+            $('#showPermissions').modal('hide');
+
+            if (response.data.permissionsChanged === 1) {
+                var notification = alertify.notify('Permissions Successfully Changed!', 'success', 5, function(){  console.log('dismissed'); });
+                $scope.fetchForTableSecondary(null,'refresh');
+            }
+            else {
+                var notification = alertify.notify(response.data.error_message, 'error', 5, function(){  console.log('dismissed'); });
+            }
+
+        }
+        function cantLoadInitialDatas(response) {
+        }
 
     };
 

@@ -76,8 +76,48 @@ class fileManager
                     $newFileName = $this->cleanInput($request->newFileName);
                     $this->renameFileOrFolder($request->basePath,$request->existingName,$newFileName);
                     break;
+                case 'changePermissions':
+                    $this->changePermissions($request->basePath, $request->permissionsPath, $request->newPermissions, $request->recursive);
+                    break;
             }
         }
+    }
+
+    private function changePermissions($basePath, $permissionsPath, $newPermissions, $recursive)
+    {
+        try {
+
+            $completePath = $basePath . DIRECTORY_SEPARATOR . $permissionsPath;
+
+            if($recursive == 1){
+
+                $commandToExecute = 'chmod -R ' . $newPermissions . " '". $completePath . "'";
+                $programOutput = fopen('temp.txt', 'a');
+
+            }else{
+                $commandToExecute = 'chmod ' . $newPermissions . " '". $completePath . "'";
+                $programOutput = fopen('temp.txt', 'a');
+            }
+
+
+            exec($commandToExecute, $programOutput);
+
+            $json_data = array(
+                "error_message" => "None",
+                "permissionsChanged" => 1,
+            );
+            $json = json_encode($json_data);
+            echo $json;
+
+        } catch (Exception $e) {
+            $json_data = array(
+                "error_message" => $e->getMessage(),
+                "permissionsChanged" => 0,
+            );
+            $json = json_encode($json_data);
+            echo $json;
+        }
+
     }
 
     private function listDir($basePath)
