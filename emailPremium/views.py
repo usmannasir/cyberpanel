@@ -32,7 +32,7 @@ def listDomains(request):
             admin = Administrator.objects.get(pk=request.session['userID'])
 
             if admin.type == 1:
-                websites = Websites.objects.all()
+                websites = DomainLimits.objects.all()
             else:
                 return HttpResponse("Only administrator can view this page.")
 
@@ -44,7 +44,7 @@ def listDomains(request):
             installCheck = 0
 
             for items in output:
-                if items.find('check_policy_service inet:localhost:1089') > -1:
+                if items.find('check_policy_service unix:/var/log/policyServerSocket') > -1:
                     installCheck = 1
                     break
 
@@ -81,10 +81,9 @@ def listDomains(request):
 def getFurtherDomains(request):
     try:
         val = request.session['userID']
-
         try:
 
-            admin = Administrator.objects.get(pk=request.session['userID'])
+            admin = Administrator.objects.get(pk=val)
 
             if request.method == 'POST':
                 try:
@@ -124,7 +123,7 @@ def getFurtherDomains(request):
                     else:
                         json_data = json_data +',' + json.dumps(dic)
                 except BaseException, msg:
-                    logging.CyberCPLogFileWriter.writeToFile(str(msg))
+                    pass
 
             json_data = json_data + ']'
             final_dic = {'listWebSiteStatus': 1, 'error_message': "None", "data": json_data}
@@ -953,7 +952,7 @@ def fetchPolicyServerStatus(request):
                 installCheck = 0
 
                 for items in output:
-                    if items.find('check_policy_service inet:localhost:1089') > -1:
+                    if items.find('check_policy_service unix:/var/log/policyServerSocket') > -1:
                         installCheck = 1
                         break
 

@@ -31,7 +31,7 @@ class cacheManager:
                     dbEmail.save()
 
         except BaseException, msg:
-            logging.writeToFile(str(msg))
+            logging.writeToFile(str(msg) + ' [cacheManager.flushCache]')
 
     @staticmethod
     def disableEnableLogs(self, emailAddress, operationValue):
@@ -45,7 +45,7 @@ class cacheManager:
                     emailOBJ.logStatus = operationValue
 
         except BaseException, msg:
-            logging.writeToFile(str(msg))
+            logging.writeToFile(str(msg) + ' [cacheManager.disableEnableLogs]')
 
     @staticmethod
     def purgeLog(command):
@@ -60,7 +60,7 @@ class cacheManager:
                 emailOBJ.logStatus = operationVal
 
         except BaseException, msg:
-            logging.writeToFile(str(msg))
+            logging.writeToFile(str(msg) + ' [cacheManager.purgeLog]')
 
     @staticmethod
     def purgeLimit(command):
@@ -75,7 +75,7 @@ class cacheManager:
                 emailOBJ.limitStatus = operationVal
 
         except BaseException, msg:
-            logging.writeToFile(str(msg))
+            logging.writeToFile(str(msg) + ' [cacheManager.purgeLimit]')
 
     @staticmethod
     def purgeLimitDomain(command):
@@ -88,7 +88,7 @@ class cacheManager:
                 domainOBJ.limitStatus = operationVal
 
         except BaseException, msg:
-            logging.writeToFile(str(msg))
+            logging.writeToFile(str(msg) + ' [cacheManager.purgeLimitDomain]')
 
     @staticmethod
     def updateDomainLimit(command):
@@ -101,7 +101,7 @@ class cacheManager:
                 domainOBJ.monthlyLimits = newLimit
 
         except BaseException, msg:
-            logging.writeToFile(str(msg))
+            logging.writeToFile(str(msg) + ' [cacheManager.updateDomainLimit]')
 
     @staticmethod
     def purgeLimitEmail(command):
@@ -118,7 +118,7 @@ class cacheManager:
                 emailOBJ.hourlyLimits = hourlyLimit
 
         except BaseException, msg:
-            logging.writeToFile(str(msg))
+            logging.writeToFile(str(msg) + ' [cacheManager.purgeLimitEmail]')
 
     @staticmethod
     def hourlyCleanUP():
@@ -141,7 +141,7 @@ class cacheManager:
                     dbEmail.save()
 
         except BaseException, msg:
-            logging.writeToFile(str(msg))
+            logging.writeToFile(str(msg) + ' [cacheManager.hourlyCleanUP]')
 
     @staticmethod
     def monthlyCleanUP():
@@ -166,7 +166,7 @@ class cacheManager:
                 dbDomain.save()
 
         except BaseException, msg:
-            logging.writeToFile(str(msg))
+            logging.writeToFile(str(msg) + ' [cacheManager.monthlyCleanUP]')
 
 
     @staticmethod
@@ -197,5 +197,5 @@ class cacheManager:
 
 
         except BaseException, msg:
-            logging.writeToFile(str(msg))
+            logging.writeToFile(str(msg) + ' [cacheManager.handlePurgeRequest]')
 

@@ -14,8 +14,8 @@
       <file leaf-file-name="fileManager.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/php/fileManager.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="306">
-              <caret line="74" column="30" lean-forward="true" selection-start-line="74" selection-start-column="30" selection-end-line="74" selection-end-column="30" />
+            <state relative-caret-position="414">
+              <caret line="80" column="26" lean-forward="true" selection-start-line="80" selection-start-column="26" selection-end-line="80" selection-end-column="26" />
               <folding>
                 <element signature="n#listDir#0;n#fileManager#0;n#!!top" expanded="false" />
                 <element signature="n#getPermissions#0;n#fileManager#0;n#!!top" expanded="false" />
@@ -176,16 +176,15 @@
       <workItem from="1526512471223" duration="71000" />
       <workItem from="1530908210451" duration="3368000" />
       <workItem from="1531046295316" duration="1117000" />
-      <workItem from="1531052646849" duration="26000" />
+      <workItem from="1531052646849" duration="625000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="41000000" />
+    <option name="totallyTimeSpent" value="41599000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1419" y="-4" width="1303" height="780" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.12759416" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -575,8 +574,8 @@
     <entry file="file://$USER_HOME$/.cache/.fr-Tsiwv1/CyberCP/install/FileManager/php/fileManager.php" />
     <entry file="file://$PROJECT_DIR$/php/fileManager.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="74" column="30" lean-forward="true" selection-start-line="74" selection-start-column="30" selection-end-line="74" selection-end-column="30" />
+        <state relative-caret-position="414">
+          <caret line="80" column="26" lean-forward="true" selection-start-line="80" selection-start-column="26" selection-end-line="80" selection-end-column="26" />
           <folding>
             <element signature="n#listDir#0;n#fileManager#0;n#!!top" expanded="false" />
             <element signature="n#getPermissions#0;n#fileManager#0;n#!!top" expanded="false" />

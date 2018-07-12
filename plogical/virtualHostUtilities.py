@@ -39,10 +39,12 @@ class virtualHostUtilities:
         try:
 
             if Websites.objects.filter(domain=virtualHostName).count() > 0:
-                raise BaseException("This website already exists.")
+                print "0, This website already exists."
+                return 0, "This website already exists."
 
             if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
-                raise BaseException("This website already exists as child domain.")
+                print "0, This website already exists as child domain."
+                return 0, "This website already exists as child domain."
 
             ####### Limitations Check End
 
@@ -55,10 +57,12 @@ class virtualHostUtilities:
             ## zone creation
 
             if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
-                raise BaseException("Virtual Host Directory already exists!")
+                print "0, Virtual Host Directory already exists!"
+                return 0, "Virtual Host Directory already exists!"
 
             if vhost.checkIfAliasExists(virtualHostName) == 1:
-                raise BaseException("This domain exists as Alias.")
+                print "0, This domain exists as Alias."
+                return 0, "This domain exists as Alias."
 
             if dkimCheck == 1:
                 if mailUtilities.checkIfDKIMInstalled() == 0:
@@ -924,10 +928,12 @@ class virtualHostUtilities:
                 DNS.dnsTemplate(virtualHostName, admin)
 
             if Websites.objects.filter(domain=virtualHostName).count() > 0:
-                raise BaseException("This Domain already exists as a website.")
+                print "0, This Domain already exists as a website."
+                return 0, "This Domain already exists as a website."
 
             if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
-                raise BaseException("This domain already exists as child domain.")
+                print "0, This domain already exists as child domain."
+                return 0, "This domain already exists as child domain."
 
             ####### Limitations check
 
@@ -939,16 +945,20 @@ class virtualHostUtilities:
             elif domainsInPackage > master.childdomains_set.all().count():
                 pass
             else:
-                raise BaseException("Exceeded maximum number of domains for this package")
+                print "0, Exceeded maximum number of domains for this package"
+                return 0, "Exceeded maximum number of domains for this package"
+
 
             ####### Limitations Check End
 
 
             if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
-                raise BaseException("Virtual Host Directory already exists!")
+                print "0, Virtual Host Directory already exists!"
+                return 0, "Virtual Host Directory already exists!"
 
             if vhost.checkIfAliasExists(virtualHostName) == 1:
-                raise BaseException("This domain exists as Alias.")
+                print "0, This domain exists as Alias."
+                return 0, "This domain exists as Alias."
 
             if dkimCheck == 1:
                 if mailUtilities.checkIfDKIMInstalled() == 0:

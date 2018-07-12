@@ -534,7 +534,7 @@ milter_default_action = accept
                 subprocess.call(shlex.split(command))
 
                 writeToFile = open(postfixPath, 'a')
-                writeToFile.writelines('smtpd_data_restrictions = check_policy_service inet:localhost:1089\n')
+                writeToFile.writelines('smtpd_data_restrictions = check_policy_service unix:/var/log/policyServerSocket\n')
                 writeToFile.close()
 
                 command = 'systemctl restart postfix'
@@ -545,7 +545,7 @@ milter_default_action = accept
                 writeToFile = open(postfixPath, 'w')
 
                 for items in data:
-                    if items.find('check_policy_service inet:localhost:1089') > -1:
+                    if items.find('check_policy_service unix:/var/log/policyServerSocket') > -1:
                         continue
                     else:
                         writeToFile.writelines(items)

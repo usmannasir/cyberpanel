@@ -25,6 +25,7 @@ from random import randint
 import hashlib
 from xml.etree import ElementTree
 from plogical.mailUtilities import mailUtilities
+from plogical.applicationInstaller import ApplicationInstaller
 # Create your views here.
 
 
@@ -1060,127 +1061,6 @@ def fetchErrorLogs(request):
     except BaseException,msg:
         final_json = json.dumps({'logstatus': 0, 'error_message': str(msg)})
         return HttpResponse(final_json)
-
-def installWordpress(request):
-    try:
-        val = request.session['userID']
-
-        if request.method == 'POST':
-            try:
-                data = json.loads(request.body)
-                domainName = data['domain']
-                home = data['home']
-
-                finalPath = ""
-
-                if home == '0':
-                    path = data['path']
-                    finalPath = "/home/" + domainName + "/public_html/" + path + "/"
-                else:
-                    finalPath = "/home/" + domainName + "/public_html/"
-
-                ## Security Check
-
-                if finalPath.find("..") > -1:
-                    data_ret = {'installStatus': 0,
-                                'error_message': "Specified path must be inside virtual host home!"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                admin = Administrator.objects.get(pk=val)
-
-                try:
-                    website = ChildDomains.objects.get(domain=domainName)
-                    externalApp = website.master.externalApp
-
-                    if admin.type != 1:
-                        if website.master.admin != admin:
-                            data_ret = {'installStatus': 0,
-                                        'error_message': "You do not own this website!"}
-                            json_data = json.dumps(data_ret)
-                            return HttpResponse(json_data)
-
-                except:
-                    website = Websites.objects.get(domain=domainName)
-                    externalApp = website.externalApp
-
-                    if admin.type != 1:
-                        if website.admin != admin:
-                            data_ret = {'installStatus': 0,
-                                        'error_message': "You do not own this website!"}
-                            json_data = json.dumps(data_ret)
-                            return HttpResponse(json_data)
-
-
-                ## DB Creation
-
-                dbName = randomPassword.generate_pass()
-                dbUser = dbName
-                dbPassword = randomPassword.generate_pass()
-
-                ## DB Creation
-
-                if website.package.dataBases > website.databases_set.all().count():
-                    pass
-                else:
-                    data_ret = {'installStatus': 0, 'error_message': "0,Maximum database limit reached for this website."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                if Databases.objects.filter(dbName=dbName).exists() or Databases.objects.filter(
-                        dbUser=dbUser).exists():
-
-                    data_ret = {'installStatus': 0,
-                                'error_message': "0,This database or user is already taken."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                result = mysqlUtilities.createDatabase(dbName, dbUser, dbPassword)
-
-                if result == 1:
-                    pass
-                else:
-                    data_ret = {'installStatus': 0,
-                                'error_message': "0,Not able to create database."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                db = Databases(website=website, dbName=dbName, dbUser=dbUser)
-                db.save()
-
-                ## Installation
-
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-
-                execPath = execPath + " installWordPress --virtualHostName " + domainName + " --virtualHostUser " + externalApp + " --path " + finalPath + " --dbName " + dbName + " --dbUser " + dbUser + " --dbPassword " + dbPassword
-
-
-                output = subprocess.check_output(shlex.split(execPath))
-
-                if output.find("1,None") > -1:
-                    data_ret = {"installStatus": 1}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-                else:
-                    mysqlUtilities.deleteDatabase(dbName, dbUser)
-                    db = Databases.objects.get(dbName=dbName)
-                    db.delete()
-                    data_ret = {'installStatus': 0, 'error_message': output}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                ## Installation ends
-
-            except BaseException, msg:
-                data_ret = {'installStatus': 0, 'error_message': str(msg)}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-
-    except KeyError, msg:
-        status = {"installStatus":0,"error":str(msg)}
-        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
-        return HttpResponse("Not Logged in as admin")
 
 def installJoomla(request):
     try:
@@ -2449,5 +2329,139 @@ def changeOpenBasedir(request):
 
     except KeyError,msg:
         data_ret = {'changeOpenBasedir': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+
+def applicationInstaller(request):
+    try:
+        val = request.session['userID']
+        try:
+
+            admin = Administrator.objects.get(pk=val)
+
+            if admin.type != 1:
+                website = Websites.objects.get(domain=domain)
+                if website.admin != admin:
+                    raise BaseException('You do not own this website.')
+
+
+            return render(request, 'websiteFunctions/applicationInstaller.html')
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return HttpResponse(str(msg))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def wordpressInstall(request, domain):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        try:
+            if admin.type != 1:
+                website = Websites.objects.get(domain=domain)
+                if website.admin != admin:
+                    raise BaseException('You do not own this website.')
+
+
+            return render(request, 'websiteFunctions/installWordPress.html', {'domainName' : domain})
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return HttpResponse(str(msg))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def installWordpress(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+
+        if request.method == 'POST':
+            try:
+                data = json.loads(request.body)
+
+                mailUtilities.checkHome()
+
+                extraArgs = {}
+                extraArgs['admin'] = admin
+                extraArgs['domainName'] = data['domain']
+                extraArgs['home'] = data['home']
+                extraArgs['blogTitle'] = data['blogTitle']
+                extraArgs['adminUser'] = data['adminUser']
+                extraArgs['adminPassword'] = data['adminPassword']
+                extraArgs['adminEmail'] = data['adminEmail']
+                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+                if data['home'] == '0':
+                    extraArgs['path'] = data['path']
+
+
+                background = ApplicationInstaller('wordpress', extraArgs)
+                background.start()
+
+                data_ret = {'installStatus': 1, 'error_message': 'None', 'tempStatusPath': extraArgs['tempStatusPath']}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+            except BaseException, msg:
+                data_ret = {'installStatus': 0, 'error_message': str(msg)}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+    except KeyError, msg:
+        status = {"installStatus":0,"error":str(msg)}
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
+        return HttpResponse("Not Logged in as admin")
+
+
+def installWordpressStatus(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+
+        if request.method == 'POST':
+            try:
+                data = json.loads(request.body)
+
+
+                domainName = data['domainName']
+                statusFile = data['statusFile']
+
+                if admin.type != 1:
+                    website = Websites.objects.get(domain=domainName)
+                    if website.admin != admin:
+                        raise BaseException('You do not own this website.')
+
+                statusData = open(statusFile, 'r').readlines()
+
+                lastLine = statusData[-1]
+
+                if lastLine.find('[200]') > -1:
+                    data_ret = { 'abort':1, 'installStatus': 1, 'installationProgress': "100", 'currentStatus': 'Successfully Installed.' }
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                elif lastLine.find('[404]') > -1:
+                    data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "0", 'error_message': lastLine}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    progress = lastLine.split(',')
+                    currentStatus = progress[0]
+                    installationProgress = progress[1]
+                    data_ret = {'abort': 0, 'installStatus': 0, 'installationProgress': installationProgress, 'currentStatus': currentStatus}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+            except BaseException, msg:
+                data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "0", 'error_message': str(msg)}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+    except KeyError, msg:
+        data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "0", 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

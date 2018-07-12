@@ -1,0 +1,62 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Application Installer - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+
+    <div id="page-title">
+       <h2 id="domainNamePage">{% trans "Application Installer" %}</h2>
+       <p>{% trans "One-click application install." %}</p>
+    </div>
+
+<div class="example-box-wrapper">
+
+       <div style="border-radius: 25px;border-color:#3498db" class="content-box">
+           <h3 class="content-box-header bg-blue">
+               {% trans "Application Installer" %} <img  ng-hide="applicationInstallerLoading" src="/static/images/loading.gif">
+           </h3>
+
+           <div class="content-box-wrapper">
+               <div class="row">
+
+                    <a  ng-click="installationDetails()" href="" title="{% trans 'Install wordpress with LSCache' %}">
+                       <div class="col-md-4" style="margin-bottom: 2%;">
+
+                                    <a  ng-click="installationDetails()" href="" title="{% trans 'Install wordpress with LSCache' %}">
+                                        <img  src="{% static 'images/icons/wordpress.png'  %}">
+                                    </a>
+                                    <a ng-click="installationDetails()" href="" title="{% trans 'Install wordpress with LSCache' %}">
+                                        <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Wordpress with LSCache" %}</span>
+                                    </a>
+
+                        </div>
+                    </a>
+
+                    <a  ng-click="installationDetailsJoomla()" href="" title="{% trans 'Install Joomla with(?) LSCache' %}">
+                       <div class="col-md-4" style="margin-bottom: 2%;">
+
+                                    <a  ng-click="installationDetailsJoomla()" href="" title="{% trans 'Install Joomla with LSCache' %}">
+                                        <img  src="{% static 'images/icons/joomla-logo.png'  %}">
+                                    </a>
+                                    <a ng-click="installationDetailsJoomla()" href="" title="{% trans 'Install Joomla with LSCache' %}">
+                                        <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Joomla" %}</span>
+                                    </a>
+
+                        </div>
+                    </a>
+
+                </div>
+           </div>
+
+       </div>
+   </div>
+
+
+
+{% endblock %}

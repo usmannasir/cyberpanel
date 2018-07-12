@@ -456,6 +456,7 @@ app.controller('websitePages', function($scope,$http) {
     };
 
     $scope.fileManagerURL = "/filemanager/"+$("#domainNamePage").text();
+    $scope.wordPressInstallURL = $("#domainNamePage").text() + "/wordpressInstall";
     $scope.domainAliasURL = "/websites/"+$("#domainNamePage").text()+"/domainAlias";
     $scope.previewUrl = "/preview/"+$("#domainNamePage").text()+"/";
 
@@ -3835,7 +3836,294 @@ app.controller('launchChild', function($scope,$http) {
 
     }
 
+});
 
+
+
+/* Application Installer */
+
+
+app.controller('installWordPressCTRL', function($scope, $http, $timeout) {
+
+    $scope.installationDetailsForm = false;
+    $scope.installationProgress = true;
+    $scope.installationFailed = true;
+    $scope.installationSuccessfull = true;
+    $scope.couldNotConnect = true;
+    $scope.wpInstallLoading = true;
+    $scope.goBackDisable = true;
+
+    var statusFile;
+    var domain = $("#domainNamePage").text();
+    var path;
+
+
+
+    $scope.goBack = function () {
+        $scope.installationDetailsForm = false;
+        $scope.installationProgress = true;
+        $scope.installationFailed = true;
+        $scope.installationSuccessfull = true;
+        $scope.couldNotConnect = true;
+        $scope.wpInstallLoading = true;
+        $scope.goBackDisable = true;
+        $("#installProgress").css("width", "0%");
+    };
+
+
+
+
+    $scope.installWordPress = function(){
+
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.installationFailed = true;
+                $scope.installationSuccessfull = true;
+                $scope.couldNotConnect = true;
+                $scope.wpInstallLoading = false;
+                $scope.goBackDisable = true;
+                $scope.currentStatus = "Starting installation..";
+
+                path = $scope.installPath;
+
+
+                url = "/websites/installWordpress";
+
+                var home = "1";
+
+                if (typeof path !== 'undefined'){
+                    home = "0";
+                }
+
+
+                var data = {
+                    domain: domain,
+                    home:home,
+                    path:path,
+                    blogTitle: $scope.blogTitle,
+                    adminUser: $scope.adminUser,
+                    adminPassword: $scope.adminPassword,
+                    adminEmail: $scope.adminEmail
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if (response.data.installStatus === 1)
+                    {
+                        statusFile = response.data.tempStatusPath;
+                        getInstallStatus();
+                    }
+                    else{
+
+                        $scope.installationDetailsForm = true;
+                        $scope.installationProgress = false;
+                        $scope.installationFailed = false;
+                        $scope.installationSuccessfull = true;
+                        $scope.couldNotConnect = true;
+                        $scope.wpInstallLoading = true;
+                        $scope.goBackDisable = false;
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+
+
+                }
+
+    };
+
+    function getInstallStatus(){
+
+                        url = "/websites/installWordpressStatus";
+
+                        var data = {
+                            statusFile: statusFile,
+                            domainName: domain
+                        };
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.abort === 1){
+
+                        if(response.data.installStatus === 1){
+
+                            $scope.installationDetailsForm = true;
+                            $scope.installationProgress = false;
+                            $scope.installationFailed = true;
+                            $scope.installationSuccessfull = false;
+                            $scope.couldNotConnect = true;
+                            $scope.wpInstallLoading = true;
+                            $scope.goBackDisable = false;
+
+                            if (typeof path !== 'undefined'){
+                            $scope.installationURL = "http://"+domain+"/"+path;
+                            }
+                            else{
+                                $scope.installationURL = domain;
+                            }
+
+
+                            $("#installProgress").css("width", "100%");
+                            $scope.installPercentage = "100";
+                            $scope.currentStatus = response.data.currentStatus;
+                            $timeout.cancel();
+
+                        }
+                        else{
+
+                            $scope.installationDetailsForm = true;
+                            $scope.installationProgress = false;
+                            $scope.installationFailed = false;
+                            $scope.installationSuccessfull = true;
+                            $scope.couldNotConnect = true;
+                            $scope.wpInstallLoading = true;
+                            $scope.goBackDisable = false;
+
+                            $scope.errorMessage = response.data.error_message;
+
+                            $("#installProgress").css("width", "0%");
+                            $scope.installPercentage = "0";
+
+                        }
+
+                    }
+                    else{
+                        $("#installProgress").css("width", response.data.installationProgress + "%");
+                        $scope.installPercentage = response.data.installationProgress;
+                        $scope.currentStatus = response.data.currentStatus;
+
+                        $timeout(getInstallStatus,1000);
+
+
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    $scope.canNotFetch = true;
+                    $scope.couldNotConnect = false;
+
+
+                }
+
+
+           }
+
+    $scope.installJoomla = function(){
+
+
+                $scope.installationDetailsFormJoomla = false;
+                $scope.applicationInstallerLoading = false;
+                $scope.installationFailed = true;
+                $scope.installationSuccessfull = true;
+                $scope.couldNotConnect = true;
+
+                var domain = $("#domainNamePage").text();
+                var path = $scope.installPath;
+                var sitename = $scope.sitename
+                var username = $scope.username
+                var password = $scope.password
+                var prefix = $scope.prefix
+
+
+                url = "/websites/installJoomla";
+
+                var home = "1";
+
+                if (typeof path != 'undefined'){
+                    home = "0";
+                }
+
+
+                var data = {
+                    domain: domain,
+                    home:home,
+                    path:path,
+                    sitename:sitename,
+                    username:username,
+                    password:password,
+                    prefix:prefix,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if (response.data.installStatus == 1)
+                    {
+                        if (typeof path != 'undefined'){
+                            $scope.installationURL = "http://"+domain+"/"+path;
+                        }
+                        else{
+                            $scope.installationURL = domain;
+                        }
+
+                        $scope.installationDetailsFormJoomla = false;
+                        $scope.applicationInstallerLoading = true;
+                        $scope.installationFailed = true;
+                        $scope.installationSuccessfull = false;
+                        $scope.couldNotConnect = true;
+
+                    }
+                    else{
+
+                        $scope.installationDetailsFormJoomla = false;
+                        $scope.applicationInstallerLoading = true;
+                        $scope.installationFailed = false;
+                        $scope.installationSuccessfull = true;
+                        $scope.couldNotConnect = true;
+
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    $scope.installationDetailsFormJoomla = false;
+                    $scope.applicationInstallerLoading = true;
+                    $scope.installationFailed = true;
+                    $scope.installationSuccessfull = true;
+                    $scope.couldNotConnect = false;
+
+                }
+
+    };
 
 
 });

@@ -51,7 +51,7 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
                     <div class="col-sm-6">
-                        <input ng-pattern="/*/i"  name="dom"  type="text" class="form-control" ng-model="domainNameCreate" placeholder="{% trans "Do not enter WWW, it will be auto created!" %}" required>
+                        <input  name="dom"  type="text" class="form-control" ng-model="domainNameCreate" placeholder="{% trans "Do not enter WWW, it will be auto created!" %}" required>
                     </div>
                         <div ng-show="websiteCreationForm.dom.$error.pattern" class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
                 </div>
@@ -115,7 +115,7 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button ng-disabled="websiteCreationForm.dom.$error.required || websiteCreationForm.dom.$error.pattern || websiteCreationForm.email.$invalid" type="button" ng-click="createWebsite()" class="btn btn-primary btn-lg btn-block">{% trans "Create Website" %}</button>
+                         <button ng-disabled="websiteCreationForm.dom.$error.required || websiteCreationForm.email.$invalid" type="button" ng-click="createWebsite()" class="btn btn-primary btn-lg btn-block">{% trans "Create Website" %}</button>
 
                     </div>
                 </div>

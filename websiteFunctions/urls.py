@@ -30,7 +30,7 @@ urlpatterns = [
     url(r'^fetchErrorLogs', views.fetchErrorLogs, name='fetchErrorLogs'),
 
 
-    url(r'^installWordpress', views.installWordpress, name='installWordpress'),
+    url(r'^installWordpress$', views.installWordpress, name='installWordpress'),
     url(r'^installJoomla', views.installJoomla, name='installJoomla'),
     
     url(r'^getDataFromConfigFile', views.getDataFromConfigFile, name='getDataFromConfigFile'),
@@ -75,5 +75,11 @@ urlpatterns = [
     ## Openbasedir
     url(r'^changeOpenBasedir$',views.changeOpenBasedir,name="changeOpenBasedir"),
 
+
+    ## Application Installer
+
+    url(r'^applicationInstaller$',views.applicationInstaller,name="applicationInstaller"),
+    url(r'^(?P<domain>([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)/wordpressInstall$', views.wordpressInstall, name='wordpressInstall'),
+    url(r'^installWordpressStatus$',views.installWordpressStatus,name="installWordpressStatus"),
 
 ]

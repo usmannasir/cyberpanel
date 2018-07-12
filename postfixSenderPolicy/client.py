@@ -13,13 +13,12 @@ class cacheClient:
     def handleCachePurgeRequest(command):
         try:
             mailUtilities.checkHome()
-
             writeToFile = open(cacheClient.cleaningPath, 'w')
             writeToFile.write(command)
             writeToFile.close()
 
         except BaseException, msg:
-            logging.writeToFile(str(msg))
+            logging.writeToFile(str(msg) + ' [cacheClient.handleCachePurgeRequest]')
 
 
 def main():

@@ -127,7 +127,7 @@ def addRule(request):
 def deleteRule(request):
     try:
         val = request.session['userID']
-        admin = Administrator.objects.get(val=val)
+        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
 

@@ -31,7 +31,6 @@ class policyCTRL:
 
         path = policyCTRL.applicationPath
         if os.path.exists(path):
-
             pid = open(path, "r").readlines()[0]
             try:
                 os.kill(int(pid), signal.SIGTERM)
