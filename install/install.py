@@ -2690,6 +2690,23 @@ milter_default_action = accept
             logging.InstallLog.writeToFile(str(msg) + " [setupCLI]")
             return 0
 
+    def setupPHPAndComposer(self):
+        try:
+            command = "cp /usr/local/lsws/lsphp71/bin/php /usr/bin/"
+            res = subprocess.call(shlex.split(command))
+
+            os.chdir(self.cwd)
+
+            command = "chmod +x composer.sh"
+            res = subprocess.call(shlex.split(command))
+
+            command = "./composer.sh"
+            res = subprocess.call(shlex.split(command))
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [setupPHPAndComposer]")
+            return 0
+
     @staticmethod
     def setupVirtualEnv():
         try:
@@ -2884,6 +2901,7 @@ def main():
 
     checks.modSecPreReqs()
     checks.setupVirtualEnv()
+    checks.setupPHPAndComposer()
     checks.installation_successfull()
 
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")

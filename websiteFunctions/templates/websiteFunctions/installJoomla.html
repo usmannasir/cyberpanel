@@ -1,0 +1,127 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Install Joomla - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Install Joomla" %}</h2>
+   <p>{% trans "One-click Joomla Install!" %}</p>
+</div>
+
+
+<div ng-controller="installJoomlaCTRL" class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            <span id="domainNamePage">{{ domainName }}</span> -  {% trans "Installation Details" %} <img ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div class="example-box-wrapper">
+
+
+            <form name="websiteCreationForm"  action="/" id="createPackages" class="form-horizontal bordered-row">
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Site Name" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="blogTitle" required>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Login User" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="adminUser" required>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Login Password" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="password" class="form-control" ng-model="adminPassword" required>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Database Prefix" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="databasePrefix" required>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Path" %}</label>
+                    <div class="col-sm-6">
+                        <input placeholder="Leave emtpy to install in website home directory. (Without preceding slash)"  type="text" class="form-control" ng-model="installPath">
+                    </div>
+                </div>
+
+
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button"  ng-click="installJoomla()" class="btn btn-primary btn-lg btn-block">{% trans "Install Now" %}</button>
+                    </div>
+                </div>
+
+
+
+                <div ng-hide="installationProgress" class="form-group">
+                    <label class="col-sm-2 control-label"></label>
+                    <div class="col-sm-7">
+
+                            <div class="alert alert-success text-center">
+                                        <h2>{$ currentStatus $}</h2>
+                            </div>
+
+                        <div class="progress">
+                          <div id="installProgress" class="progress-bar" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                            <span class="sr-only">70% Complete</span>
+                          </div>
+                        </div>
+
+
+
+
+                            <div ng-hide="installationFailed" class="alert alert-danger">
+                                        <p>{% trans "Installation failed. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="installationSuccessfull" class="alert alert-success">
+                                <p>{% trans "Installation successful. Visit:" %} {$ installationURL $}</p>
+                            </div>
+
+
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+
+
+                    </div>
+                </div>
+
+                <div ng-hide="installationProgress" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                        <button type="button" ng-disabled="goBackDisable"  ng-click="goBack()" class="btn btn-primary btn-lg btn-block">{% trans "Go Back" %}</button>
+                    </div>
+                </div>
+
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+
+</div>
+
+
+{% endblock %}

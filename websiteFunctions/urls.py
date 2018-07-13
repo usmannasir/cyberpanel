@@ -28,10 +28,6 @@ urlpatterns = [
     url(r'^(?P<domain>([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)$', views.domain, name='domain'),
     url(r'^getDataFromLogFile', views.getDataFromLogFile, name='getDataFromLogFile'),
     url(r'^fetchErrorLogs', views.fetchErrorLogs, name='fetchErrorLogs'),
-
-
-    url(r'^installWordpress$', views.installWordpress, name='installWordpress'),
-    url(r'^installJoomla', views.installJoomla, name='installJoomla'),
     
     url(r'^getDataFromConfigFile', views.getDataFromConfigFile, name='getDataFromConfigFile'),
 
@@ -79,7 +75,18 @@ urlpatterns = [
     ## Application Installer
 
     url(r'^applicationInstaller$',views.applicationInstaller,name="applicationInstaller"),
+
+    ## WP Install
+
     url(r'^(?P<domain>([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)/wordpressInstall$', views.wordpressInstall, name='wordpressInstall'),
     url(r'^installWordpressStatus$',views.installWordpressStatus,name="installWordpressStatus"),
+    url(r'^installWordpress$', views.installWordpress, name='installWordpress'),
+
+
+    ## Joomla Install
+
+    url(r'^installJoomla$', views.installJoomla, name='installJoomla'),
+    url(r'^(?P<domain>([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)/joomlaInstall$', views.joomlaInstall, name='joomlaInstall'),
+
 
 ]

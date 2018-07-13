@@ -29,6 +29,8 @@ class ApplicationInstaller(multi.Thread):
         try:
             if self.installApp == 'wordpress':
                 self.installWordPress()
+            elif self.installApp == 'joomla':
+                self.installJoomla()
 
         except BaseException, msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.run]')
@@ -47,7 +49,6 @@ class ApplicationInstaller(multi.Thread):
 
         except BaseException, msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.installWPCLI]')
-
 
 
     def installWordPress(self):
@@ -165,18 +166,30 @@ class ApplicationInstaller(multi.Thread):
             if website.package.dataBases > website.databases_set.all().count():
                 pass
             else:
-                raise BaseException("Maximum database limit reached for this website.")
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(
+                    "Maximum database limit reached for this website." + " [404]")
+                statusFile.close()
+                return 0
 
             if Databases.objects.filter(dbName=dbName).exists() or Databases.objects.filter(
                     dbUser=dbUser).exists():
-                raise BaseException("This database or user is already taken.")
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(
+                    "This database or user is already taken." + " [404]")
+                statusFile.close()
+                return 0
 
             result = mysqlUtilities.createDatabase(dbName, dbUser, dbPassword)
 
             if result == 1:
                 pass
             else:
-                raise BaseException("Not able to create database.")
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(
+                    "Not able to create database." + " [404]")
+                statusFile.close()
+                return 0
 
             db = Databases(website=website, dbName=dbName, dbUser=dbUser)
             db.save()
@@ -225,8 +238,6 @@ class ApplicationInstaller(multi.Thread):
             command = "sudo wp plugin activate litespeed-cache --allow-root --path=" + finalPath
             subprocess.call(shlex.split(command))
 
-
-
             ##
 
 
@@ -274,6 +285,194 @@ class ApplicationInstaller(multi.Thread):
                 db.delete()
             except:
                 pass
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines(str(msg) + " [404]")
+            statusFile.close()
+            return 0
+
+
+    def installJoomla(self):
+
+        try:
+
+            domainName = self.extraArgs['domainName']
+            finalPath = self.extraArgs['finalPath']
+            virtualHostUser = self.extraArgs['virtualHostUser']
+            dbName = self.extraArgs['dbName']
+            dbUser = self.extraArgs['dbUser']
+            dbPassword = self.extraArgs['dbPassword']
+            username = self.extraArgs['username']
+            password = self.extraArgs['password']
+            prefix = self.extraArgs['prefix']
+            sitename = self.extraArgs['sitename']
+            tempStatusPath = self.extraArgs['tempStatusPath']
+
+
+
+            FNULL = open(os.devnull, 'w')
+
+            if not os.path.exists(finalPath):
+                os.makedirs(finalPath)
+
+            ## checking for directories/files
+
+            dirFiles = os.listdir(finalPath)
+
+            if len(dirFiles) == 1:
+                if dirFiles[0] == ".well-known":
+                    pass
+                else:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines("Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
+                    statusFile.close()
+                    return 0
+            elif len(dirFiles) == 0:
+                pass
+            else:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(
+                    "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
+                statusFile.close()
+                return 0
+
+            ## Get Joomla
+
+            os.chdir(finalPath)
+
+            if not os.path.exists("staging.zip"):
+                command = 'wget --no-check-certificate https://github.com/joomla/joomla-cms/archive/staging.zip -P ' + finalPath
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            else:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("File already exists." + " [404]")
+                statusFile.close()
+                return 0
+
+            command = 'unzip ' + finalPath + 'staging.zip -d ' + finalPath
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            os.remove(finalPath + 'staging.zip')
+
+            command = 'cp -r ' + finalPath + 'joomla-cms-staging/. ' + finalPath
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            shutil.rmtree(finalPath + "joomla-cms-staging")
+            os.rename(finalPath + "installation/configuration.php-dist", finalPath + "configuration.php")
+            os.rename(finalPath + "robots.txt.dist", finalPath + "robots.txt")
+            os.rename(finalPath + "htaccess.txt", finalPath + ".htaccess")
+
+            ## edit config file
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Creating configuration files.,40')
+            statusFile.close()
+
+            configfile = finalPath + "configuration.php"
+
+            data = open(configfile, "r").readlines()
+
+            writeDataToFile = open(configfile, "w")
+
+            secret = randomPassword.generate_pass()
+
+            defDBName = "   public $user = '" + dbName + "';" + "\n"
+            defDBUser = "   public $db = '" + dbUser + "';" + "\n"
+            defDBPassword = "   public $password = '" + dbPassword + "';" + "\n"
+            secretKey = "   public $secret = '" + secret + "';" + "\n"
+            logPath = "   public $log_path = '" + finalPath + "administrator/logs';" + "\n"
+            tmpPath = "   public $tmp_path = '" + finalPath + "administrator/tmp';" + "\n"
+            dbprefix = "   public $dbprefix = '" + prefix + "';" + "\n"
+            sitename = "   public $sitename = '" + sitename + "';" + "\n"
+
+            for items in data:
+                if items.find("public $user ") > -1:
+                    writeDataToFile.writelines(defDBUser)
+                elif items.find("public $password ") > -1:
+                    writeDataToFile.writelines(defDBPassword)
+                elif items.find("public $db ") > -1:
+                    writeDataToFile.writelines(defDBName)
+                elif items.find("public $log_path ") > -1:
+                    writeDataToFile.writelines(logPath)
+                elif items.find("public $tmp_path ") > -1:
+                    writeDataToFile.writelines(tmpPath)
+                elif items.find("public $secret ") > -1:
+                    writeDataToFile.writelines(secretKey)
+                elif items.find("public $dbprefix ") > -1:
+                    writeDataToFile.writelines(dbprefix)
+                elif items.find("public $sitename ") > -1:
+                    writeDataToFile.writelines(sitename)
+                elif items.find("/*") > -1:
+                    pass
+                elif items.find(" *") > -1:
+                    pass
+                else:
+                    writeDataToFile.writelines(items)
+
+            writeDataToFile.close()
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Creating default user..,70')
+            statusFile.close()
+
+            # Rename SQL db prefix
+
+            f1 = open(finalPath + 'installation/sql/mysql/joomla.sql', 'r')
+            f2 = open('installation/sql/mysql/joomlaInstall.sql', 'w')
+            for line in f1:
+                f2.write(line.replace('#__', prefix))
+            f1.close()
+            f2.close()
+
+            # Restore SQL
+            proc = subprocess.Popen(["mysql", "--user=%s" % dbUser, "--password=%s" % dbPassword, dbName],
+                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+
+            usercreation = """INSERT INTO `%susers`
+            (`name`, `username`, `password`, `params`)
+            VALUES ('Administrator', '%s',
+            '%s', '');
+            INSERT INTO `%suser_usergroup_map` (`user_id`,`group_id`)
+            VALUES (LAST_INSERT_ID(),'8');""" % (prefix, username, password, prefix)
+
+            out, err = proc.communicate(
+                file(finalPath + 'installation/sql/mysql/joomlaInstall.sql').read() + "\n" + usercreation)
+
+            shutil.rmtree(finalPath + "installation")
+
+            command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + "/home/" + domainName + "/public_html/"
+
+            cmd = shlex.split(command)
+
+            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            vhost.addRewriteRules(domainName)
+
+            installUtilities.reStartLiteSpeed()
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines("Successfully Installed. [200]")
+            statusFile.close()
+            return 0
+
+        except BaseException, msg:
+            # remove the downloaded files
+            try:
+                shutil.rmtree(finalPath)
+            except:
+                logging.writeToFile("shutil.rmtree(finalPath)")
+
+            homeDir = "/home/" + domainName + "/public_html"
+
+            if not os.path.exists(homeDir):
+                FNULL = open(os.devnull, 'w')
+                os.mkdir(homeDir)
+                command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + homeDir
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")

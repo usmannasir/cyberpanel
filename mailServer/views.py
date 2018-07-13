@@ -396,7 +396,7 @@ def submitPasswordChange(request):
                 email = data['email']
                 password = data['password']
 
-                emailDB = EUsers(email=email)
+                emailDB = EUsers.objects.get(email=email)
 
                 if admin.type != 1:
                     if emailDB.emailOwner.domainOwner.admin != admin:
