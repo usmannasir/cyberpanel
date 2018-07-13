@@ -24,6 +24,9 @@ from plogical.mailUtilities import mailUtilities
 import CyberCPLogFileWriter as logging
 from dnsUtilities import DNS
 from vhost import vhost
+import re
+import urllib2
+from distutils.dir_util import copy_tree
 
 
 ## If you want justice, you have come to the wrong place.
@@ -411,27 +414,24 @@ class virtualHostUtilities:
 
             os.chdir(finalPath)
 
-            if not os.path.exists("staging.zip"):
-                command = 'wget --no-check-certificate https://github.com/joomla/joomla-cms/archive/staging.zip -P ' + finalPath
+            if not os.path.exists("joomla.tar.gz"):
+                response = urllib2.urlopen("https://api.github.com/repos/joomla/joomla-cms/releases/latest").read()
+                regex = ur"\[.tar.gz](?:.*)Stable-Full_Package.tar.gz"
+                latestURL = re.search(regex, response).group().split("(")[1]
+
+                command = 'wget --no-check-certificate ' + latestURL + ' -O joomla.tar.gz'
                 cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+                res = subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
             else:
                 print "0,File already exists"
                 return
 
-            command = 'unzip ' + finalPath + 'staging.zip -d ' + finalPath
-
+            command = 'tar -xzvf joomla.tar.gz -C ' + finalPath
             cmd = shlex.split(command)
+            res = subprocess.call(cmd,stdout=FNULL, stderr=subprocess.STDOUT)
 
-            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            os.remove('joomla.tar.gz')
 
-            os.remove(finalPath + 'staging.zip')
-
-            command = 'cp -r ' + finalPath + 'joomla-cms-staging/. ' + finalPath
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            shutil.rmtree(finalPath + "joomla-cms-staging")
             os.rename(finalPath + "installation/configuration.php-dist", finalPath + "configuration.php")
             os.rename(finalPath + "robots.txt.dist", finalPath + "robots.txt")
             os.rename(finalPath + "htaccess.txt", finalPath + ".htaccess")
