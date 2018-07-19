@@ -8,22 +8,16 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical import hashPassword
 from plogical.installUtilities import installUtilities
 from packages.models import Package
-import shutil
-from plogical.mysqlUtilities import mysqlUtilities
-from databases.models import Databases
 from baseTemplate.views import renderBase
 from random import randint
 from websiteFunctions.models import Websites,ChildDomains
 import os
-import signal
-from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-from shutil import rmtree
 from baseTemplate.models import version
 import subprocess
 import shlex
 import re
-from dns.models import Domains,Records
 from plogical.mailUtilities import mailUtilities
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 # Create your views here.
 
 
@@ -34,7 +28,6 @@ def verifyConn(request):
             data = json.loads(request.body)
             adminUser = data['adminUser']
             adminPass = data['adminPass']
-
 
             admin = Administrator.objects.get(userName=adminUser)
 
@@ -66,6 +59,9 @@ def createWebsite(request):
             websiteOwner = data['websiteOwner']
             ownerPassword = data['ownerPassword']
             externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:7]
+            data['ssl'] = 0
+            data['dkimCheck'] = 0
+            data['openBasedir'] = 1
 
 
             phpSelection = "PHP 7.0"

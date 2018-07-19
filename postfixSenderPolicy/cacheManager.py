@@ -123,7 +123,6 @@ class cacheManager:
     @staticmethod
     def hourlyCleanUP():
         try:
-
             for domain, domainOBJ in cacheManager.domains.iteritems():
                 for email, emailOBJ in domainOBJ.emails.iteritems():
 
@@ -133,12 +132,8 @@ class cacheManager:
                     dbEmail.hourlyUsed = 0
                     dbEmail.save()
 
-                    emailID = EUsers.objects.get(email=email)
-                    dbEmail = EmailLimits.objects.get(email=emailID)
-
                     dbEmail.hourlyUsed = 0
                     emailOBJ.hourlyUsed = 0
-                    dbEmail.save()
 
         except BaseException, msg:
             logging.writeToFile(str(msg) + ' [cacheManager.hourlyCleanUP]')

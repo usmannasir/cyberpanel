@@ -50,13 +50,16 @@ class SetupConn:
         try:
             self.sock.listen(5)
             while True:
-                # Wait for a connection
-                if os.path.exists(SetupConn.cleaningPath):
-                    readFromFile = open(SetupConn.cleaningPath, 'r')
-                    command = readFromFile.read()
-                    cacheManager.handlePurgeRequest(command)
-                    readFromFile.close()
-                    os.remove(SetupConn.cleaningPath)
+                try:
+                    # Wait for a connection
+                    if os.path.exists(SetupConn.cleaningPath):
+                        readFromFile = open(SetupConn.cleaningPath, 'r')
+                        command = readFromFile.read()
+                        cacheManager.handlePurgeRequest(command)
+                        readFromFile.close()
+                        os.remove(SetupConn.cleaningPath)
+                except:
+                    pass
 
                 connection, client_address = self.sock.accept()
                 background = handle.HandleRequest(connection)

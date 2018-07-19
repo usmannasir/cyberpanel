@@ -687,8 +687,8 @@ class preFlightsChecks:
 
         count = 0
         while (1):
-            #command = "wget http://cyberpanel.net/CyberPanel.1.6.4.tar.gz"
-            command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
+            command = "wget http://cyberpanel.net/CyberPanel.1.7.0.tar.gz"
+            #command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
             res = subprocess.call(shlex.split(command))
 
             if res == 1:
@@ -707,8 +707,8 @@ class preFlightsChecks:
 
         count = 0
         while(1):
-            #command = "tar zxf CyberPanel.1.6.4.tar.gz"
-            command = "tar zxf CyberPanelTemp.tar.gz"
+            command = "tar zxf CyberPanel.1.7.0.tar.gz"
+            #command = "tar zxf CyberPanelTemp.tar.gz"
 
             res = subprocess.call(shlex.split(command))
 
@@ -1271,7 +1271,7 @@ class preFlightsChecks:
            count = 0
 
            while(1):
-               command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/postfix/key.pem -out /etc/postfix/cert.pem'
+               command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/postfix/key.pem -out /etc/postfix/cert.pem'
 
                cmd = shlex.split(command)
 
@@ -1293,7 +1293,7 @@ class preFlightsChecks:
 
            while(1):
 
-               command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/dovecot/key.pem -out /etc/dovecot/cert.pem'
+               command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/dovecot/key.pem -out /etc/dovecot/cert.pem'
 
                cmd = shlex.split(command)
 
@@ -2048,6 +2048,10 @@ class preFlightsChecks:
                     break
 
             ######
+            command = 'systemctl restart dbus'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
+
 
             count = 0
 

@@ -102,7 +102,7 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Username" %}</label>
                     <div class="col-sm-6">
-                        <input name="username" ng-pattern="/^[a-zA-Z0-9]+$/" ng-change="hideSomeThings()"  type="text" class="form-control" ng-model="userName" required>
+                        <input name="username" ng-change="hideSomeThings()"  type="text" class="form-control" ng-model="userName" required>
                     </div>
                     <div ng-show="createUser.username.$error.pattern" class="current-pack">{% trans "Username should be lowercase alphanumeric." %}</div>
                 </div>
@@ -112,7 +112,7 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Password" %}</label>
                     <div class="col-sm-6">
-                        <input name="password"  ng-pattern="/^(?=.*?[a-zA-Z])(?=.*\d)([a-zA-Z0-9])+$/"  type="password" class="form-control" ng-model="password" required>
+                        <input name="password"  type="password" class="form-control" ng-model="password" required>
                     </div>
                     <div ng-show="createUser.password.$error.pattern" class="current-pack">{% trans "Must contain one number and one special character." %}</div>
 
@@ -123,9 +123,7 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button ng-disabled="createUser.password.$error.pattern ||
-                                              createUser.username.$error.pattern ||
-                                          createUser.websitesLimit.$error.number ||
+                         <button ng-disabled="createUser.websitesLimit.$error.number ||
                                           createUser.userAccountsLimit.$error.number ||
                                           createUser.email.$error.email ||
                                           createUser.firstName.$error.pattern ||

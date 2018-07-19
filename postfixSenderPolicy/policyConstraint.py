@@ -23,7 +23,6 @@ class policyConstraints:
     def findEmailOBJ(self, emailAddress):
         if emailAddress in self.emails:
             return self.emails[emailAddress]
-
         else:
             email = EUsers.objects.get(email=emailAddress)
             emailLTS = EmailLimits.objects.get(email=email)

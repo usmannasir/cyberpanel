@@ -34,15 +34,22 @@ class HandleRequest(multi.Thread):
             while True:
 
                 Data = self.connection.recv(64)
-
                 # Wait for a connection
-                if os.path.exists(HandleRequest.cleaningPath):
-                    readFromFile = open(HandleRequest.cleaningPath, 'r')
-                    command = readFromFile.read()
-                    cacheManager.handlePurgeRequest(command)
-                    readFromFile.close()
-                    os.remove(HandleRequest.cleaningPath)
-                    cacheManager.flushCache()
+
+                try:
+                    if os.path.exists(HandleRequest.cleaningPath):
+
+                        readFromFile = open(HandleRequest.cleaningPath, 'r')
+                        command = readFromFile.read()
+
+                        cacheManager.handlePurgeRequest(command)
+
+                        readFromFile.close()
+
+                        os.remove(HandleRequest.cleaningPath)
+                        cacheManager.flushCache()
+                except:
+                    pass
 
                 if Data:
                     if len(Data) < 64:
@@ -62,15 +69,21 @@ class HandleRequest(multi.Thread):
 
     def manageRequest(self, completeData):
         try:
+
             completeData = completeData.split('\n')
 
             for items in completeData:
                 tempData = items.split('=')
-                if tempData[0] == 'sender':
+                if tempData[0] == 'sasl_username':
+                    if len(tempData[1]) == 0:
+                        self.connection.sendall('action=dunno\n\n')
+                        return
                     emailAddress = tempData[1]
                     domainName = emailAddress.split('@')[1]
                 elif tempData[0] == 'recipient':
                     destination = tempData[1]
+
+
 
             if domainName in cacheManager.domains:
                 domainObj = cacheManager.domains[domainName]
@@ -95,9 +108,11 @@ class HandleRequest(multi.Thread):
             #logging.writeToFile('Email Monthly Used: ' + str(emailObj.monthlyUsed))
 
             if domainObj.limitStatus == 1 and emailObj.limitStatus == 1:
+
                 if domainObj.monthlyLimits <= domainObj.monthlyUsed or emailObj.monthlyLimits <= emailObj.monthlyUsed or emailObj.hourlyLimits <= emailObj.hourlyUsed:
                     logging.writeToFile(emailAddress + ' either exceeded monthly or hourly sending limit.')
                     self.connection.sendall('action=defer_if_permit Service temporarily unavailable\n\n')
+                    return
                 else:
                     email = EUsers.objects.get(email=emailAddress)
                     if emailObj.logStatus == 1:
@@ -113,8 +128,10 @@ class HandleRequest(multi.Thread):
                     logEntry = EmailLogs(email=email, destination=destination,
                                          timeStamp=time.strftime("%I-%M-%S-%a-%b-%Y"))
                     logEntry.save()
+
                 emailObj.monthlyUsed = emailObj.monthlyUsed + 1
                 emailObj.hourlyUsed = emailObj.hourlyUsed + 1
+                domainObj.monthlyUsed = domainObj.monthlyUsed + 1
                 self.connection.sendall('action=dunno\n\n')
 
 
