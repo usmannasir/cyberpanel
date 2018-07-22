@@ -222,6 +222,7 @@ class remoteBackup:
 
             command = 'sudo rsync -avz -e "ssh  -i /root/.ssh/cyberpanel -o StrictHostKeyChecking=no" ' + completedPathToSend + ' root@' + IPAddress + ':/home/backup/transfer-'+folderNumber
             subprocess.call(shlex.split(command), stdout=writeToFile)
+            os.remove(completedPathToSend)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")

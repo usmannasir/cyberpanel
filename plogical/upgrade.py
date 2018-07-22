@@ -239,6 +239,32 @@ WantedBy=multi-user.target"""
         subprocess.call(shlex.split(command))
 
     @staticmethod
+    def setupCLI():
+        try:
+            count = 0
+            while (1):
+                command = "ln -s /usr/local/CyberCP/cli/cyberPanel.py /usr/bin/cyberpanel"
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    Upgrade.stdOut(
+                        "Trying to setup CLI, trying again, try number: " + str(count))
+                    if count == 3:
+                        Upgrade.stdOut(
+                            "Failed to setup CLI! [setupCLI]")
+                else:
+                    Upgrade.stdOut("CLI setup successfull!")
+                    break
+
+            command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
+            res = subprocess.call(shlex.split(command))
+
+        except OSError, msg:
+            Upgrade.stdOut(str(msg) + " [setupCLI]")
+            return 0
+
+    @staticmethod
     def staticContent():
         count = 1
         while (1):
@@ -495,6 +521,7 @@ WantedBy=multi-user.target"""
         ## Upgrade OpenLiteSpeed
 
         Upgrade.upgradeOpenLiteSpeed()
+        Upgrade.setupCLI()
         time.sleep(3)
 
         ## Upgrade version

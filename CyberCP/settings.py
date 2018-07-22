@@ -58,7 +58,8 @@ INSTALLED_APPS = [
     'manageSSL',
     'api',
     'filemanager',
-    'emailPremium'
+    'emailPremium',
+    'manageServices'
 ]
 
 MIDDLEWARE = [

@@ -38,9 +38,8 @@ def loadWebsitesHome(request):
 def createWebsite(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
-            admin = Administrator.objects.get(pk=val)
-
             if admin.type == 3:
                 return HttpResponse("Not enough privileges.")
 

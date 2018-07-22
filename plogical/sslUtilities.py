@@ -178,7 +178,7 @@ class sslUtilities:
 
                 try:
                     logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName)
-                    command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName
+                    command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName
                     output = subprocess.check_output(shlex.split(command))
                     logging.CyberCPLogFileWriter.writeToFile(
                         "Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName)
@@ -188,13 +188,15 @@ class sslUtilities:
                     try:
                         logging.CyberCPLogFileWriter.writeToFile(
                             "Trying to obtain SSL for: " + virtualHostName)
-                        command = "certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
+                        command = "/usr/local/CyberCP/bin/certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
                         output = subprocess.check_output(shlex.split(command))
                         logging.CyberCPLogFileWriter.writeToFile(
                             "Successfully obtained SSL for: " + virtualHostName)
                     except subprocess.CalledProcessError, msg:
                         logging.CyberCPLogFileWriter.writeToFile('Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName)
                         return 0
+
+                logging.CyberCPLogFileWriter.writeToFile(command)
 
                 pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
 
@@ -260,13 +262,13 @@ class sslUtilities:
 
                         if serverIPAddress == ipRecordsAlias[1] and serverIPAddress == ipRecordsAlias[2]:
 
-                            command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName + " -d " + aliasDomain + " -d www." + aliasDomain
+                            command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName + " -d " + aliasDomain + " -d www." + aliasDomain
 
                         else:
                             if serverIPAddress == ipRecordsAlias[2]:
-                                command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName + " -d " + aliasDomain
+                                command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName + " -d " + aliasDomain
                             else:
-                                command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName
+                                command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName
 
                     else:
                         if serverIPAddress == ipRecords[2]:
@@ -275,13 +277,13 @@ class sslUtilities:
 
                             if serverIPAddress == ipRecordsAlias[1] and serverIPAddress == ipRecordsAlias[2]:
 
-                                command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName  + " -d " + aliasDomain + " -d www." + aliasDomain
+                                command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName  + " -d " + aliasDomain + " -d www." + aliasDomain
 
                             else:
                                 if serverIPAddress == ipRecordsAlias[2]:
-                                    command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d " + aliasDomain
+                                    command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d " + aliasDomain
                                 else:
-                                    command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
+                                    command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
 
                             logging.CyberCPLogFileWriter.writeToFile(
                                 "SSL is issued without 'www' due to DNS error for domain : " + virtualHostName)
@@ -290,10 +292,10 @@ class sslUtilities:
                             ipRecordsAlias = sslUtilities.getDNSRecords(aliasDomain)
 
                             if serverIPAddress == ipRecordsAlias[1] and serverIPAddress == ipRecordsAlias[2]:
-                                command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath  + " -d " + aliasDomain + " -d www." + aliasDomain
+                                command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath  + " -d " + aliasDomain + " -d www." + aliasDomain
                             else:
                                 if serverIPAddress == ipRecordsAlias[2]:
-                                    command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath  + " -d " + aliasDomain
+                                    command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath  + " -d " + aliasDomain
                                 else:
                                     return 0
                 else:
