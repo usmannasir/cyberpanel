@@ -566,6 +566,23 @@
     </li>
 
 
+    <li id="normalUserJ">
+        <a href="#" title="{% trans 'Manage Services' %}">
+            <i class="glyph-icon icon-linecons-fire"></i>
+            <span>{% trans "Manage Services" %}</span>
+        </a>
+        <div class="sidebar-submenu">
+
+            <ul>
+                <li><a href="{% url 'managePowerDNS' %}" title="{% trans 'Manage PowerDNS' %}"><span>{% trans "Manage PowerDNS" %}</span></a></li>
+                <li><a href="{% url 'managePostfix' %}" title="{% trans 'Manage Postfix' %}"><span>{% trans "Manage Postfix" %}</span></a></li>
+                <li><a href="{% url 'managePureFtpd' %}" title="{% trans 'Manage FTP' %}"><span>{% trans "Manage FTP" %}</span></a></li>
+            </ul>
+
+        </div><!-- .sidebar-submenu -->
+    </li>
+
+
     </ul><!-- #sidebar-menu -->
 
 

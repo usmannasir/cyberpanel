@@ -51,6 +51,23 @@ def managePostfix(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def managePureFtpd(request):
+    try:
+        val = request.session['userID']
+        try:
+            admin = Administrator.objects.get(pk=val)
+
+            if admin.type == 1:
+                return render(request, 'manageServices/managePureFtpd.html', {"status": 1})
+            else:
+                return render(request, 'manageServices/managePureFtpd.html', {"status": 0})
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return HttpResponse("See CyberCP main log file.")
+
+    except KeyError:
+        return redirect(loadLoginPage)
 
 def fetchStatus(request):
     try:
@@ -89,7 +106,15 @@ def fetchStatus(request):
                         json_data = json.dumps(data_ret)
                         return HttpResponse(json_data)
 
-
+                elif service == 'pureftpd':
+                    if os.path.exists('/home/cyberpanel/pureftpd'):
+                        data_ret = {'status': 1, 'error_message': 'None', 'installCheck': 1}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+                    else:
+                        data_ret = {'status': 1, 'error_message': 'None', 'installCheck': 0}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
 
         except BaseException,msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
@@ -129,9 +154,15 @@ def saveStatus(request):
                         writeToFile.close()
                         command = 'sudo systemctl start pdns'
                         subprocess.call(shlex.split(command))
+
+
                     else:
                         command = 'sudo systemctl stop pdns'
                         subprocess.call(shlex.split(command))
+
+                        command = 'sudo systemctl disable pdns'
+                        subprocess.call(shlex.split(command))
+
                         try:
                             os.remove(servicePath)
                         except:
@@ -149,6 +180,30 @@ def saveStatus(request):
                     else:
                         command = 'sudo systemctl stop postfix'
                         subprocess.call(shlex.split(command))
+
+                        command = 'sudo systemctl disable postfix'
+                        subprocess.call(shlex.split(command))
+
+                        try:
+                            os.remove(servicePath)
+                        except:
+                            pass
+
+                elif service == 'pureftpd':
+
+                    servicePath = '/home/cyberpanel/pureftpd'
+                    if status == True:
+                        writeToFile = open(servicePath, 'w+')
+                        writeToFile.close()
+                        command = 'sudo systemctl start pure-ftpd'
+                        subprocess.call(shlex.split(command))
+                    else:
+                        command = 'sudo systemctl stop pure-ftpd'
+                        subprocess.call(shlex.split(command))
+
+                        command = 'sudo systemctl disable pure-ftpd'
+                        subprocess.call(shlex.split(command))
+
                         try:
                             os.remove(servicePath)
                         except:
