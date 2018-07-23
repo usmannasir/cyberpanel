@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Email Policy Server - CyberPanel" %}{% endblock %}
+{% block title %}{% trans "Manage Email Server (Postfix) - CyberPanel" %}{% endblock %}
 {% block content %}
 
 {% load static %}
@@ -10,14 +10,16 @@
 
 <div class="container">
 <div id="page-title">
-   <h2>{% trans "Email Policy Server Configurations!" %} - <a  target="_blank" href="http://go.cyberpanel.net/emailLimits" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "Emai Limits Docs" %}</span></a> </h2>
-   <p>{% trans "Turn ON Email Policy Server to use Email Limits Feature. " %}</p>
+   <h2>{% trans "Manage Email Server (Postfix)!" %} - <a  target="_blank" href="http://go.cyberpanel.net/emailLimits" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "Emai Limits Docs" %}</span></a> </h2>
+   <p>{% trans "Enable or disable Email services. " %}</p>
 </div>
 
-<div ng-controller="policyServer" class="example-box-wrapper">
+    {% if status %}
+
+    <div ng-controller="postfix" class="example-box-wrapper">
         <div style="border-radius: 25px;border-color:#3498db" class="content-box">
             <h3 class="content-box-header bg-blue">
-                {% trans "Email Policy Server" %} <img ng-hide="policyServerLoading"  src="/static/images/loading.gif">
+                {% trans "Manage Postfix" %} <img ng-hide="serviceLoading"  src="/static/images/loading.gif">
             </h3>
 
             <div class="content-box-wrapper">
@@ -27,9 +29,9 @@
                     <form  action="/" id="createPackages" class="form-horizontal bordered-row">
 
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Server Status</label>
+                            <label class="col-sm-4 control-label">Postfix Status</label>
                             <div class="col-sm-6">
-                                <input type="checkbox" id="policServerStatus" data-toggle="toggle">
+                                <input type="checkbox" id="serviceStatus" data-toggle="toggle">
                             </div>
                         </div>
 
@@ -37,7 +39,7 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-4">
-                                 <button type="button" ng-click="savePolicServerStatus()" class="btn btn-primary btn-lg btn-block">{% trans "Save changes." %}</button>
+                                 <button type="button" ng-click="saveStatus('postfix')" class="btn btn-primary btn-lg btn-block">{% trans "Save changes." %}</button>
 
                             </div>
                         </div>
@@ -73,6 +75,14 @@
             </div>
         </div>
     </div>
+
+    {% else %}
+
+        <div class="alert alert-danger">
+            <p>{% trans "Only administrator can manage services." %}</p>
+    </div>
+
+    {% endif  %}
 
 
 </div>

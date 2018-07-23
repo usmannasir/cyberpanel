@@ -33,6 +33,24 @@ def managePowerDNS(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def managePostfix(request):
+    try:
+        val = request.session['userID']
+        try:
+            admin = Administrator.objects.get(pk=val)
+
+            if admin.type == 1:
+                return render(request, 'manageServices/managePostfix.html', {"status": 1})
+            else:
+                return render(request, 'manageServices/managePostfix.html', {"status": 0})
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return HttpResponse("See CyberCP main log file.")
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def fetchStatus(request):
     try:
@@ -53,6 +71,16 @@ def fetchStatus(request):
 
                 if service == 'powerdns':
                     if os.path.exists('/home/cyberpanel/powerdns'):
+                        data_ret = {'status': 1, 'error_message': 'None', 'installCheck': 1}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+                    else:
+                        data_ret = {'status': 1, 'error_message': 'None', 'installCheck': 0}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+
+                elif service == 'postfix':
+                    if os.path.exists('/home/cyberpanel/postfix'):
                         data_ret = {'status': 1, 'error_message': 'None', 'installCheck': 1}
                         json_data = json.dumps(data_ret)
                         return HttpResponse(json_data)
@@ -94,9 +122,10 @@ def saveStatus(request):
                 mailUtilities.checkHome()
 
                 if service == 'powerdns':
-                    pdnsPath = '/home/cyberpanel/powerdns'
+
+                    servicePath = '/home/cyberpanel/powerdns'
                     if status == True:
-                        writeToFile = open(pdnsPath, 'w+')
+                        writeToFile = open(servicePath, 'w+')
                         writeToFile.close()
                         command = 'sudo systemctl start pdns'
                         subprocess.call(shlex.split(command))
@@ -104,13 +133,30 @@ def saveStatus(request):
                         command = 'sudo systemctl stop pdns'
                         subprocess.call(shlex.split(command))
                         try:
-                            os.remove(pdnsPath)
+                            os.remove(servicePath)
                         except:
                             pass
 
-                    data_ret = {'status': 1, 'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+
+                elif service == 'postfix':
+
+                    servicePath = '/home/cyberpanel/postfix'
+                    if status == True:
+                        writeToFile = open(servicePath, 'w+')
+                        writeToFile.close()
+                        command = 'sudo systemctl start postfix'
+                        subprocess.call(shlex.split(command))
+                    else:
+                        command = 'sudo systemctl stop postfix'
+                        subprocess.call(shlex.split(command))
+                        try:
+                            os.remove(servicePath)
+                        except:
+                            pass
+
+                data_ret = {'status': 1, 'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
 
         except BaseException,msg:
