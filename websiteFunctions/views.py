@@ -2282,7 +2282,6 @@ def installWordpress(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
         return HttpResponse("Not Logged in as admin")
 
-
 def installWordpressStatus(request):
     try:
         val = request.session['userID']
@@ -2331,7 +2330,6 @@ def installWordpressStatus(request):
         data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "0", 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
-
 
 
 def joomlaInstall(request, domain):
@@ -2500,4 +2498,66 @@ def installJoomla(request):
     except KeyError, msg:
         status = {"installStatus":0,"error":str(msg)}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installJoomla]")
+        return HttpResponse("Not Logged in as admin")
+
+
+def setupGit(request, domain):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        try:
+            if admin.type != 1:
+                website = Websites.objects.get(domain=domain)
+                if website.admin != admin:
+                    raise BaseException('You do not own this website.')
+
+            command = 'sudo cat /root/.ssh/cyberpanel.pub'
+            deploymentKey = subprocess.check_output(shlex.split(command)).strip('\n')
+
+            return render(request, 'websiteFunctions/setupGit.html', {'domainName' : domain, 'deploymentKey': deploymentKey})
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return HttpResponse(str(msg))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def setupGitRepo(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+
+        if request.method == 'POST':
+            try:
+                data = json.loads(request.body)
+
+                mailUtilities.checkHome()
+
+                extraArgs = {}
+                extraArgs['admin'] = admin
+                extraArgs['domainName'] = data['domain']
+                extraArgs['username'] = data['username']
+                extraArgs['reponame'] = data['reponame']
+                extraArgs['branch'] = data['branch']
+                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+
+                background = ApplicationInstaller('git', extraArgs)
+                background.start()
+
+                time.sleep(2)
+
+                data_ret = {'installStatus': 1, 'error_message': 'None', 'tempStatusPath': extraArgs['tempStatusPath']}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+            except BaseException, msg:
+                data_ret = {'installStatus': 0, 'error_message': str(msg)}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+    except KeyError, msg:
+        status = {"installStatus":0,"error":str(msg)}
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
         return HttpResponse("Not Logged in as admin")

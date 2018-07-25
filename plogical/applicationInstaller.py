@@ -31,6 +31,8 @@ class ApplicationInstaller(multi.Thread):
                 self.installWordPress()
             elif self.installApp == 'joomla':
                 self.installJoomla()
+            elif self.installApp == 'git':
+                self.setupGit()
 
         except BaseException, msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.run]')
@@ -49,6 +51,18 @@ class ApplicationInstaller(multi.Thread):
 
         except BaseException, msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.installWPCLI]')
+
+    def installGit(self, tempStatusPath):
+        try:
+
+            command = 'sudo yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
+            subprocess.call(shlex.split(command))
+
+            command = 'sudo yum install git -y'
+            subprocess.call(shlex.split(command))
+
+        except BaseException, msg:
+            logging.writeToFile( str(msg) + ' [ApplicationInstaller.installGit]')
 
 
     def installWordPress(self):
@@ -286,6 +300,148 @@ class ApplicationInstaller(multi.Thread):
             except:
                 pass
 
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines(str(msg) + " [404]")
+            statusFile.close()
+            return 0
+
+
+    def setupGit(self):
+        try:
+            admin = self.extraArgs['admin']
+            domainName = self.extraArgs['domainName']
+            username = self.extraArgs['username']
+            reponame = self.extraArgs['reponame']
+            branch = self.extraArgs['branch']
+            tempStatusPath = self.extraArgs['tempStatusPath']
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Checking if GIT installed..,0')
+            statusFile.close()
+
+            finalPath = "/home/" + domainName + "/public_html/"
+
+
+            ### Check git
+
+            try:
+                command = 'sudo /usr/local/bin/git --help'
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines('Installing GIT..,0')
+                    statusFile.close()
+                    self.installGit(tempStatusPath)
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines('GIT successfully installed,40')
+                    statusFile.close()
+            except subprocess.CalledProcessError:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Installing GIT..,0')
+                statusFile.close()
+                self.installGit(tempStatusPath)
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('GIT successfully installed.,40')
+                statusFile.close()
+
+            ## Open Status File
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Setting up directories..,40')
+            statusFile.close()
+
+            try:
+                website = ChildDomains.objects.get(domain=domainName)
+                externalApp = website.master.externalApp
+
+                if admin.type != 1:
+                    if website.master.admin != admin:
+                        statusFile = open(tempStatusPath, 'w')
+                        statusFile.writelines("You do not own this website." + " [404]")
+                        statusFile.close()
+                        return 0
+
+            except:
+                website = Websites.objects.get(domain=domainName)
+                externalApp = website.externalApp
+
+                if admin.type != 1:
+                    if website.admin != admin:
+                        statusFile = open(tempStatusPath, 'w')
+                        statusFile.writelines("You do not own this website." + " [404]")
+                        statusFile.close()
+                        return 0
+
+            ## Security Check
+
+            if finalPath.find("..") > -1:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
+                statusFile.close()
+                return 0
+
+            FNULL = open(os.devnull, 'w')
+
+            if not os.path.exists(finalPath):
+                command = 'sudo mkdir -p ' + finalPath
+                subprocess.call(shlex.split(command))
+
+            ## checking for directories/files
+
+            dirFiles = os.listdir(finalPath)
+
+            if len(dirFiles) == 1:
+                if dirFiles[0] == ".well-known":
+                    pass
+                else:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines("Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
+                    statusFile.close()
+                    return 0
+            elif len(dirFiles) == 0:
+                pass
+            else:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(
+                    "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
+                statusFile.close()
+                return 0
+
+            ####
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Cloning the repo..,40')
+            statusFile.close()
+
+            try:
+
+                command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" /usr/local/bin/git clone ' \
+                          '--depth 1 --no-single-branch git@github.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
+                subprocess.call(shlex.split(command))
+
+            except subprocess.CalledProcessError, msg:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Failed to clone repository. [404]')
+                statusFile.close()
+                return 0
+
+            ##
+
+            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            vhost.addRewriteRules(domainName)
+            installUtilities.reStartLiteSpeed()
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines("Successfully Installed. [200]")
+            statusFile.close()
+            return 0
+
+
+        except BaseException, msg:
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()

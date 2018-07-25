@@ -1,0 +1,171 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Attach Git - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Attach Git" %}</h2>
+   <p>{% trans "Attach git to your website" %}</p>
+</div>
+
+<div ng-controller="setupGit" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    <span id="domainNamePage">{{ domainName }}</span> - {% trans "Attach Git" %} <img ng-hide="gitLoading" src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+                    <ul class="list-group list-group-separator row list-group-icons">
+
+                        <li class="col-md-3 active">
+                            <a href="#tab-example-1" data-toggle="tab" class="list-group-item">
+                                <i class="glyph-icon icon-dashboard"></i>
+                                {% trans "Github" %}
+                            </a>
+                        </li>
+
+                        <li class="col-md-3">
+                            <a href="#tab-example-3" data-toggle="tab" class="list-group-item">
+                                <i class="glyph-icon font-blue-alt icon-globe"></i>
+                                {% trans "Deployment Key" %}
+                            </a>
+                        </li>
+
+                    </ul>
+
+
+                    <div class="tab-content">
+                        <div class="tab-pane fade active in" id="tab-example-1">
+                            <div  class="example-box-wrapper">
+
+                                <form  action="/" class="form-horizontal bordered-row">
+
+                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                        <label style="color: green;" class="col-sm-10 control-label">{% trans "Before attaching repo to your website, make sure to place your Development key in your GIT repository." %}</label>
+                                     </div>
+
+                                     <div ng-hide="installationDetailsForm" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Github Username" %}</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control" ng-model="githubUserName" required>
+                                        </div>
+
+                                     </div>
+
+                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Repository Name" %}</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control" ng-model="githubRepo" required>
+                                        </div>
+
+                                    </div>
+
+
+                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Branch" %}</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control" ng-model="githubBranch" required>
+                                        </div>
+
+                                    </div>
+
+
+                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                        <label class="col-sm-3 control-label"></label>
+                                        <div class="col-sm-4">
+                                             <button type="button" ng-click="attachRepo()" class="btn btn-primary btn-lg btn-block">{% trans "Attach Now" %}</button>
+
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="" class="form-group">
+                                        <label class="col-sm-2 control-label"></label>
+                                        <div class="col-sm-7">
+
+                                                <div ng-hide="installProg" class="alert alert-success text-center">
+                                                            <h2>{$ currentStatus $}</h2>
+                                                </div>
+
+                                            <div ng-hide="installProg" class="progress">
+                                              <div id="installProgress" class="progress-bar" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                                                <span class="sr-only">70% Complete</span>
+                                              </div>
+                                            </div>
+
+                                                <div ng-hide="installationFailed" class="alert alert-danger">
+                                                            <p>{% trans "Installation failed. Error message:" %} {$ errorMessage $}</p>
+                                                </div>
+
+                                                <div ng-hide="installationSuccessfull" class="alert alert-success">
+                                                    <p>{% trans "Installation successful. Visit:" %} {$ installationURL $}</p>
+                                                </div>
+
+
+
+                                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                            <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                                </div>
+
+                                        </div>
+                </div>
+
+
+                                </form>
+
+                            </div>
+                        </div>
+
+
+                        <div class="tab-pane fade" id="tab-example-3">
+
+                            <form  action="/" class="form-horizontal bordered-row">
+
+                                <!------ List of records --------------->
+
+                                <div class="form-group">
+
+                                    <div  class="col-sm-12">
+
+                                        <table class="table">
+                                            <thead>
+                                            <tr>
+                                                <th>{% trans "Deployment Key" %}</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr>
+                                                <td>
+                                                    <div class="form-group">
+                                                        <div class="col-sm-12">
+                                                            <textarea rows="5" class="form-control">{{ deploymentKey }}</textarea>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+
+
+                            <!------ List of records --------------->
+
+                            </form>
+
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+</div>
+
+{% endblock %}

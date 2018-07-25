@@ -253,6 +253,7 @@ WantedBy=multi-user.target"""
                     if count == 3:
                         Upgrade.stdOut(
                             "Failed to setup CLI! [setupCLI]")
+                        break
                 else:
                     Upgrade.stdOut("CLI setup successfull!")
                     break
@@ -314,13 +315,19 @@ WantedBy=multi-user.target"""
 
         os.chdir("/usr/local")
 
+
+
         ## Current Version
 
         Version = version.objects.get(pk=1)
 
+
         ##
 
         versionNumbring = Upgrade.downloadLink()
+
+        if os.path.exists('/usr/local/CyberPanel.' + versionNumbring):
+            os.remove('/usr/local/CyberPanel.' + versionNumbring)
 
         if float(Version.currentVersion) < 1.6:
             Upgrade.stdOut('Upgrades works for version 1.6 onwards.')

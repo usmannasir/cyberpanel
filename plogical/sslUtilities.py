@@ -196,8 +196,6 @@ class sslUtilities:
                         logging.CyberCPLogFileWriter.writeToFile('Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName)
                         return 0
 
-                logging.CyberCPLogFileWriter.writeToFile(command)
-
                 pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
 
                 if not os.path.exists(pathToStoreSSL):

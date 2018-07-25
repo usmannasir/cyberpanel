@@ -23,17 +23,13 @@ Webhosting control panel that uses OpenLiteSpeed as web server.
 * PHP 5.6
 * PHP 7.0
 * PHP 7.1
-
+* PHP 7.2
 
 # Installation Instructions
 
 
 ```
-wget http://cyberpanel.net/install.tar.gz
-tar zxf install.tar.gz
-cd install
-chmod +x install.py
-python install.py [IP Address]
+sh <(curl https://cyberpanel.net/install.sh || wget -O - https://cyberpanel.net/install.sh)
 ```
 
 # Resources
