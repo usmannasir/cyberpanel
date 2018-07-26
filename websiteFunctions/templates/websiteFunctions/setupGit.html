@@ -97,11 +97,11 @@
                                             </div>
 
                                                 <div ng-hide="installationFailed" class="alert alert-danger">
-                                                            <p>{% trans "Installation failed. Error message:" %} {$ errorMessage $}</p>
+                                                            <p>{% trans "Error message:" %} {$ errorMessage $}</p>
                                                 </div>
 
                                                 <div ng-hide="installationSuccessfull" class="alert alert-success">
-                                                    <p>{% trans "Installation successful. Visit:" %} {$ installationURL $}</p>
+                                                    <p>{% trans "GIT Successfully attached. Visit:" %} {$ installationURL $}</p>
                                                 </div>
 
 
@@ -112,6 +112,14 @@
 
                                         </div>
                 </div>
+
+
+                                    <div ng-hide="installationProgress" class="form-group">
+                                        <label class="col-sm-3 control-label"></label>
+                                        <div class="col-sm-4">
+                                            <button type="button" ng-disabled="goBackDisable"  ng-click="goBack()" class="btn btn-primary btn-lg btn-block">{% trans "Go Back" %}</button>
+                                        </div>
+                                    </div>
 
 
                                 </form>

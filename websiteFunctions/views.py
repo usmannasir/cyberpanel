@@ -2561,3 +2561,30 @@ def setupGitRepo(request):
         status = {"installStatus":0,"error":str(msg)}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
         return HttpResponse("Not Logged in as admin")
+
+
+def gitNotify(request, domain):
+    try:
+        if request.method == 'POST':
+            try:
+
+                extraArgs = {}
+                extraArgs['domain'] = domain
+
+                background = ApplicationInstaller('pull', extraArgs)
+                background.start()
+
+                data_ret = {'pulled': 1, 'error_message': 'None'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            except BaseException, msg:
+                data_ret = {'pulled': 0, 'error_message': str(msg)}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+    except KeyError, msg:
+        data_ret = {"pulled":0,"error":str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)

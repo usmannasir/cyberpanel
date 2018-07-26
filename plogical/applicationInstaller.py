@@ -9,13 +9,13 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 from vhost import vhost
-from loginSystem.models import Administrator
 from websiteFunctions.models import ChildDomains, Websites
 import randomPassword
 from mysqlUtilities import mysqlUtilities
 from databases.models import Databases
 from installUtilities import installUtilities
 import shutil
+from plogical.mailUtilities import mailUtilities
 
 
 class ApplicationInstaller(multi.Thread):
@@ -33,10 +33,11 @@ class ApplicationInstaller(multi.Thread):
                 self.installJoomla()
             elif self.installApp == 'git':
                 self.setupGit()
+            elif self.installApp == 'pull':
+                self.gitPull()
 
         except BaseException, msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.run]')
-
 
     def installWPCLI(self):
         try:
@@ -52,7 +53,7 @@ class ApplicationInstaller(multi.Thread):
         except BaseException, msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.installWPCLI]')
 
-    def installGit(self, tempStatusPath):
+    def installGit(self):
         try:
 
             command = 'sudo yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
@@ -63,7 +64,6 @@ class ApplicationInstaller(multi.Thread):
 
         except BaseException, msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.installGit]')
-
 
     def installWordPress(self):
         try:
@@ -305,7 +305,6 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
             return 0
 
-
     def setupGit(self):
         try:
             admin = self.extraArgs['admin']
@@ -325,30 +324,30 @@ class ApplicationInstaller(multi.Thread):
             ### Check git
 
             try:
-                command = 'sudo /usr/local/bin/git --help'
+                command = 'sudo git --help'
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
                     statusFile = open(tempStatusPath, 'w')
                     statusFile.writelines('Installing GIT..,0')
                     statusFile.close()
-                    self.installGit(tempStatusPath)
+                    self.installGit()
                     statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines('GIT successfully installed,40')
+                    statusFile.writelines('GIT successfully installed,20')
                     statusFile.close()
             except subprocess.CalledProcessError:
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines('Installing GIT..,0')
                 statusFile.close()
-                self.installGit(tempStatusPath)
+                self.installGit()
                 statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines('GIT successfully installed.,40')
+                statusFile.writelines('GIT successfully installed.,20')
                 statusFile.close()
 
             ## Open Status File
 
             statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Setting up directories..,40')
+            statusFile.writelines('Setting up directories..,20')
             statusFile.close()
 
             try:
@@ -396,7 +395,7 @@ class ApplicationInstaller(multi.Thread):
                     pass
                 else:
                     statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines("Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
+                    statusFile.writelines("Target directory should be empty before attaching GIT, otherwise data loss could occur." + " [404]")
                     statusFile.close()
                     return 0
             elif len(dirFiles) == 0:
@@ -404,7 +403,7 @@ class ApplicationInstaller(multi.Thread):
             else:
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines(
-                    "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
+                    "Target directory should be empty before attaching GIT, otherwise data loss could occur." + " [404]")
                 statusFile.close()
                 return 0
 
@@ -416,13 +415,13 @@ class ApplicationInstaller(multi.Thread):
 
             try:
 
-                command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" /usr/local/bin/git clone ' \
+                command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" git clone ' \
                           '--depth 1 --no-single-branch git@github.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
-                subprocess.call(shlex.split(command))
+                result = subprocess.check_output(shlex.split(command))
 
             except subprocess.CalledProcessError, msg:
                 statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines('Failed to clone repository. [404]')
+                statusFile.writelines('Failed to clone repository, make sure you deployed your key to repository. [404]')
                 statusFile.close()
                 return 0
 
@@ -435,18 +434,50 @@ class ApplicationInstaller(multi.Thread):
             vhost.addRewriteRules(domainName)
             installUtilities.reStartLiteSpeed()
 
+            mailUtilities.checkHome()
+
+            gitPath = '/home/cyberpanel/' + domainName + '.git'
+            writeToFile = open(gitPath, 'w')
+            writeToFile.write(username + ':' + reponame)
+            writeToFile.close()
+
             statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines("Successfully Installed. [200]")
+            statusFile.writelines("GIT Repository successfully attached. [200]")
             statusFile.close()
             return 0
 
 
         except BaseException, msg:
+
+            os.remove('/home/cyberpanel/' + domainName + '.git')
+
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
             return 0
 
+    def gitPull(self):
+        try:
+            domain = self.extraArgs['domain']
+
+            command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" git -C /home/' + domain + '/public_html/  pull'
+            subprocess.check_output(shlex.split(command))
+
+            website = Websites.objects.get(domain=domain)
+            externalApp = website.externalApp
+
+            ##
+
+            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + '/home/' + domain + '/public_html/'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
+
+            return 0
+
+
+        except BaseException, msg:
+            logging.writeToFile(str(msg)+ " [ApplicationInstaller.gitPull]")
+            return 0
 
     def installJoomla(self):
 

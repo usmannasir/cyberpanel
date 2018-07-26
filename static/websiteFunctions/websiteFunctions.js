@@ -4245,6 +4245,8 @@ app.controller('setupGit', function($scope, $http, $timeout) {
     $scope.gitLoading = true;
     $scope.githubBranch = 'master';
     $scope.installProg = true;
+    $scope.goBackDisable = true;
+
 
     var statusFile;
     var domain = $("#domainNamePage").text();
@@ -4306,6 +4308,7 @@ app.controller('setupGit', function($scope, $http, $timeout) {
 
                             $("#installProgress").css("width", "0%");
                             $scope.installPercentage = "0";
+                            $scope.goBackDisable = false;
 
                         }
 
@@ -4326,6 +4329,7 @@ app.controller('setupGit', function($scope, $http, $timeout) {
 
                     $scope.canNotFetch = true;
                     $scope.couldNotConnect = false;
+                    $scope.goBackDisable = false;
 
 
                 }
@@ -4343,7 +4347,7 @@ app.controller('setupGit', function($scope, $http, $timeout) {
                 $scope.gitLoading = false;
                 $scope.installProg = false;
 
-                $scope.currentStatus = "Starting installation..";
+                $scope.currentStatus = "Attaching GIT..";
 
                 url = "/websites/setupGitRepo";
 
@@ -4380,6 +4384,7 @@ app.controller('setupGit', function($scope, $http, $timeout) {
                         $scope.gitLoading = true;
 
                         $scope.errorMessage = response.data.error_message;
+                        $scope.goBackDisable = false;
 
                     }
 
@@ -4391,6 +4396,19 @@ app.controller('setupGit', function($scope, $http, $timeout) {
 
                 }
 
+    };
+
+
+    $scope.goBack = function () {
+        $scope.installationDetailsForm = false;
+        $scope.installationProgress = true;
+        $scope.installProg = true;
+        $scope.installationFailed = true;
+        $scope.installationSuccessfull = true;
+        $scope.couldNotConnect = true;
+        $scope.gitLoading = true;
+        $scope.goBackDisable = true;
+        $("#installProgress").css("width", "0%");
     };
 
 
