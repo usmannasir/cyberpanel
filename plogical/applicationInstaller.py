@@ -313,6 +313,7 @@ class ApplicationInstaller(multi.Thread):
             reponame = self.extraArgs['reponame']
             branch = self.extraArgs['branch']
             tempStatusPath = self.extraArgs['tempStatusPath']
+            defaultProvider = self.extraArgs['defaultProvider']
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Checking if GIT installed..,0')
@@ -416,7 +417,7 @@ class ApplicationInstaller(multi.Thread):
             try:
 
                 command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" git clone ' \
-                          '--depth 1 --no-single-branch git@github.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
+                          '--depth 1 --no-single-branch git@' + defaultProvider +'.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
                 result = subprocess.check_output(shlex.split(command))
 
             except subprocess.CalledProcessError, msg:

@@ -2511,10 +2511,24 @@ def setupGit(request, domain):
                 if website.admin != admin:
                     raise BaseException('You do not own this website.')
 
-            command = 'sudo cat /root/.ssh/cyberpanel.pub'
-            deploymentKey = subprocess.check_output(shlex.split(command)).strip('\n')
 
-            return render(request, 'websiteFunctions/setupGit.html', {'domainName' : domain, 'deploymentKey': deploymentKey})
+            path = '/home/cyberpanel/' + domain + '.git'
+
+            if os.path.exists(path):
+
+                ipFile = "/etc/cyberpanel/machineIP"
+                f = open(ipFile)
+                ipData = f.read()
+                ipAddress = ipData.split('\n', 1)[0]
+
+                webhookURL = 'https://' + ipAddress + ':8090/websites/' + domain + '/gitNotify'
+                return render(request, 'websiteFunctions/setupGit.html',
+                              {'domainName': domain, 'installed': 1, 'webhookURL': webhookURL})
+            else:
+                command = 'sudo cat /root/.ssh/cyberpanel.pub'
+                deploymentKey = subprocess.check_output(shlex.split(command)).strip('\n')
+
+            return render(request, 'websiteFunctions/setupGit.html', {'domainName' : domain, 'deploymentKey': deploymentKey, 'installed': 0})
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
@@ -2539,6 +2553,7 @@ def setupGitRepo(request):
                 extraArgs['reponame'] = data['reponame']
                 extraArgs['branch'] = data['branch']
                 extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+                extraArgs['defaultProvider'] = data['defaultProvider']
 
 
                 background = ApplicationInstaller('git', extraArgs)

@@ -4247,6 +4247,12 @@ app.controller('setupGit', function($scope, $http, $timeout) {
     $scope.installProg = true;
     $scope.goBackDisable = true;
 
+    var defaultProvider = 'github';
+
+    $scope.setProvider = function (provider) {
+        defaultProvider = provider;
+    };
+
 
     var statusFile;
     var domain = $("#domainNamePage").text();
@@ -4284,7 +4290,7 @@ app.controller('setupGit', function($scope, $http, $timeout) {
                             $scope.installationSuccessfull = false;
                             $scope.couldNotConnect = true;
                             $scope.gitLoading = true;
-                            $scope.goBackDisable = false;
+                            $scope.goBackDisable = true;
 
                             $scope.installationURL = domain;
 
@@ -4355,7 +4361,8 @@ app.controller('setupGit', function($scope, $http, $timeout) {
                     domain: domain,
                     username: $scope.githubUserName,
                     reponame: $scope.githubRepo,
-                    branch: $scope.githubBranch
+                    branch: $scope.githubBranch,
+                    defaultProvider: defaultProvider
                 };
 
                 var config = {
