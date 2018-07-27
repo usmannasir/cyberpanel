@@ -1,21 +1,21 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Attach Git - CyberPanel" %}{% endblock %}
+{% block title %}{% trans "Git Management - CyberPanel" %}{% endblock %}
 {% block content %}
 
 {% load static %}
 {% get_current_language as LANGUAGE_CODE %}
 <!-- Current language: {{ LANGUAGE_CODE }} -->
 
-<div class="container">
+<div ng-controller="setupGit" class="container">
 <div id="page-title">
-   <h2>{% trans "Attach Git" %}</h2>
-   <p>{% trans "Attach git to your website" %}</p>
+   <h2>{% trans "Git Management" %}</h2>
+   <p>{% trans "Attach git to your websites." %}</p>
 </div>
 
     {% if not installed %}
 
-        <div ng-controller="setupGit" class="panel">
+        <div class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
                     <span id="domainNamePage">{{ domainName }}</span> - {% trans "Attach Git" %} <img ng-hide="gitLoading" src="{% static 'images/loading.gif' %}">
@@ -120,7 +120,7 @@
                                                 </div>
 
                                                 <div ng-hide="installationSuccessfull" class="alert alert-success">
-                                                    <p>{% trans "GIT Successfully attached. Visit:" %} {$ installationURL $}</p>
+                                                    <p>{% trans "GIT Successfully attached, refreshing page in 3 seconds... Visit:" %} {$ installationURL $}</p>
                                                 </div>
 
 
@@ -194,7 +194,7 @@
 
     {% else %}
 
-        <div ng-controller="setupGit" class="panel">
+        <div class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
                     <span id="domainNamePage">{{ domainName }}</span> <img ng-hide="gitLoading" src="{% static 'images/loading.gif' %}">
@@ -220,9 +220,9 @@
                         <div class="tab-pane fade active in" id="tab-example-1">
                             <ul class="list-group row">
                                     <li class="col-md-3">
-                                        <a href="" ng-click="setProvider('github')" class="list-group-item">
+                                        <a href="" ng-click="detachRepo()" class="list-group-item">
                                             <i class="fa fa-github" aria-hidden="true"></i>
-                                             Detach Repo
+                                             {% trans 'Detach Repo' %}
                                             <i class="glyph-icon icon-chevron-right"></i>
                                         </a>
                                     </li>
@@ -231,6 +231,28 @@
                                 <h4 class="alert-title">{% trans 'Webhook URL'  %}</h4>
                                 <p>{% trans "Add this URL to Webhooks section of your Git respository, if you've used hostname SSL then replace IP with your hostname. Otherwise use IP and disable SSL check while configuring webhook. This will initiate a pull from your resposity as soon as you commit some changes."%} <code>{{ webhookURL }}</code></p>
                             </div>
+
+                            <div ng-hide="" class="form-group">
+                                        <label class="col-sm-2 control-label"></label>
+                                        <div class="col-sm-7">
+
+                                                <div ng-hide="failedMesg" class="alert alert-danger">
+                                                            <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                                                </div>
+
+                                                <div ng-hide="successMessage" class="alert alert-success">
+                                                    <p>{% trans "Repo successfully detached, refreshing in 3 seconds.." %}</p>
+                                                </div>
+
+
+
+                                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                            <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                                </div>
+
+                                        </div>
+                            </div>
+
                         </div>
 
 
@@ -251,7 +273,7 @@
                                     <div ng-hide="installationDetailsForm" class="form-group">
                                         <label class="col-sm-3 control-label"></label>
                                         <div class="col-sm-4">
-                                             <button type="button" ng-click="attachRepo()" class="btn btn-primary btn-lg btn-block">{% trans "Change Branch" %}</button>
+                                             <button type="button" ng-click="changeBranch()" class="btn btn-primary btn-lg btn-block">{% trans "Change Branch" %}</button>
 
                                         </div>
                                     </div>
@@ -264,7 +286,7 @@
                                                             <p>{% trans "Error message:" %} {$ errorMessage $}</p>
                                                 </div>
 
-                                                <div ng-hide="successMessage" class="alert alert-success">
+                                                <div ng-hide="successMessageBranch" class="alert alert-success">
                                                     <p>{% trans "Branch successfully changed." %}</p>
                                                 </div>
 
@@ -275,7 +297,7 @@
                                                 </div>
 
                                         </div>
-                </div>
+                                    </div>
 
 
                                 </form>

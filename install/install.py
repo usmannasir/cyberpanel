@@ -2052,6 +2052,10 @@ class preFlightsChecks:
             cmd = shlex.split(command)
             subprocess.call(cmd)
 
+            command = 'systemctl restart systemd-logind'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
+
 
             count = 0
 

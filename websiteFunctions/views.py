@@ -2603,3 +2603,77 @@ def gitNotify(request, domain):
         data_ret = {"pulled":0,"error":str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+
+def detachRepo(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+
+        if request.method == 'POST':
+            try:
+                data = json.loads(request.body)
+
+                mailUtilities.checkHome()
+
+                extraArgs = {}
+                extraArgs['domainName'] = data['domain']
+
+
+                background = ApplicationInstaller('detach', extraArgs)
+                background.start()
+
+                time.sleep(2)
+
+                data_ret = {'status': 1, 'error_message': 'None'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+            except BaseException, msg:
+                data_ret = {'status': 0, 'error_message': str(msg)}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+    except KeyError, msg:
+        status = {"status":0,"error":str(msg)}
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
+        return HttpResponse("Not Logged in as admin")
+
+def changeBranch(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+
+        if request.method == 'POST':
+            try:
+                data = json.loads(request.body)
+
+                mailUtilities.checkHome()
+
+                extraArgs = {}
+                extraArgs['domainName'] = data['domain']
+                extraArgs['githubBranch'] = data['githubBranch']
+
+
+                background = ApplicationInstaller('changeBranch', extraArgs)
+                background.start()
+
+                time.sleep(2)
+
+                data_ret = {'status': 1, 'error_message': 'None'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+            except BaseException, msg:
+                data_ret = {'status': 0, 'error_message': str(msg)}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+    except KeyError, msg:
+        status = {"status":0,"error":str(msg)}
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
+        return HttpResponse("Not Logged in as admin")

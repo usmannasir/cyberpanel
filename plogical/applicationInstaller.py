@@ -35,6 +35,10 @@ class ApplicationInstaller(multi.Thread):
                 self.setupGit()
             elif self.installApp == 'pull':
                 self.gitPull()
+            elif self.installApp == 'detach':
+                self.detachRepo()
+            elif self.installApp == 'changeBranch':
+                self.changeBranch()
 
         except BaseException, msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.run]')
@@ -480,6 +484,36 @@ class ApplicationInstaller(multi.Thread):
             logging.writeToFile(str(msg)+ " [ApplicationInstaller.gitPull]")
             return 0
 
+    def detachRepo(self):
+        try:
+            domain = self.extraArgs['domainName']
+
+            command = 'sudo rm -rf  /home/' + domain + '/public_html'
+            subprocess.check_output(shlex.split(command))
+
+            command = 'sudo mkdir  /home/' + domain + '/public_html'
+            subprocess.check_output(shlex.split(command))
+
+            website = Websites.objects.get(domain=domain)
+            externalApp = website.externalApp
+
+            ##
+
+            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + '/home/' + domain + '/public_html'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
+
+            gitPath = '/home/cyberpanel/' + domain + '.git'
+
+            os.remove(gitPath)
+
+            return 0
+
+
+        except BaseException, msg:
+            logging.writeToFile(str(msg)+ " [ApplicationInstaller.gitPull]")
+            return 0
+
     def installJoomla(self):
 
         try:
@@ -665,4 +699,26 @@ class ApplicationInstaller(multi.Thread):
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
+            return 0
+
+    def changeBranch(self):
+        try:
+            domainName = self.extraArgs['domainName']
+            githubBranch = self.extraArgs['githubBranch']
+
+            try:
+                command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" git -C /home/' + domainName + '/public_html/  checkout -b' + githubBranch
+                subprocess.check_output(shlex.split(command))
+
+            except subprocess.CalledProcessError, msg:
+                logging.writeToFile('Failed to change branch: ' +  str(msg))
+                return 0
+
+            ##
+
+
+            return 0
+
+
+        except BaseException, msg:
             return 0

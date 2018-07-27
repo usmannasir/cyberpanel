@@ -4235,7 +4235,7 @@ app.controller('installJoomlaCTRL', function($scope, $http, $timeout) {
 });
 
 
-app.controller('setupGit', function($scope, $http, $timeout) {
+app.controller('setupGit', function($scope, $http, $timeout, $window) {
 
     $scope.installationDetailsForm = false;
     $scope.installationProgress = true;
@@ -4298,6 +4298,7 @@ app.controller('setupGit', function($scope, $http, $timeout) {
                             $scope.installPercentage = "100";
                             $scope.currentStatus = response.data.currentStatus;
                             $timeout.cancel();
+                            $timeout(function() {  $window.location.reload(); }, 3000);
 
                         }
                         else{
@@ -4405,7 +4406,6 @@ app.controller('setupGit', function($scope, $http, $timeout) {
 
     };
 
-
     $scope.goBack = function () {
         $scope.installationDetailsForm = false;
         $scope.installationProgress = true;
@@ -4416,6 +4416,134 @@ app.controller('setupGit', function($scope, $http, $timeout) {
         $scope.gitLoading = true;
         $scope.goBackDisable = true;
         $("#installProgress").css("width", "0%");
+    };
+
+    /// Detach Repo
+
+    $scope.failedMesg = true;
+    $scope.successMessage = true;
+    $scope.couldNotConnect = true;
+    $scope.gitLoading = true;
+    $scope.successMessageBranch = true;
+
+    $scope.detachRepo = function(){
+
+    $scope.failedMesg = true;
+    $scope.successMessage = true;
+    $scope.couldNotConnect = true;
+    $scope.gitLoading = false;
+    $scope.successMessageBranch = true;
+
+                url = "/websites/detachRepo";
+
+                var data = {
+                    domain: domain
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.gitLoading = true;
+
+                    if (response.data.status === 1)
+                    {
+                        $scope.failedMesg = true;
+                        $scope.successMessage = false;
+                        $scope.couldNotConnect = true;
+                        $scope.successMessageBranch = true;
+
+                        $timeout(function() {  $window.location.reload(); }, 3000);
+
+                    }
+                    else{
+
+                        $scope.failedMesg = false;
+                        $scope.successMessage = true;
+                        $scope.couldNotConnect = true;
+                        $scope.successMessageBranch = true;
+
+                        $scope.errorMessage = response.data.error_message;
+
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+                        $scope.failedMesg = true;
+                        $scope.successMessage = true;
+                        $scope.couldNotConnect = false;
+                        $scope.gitLoading = true;
+                        $scope.successMessageBranch = true;
+                }
+
+    };
+    $scope.changeBranch = function(){
+
+    $scope.failedMesg = true;
+    $scope.successMessage = true;
+    $scope.couldNotConnect = true;
+    $scope.gitLoading = false;
+    $scope.successMessageBranch = true;
+
+                url = "/websites/changeBranch";
+
+                var data = {
+                    domain: domain,
+                    githubBranch: $scope.githubBranch
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.gitLoading = true;
+
+                    if (response.data.status === 1)
+                    {
+                        $scope.failedMesg = true;
+                        $scope.successMessage = true;
+                        $scope.couldNotConnect = true;
+                        $scope.successMessageBranch = false;
+
+                    }
+                    else{
+
+                        $scope.failedMesg = false;
+                        $scope.successMessage = true;
+                        $scope.couldNotConnect = true;
+                        $scope.successMessageBranch = true;
+
+                        $scope.errorMessage = response.data.error_message;
+
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+                        $scope.failedMesg = true;
+                        $scope.successMessage = true;
+                        $scope.couldNotConnect = false;
+                        $scope.gitLoading = true;
+                        $scope.successMessageBranch = true;
+                }
+
     };
 
 
