@@ -465,6 +465,12 @@ class ApplicationInstaller(multi.Thread):
         try:
             domain = self.extraArgs['domain']
 
+            path = '/home/cyberpanel/' + domain + '.git'
+
+            if not os.path.exists(path):
+                logging.writeToFile('Git is not setup for this website.')
+                return 0
+
             command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" git -C /home/' + domain + '/public_html/  pull'
             subprocess.check_output(shlex.split(command))
 
@@ -487,15 +493,32 @@ class ApplicationInstaller(multi.Thread):
     def detachRepo(self):
         try:
             domain = self.extraArgs['domainName']
+            admin = self.extraArgs['admin']
+
+            try:
+                website = ChildDomains.objects.get(domain=domain)
+                externalApp = website.master.externalApp
+
+                if admin.type != 1:
+                    if website.master.admin != admin:
+                        logging.writeToFile("You do not own this website, detach failed. [404]")
+                        return 0
+
+            except:
+                website = Websites.objects.get(domain=domain)
+                externalApp = website.externalApp
+
+                if admin.type != 1:
+                    if website.admin != admin:
+                        logging.writeToFile("You do not own this website, detach failed. [404]")
+                        return 0
+
 
             command = 'sudo rm -rf  /home/' + domain + '/public_html'
             subprocess.check_output(shlex.split(command))
 
             command = 'sudo mkdir  /home/' + domain + '/public_html'
             subprocess.check_output(shlex.split(command))
-
-            website = Websites.objects.get(domain=domain)
-            externalApp = website.externalApp
 
             ##
 
@@ -705,6 +728,23 @@ class ApplicationInstaller(multi.Thread):
         try:
             domainName = self.extraArgs['domainName']
             githubBranch = self.extraArgs['githubBranch']
+            admin = self.extraArgs['admin']
+
+            try:
+                website = ChildDomains.objects.get(domain=domainName)
+
+                if admin.type != 1:
+                    if website.master.admin != admin:
+                        logging.writeToFile("You do not own this website, failed to change branch. [404]")
+                        return 0
+
+            except:
+                website = Websites.objects.get(domain=domainName)
+
+                if admin.type != 1:
+                    if website.admin != admin:
+                        logging.writeToFile("You do not own this website, failed to change branch. [404]")
+                        return 0
 
             try:
                 command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" git -C /home/' + domainName + '/public_html/  checkout -b' + githubBranch

@@ -611,7 +611,6 @@ RewriteFile .htaccess
 
     @staticmethod
     def addRewriteRules(virtualHostName, fileName=None):
-
         try:
             pass
         except BaseException, msg:
@@ -679,11 +678,8 @@ RewriteFile .htaccess
     def permissionControl(path):
         try:
             command = 'sudo chown -R  cyberpanel:cyberpanel ' + path
-
             cmd = shlex.split(command)
-
             res = subprocess.call(cmd)
-
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 

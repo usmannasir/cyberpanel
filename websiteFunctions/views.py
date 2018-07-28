@@ -259,6 +259,8 @@ def submitWebsiteCreation(request):
                 data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
+
+
     except BaseException, msg:
         data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
         json_data = json.dumps(data_ret)
@@ -2522,6 +2524,7 @@ def setupGit(request, domain):
                 ipAddress = ipData.split('\n', 1)[0]
 
                 webhookURL = 'https://' + ipAddress + ':8090/websites/' + domain + '/gitNotify'
+
                 return render(request, 'websiteFunctions/setupGit.html',
                               {'domainName': domain, 'installed': 1, 'webhookURL': webhookURL})
             else:
@@ -2577,7 +2580,6 @@ def setupGitRepo(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
         return HttpResponse("Not Logged in as admin")
 
-
 def gitNotify(request, domain):
     try:
         if request.method == 'POST':
@@ -2604,7 +2606,6 @@ def gitNotify(request, domain):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def detachRepo(request):
     try:
         val = request.session['userID']
@@ -2618,6 +2619,7 @@ def detachRepo(request):
 
                 extraArgs = {}
                 extraArgs['domainName'] = data['domain']
+                extraArgs['admin'] = admin
 
 
                 background = ApplicationInstaller('detach', extraArgs)
@@ -2655,6 +2657,7 @@ def changeBranch(request):
                 extraArgs = {}
                 extraArgs['domainName'] = data['domain']
                 extraArgs['githubBranch'] = data['githubBranch']
+                extraArgs['admin'] = admin
 
 
                 background = ApplicationInstaller('changeBranch', extraArgs)
