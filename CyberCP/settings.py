@@ -177,4 +177,5 @@ LANGUAGES = (
     ('ru', _('Russian')),
     ('tr', _('Turkish')),
     ('es', _('Spanish')),
+    ('fr', _('French')),
 )

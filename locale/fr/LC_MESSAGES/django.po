@@ -1315,15 +1315,11 @@ msgstr "Serveur de stratégie de messagerie"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:562
 msgid "Email Limits"
-msgstr ""
-"\n"
-"Limites de messagerie"
+msgstr "Limites de messagerie"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:563
 msgid "SpamAssassin Configurations"
-msgstr ""
-"\n"
-"SpamAssassin Configurations"
+msgstr "SpamAssassin Configurations"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:563
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:20
@@ -1376,9 +1372,7 @@ msgstr ""
 
 #: CyberCP/baseTemplate/templates/baseTemplate/versionManagment.html:25
 msgid "Current Version"
-msgstr ""
-"\n"
-"Version actuelle"
+msgstr "Version actuelle"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/versionManagment.html:33
 msgid "Build"
@@ -1736,9 +1730,7 @@ msgstr "Premier serveur de noms"
 
 #: CyberCP/dns/templates/dns/createNameServer.html:66
 msgid "Second Nameserver (Back up)"
-msgstr ""
-"\n"
-"Second Nameserver (Sauvegarde)"
+msgstr "Second Nameserver (Sauvegarde)"
 
 #: CyberCP/dns/templates/dns/createNameServer.html:98
 msgid "Nameserver cannot be created. Error message:"
@@ -1810,9 +1802,7 @@ msgstr "Ajouter des enregistrements de suppression"
 #: CyberCP/dns/templates/dns/index.html:55
 #: CyberCP/dns/templates/dns/index.html:110
 msgid "Add Delete/Records"
-msgstr ""
-"\n"
-"Ajouter Supprimer / Enregistrements"
+msgstr "Ajouter Supprimer / Enregistrements"
 
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:3
 #: CyberCP/firewall/templates/firewall/spamassassin.html:3
@@ -1899,9 +1889,7 @@ msgstr "Afficher et modifier les limites de messagerie pour un nom de domaine"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:25
 msgid "Domain Resource Usage"
-msgstr ""
-"\n"
-"Utilisation des ressources de domaine"
+msgstr "Utilisation des ressources de domaine"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:52
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:158
@@ -2135,9 +2123,7 @@ msgstr "Arrière"
 #: CyberCP/serverStatus/templates/serverStatus/cybercpmainlogfile.html:40
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:36
 msgid "Refresh"
-msgstr ""
-"\n"
-"Rafraîchir"
+msgstr "Rafraîchir"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:147
 msgid "Select All"
@@ -2270,9 +2256,7 @@ msgstr "Créer un fichier"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:400
 msgid "File Successfully created."
-msgstr ""
-"\n"
-"Fichier créé avec succès."
+msgstr "Fichier créé avec succès."
 
 #: CyberCP/filemanager/templates/filemanager/index.html:416
 msgid "Confirm Deletion!"
@@ -2294,9 +2278,7 @@ msgstr "Fermer"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:449
 msgid "List of files/folder!"
-msgstr ""
-"\n"
-"Liste des fichiers / dossiers!"
+msgstr "Liste des fichiers / dossiers!"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:453
 msgid "Compressed File Name"
@@ -2329,9 +2311,7 @@ msgstr "Déplacer des fichiers"
 #: CyberCP/filemanager/templates/filemanager/index.html:520
 #: CyberCP/filemanager/templates/filemanager/index.html:555
 msgid "List of files/folders!"
-msgstr ""
-"\n"
-"Liste des fichiers / dossiers!"
+msgstr "Liste des fichiers / dossiers!"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:524
 msgid "Move to"
@@ -2472,9 +2452,7 @@ msgstr "ModSecurity - CyberPanel"
 
 #: CyberCP/firewall/templates/firewall/modSecurity.html:13
 msgid "ModSecurity Configurations!"
-msgstr ""
-"\n"
-"Configurations ModSecurity!"
+msgstr "Configurations ModSecurity!"
 
 #: CyberCP/firewall/templates/firewall/modSecurity.html:13
 #: CyberCP/firewall/templates/firewall/modSecurityRules.html:13
@@ -2535,21 +2513,15 @@ msgstr ""
 
 #: CyberCP/firewall/templates/firewall/modSecurityRules.html:42
 msgid "Save Rules!"
-msgstr ""
-"\n"
-"Enregistrer les règles!"
+msgstr "Enregistrer les règles!"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRules.html:49
 msgid "ModSecurity Rules Saved"
-msgstr ""
-"\n"
-"Règles ModSecurity sauvegardées"
+msgstr "Règles ModSecurity sauvegardées"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRules.html:58
 msgid "Could not save rules, Error message: "
-msgstr ""
-"\n"
-"Impossible d'enregistrer les règles, message d'erreur:"
+msgstr "Impossible d'enregistrer les règles, message d'erreur:"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:3
 msgid "ModSecurity Rules Packs - CyberPanel"
@@ -2558,9 +2530,7 @@ msgstr "Packs de règles ModSecurity - CyberPanel"
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:13
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:20
 msgid "ModSecurity Rules Packages!"
-msgstr ""
-"\n"
-"Paquets de règles de ModSecurity!"
+msgstr "Paquets de règles de ModSecurity!"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:14
 msgid "Install/Un-install ModSecurity rules packages."
@@ -2710,9 +2680,7 @@ msgstr "Sélectionnez un domaine et supprimez ses comptes FTP associés."
 
 #: CyberCP/ftp/templates/ftp/deleteFTPAccount.html:52
 msgid "Select FTP Account"
-msgstr ""
-"\n"
-"Sélectionnez un compte FTP"
+msgstr "Sélectionnez un compte FTP"
 
 #: CyberCP/ftp/templates/ftp/deleteFTPAccount.html:83
 msgid "Cannot delete account. Error message:"
@@ -3029,9 +2997,7 @@ msgstr ""
 #: CyberCP/managePHP/templates/managePHP/installExtensions.html:67
 #: CyberCP/managePHP/templates/managePHP/installExtensions.html:78
 msgid "Install"
-msgstr ""
-"\n"
-"Installer"
+msgstr "Installer"
 
 #: CyberCP/managePHP/templates/managePHP/installExtensions.html:68
 #: CyberCP/managePHP/templates/managePHP/installExtensions.html:79
@@ -3139,9 +3105,7 @@ msgstr "SSL émis, votre serveur de messagerie utilise maintenant Lets Encrypt!"
 
 #: CyberCP/manageSSL/templates/manageSSL/sslForMailServer.html:60
 msgid "Could not connect to server, please refresh this page."
-msgstr ""
-"\n"
-"Impossible de se connecter au serveur. Veuillez actualiser cette page"
+msgstr "Impossible de se connecter au serveur. Veuillez actualiser cette page"
 
 #: CyberCP/manageServices/templates/manageServices/managePostfix.html:3
 msgid "Manage Email Server (Postfix) - CyberPanel"
@@ -3480,9 +3444,7 @@ msgstr "Services - CyberPanel"
 
 #: CyberCP/tuning/templates/tuning/index.html:3
 msgid "Server Tuning - CyberPanel"
-msgstr ""
-"\n"
-"Réglage du serveur - CyberPanel"
+msgstr "Réglage du serveur - CyberPanel"
 
 #: CyberCP/tuning/templates/tuning/index.html:13
 msgid ""
@@ -3600,9 +3562,7 @@ msgstr "Régler PHP"
 
 #: CyberCP/tuning/templates/tuning/phpTuning.html:115
 msgid "Cannot tune. Error message:"
-msgstr ""
-"\n"
-"Impossible de syntoniser. Message d'erreur:"
+msgstr "Impossible de syntoniser. Message d'erreur:"
 
 #: CyberCP/tuning/templates/tuning/phpTuning.html:120
 msgid "Details Successfully fetched."
@@ -3757,9 +3717,7 @@ msgstr "est modifié avec succès."
 
 #: CyberCP/userManagment/templates/userManagment/modifyUser.html:139
 msgid "Cannot modify user. Error message:"
-msgstr ""
-"\n"
-"Impossible de modifier l'utilisateur. Message d'erreur:"
+msgstr "Impossible de modifier l'utilisateur. Message d'erreur:"
 
 #: CyberCP/userManagment/templates/userManagment/modifyUser.html:152
 msgid "Details fetched."
@@ -4633,12 +4591,9 @@ msgstr "Nom d'utilisateur de l'administrateur"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:1053
 msgid "Admin Password"
-msgstr ""
-"\n"
-"Mot de passe administrateur"
+msgstr "Mot de passe administrateur"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:1060
 msgid "Database prefix"
-msgstr ""
-"\n"
-"Préfixe de base de données"
+msgstr "Préfixe de base de données"
+
