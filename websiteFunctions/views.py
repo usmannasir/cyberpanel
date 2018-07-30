@@ -223,6 +223,7 @@ def submitWebsiteCreation(request):
             packageName = data['package']
             websiteOwner = data['websiteOwner']
             externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:7]
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
 
             ####### Limitations check
@@ -247,22 +248,18 @@ def submitWebsiteCreation(request):
                        "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + \
                        " --ssl " + str(data['ssl']) + " --sslPath " + sslpath + " --dkimCheck " + str(data['dkimCheck'])\
                        + " --openBasedir " + str(data['openBasedir']) + ' --websiteOwner ' + websiteOwner \
-                       + ' --package ' + packageName
+                       + ' --package ' + packageName + ' --tempStatusPath ' + tempStatusPath
 
-            output = subprocess.check_output(shlex.split(execPath))
+            subprocess.Popen(shlex.split(execPath))
+            time.sleep(2)
 
-            if output.find("1,None") > -1:
-                data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            else:
-                data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+            data_ret = {'createWebSiteStatus': 1, 'error_message': "None", 'tempStatusPath': tempStatusPath}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
 
     except BaseException, msg:
-        data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
+        data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -275,6 +272,7 @@ def submitDomainCreation(request):
             domain = data['domainName']
             phpSelection = data['phpSelection']
             path = data['path']
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
 
             try:
@@ -286,7 +284,7 @@ def submitDomainCreation(request):
                 execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
                            " --phpVersion '" + phpSelection + "' --ssl " + str(data['ssl']) + " --dkimCheck " + \
                            str(data['dkimCheck']) + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path \
-                           + ' --restore ' + restore
+                           + ' --restore ' + restore + ' --tempStatusPath ' + tempStatusPath
 
             except:
                 restore = '0'
@@ -308,22 +306,17 @@ def submitDomainCreation(request):
                 execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
                            " --phpVersion '" + phpSelection + "' --ssl " + str(data['ssl']) + " --dkimCheck " + str(data['dkimCheck']) \
                            + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path \
-                           + ' --restore ' + restore + ' --websiteOwner ' + admin.userName
+                           + ' --restore ' + restore + ' --websiteOwner ' + admin.userName + ' --tempStatusPath ' + tempStatusPath
 
+            subprocess.Popen(shlex.split(execPath))
+            time.sleep(2)
 
-            output = subprocess.check_output(shlex.split(execPath))
-
-            if output.find("1,None") > -1:
-                data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            else:
-                data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+            data_ret = {'createWebSiteStatus': 1, 'error_message': "None", 'tempStatusPath': tempStatusPath}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
     except BaseException, msg:
-        data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
+        data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -2294,10 +2287,10 @@ def installWordpressStatus(request):
                 data = json.loads(request.body)
 
 
-                domainName = data['domainName']
                 statusFile = data['statusFile']
 
                 if admin.type != 1:
+                    domainName = data['domainName']
                     website = Websites.objects.get(domain=domainName)
                     if website.admin != admin:
                         raise BaseException('You do not own this website.')
