@@ -14,18 +14,18 @@
 </div>
 
 
-<div class="panel">
+<div ng-controller="createWebsite" class="panel">
     <div class="panel-body">
         <h3 class="title-hero">
-            {% trans "Website Details" %} <img id="webSiteCreation" src="{% static 'images/loading.gif' %}">
+            {% trans "Website Details" %} <img ng-hide="webSiteCreationLoading" src="{% static 'images/loading.gif' %}">
         </h3>
-        <div ng-controller="createWebsite" class="example-box-wrapper">
+        <div class="example-box-wrapper">
 
 
         <form name="websiteCreationForm"  action="/" id="createPackages" class="form-horizontal bordered-row">
 
 
-                <div class="form-group">
+                <div ng-hide="installationDetailsForm" class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Select Package" %}</label>
                     <div class="col-sm-6">
                         <select ng-model="packageForWebsite" class="form-control">
@@ -36,7 +36,7 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div ng-hide="installationDetailsForm" class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Select Owner" %}</label>
                     <div class="col-sm-6">
                         <select ng-model="websiteOwner" class="form-control">
@@ -48,7 +48,7 @@
                 </div>
 
 
-                <div class="form-group">
+                <div ng-hide="installationDetailsForm" class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
                     <div class="col-sm-6">
                         <input  name="dom"  type="text" class="form-control" ng-model="domainNameCreate" placeholder="{% trans "Do not enter WWW, it will be auto created!" %}" required>
@@ -56,7 +56,7 @@
                         <div ng-show="websiteCreationForm.dom.$error.pattern" class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
                 </div>
 
-                <div class="form-group">
+                <div ng-hide="installationDetailsForm" class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Email" %}</label>
                     <div class="col-sm-6">
                         <input  type="email" name="email" class="form-control" ng-model="adminEmail" required>
@@ -64,7 +64,7 @@
                     <div ng-show="websiteCreationForm.email.$error.email" class="current-pack">{% trans "Invalid Email" %}</div>
                 </div>
 
-                 <div class="form-group">
+                 <div ng-hide="installationDetailsForm" class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
                     <div class="col-sm-6">
                         <select ng-model="phpSelection" class="form-control">
@@ -81,7 +81,7 @@
 
 
 
-                 <div class="form-group">
+                 <div ng-hide="installationDetailsForm" class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
                     <div class="col-sm-9">
                         <div class="checkbox">
@@ -112,7 +112,7 @@
                 </div>
 
 
-                <div class="form-group">
+                <div ng-hide="installationDetailsForm" class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
                          <button ng-disabled="websiteCreationForm.dom.$error.required || websiteCreationForm.email.$invalid" type="button" ng-click="createWebsite()" class="btn btn-primary btn-lg btn-block">{% trans "Create Website" %}</button>
@@ -122,16 +122,42 @@
 
 
 
-                <div class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                            <div id="websiteCreationFailed" class="alert alert-danger">
-                                        <p>{% trans "Cannot create website. Error message:" %} {$ errorMessage $}</p>
+                <div ng-hide="installationProgress" class="form-group">
+                    <label class="col-sm-2 control-label"></label>
+                    <div class="col-sm-7">
+
+                            <div class="alert alert-success text-center">
+                                        <h2>{$ currentStatus $}</h2>
                             </div>
 
-                            <div id="websiteCreated" class="alert alert-success">
-                                <p>{% trans "Website with domain" %} <strong>{$ websiteDomain $}</strong>{% trans " is Successfully Created" %}</p>
+                            <div class="progress">
+                              <div id="installProgress" class="progress-bar" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                                <span class="sr-only">70% Complete</span>
+                              </div>
                             </div>
+
+                            <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="success" class="alert alert-success">
+                                <p>{% trans "Website succesfully created." %}</p>
+                            </div>
+
+
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+
+
+                    </div>
+                </div>
+
+                <div ng-hide="installationProgress" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                        <button type="button" ng-disabled="goBackDisable"  ng-click="goBack()" class="btn btn-primary btn-lg btn-block">{% trans "Go Back" %}</button>
                     </div>
                 </div>
 

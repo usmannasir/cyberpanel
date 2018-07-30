@@ -36,18 +36,31 @@ class virtualHostUtilities:
     cyberPanel = "/usr/local/CyberCP"
     @staticmethod
     def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHostUser, numberOfSites, ssl, sslPath,
-                          dkimCheck, openBasedir, websiteOwner, packageName):
+                          dkimCheck, openBasedir, websiteOwner, packageName, tempStatusPath = '/home/cyberpanel/fakePath'):
+
+        statusFile = open(tempStatusPath, 'w')
+        statusFile.writelines('Running some checks..,0')
+        statusFile.close()
+
         try:
 
             if Websites.objects.filter(domain=virtualHostName).count() > 0:
-                print "0, This website already exists."
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("This website already exists. [404]")
+                statusFile.close()
                 return 0, "This website already exists."
 
             if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
-                print "0, This website already exists as child domain."
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("This website already exists as child domain. [404]")
+                statusFile.close()
                 return 0, "This website already exists as child domain."
 
             ####### Limitations Check End
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Creating DNS records..,10')
+            statusFile.close()
 
             ##### Zone creation
 
@@ -57,12 +70,20 @@ class virtualHostUtilities:
 
             ## zone creation
 
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Setting up directories..,25')
+            statusFile.close()
+
             if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
-                print "0, Virtual Host Directory already exists!"
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("Virtual Host Directory already exists. [404]")
+                statusFile.close()
                 return 0, "Virtual Host Directory already exists!"
 
             if vhost.checkIfAliasExists(virtualHostName) == 1:
-                print "0, This domain exists as Alias."
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("This domain exists as Alias. [404]")
+                statusFile.close()
                 return 0, "This domain exists as Alias."
 
             if dkimCheck == 1:
@@ -78,9 +99,17 @@ class virtualHostUtilities:
             if retValues[0] == 0:
                 raise BaseException(retValues[1])
 
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Creating configurations..,50')
+            statusFile.close()
+
             retValues = vhost.createConfigInMainVirtualHostFile(virtualHostName)
             if retValues[0] == 0:
                 raise BaseException(retValues[1])
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Setting up SSL..,70')
+            statusFile.close()
 
             if ssl == 1:
                 installUtilities.installUtilities.reStartLiteSpeed()
@@ -97,6 +126,10 @@ class virtualHostUtilities:
 
             ## Create Configurations ends here
 
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('DKIM Setup..,90')
+            statusFile.close()
+
             ## DKIM Check
 
             if dkimCheck == 1:
@@ -110,13 +143,17 @@ class virtualHostUtilities:
 
             website.save()
 
-            print "1,None"
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines("Website successfully created. [200]")
+            statusFile.close()
             return 1, 'None'
 
         except BaseException, msg:
             vhost.deleteVirtualHostConfigurations(virtualHostName, numberOfSites)
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createVirtualHost]")
-            print "0," + str(msg)
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines(str(msg) + " [404]")
+            statusFile.close()
             return 0, str(msg)
 
     @staticmethod
@@ -774,8 +811,11 @@ class virtualHostUtilities:
             print "0," + str(msg)
 
     @staticmethod
-    def createDomain(masterDomain, virtualHostName, phpVersion, path, ssl, dkimCheck, openBasedir, restore, owner=None):
+    def createDomain(masterDomain, virtualHostName, phpVersion, path, ssl, dkimCheck, openBasedir, restore, owner=None, tempStatusPath = '/home/cyberpanel/fakePath'):
         try:
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Running some checks..,0')
+            statusFile.close()
 
             ## Check if this domain either exists as website or child domain
 
@@ -784,11 +824,15 @@ class virtualHostUtilities:
                 DNS.dnsTemplate(virtualHostName, admin)
 
             if Websites.objects.filter(domain=virtualHostName).count() > 0:
-                print "0, This Domain already exists as a website."
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("This Domain already exists as a website. [404]")
+                statusFile.close()
                 return 0, "This Domain already exists as a website."
 
             if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
-                print "0, This domain already exists as child domain."
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("This domain already exists as child domain. [404]")
+                statusFile.close()
                 return 0, "This domain already exists as child domain."
 
             ####### Limitations check
@@ -801,7 +845,9 @@ class virtualHostUtilities:
             elif domainsInPackage > master.childdomains_set.all().count():
                 pass
             else:
-                print "0, Exceeded maximum number of domains for this package"
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("Exceeded maximum number of domains for this package. [404]")
+                statusFile.close()
                 return 0, "Exceeded maximum number of domains for this package"
 
 
@@ -809,12 +855,20 @@ class virtualHostUtilities:
 
 
             if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
-                print "0, Virtual Host Directory already exists!"
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("Virtual Host Directory already exists. [404]")
+                statusFile.close()
                 return 0, "Virtual Host Directory already exists!"
 
             if vhost.checkIfAliasExists(virtualHostName) == 1:
-                print "0, This domain exists as Alias."
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("This domain exists as Alias. [404]")
+                statusFile.close()
                 return 0, "This domain exists as Alias."
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('DKIM Setup..,30')
+            statusFile.close()
 
             if dkimCheck == 1:
                 if mailUtilities.checkIfDKIMInstalled() == 0:
@@ -825,6 +879,10 @@ class virtualHostUtilities:
                     raise BaseException(retValues[1])
 
             FNULL = open(os.devnull, 'w')
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Creating configurations..,50')
+            statusFile.close()
 
             retValues = vhost.createDirectoryForDomain(masterDomain, virtualHostName, phpVersion, path,
                                                              master.adminEmail, master.externalApp, openBasedir)
@@ -837,6 +895,10 @@ class virtualHostUtilities:
                 raise BaseException(retValues[1])
 
             ## Now restart litespeed after initial configurations are done
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Creating SSL..,50')
+            statusFile.close()
 
 
             if ssl == 1:
@@ -862,7 +924,9 @@ class virtualHostUtilities:
 
             website.save()
 
-            print "1,None"
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines("Domain successfully created. [200]")
+            statusFile.close()
             return 1, "None"
 
         except BaseException, msg:
@@ -870,7 +934,9 @@ class virtualHostUtilities:
             vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [createDomain]")
-            print "0," + str(msg)
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines(str(msg) + ". [404]")
+            statusFile.close()
             return 0, str(msg)
 
     @staticmethod
@@ -994,7 +1060,6 @@ def main():
     ## Arguments for OpenBasedir
 
     parser.add_argument('--openBasedirValue', help='open_base dir protection value!')
-
     parser.add_argument('--tempStatusPath', help='Temporary Status file path.')
 
 
@@ -1012,7 +1077,12 @@ def main():
         except:
             openBasedir = 0
 
-        virtualHostUtilities.createVirtualHost(args.virtualHostName, args.administratorEmail, args.phpVersion, args.virtualHostUser, int(args.numberOfSites), int(args.ssl), args.sslPath, dkimCheck, openBasedir, args.websiteOwner, args.package)
+        try:
+            tempStatusPath = args.tempStatusPath
+        except:
+            tempStatusPath = '/home/cyberpanel/fakePath'
+
+        virtualHostUtilities.createVirtualHost(args.virtualHostName, args.administratorEmail, args.phpVersion, args.virtualHostUser, int(args.numberOfSites), int(args.ssl), args.sslPath, dkimCheck, openBasedir, args.websiteOwner, args.package, tempStatusPath)
     elif args.function == "deleteVirtualHostConfigurations":
         vhost.deleteVirtualHostConfigurations(args.virtualHostName,int(args.numberOfSites))
     elif args.function == "createDomain":
@@ -1026,7 +1096,12 @@ def main():
         except:
             openBasedir = 0
 
-        virtualHostUtilities.createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path, int(args.ssl), dkimCheck, openBasedir, args.restore, args.websiteOwner)
+        try:
+            tempStatusPath = args.tempStatusPath
+        except:
+            tempStatusPath = '/home/cyberpanel/fakePath'
+
+        virtualHostUtilities.createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path, int(args.ssl), dkimCheck, openBasedir, args.restore, args.websiteOwner, tempStatusPath)
     elif args.function == "issueSSL":
         virtualHostUtilities.issueSSL(args.virtualHostName,args.path,args.administratorEmail)
     elif args.function == "changePHP":

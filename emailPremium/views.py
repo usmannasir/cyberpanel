@@ -933,7 +933,6 @@ def emailPolicyServer(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def fetchPolicyServerStatus(request):
     try:
         val = request.session['userID']

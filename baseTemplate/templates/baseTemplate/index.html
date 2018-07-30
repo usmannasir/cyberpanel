@@ -41,6 +41,7 @@
 
 <link rel="stylesheet" type="text/css" href="/static/baseTemplate/assets/themes/admin/layout.css">
 <link rel="stylesheet" type="text/css" href="/static/baseTemplate/assets/themes/admin/color-schemes/default.css">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
 
 <!-- Components theme, component below was above three CSS files. -->
 
@@ -566,6 +567,23 @@
     </li>
 
 
+    <li id="normalUserJ">
+        <a href="#" title="{% trans 'Manage Services' %}">
+            <i class="glyph-icon icon-linecons-fire"></i>
+            <span>{% trans "Manage Services" %}</span>
+        </a>
+        <div class="sidebar-submenu">
+
+            <ul>
+                <li><a href="{% url 'managePowerDNS' %}" title="{% trans 'Manage PowerDNS' %}"><span>{% trans "Manage PowerDNS" %}</span></a></li>
+                <li><a href="{% url 'managePostfix' %}" title="{% trans 'Manage Postfix' %}"><span>{% trans "Manage Postfix" %}</span></a></li>
+                <li><a href="{% url 'managePureFtpd' %}" title="{% trans 'Manage FTP' %}"><span>{% trans "Manage FTP" %}</span></a></li>
+            </ul>
+
+        </div><!-- .sidebar-submenu -->
+    </li>
+
+
     </ul><!-- #sidebar-menu -->
 
 
@@ -642,6 +660,7 @@
 <script src="{% static 'baseTemplate/bootstrap-toggle.min.js' %}"></script>
 <script src="{% static 'firewall/firewall.js' %}"></script>
 <script src="{% static 'manageSSL/manageSSL.js' %}"></script>
+<script src="{% static 'manageServices/manageServices.js' %}"></script>
 </div>
 </body>
 </html>

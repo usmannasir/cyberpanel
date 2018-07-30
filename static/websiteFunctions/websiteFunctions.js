@@ -2,40 +2,53 @@
  * Created by usman on 7/26/17.
  */
 
-
-$("#websiteCreationFailed").hide();
-$("#websiteCreated").hide();
-$("#webSiteCreation").hide();
-
 /* Java script code to create account */
-app.controller('createWebsite', function($scope,$http) {
+app.controller('createWebsite', function($scope, $http, $timeout, $window) {
 
+    $scope.webSiteCreationLoading = true;
+    $scope.installationDetailsForm = false;
+    $scope.installationProgress = true;
+    $scope.errorMessageBox = true;
+    $scope.success = true;
+    $scope.couldNotConnect = true;
+    $scope.goBackDisable = true;
+
+    var statusFile;
 
     $scope.createWebsite = function(){
 
+                $scope.webSiteCreationLoading = false;
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.errorMessageBox = true;
+                $scope.success = true;
+                $scope.couldNotConnect = true;
+                $scope.goBackDisable = true;
+
+                $scope.currentStatus = "Starting creation..";
+
+                var ssl, dkimCheck, openBasedir;
+
                 if ($scope.sslCheck === true){
-                    var ssl = 1;
+                    ssl = 1;
                 }
                 else{
-                    var ssl = 0
+                    ssl = 0
                 }
 
                 if ($scope.dkimCheck === true){
-                    var dkimCheck = 1;
+                    dkimCheck = 1;
                 }
                 else{
-                    var dkimCheck = 0
+                    dkimCheck = 0
                 }
 
                 if ($scope.openBasedir === true){
-                    var openBasedir = 1;
+                    openBasedir = 1;
                 }
                 else{
-                    var openBasedir = 0
+                    openBasedir = 0
                 }
-
-
-                $("#webSiteCreation").fadeIn();
 
                 url = "/websites/submitWebsiteCreation";
 
@@ -67,35 +80,38 @@ app.controller('createWebsite', function($scope,$http) {
 
 
                 function ListInitialDatas(response) {
-                    $("#webSiteCreation").fadeOut();
 
-                    if(response.data.existsStatus == 1){
-                        $scope.errorMessage = response.data.error_message;
-                        $("#websiteCreationFailed").fadeIn();
-                        $("#websiteCreated").hide();
-
-                    }
-
-                    else if (response.data.createWebSiteStatus == 0)
+                    if (response.data.createWebSiteStatus === 1)
                     {
-                        $scope.errorMessage = response.data.error_message;
-                        $("#websiteCreationFailed").fadeIn();
-                        $("#websiteCreated").hide();
-
+                        statusFile = response.data.tempStatusPath;
+                        getCreationStatus();
                     }
                     else{
 
-                        $("#websiteCreationFailed").hide();
-                        $("#websiteCreated").fadeIn();
-                        $scope.websiteDomain = domainName;
+                        $scope.webSiteCreationLoading = true;
+                        $scope.installationDetailsForm = true;
+                        $scope.installationProgress = false;
+                        $scope.errorMessageBox = false;
+                        $scope.success = true;
+                        $scope.couldNotConnect = true;
+                        $scope.goBackDisable = false;
 
+                        $scope.errorMessage = response.data.error_message;
                     }
+
 
 
                 }
                 function cantLoadInitialDatas(response) {
-                    $("#webSiteCreation").fadeOut();
-                    console.log("not good");
+
+                    $scope.webSiteCreationLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = true;
+                    $scope.success = true;
+                    $scope.couldNotConnect = false;
+                    $scope.goBackDisable = false;
+
                 }
 
 
@@ -103,6 +119,97 @@ app.controller('createWebsite', function($scope,$http) {
 
 
     };
+    $scope.goBack = function () {
+        $scope.webSiteCreationLoading = true;
+        $scope.installationDetailsForm = false;
+        $scope.installationProgress = true;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
+        $("#installProgress").css("width", "0%");
+    };
+    function getCreationStatus(){
+
+                        url = "/websites/installWordpressStatus";
+
+                        var data = {
+                            statusFile: statusFile
+                        };
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.abort === 1){
+
+                        if(response.data.installStatus === 1){
+
+                            $scope.webSiteCreationLoading = true;
+                            $scope.installationDetailsForm = true;
+                            $scope.installationProgress = false;
+                            $scope.errorMessageBox = true;
+                            $scope.success = false;
+                            $scope.couldNotConnect = true;
+                            $scope.goBackDisable = false;
+
+                            $("#installProgress").css("width", "100%");
+                            $scope.installPercentage = "100";
+                            $scope.currentStatus = response.data.currentStatus;
+                            $timeout.cancel();
+
+                        }
+                        else{
+
+                            $scope.webSiteCreationLoading = true;
+                            $scope.installationDetailsForm = true;
+                            $scope.installationProgress = false;
+                            $scope.errorMessageBox = false;
+                            $scope.success = true;
+                            $scope.couldNotConnect = true;
+                            $scope.goBackDisable = false;
+
+                            $scope.errorMessage = response.data.error_message;
+
+                            $("#installProgress").css("width", "0%");
+                            $scope.installPercentage = "0";
+                            $scope.goBackDisable = false;
+
+                        }
+
+                    }
+                    else{
+                        $("#installProgress").css("width", response.data.installationProgress + "%");
+                        $scope.installPercentage = response.data.installationProgress;
+                        $scope.currentStatus = response.data.currentStatus;
+                        $timeout(getCreationStatus,1000);
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    $scope.webSiteCreationLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = true;
+                    $scope.success = true;
+                    $scope.couldNotConnect = false;
+                    $scope.goBackDisable = false;
+
+                }
+
+
+           }
 
 });
 /* Java script code to create account ends here */
@@ -165,7 +272,7 @@ app.controller('listWebsites', function($scope,$http) {
 
 
     function ListInitialData(response) {
-        if (response.data.listWebSiteStatus==1) {
+        if (response.data.listWebSiteStatus ===1) {
 
             var finalData = JSON.parse(response.data.data);
             $scope.WebSitesList = finalData;
@@ -309,7 +416,7 @@ app.controller('modifyWebsitesController', function($scope,$http) {
 
                 function ListInitialDatas(response) {
 
-                    if (response.data.modifyStatus == 0)
+                    if (response.data.modifyStatus === 0)
                     {
                         console.log(response.data);
                         $scope.errorMessage = response.data.error_message;
@@ -377,7 +484,7 @@ app.controller('modifyWebsitesController', function($scope,$http) {
                     packForWeb:packForWeb,
                     email:email,
                     phpVersion:phpVersion,
-                    admin:admin,
+                    admin:admin
                 };
 
                 var config = {
@@ -391,7 +498,7 @@ app.controller('modifyWebsitesController', function($scope,$http) {
 
                 function ListInitialDatas(response) {
 
-                    if (response.data.saveStatus == 0)
+                    if (response.data.saveStatus === 0)
                     {
                         $scope.errMessage = response.data.error_message;
 
@@ -437,7 +544,7 @@ app.controller('modifyWebsitesController', function($scope,$http) {
 
 /* Java script code to create account */
 
-app.controller('websitePages', function($scope,$http) {
+app.controller('websitePages', function($scope, $http, $timeout, $window) {
 
     $scope.logFileLoading = true;
     $scope.logsFeteched = true;
@@ -458,6 +565,7 @@ app.controller('websitePages', function($scope,$http) {
     $scope.fileManagerURL = "/filemanager/"+$("#domainNamePage").text();
     $scope.wordPressInstallURL = $("#domainNamePage").text() + "/wordpressInstall";
     $scope.joomlaInstallURL = $("#domainNamePage").text() + "/joomlaInstall";
+    $scope.setupGit = $("#domainNamePage").text() + "/setupGit";
     $scope.domainAliasURL = "/websites/"+$("#domainNamePage").text()+"/domainAlias";
     $scope.previewUrl = "/preview/"+$("#domainNamePage").text()+"/";
 
@@ -913,7 +1021,6 @@ app.controller('websitePages', function($scope,$http) {
         $scope.configurationsBoxRewrite = true;
     };
 
-
     $scope.fetchRewriteFules = function(){
 
                 $scope.hidsslconfigs = true;
@@ -1143,8 +1250,6 @@ app.controller('websitePages', function($scope,$http) {
 
     };
 
-
-
     //////// Application Installation part
 
     $scope.installationDetailsForm = true;
@@ -1153,7 +1258,6 @@ app.controller('websitePages', function($scope,$http) {
     $scope.installationFailed = true;
     $scope.installationSuccessfull = true;
     $scope.couldNotConnect = true;
-
 
 
     $scope.installationDetails = function(){
@@ -1169,7 +1273,6 @@ app.controller('websitePages', function($scope,$http) {
         $scope.installationDetailsForm = true;
 
     };
-
 
     $scope.installWordpress = function(){
 
@@ -1340,9 +1443,6 @@ app.controller('websitePages', function($scope,$http) {
 
     };
 
-
-
-
     //////// SSL Part
 
     $scope.sslSaved = true;
@@ -1361,9 +1461,6 @@ app.controller('websitePages', function($scope,$http) {
         $scope.configurationsBoxRewrite = true;
         $scope.changePHPView = true;
     };
-
-
-
 
     $scope.saveSSL = function(){
 
@@ -1433,7 +1530,6 @@ app.controller('websitePages', function($scope,$http) {
 
     };
 
-
     //// Change PHP Master
 
     $scope.failedToChangePHPMaster = true;
@@ -1453,7 +1549,6 @@ app.controller('websitePages', function($scope,$http) {
         $scope.configurationsBoxRewrite = true;
         $scope.changePHPView = false;
     };
-
 
     $scope.changePHPVersionMaster = function(childDomain,phpSelection){
 
@@ -1521,10 +1616,7 @@ app.controller('websitePages', function($scope,$http) {
 
                 }
 
-    }
-
-
-
+    };
 
     ////// create domain part
 
@@ -1542,37 +1634,47 @@ app.controller('websitePages', function($scope,$http) {
 
     // notifcations settings
     $scope.domainLoading = true;
-    $scope.websiteCreationFailed = true;
-    $scope.domainCreated = true;
+    $scope.installationDetailsForm = false;
+    $scope.installationProgress = true;
+    $scope.errorMessageBox = true;
+    $scope.success = true;
     $scope.couldNotConnect = true;
+    $scope.goBackDisable = true;
+
+    var statusFile;
 
     $scope.createDomain = function(){
 
-                // notifcations settings
                 $scope.domainLoading = false;
-                $scope.websiteCreationFailed = true;
-                $scope.domainCreated = true;
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.errorMessageBox = true;
+                $scope.success = true;
                 $scope.couldNotConnect = true;
+                $scope.goBackDisable = true;
+                $scope.currentStatus = "Starting creation..";
+
+                var ssl, dkimCheck, openBasedir;
 
                 if ($scope.sslCheck === true){
-                    var ssl = 1;
+                    ssl = 1;
                 }
                 else{
-                    var ssl = 0
+                    ssl = 0
                 }
 
                 if ($scope.dkimCheck === true){
-                    var dkimCheck = 1;
+                    dkimCheck = 1;
                 }
                 else{
-                    var dkimCheck = 0
+                    dkimCheck = 0
                 }
 
                 if ($scope.openBasedir === true){
-                    var openBasedir = 1;
+                    openBasedir = 1;
                 }
                 else{
-                    var openBasedir = 0
+                    openBasedir = 0
                 }
 
 
@@ -1608,40 +1710,36 @@ app.controller('websitePages', function($scope,$http) {
 
                 function ListInitialDatas(response) {
 
-
-                    if(response.data.createWebSiteStatus === 1){
-
-                        $scope.websiteDomain = domainName;
-
-                        // notifcations settings
-                        $scope.domainLoading = true;
-                        $scope.websiteCreationFailed = true;
-                        $scope.domainCreated = false;
-                        $scope.couldNotConnect = true
-
-
+                    if (response.data.createWebSiteStatus === 1)
+                    {
+                        statusFile = response.data.tempStatusPath;
+                        getCreationStatus();
                     }
                     else{
 
-                        $scope.errorMessage = response.data.error_message;
-
-                        // notifcations settings
                         $scope.domainLoading = true;
-                        $scope.websiteCreationFailed = false;
-                        $scope.domainCreated = true;
+                        $scope.installationDetailsForm = true;
+                        $scope.installationProgress = false;
+                        $scope.errorMessageBox = false;
+                        $scope.success = true;
                         $scope.couldNotConnect = true;
+                        $scope.goBackDisable = false;
 
+                        $scope.errorMessage = response.data.error_message;
                     }
+
 
 
                 }
                 function cantLoadInitialDatas(response) {
 
-                        // notifcations settings
-                        $scope.domainLoading = true;
-                        $scope.websiteCreationFailed = true;
-                        $scope.domainCreated = true;
-                        $scope.couldNotConnect = false;
+                    $scope.domainLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = true;
+                    $scope.success = true;
+                    $scope.couldNotConnect = false;
+                    $scope.goBackDisable = false;
 
                 }
 
@@ -1650,6 +1748,99 @@ app.controller('websitePages', function($scope,$http) {
 
 
     };
+
+    $scope.goBack = function () {
+        $scope.domainLoading = true;
+        $scope.installationDetailsForm = false;
+        $scope.installationProgress = true;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
+        $("#installProgress").css("width", "0%");
+    };
+
+    function getCreationStatus(){
+
+                        url = "/websites/installWordpressStatus";
+
+                        var data = {
+                            statusFile: statusFile
+                        };
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.abort === 1){
+
+                        if(response.data.installStatus === 1){
+
+                            $scope.domainLoading = true;
+                            $scope.installationDetailsForm = true;
+                            $scope.installationProgress = false;
+                            $scope.errorMessageBox = true;
+                            $scope.success = false;
+                            $scope.couldNotConnect = true;
+                            $scope.goBackDisable = false;
+
+                            $("#installProgress").css("width", "100%");
+                            $scope.installPercentage = "100";
+                            $scope.currentStatus = response.data.currentStatus;
+                            $timeout.cancel();
+
+                        }
+                        else{
+
+                            $scope.domainLoading = true;
+                            $scope.installationDetailsForm = true;
+                            $scope.installationProgress = false;
+                            $scope.errorMessageBox = false;
+                            $scope.success = true;
+                            $scope.couldNotConnect = true;
+                            $scope.goBackDisable = false;
+
+                            $scope.errorMessage = response.data.error_message;
+
+                            $("#installProgress").css("width", "0%");
+                            $scope.installPercentage = "0";
+                            $scope.goBackDisable = false;
+
+                        }
+
+                    }
+                    else{
+                        $("#installProgress").css("width", response.data.installationProgress + "%");
+                        $scope.installPercentage = response.data.installationProgress;
+                        $scope.currentStatus = response.data.currentStatus;
+                        $timeout(getCreationStatus,1000);
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    $scope.domainLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = true;
+                    $scope.success = true;
+                    $scope.couldNotConnect = false;
+                    $scope.goBackDisable = false;
+
+                }
+
+
+           }
 
 
     ////// List Domains Part
@@ -2140,12 +2331,7 @@ app.controller('websitePages', function($scope,$http) {
 
 /* Java script code to create account ends here */
 
-
-
 /* Java script code to suspend/un-suspend Website */
-
-
-
 
 app.controller('suspendWebsiteControl', function($scope,$http) {
 
@@ -2271,11 +2457,7 @@ app.controller('suspendWebsiteControl', function($scope,$http) {
 
 });
 
-
-
 /* Java script code to suspend/un-suspend ends here */
-
-
 
 /* Java script code to manage cron */
 
@@ -2605,9 +2787,7 @@ app.controller('manageCronController', function($scope,$http) {
 
 });
 
-
 /* Java script code to manage cron ends here */
-
 
 /* Java script code to manage cron */
 
@@ -2866,7 +3046,6 @@ app.controller('manageAliasController', function($scope,$http, $timeout, $window
 
 
 });
-
 
 /* Java script code to manage cron ends here */
 
@@ -3839,10 +4018,7 @@ app.controller('launchChild', function($scope,$http) {
 
 });
 
-
-
 /* Application Installer */
-
 
 app.controller('installWordPressCTRL', function($scope, $http, $timeout) {
 
@@ -4037,7 +4213,6 @@ app.controller('installWordPressCTRL', function($scope, $http, $timeout) {
 
 });
 
-
 app.controller('installJoomlaCTRL', function($scope, $http, $timeout) {
 
     $scope.installationDetailsForm = false;
@@ -4048,7 +4223,7 @@ app.controller('installJoomlaCTRL', function($scope, $http, $timeout) {
     $scope.wpInstallLoading = true;
     $scope.goBackDisable = true;
 
-    $scope.databasePrefix = 'jm_'
+    $scope.databasePrefix = 'jm_';
 
     var statusFile;
     var domain = $("#domainNamePage").text();
@@ -4226,6 +4401,320 @@ app.controller('installJoomlaCTRL', function($scope, $http, $timeout) {
 
 
 
+                }
+
+    };
+
+
+});
+
+app.controller('setupGit', function($scope, $http, $timeout, $window) {
+
+    $scope.installationDetailsForm = false;
+    $scope.installationProgress = true;
+    $scope.installationFailed = true;
+    $scope.installationSuccessfull = true;
+    $scope.couldNotConnect = true;
+    $scope.gitLoading = true;
+    $scope.githubBranch = 'master';
+    $scope.installProg = true;
+    $scope.goBackDisable = true;
+
+    var defaultProvider = 'github';
+
+    $scope.setProvider = function (provider) {
+        defaultProvider = provider;
+    };
+
+
+    var statusFile;
+    var domain = $("#domainNamePage").text();
+
+    function getInstallStatus(){
+
+                        url = "/websites/installWordpressStatus";
+
+                        var data = {
+                            statusFile: statusFile,
+                            domainName: domain
+                        };
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.abort === 1){
+
+                        if(response.data.installStatus === 1){
+
+                            $scope.installationDetailsForm = true;
+                            $scope.installationProgress = false;
+                            $scope.installationFailed = true;
+                            $scope.installationSuccessfull = false;
+                            $scope.couldNotConnect = true;
+                            $scope.gitLoading = true;
+                            $scope.goBackDisable = true;
+
+                            $scope.installationURL = domain;
+
+                            $("#installProgress").css("width", "100%");
+                            $scope.installPercentage = "100";
+                            $scope.currentStatus = response.data.currentStatus;
+                            $timeout.cancel();
+                            $timeout(function() {  $window.location.reload(); }, 3000);
+
+                        }
+                        else{
+
+                            $scope.installationDetailsForm = true;
+                            $scope.installationProgress = false;
+                            $scope.installationFailed = false;
+                            $scope.installationSuccessfull = true;
+                            $scope.couldNotConnect = true;
+                            $scope.gitLoading = true;
+                            $scope.goBackDisable = false;
+
+                            $scope.errorMessage = response.data.error_message;
+
+                            $("#installProgress").css("width", "0%");
+                            $scope.installPercentage = "0";
+                            $scope.goBackDisable = false;
+
+                        }
+
+                    }
+                    else{
+                        $("#installProgress").css("width", response.data.installationProgress + "%");
+                        $scope.installPercentage = response.data.installationProgress;
+                        $scope.currentStatus = response.data.currentStatus;
+
+                        $timeout(getInstallStatus,1000);
+
+
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    $scope.canNotFetch = true;
+                    $scope.couldNotConnect = false;
+                    $scope.goBackDisable = false;
+
+
+                }
+
+
+           }
+
+    $scope.attachRepo = function(){
+
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.installationFailed = true;
+                $scope.installationSuccessfull = true;
+                $scope.couldNotConnect = true;
+                $scope.gitLoading = false;
+                $scope.installProg = false;
+
+                $scope.currentStatus = "Attaching GIT..";
+
+                url = "/websites/setupGitRepo";
+
+                var data = {
+                    domain: domain,
+                    username: $scope.githubUserName,
+                    reponame: $scope.githubRepo,
+                    branch: $scope.githubBranch,
+                    defaultProvider: defaultProvider
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    if (response.data.installStatus === 1)
+                    {
+                        statusFile = response.data.tempStatusPath;
+                        getInstallStatus();
+                    }
+                    else{
+
+                        $scope.installationDetailsForm = true;
+                        $scope.installationProgress = false;
+                        $scope.installationFailed = false;
+                        $scope.installationSuccessfull = true;
+                        $scope.couldNotConnect = true;
+                        $scope.gitLoading = true;
+
+                        $scope.errorMessage = response.data.error_message;
+                        $scope.goBackDisable = false;
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+
+
+
+                }
+
+    };
+
+    $scope.goBack = function () {
+        $scope.installationDetailsForm = false;
+        $scope.installationProgress = true;
+        $scope.installProg = true;
+        $scope.installationFailed = true;
+        $scope.installationSuccessfull = true;
+        $scope.couldNotConnect = true;
+        $scope.gitLoading = true;
+        $scope.goBackDisable = true;
+        $("#installProgress").css("width", "0%");
+    };
+
+    /// Detach Repo
+
+    $scope.failedMesg = true;
+    $scope.successMessage = true;
+    $scope.couldNotConnect = true;
+    $scope.gitLoading = true;
+    $scope.successMessageBranch = true;
+
+    $scope.detachRepo = function(){
+
+    $scope.failedMesg = true;
+    $scope.successMessage = true;
+    $scope.couldNotConnect = true;
+    $scope.gitLoading = false;
+    $scope.successMessageBranch = true;
+
+                url = "/websites/detachRepo";
+
+                var data = {
+                    domain: domain
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.gitLoading = true;
+
+                    if (response.data.status === 1)
+                    {
+                        $scope.failedMesg = true;
+                        $scope.successMessage = false;
+                        $scope.couldNotConnect = true;
+                        $scope.successMessageBranch = true;
+
+                        $timeout(function() {  $window.location.reload(); }, 3000);
+
+                    }
+                    else{
+
+                        $scope.failedMesg = false;
+                        $scope.successMessage = true;
+                        $scope.couldNotConnect = true;
+                        $scope.successMessageBranch = true;
+
+                        $scope.errorMessage = response.data.error_message;
+
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+                        $scope.failedMesg = true;
+                        $scope.successMessage = true;
+                        $scope.couldNotConnect = false;
+                        $scope.gitLoading = true;
+                        $scope.successMessageBranch = true;
+                }
+
+    };
+    $scope.changeBranch = function(){
+
+    $scope.failedMesg = true;
+    $scope.successMessage = true;
+    $scope.couldNotConnect = true;
+    $scope.gitLoading = false;
+    $scope.successMessageBranch = true;
+
+                url = "/websites/changeBranch";
+
+                var data = {
+                    domain: domain,
+                    githubBranch: $scope.githubBranch
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.gitLoading = true;
+
+                    if (response.data.status === 1)
+                    {
+                        $scope.failedMesg = true;
+                        $scope.successMessage = true;
+                        $scope.couldNotConnect = true;
+                        $scope.successMessageBranch = false;
+
+                    }
+                    else{
+
+                        $scope.failedMesg = false;
+                        $scope.successMessage = true;
+                        $scope.couldNotConnect = true;
+                        $scope.successMessageBranch = true;
+
+                        $scope.errorMessage = response.data.error_message;
+
+
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+                        $scope.failedMesg = true;
+                        $scope.successMessage = true;
+                        $scope.couldNotConnect = false;
+                        $scope.gitLoading = true;
+                        $scope.successMessageBranch = true;
                 }
 
     };

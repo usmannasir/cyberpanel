@@ -235,7 +235,6 @@ class mailUtilities:
     @staticmethod
     def generateKeys(domain):
         try:
-
             result = mailUtilities.setupDKIM(domain)
             if result[0] == 0:
                 raise BaseException(result[1])

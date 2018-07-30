@@ -403,25 +403,21 @@ app.controller('servicesManager', function($scope,$http) {
                     if(response.data.serviceAction == 1){
                         setTimeout(function() {
                             getServiceStatus();
-                            setTimeout(function() {
-                                $scope.ActionSuccessfull = true;
-                                $scope.ActionFailed = false;
-                                $scope.couldNotConnect = false;
-                                $scope.actionLoader = false;
-                                $scope.btnDisable = false;
-                            },1000)
+                            $scope.ActionSuccessfull = true;
+                            $scope.ActionFailed = false;
+                            $scope.couldNotConnect = false;
+                            $scope.actionLoader = false;
+                            $scope.btnDisable = false;
                         }, 3000);
                     }
                     else{
                         setTimeout(function() {
                             getServiceStatus();
-                            setTimeout(function() {
-                                $scope.ActionSuccessfull = false;
-                                $scope.ActionFailed = true;
-                                $scope.couldNotConnect = false;
-                                $scope.actionLoader = false;
-                                $scope.btnDisable = false;
-                            },1000)
+                            $scope.ActionSuccessfull = false;
+                            $scope.ActionFailed = true;
+                            $scope.couldNotConnect = false;
+                            $scope.actionLoader = false;
+                            $scope.btnDisable = false;
                         }, 5000);
 
                     }

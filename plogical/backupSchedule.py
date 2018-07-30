@@ -83,6 +83,11 @@ class backupSchedule:
             writeToFile = open(backupLogPath, "a")
             command = "sudo scp -o StrictHostKeyChecking=no -P "+port+" -i /root/.ssh/cyberpanel " + backupPath + " root@"+IPAddress+":/home/backup/" + ipAddressLocal + "/" + time.strftime("%a-%b") + "/"
             subprocess.call(shlex.split(command), stdout=writeToFile)
+
+            ## Remove backups already sent to remote destinations
+
+            os.remove(backupPath)
+
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 

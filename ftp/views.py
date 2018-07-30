@@ -13,6 +13,7 @@ import subprocess
 from plogical.virtualHostUtilities import virtualHostUtilities
 import shlex
 from plogical.ftpUtilities import FTPUtilities
+import os
 # Create your views here.
 
 def loadFTPHome(request):
@@ -28,6 +29,9 @@ def createFTPAccount(request):
         val = request.session['userID']
         try:
             admin = Administrator.objects.get(pk=val)
+
+            if not os.path.exists('/home/cyberpanel/pureftpd'):
+                return render(request, "ftp/createFTPAccount.html", {"status": 0})
 
             if admin.type == 1:
                 websites = Websites.objects.all()
@@ -55,7 +59,7 @@ def createFTPAccount(request):
                     for items in websites:
                         websitesName.append(items.domain)
 
-            return render(request, 'ftp/createFTPAccount.html', {'websiteList':websitesName,'admin':admin.userName})
+            return render(request, 'ftp/createFTPAccount.html', {'websiteList':websitesName,'admin':admin.userName, "status": 1})
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
@@ -124,7 +128,10 @@ def deleteFTPAccount(request):
     try:
         val = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=request.session['userID'])
+            admin = Administrator.objects.get(pk=val)
+
+            if not os.path.exists('/home/cyberpanel/pureftpd'):
+                return render(request, "ftp/deleteFTPAccount.html", {"status": 0})
 
             if admin.type == 1:
                 websites = Websites.objects.all()
@@ -152,7 +159,7 @@ def deleteFTPAccount(request):
                     for items in websites:
                         websitesName.append(items.domain)
 
-            return render(request, 'ftp/deleteFTPAccount.html', {'websiteList':websitesName})
+            return render(request, 'ftp/deleteFTPAccount.html', {'websiteList':websitesName, "status": 1})
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
@@ -249,6 +256,9 @@ def listFTPAccounts(request):
         try:
             admin = Administrator.objects.get(pk=val)
 
+            if not os.path.exists('/home/cyberpanel/pureftpd'):
+                return render(request, "ftp/listFTPAccounts.html", {"status": 0})
+
             if admin.type == 1:
                 websites = Websites.objects.all()
                 websitesName = []
@@ -275,7 +285,7 @@ def listFTPAccounts(request):
                     for items in websites:
                         websitesName.append(items.domain)
 
-            return render(request, 'ftp/listFTPAccounts.html', {'websiteList':websitesName})
+            return render(request, 'ftp/listFTPAccounts.html', {'websiteList':websitesName, "status": 1})
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))

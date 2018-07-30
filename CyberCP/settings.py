@@ -58,7 +58,8 @@ INSTALLED_APPS = [
     'manageSSL',
     'api',
     'filemanager',
-    'emailPremium'
+    'emailPremium',
+    'manageServices'
 ]
 
 MIDDLEWARE = [
@@ -176,4 +177,5 @@ LANGUAGES = (
     ('ru', _('Russian')),
     ('tr', _('Turkish')),
     ('es', _('Spanish')),
+    ('fr', _('French')),
 )

@@ -89,4 +89,13 @@ urlpatterns = [
     url(r'^(?P<domain>([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)/joomlaInstall$', views.joomlaInstall, name='joomlaInstall'),
 
 
+    ## Git
+    url(r'^(?P<domain>([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)/setupGit$', views.setupGit, name='setupGit'),
+    url(r'^setupGitRepo$', views.setupGitRepo, name='setupGitRepo'),
+
+    url(r'^(?P<domain>([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)/gitNotify$', views.gitNotify, name='gitNotify'),
+    url(r'^detachRepo$', views.detachRepo, name='detachRepo'),
+    url(r'^changeBranch$', views.changeBranch, name='changeBranch'),
+
+
 ]
