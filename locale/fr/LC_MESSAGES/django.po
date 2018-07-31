@@ -8,14 +8,14 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-07-28 13:16+0500\n"
-"PO-Revision-Date: 2018-07-28 22:19+0200\n"
+"PO-Revision-Date: 2018-07-30 15:35+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "Last-Translator: \n"
 "Language-Team: \n"
-"X-Generator: Poedit 2.1.1\n"
+"X-Generator: Poedit 2.0.6\n"
 "Language: fr\n"
 
 #: CyberCP/CyberCP/settings.py:170
@@ -28,7 +28,7 @@ msgstr "Chinois"
 
 #: CyberCP/CyberCP/settings.py:172
 msgid "Bulgarian"
-msgstr "bulgare"
+msgstr "Bulgare"
 
 #: CyberCP/CyberCP/settings.py:173
 msgid "Portuguese"
@@ -44,15 +44,15 @@ msgstr "Bosniaque"
 
 #: CyberCP/CyberCP/settings.py:176
 msgid "Greek"
-msgstr "grec"
+msgstr "Grec"
 
 #: CyberCP/CyberCP/settings.py:177
 msgid "Russian"
-msgstr "russe"
+msgstr "Russe"
 
 #: CyberCP/CyberCP/settings.py:178
 msgid "Turkish"
-msgstr "turc"
+msgstr "Turc"
 
 #: CyberCP/CyberCP/settings.py:179
 msgid "Spanish"
@@ -148,7 +148,7 @@ msgstr "Annuler la sauvegarde"
 #: CyberCP/mailServer/templates/mailServer/emailForwarding.html:110
 #: CyberCP/managePHP/templates/managePHP/installExtensions.html:62
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 #: CyberCP/backup/templates/backup/backup.html:103
 msgid "File"
@@ -233,7 +233,7 @@ msgstr "Mot de passe"
 #: CyberCP/backup/templates/backup/backupDestinations.html:45
 #: CyberCP/firewall/templates/firewall/firewall.html:139
 msgid "Port"
-msgstr ""
+msgstr "Port"
 
 #: CyberCP/backup/templates/backup/backupDestinations.html:47
 msgid "Backup server SSH Port, leave empty for 22."
@@ -581,7 +581,7 @@ msgstr "Utilisation de RAM"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/homePage.html:74
 msgid "Disk Usage '/'"
-msgstr "Utilisation du disque '/'"
+msgstr "Utilisation du disque"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/homePage.html:111
 #: CyberCP/baseTemplate/templates/baseTemplate/homePage.html:325
@@ -1119,8 +1119,9 @@ msgstr "Liste des comptes FTP"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:436
 #: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:554
+#, fuzzy
 msgid "Add/Delete Destination"
-msgstr "Ajouter / Supprimer la destination"
+msgstr "Sauvegarde externe"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:438
 #: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:556
@@ -1527,7 +1528,7 @@ msgstr "Changement"
 
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:3
 msgid "Add/Modify DNS Records - CyberPanel"
-msgstr "Ajouter / Modifier les enregistrements DNS - CyberPanel"
+msgstr "Gestions enregistrements DNS - CyberPanel"
 
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:13
 msgid "Add/Modify DNS Zone"
@@ -3220,7 +3221,7 @@ msgstr "Créé avec succès"
 
 #: CyberCP/packages/templates/packages/deletePackage.html:3
 msgid "Delete Package - CyberPanel"
-msgstr "Supprimer un package - CyberPanel"
+msgstr "Supprimer un paquet - CyberPanel"
 
 #: CyberCP/packages/templates/packages/deletePackage.html:27
 #: CyberCP/packages/templates/packages/modifyPackage.html:24
@@ -4596,4 +4597,3 @@ msgstr "Mot de passe administrateur"
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:1060
 msgid "Database prefix"
 msgstr "Préfixe de base de données"
-
