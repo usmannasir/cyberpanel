@@ -520,13 +520,11 @@ RewriteFile .htaccess
             sslCheck = 1
 
             for items in data:
-
                 if numberOfSites == 1:
-
                     if (items.find(virtualHostName) > -1 and items.find(
                                 "  map                     " + virtualHostName) > -1):
                         continue
-                    if (items.find(virtualHostName) > -1 and (
+                    if (items.find(' ' + virtualHostName) > -1 and (
                             items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
                         check = 0
                     if items.find("listener") > -1 and items.find("SSL") > -1:
