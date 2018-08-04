@@ -39,6 +39,8 @@ class ApplicationInstaller(multi.Thread):
                 self.detachRepo()
             elif self.installApp == 'changeBranch':
                 self.changeBranch()
+            elif self.installApp == 'prestashop':
+                self.installPrestaShop()
 
         except BaseException, msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.run]')
@@ -260,6 +262,242 @@ class ApplicationInstaller(multi.Thread):
 
 
             command = "sudo chown -R " + externalApp + ":" + externalApp + " " + "/home/" + domainName + "/public_html/"
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            vhost.addRewriteRules(domainName)
+            installUtilities.reStartLiteSpeed()
+
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines("Successfully Installed. [200]")
+            statusFile.close()
+            return 0
+
+
+        except BaseException, msg:
+            # remove the downloaded files
+            try:
+
+                command = "sudo rm -rf " + finalPath
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            except BaseException, msg:
+                logging.writeToFile(str(msg) + " [installWordPress]")
+
+            homeDir = "/home/" + domainName + "/public_html"
+
+            if not os.path.exists(homeDir):
+                FNULL = open(os.devnull, 'w')
+
+                command = 'sudo mkdir ' + homeDir
+                subprocess.call(shlex.split(command))
+
+
+                command = "sudo chown -R " + externalApp + ":" + externalApp + " " + homeDir
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            try:
+                mysqlUtilities.deleteDatabase(dbName, dbUser)
+                db = Databases.objects.get(dbName=dbName)
+                db.delete()
+            except:
+                pass
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines(str(msg) + " [404]")
+            statusFile.close()
+            return 0
+
+    def installPrestaShop(self):
+        try:
+
+            admin = self.extraArgs['admin']
+            domainName = self.extraArgs['domainName']
+            home = self.extraArgs['home']
+            shopName = self.extraArgs['shopName']
+            firstName = self.extraArgs['firstName']
+            lastName = self.extraArgs['lastName']
+            databasePrefix = self.extraArgs['databasePrefix']
+            email = self.extraArgs['email']
+            password = self.extraArgs['password']
+            tempStatusPath = self.extraArgs['tempStatusPath']
+
+
+            ### Check WP CLI
+
+
+            ## Open Status File
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Setting up paths,0')
+            statusFile.close()
+
+            try:
+                website = ChildDomains.objects.get(domain=domainName)
+                externalApp = website.master.externalApp
+
+                if admin.type != 1:
+                    if website.master.admin != admin:
+                        statusFile = open(tempStatusPath, 'w')
+                        statusFile.writelines("You do not own this website." + " [404]")
+                        statusFile.close()
+                        return 0
+
+            except:
+                website = Websites.objects.get(domain=domainName)
+                externalApp = website.externalApp
+
+                if admin.type != 1:
+                    if website.admin != admin:
+                        statusFile = open(tempStatusPath, 'w')
+                        statusFile.writelines("You do not own this website." + " [404]")
+                        statusFile.close()
+                        return 0
+
+            finalPath = ""
+
+
+            if home == '0':
+                path = self.extraArgs['path']
+                finalPath = "/home/" + domainName + "/public_html/" + path + "/"
+            else:
+                finalPath = "/home/" + domainName + "/public_html/"
+
+
+            ## Security Check
+
+            if finalPath.find("..") > -1:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
+                statusFile.close()
+                return 0
+
+            FNULL = open(os.devnull, 'w')
+
+            if not os.path.exists(finalPath):
+                command = 'sudo mkdir -p ' + finalPath
+                subprocess.call(shlex.split(command))
+
+            ## checking for directories/files
+
+            dirFiles = os.listdir(finalPath)
+
+            if len(dirFiles) == 1:
+                if dirFiles[0] == ".well-known":
+                    pass
+                else:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines("Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
+                    statusFile.close()
+                    return 0
+            elif len(dirFiles) == 0:
+                pass
+            else:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(
+                    "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
+                statusFile.close()
+                return 0
+
+
+
+
+            ## DB Creation
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Setting up Database,20')
+            statusFile.close()
+
+            dbName = randomPassword.generate_pass()
+            dbUser = dbName
+            dbPassword = randomPassword.generate_pass()
+
+            ## DB Creation
+
+            if website.package.dataBases > website.databases_set.all().count():
+                pass
+            else:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(
+                    "Maximum database limit reached for this website." + " [404]")
+                statusFile.close()
+                return 0
+
+            if Databases.objects.filter(dbName=dbName).exists() or Databases.objects.filter(
+                    dbUser=dbUser).exists():
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(
+                    "This database or user is already taken." + " [404]")
+                statusFile.close()
+                return 0
+
+            result = mysqlUtilities.createDatabase(dbName, dbUser, dbPassword)
+
+            if result == 1:
+                pass
+            else:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(
+                    "Not able to create database." + " [404]")
+                statusFile.close()
+                return 0
+
+            db = Databases(website=website, dbName=dbName, dbUser=dbUser)
+            db.save()
+
+
+            ####
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Downloading and extracting PrestaShop Core..,30')
+            statusFile.close()
+
+            command = "sudo wget https://download.prestashop.com/download/releases/prestashop_1.7.4.2.zip"
+            subprocess.call(shlex.split(command))
+
+            command = "sudo unzip -o prestashop_1.7.4.2.zip -d " + finalPath
+            subprocess.call(shlex.split(command))
+
+            command = "sudo unzip -o " + finalPath + "prestashop.zip -d " + finalPath
+            subprocess.call(shlex.split(command))
+
+            ##
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Configuring the installation,40')
+            statusFile.close()
+
+            if home == '0':
+                path = self.extraArgs['path']
+                finalURL = domainName + '/' + path
+            else:
+                finalURL = domainName
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Installing and configuring PrestaShop..,60')
+            statusFile.close()
+
+            command = "sudo php " + finalPath + "install/index_cli.php --domain=" + finalURL + \
+                      " --db_server=localhost --db_name=" + dbName + " --db_user=" + dbUser + " --db_password=" + dbPassword \
+                      + " --name='" + shopName + "' --firstname=" + firstName + " --lastname=" + lastName + \
+                      " --email=" + email + " --password=" + password
+            subprocess.call(shlex.split(command))
+
+            ##
+
+            command = "sudo rm -rf" + finalPath + "install"
+            subprocess.call(shlex.split(command))
+
+            ##
+
+            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + "/home/" + domainName + "/public_html/"
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            command = "sudo rm -f prestashop_1.7.4.2.zip"
             cmd = shlex.split(command)
             res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 

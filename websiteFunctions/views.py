@@ -2345,7 +2345,6 @@ def joomlaInstall(request, domain):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def installJoomla(request):
     try:
         val = request.session['userID']
@@ -2672,4 +2671,70 @@ def changeBranch(request):
     except KeyError, msg:
         status = {"status":0,"error":str(msg)}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
+        return HttpResponse("Not Logged in as admin")
+
+def installPrestaShop(request, domain):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        try:
+            if admin.type != 1:
+                website = Websites.objects.get(domain=domain)
+                if website.admin != admin:
+                    raise BaseException('You do not own this website.')
+
+
+            return render(request, 'websiteFunctions/installPrestaShop.html', {'domainName' : domain})
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return HttpResponse(str(msg))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def prestaShopInstall(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(id=val)
+        if request.method == 'POST':
+            try:
+                data = json.loads(request.body)
+
+                mailUtilities.checkHome()
+
+                extraArgs = {}
+                extraArgs['admin'] = admin
+                extraArgs['domainName'] = data['domain']
+                extraArgs['home'] = data['home']
+                extraArgs['shopName'] = data['shopName']
+                extraArgs['firstName'] = data['firstName']
+                extraArgs['lastName'] = data['lastName']
+                extraArgs['databasePrefix'] = data['databasePrefix']
+                extraArgs['email'] = data['email']
+                extraArgs['password'] = data['password']
+                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+                if data['home'] == '0':
+                    extraArgs['path'] = data['path']
+
+                background = ApplicationInstaller('prestashop', extraArgs)
+                background.start()
+
+                time.sleep(2)
+
+                data_ret = {'installStatus': 1, 'error_message': 'None', 'tempStatusPath': extraArgs['tempStatusPath']}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+
+                ## Installation ends
+
+            except BaseException, msg:
+                data_ret = {'installStatus': 0, 'error_message': str(msg)}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+    except KeyError, msg:
+        status = {"installStatus":0,"error":str(msg)}
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installJoomla]")
         return HttpResponse("Not Logged in as admin")
