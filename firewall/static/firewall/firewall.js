@@ -1564,3 +1564,164 @@ app.controller('modSecRulesPack', function($scope, $http, $timeout, $window) {
 
 
 /* Java script code for ModSec */
+
+
+/* Java script code for CSF */
+
+app.controller('csf', function($scope, $http, $timeout, $window) {
+
+           $scope.csfLoading  = true;
+           $scope.modeSecInstallBox = true;
+           $scope.modsecLoading = true;
+           $scope.failedToStartInallation = true;
+           $scope.couldNotConnect = true;
+           $scope.modSecSuccessfullyInstalled = true;
+           $scope.installationFailed = true;
+
+
+
+           $scope.installCSF = function(){
+
+               $scope.modSecNotifyBox  = true;
+               $scope.modeSecInstallBox = true;
+               $scope.modsecLoading = false;
+               $scope.failedToStartInallation = true;
+               $scope.couldNotConnect = true;
+               $scope.modSecSuccessfullyInstalled = true;
+               $scope.installationFailed = true;
+
+               url = "/firewall/installCSF";
+
+                        var data = {};
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.installStatus === 1){
+
+                        $scope.modSecNotifyBox  = true;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = false;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+                        $scope.modSecSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+                        getRequestStatus();
+
+                    }
+                    else{
+                        $scope.errorMessage = response.data.error_message;
+
+                        $scope.modSecNotifyBox  = false;
+                        $scope.modeSecInstallBox = true;
+                        $scope.modsecLoading = true;
+                        $scope.failedToStartInallation = false;
+                        $scope.couldNotConnect = true;
+                        $scope.modSecSuccessfullyInstalled = true;
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.modSecNotifyBox  = false;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = true;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = false;
+                        $scope.modSecSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+                }
+
+           };
+
+           function getRequestStatus(){
+
+                        $scope.modSecNotifyBox  = true;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = false;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+                        $scope.modSecSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+                        url = "/firewall/installStatusCSF";
+
+                        var data = {};
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.abort === 0){
+
+                        $scope.modSecNotifyBox  = true;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = false;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+                        $scope.modSecSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+                        $scope.requestData = response.data.requestStatus;
+                        $timeout(getRequestStatus,1000);
+                    }
+                    else{
+                        // Notifications
+                        $timeout.cancel();
+                        $scope.modSecNotifyBox  = false;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = true;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+
+                        $scope.requestData = response.data.requestStatus;
+
+                        if(response.data.installed === 0) {
+                            $scope.installationFailed = false;
+                            $scope.errorMessage = response.data.error_message;
+                        }else{
+                            $scope.modSecSuccessfullyInstalled = false;
+                            //$timeout(function() {  $window.location.reload(); }, 3000);
+                        }
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.modSecNotifyBox  = false;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = true;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = false;
+                        $scope.modSecSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+
+                }
+
+           }
+
+});

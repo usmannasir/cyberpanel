@@ -14,6 +14,7 @@ import thread
 from plogical.modSec import modSec
 from plogical.installUtilities import installUtilities
 from random import randint
+from plogical.csf import CSF
 # Create your views here.
 
 
@@ -803,7 +804,6 @@ def installStatusModSec(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def fetchModSecSettings(request):
     try:
         val = request.session['userID']
@@ -1017,7 +1017,6 @@ def modSecRules(request):
 
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def fetchModSecRules(request):
     try:
@@ -1357,4 +1356,102 @@ def enableDisableRuleFile(request):
         data_ret = {'saveStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+def csf(request):
+    try:
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
+
+        if admin.type == 3:
+            return HttpResponse("You don't have enough priviliges to access this page.")
+
+        csfInstalled = 1
+
+        try:
+            command = 'sudo csf -h'
+            res = subprocess.call(shlex.split(command))
+            if res == 1:
+                csfInstalled = 0
+        except subprocess.CalledProcessError:
+            csfInstalled = 0
+
+        return render(request,'firewall/csf.html', {'csfInstalled' : csfInstalled})
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def installCSF(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        try:
+
+            if admin.type != 1:
+                final_dic = {'installStatus': 0, 'error_message': 'Not enough privileges.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+            thread.start_new_thread(CSF.installCSF, ('Install','csf'))
+            final_json = json.dumps({'installStatus': 1, 'error_message': "None"})
+            return HttpResponse(final_json)
+
+        except BaseException,msg:
+            final_dic = {'installStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'installStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def installStatusCSF(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        try:
+            if request.method == 'POST':
+
+                if admin.type != 1:
+                    final_dic = {'abort': 1, 'installed': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+                installStatus = unicode(open(CSF.installLogPath, "r").read())
+
+                if installStatus.find("[200]")>-1:
+
+                    final_json = json.dumps({
+                                             'error_message': "None",
+                                             'requestStatus': installStatus,
+                                             'abort':1,
+                                             'installed': 1,
+                                             })
+                    return HttpResponse(final_json)
+                elif installStatus.find("[404]") > -1:
+
+                    final_json = json.dumps({
+                                             'abort':1,
+                                             'installed':0,
+                                             'error_message': "None",
+                                             'requestStatus': installStatus,
+                                             })
+                    return HttpResponse(final_json)
+
+                else:
+                    final_json = json.dumps({
+                                             'abort':0,
+                                             'error_message': "None",
+                                             'requestStatus': installStatus,
+                                             })
+                    return HttpResponse(final_json)
+
+
+        except BaseException,msg:
+            final_dic = {'abort':1,'installed':0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'abort':1,'installed':0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
 

@@ -39,6 +39,12 @@ urlpatterns = [
     url(r'^getRulesFiles', views.getRulesFiles, name='getRulesFiles'),
     url(r'^enableDisableRuleFile', views.enableDisableRuleFile, name='enableDisableRuleFile'),
 
+    ## CSF
+
+    url(r'^csf$', views.csf, name='csf'),
+    url(r'^installCSF$', views.installCSF, name='installModSec'),
+    url(r'^installStatusCSF$', views.installStatusCSF, name='installStatusCSF'),
+
 
 
 ]
