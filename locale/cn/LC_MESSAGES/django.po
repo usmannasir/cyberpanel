@@ -3,27 +3,12 @@
 # This file is distributed under the same license as the CyberPanel package.
 # FIRST AUTHOR <unasir@litespeedtech.com>, 2017.
 #
-#: CyberCP/baseTemplate/templates/baseTemplate/index.html:177
-#: CyberCP/baseTemplate/templates/baseTemplate/index.html:223
-#: CyberCP/baseTemplate/templates/baseTemplate/index.html:229
-#: CyberCP/baseTemplate/templates/baseTemplate/index.html:235
-#: CyberCP/baseTemplate/templates/baseTemplate/index.html:241
-#: CyberCP/baseTemplate/templates/baseTemplate/index.html:247
-#: CyberCP/baseTemplate/templates/baseTemplate/index.html:253
-#: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:198
-#: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:288
-#: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:343
-#: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:349
-#: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:355
-#: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:361
-#: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:367
-#: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:373
 msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-07-28 13:16+0500\n"
-"PO-Revision-Date: 2017-10-29 19:32+0100\n"
+"PO-Revision-Date: 2018-08-09 17:01+0200\n"
 "Last-Translator: \n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
 "Language: zh_CN\n"
@@ -31,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.0.4\n"
+"X-Generator: Poedit 2.1.1\n"
 
 #: CyberCP/CyberCP/settings.py:170
 msgid "English"
@@ -59,19 +44,19 @@ msgstr "波斯尼亚语"
 
 #: CyberCP/CyberCP/settings.py:176
 msgid "Greek"
-msgstr ""
+msgstr "希腊语"
 
 #: CyberCP/CyberCP/settings.py:177
 msgid "Russian"
-msgstr ""
+msgstr "俄语"
 
 #: CyberCP/CyberCP/settings.py:178
 msgid "Turkish"
-msgstr ""
+msgstr "土耳其语"
 
 #: CyberCP/CyberCP/settings.py:179
 msgid "Spanish"
-msgstr ""
+msgstr "西班牙语"
 
 #: CyberCP/backup/templates/backup/backup.html:4
 #: CyberCP/backup/templates/backup/backup.html:14
@@ -81,10 +66,8 @@ msgstr "备份网站"
 
 #: CyberCP/backup/templates/backup/backup.html:14
 #: CyberCP/backup/templates/backup/restore.html:14
-#, fuzzy
-#| msgid "Back up"
 msgid "Backup Docs"
-msgstr "备份"
+msgstr "备份文件"
 
 #: CyberCP/backup/templates/backup/backup.html:15
 msgid "This page can be used to Back up your websites"
@@ -221,7 +204,7 @@ msgstr "这里是远程备份页面(SFTP)"
 
 #: CyberCP/backup/templates/backup/backupDestinations.html:21
 msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
-msgstr ""
+msgstr "设置备份目的地 (备份服务器SSH端口应设为22)"
 
 #: CyberCP/backup/templates/backup/backupDestinations.html:30
 #: CyberCP/backup/templates/backup/remoteBackups.html:29
@@ -251,7 +234,7 @@ msgstr "端口"
 
 #: CyberCP/backup/templates/backup/backupDestinations.html:47
 msgid "Backup server SSH Port, leave empty for 22."
-msgstr ""
+msgstr "备份服务器SSH端口, 留空为22"
 
 #: CyberCP/backup/templates/backup/backupDestinations.html:55
 #: CyberCP/backup/templates/backup/backupSchedule.html:54
@@ -266,10 +249,8 @@ msgid "Connection to"
 msgstr "连接到"
 
 #: CyberCP/backup/templates/backup/backupDestinations.html:69
-#, fuzzy
-#| msgid "failed. Please delete and re-add."
 msgid "failed. Please delete and re-add. "
-msgstr "失败, 请删除后重新添加"
+msgstr "失败, 请删除后重新添加."
 
 #: CyberCP/backup/templates/backup/backupDestinations.html:73
 msgid "successful."
@@ -439,10 +420,8 @@ msgid "Transfer Websites from Remote Server - CyberPanel"
 msgstr "从远程服务器恢复网站 - CyberPanel"
 
 #: CyberCP/backup/templates/backup/remoteBackups.html:14
-#, fuzzy
-#| msgid "Start Transfer"
 msgid "Remote Transfer"
-msgstr "开始迁移"
+msgstr "远程传输"
 
 #: CyberCP/backup/templates/backup/remoteBackups.html:15
 msgid "This feature can import website(s) from remote server"
@@ -548,10 +527,8 @@ msgid "Select Back up"
 msgstr "选择备份"
 
 #: CyberCP/backup/templates/backup/restore.html:61
-#, fuzzy
-#| msgid "Configurations"
 msgid "Condition"
-msgstr "配置"
+msgstr "条件"
 
 #: CyberCP/backup/templates/backup/restore.html:86
 #: CyberCP/databases/templates/databases/deleteDatabase.html:64
@@ -845,8 +822,6 @@ msgstr "概览"
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:281
 #: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:400
 #: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:401
-#, fuzzy
-#| msgid "IP Address"
 msgid "Server IP Address"
 msgstr "IP地址"
 
@@ -1075,10 +1050,8 @@ msgid "Delete Email"
 msgstr "删除Email"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:394
-#, fuzzy
-#| msgid "Email Log"
 msgid "Email Forwarding"
-msgstr "Email日志"
+msgstr "Email转发"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:395
 #: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:514
@@ -1094,10 +1067,8 @@ msgstr "修改Email"
 #: CyberCP/mailServer/templates/mailServer/dkimManager.html:13
 #: CyberCP/mailServer/templates/mailServer/dkimManager.html:22
 #: CyberCP/mailServer/templates/mailServer/dkimManager.html:75
-#, fuzzy
-#| msgid "File Manager"
 msgid "DKIM Manager"
-msgstr "文件管理"
+msgstr "DKIM管理器"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:397
 #: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:515
@@ -1147,8 +1118,6 @@ msgstr "添加/删除远程目录"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:438
 #: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:556
-#, fuzzy
-#| msgid "Remote Backups"
 msgid "Remote Back ups"
 msgstr "远程备份"
 
@@ -1175,10 +1144,8 @@ msgid "Hostname SSL"
 msgstr "面板SSL"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:455
-#, fuzzy
-#| msgid "Server Logs"
 msgid "MailServer SSL"
-msgstr "服务器日志"
+msgstr "邮件SSL"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:463
 #: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:580
@@ -1218,8 +1185,6 @@ msgstr "Cybapenl主日志"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:490
 #: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:608
-#, fuzzy
-#| msgid "Server Status"
 msgid "Services Status"
 msgstr "服务器状态"
 
@@ -1282,14 +1247,12 @@ msgstr "FTP日志"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:527
 #: CyberCP/serverLogs/templates/serverLogs/modSecAuditLog.html:14
-#, fuzzy
-#| msgid "Security Functions"
 msgid "ModSecurity Audit Logs"
-msgstr "安全"
+msgstr "ModSecurity日志"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:527
 msgid "ModSec Audit Logs"
-msgstr ""
+msgstr "ModSec日志"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:542
 #: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:659
@@ -1313,34 +1276,26 @@ msgid "Secure SSH"
 msgstr "SSH加固"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:544
-#, fuzzy
-#| msgid "Edit PHP Configurations"
 msgid "ModSecurity Configurations"
-msgstr "设置PHP参数"
+msgstr "ModSecurity设置"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:544
-#, fuzzy
-#| msgid "Security"
 msgid "ModSecurity Conf"
-msgstr "安全"
+msgstr "ModSecurity配置"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:545
 #: CyberCP/firewall/templates/firewall/modSecurityRules.html:20
-#, fuzzy
-#| msgid "Security"
 msgid "ModSecurity Rules"
-msgstr "安全"
+msgstr "ModSecurity规则"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:546
 msgid "ModSecurity Rules Packs"
-msgstr ""
+msgstr "ModSecurity规则包"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:553
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:555
-#, fuzzy
-#| msgid "Mail Functions"
 msgid "Mail Settings"
-msgstr "邮件功能"
+msgstr "邮件设置"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:556
 #: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:585
@@ -1350,50 +1305,40 @@ msgstr "新功能"
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:561
 #: CyberCP/emailPremium/templates/emailPremium/policyServer.html:20
 msgid "Email Policy Server"
-msgstr ""
+msgstr "邮件限制策略"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:562
-#, fuzzy
-#| msgid "Email Logs"
 msgid "Email Limits"
-msgstr "Email日志"
+msgstr "Email限制"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:563
-#, fuzzy
-#| msgid "Configurations"
 msgid "SpamAssassin Configurations"
-msgstr "配置"
+msgstr "SpamAssassin配置"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:563
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:20
 #: CyberCP/firewall/templates/firewall/spamassassin.html:20
 msgid "SpamAssassin"
-msgstr ""
+msgstr "SpamAssassin"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:571
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:573
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage Services"
-msgstr "管理SSL"
+msgstr "管理服务"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:578
 #: CyberCP/manageServices/templates/manageServices/managePowerDNS.html:22
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage PowerDNS"
-msgstr "管理SSL"
+msgstr "管理PowerDNS"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:579
 #: CyberCP/manageServices/templates/manageServices/managePostfix.html:22
 msgid "Manage Postfix"
-msgstr ""
+msgstr "管理Postfix"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/index.html:580
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage FTP"
-msgstr "管理SSL"
+msgstr "管理FTP"
 
 #: CyberCP/baseTemplate/templates/baseTemplate/indexJavaFixed.html:199
 msgid "CPU Status"
@@ -1585,7 +1530,7 @@ msgstr "添加/修改DNS区域"
 #: CyberCP/dns/templates/dns/createNameServer.html:12
 #: CyberCP/dns/templates/dns/deleteDNSZone.html:12
 msgid "DNS Docs"
-msgstr ""
+msgstr "DNS文档"
 
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:14
 msgid ""
@@ -1602,7 +1547,7 @@ msgstr "添加记录"
 #: CyberCP/dns/templates/dns/createNameServer.html:24
 #: CyberCP/dns/templates/dns/deleteDNSZone.html:25
 msgid "PowerDNS is disabled."
-msgstr ""
+msgstr "PowerDNS已禁用"
 
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:29
 #: CyberCP/dns/templates/dns/createDNSZone.html:26
@@ -1615,8 +1560,6 @@ msgstr ""
 #: CyberCP/mailServer/templates/mailServer/createEmailAccount.html:28
 #: CyberCP/mailServer/templates/mailServer/deleteEmailAccount.html:28
 #: CyberCP/mailServer/templates/mailServer/emailForwarding.html:28
-#, fuzzy
-#| msgid "Enable"
 msgid "Enable Now"
 msgstr "开启"
 
@@ -1647,7 +1590,7 @@ msgstr "名称"
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:271
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:311
 msgid "TTL"
-msgstr ""
+msgstr "TTL"
 
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:87
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:110
@@ -1663,10 +1606,8 @@ msgid "Add"
 msgstr "添加"
 
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:104
-#, fuzzy
-#| msgid "IP Address"
 msgid "IPV6 Address"
-msgstr "IP地址"
+msgstr "IPv6地址"
 
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:128
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:155
@@ -1691,26 +1632,20 @@ msgid "Text"
 msgstr "内容"
 
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:228
-#, fuzzy
-#| msgid "Value"
 msgid "SOA Value"
 msgstr "内容"
 
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:252
-#, fuzzy
-#| msgid "First Nameserver"
 msgid "Name server"
-msgstr "第一名称服务器"
+msgstr "域名服务器"
 
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:275
-#, fuzzy
-#| msgid "Priority"
 msgid "Prioirty"
 msgstr "优先级"
 
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:280
 msgid "Content"
-msgstr ""
+msgstr "内容"
 
 #: CyberCP/dns/templates/dns/addDeleteDNSRecords.html:309
 msgid "Type"
@@ -1854,66 +1789,54 @@ msgstr "添加/删除记录"
 
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:3
 #: CyberCP/firewall/templates/firewall/spamassassin.html:3
-#, fuzzy
-#| msgid "Packages - CyberPanel"
 msgid "SpamAssassin - CyberPanel"
-msgstr "套餐 - CyberPanel"
+msgstr "SpamAssassin - CyberPanel"
 
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:13
 #: CyberCP/firewall/templates/firewall/spamassassin.html:13
-#, fuzzy
-#| msgid "Configurations"
 msgid "SpamAssassin Configurations!"
-msgstr "配置"
+msgstr "SpamAssassin配置"
 
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:13
 msgid "SpamAssassin Docs"
-msgstr ""
+msgstr "SpamAssassin文档"
 
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:14
 #: CyberCP/firewall/templates/firewall/spamassassin.html:14
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can configure SpamAssassin settings."
-msgstr "这里是远程备份页面(SFTP)"
+msgstr "这里是SpamAssasin配置页面"
 
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:29
 msgid "SpamAssassin is not installed "
-msgstr ""
+msgstr "SpamAssassin未安装"
 
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:31
 #: CyberCP/firewall/templates/firewall/modSecurity.html:31
 #: CyberCP/firewall/templates/firewall/modSecurityRules.html:72
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:30
 #: CyberCP/firewall/templates/firewall/spamassassin.html:31
-#, fuzzy
-#| msgid "Install"
 msgid "Install Now."
 msgstr "安装"
 
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:43
 #: CyberCP/firewall/templates/firewall/modSecurity.html:43
 #: CyberCP/firewall/templates/firewall/spamassassin.html:43
-#, fuzzy
-#| msgid "Cannot add destination. Error message:"
 msgid "Failed to start installation, Error message: "
-msgstr "无法添加远程目录, 错误信息: "
+msgstr "无法进行安装, 错误信息: "
 
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:51
 #: CyberCP/firewall/templates/firewall/modSecurity.html:51
 #: CyberCP/firewall/templates/firewall/spamassassin.html:51
-#, fuzzy
-#| msgid "Installation failed. Error message:"
 msgid "Installation failed."
-msgstr "安装失败, 错误信息:"
+msgstr "安装失败."
 
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:55
 msgid "SpamAssassin successfully installed, refreshing page in 3 seconds.."
-msgstr ""
+msgstr "SpamAssassin成功安装，页面将在3秒后刷新"
 
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:66
 msgid "Winter is coming, but so is SpamAssassin."
-msgstr ""
+msgstr "Winter is coming, but so is SpamAssassin."
 
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:114
 #: CyberCP/emailPremium/templates/emailPremium/policyServer.html:40
@@ -1922,48 +1845,38 @@ msgstr ""
 #: CyberCP/manageServices/templates/manageServices/managePostfix.html:42
 #: CyberCP/manageServices/templates/manageServices/managePowerDNS.html:42
 #: CyberCP/manageServices/templates/manageServices/managePureFtpd.html:42
-#, fuzzy
-#| msgid "Save Changes"
 msgid "Save changes."
 msgstr "保存修改"
 
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:126
-#, fuzzy
-#| msgid "Could not fetch current configuration. Error message:"
 msgid "Failed to save SpamAssassin configurations. Error message: "
-msgstr "无法读取当前配置, 错误信息:"
+msgstr "无法保存SapmAssassin配置, 错误信息:"
 
 #: CyberCP/emailPremium/templates/emailPremium/SpamAssassin.html:130
-#, fuzzy
-#| msgid "Backup Process successfully started."
 msgid "SpamAssassin configurations successfully saved."
-msgstr " 已成功创建."
+msgstr "SpamAssassin配置成功保存"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:13
 #: CyberCP/emailPremium/templates/emailPremium/emailPage.html:13
 #: CyberCP/emailPremium/templates/emailPremium/listDomains.html:14
 #: CyberCP/emailPremium/templates/emailPremium/policyServer.html:13
-#, fuzzy
-#| msgid "Email Logs"
 msgid "Emai Limits Docs"
 msgstr "Email日志"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:14
 msgid "View and change email limits for a domain name."
-msgstr ""
+msgstr "查看和修改域名邮件限制"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:25
-#, fuzzy
-#| msgid "Resource Usage"
 msgid "Domain Resource Usage"
-msgstr "资源使用量"
+msgstr "域名资源使用量"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:52
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:158
 #: CyberCP/emailPremium/templates/emailPremium/emailPage.html:54
 #: CyberCP/emailPremium/templates/emailPremium/listDomains.html:59
 msgid "Limits are being Applied!"
-msgstr ""
+msgstr "限制已设定"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:53
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:159
@@ -1979,7 +1892,7 @@ msgstr "关闭"
 #: CyberCP/emailPremium/templates/emailPremium/emailPage.html:56
 #: CyberCP/emailPremium/templates/emailPremium/listDomains.html:61
 msgid "Limits are not being applied!"
-msgstr ""
+msgstr "限制未启用"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:55
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:161
@@ -1995,55 +1908,41 @@ msgstr "开启"
 #: CyberCP/filemanager/templates/filemanager/index.html:84
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:66
 msgid "Edit"
-msgstr ""
+msgstr "编辑"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:70
 #: CyberCP/emailPremium/templates/emailPremium/emailPage.html:78
-#, fuzzy
-#| msgid "Memory Soft Limit"
 msgid "Monthly Limit"
-msgstr "内存软限制"
+msgstr "月限制"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:83
 #: CyberCP/emailPremium/templates/emailPremium/emailPage.html:101
-#, fuzzy
-#| msgid "Change"
 msgid "Change Limits"
-msgstr "修改"
+msgstr "修改限制"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:93
 #: CyberCP/emailPremium/templates/emailPremium/emailPage.html:111
-#, fuzzy
-#| msgid "Cannot create user. Error message:"
 msgid "Can not change limits. Error message:"
-msgstr "无法创建用户, 错误信息:"
+msgstr "无法修改限制, 错误信息:"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:97
-#, fuzzy
-#| msgid "Password successfully changed for :"
 msgid "Limits successfully changed, refreshing in 3 seconds."
-msgstr "已成功为修改密码 :"
+msgstr "限制已成功修改，页面将在3秒后刷新"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:126
 #: CyberCP/emailPremium/templates/emailPremium/emailPage.html:25
-#, fuzzy
-#| msgid "Resource Usage"
 msgid "Email Resource Usage"
-msgstr "资源使用量"
+msgstr "邮件使用量"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:133
-#, fuzzy
-#| msgid "Search Extensions.."
 msgid "Search Emails.."
-msgstr "搜索扩展..."
+msgstr "搜索邮件"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:164
 #: CyberCP/emailPremium/templates/emailPremium/listDomains.html:65
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:209
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage"
-msgstr "管理SSL"
+msgstr "管理"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailLimits.html:172
 #: CyberCP/emailPremium/templates/emailPremium/emailPage.html:179
@@ -2054,45 +1953,35 @@ msgstr "无法查看网站, 错误信息:"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailPage.html:14
 msgid "View and change limits for an Email Address."
-msgstr ""
+msgstr "查看和修改邮箱限制"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailPage.html:60
 msgid "Logging in ON!"
-msgstr ""
+msgstr "登陆已开启"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailPage.html:62
 msgid "Logging is Off"
-msgstr ""
+msgstr "登陆已禁止"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailPage.html:88
-#, fuzzy
-#| msgid "Memory Soft Limit"
 msgid "Hourly Limit"
-msgstr "内存软限制"
+msgstr "每小时限制"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailPage.html:115
-#, fuzzy
-#| msgid "is successfully created."
 msgid "Limits successfully changed."
-msgstr "已成功添加"
+msgstr "限制已成功添加"
 
 #: CyberCP/emailPremium/templates/emailPremium/emailPage.html:151
-#, fuzzy
-#| msgid "Search Extensions.."
 msgid "Search Emails Logs.."
-msgstr "搜索扩展..."
+msgstr "搜索邮件日志.."
 
 #: CyberCP/emailPremium/templates/emailPremium/emailPage.html:155
-#, fuzzy
-#| msgid "FTP Logs"
 msgid "Flush Logs"
-msgstr "FTP日志"
+msgstr "清空日志"
 
 #: CyberCP/emailPremium/templates/emailPremium/listDomains.html:3
-#, fuzzy
-#| msgid "Home - CyberPanel"
 msgid "Domains - CyberPanel"
-msgstr "主页 - Cyberpanel"
+msgstr "域名 - Cyberpanel"
 
 #: CyberCP/emailPremium/templates/emailPremium/listDomains.html:14
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:272
@@ -2105,7 +1994,7 @@ msgstr "查看域名"
 
 #: CyberCP/emailPremium/templates/emailPremium/listDomains.html:15
 msgid "On this page you manage emails limits for Domains/Email Addresses"
-msgstr ""
+msgstr "此页面可管理域名和邮箱限制"
 
 #: CyberCP/emailPremium/templates/emailPremium/listDomains.html:22
 #: CyberCP/packages/templates/packages/createPackage.html:35
@@ -2116,114 +2005,90 @@ msgstr "域名"
 
 #: CyberCP/emailPremium/templates/emailPremium/listDomains.html:29
 msgid "Email Policy Server is not enabled "
-msgstr ""
+msgstr "邮件限制策略未启用"
 
 #: CyberCP/emailPremium/templates/emailPremium/listDomains.html:32
-#, fuzzy
-#| msgid "Enable"
 msgid "Enable Now."
 msgstr "开启"
 
 #: CyberCP/emailPremium/templates/emailPremium/policyServer.html:3
-#, fuzzy
-#| msgid "Server Logs - CyberPanel"
 msgid "Email Policy Server - CyberPanel"
-msgstr "服务器日志 - CyberPanel"
+msgstr "邮件限制日志 - CyberPanel"
 
 #: CyberCP/emailPremium/templates/emailPremium/policyServer.html:13
-#, fuzzy
-#| msgid "Edit PHP Configurations"
 msgid "Email Policy Server Configurations!"
-msgstr "设置PHP参数"
+msgstr "邮件限制策略设置"
 
 #: CyberCP/emailPremium/templates/emailPremium/policyServer.html:14
 msgid "Turn ON Email Policy Server to use Email Limits Feature. "
-msgstr ""
+msgstr "开启邮件限制策略"
 
 #: CyberCP/emailPremium/templates/emailPremium/policyServer.html:56
 #: CyberCP/manageServices/templates/manageServices/managePostfix.html:58
 #: CyberCP/manageServices/templates/manageServices/managePowerDNS.html:58
 #: CyberCP/manageServices/templates/manageServices/managePureFtpd.html:58
-#, fuzzy
-#| msgid "is successfully erased."
 msgid "Changes successfully applied."
-msgstr "已成功删除"
+msgstr "已成功修改"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:5
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "File Manager - CyberPanel"
-msgstr "管理SSL - CyberPanel"
+msgstr "文件管理器 - CyberPanel"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:43
-#, fuzzy
-#| msgid "File Manager"
 msgid " File Manager"
-msgstr "文件管理"
+msgstr "文件管理器"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:63
 #: CyberCP/filemanager/templates/filemanager/index.html:205
 #: CyberCP/filemanager/templates/filemanager/index.html:236
-#, fuzzy
-#| msgid "Reload"
 msgid "Upload"
-msgstr "重载"
+msgstr "上传"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:66
-#, fuzzy
-#| msgid "File"
 msgid "New File"
-msgstr "文件"
+msgstr "新建文件"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:69
 msgid "New Folder"
-msgstr ""
+msgstr "新建目录"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:75
 #: CyberCP/filemanager/templates/filemanager/index.html:566
 msgid "Copy"
-msgstr ""
+msgstr "复制"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:78
 #: CyberCP/filemanager/templates/filemanager/index.html:531
 msgid "Move"
-msgstr ""
+msgstr "移动"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:81
 #: CyberCP/filemanager/templates/filemanager/index.html:596
-#, fuzzy
-#| msgid "Username"
 msgid "Rename"
-msgstr "用户名"
+msgstr "重命名"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:87
 #: CyberCP/filemanager/templates/filemanager/index.html:441
 #: CyberCP/filemanager/templates/filemanager/index.html:468
 msgid "Compress"
-msgstr ""
+msgstr "压缩"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:90
 #: CyberCP/filemanager/templates/filemanager/index.html:496
 msgid "Extract"
-msgstr ""
+msgstr "解压"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:93
-#, fuzzy
-#| msgid "PHP version "
 msgid "Fix Permissions"
-msgstr "PHP版本 "
+msgstr "修复权限"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:111
-#, fuzzy
-#| msgid "Current Package:"
 msgid "Current Path"
-msgstr "当前套餐:"
+msgstr "当前路径:"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:139
-#, fuzzy
-#| msgid "Back up"
 msgid "Back"
-msgstr "备份"
+msgstr "返回"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:143
 #: CyberCP/serverLogs/templates/serverLogs/accessLogs.html:42
@@ -2237,103 +2102,85 @@ msgid "Refresh"
 msgstr "刷新"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:147
-#, fuzzy
-#| msgid "Select Email"
 msgid "Select All"
-msgstr "选择Email"
+msgstr "全部选择"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:151
-#, fuzzy
-#| msgid "Select Email"
 msgid "UnSelect All"
-msgstr "选择Email"
+msgstr "取消全选"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:161
-#, fuzzy
-#| msgid "Size"
 msgid "Size (KB)"
-msgstr "大小"
+msgstr "大小(KB)"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:162
 msgid "Last Modified"
-msgstr ""
+msgstr "最后修改"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:163
-#, fuzzy
-#| msgid "PHP version "
 msgid "Permissions"
-msgstr "PHP版本 "
+msgstr "权限"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:183
 msgid "Upload File"
-msgstr ""
+msgstr "上传文件"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:183
-#, fuzzy
-#| msgid "Reload"
 msgid "Upload Limits"
-msgstr "重载"
+msgstr "上传限制"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:190
 msgid "Upload queue"
-msgstr ""
+msgstr "上传队列"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:191
 msgid "Queue length:"
-msgstr ""
+msgstr "队列长度:"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:198
 msgid "Drop"
-msgstr ""
+msgstr "拖拽"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:199
 msgid "Drop Files here to upload them."
-msgstr ""
+msgstr "拖拽到此以上传"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:214
 msgid "Progress"
-msgstr ""
+msgstr "进度"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:216
 #: CyberCP/mailServer/templates/mailServer/emailForwarding.html:113
-#, fuzzy
-#| msgid "FTP Functions"
 msgid "Actions"
-msgstr "FTP功能"
+msgstr "开始"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:242
 msgid "Remove"
-msgstr ""
+msgstr "删除"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:252
 msgid "Queue progress:"
-msgstr ""
+msgstr "队列进度:"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:261
-#, fuzzy
-#| msgid "Cannot tune. Error message:"
 msgid "can not be uploaded, Error message:"
-msgstr "无法保存设置, 错误信息:"
+msgstr "无法上传, 错误信息:"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:265
 msgid "Upload all"
-msgstr ""
+msgstr "上传全部"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:268
-#, fuzzy
-#| msgid "Cancel"
 msgid "Cancel all"
-msgstr "取消"
+msgstr "取消全部"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:271
 msgid "Remove all"
-msgstr ""
+msgstr "删除全部"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:307
-#, fuzzy
-#| msgid "Rule successfully added."
 msgid "File Successfully saved."
-msgstr "成功添加规则"
+msgstr "文件保存成功"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:314
 #: CyberCP/firewall/templates/firewall/secureSSH.html:68
@@ -2343,72 +2190,54 @@ msgid "Save Changes"
 msgstr "保存修改"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:331
-#, fuzzy
-#| msgid "Create New User"
 msgid "Create new folder!"
-msgstr "创建新用户"
+msgstr "创建新目录"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:339
-#, fuzzy
-#| msgid "File Name"
 msgid "New Folder Name"
-msgstr "文件名"
+msgstr "新目录名"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:341
 msgid "Folder will be created in your current directory"
-msgstr ""
+msgstr "目录将在当前路径创建"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:343
-#, fuzzy
-#| msgid "Create User"
 msgid "Create Folder"
-msgstr "创建用户"
+msgstr "新建目录"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:356
-#, fuzzy
-#| msgid "is successfully created."
 msgid "Folder Successfully created."
-msgstr "已成功添加"
+msgstr "目录成功创建"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:375
-#, fuzzy
-#| msgid "Create New User"
 msgid "Create new file!"
-msgstr "创建新用户"
+msgstr "创建新文件"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:383
-#, fuzzy
-#| msgid "File Name"
 msgid "New File Name"
-msgstr "文件名"
+msgstr "新建文件名"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:385
 msgid ""
 "File will be created in your current directory, if it already exists it will "
 "not overwirte."
-msgstr ""
+msgstr "文件将创建在当前目录,如已存在则不会进行覆盖"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:387
-#, fuzzy
-#| msgid "Create Email"
 msgid "Create File"
-msgstr "创建Email"
+msgstr "新建文件"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:400
-#, fuzzy
-#| msgid "is successfully created."
 msgid "File Successfully created."
-msgstr "已成功添加"
+msgstr "文件已成功创建"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:416
-#, fuzzy
-#| msgid "Configurations"
 msgid "Confirm Deletion!"
-msgstr "配置"
+msgstr "确认删除"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:425
 msgid "Confirm"
-msgstr ""
+msgstr "确认"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:426
 #: CyberCP/filemanager/templates/filemanager/index.html:469
@@ -2422,130 +2251,112 @@ msgstr "关闭"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:449
 msgid "List of files/folder!"
-msgstr ""
+msgstr "文件/目录列表"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:453
-#, fuzzy
-#| msgid "File Name"
 msgid "Compressed File Name"
-msgstr "文件名"
+msgstr "压缩文件名"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:455
-#, fuzzy
-#| msgid "Extension Name"
 msgid "Enter without extension name!"
-msgstr "扩展名称"
+msgstr "输入文件夹(不带后缀)"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:459
 msgid "Compression Type"
-msgstr ""
+msgstr "压缩类型"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:484
 msgid "Extracting"
-msgstr ""
+msgstr "解压中"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:492
 msgid "Extract in"
-msgstr ""
+msgstr "解压"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:494
 msgid "You can enter . to extract in current directory!"
-msgstr ""
+msgstr "输入 . 以解压到当前目录"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:512
-#, fuzzy
-#| msgid "Files"
 msgid "Move Files"
-msgstr "文件"
+msgstr "移动文件"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:520
 #: CyberCP/filemanager/templates/filemanager/index.html:555
 msgid "List of files/folders!"
-msgstr ""
+msgstr "文件/目录列表"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:524
 msgid "Move to"
-msgstr ""
+msgstr "移动到"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:526
 msgid "Enter a path to move your files!"
-msgstr ""
+msgstr "输入目标路径"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:547
-#, fuzzy
-#| msgid "Files"
 msgid "Copy Files"
-msgstr "文件"
+msgstr "复制文件"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:559
 msgid "Copy to"
-msgstr ""
+msgstr "复制到"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:561
 msgid "Enter a path to copy your files to!"
-msgstr ""
+msgstr "输入目标路径"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:581
 msgid "Renaming"
-msgstr ""
+msgstr "重命名"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:589
-#, fuzzy
-#| msgid "File Name"
 msgid "New Name"
-msgstr "文件名"
+msgstr "新文件名"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:591
 msgid "Enter new name of file!"
-msgstr ""
+msgstr "输入新文件名"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:611
-#, fuzzy
-#| msgid "PHP version "
 msgid "Changing permissions for"
-msgstr "PHP版本 "
+msgstr "修改权限"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:620
 msgid "Mode"
-msgstr ""
+msgstr "模式"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:621
-#, fuzzy
-#| msgid "Users"
 msgid "User"
 msgstr "用户"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:622
 msgid "Group"
-msgstr ""
+msgstr "组"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:623
 msgid "World"
-msgstr ""
+msgstr "世界"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:628
 msgid "Read"
-msgstr ""
+msgstr "读取"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:634
 msgid "Write"
-msgstr ""
+msgstr "写入"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:640
 msgid "Execute"
-msgstr ""
+msgstr "执行"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:656
-#, fuzzy
-#| msgid "Select PHP Version"
 msgid "Change Permissions"
-msgstr "选择PHP版本"
+msgstr "修改权限"
 
 #: CyberCP/filemanager/templates/filemanager/index.html:657
-#, fuzzy
-#| msgid "Select PHP Version"
 msgid "Change Recursively"
-msgstr "选择PHP版本"
+msgstr "修改递归"
 
 #: CyberCP/firewall/templates/firewall/firewall.html:3
 msgid "Firewall - CyberPanel"
@@ -2607,146 +2418,110 @@ msgid "Manage the security of the server on this page."
 msgstr "在此页面管理服务器安全相关内容"
 
 #: CyberCP/firewall/templates/firewall/modSecurity.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity - CyberPanel"
-msgstr "安全 - CyberPanel"
+msgstr "ModSecurity - CyberPanel"
 
 #: CyberCP/firewall/templates/firewall/modSecurity.html:13
-#, fuzzy
-#| msgid "Edit PHP Configurations"
 msgid "ModSecurity Configurations!"
-msgstr "设置PHP参数"
+msgstr "ModSecurity设置"
 
 #: CyberCP/firewall/templates/firewall/modSecurity.html:13
 #: CyberCP/firewall/templates/firewall/modSecurityRules.html:13
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:13
 msgid "ModSec Docs"
-msgstr ""
+msgstr "ModSec文档"
 
 #: CyberCP/firewall/templates/firewall/modSecurity.html:14
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can configure ModSecurity settings."
 msgstr "这里是远程备份页面(SFTP)"
 
 #: CyberCP/firewall/templates/firewall/modSecurity.html:20
-#, fuzzy
-#| msgid "Security"
 msgid "ModSecurity"
-msgstr "安全"
+msgstr "ModSecurity"
 
 #: CyberCP/firewall/templates/firewall/modSecurity.html:29
 #: CyberCP/firewall/templates/firewall/modSecurityRules.html:70
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:28
 #: CyberCP/firewall/templates/firewall/spamassassin.html:29
 msgid "ModSecurity is not installed "
-msgstr ""
+msgstr "ModSecurity并未安装"
 
 #: CyberCP/firewall/templates/firewall/modSecurity.html:55
 #: CyberCP/firewall/templates/firewall/spamassassin.html:55
 msgid "ModSecurity successfully installed, refreshing page in 3 seconds.."
-msgstr ""
+msgstr "ModSecurity安装成功, 页面将在3秒后刷新"
 
 #: CyberCP/firewall/templates/firewall/modSecurity.html:66
 #: CyberCP/firewall/templates/firewall/spamassassin.html:66
 msgid "Winter is coming, but so is ModSecurity."
-msgstr ""
+msgstr "Winter is coming, but so is ModSecurity"
 
 #: CyberCP/firewall/templates/firewall/modSecurity.html:169
 #: CyberCP/firewall/templates/firewall/spamassassin.html:169
-#, fuzzy
-#| msgid "Could not fetch current configuration. Error message:"
 msgid "Failed to save ModSecurity configurations. Error message: "
-msgstr "无法读取当前配置, 错误信息:"
+msgstr "无法保存ModSecurity配置, 错误信息:"
 
 #: CyberCP/firewall/templates/firewall/modSecurity.html:173
 #: CyberCP/firewall/templates/firewall/spamassassin.html:173
-#, fuzzy
-#| msgid "Backup Process successfully started."
 msgid "ModSecurity configurations successfully saved."
-msgstr " 已成功创建."
+msgstr "ModSecurity配置成功保存"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRules.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity Rules - CyberPanel"
-msgstr "安全 - CyberPanel"
+msgstr "ModSecurity规则 - CyberPanel"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRules.html:13
-#, fuzzy
-#| msgid "Security"
 msgid "ModSecurity Rules!"
-msgstr "安全"
+msgstr "ModSecurity Rules"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRules.html:14
-#, fuzzy
-#| msgid ""
-#| "On this page you can launch, list, modify and delete websites from your "
-#| "server."
 msgid "On this page you can add/delete ModSecurity rules."
-msgstr "在此页面可以创建,查看,修改和删除您服务器上的网站."
+msgstr "在此页面可以添加和删除ModSecurity规则"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRules.html:42
-#, fuzzy
-#| msgid "Save Rewrite Rules"
 msgid "Save Rules!"
-msgstr "保存Rewrite rules"
+msgstr "保存规则"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRules.html:49
 msgid "ModSecurity Rules Saved"
-msgstr ""
+msgstr "ModSecurity规则已保存"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRules.html:58
-#, fuzzy
-#| msgid "Could not save rewrite rules. Error message:"
 msgid "Could not save rules, Error message: "
-msgstr "无法保存Rewrite rules, 错误信息:"
+msgstr "无法保存, 错误信息:"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity Rules Packs - CyberPanel"
-msgstr "安全 - CyberPanel"
+msgstr "ModSecurity规则包 - CyberPanel"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:13
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:20
-#, fuzzy
-#| msgid "Modify Package"
 msgid "ModSecurity Rules Packages!"
-msgstr "修改套餐"
+msgstr "ModSecurity规则包"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:14
 msgid "Install/Un-install ModSecurity rules packages."
-msgstr ""
+msgstr "安装/卸载 ModSecurity规则包"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:60
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:71
-#, fuzzy
-#| msgid "Configurations"
 msgid "Configure"
 msgstr "配置"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:84
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:96
-#, fuzzy
-#| msgid "Action successful."
 msgid "Operation successful."
 msgstr "操作成功"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:92
-#, fuzzy
-#| msgid "Action failed. Error message:"
 msgid "Operation failed, Error message: "
 msgstr "操作失败, 错误信息: "
 
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:110
 msgid "Supplier"
-msgstr ""
+msgstr "提供商"
 
 #: CyberCP/firewall/templates/firewall/modSecurityRulesPacks.html:111
-#, fuzzy
-#| msgid "File Name"
 msgid "Filename"
 msgstr "文件名"
 
@@ -2755,8 +2530,6 @@ msgid "Secure SSH - CyberPanel"
 msgstr "SSH加固 - CyberPanel"
 
 #: CyberCP/firewall/templates/firewall/secureSSH.html:13
-#, fuzzy
-#| msgid "SSH Keys"
 msgid "SSH Docs"
 msgstr "SSH密钥"
 
@@ -2826,7 +2599,7 @@ msgstr "在列表中选择一个网站, 它的根目录将会设为FTP的根目�
 #: CyberCP/ftp/templates/ftp/deleteFTPAccount.html:25
 #: CyberCP/ftp/templates/ftp/listFTPAccounts.html:26
 msgid "PureFTPD is disabled."
-msgstr ""
+msgstr "PureFTPD已禁用"
 
 #: CyberCP/ftp/templates/ftp/createFTPAccount.html:64
 msgid "FTP Password"
@@ -2932,7 +2705,7 @@ msgstr "在列表中选择并修改密码"
 #: CyberCP/mailServer/templates/mailServer/deleteEmailAccount.html:26
 #: CyberCP/mailServer/templates/mailServer/emailForwarding.html:26
 msgid "Postfix is disabled."
-msgstr ""
+msgstr "Postfix已禁用"
 
 #: CyberCP/mailServer/templates/mailServer/changeEmailPassword.html:55
 #: CyberCP/mailServer/templates/mailServer/deleteEmailAccount.html:55
@@ -2987,92 +2760,76 @@ msgid "Email with id : {$ deletedID $} is successfully deleted."
 msgstr "Email: {$ deletedID $} 已成功删除"
 
 #: CyberCP/mailServer/templates/mailServer/dkimManager.html:3
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "DKIM Manager - CyberPanel"
-msgstr "管理SSL - CyberPanel"
+msgstr "DKIM管理 - CyberPanel"
 
 #: CyberCP/mailServer/templates/mailServer/dkimManager.html:13
 msgid "DKIM Docs"
-msgstr ""
+msgstr "DKIM文档"
 
 #: CyberCP/mailServer/templates/mailServer/dkimManager.html:14
-#, fuzzy
-#| msgid "This page can be used to Back up your websites"
 msgid "This page can be used to generate and view DKIM keys for Domains"
-msgstr "这里是网站备份界面"
+msgstr "这里是域名DKIM生成和查看页面"
 
 #: CyberCP/mailServer/templates/mailServer/dkimManager.html:27
 msgid "OpenDKIM is not installed. "
-msgstr ""
+msgstr "OpenDKIM未安装"
 
 #: CyberCP/mailServer/templates/mailServer/dkimManager.html:28
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installJoomla.html:67
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installWordPress.html:67
-#, fuzzy
-#| msgid "Install"
 msgid "Install Now"
 msgstr "安装"
 
 #: CyberCP/mailServer/templates/mailServer/dkimManager.html:48
 msgid "OpenDKIM successfully installed, refreshing page in 3 seconds.."
-msgstr ""
+msgstr "OpenDKIM成功安装，页面将在3秒后刷新"
 
 #: CyberCP/mailServer/templates/mailServer/dkimManager.html:97
-#, fuzzy
-#| msgid "Currently no email accounts exist for this domain."
 msgid "Keys not available for this domain."
-msgstr "目前此域名并没有Email"
+msgstr "目前此域名并没有DKIM Key"
 
 #: CyberCP/mailServer/templates/mailServer/dkimManager.html:98
 msgid "Generate Now"
-msgstr ""
+msgstr "马上生成"
 
 #: CyberCP/mailServer/templates/mailServer/dkimManager.html:110
-#, fuzzy
-#| msgid "Domains"
 msgid "Domain"
 msgstr "域名"
 
 #: CyberCP/mailServer/templates/mailServer/dkimManager.html:111
 msgid "Private Key"
-msgstr ""
+msgstr "私钥"
 
 #: CyberCP/mailServer/templates/mailServer/dkimManager.html:112
 msgid "Public Key"
-msgstr ""
+msgstr "公钥"
 
 #: CyberCP/mailServer/templates/mailServer/emailForwarding.html:3
-#, fuzzy
-#| msgid "Create Email Account - CyberPanel"
 msgid "Setup Email Forwarding - CyberPanel"
-msgstr "创建Email用户 - CyberPanel"
+msgstr "Email转发 - Cyberpanel"
 
 #: CyberCP/mailServer/templates/mailServer/emailForwarding.html:12
 #: CyberCP/mailServer/templates/mailServer/emailForwarding.html:19
 msgid "Setup Email Forwarding"
-msgstr ""
+msgstr "设置 邮件转发"
 
 #: CyberCP/mailServer/templates/mailServer/emailForwarding.html:12
 msgid "Forwarding Docs"
-msgstr ""
+msgstr "转发文档"
 
 #: CyberCP/mailServer/templates/mailServer/emailForwarding.html:13
 msgid "This page help you setup email forwarding for your emails."
-msgstr ""
+msgstr "这里是邮件转发设置页面"
 
 #: CyberCP/mailServer/templates/mailServer/emailForwarding.html:90
 #: CyberCP/mailServer/templates/mailServer/emailForwarding.html:111
-#, fuzzy
-#| msgid "Resource"
 msgid "Source"
-msgstr "资源"
+msgstr "源"
 
 #: CyberCP/mailServer/templates/mailServer/emailForwarding.html:99
-#, fuzzy
-#| msgid "Create Email"
 msgid "Forward Email"
-msgstr "创建Email"
+msgstr "转发邮件"
 
 #: CyberCP/mailServer/templates/mailServer/index.html:3
 msgid "Mail Functions - CyberPanel"
@@ -3143,10 +2900,8 @@ msgid "upload_max_filesize"
 msgstr "upload_max_filesize"
 
 #: CyberCP/managePHP/templates/managePHP/editPHPConfig.html:119
-#, fuzzy
-#| msgid "upload_max_filesize"
 msgid "post_max_size"
-msgstr "upload_max_filesize"
+msgstr "post_max_size"
 
 #: CyberCP/managePHP/templates/managePHP/editPHPConfig.html:126
 msgid "max_input_time"
@@ -3241,7 +2996,7 @@ msgstr "管理SSL - CyberPanel"
 #: CyberCP/manageSSL/templates/manageSSL/sslForHostName.html:13
 #: CyberCP/manageSSL/templates/manageSSL/sslForMailServer.html:13
 msgid "SSL Docs"
-msgstr ""
+msgstr "SSL文档"
 
 #: CyberCP/manageSSL/templates/manageSSL/manageSSL.html:14
 msgid ""
@@ -3284,95 +3039,77 @@ msgid "SSL Issued. You can now access CyberPanel at:"
 msgstr "SSL证书已签发, 您可以在此登陆CyberPanel: "
 
 #: CyberCP/manageSSL/templates/manageSSL/sslForMailServer.html:3
-#, fuzzy
-#| msgid "Issue SSL For Hostname - CyberPanel"
 msgid "Issue SSL For MailServer - CyberPanel"
-msgstr "为面板主机签发SSL证书 - CyberPanel"
+msgstr "为邮件服务器签发SSL证书 - CyberPanel"
 
 #: CyberCP/manageSSL/templates/manageSSL/sslForMailServer.html:13
 #: CyberCP/manageSSL/templates/manageSSL/sslForMailServer.html:20
-#, fuzzy
-#| msgid "Issue SSL For Hostname"
 msgid "Issue SSL For MailServer"
-msgstr "为面板主机签发SSL证书"
+msgstr "为邮件服务器签发SSL证书"
 
 #: CyberCP/manageSSL/templates/manageSSL/sslForMailServer.html:14
-#, fuzzy
-#| msgid "Issue Let’s Encrypt SSLs for websites and hostname."
 msgid "Let’s Encrypt SSL for MailServer (Postfix/Dovecot)."
-msgstr "为网站以及主机申请签发Let's Encrypt证书"
+msgstr "为邮件服务器(Postfix/Dovecot)申请签发Let's Encrypt证书"
 
 #: CyberCP/manageSSL/templates/manageSSL/sslForMailServer.html:56
 msgid "SSL Issued, your mail server now uses Lets Encrypt!"
-msgstr ""
+msgstr "SSL已签发,邮件服务器现在使用Let's Encrypt证书"
 
 #: CyberCP/manageSSL/templates/manageSSL/sslForMailServer.html:60
-#, fuzzy
-#| msgid "Could not connect to server. Please refresh this page."
 msgid "Could not connect to server, please refresh this page."
 msgstr "无法连接到服务器, 请刷新此页面"
 
 #: CyberCP/manageServices/templates/manageServices/managePostfix.html:3
-#, fuzzy
-#| msgid "Change Email Password - CyberPanel"
 msgid "Manage Email Server (Postfix) - CyberPanel"
-msgstr "修改Email密码 - CyberPanel"
+msgstr "管理邮件服务器(Postfix) - CyberPanel"
 
 #: CyberCP/manageServices/templates/manageServices/managePostfix.html:13
 msgid "Manage Email Server (Postfix)!"
-msgstr ""
+msgstr "管理邮件服务器(Postfix)"
 
 #: CyberCP/manageServices/templates/manageServices/managePostfix.html:13
 #: CyberCP/manageServices/templates/manageServices/managePowerDNS.html:13
 #: CyberCP/manageServices/templates/manageServices/managePureFtpd.html:13
-#, fuzzy
-#| msgid "Server Status"
 msgid "Services Docs"
 msgstr "服务器状态"
 
 #: CyberCP/manageServices/templates/manageServices/managePostfix.html:14
 msgid "Enable or disable Email services. "
-msgstr ""
+msgstr "启用或禁用邮件服务"
 
 #: CyberCP/manageServices/templates/manageServices/managePostfix.html:82
 #: CyberCP/manageServices/templates/manageServices/managePowerDNS.html:82
 #: CyberCP/manageServices/templates/manageServices/managePureFtpd.html:82
 msgid "Only administrator can manage services."
-msgstr ""
+msgstr "只要管理员可以管理服务"
 
 #: CyberCP/manageServices/templates/manageServices/managePowerDNS.html:3
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "Manage PowerDNS - CyberPanel"
-msgstr "管理SSL - CyberPanel"
+msgstr "管理PowerDNS - CyberPanel"
 
 #: CyberCP/manageServices/templates/manageServices/managePowerDNS.html:13
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage PowerDNS!"
-msgstr "管理SSL"
+msgstr "管理PowerDNS"
 
 #: CyberCP/manageServices/templates/manageServices/managePowerDNS.html:14
 msgid "Enable or disable DNS services. "
-msgstr ""
+msgstr "启用或禁用DNS服务"
 
 #: CyberCP/manageServices/templates/manageServices/managePureFtpd.html:3
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "Manage FTP Server (Pure FTPD) - CyberPanel"
-msgstr "管理SSL - CyberPanel"
+msgstr "管理FTP服务器 (PureFTPD) - CyberPanel"
 
 #: CyberCP/manageServices/templates/manageServices/managePureFtpd.html:13
 msgid "Manage FTP Server (Pure FTPD)!"
-msgstr ""
+msgstr "管理FTP服务器 (PureFTPD)"
 
 #: CyberCP/manageServices/templates/manageServices/managePureFtpd.html:14
 msgid "Enable or disable FTP services. "
-msgstr ""
+msgstr "启用或禁用FTP服务"
 
 #: CyberCP/manageServices/templates/manageServices/managePureFtpd.html:22
 msgid "Manage PureFTPD"
-msgstr ""
+msgstr "管理PureFTPD"
 
 #: CyberCP/packages/templates/packages/createPackage.html:3
 msgid "Create Package - CyberPanel"
@@ -3501,10 +3238,8 @@ msgstr "最后50行"
 #: CyberCP/serverLogs/templates/serverLogs/errorLogs.html:42
 #: CyberCP/serverLogs/templates/serverLogs/ftplogs.html:42
 #: CyberCP/serverLogs/templates/serverLogs/modSecAuditLog.html:42
-#, fuzzy
-#| msgid "Server Logs"
 msgid "Clear Logs"
-msgstr "服务器日志"
+msgstr "清除日志"
 
 #: CyberCP/serverLogs/templates/serverLogs/accessLogs.html:52
 #: CyberCP/serverLogs/templates/serverLogs/emailLogs.html:49
@@ -3561,16 +3296,12 @@ msgstr ""
 "此为主服务器日志,查看网站日志请前往 网站 -> 查看网站 -> 选择网站 -> 查看日志"
 
 #: CyberCP/serverLogs/templates/serverLogs/modSecAuditLog.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity Audit Logs - CyberPanel"
-msgstr "安全 - CyberPanel"
+msgstr "ModSecurity日志 - CyberPanel"
 
 #: CyberCP/serverLogs/templates/serverLogs/modSecAuditLog.html:15
-#, fuzzy
-#| msgid "Security Functions"
 msgid "ModSecurity Audit logs"
-msgstr "安全"
+msgstr "ModSecurity日志"
 
 #: CyberCP/serverStatus/templates/serverStatus/cybercpmainlogfile.html:3
 msgid "CyberPanel Main Log File - CyberPanel"
@@ -3646,10 +3377,8 @@ msgid "Could not connect to server."
 msgstr "无法连接到服务器."
 
 #: CyberCP/serverStatus/templates/serverStatus/services.html:3
-#, fuzzy
-#| msgid "Server Logs - CyberPanel"
 msgid "Services - CyberPanel"
-msgstr "服务器日志 - CyberPanel"
+msgstr "服务 - CyberPanel"
 
 #: CyberCP/tuning/templates/tuning/index.html:3
 msgid "Server Tuning - CyberPanel"
@@ -3772,8 +3501,6 @@ msgid "Details Successfully fetched."
 msgstr "详情读取成功."
 
 #: CyberCP/tuning/templates/tuning/phpTuning.html:124
-#, fuzzy
-#| msgid "PHP version "
 msgid "PHP for "
 msgstr "PHP版本 "
 
@@ -3951,10 +3678,8 @@ msgid "Websites Limit"
 msgstr "网站数量限制"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/applicationInstaller.html:3
-#, fuzzy
-#| msgid "Application Installer"
 msgid "Application Installer - CyberPanel"
-msgstr "应用安装器"
+msgstr "应用安装器 - CyberPanel"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/applicationInstaller.html:14
 #: CyberCP/websiteFunctions/templates/websiteFunctions/applicationInstaller.html:22
@@ -3963,10 +3688,8 @@ msgid "Application Installer"
 msgstr "应用安装器"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/applicationInstaller.html:15
-#, fuzzy
-#| msgid "Application Installer"
 msgid "One-click application install."
-msgstr "应用安装器"
+msgstr "一键应用安装器"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/applicationInstaller.html:28
 #: CyberCP/websiteFunctions/templates/websiteFunctions/applicationInstaller.html:31
@@ -3984,22 +3707,18 @@ msgstr "Wordpress和LS Cache"
 #: CyberCP/websiteFunctions/templates/websiteFunctions/applicationInstaller.html:41
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:955
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:958
-#, fuzzy
-#| msgid "Install wordpress with LSCache"
 msgid "Install Joomla with(?) LSCache"
-msgstr "安装Wordpress和LS Cache"
+msgstr "安装Joomla!和LS Cache"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/applicationInstaller.html:44
 #: CyberCP/websiteFunctions/templates/websiteFunctions/applicationInstaller.html:47
-#, fuzzy
-#| msgid "Install wordpress with LSCache"
 msgid "Install Joomla with LSCache"
-msgstr "安装Wordpress和LS Cache"
+msgstr "安装Joomla! 和LS Cache"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/applicationInstaller.html:48
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:959
 msgid "Joomla"
-msgstr ""
+msgstr "Joomla!"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/createWebsite.html:3
 msgid "Create New Website - CyberPanel"
@@ -4024,7 +3743,7 @@ msgstr "选择拥有者"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/createWebsite.html:54
 msgid "Do not enter WWW, it will be auto created!"
-msgstr ""
+msgstr "请不要输入WWW,将自动创建."
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/createWebsite.html:56
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:316
@@ -4072,46 +3791,36 @@ msgid "Successfully Deleted."
 msgstr "成功删除."
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:3
-#, fuzzy
-#| msgid "Home - CyberPanel"
 msgid "Domain Aliases - CyberPanel"
-msgstr "主页 - Cyberpanel"
+msgstr "域名别名 - Cyberpanel"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:12
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:19
-#, fuzzy
-#| msgid "Domain Name"
 msgid "Domain Aliases"
-msgstr "域名"
+msgstr "域名别名"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:13
 msgid ""
 "With Domain Aliases you can visit example.com using example.net and view the "
 "same content."
-msgstr ""
+msgstr "通过域名别名,您可以使用example.net访问与example.com相同的内容"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:29
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:105
-#, fuzzy
-#| msgid "Create Email"
 msgid "Create Alias"
-msgstr "创建Email"
+msgstr "创建别名"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:36
-#, fuzzy
-#| msgid "Create Domain"
 msgid "Master Domain"
-msgstr "创建域名"
+msgstr "主域名"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:37
 msgid "Alias"
-msgstr ""
+msgstr "别名"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:38
-#, fuzzy
-#| msgid "System Status"
 msgid "File System Path"
-msgstr "系统状态"
+msgstr "文件目录"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:53
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:501
@@ -4120,13 +3829,11 @@ msgstr "签发SSL证书"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:63
 msgid "Domain Aliases not found."
-msgstr ""
+msgstr "域名别名未找到"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:79
-#, fuzzy
-#| msgid "List Domains"
 msgid "Alias Domain"
-msgstr "查看域名"
+msgstr "域名别名"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:93
 msgid ""
@@ -4137,18 +3844,14 @@ msgstr ""
 "之后添加自有证书或重新申请签发Let's Encrypt证书."
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:114
-#, fuzzy
-#| msgid "Action failed. Error message:"
 msgid "Operation failed. Error message:"
 msgstr "操作失败, 错误信息: "
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:118
 msgid "Alias successfully created. Refreshing page in 3 seconds..."
-msgstr ""
+msgstr "别名创建成功,页面将在3秒后刷新"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/domainAlias.html:122
-#, fuzzy
-#| msgid "Action successful."
 msgid "Operation Successfull."
 msgstr "操作成功"
 
@@ -4164,53 +3867,39 @@ msgid "Suspend/Unsuspend Website"
 msgstr "禁用/启用网站"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installJoomla.html:3
-#, fuzzy
-#| msgid "Install PHP Extensions - CyberPanel"
 msgid "Install Joomla - CyberPanel"
-msgstr "安装PHP扩展 - CyberPanel"
+msgstr "安装Joomla! - CyberPanel"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installJoomla.html:12
-#, fuzzy
-#| msgid "Install"
 msgid "Install Joomla"
-msgstr "安装"
+msgstr "安装Joomla!"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installJoomla.html:13
 msgid "One-click Joomla Install!"
-msgstr ""
+msgstr "一键安装Joomla!"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installJoomla.html:20
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installWordPress.html:20
-#, fuzzy
-#| msgid "Installation failed. Error message:"
 msgid "Installation Details"
-msgstr "安装失败, 错误信息:"
+msgstr "安装详情"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installJoomla.html:28
-#, fuzzy
-#| msgid "File Name"
 msgid "Site Name"
-msgstr "文件名"
+msgstr "站点名字"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installJoomla.html:35
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installWordPress.html:35
-#, fuzzy
-#| msgid "Modify User"
 msgid "Login User"
-msgstr "修改用户"
+msgstr "用户名"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installJoomla.html:42
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installWordPress.html:42
-#, fuzzy
-#| msgid "Password"
 msgid "Login Password"
 msgstr "密码"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installJoomla.html:49
-#, fuzzy
-#| msgid "Database Name"
 msgid "Database Prefix"
-msgstr "数据库名字"
+msgstr "数据库前缀"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installJoomla.html:56
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installWordPress.html:56
@@ -4229,39 +3918,29 @@ msgstr "安装失败, 错误信息:"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installJoomla.html:95
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installWordPress.html:95
-#, fuzzy
-#| msgid "Installation successful. To complete the setup visit:"
 msgid "Installation successful. Visit:"
 msgstr "安装成功, 请访问网站以完成设置:"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installWordPress.html:3
-#, fuzzy
-#| msgid "Install PHP Extensions - CyberPanel"
 msgid "Install WordPress - CyberPanel"
-msgstr "安装PHP扩展 - CyberPanel"
+msgstr "安装WordPress - CyberPanel"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installWordPress.html:12
-#, fuzzy
-#| msgid "Install"
 msgid "Install WordPress"
-msgstr "安装"
+msgstr "安装WordPress"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installWordPress.html:13
-#, fuzzy
-#| msgid "Install wordpress with LSCache"
 msgid "Install WordPress with LSCache."
-msgstr "安装Wordpress和LS Cache"
+msgstr "安装WordPress和LS Cache"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/installWordPress.html:28
 msgid "Blog Title"
-msgstr ""
+msgstr "站点名字"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:13
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:13
-#, fuzzy
-#| msgid "Previous"
 msgid "Preview"
-msgstr "上一个"
+msgstr "预览"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:14
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:14
@@ -4344,7 +4023,7 @@ msgstr "编辑vHost主配置"
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:266
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:539
 msgid "vHost Conf"
-msgstr ""
+msgstr "虚拟主机配置文件"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:274
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:547
@@ -4353,17 +4032,13 @@ msgstr "添加Rewrite Rules (.htaccess)"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:277
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:550
-#, fuzzy
-#| msgid "Add Rewrite Rules (.htaccess)"
 msgid "Rewrite Rules (.htaccess)"
-msgstr "添加Rewrite Rules (.htaccess)"
+msgstr "伪静态规则 (.htaccess)"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:278
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:551
-#, fuzzy
-#| msgid "Save Rewrite Rules"
 msgid "Rewrite Rules"
-msgstr "保存Rewrite rules"
+msgstr "伪静态规则"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:286
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:289
@@ -4381,8 +4056,6 @@ msgstr "添加SSL证书"
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:301
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:571
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:574
-#, fuzzy
-#| msgid "Select PHP Version"
 msgid "Change PHP Version"
 msgstr "选择PHP版本"
 
@@ -4390,10 +4063,8 @@ msgstr "选择PHP版本"
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:498
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:575
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:771
-#, fuzzy
-#| msgid "Change"
 msgid "Change PHP"
-msgstr "修改"
+msgstr "修改PHP"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:314
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:587
@@ -4421,10 +4092,8 @@ msgstr "无法读取当前配置, 错误信息:"
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:434
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:655
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:707
-#, fuzzy
-#| msgid "SSH Configurations Saved."
 msgid "Configurations saved."
-msgstr "SSH设置已保存"
+msgstr "设置已保存"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:420
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:693
@@ -4448,17 +4117,13 @@ msgstr "保存Rewrite rules"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:509
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:782
-#, fuzzy
-#| msgid "Cannot create website. Error message:"
 msgid "Failed to change PHP version. Error message:"
-msgstr "无法创建网站, 错误信息:"
+msgstr "无法修改PHP版本, 错误信息:"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:513
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:786
-#, fuzzy
-#| msgid "Password successfully changed for :"
 msgid "PHP successfully changed for: "
-msgstr "已成功为修改密码 :"
+msgstr "已成功修改PHP :"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:539
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:812
@@ -4481,159 +4146,137 @@ msgstr "文件管理"
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:834
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:872
 msgid "open_basedir Protection"
-msgstr ""
+msgstr "open_basedir 防护"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:562
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:835
 msgid "open_basedir"
-msgstr ""
+msgstr "open_basedir"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:574
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:847
-#, fuzzy
-#| msgid "Create FTP Account"
 msgid "Create FTP Acct"
 msgstr "创建FTP用户"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:586
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:859
-#, fuzzy
-#| msgid "Delete FTP Account"
 msgid "Delete FTP Acct"
 msgstr "删除FTP用户"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:621
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:894
-#, fuzzy
-#| msgid "Save Changes"
 msgid "Apply Changes"
 msgstr "保存修改"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/launchChild.html:633
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:906
-#, fuzzy
-#| msgid "Rule successfully added."
 msgid "Changes successfully saved."
-msgstr "成功添加规则"
+msgstr "成功修改"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:3
-#, fuzzy
-#| msgid "Version Management - CyberPanel"
 msgid "Cron Management - CyberPanel"
-msgstr "版本管理 - Cyberpanel"
+msgstr "计划任务管理 - Cyberpanel"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:12
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:19
-#, fuzzy
-#| msgid "Version Management"
 msgid "Cron Management"
-msgstr "版本管理"
+msgstr "计划任务管理"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:12
 msgid "Cron Docs"
-msgstr ""
+msgstr "计划任务文档"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:13
-#, fuzzy
-#| msgid "Create, edit and delete users on this page."
 msgid "Create, edit or delete your cron jobs from this page."
-msgstr "在此页面创建, 编辑和删除用户."
+msgstr "在此页面创建, 编辑和删除计划任务."
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:37
-#, fuzzy
-#| msgid "Add Domains"
 msgid "Add Cron"
-msgstr "添加域名"
+msgstr "添加计划任务"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:46
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:95
 msgid "Minute"
-msgstr ""
+msgstr "分钟"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:47
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:101
 msgid "Hour"
-msgstr ""
+msgstr "小时"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:48
 msgid "Day of Month"
-msgstr ""
+msgstr "日"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:49
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:113
 msgid "Month"
-msgstr ""
+msgstr "月"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:50
 msgid "Day of Week"
-msgstr ""
+msgstr "周"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:51
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:126
 msgid "Command"
-msgstr ""
+msgstr "命令"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:52
-#, fuzzy
-#| msgid "FTP Functions"
 msgid "Action"
-msgstr "FTP功能"
+msgstr "动作"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:79
 msgid "Pre defined"
-msgstr ""
+msgstr "预定义"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:82
 msgid "Every minute"
-msgstr ""
+msgstr "每分钟"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:83
 msgid "Every 5 minutes"
-msgstr ""
+msgstr "每5分钟"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:84
 msgid "Every 30 minutes"
-msgstr ""
+msgstr "每30分钟"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:85
 msgid "Every hour"
-msgstr ""
+msgstr "每小时"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:86
 msgid "Every day"
-msgstr ""
+msgstr "每天"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:87
 msgid "Every week"
-msgstr ""
+msgstr "每周"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:88
 msgid "Every month"
-msgstr ""
+msgstr "每月"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:89
 msgid "Every year"
-msgstr ""
+msgstr "每年"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:107
 msgid "Day of month"
-msgstr ""
+msgstr "日"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:119
 msgid "Day of week"
-msgstr ""
+msgstr "周"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:135
-#, fuzzy
-#| msgid "Save Rewrite Rules"
 msgid "Save edits"
-msgstr "保存Rewrite rules"
+msgstr "保存修改"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:142
-#, fuzzy
-#| msgid "Add Records"
 msgid "Add cron"
-msgstr "添加记录"
+msgstr "添加计划任务"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:152
 #: CyberCP/websiteFunctions/templates/websiteFunctions/modifyWebsite.html:105
@@ -4641,14 +4284,12 @@ msgid "Cannot fetch website details. Error message:"
 msgstr "无法更新网站详情, 错误信息:"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:156
-#, fuzzy
-#| msgid "Could not save SSL. Error message:"
 msgid "Unable to add/save Cron. Error message:"
-msgstr "无法保存SSL证书, 错误信息:"
+msgstr "无法保存计划任务, 错误信息:"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listCron.html:159
 msgid "Cron job saved"
-msgstr ""
+msgstr "计划任务已保存"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/listWebsites.html:3
 msgid "Websites Hosted - CyberPanel"
@@ -4675,73 +4316,65 @@ msgid "Website Details Successfully fetched"
 msgstr "网站详情已成功更新"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:3
-#, fuzzy
-#| msgid "Version Management - CyberPanel"
 msgid "Git Management - CyberPanel"
-msgstr "版本管理 - Cyberpanel"
+msgstr "Git管理 - Cyberpanel"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:12
-#, fuzzy
-#| msgid "Version Management"
 msgid "Git Management"
-msgstr "版本管理"
+msgstr "Git管理"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:13
 msgid "Attach git to your websites."
-msgstr ""
+msgstr "添加Git到网站"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:21
 msgid "Attach Git"
-msgstr ""
+msgstr "添加Git"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:29
 msgid "Providers"
-msgstr ""
+msgstr "提供者"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:36
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:163
 msgid "Deployment Key"
-msgstr ""
+msgstr "部署Key"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:67
 msgid ""
 "Before attaching repo to your website, make sure to place your Development "
 "key in your GIT repository."
-msgstr ""
+msgstr "开启GIT前,请确认已经放置部署key"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:79
-#, fuzzy
-#| msgid "Extension Name"
 msgid "Repository Name"
-msgstr "扩展名称"
+msgstr "仓库名字"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:88
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:265
 msgid "Branch"
-msgstr ""
+msgstr "分支"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:99
 msgid "Attach Now"
-msgstr ""
+msgstr "马上添加"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:123
 msgid "GIT Successfully attached, refreshing page in 3 seconds... Visit:"
-msgstr ""
+msgstr "Git成功添加,页面将在3秒后刷新,请访问:"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:215
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:276
-#, fuzzy
-#| msgid "Change"
 msgid "Change Branch"
-msgstr "修改"
+msgstr "修改分支"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:225
 msgid "Detach Repo"
-msgstr ""
+msgstr "移除仓库"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:231
 msgid "Webhook URL"
-msgstr ""
+msgstr "Webhook地址"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:232
 msgid ""
@@ -4750,18 +4383,16 @@ msgid ""
 "disable SSL check while configuring webhook. This will initiate a pull from "
 "your resposity as soon as you commit some changes."
 msgstr ""
+"添加此URL到GIT仓库的WebHook,如果使用SSL那么请设置SSL域名,否则请使用IP地址并关"
+"闭SSL检查,这将会开始同步仓库"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:244
-#, fuzzy
-#| msgid "Records successfully fetched for"
 msgid "Repo successfully detached, refreshing in 3 seconds.."
-msgstr "成功读取记录"
+msgstr "仓库成功移除,页面将在3秒后刷新"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/setupGit.html:290
-#, fuzzy
-#| msgid "Backup successfully cancelled."
 msgid "Branch successfully changed."
-msgstr "已成功添加."
+msgstr "成功修改分支"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/suspendWebsite.html:3
 msgid "Suspend/Unsuspend Website - CyberPanel"
@@ -4804,19 +4435,17 @@ msgstr "添加域名"
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:282
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:285
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:286
-#, fuzzy
-#| msgid "Domains"
 msgid "Domain Alias"
-msgstr "域名"
+msgstr "域名别名"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:293
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:296
 msgid "Add new Cron Job"
-msgstr ""
+msgstr "添加新的计划任务"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:297
 msgid "Cron Jobs"
-msgstr ""
+msgstr "计划任务"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:325
 msgid "This path is relative to: "
@@ -4843,19 +4472,17 @@ msgid "SSL Issued:"
 msgstr "已为签发证书:"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:436
-#, fuzzy
-#| msgid "Database created successfully."
 msgid "Changes applied successfully."
-msgstr "成功创建数据库"
+msgstr "成功修改"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:967
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:970
 msgid "Attach Git with this website!"
-msgstr ""
+msgstr "添加Git到此网站"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:971
 msgid "Git"
-msgstr ""
+msgstr "Git"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:1007
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:1086
@@ -4864,25 +4491,19 @@ msgstr "安装成功, 请访问网站以完成设置:"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:1039
 msgid "Site name"
-msgstr ""
+msgstr "站点名字"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:1046
-#, fuzzy
-#| msgid "Username"
 msgid "Admin Username"
-msgstr "用户名"
+msgstr "管理员名字"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:1053
-#, fuzzy
-#| msgid "Password"
 msgid "Admin Password"
-msgstr "密码"
+msgstr "管理员密码"
 
 #: CyberCP/websiteFunctions/templates/websiteFunctions/website.html:1060
-#, fuzzy
-#| msgid "Database Name"
 msgid "Database prefix"
-msgstr "数据库名字"
+msgstr "数据库前缀"
 
 #~ msgid "Daily"
 #~ msgstr "每日"

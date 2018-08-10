@@ -1,7 +1,0 @@
-# MariaDB 10.0 CentOS repository list - created 2018-02-02 12:38 UTC
-# http://downloads.mariadb.org/mariadb/repositories/
-[mariadb-mirror]
-name = MariaDB
-baseurl = https://mirror.cyberpanel.net/mariadb/10.0
-gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-gpgcheck=0
