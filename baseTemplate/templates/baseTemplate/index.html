@@ -42,7 +42,7 @@
 <link rel="stylesheet" type="text/css" href="/static/baseTemplate/assets/themes/admin/layout.css">
 <link rel="stylesheet" type="text/css" href="/static/baseTemplate/assets/themes/admin/color-schemes/default.css">
 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
-
+<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}">
 <!-- Components theme, component below was above three CSS files. -->
 
 
@@ -544,6 +544,7 @@
                 <li><a href="{% url 'modSecurity' %}" title="{% trans 'ModSecurity Configurations' %}"><span>{% trans "ModSecurity Conf" %}</span></a></li>
                 <li><a href="{% url 'modSecRules' %}" title="{% trans 'ModSecurity Rules' %}"><span>{% trans "ModSecurity Rules" %}</span></a></li>
                 <li><a href="{% url 'modSecRulesPacks' %}" title="{% trans 'ModSecurity Rules Packs' %}"><span>{% trans "ModSecurity Rules Packs" %}</span></a></li>
+                <li><a href="{% url 'csf' %}" title="{% trans 'ConfigServer Security & Firewall (CSF)' %}"><span>{% trans "CSF" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
@@ -608,7 +609,7 @@
 
 
 <!-- Sparklines charts -->
-
+<script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}"></script>
 <script src="{% static 'baseTemplate/custom-js/system-status.js' %}"></script>
 <script src="{% static 'packages/packages.js' %}"></script>
 <script src="{% static 'websiteFunctions/websiteFunctions.js' %}"></script>
