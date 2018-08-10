@@ -101,11 +101,11 @@ snippet docx\n\
 # html5shiv\n\
 snippet html5shiv\n\
 	<!--[if lte IE 8]>\n\
-		<script src=\"https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js\"></script>\n\
+		<script src=\"https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js\"></script>\n\
 	<![endif]-->\n\
 snippet html5printshiv\n\
 	<!--[if lte IE 8]>\n\
-		<script src=\"https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js\"></script>\n\
+		<script src=\"https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv-printshiv.min.js\"></script>\n\
 	<![endif]-->\n\
 # Attributes\n\
 snippet attr\n\
