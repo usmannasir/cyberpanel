@@ -342,6 +342,8 @@ def getCurrentRecordsForDomain(request):
                     fetchType = 'SOA'
                 elif currentSelection == 'srvRecord':
                     fetchType = 'SRV'
+                elif currentSelection == 'caaRecord':
+                    fetchType = 'CAA'
 
                 json_data = "["
                 checker = 0
@@ -528,6 +530,19 @@ def addDNSRecord(request):
                     priority = data['priority']
 
                     DNS.createDNSRecord(zone, value, recordType, recordContentSRV, priority, ttl)
+                elif recordType == "CAA":
+
+                    if recordName == "@":
+                        value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
+                    recordContentCAA = data['recordContentCAA']  ## IP or ponting value
+
+                    DNS.createDNSRecord(zone, value, recordType, recordContentCAA, 0, ttl)
 
 
                 final_dic = {'add_status': 1, 'error_message': "None"}

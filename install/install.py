@@ -2929,10 +2929,12 @@ def main():
 
     checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd,"/usr/local/CyberCP")
 
-    try:
-        mysql = args.mysql
-    except:
+    if args.mysql == None:
         mysql = 'One'
+        preFlightsChecks.stdOut("Single MySQL instance version will be installed.")
+    else:
+        mysql = args.mysql
+        preFlightsChecks.stdOut("Dobule MySQL instance version will be installed.")
 
 
     checks.checkPythonVersion()
@@ -2993,22 +2995,22 @@ def main():
     checks.setupVirtualEnv()
     checks.setupPHPAndComposer()
 
-    try:
-        postfix = args.postfix
-        checks.enableDisableEmail(postfix)
-    except:
+    if args.postfix != None:
+        checks.enableDisableEmail(args.postfix)
+    else:
+        preFlightsChecks.stdOut("Postfix will be installed and enabled.")
         checks.enableDisableEmail('On')
 
-    try:
-        powerdns = args.powerdns
-        checks.enableDisableDNS(powerdns)
-    except:
+    if args.powerdns != None:
+        checks.enableDisableDNS(args.powerdns)
+    else:
+        preFlightsChecks.stdOut("PowerDNS will be installed and enabled.")
         checks.enableDisableDNS('On')
 
-    try:
-        ftp = args.ftp
-        checks.enableDisableFTP(ftp)
-    except:
+    if args.ftp != None:
+        checks.enableDisableFTP(args.ftp)
+    else:
+        preFlightsChecks.stdOut("Pure-FTPD will be installed and enabled.")
         checks.enableDisableFTP('On')
 
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")

@@ -1262,12 +1262,12 @@ def saveRewriteRules(request):
                 except:
                     filePath = "/home/" + virtualHost + "/public_html/.htaccess"
 
-                if admin.type != 1:
-                    website = Websites.objects.get(domain=virtualHost)
-                    if website.admin != admin:
-                        data_ret = {'rewriteStatus': 0, 'error_message': 'You do not own this website.'}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
+                    if admin.type != 1:
+                        website = Websites.objects.get(domain=virtualHost)
+                        if website.admin != admin:
+                            data_ret = {'rewriteStatus': 0, 'error_message': 'You do not own this website.'}
+                            json_data = json.dumps(data_ret)
+                            return HttpResponse(json_data)
 
 
                 ## save configuration data
