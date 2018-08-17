@@ -19,6 +19,36 @@ class backupSchedule:
         except IOError,msg:
             return "Can not write to error file."
 
+    @staticmethod
+    def createLocalBackup(virtualHost, backupLogPath):
+        try:
+
+            backupSchedule.remoteBackupLogging(backupLogPath, "Starting local backup for: " + virtualHost)
+
+            finalData = json.dumps({'websiteToBeBacked': virtualHost})
+            r = requests.post("http://localhost:5003/backup/submitBackupCreation", data=finalData)
+
+            data = json.loads(r.text)
+            backupPath = data['tempStorage']
+
+            backupSchedule.remoteBackupLogging(backupLogPath, "Waiting for backup to complete.. ")
+
+
+            while (1):
+                r = requests.post("http://localhost:5003/backup/backupStatus", data=finalData)
+                time.sleep(2)
+                data = json.loads(r.text)
+
+                if data['backupStatus'] == 0:
+                    backupSchedule.remoteBackupLogging(backupLogPath, "An error occurred, Error message: " + data[
+                                               'error_message'])
+                    return 0, backupPath
+                elif data['abort'] == 1:
+                    backupSchedule.remoteBackupLogging(backupLogPath, "Backup Completed for: " + virtualHost)
+                    return 1, backupPath
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
     @staticmethod
     def createBackup(virtualHost, ipAddress, backupLogPath , port):
@@ -27,42 +57,40 @@ class backupSchedule:
             backupSchedule.remoteBackupLogging(backupLogPath, "Preparing to create backup for: " + virtualHost)
             backupSchedule.remoteBackupLogging(backupLogPath, "Backup started for: " + virtualHost)
 
-            finalData = json.dumps({'websiteToBeBacked': virtualHost})
-            r = requests.post("http://localhost:5003/backup/submitBackupCreation", data=finalData)
-            data = json.loads(r.text)
-            backupPath = data['tempStorage']
+            retValues = backupSchedule.createLocalBackup(virtualHost, backupLogPath)
+
+            if retValues[0] == 1:
+                backupPath = retValues[1]
+
+                backupSchedule.remoteBackupLogging(backupLogPath, "Backup created for: " + virtualHost)
+
+                ## Prepping to send backup.
+
+                backupSchedule.remoteBackupLogging(backupLogPath, "Preparing to send backup for: " + virtualHost +" to " + ipAddress)
+
+                backupSchedule.sendBackup(backupPath+".tar.gz", ipAddress, backupLogPath, port)
+
+                backupSchedule.remoteBackupLogging(backupLogPath, "Backup for: " + virtualHost + " is sent to " + ipAddress)
+
+                ## Backup sent.
 
 
-            while (1):
-                r = requests.post("http://localhost:5003/backup/backupStatus", data= finalData)
-                time.sleep(2)
-                data = json.loads(r.text)
+                backupSchedule.remoteBackupLogging(backupLogPath, "")
+                backupSchedule.remoteBackupLogging(backupLogPath, "")
 
-                if data['backupStatus'] == 0:
-                    break
-                elif data['abort'] == 1:
-                    break
+                backupSchedule.remoteBackupLogging(backupLogPath, "#################################################")
 
-            backupSchedule.remoteBackupLogging(backupLogPath, "Backup created for: " + virtualHost)
+                backupSchedule.remoteBackupLogging(backupLogPath, "")
+                backupSchedule.remoteBackupLogging(backupLogPath, "")
+            else:
 
-            ## Prepping to send backup.
+                backupSchedule.remoteBackupLogging(backupLogPath, "")
+                backupSchedule.remoteBackupLogging(backupLogPath, "")
 
-            backupSchedule.remoteBackupLogging(backupLogPath, "Preparing to send backup for: " + virtualHost +" to " + ipAddress)
+                backupSchedule.remoteBackupLogging(backupLogPath, "#################################################")
 
-            backupSchedule.sendBackup(backupPath+".tar.gz", ipAddress, backupLogPath, port)
-
-            backupSchedule.remoteBackupLogging(backupLogPath, "Backup for: " + virtualHost + " is sent to " + ipAddress)
-
-            ## Backup sent.
-
-
-            backupSchedule.remoteBackupLogging(backupLogPath, "")
-            backupSchedule.remoteBackupLogging(backupLogPath, "")
-
-            backupSchedule.remoteBackupLogging(backupLogPath, "#################################################")
-
-            backupSchedule.remoteBackupLogging(backupLogPath, "")
-            backupSchedule.remoteBackupLogging(backupLogPath, "")
+                backupSchedule.remoteBackupLogging(backupLogPath, "")
+                backupSchedule.remoteBackupLogging(backupLogPath, "")
 
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createBackup]")
@@ -137,6 +165,11 @@ class backupSchedule:
             for virtualHost in os.listdir("/home"):
                 if match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', virtualHost, M | I):
                     backupSchedule.createBackup(virtualHost, ipAddress, backupLogPath, port)
+
+
+            backupSchedule.remoteBackupLogging(backupLogPath, "Remote backup job completed.\n")
+
+
 
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [prepare]")
