@@ -42,3 +42,8 @@ class backupSchedules(models.Model):
     dest = models.ForeignKey(dest)
     frequency = models.CharField(max_length=15)
 
+
+class aliasDomains(models.Model):
+    master = models.ForeignKey(Websites, on_delete=models.CASCADE)
+    aliasDomain = models.CharField(max_length=75)
+

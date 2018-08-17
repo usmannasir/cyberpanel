@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from plogical.getSystemInformation import SystemInformation
-from loginSystem.models import Administrator
+from loginSystem.models import Administrator, ACL
 import json
 from loginSystem.views import loadLoginPage
 import re
@@ -14,59 +14,37 @@ import subprocess
 import shlex
 import os
 import plogical.CyberCPLogFileWriter as logging
-from plogical.virtualHostUtilities import virtualHostUtilities
+from plogical.acl import ACLManager
 # Create your views here.
 
 
 def renderBase(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=val)
+        if currentACL['admin'] == 1:
+            admin = 1
+        else:
+            admin = 0
 
         cpuRamDisk = SystemInformation.cpuRamDisk()
 
-        finaData = {"type": admin.type,'ramUsage':cpuRamDisk['ramUsage'],'cpuUsage':cpuRamDisk['cpuUsage'],'diskUsage':cpuRamDisk['diskUsage'] }
+        finaData = {"admin": admin,'ramUsage':cpuRamDisk['ramUsage'],'cpuUsage':cpuRamDisk['cpuUsage'],'diskUsage':cpuRamDisk['diskUsage'] }
 
         return render(request, 'baseTemplate/homePage.html', finaData)
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def getAdminStatus(request):
     try:
-        admin = request.session['userID']
+        val = request.session['userID']
+        currentACL = ACLManager.loadedACL(val)
 
-        administrator = Administrator.objects.get(pk=admin)
-
-        if administrator.type == 1:
-            admin_type = "Administrator"
-        elif administrator.type == 2:
-            admin_type = "Reseller"
-        else:
-            admin_type = "Normal User"
-
-        # read server IP
-
-        try:
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            serverIPAddress = ipData.split('\n', 1)[0]
-        except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile("Failed to read machine IP, error:" +str(msg))
-            serverIPAddress = "192.168.100.1"
-
-        adminName = administrator.firstName + " " + administrator.lastName[:3]
-
-        adminData = {"admin_type":admin_type,"user_name":adminName,"serverIPAddress":serverIPAddress}
-
-        json_data = json.dumps(adminData)
-
+        json_data = json.dumps(currentACL)
         return HttpResponse(json_data)
     except KeyError:
         return HttpResponse("Can not get admin Status")
-
 
 def getSystemStatus(request):
     try:
@@ -74,7 +52,6 @@ def getSystemStatus(request):
         HTTPData = SystemInformation.getSystemInformation()
         json_data = json.dumps(HTTPData)
         return HttpResponse(json_data)
-
     except KeyError:
         return HttpResponse("Can not get admin Status")
 
@@ -91,37 +68,34 @@ def getLoadAverage(request):
 
     return HttpResponse(json_data)
 
-
 def versionManagment(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=val)
-
-        if admin.type == 1:
-            vers = version.objects.get(pk=1)
-
-            getVersion = requests.get('https://cyberpanel.net/version.txt')
-
-            latest = getVersion.json()
-
-            latestVersion = latest['version']
-            latestBuild = latest['build']
-
-            if vers.currentVersion == latestVersion and vers.build == latestBuild:
-                active = 0
-            else:
-                active = 0
-
-            return render(request, 'baseTemplate/versionManagment.html', {'build':vers.build,
-                'currentVersion':vers.currentVersion,
-                'latestVersion':latestVersion,'latestBuild':latestBuild,"active":active})
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['versionManagement'] == 1:
+            pass
         else:
-            return HttpResponse("You need to be admiministrator to view this page.")
+            return ACLManager.loadError()
+
+        vers = version.objects.get(pk=1)
+
+        getVersion = requests.get('https://cyberpanel.net/version.txt')
+
+        latest = getVersion.json()
+
+        latestVersion = latest['version']
+        latestBuild = latest['build']
+
+        return render(request, 'baseTemplate/versionManagment.html', {'build': vers.build,
+                                                                      'currentVersion': vers.currentVersion,
+                                                                      'latestVersion': latestVersion,
+                                                                      'latestBuild': latestBuild})
+
     except KeyError:
         return redirect(loadLoginPage)
-
-
 
 def upgrade(request):
     try:
@@ -155,8 +129,6 @@ def upgrade(request):
         adminData = {"upgrade": 1,"error_message":"Please login or refresh this page."}
         json_data = json.dumps(adminData)
         return HttpResponse(json_data)
-
-
 
 def upgradeStatus(request):
     try:
@@ -205,7 +177,6 @@ def upgradeStatus(request):
         final_dic = {'upgradeStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
-
 
 def upgradeVersion(request):
     try:

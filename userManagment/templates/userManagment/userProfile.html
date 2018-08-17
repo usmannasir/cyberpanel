@@ -55,28 +55,11 @@
 
 
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Account Level" %}</label>
+                    <label class="col-sm-3 control-label">{% trans "Account ACL" %}</label>
                     <div class="col-sm-6">
-                        <div class="current-pack">{{ type }}</div>
+                        <div class="current-pack">{{ accountACL }}</div>
                     </div>
                 </div>
-
-
-                {% if typeNumeric == 1 %}
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "User Accounts Limit" %}</label>
-                    <div class="col-sm-6">
-                        <div class="current-pack">{{ userAccountsLimit }} {% trans "( 0 = Unlimited )" %}</div>
-                    </div>
-                </div>
-                {% elif typeNumeric == 2 %}
-                    <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "User Accounts Limit" %}</label>
-                    <div class="col-sm-6">
-                        <div class="current-pack">{{ userAccountsLimit }} {% trans "( 0 = Unlimited )" %}</div>
-                    </div>
-                </div>
-                {% endif %}
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Websites Limit" %}</label>

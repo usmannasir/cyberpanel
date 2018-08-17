@@ -8,23 +8,15 @@ import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 import json
 import subprocess
-from loginSystem.models import Administrator
 import psutil
 import shlex
 import socket
+from plogical.acl import ACLManager
 # Create your views here.
-
 
 def serverStatusHome(request):
     try:
         userID = request.session['userID']
-
-        admin = Administrator.objects.get(pk=userID)
-
-        if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
-
-
         return render(request,'serverStatus/index.html')
     except KeyError:
         return redirect(loadLoginPage)
@@ -34,10 +26,12 @@ def litespeedStatus(request):
     try:
         userID = request.session['userID']
 
-        admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
 
-        if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         processList = ProcessUtilities.getLitespeedProcessNumber()
 
@@ -75,16 +69,16 @@ def litespeedStatus(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
         return redirect(loadLoginPage)
 
-
-
 def stopOrRestartLitespeed(request):
     try:
         userID = request.session['userID']
 
-        admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
 
-        if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('reboot', 0)
 
         data = json.loads(request.body)
 
@@ -108,17 +102,17 @@ def stopOrRestartLitespeed(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[stopOrRestartLitespeed]")
         return HttpResponse("Not Logged in as admin")
 
-
-
 def cyberCPMainLogFile(request):
 
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
 
-        admin = Administrator.objects.get(pk=val)
+        currentACL = ACLManager.loadedACL(userID)
 
-        if admin.type == 3:
-            return HttpResponse("You don't have enough privileges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
 
         return render(request,'serverStatus/cybercpmainlogfile.html')
@@ -127,55 +121,44 @@ def cyberCPMainLogFile(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[cyberCPMainLogFile]")
         return redirect(loadLoginPage)
 
-
 def getFurtherDataFromLogFile(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        if admin.type == 1:
-
-            fewLinesOfLogFile = logging.CyberCPLogFileWriter.readLastNFiles(50,logging.CyberCPLogFileWriter.fileName)
-            fewLinesOfLogFile = str(fewLinesOfLogFile)
-            status = {"logstatus": 1, "logsdata": fewLinesOfLogFile}
-            final_json = json.dumps(status)
-            return HttpResponse(final_json)
-
+        if currentACL['admin'] == 1:
+            pass
         else:
-            status = {"logstatus": 0,'error':"You don't have enough privilege to view logs."}
-            final_json = json.dumps(status)
-            return HttpResponse(final_json)
+            return ACLManager.loadErrorJson('logstatus', 0)
+
+        fewLinesOfLogFile = logging.CyberCPLogFileWriter.readLastNFiles(50, logging.CyberCPLogFileWriter.fileName)
+        fewLinesOfLogFile = str(fewLinesOfLogFile)
+        status = {"logstatus": 1, "logsdata": fewLinesOfLogFile}
+        final_json = json.dumps(status)
+        return HttpResponse(final_json)
 
     except KeyError, msg:
         status = {"logstatus":0,"error":"Could not fetch data from log file, please see CyberCP main log file through command line."}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[getFurtherDataFromLogFile]")
         return HttpResponse("Not Logged in as admin")
 
-
 def services(request):
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=userID)
-
-        if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         return render(request, 'serverStatus/services.html')
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def servicesStatus(request):
     try:
         userID = request.session['userID']
-
-        admin = Administrator.objects.get(pk=userID)
-
-        if admin.type == 3:
-            final = {'error': 1, "error_message": "Not enough privilege"}
-            final_json = json.dumps(final)
-            return HttpResponse(final_json)
 
         lsStatus = []
         sqlStatus = []
@@ -257,17 +240,15 @@ def servicesStatus(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def servicesAction(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=val)
-
-        if admin.type == 3:
-            final = {'serviceAction': 0, "error_message": "Not enough privileges."}
-            final_json = json.dumps(final)
-            return HttpResponse(final_json)
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('serviceAction', 0)
 
         try:
             if request.method == 'POST':

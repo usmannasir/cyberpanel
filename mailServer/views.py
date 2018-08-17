@@ -18,6 +18,7 @@ import thread
 from dns.models import Domains as dnsDomains
 from dns.models import Records as dnsRecords
 from mailServer.models import Forwardings
+from plogical.acl import ACLManager
 import os
 
 def loadEmailHome(request):
@@ -27,26 +28,23 @@ def loadEmailHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def createEmailAccount(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['createEmail'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
         try:
 
             if not os.path.exists('/home/cyberpanel/postfix'):
                 return render(request, "mailServer/createEmailAccount.html", {"status": 0})
 
-            admin = Administrator.objects.get(pk=val)
-
-            if admin.type == 1:
-                websites = Websites.objects.all()
-            else:
-                websites = Websites.objects.filter(admin=admin)
-
-            websitesName = []
-
-            for items in websites:
-                websitesName.append(items.domain)
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'mailServer/createEmailAccount.html', {'websiteList':websitesName, "status": 1})
         except BaseException, msg:
@@ -56,12 +54,19 @@ def createEmailAccount(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def submitEmailCreation(request):
     try:
         if request.method == 'POST':
 
-            val = request.session['userID']
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['createEmail'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('createEmailStatus', 0)
 
             data = json.loads(request.body)
             domainName = data['domain']
@@ -97,26 +102,23 @@ def submitEmailCreation(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def deleteEmailAccount(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['deleteEmail'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
         try:
 
             if not os.path.exists('/home/cyberpanel/postfix'):
                 return render(request, "mailServer/deleteEmailAccount.html", {"status": 0})
 
-            admin = Administrator.objects.get(pk=val)
-
-            if admin.type == 1:
-                websites = Websites.objects.all()
-            else:
-                websites = Websites.objects.filter(admin=admin)
-
-            websitesName = []
-
-            for items in websites:
-                websitesName.append(items.domain)
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'mailServer/deleteEmailAccount.html', {'websiteList':websitesName, "status": 1})
         except BaseException, msg:
@@ -126,11 +128,17 @@ def deleteEmailAccount(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def getEmailsForDomain(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['deleteEmail'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
         try:
             if request.method == 'POST':
 
@@ -143,12 +151,6 @@ def getEmailsForDomain(request):
                     final_dic = {'fetchStatus': 0, 'error_message': "No email accounts exists!"}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
-
-                if admin.type != 1:
-                    if domain.domainOwner.admin != admin:
-                        final_dic = {'fetchStatus': 0, 'error_message': "Not enough privileges." }
-                        final_json = json.dumps(final_dic)
-                        return HttpResponse(final_json)
 
                 emails = domain.eusers_set.all()
 
@@ -186,20 +188,20 @@ def getEmailsForDomain(request):
 
 def submitEmailDeletion(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['deleteEmail'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('deleteEmailStatus', 0)
         try:
             if request.method == 'POST':
 
                 data = json.loads(request.body)
                 email = data['email']
-                emailDB = EUsers.objects.get(email=email)
-
-                if admin.type != 1:
-                    if emailDB.emailOwner.domainOwner.admin != admin:
-                        final_dic = {'deleteEmailStatus': 0, 'error_message': "Not enough privileges."}
-                        final_json = json.dumps(final_dic)
-                        return HttpResponse(final_json)
 
                 mailUtilities.deleteEmailAccount(email)
                 data_ret = {'deleteEmailStatus': 1, 'error_message': "None"}
@@ -217,23 +219,21 @@ def submitEmailDeletion(request):
 
 def emailForwarding(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['emailForwarding'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
         try:
 
             if not os.path.exists('/home/cyberpanel/postfix'):
                 return render(request, "mailServer/emailForwarding.html", {"status": 0})
 
-            admin = Administrator.objects.get(pk=val)
-
-            if admin.type == 1:
-                websites = Websites.objects.all()
-            else:
-                websites = Websites.objects.filter(admin=admin)
-
-            websitesName = []
-
-            for items in websites:
-                websitesName.append(items.domain)
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'mailServer/emailForwarding.html', {'websiteList':websitesName, "status": 1})
         except BaseException, msg:
@@ -245,21 +245,20 @@ def emailForwarding(request):
 
 def fetchCurrentForwardings(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['emailForwarding'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
         try:
             if request.method == 'POST':
 
                 data = json.loads(request.body)
                 emailAddress = data['emailAddress']
-
-                emailDB = EUsers.objects.get(email=emailAddress)
-
-                if admin.type != 1:
-                    if emailDB.emailOwner.domainOwner.admin != admin:
-                        final_dic = {'fetchStatus': 1, 'error_message': "Not enough privileges."}
-                        final_json = json.dumps(final_dic)
-                        return HttpResponse(final_json)
 
                 currentForwardings = Forwardings.objects.filter(source=emailAddress)
 
@@ -298,7 +297,15 @@ def fetchCurrentForwardings(request):
 
 def submitForwardDeletion(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['emailForwarding'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('deleteForwardingStatus', 0)
         try:
             if request.method == 'POST':
 
@@ -323,23 +330,21 @@ def submitForwardDeletion(request):
 
 def submitEmailForwardingCreation(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-        try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['emailForwarding'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('createStatus', 0)
+        try:
             if request.method == 'POST':
 
                 data = json.loads(request.body)
                 source = data['source']
                 destination = data['destination']
-
-                email = EUsers.objects.get(email=source)
-
-                if admin.type != 1:
-                    if email.emailOwner.domainOwner.admin != admin:
-                        final_dic = {'createStatus': 0, 'error_message': "Not enough privileges." }
-                        final_json = json.dumps(final_dic)
-                        return HttpResponse(final_json)
 
                 if Forwardings.objects.filter(source=source, destination=destination).count() > 0:
                     data_ret = {'createStatus': 0, 'error_message': "You have already forwared to this destination."}
@@ -368,29 +373,25 @@ def submitEmailForwardingCreation(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 #######
-
 
 def changeEmailAccountPassword(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['changeEmailPassword'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
         try:
 
             if not os.path.exists('/home/cyberpanel/postfix'):
                 return render(request, "mailServer/changeEmailPassword.html", {"status": 0})
 
-            admin = Administrator.objects.get(pk=val)
-
-            if admin.type == 1:
-                websites = Websites.objects.all()
-            else:
-                websites = Websites.objects.filter(admin=admin)
-
-            websitesName = []
-
-            for items in websites:
-                websitesName.append(items.domain)
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'mailServer/changeEmailPassword.html', {'websiteList':websitesName, "status": 1})
         except BaseException, msg:
@@ -400,27 +401,25 @@ def changeEmailAccountPassword(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def submitPasswordChange(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['changeEmailPassword'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('passChangeStatus', 0)
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
-
                 domain = data['domain']
                 email = data['email']
                 password = data['password']
 
                 emailDB = EUsers.objects.get(email=email)
-
-                if admin.type != 1:
-                    if emailDB.emailOwner.domainOwner.admin != admin:
-                        final_dic = {'passChangeStatus': 0, 'error_message': "Not enough privileges." }
-                        final_json = json.dumps(final_dic)
-                        return HttpResponse(final_json)
-
                 emailDB.delete()
 
                 dom = Domains(domain=domain)
@@ -446,42 +445,22 @@ def submitPasswordChange(request):
 
 def dkimManager(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['dkimManager'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         openDKIMInstalled = 0
 
         if mailUtilities.checkIfDKIMInstalled() == 1:
             openDKIMInstalled = 1
 
-            admin = Administrator.objects.get(pk=val)
-
-            if admin.type == 1:
-                websites = Websites.objects.all()
-                websitesName = []
-
-                for items in websites:
-                    websitesName.append(items.domain)
-            else:
-                if admin.type == 2:
-                    websites = admin.websites_set.all()
-                    admins = Administrator.objects.filter(owner=admin.pk)
-                    websitesName = []
-
-                    for items in websites:
-                        websitesName.append(items.domain)
-
-                    for items in admins:
-                        webs = items.websites_set.all()
-
-                        for web in webs:
-                            websitesName.append(web.domain)
-
-
-                else:
-                    websitesName = []
-                    websites = Websites.objects.filter(admin=admin)
-                    for items in websites:
-                        websitesName.append(items.domain)
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'mailServer/dkimManager.html',
                           {'websiteList': websitesName, 'openDKIMInstalled': openDKIMInstalled})
@@ -494,24 +473,21 @@ def dkimManager(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def fetchDKIMKeys(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['dkimManager'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
         try:
             if request.method == 'POST':
+
                 data = json.loads(request.body)
-
                 domainName = data['domainName']
-
-                if admin.type != 1:
-                    website = Websites.objects.get(domain=domainName)
-                    if website.admin != admin:
-                        data_ret = {'fetchStatus': 0, 'keysAvailable': 0, 'error_message': 'Not enough privileges.'}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-
 
                 try:
                     path = "/etc/opendkim/keys/" + domainName + "/default.txt"
@@ -544,20 +520,20 @@ def fetchDKIMKeys(request):
 
 def generateDKIMKeys(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['dkimManager'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('generateStatus', 0)
         try:
             if request.method == 'POST':
 
                 data = json.loads(request.body)
                 domainName = data['domainName']
-
-                if admin.type != 1:
-                    website = Websites.objects.get(domain=domainName)
-                    if website.admin != admin:
-                        data_ret = {'generateStatus': 0, 'error_message': 'Not enough privileges.'}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                 execPath = execPath + " generateKeys --domain " + domainName
@@ -603,13 +579,17 @@ def generateDKIMKeys(request):
 
 def installOpenDKIM(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-        try:
-            if admin.type != 1:
-                final_json = json.dumps({'installOpenDKIM': 0, 'error_message': "Not enough privileges."})
-                return HttpResponse(final_json)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['dkimManager'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('installOpenDKIM', 0)
+
+        try:
             thread.start_new_thread(mailUtilities.installOpenDKIM, ('Install','openDKIM'))
             final_json = json.dumps({'installOpenDKIM': 1, 'error_message': "None"})
             return HttpResponse(final_json)
@@ -625,14 +605,8 @@ def installOpenDKIM(request):
 def installStatusOpenDKIM(request):
     try:
         val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'abort': 1, 'installed': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 command = "sudo cat " + mailUtilities.installLogPath
                 installStatus = subprocess.check_output(shlex.split(command))
@@ -672,7 +646,6 @@ def installStatusOpenDKIM(request):
                                              'requestStatus': installStatus,
                                              })
                     return HttpResponse(final_json)
-
                 else:
                     final_json = json.dumps({
                                              'abort':0,
@@ -680,8 +653,6 @@ def installStatusOpenDKIM(request):
                                              'requestStatus': installStatus,
                                              })
                     return HttpResponse(final_json)
-
-
         except BaseException,msg:
             final_dic = {'abort':1,'installed':0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)

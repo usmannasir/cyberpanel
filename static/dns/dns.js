@@ -288,8 +288,7 @@ app.controller('addModifyDNSRecords', function($scope,$http) {
                             data.priority = $scope.priority;
                             data.ttl = $scope.ttl;
                             data.recordType = type;
-                        }
-                        else if(type === "CAA"){
+                        }else if(type === "CAA"){
                             data.selectedZone = $scope.selectedZone;
                             data.recordName = $scope.recordName;
                             data.recordContentCAA = $scope.recordContentCAA;

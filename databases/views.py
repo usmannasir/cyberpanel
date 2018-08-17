@@ -12,6 +12,7 @@ from models import Databases
 import json
 import shlex
 import subprocess
+from plogical.acl import ACLManager
 # Create your views here.
 
 
@@ -29,36 +30,19 @@ def loadDatabaseHome(request):
 
 def createDatabase(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=val)
 
-            if admin.type == 1:
-                websites = Websites.objects.all()
-                websitesName = []
+            currentACL = ACLManager.loadedACL(userID)
 
-                for items in websites:
-                    websitesName.append(items.domain)
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['createDatabase'] == 1:
+                pass
             else:
-                if admin.type == 2:
-                    websites = Websites.objects.filter(admin=admin)
-                    admins = Administrator.objects.filter(owner=admin.pk)
-                    websitesName = []
+                return ACLManager.loadError()
 
-                    for items in websites:
-                        websitesName.append(items.domain)
-
-                    for items in admins:
-                        webs = Websites.objects.filter(admin=items)
-
-                        for web in webs:
-                            websitesName.append(web.domain)
-                else:
-                    websitesName = []
-                    websites = Websites.objects.filter(admin=admin)
-                    for items in websites:
-                        websitesName.append(items.domain)
-
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'databases/createDatabase.html', {'websitesList':websitesName})
         except BaseException, msg:
@@ -68,11 +52,9 @@ def createDatabase(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def submitDBCreation(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
@@ -83,12 +65,14 @@ def submitDBCreation(request):
                 dbPassword = data['dbPassword']
                 webUsername = data['webUserName']
 
-                if admin.type != 1:
-                    website = Websites.objects.get(domain=databaseWebsite)
-                    if website.admin != admin:
-                        dic = {'createDBStatus': 0, 'error_message': "Only administrator can view this page."}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['createDatabase'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('createDBStatus', 0)
 
                 dbName = webUsername+"_"+dbName
                 dbUsername = webUsername+"_"+dbUsername
@@ -113,40 +97,21 @@ def submitDBCreation(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def deleteDatabase(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
 
-            admin = Administrator.objects.get(pk=val)
+            currentACL = ACLManager.loadedACL(userID)
 
-            if admin.type == 1:
-                websites = Websites.objects.all()
-                websitesName = []
-
-                for items in websites:
-                    websitesName.append(items.domain)
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['deleteDatabase'] == 1:
+                pass
             else:
-                if admin.type == 2:
-                    websites = admin.websites_set.all()
-                    admins = Administrator.objects.filter(owner=admin.pk)
-                    websitesName = []
+                return ACLManager.loadError()
 
-                    for items in websites:
-                        websitesName.append(items.domain)
-
-                    for items in admins:
-                        webs = items.websites_set.all()
-
-                        for web in webs:
-                            websitesName.append(web.domain)
-                else:
-                    websitesName = []
-                    websites = Websites.objects.filter(admin=admin)
-                    for items in websites:
-                        websitesName.append(items.domain)
-
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'databases/deleteDatabase.html', {'websitesList':websitesName})
         except BaseException, msg:
@@ -158,24 +123,21 @@ def deleteDatabase(request):
 
 def fetchDatabases(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
-
             data = json.loads(request.body)
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['deleteDatabase'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('fetchStatus', 0)
 
             databaseWebsite = data['databaseWebsite']
 
-            if admin.type != 1:
-                website = Websites.objects.get(domain=databaseWebsite)
-                if website.admin != admin:
-                    dic = {'fetchStatus': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-
             website = Websites.objects.get(domain=databaseWebsite)
-
-
             databases = Databases.objects.filter(website=website)
 
             json_data = "["
@@ -207,24 +169,22 @@ def fetchDatabases(request):
         final_json = json.dumps({'fetchStatus': 0, 'error_message': "Not logged in."})
         return HttpResponse(final_json)
 
-
 def submitDatabaseDeletion(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
-
-
                 data = json.loads(request.body)
                 dbName = data['dbName']
 
-                if admin.type != 1:
-                    db = Databases.objects.get(dbName=dbName)
-                    if db.website.admin != admin:
-                        dic = {'deleteStatus': 0, 'error_message': "Only administrator can view this page."}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['deleteDatabase'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('deleteStatus', 0)
 
                 result = mysqlUtilities.submitDBDeletion(dbName)
 
@@ -247,38 +207,20 @@ def submitDatabaseDeletion(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def listDBs(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=val)
+            currentACL = ACLManager.loadedACL(userID)
 
-            if admin.type == 1:
-                websites = Websites.objects.all()
-                websitesName = []
-
-                for items in websites:
-                    websitesName.append(items.domain)
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['listDatabases'] == 1:
+                pass
             else:
-                if admin.type == 2:
-                    websites = admin.websites_set.all()
-                    admins = Administrator.objects.filter(owner=admin.pk)
-                    websitesName = []
+                return ACLManager.loadError()
 
-                    for items in websites:
-                        websitesName.append(items.domain)
-
-                    for items in admins:
-                        webs = items.websites_set.all()
-
-                        for web in webs:
-                            websitesName.append(web.domain)
-                else:
-                    websitesName = []
-                    websites = Websites.objects.filter(admin=admin)
-                    for items in websites:
-                        websitesName.append(items.domain)
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'databases/listDataBases.html', {'websiteList':websitesName})
         except BaseException, msg:
@@ -288,11 +230,9 @@ def listDBs(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def changePassword(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
@@ -300,12 +240,14 @@ def changePassword(request):
                 userName = data['dbUserName']
                 dbPassword = data['dbPassword']
 
-                if admin.type != 1:
-                    db = Databases.objects.get(dbName=userName)
-                    if db.website.admin != admin:
-                        dic = {'changePasswordStatus': 0, 'error_message': "Only administrator can view this page."}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['listDatabases'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('changePasswordStatus', 0)
 
                 passFile = "/etc/cyberpanel/mysqlPassword"
 

@@ -537,8 +537,6 @@ app.controller('modifyWebsitesController', function($scope,$http) {
 
 });
 
-
-
 /* Java script code to Modify Pacakge ends here */
 
 
@@ -723,7 +721,7 @@ app.controller('websitePages', function($scope, $http, $timeout, $window) {
 
                 function ListInitialDatas(response) {
 
-                    if(response.data.logstatus == 1){
+                    if(response.data.logstatus === 1){
 
 
                         // notifications
@@ -839,7 +837,7 @@ app.controller('websitePages', function($scope, $http, $timeout, $window) {
 
                 function ListInitialDatas(response) {
 
-                    if(response.data.configstatus == 1){
+                    if(response.data.configstatus === 1){
 
                         //Rewrite rules
 
@@ -956,7 +954,7 @@ app.controller('websitePages', function($scope, $http, $timeout, $window) {
 
                 function ListInitialDatas(response) {
 
-                    if(response.data.configstatus == 1){
+                    if(response.data.configstatus === 1){
 
                         $scope.configurationsBox = false;
                         $scope.configsFetched = true;
@@ -1366,10 +1364,10 @@ app.controller('websitePages', function($scope, $http, $timeout, $window) {
 
                 var domain = $("#domainNamePage").text();
                 var path = $scope.installPath;
-                var sitename = $scope.sitename
-                var username = $scope.username
-                var password = $scope.password
-                var prefix = $scope.prefix
+                var sitename = $scope.sitename;
+                var username = $scope.username;
+                var password = $scope.password;
+                var prefix = $scope.prefix;
 
 
                 url = "/websites/installJoomla";
@@ -1480,7 +1478,7 @@ app.controller('websitePages', function($scope, $http, $timeout, $window) {
                 var data = {
                     virtualHost: virtualHost,
                     cert:cert,
-                    key:key,
+                    key:key
                 };
 
                 var config = {
@@ -2377,9 +2375,8 @@ app.controller('suspendWebsiteControl', function($scope,$http) {
 
 
                 function ListInitialDatas(response) {
-                    console.log(response.data)
 
-                    if (response.data.websiteStatus == 1)
+                    if (response.data.websiteStatus === 1)
                     {
                         if(state=="Suspend"){
 
@@ -3071,6 +3068,10 @@ app.controller('launchChild', function($scope,$http) {
 
     $scope.fileManagerURL = "/filemanager/"+$("#domainNamePage").text();
     $scope.previewUrl = "/preview/"+$("#childDomain").text()+"/";
+    $scope.wordPressInstallURL = "/websites/" + $("#childDomain").text() + "/wordpressInstall";
+    $scope.joomlaInstallURL = "/websites/" + $("#childDomain").text() + "/joomlaInstall";
+    $scope.setupGit = "/websites/" + $("#childDomain").text() + "/setupGit";
+    $scope.installPrestaURL = "/websites/" + $("#childDomain").text() + "/installPrestaShop";
 
     var logType = 0;
     $scope.pageNumber = 1;
@@ -3124,7 +3125,7 @@ app.controller('launchChild', function($scope,$http) {
 
                 function ListInitialDatas(response) {
 
-                    if(response.data.logstatus == 1){
+                    if(response.data.logstatus === 1){
 
 
                         $scope.logFileLoading = true;
@@ -3180,11 +3181,11 @@ app.controller('launchChild', function($scope,$http) {
                 var errorPageNumber = $scope.errorPageNumber;
 
 
-                if(type==3){
+                if(type === 3){
                     errorPageNumber = $scope.errorPageNumber+1;
                     $scope.errorPageNumber = errorPageNumber;
                 }
-                else if(type==4){
+                else if(type === 4){
                     errorPageNumber = $scope.errorPageNumber-1;
                     $scope.errorPageNumber = errorPageNumber;
                 }
@@ -3225,7 +3226,7 @@ app.controller('launchChild', function($scope,$http) {
 
                 function ListInitialDatas(response) {
 
-                    if(response.data.logstatus == 1){
+                    if(response.data.logstatus === 1){
 
 
                         // notifications
@@ -3805,7 +3806,7 @@ app.controller('launchChild', function($scope,$http) {
 
                 function ListInitialDatas(response) {
 
-                    if(response.data.sslStatus == 1){
+                    if(response.data.sslStatus === 1){
 
                         $scope.sslSaved = false;
                         $scope.couldNotSaveSSL = true;
@@ -3931,7 +3932,7 @@ app.controller('launchChild', function($scope,$http) {
 
                 }
 
-    }
+    };
 
 
 

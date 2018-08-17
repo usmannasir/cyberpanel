@@ -16,12 +16,21 @@ from plogical.installUtilities import installUtilities
 from random import randint
 from plogical.csf import CSF
 import time
+from plogical.acl import ACLManager
 # Create your views here.
 
 
 def securityHome(request):
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+
         return render(request,'firewall/index.html')
     except KeyError:
         return redirect(loadLoginPage)
@@ -29,28 +38,30 @@ def securityHome(request):
 def firewallHome(request):
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=userID)
-
-        if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         return render(request,'firewall/firewall.html')
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def getCurrentRules(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
+
+
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'fetchStatus': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 rules = FirewallRules.objects.all()
 
@@ -86,18 +97,18 @@ def getCurrentRules(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def addRule(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('add_status', 0)
+
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'add_status': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 data = json.loads(request.body)
                 ruleName = data['ruleName']
@@ -125,18 +136,17 @@ def addRule(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def deleteRule(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('delete_status', 0)
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'delete_status': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 data = json.loads(request.body)
                 ruleID = data['id']
@@ -153,7 +163,6 @@ def deleteRule(request):
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
-
         except BaseException,msg:
             final_dic = {'delete_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -163,18 +172,18 @@ def deleteRule(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def reloadFirewall(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('reload_status', 0)
+
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'reload_status': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 command = 'sudo firewall-cmd --reload'
                 cmd = shlex.split(command)
@@ -189,9 +198,6 @@ def reloadFirewall(request):
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
 
-
-
-
         except BaseException,msg:
             final_dic = {'reload_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -201,18 +207,17 @@ def reloadFirewall(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def startFirewall(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('start_status', 0)
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'start_status': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 command = 'sudo systemctl start firewalld'
 
@@ -229,9 +234,6 @@ def startFirewall(request):
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
 
-
-
-
         except BaseException,msg:
             final_dic = {'start_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -241,18 +243,17 @@ def startFirewall(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def stopFirewall(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('stop_status', 0)
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'stop_status': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 command = 'sudo systemctl stop firewalld'
 
@@ -278,18 +279,17 @@ def stopFirewall(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def firewallStatus(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'status': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 status = subprocess.check_output(["systemctl", "status","firewalld"])
 
@@ -302,7 +302,6 @@ def firewallStatus(request):
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
 
-
         except BaseException,msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -312,34 +311,34 @@ def firewallStatus(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def secureSSH(request):
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=userID)
-
-        if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         return render(request,'firewall/secureSSH.html')
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def getSSHConfigs(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
                 type = data['type']
-
-                if admin.type != 1:
-                    final_dic = {'status': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 if type=="1":
 
@@ -428,9 +427,6 @@ def getSSHConfigs(request):
 
                     final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
                     return HttpResponse(final_json)
-
-
-
         except BaseException,msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -440,21 +436,19 @@ def getSSHConfigs(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def saveSSHConfigs(request):
     try:
-        val = request.session['userID']
-        admin= Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('saveStatus', 0)
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
                 type = data['type']
-
-                if admin.type != 1:
-                    final_dic = {'saveStatus': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
-
 
                 if type=="1":
 
@@ -548,20 +542,19 @@ def saveSSHConfigs(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def deleteSSHKey(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('delete_status', 0)
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
                 key = data['key']
-
-                if admin.type != 1:
-                    final_dic = {'delete_status': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 # temp change of permissions
 
@@ -612,20 +605,20 @@ def deleteSSHKey(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def addSSHKey(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('add_status', 0)
+
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
                 key = data['key']
-
-                if admin.type != 1:
-                    final_dic = {'add_status': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 # temp change of permissions
 
@@ -688,11 +681,12 @@ def addSSHKey(request):
 def loadModSecurityHome(request):
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=userID)
-
-        if admin.type == 3:
-            return HttpResponse("You don't have enough privileges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         confPath = os.path.join(virtualHostUtilities.Server_root,"conf/httpd_config.conf")
 
@@ -712,15 +706,15 @@ def loadModSecurityHome(request):
 
 def installModSec(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('installModSec', 0)
+
         try:
-
-            if admin.type != 1:
-                final_dic = {'installModSec': 0, 'error_message': 'Not enough privileges.'}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-
             thread.start_new_thread(modSec.installModSec, ('Install','modSec'))
             final_json = json.dumps({'installModSec': 1, 'error_message': "None"})
             return HttpResponse(final_json)
@@ -740,11 +734,6 @@ def installStatusModSec(request):
         admin = Administrator.objects.get(pk=val)
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'abort': 1, 'installed': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
 
                 installStatus = unicode(open(modSec.installLogPath, "r").read())
@@ -807,15 +796,17 @@ def installStatusModSec(request):
 
 def fetchModSecSettings(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
+
         try:
             if request.method == 'POST':
 
-                if admin.type != 1:
-                    final_dic = {'fetchStatus': 0, 'installed': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 modsecurity = 0
                 SecAuditEngine = 0
@@ -906,15 +897,15 @@ def fetchModSecSettings(request):
 
 def saveModSecConfigurations(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('saveStatus', 0)
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'saveStatus': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 data = json.loads(request.body)
 
@@ -996,11 +987,14 @@ def saveModSecConfigurations(request):
 
 def modSecRules(request):
     try:
-        userID = request.session['userID']
-        admin = Administrator.objects.get(pk=userID)
 
-        if admin.type == 3:
-            return HttpResponse("You don't have enough privileges to access this page.")
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
@@ -1022,10 +1016,12 @@ def modSecRules(request):
 def fetchModSecRules(request):
     try:
         userID = request.session['userID']
-        admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
 
-        if admin.type == 3:
-            return HttpResponse("You don't have enough privileges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('modSecInstalled', 0)
 
         confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
@@ -1059,18 +1055,17 @@ def fetchModSecRules(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def saveModSecRules(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('saveStatus', 0)
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'saveStatus': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 data = json.loads(request.body)
 
@@ -1114,15 +1109,15 @@ def saveModSecRules(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def modSecRulesPacks(request):
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=userID)
-
-        if admin.type == 3:
-            return HttpResponse("You don't have enough privileges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
@@ -1144,12 +1139,12 @@ def modSecRulesPacks(request):
 def getOWASPAndComodoStatus(request):
     try:
         userID = request.session['userID']
-        admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
 
-        if admin.type == 3:
-            final_dic = {'modSecInstalled': 0}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('modSecInstalled', 0)
 
         confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
@@ -1198,15 +1193,15 @@ def getOWASPAndComodoStatus(request):
 
 def installModSecRulesPack(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('installStatus', 0)
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'installStatus': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 data = json.loads(request.body)
 
@@ -1242,16 +1237,16 @@ def installModSecRulesPack(request):
 
 def getRulesFiles(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
+
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'fetchStatus': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
-
 
                 data = json.loads(request.body)
                 packName = data['packName']
@@ -1308,15 +1303,15 @@ def getRulesFiles(request):
 
 def enableDisableRuleFile(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk = val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('saveStatus', 0)
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'saveStatus': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 data = json.loads(request.body)
 
@@ -1359,10 +1354,12 @@ def enableDisableRuleFile(request):
 def csf(request):
     try:
         userID = request.session['userID']
-        admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
 
-        if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         csfInstalled = 1
 
@@ -1380,15 +1377,14 @@ def csf(request):
 
 def installCSF(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('installStatus', 0)
         try:
-
-            if admin.type != 1:
-                final_dic = {'installStatus': 0, 'error_message': 'Not enough privileges.'}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-
 
             execPath = "sudo " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " installCSF"
@@ -1411,15 +1407,10 @@ def installCSF(request):
 
 def installStatusCSF(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'abort': 1, 'installed': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 installStatus = unicode(open(CSF.installLogPath, "r").read())
 
@@ -1466,15 +1457,14 @@ def installStatusCSF(request):
 
 def removeCSF(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('installStatus', 0)
         try:
-
-            if admin.type != 1:
-                final_dic = {'installStatus': 0, 'error_message': 'Not enough privileges.'}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-
 
             execPath = "sudo " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " removeCSF"
@@ -1497,15 +1487,14 @@ def removeCSF(request):
 
 def fetchCSFSettings(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
         try:
-
-            if admin.type != 1:
-                final_dic = {'fetchStatus': 0, 'error_message': 'Not enough privileges.'}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-
 
             currentSettings = CSF.fetchCSFSettings()
 
@@ -1529,17 +1518,16 @@ def fetchCSFSettings(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def changeStatus(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-        try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-            if admin.type != 1:
-                final_dic = {'status': 0, 'error_message': 'Not enough privileges.'}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+        try:
 
             data = json.loads(request.body)
 
@@ -1564,22 +1552,21 @@ def changeStatus(request):
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
     except KeyError:
-        final_dic = {'status'
-                     '': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_dic = {'status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
 def modifyPorts(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
         try:
-
-            if admin.type != 1:
-                final_dic = {'status': 0, 'error_message': 'Not enough privileges.'}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-
             data = json.loads(request.body)
 
             protocol = data['protocol']
@@ -1603,21 +1590,20 @@ def modifyPorts(request):
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
     except KeyError:
-        final_dic = {'status'
-                     '': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_dic = {'status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
 def modifyIPs(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-        try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-            if admin.type != 1:
-                final_dic = {'status': 0, 'error_message': 'Not enough privileges.'}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+        try:
 
             data = json.loads(request.body)
 
@@ -1639,8 +1625,6 @@ def modifyIPs(request):
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
     except KeyError:
-        final_dic = {'status'
-                     '': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_dic = {'status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
-

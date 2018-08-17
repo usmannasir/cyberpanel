@@ -10,6 +10,7 @@ import os
 import json
 from plogical.mailUtilities import mailUtilities
 import subprocess, shlex
+from plogical.acl import ACLManager
 # Create your views here.
 
 
@@ -17,15 +18,15 @@ import subprocess, shlex
 
 def managePowerDNS(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
         try:
-            admin = Administrator.objects.get(pk=val)
-
-            if admin.type == 1:
-                return render(request, 'manageServices/managePowerDNS.html', {"status": 1})
-            else:
-                return render(request, 'manageServices/managePowerDNS.html', {"status": 0})
-
+            return render(request, 'manageServices/managePowerDNS.html', {"status": 1})
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse("See CyberCP main log file.")
@@ -35,14 +36,16 @@ def managePowerDNS(request):
 
 def managePostfix(request):
     try:
-        val = request.session['userID']
-        try:
-            admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-            if admin.type == 1:
-                return render(request, 'manageServices/managePostfix.html', {"status": 1})
-            else:
-                return render(request, 'manageServices/managePostfix.html', {"status": 0})
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+        try:
+
+            return render(request, 'manageServices/managePostfix.html', {"status": 1})
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -53,15 +56,15 @@ def managePostfix(request):
 
 def managePureFtpd(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
         try:
-            admin = Administrator.objects.get(pk=val)
-
-            if admin.type == 1:
-                return render(request, 'manageServices/managePureFtpd.html', {"status": 1})
-            else:
-                return render(request, 'manageServices/managePureFtpd.html', {"status": 0})
-
+            return render(request, 'manageServices/managePureFtpd.html', {"status": 1})
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse("See CyberCP main log file.")
@@ -71,15 +74,15 @@ def managePureFtpd(request):
 
 def fetchStatus(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
 
                 mailUtilities.checkHome()
 
@@ -129,15 +132,15 @@ def fetchStatus(request):
 
 def saveStatus(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
 
                 data = json.loads(request.body)
 

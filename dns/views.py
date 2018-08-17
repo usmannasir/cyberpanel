@@ -12,6 +12,7 @@ from models import Domains,Records
 from re import match,I,M
 from websiteFunctions.models import Websites
 from plogical.mailUtilities import mailUtilities
+from plogical.acl import ACLManager
 
 # Create your views here.
 
@@ -27,10 +28,15 @@ def loadDNSHome(request):
 def createNameserver(request):
     try:
         userID = request.session['userID']
-        admin = Administrator.objects.get(pk=userID)
 
-        if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['createNameServer'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         mailUtilities.checkHome()
 
@@ -46,15 +52,19 @@ def createNameserver(request):
 
 def NSCreation(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
-                admin = Administrator.objects.get(pk=val)
+                admin = Administrator.objects.get(pk=userID)
 
-                if admin.type != 1:
-                    dic = {'NSCreation': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['createNameServer'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('NSCreation', 0)
 
 
                 data = json.loads(request.body)
@@ -136,7 +146,6 @@ def NSCreation(request):
                     final_dic = {'NSCreation': 1, 'error_message': "None"}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
-
                 else:
 
                     newZone = Domains.objects.get(name=domainForNS)
@@ -194,8 +203,6 @@ def NSCreation(request):
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
 
-
-
         except BaseException, msg:
             final_dic = {'NSCreation': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -206,11 +213,18 @@ def NSCreation(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def createDNSZone(request):
     try:
         userID = request.session['userID']
-        admin = Administrator.objects.get(pk=userID)
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['createDNSZone'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         if os.path.exists('/home/cyberpanel/powerdns'):
             return render(request,'dns/createDNSZone.html', {"status": 1})
@@ -222,11 +236,19 @@ def createDNSZone(request):
 
 def zoneCreation(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
-                admin = Administrator.objects.get(pk=val)
+                admin = Administrator.objects.get(pk=userID)
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['createDNSZone'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('zoneCreation', 0)
 
                 data = json.loads(request.body)
                 zoneDomain = data['zoneDomain']
@@ -250,10 +272,7 @@ def zoneCreation(request):
 
                 final_dic = {'zoneCreation': 1}
                 final_json = json.dumps(final_dic)
-
                 return HttpResponse(final_json)
-
-
 
         except BaseException,msg:
 
@@ -267,31 +286,23 @@ def zoneCreation(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def addDeleteDNSRecords(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
 
-        admin = Administrator.objects.get(pk=val)
-        domainsList = []
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['addDeleteRecords'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         if not os.path.exists('/home/cyberpanel/powerdns'):
             return render(request,'dns/addDeleteDNSRecords.html', {"status": 0})
 
-        if admin.type == 1:
-            domains = Domains.objects.all()
-            for items in domains:
-                domainsList.append(items.name)
-        else:
-            websites = admin.websites_set.all()
-
-            for web in websites:
-                try:
-                    tempDomain = Domains.objects.get(name = web.domain)
-                    domainsList.append(web.domain)
-                except:
-                    pass
-
+        domainsList = ACLManager.findAllDomains(currentACL, userID)
 
         return render(request, 'dns/addDeleteDNSRecords.html',{"domainsList":domainsList, "status": 1})
 
@@ -300,8 +311,7 @@ def addDeleteDNSRecords(request):
 
 def getCurrentRecordsForDomain(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
@@ -309,16 +319,20 @@ def getCurrentRecordsForDomain(request):
                 zoneDomain = data['selectedZone']
                 currentSelection = data['currentSelection']
 
-                if admin.type != 1:
-                    website = Websites.objects.get(domain=zoneDomain)
-                    if website.admin != admin:
-                        dic = {'fetchStatus': 0, 'error_message': "Only administrator can view this page."}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['addDeleteRecords'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('fetchStatus', 1)
+
+                if not os.path.exists('/home/cyberpanel/powerdns'):
+                    return render(request, 'dns/addDeleteDNSRecords.html', {"status": 0})
 
 
                 domain = Domains.objects.get(name=zoneDomain)
-
                 records = Records.objects.filter(domain_id=domain.id)
 
 
@@ -383,11 +397,9 @@ def getCurrentRecordsForDomain(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def addDNSRecord(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
@@ -397,12 +409,15 @@ def addDNSRecord(request):
                 recordName = data['recordName']
                 ttl = int(data['ttl'])
 
-                if admin.type != 1:
-                    website = Websites.objects.get(domain=zoneDomain)
-                    if website.admin != admin:
-                        dic = {'add_status': 0, 'error_message': "Only administrator can view this page."}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['addDeleteRecords'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('add_status', 0)
+
 
                 zone = Domains.objects.get(name=zoneDomain)
                 value = ""
@@ -530,18 +545,17 @@ def addDNSRecord(request):
                     priority = data['priority']
 
                     DNS.createDNSRecord(zone, value, recordType, recordContentSRV, priority, ttl)
-                elif recordType == "CAA":
 
+                elif recordType == "CAA":
                     if recordName == "@":
                         value = zoneDomain
                     ## re.match
-                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName,
+                               M | I):
                         value = recordName
                     else:
                         value = recordName + "." + zoneDomain
-
                     recordContentCAA = data['recordContentCAA']  ## IP or ponting value
-
                     DNS.createDNSRecord(zone, value, recordType, recordContentCAA, 0, ttl)
 
 
@@ -559,31 +573,30 @@ def addDNSRecord(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def deleteDNSRecord(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
                 data = json.loads(request.body)
                 id = data['id']
 
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['addDeleteRecords'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('delete_status', 0)
+
                 delRecord = Records.objects.get(id=id)
-
-                if admin.type != 1:
-                    if delRecord.domainOwner.admin != admin:
-                        dic = {'delete_status': 0, 'error_message': "Only administrator can view this page."}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
-
                 delRecord.delete()
 
                 final_dic = {'delete_status': 1, 'error_message': "None"}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
-
 
         except BaseException,msg:
             final_dic = {'delete_status': 0, 'error_message': str(msg)}
@@ -594,57 +607,52 @@ def deleteDNSRecord(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def deleteDNSZone(request):
 
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=val)
-        domainsList = []
-
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['deleteZone'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         if not os.path.exists('/home/cyberpanel/powerdns'):
-            return render(request,'dns/deleteDNSZone.html', {"status": 0})
+            return render(request, 'dns/addDeleteDNSRecords.html', {"status": 0})
 
-        if admin.type == 1:
-            domains = Domains.objects.all()
-            for items in domains:
-                domainsList.append(items.name)
-        else:
-            websites = admin.websites_set.all()
-
-            for web in websites:
-                try:
-                    tempDomain = Domains.objects.get(name = web.domain)
-                    domainsList.append(web.domain)
-                except:
-                    pass
-
+        domainsList = ACLManager.findAllDomains(currentACL, userID)
 
         return render(request, 'dns/deleteDNSZone.html',{"domainsList":domainsList, "status": 1})
 
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def submitZoneDeletion(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
-
                 data = json.loads(request.body)
                 zoneDomain = data['zoneDomain']
 
-                delZone = Domains.objects.get(name=zoneDomain)
+                currentACL = ACLManager.loadedACL(userID)
 
-                if admin.type != 1:
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['deleteZone'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('delete_status', 0)
+
+                delZone = Domains.objects.get(name=zoneDomain)
+                admin = Administrator.objects.get(pk=userID)
+
+                if currentACL['admin'] == 1:
                     if delZone.admin != admin:
-                        dic = {'delete_status': 0, 'error_message': "Only administrator can view this page."}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
+                        ACLManager.loadErrorJson()
 
                 delZone.delete()
 

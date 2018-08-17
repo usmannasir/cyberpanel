@@ -14,6 +14,7 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 import shlex
 from plogical.ftpUtilities import FTPUtilities
 import os
+from plogical.acl import ACLManager
 # Create your views here.
 
 def loadFTPHome(request):
@@ -23,41 +24,26 @@ def loadFTPHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def createFTPAccount(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['createFTPAccount'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+
         try:
-            admin = Administrator.objects.get(pk=val)
+            admin = Administrator.objects.get(pk=userID)
 
             if not os.path.exists('/home/cyberpanel/pureftpd'):
                 return render(request, "ftp/createFTPAccount.html", {"status": 0})
 
-            if admin.type == 1:
-                websites = Websites.objects.all()
-                websitesName = []
-
-                for items in websites:
-                    websitesName.append(items.domain)
-            else:
-                if admin.type == 2:
-                    websites = Websites.objects.filter(admin=admin)
-                    admins = Administrator.objects.filter(owner=admin.pk)
-                    websitesName = []
-
-                    for items in websites:
-                        websitesName.append(items.domain)
-
-                    for items in admins:
-                        webs = Websites.objects.filter(admin=items)
-
-                        for web in webs:
-                            websitesName.append(web.domain)
-                else:
-                    websitesName = []
-                    websites = Websites.objects.filter(admin=admin)
-                    for items in websites:
-                        websitesName.append(items.domain)
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'ftp/createFTPAccount.html', {'websiteList':websitesName,'admin':admin.userName, "status": 1})
         except BaseException, msg:
@@ -67,12 +53,20 @@ def createFTPAccount(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def submitFTPCreation(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
+
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['createFTPAccount'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('creatFTPStatus', 0)
 
 
                 data = json.loads(request.body)
@@ -81,14 +75,7 @@ def submitFTPCreation(request):
                 path = data['path']
                 domainName = data['ftpDomain']
 
-                admin = Administrator.objects.get(id=val)
-                website = Websites.objects.get(domain=domainName)
-
-                if admin.type != 1:
-                    if website.admin != admin:
-                        data_ret = {'creatFTPStatus': 0, 'error_message': 'Not enough privileges.'}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
+                admin = Administrator.objects.get(id=userID)
 
                 if len(path) > 0:
                     pass
@@ -112,8 +99,6 @@ def submitFTPCreation(request):
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
-
-
         except BaseException,msg:
             data_ret = {'creatFTPStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
@@ -123,41 +108,23 @@ def submitFTPCreation(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def deleteFTPAccount(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['deleteFTPAccount'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
         try:
-            admin = Administrator.objects.get(pk=val)
 
             if not os.path.exists('/home/cyberpanel/pureftpd'):
                 return render(request, "ftp/deleteFTPAccount.html", {"status": 0})
 
-            if admin.type == 1:
-                websites = Websites.objects.all()
-                websitesName = []
-
-                for items in websites:
-                    websitesName.append(items.domain)
-            else:
-                if admin.type == 2:
-                    websites = admin.websites_set.all()
-                    admins = Administrator.objects.filter(owner=admin.pk)
-                    websitesName = []
-
-                    for items in websites:
-                        websitesName.append(items.domain)
-
-                    for items in admins:
-                        webs = items.websites_set.all()
-
-                        for web in webs:
-                            websitesName.append(web.domain)
-                else:
-                    websitesName = []
-                    websites = Websites.objects.filter(admin=admin)
-                    for items in websites:
-                        websitesName.append(items.domain)
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'ftp/deleteFTPAccount.html', {'websiteList':websitesName, "status": 1})
         except BaseException, msg:
@@ -167,25 +134,23 @@ def deleteFTPAccount(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def fetchFTPAccounts(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['deleteFTPAccount'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
         try:
             if request.method == 'POST':
-
                 data = json.loads(request.body)
                 domain = data['ftpDomain']
 
                 website = Websites.objects.get(domain=domain)
-                admin = Administrator.objects.get(id=val)
-
-                if admin.type != 1:
-                    if website.admin != admin:
-                        data_ret = {'fetchStatus': 0, 'error_message': 'Not enough privileges.'}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-
 
                 ftpAccounts = website.users_set.all()
 
@@ -216,24 +181,23 @@ def fetchFTPAccounts(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def submitFTPDelete(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(id=val)
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['deleteFTPAccount'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('deleteStatus', 0)
+
                 data = json.loads(request.body)
                 ftpUserName = data['ftpUsername']
-
-                ftp = Users.objects.get(user=ftpUserName)
-
-                if admin.type != 1:
-                    if ftp.domain.admin != admin:
-                        data_ret = {'deleteStatus': 0, 'error_message': 'Not enough privileges.'}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
 
                 FTPUtilities.submitFTPDeletion(ftpUserName)
 
@@ -249,41 +213,23 @@ def submitFTPDelete(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def listFTPAccounts(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['listFTPAccounts'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
         try:
-            admin = Administrator.objects.get(pk=val)
 
             if not os.path.exists('/home/cyberpanel/pureftpd'):
                 return render(request, "ftp/listFTPAccounts.html", {"status": 0})
 
-            if admin.type == 1:
-                websites = Websites.objects.all()
-                websitesName = []
-
-                for items in websites:
-                    websitesName.append(items.domain)
-            else:
-                if admin.type == 2:
-                    websites = admin.websites_set.all()
-                    admins = Administrator.objects.filter(owner=admin.pk)
-                    websitesName = []
-
-                    for items in websites:
-                        websitesName.append(items.domain)
-
-                    for items in admins:
-                        webs = items.websites_set.all()
-
-                        for web in webs:
-                            websitesName.append(web.domain)
-                else:
-                    websitesName = []
-                    websites = Websites.objects.filter(admin=admin)
-                    for items in websites:
-                        websitesName.append(items.domain)
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'ftp/listFTPAccounts.html', {'websiteList':websitesName, "status": 1})
         except BaseException, msg:
@@ -293,10 +239,17 @@ def listFTPAccounts(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def getAllFTPAccounts(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['listFTPAccounts'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
         try:
             if request.method == 'POST':
 
@@ -305,13 +258,6 @@ def getAllFTPAccounts(request):
                 selectedDomain = data['selectedDomain']
 
                 domain = Websites.objects.get(domain=selectedDomain)
-                admin = Administrator.objects.get(id=val)
-
-                if admin.type != 1:
-                    if domain.admin != admin:
-                        data_ret = {'fetchStatus': 0, 'error_message': 'Not enough privileges.'}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
 
                 records = Users.objects.filter(domain=domain)
 
@@ -346,25 +292,22 @@ def getAllFTPAccounts(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def changePassword(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(id=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['listFTPAccounts'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('changePasswordStatus', 0)
         try:
             if request.method == 'POST':
 
                 data = json.loads(request.body)
                 userName = data['ftpUserName']
                 password = data['ftpPassword']
-
-                ftp = Users.objects.get(user=userName)
-
-                if admin.type != 1:
-                    if ftp.domain.admin != admin:
-                        data_ret = {'changePasswordStatus': 0, 'error_message': 'Not enough privileges.'}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
 
                 FTPUtilities.changeFTPPassword(userName, password)
 

@@ -532,7 +532,6 @@
              </div>
 
 
-
     <div class="example-box-wrapper">
         <div style="border-radius: 25px;border-color:#3498db" class="content-box">
             <h3 class="content-box-header bg-blue">
@@ -652,6 +651,72 @@
             </div>
         </div>
     </div>
+
+    <div class="example-box-wrapper">
+
+       <div style="border-radius: 25px;border-color:#3498db" class="content-box">
+           <h3 class="content-box-header bg-blue">
+               {% trans "Application Installer" %}
+           </h3>
+
+           <div class="content-box-wrapper">
+               <div class="row">
+
+
+                   <div class="col-md-4" style="margin-bottom: 2%;">
+
+                                <a  href="{$ wordPressInstallURL $}" target="_blank" title="{% trans 'Install wordpress with LSCache' %}">
+                                    <img  src="{% static 'images/icons/wordpress.png'  %}">
+                                </a>
+                                <a href="{$ wordPressInstallURL $}" target="_blank" title="{% trans 'Install wordpress with LSCache' %}">
+                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Wordpress with LSCache" %}</span>
+                                </a>
+
+                    </div>
+
+
+                   <div class="col-md-4" style="margin-bottom: 2%;">
+
+                                <a  href="{$ joomlaInstallURL $}" target="_blank" title="{% trans 'Install Joomla with LSCache' %}">
+                                    <img  src="{% static 'images/icons/joomla-logo.png'  %}">
+                                </a>
+                                <a href="{$ joomlaInstallURL $}" target="_blank" title="{% trans 'Install Joomla with LSCache' %}">
+                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Joomla" %}</span>
+                                </a>
+
+                    </div>
+
+
+                   <div class="col-md-4" style="margin-bottom: 2%;">
+
+                                <a  href="{$ setupGit $}" target="_blank" title="{% trans 'Attach Git with this website!' %}">
+                                    <img  src="{% static 'images/icons/git-logo.png'  %}">
+                                </a>
+                                <a href="{$ setupGit $}" target="_blank" title="{% trans 'Attach Git with this website!' %}">
+                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Git" %}</span>
+                                </a>
+
+                    </div>
+
+
+
+                   <div class="col-md-4" style="margin-bottom: 2%;">
+
+                                <a  href="{$ installPrestaURL $}" target="_blank" title="{% trans 'Install Prestashop' %}">
+                                    <img  src="{% static 'images/icons/prestashop.png'  %}">
+                                </a>
+                                <a href="{$ installPrestaURL $}" target="_blank" title="{% trans 'Install Prestashop' %}">
+                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Prestashop" %}</span>
+                                </a>
+
+                    </div>
+
+
+                </div>
+           </div>
+
+       </div>
+   </div>
 
     {% else %}
 

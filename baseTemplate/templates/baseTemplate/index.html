@@ -285,7 +285,7 @@
             <i class="glyph-icon icon-linecons-tv"></i>
             <span>{% trans "Dashboard" %}</span>
         </a>
-        <a id="versionManagement" href="{% url 'versionManagment' %}" title="{% trans 'Version Management' %}">
+        <a class="versionManagement" href="{% url 'versionManagment' %}" title="{% trans 'Version Management' %}">
             <i class="glyph-icon tooltip-button icon-cloud-upload" title="{% trans 'Version Management' %}" data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
             <span>{% trans "Version Management" %}</span>
         </a>
@@ -302,14 +302,18 @@
 
             <ul>
                 <li><a href="{% url 'viewProfile' %}" title="{% trans 'View Profile' %}"><span>{% trans "View Profile" %}</span></a></li>
-                <li id="normalUser"><a href="{% url 'createUser' %}" title="{% trans 'Create New User' %}"><span>{% trans "Create New User" %}</span></a></li>
+                <li class="createNewUser"><a href="{% url 'createUser' %}" title="{% trans 'Create New User' %}"><span>{% trans "Create New User" %}</span></a></li>
                 <li><a href="{% url 'modifyUsers' %}" title="{% trans 'Modify User' %}"><span>{% trans "Modify User" %}</span></a></li>
-                <li id="normalUserB"><a href="{% url 'deleteUser' %}" title="{% trans 'Delete User' %}"><span>{% trans "Delete User" %}</span></a></li>
+                <li class="deleteUser"><a href="{% url 'deleteUser' %}" title="{% trans 'Delete User' %}"><span>{% trans "Delete User" %}</span></a></li>
+                <li class="resellerCenter"><a href="{% url 'resellerCenter' %}" title="{% trans 'Reseller Center' %}"><span>{% trans "Reseller Center" %}</span></a></li>
+                <li class="changeUserACL"><a href="{% url 'changeUserACL' %}" title="{% trans 'Change User ACL' %}"><span>{% trans "Change User ACL" %}</span></a></li>
+                <li class="serverACL"><a href="{% url 'createNewACL' %}" title="{% trans 'Create New ACL' %}"><span>{% trans "Create New ACL" %}</span></a></li>
+                <li class="serverACL"><a href="{% url 'deleteACL' %}" title="{% trans 'Delete ACL' %}"><span>{% trans "Delete ACL" %}</span></a></li>
+                <li class="serverACL"><a href="{% url 'modifyACL' %}" title="{% trans 'Modify ACL' %}"><span>{% trans "Modify ACL" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
     </li>
-
 
     <li>
         <a href="{% url 'loadWebsitesHome' %}" title="{% trans 'Websites' %}">
@@ -319,11 +323,11 @@
         <div class="sidebar-submenu">
 
             <ul>
-                <li id="createWebsite"><a href="{% url 'createWebsite' %}" title="{% trans 'Create Website' %}"><span>{% trans "Create Website" %}</span></a></li>
-                <li ><a href="{% url 'listWebsites' %}" title="{% trans 'List Websites' %}"><span>{% trans "List Websites" %}</span></a></li>
-                <li id="modifyWebSite"><a href="{% url 'modifyWebsite' %}" title="{% trans 'Modify Website' %}"><span>{% trans "Modify Website" %}</span></a></li>
-                <li id="siteState"><a href="{% url 'siteState' %}" title="{% trans 'Suspend/Unsuspend' %}"><span>{% trans "Suspend/Unsuspend" %}</span></a></li>
-                <li id="deleteWebsite"><a href="{% url 'deleteWebsite' %}" title="{% trans 'Delete Website' %}"><span>{% trans "Delete Website" %}</span></a></li>
+                <li class="createWebsite"><a href="{% url 'createWebsite' %}" title="{% trans 'Create Website' %}"><span>{% trans "Create Website" %}</span></a></li>
+                <li><a href="{% url 'listWebsites' %}" title="{% trans 'List Websites' %}"><span>{% trans "List Websites" %}</span></a></li>
+                <li class="modifyWebsite"><a href="{% url 'modifyWebsite' %}" title="{% trans 'Modify Website' %}"><span>{% trans "Modify Website" %}</span></a></li>
+                <li class="suspendWebsite"><a href="{% url 'siteState' %}" title="{% trans 'Suspend/Unsuspend' %}"><span>{% trans "Suspend/Unsuspend" %}</span></a></li>
+                <li class="deleteWebsite"><a href="{% url 'deleteWebsite' %}" title="{% trans 'Delete Website' %}"><span>{% trans "Delete Website" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
@@ -336,25 +340,25 @@
         <div id="packageSub" class="sidebar-submenu">
 
             <ul>
-                <li id="createPackage"><a href="{% url 'createPackage' %}" title="{% trans 'Create Package' %}"><span>{% trans "Create Package" %}</span></a></li>
-                <li id="deletePackage"><a href="{% url 'deletePackage' %}" title="{% trans 'Delete Package' %}"><span>{% trans "Delete Package" %}</span></a></li>
-                <li id="modifyPackage"><a href="{% url 'modifyPackage' %}" title="{% trans 'Modify Package' %}"><span>{% trans "Modify Package" %}</span></a></li>
+                <li class="createPackage"><a href="{% url 'createPackage' %}" title="{% trans 'Create Package' %}"><span>{% trans "Create Package" %}</span></a></li>
+                <li class="deletePackage"><a href="{% url 'deletePackage' %}" title="{% trans 'Delete Package' %}"><span>{% trans "Delete Package" %}</span></a></li>
+                <li class="modifyPackage"><a href="{% url 'modifyPackage' %}" title="{% trans 'Modify Package' %}"><span>{% trans "Modify Package" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
     </li>
 
     <li>
-        <a href="{% url 'packagesHome' %}" title="{% trans 'Databases' %}">
+        <a title="{% trans 'Databases' %}">
             <i class="glyph-icon icon-database" title="{% trans 'Databases' %}"></i>
             <span>{% trans "Databases" %}</span>
         </a>
         <div class="sidebar-submenu">
 
             <ul>
-                <li><a href="{% url 'createDatabase' %}" title="{% trans 'Create Database' %}"><span>{% trans "Create Database" %}</span></a></li>
-                <li><a href="{% url 'deleteDatabase' %}" title="{% trans 'Delete Database' %}"><span>{% trans "Delete Database" %}</span></a></li>
-                <li><a href="{% url 'listDBs' %}" title="{% trans 'List Databases' %}"><span>{% trans "List Databases" %}</span></a></li>
+                <li class="createDatabase"><a href="{% url 'createDatabase' %}" title="{% trans 'Create Database' %}"><span>{% trans "Create Database" %}</span></a></li>
+                <li class="deleteDatabase"><a href="{% url 'deleteDatabase' %}" title="{% trans 'Delete Database' %}"><span>{% trans "Delete Database" %}</span></a></li>
+                <li class="listDatabases"><a href="{% url 'listDBs' %}" title="{% trans 'List Databases' %}"><span>{% trans "List Databases" %}</span></a></li>
                 <li><a href="/phpmyadmin/index.php" title="{% trans 'PHPMYAdmin' %}" target="_blank"><span>{% trans "PHPMYAdmin" %}</span></a></li>
                 <!----<li><a href="{% url 'modifyPackage' %}" title="Change Password"><span>Change Password</span></a></li>--->
             </ul>
@@ -362,26 +366,24 @@
         </div><!-- .sidebar-submenu -->
     </li>
 
-     <li>
-        <a href="{% url 'packagesHome' %}" title="{% trans 'DNS' %}">
+    <li>
+        <a title="{% trans 'DNS' %}">
             <i class="glyph-icon icon-linecons-lightbulb"></i>
             <span>{% trans "DNS" %}</span>
         </a>
         <div class="sidebar-submenu">
 
             <ul>
-                <li id="normalUserC"><a href="{% url 'createNameserver' %}" title="{% trans 'Create Nameserver' %}"><span>{% trans "Create Nameserver" %}</span></a></li>
-                <li><a href="{% url 'createDNSZone' %}" title="{% trans 'Create DNS Zone' %}"><span>{% trans "Create DNS Zone" %}</span></a></li>
-                <li><a href="{% url 'deleteDNSZone' %}" title="{% trans 'Delete Zone' %}"><span>{% trans "Delete Zone" %}</span></a></li>
-                <li><a href="{% url 'addDeleteDNSRecords' %}" title="{% trans 'Add/Delete Records' %}"><span>{% trans "Add/Delete Records" %}</span></a></li>
+                <li class="createNameServer"><a href="{% url 'createNameserver' %}" title="{% trans 'Create Nameserver' %}"><span>{% trans "Create Nameserver" %}</span></a></li>
+                <li class="createDNSZone"><a href="{% url 'createDNSZone' %}" title="{% trans 'Create DNS Zone' %}"><span>{% trans "Create DNS Zone" %}</span></a></li>
+                <li class="deleteZone"><a href="{% url 'deleteDNSZone' %}" title="{% trans 'Delete Zone' %}"><span>{% trans "Delete Zone" %}</span></a></li>
+                <li class="addDeleteRecords"><a href="{% url 'addDeleteDNSRecords' %}" title="{% trans 'Add/Delete Records' %}"><span>{% trans "Add/Delete Records" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
     </li>
 
-
-
-        <li>
+    <li>
         <a href="{% url 'loadEmailHome' %}" title="{% trans 'Email' %}">
             <i class="glyph-icon icon-linecons-mail"></i>
             <span>{% trans "Email" %}</span>
@@ -389,11 +391,11 @@
         <div class="sidebar-submenu">
 
             <ul>
-                <li id="normalUserC"><a href="{% url 'createEmailAccount' %}" title="{% trans 'Create Email Account' %}"><span>{% trans "Create Email" %}</span></a></li>
-                <li><a href="{% url 'deleteEmailAccount' %}" title="{% trans 'Delete Email Account' %}"><span>{% trans "Delete Email" %}</span></a></li>
-                <li><a href="{% url 'emailForwarding' %}" title="{% trans 'Email Forwarding' %}"><span>{% trans "Email Forwarding" %}</span></a></li>
-                <li><a href="{% url 'changeEmailAccountPassword' %}" title="{% trans 'Change Password' %}"><span>{% trans "Change Password" %}</span></a></li>
-                <li><a href="{% url 'dkimManager' %}" title="{% trans 'DKIM Manager' %}"><span>{% trans "DKIM Manager" %}</span></a></li>
+                <li class="createEmail"><a href="{% url 'createEmailAccount' %}" title="{% trans 'Create Email Account' %}"><span>{% trans "Create Email" %}</span></a></li>
+                <li class="deleteEmail"><a href="{% url 'deleteEmailAccount' %}" title="{% trans 'Delete Email Account' %}"><span>{% trans "Delete Email" %}</span></a></li>
+                <li class="emailForwarding"><a href="{% url 'emailForwarding' %}" title="{% trans 'Email Forwarding' %}"><span>{% trans "Email Forwarding" %}</span></a></li>
+                <li class="changeEmailPassword"><a href="{% url 'changeEmailAccountPassword' %}" title="{% trans 'Change Password' %}"><span>{% trans "Change Password" %}</span></a></li>
+                <li class="dkimManager"><a href="{% url 'dkimManager' %}" title="{% trans 'DKIM Manager' %}"><span>{% trans "DKIM Manager" %}</span></a></li>
                 <li><a href="/rainloop/index.php" title="{% trans 'Access Webmail' %}" target="_blank"><span>{% trans "Access Webmail" %}</span></a></li>
 
             </ul>
@@ -401,11 +403,7 @@
         </div><!-- .sidebar-submenu -->
     </li>
 
-
-
-
-
-     <li>
+    <li>
         <a href="{% url 'packagesHome' %}" title="{% trans 'FTP' %}">
             <i class="glyph-icon icon-paper-plane"></i>
             <span>{% trans "FTP" %}</span>
@@ -413,15 +411,13 @@
         <div class="sidebar-submenu">
 
             <ul>
-                <li><a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}"><span>{% trans "Create FTP Account" %}</span></a></li>
-                <li><a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}"><span>{% trans "Delete FTP Account" %}</span></a></li>
-                <li><a href="{% url 'listFTPAccounts' %}" title="{% trans 'List FTP Accounts' %}"><span>{% trans "List FTP Accounts" %}</span></a></li>
+                <li class="createFTPAccount"><a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}"><span>{% trans "Create FTP Account" %}</span></a></li>
+                <li class="deleteFTPAccount"><a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}"><span>{% trans "Delete FTP Account" %}</span></a></li>
+                <li class="listFTPAccounts"><a href="{% url 'listFTPAccounts' %}" title="{% trans 'List FTP Accounts' %}"><span>{% trans "List FTP Accounts" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
     </li>
-
-
 
     <li>
         <a href="{% url 'loadBackupHome' %}" title="{% trans 'Back up' %}">
@@ -431,11 +427,11 @@
         <div class="sidebar-submenu">
 
             <ul>
-                <li><a href="{% url 'backupSite' %}" title="{% trans 'Create Back up' %}"><span>{% trans "Create Back up" %}</span></a></li>
-                <li id="restoreSite"><a href="{% url 'restoreSite' %}" title="{% trans 'Restore Back up' %}"><span>{% trans "Restore Back up" %}</span></a></li>
-                <li id="backupDestinations"><a href="{% url 'backupDestinations' %}" title="{% trans 'Add Destination' %}"><span>{% trans "Add/Delete Destination" %}</span></a></li>
-                <li id="scheduleBackup"><a href="{% url 'scheduleBackup' %}" title="{% trans 'Schedule Back up' %}"><span>{% trans "Schedule Back up" %}</span></a></li>
-                <li id="remoteBackups"><a href="{% url 'remoteBackups' %}" title="{% trans 'Remote Back ups' %}"><span>{% trans "Remote Back ups" %}</span></a></li>
+                <li class="createBackup"><a href="{% url 'backupSite' %}" title="{% trans 'Create Back up' %}"><span>{% trans "Create Back up" %}</span></a></li>
+                <li class="restoreBackup"><a href="{% url 'restoreSite' %}" title="{% trans 'Restore Back up' %}"><span>{% trans "Restore Back up" %}</span></a></li>
+                <li class="addDeleteDestinations"><a href="{% url 'backupDestinations' %}" title="{% trans 'Add Destination' %}"><span>{% trans "Add/Delete Destination" %}</span></a></li>
+                <li class="scheDuleBackups"><a href="{% url 'scheduleBackup' %}" title="{% trans 'Schedule Back up' %}"><span>{% trans "Schedule Back up" %}</span></a></li>
+                <li class="remoteBackups"><a href="{% url 'remoteBackups' %}" title="{% trans 'Remote Back ups' %}"><span>{% trans "Remote Back ups" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
@@ -450,18 +446,17 @@
         <div  class="sidebar-submenu">
 
             <ul>
-                <li><a href="{% url 'manageSSL' %}" title="{% trans 'Manage SSL' %}"><span>{% trans "Manage SSL" %}</span></a></li>
-                <li id="sslA"><a href="{% url 'sslForHostName' %}" title="{% trans 'Hostname SSL' %}"><span>{% trans "Hostname SSL" %}</span></a></li>
-                <li id="sslA"><a href="{% url 'sslForMailServer' %}" title="{% trans 'MailServer SSL' %}"><span>{% trans "MailServer SSL" %}</span></a></li>
+                <li class="manageSSL"><a href="{% url 'manageSSL' %}" title="{% trans 'Manage SSL' %}"><span>{% trans "Manage SSL" %}</span></a></li>
+                <li class="hostnameSSL"><a href="{% url 'sslForHostName' %}" title="{% trans 'Hostname SSL' %}"><span>{% trans "Hostname SSL" %}</span></a></li>
+                <li class="mailServerSSL"><a href="{% url 'sslForMailServer' %}" title="{% trans 'MailServer SSL' %}"><span>{% trans "MailServer SSL" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
     </li>
 
+    <li class="header serverACL"><span>{% trans "Server" %}</span></li>
 
-
-    <li id="normalUserD" class="header"><span>{% trans "Server" %}</span></li>
-    <li id="normalUserE">
+    <li class="serverACL">
         <a href="#" title="{% trans 'Tuning' %}">
             <i class="glyph-icon icon-linecons-fire"></i>
             <span>{% trans "Tuning" %}</span>
@@ -476,7 +471,7 @@
         </div><!-- .sidebar-submenu -->
     </li>
 
-        <li id="normalUserF">
+    <li class="serverACL">
         <a href="#" title="{% trans 'Server Status' %}">
             <i class="glyph-icon icon-linecons-fire"></i>
             <span>{% trans "Server Status" %}</span>
@@ -495,8 +490,7 @@
         </div><!-- .sidebar-submenu -->
     </li>
 
-
-    <li id="normalUserP">
+    <li class="serverACL">
         <a href="{% url 'loadPHPHome' %}" title="{% trans 'PHP' %}">
             <i class="files-icon glyph-icon icon-file-code-o"></i>
             <span>{% trans "PHP" %}</span>
@@ -511,8 +505,7 @@
         </div><!-- .sidebar-submenu -->
     </li>
 
-
-    <li id="normalUserG">
+    <li class="serverACL">
         <a href="{% url 'logsHome' %}" title="{% trans 'Server Status' %}">
             <i class="glyph-icon icon-linecons-fire"></i>
             <span>{% trans "Logs" %}</span>
@@ -530,8 +523,7 @@
         </div><!-- .sidebar-submenu -->
     </li>
 
-
-    <li id="normalUserH">
+    <li class="serverACL">
         <a href="{% url 'securityHome' %}" title="{% trans 'Security' %}">
             <i class="glyph-icon icon-linecons-fire"></i>
             <span>{% trans "Security" %}</span>
@@ -550,7 +542,7 @@
         </div><!-- .sidebar-submenu -->
     </li>
 
-    <li id="normalUserI">
+    <li class="serverACL">
         <a href="#" title="{% trans 'Mail Settings' %}">
             <i class="glyph-icon icon-linecons-fire"></i>
             <span>{% trans "Mail Settings" %}</span>
@@ -567,8 +559,7 @@
         </div><!-- .sidebar-submenu -->
     </li>
 
-
-    <li id="normalUserJ">
+    <li class="serverACL">
         <a href="#" title="{% trans 'Manage Services' %}">
             <i class="glyph-icon icon-linecons-fire"></i>
             <span>{% trans "Manage Services" %}</span>
@@ -584,9 +575,7 @@
         </div><!-- .sidebar-submenu -->
     </li>
 
-
     </ul><!-- #sidebar-menu -->
-
 
     </div>
 </div>

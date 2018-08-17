@@ -8,6 +8,7 @@ from loginSystem.models import Administrator
 import json
 from .models import Package
 import plogical.CyberCPLogFileWriter as logging
+from plogical.acl import ACLManager
 
 # Create your views here.
 
@@ -20,59 +21,58 @@ def packagesHome(request):
 
     return render(request,'packages/index.html',{})
 
-
-
 def createPacakge(request):
 
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=val)
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['createPackage'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
-        if admin.type == 3:
-            return HttpResponse("You don't have enough privileges to access this page.")
+        return render(request, 'packages/createPackage.html', {"admin": admin.userName})
 
     except KeyError:
         return redirect(loadLoginPage)
-
-    return render(request,'packages/createPackage.html',{"admin":admin.userName})
-
 
 def deletePacakge(request):
-
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
+            currentACL = ACLManager.loadedACL(userID)
 
-            admin = Administrator.objects.get(pk=val)
-
-            if admin.type == 3:
-                return HttpResponse("You don't have enough privileges to access this page.")
-
-            if admin.type == 1:
-                packages = Package.objects.all()
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['deletePackage'] == 1:
+                pass
             else:
-                packages = Package.objects.filter(admin=admin)
+                return ACLManager.loadError()
 
-            packageList = []
-            for items in packages:
-                packageList.append(items.packageName)
+            packageList = ACLManager.loadPackages(userID, currentACL)
+            return render(request, 'packages/deletePackage.html', {"packageList": packageList})
 
         except BaseException,msg:
-            logging.writeToFile(str(msg))
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse("Please see CyberCP Main Log File")
-
     except KeyError:
         return redirect(loadLoginPage)
-
-    return render(request,'packages/deletePackage.html',{"packageList" : packageList})
-
-
 
 def submitPackage(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['createPackage'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('saveStatus', 0)
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
@@ -84,30 +84,25 @@ def submitPackage(request):
                 emails = int(data['emails'])
                 allowedDomains = int(data['allowedDomains'])
 
-                if admin.type == 1:
 
-                    if packageSpace < 0 or packageBandwidth < 0 or packageDatabases < 0 or ftpAccounts < 0 or emails < 0 or allowedDomains < 0:
-                        data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-
-
-                    admin = Administrator.objects.get(pk=val)
-
-                    packageName = admin.userName+"_"+packageName
-
-                    package = Package(admin=admin, packageName=packageName, diskSpace=packageSpace,
-                                      bandwidth=packageBandwidth, ftpAccounts=ftpAccounts, dataBases=packageDatabases,emailAccounts=emails,allowedDomains=allowedDomains)
-
-                    package.save()
-
-                    data_ret = {'saveStatus': 1,'error_message': "None"}
+                if packageSpace < 0 or packageBandwidth < 0 or packageDatabases < 0 or ftpAccounts < 0 or emails < 0 or allowedDomains < 0:
+                    data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
-                else:
-                    data_ret = {'saveStatus': 0, 'error_message': "Not enough privileges."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+
+                admin = Administrator.objects.get(pk=userID)
+
+                packageName = admin.userName + "_" + packageName
+
+                package = Package(admin=admin, packageName=packageName, diskSpace=packageSpace,
+                                  bandwidth=packageBandwidth, ftpAccounts=ftpAccounts, dataBases=packageDatabases,
+                                  emailAccounts=emails, allowedDomains=allowedDomains)
+
+                package.save()
+
+                data_ret = {'saveStatus': 1, 'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
         except BaseException,msg:
             data_ret = {'saveStatus': 0, 'error_message': str(msg)}
@@ -116,26 +111,28 @@ def submitPackage(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
-
 def submitDelete(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
-            if admin.type == 1:
-                if request.method == 'POST':
-                    data = json.loads(request.body)
-                    packageName = data['packageName']
 
-                    delPackage = Package.objects.get(packageName=packageName)
-                    delPackage.delete()
+            currentACL = ACLManager.loadedACL(userID)
 
-                    data_ret = {'deleteStatus': 1,'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['deletePackage'] == 1:
+                pass
             else:
-                data_ret = {'deleteStatus': 0, 'error_message': "Not enough privileges."}
+                return ACLManager.loadErrorJson('deleteStatus', 0)
+
+            if request.method == 'POST':
+                data = json.loads(request.body)
+                packageName = data['packageName']
+
+                delPackage = Package.objects.get(packageName=packageName)
+                delPackage.delete()
+
+                data_ret = {'deleteStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -148,65 +145,57 @@ def submitDelete(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def modifyPackage(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=val)
+            currentACL = ACLManager.loadedACL(userID)
 
-            if admin.type == 3:
-                return HttpResponse("You don't have enough privileges to access this page.")
-
-            if admin.type == 1:
-                packages = Package.objects.all()
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['modifyPackage'] == 1:
+                pass
             else:
-                packages = Package.objects.filter(admin=admin)
+                return ACLManager.loadError()
 
-            packageList = []
-            for items in packages:
-                packageList.append(items.packageName)
+            packageList = ACLManager.loadPackages(userID, currentACL)
+            return render(request, 'packages/modifyPackage.html', {"packList": packageList})
 
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse("Please see CyberCP Main Log File")
-
     except KeyError:
-        packages = Package.objects.all()
-
-        packageList = []
-        for items in packages:
-            packageList.append(items.packageName)
-        return render(request,'packages/modifyPackage.html',{"packList" : packageList})
-
-    return render(request,'packages/modifyPackage.html',{"packList" : packageList})
-
+        return redirect(loadLoginPage)
 
 def submitModify(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
-            if admin.type == 1:
-                if request.method == 'POST':
+            if request.method == 'POST':
 
-                    data = json.loads(request.body)
-                    packageName = data['packageName']
+                data = json.loads(request.body)
+                packageName = data['packageName']
 
-                    modifyPack = Package.objects.get(packageName=packageName)
+                currentACL = ACLManager.loadedACL(userID)
 
-                    diskSpace = modifyPack.diskSpace
-                    bandwidth = modifyPack.bandwidth
-                    ftpAccounts = modifyPack.ftpAccounts
-                    dataBases = modifyPack.dataBases
-                    emails = modifyPack.emailAccounts
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['modifyPackage'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('modifyStatus', 0)
 
-                    data_ret = {'emails':emails,'modifyStatus': 1,'error_message': "None",
-                                "diskSpace":diskSpace,"bandwidth":bandwidth,"ftpAccounts":ftpAccounts,"dataBases":dataBases,"allowedDomains":modifyPack.allowedDomains}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-            else:
-                data_ret = {'modifyStatus': 0, 'error_message': "Not enough privileges."}
+                modifyPack = Package.objects.get(packageName=packageName)
+
+                diskSpace = modifyPack.diskSpace
+                bandwidth = modifyPack.bandwidth
+                ftpAccounts = modifyPack.ftpAccounts
+                dataBases = modifyPack.dataBases
+                emails = modifyPack.emailAccounts
+
+                data_ret = {'emails': emails, 'modifyStatus': 1, 'error_message': "None",
+                            "diskSpace": diskSpace, "bandwidth": bandwidth, "ftpAccounts": ftpAccounts,
+                            "dataBases": dataBases, "allowedDomains": modifyPack.allowedDomains}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -223,34 +212,38 @@ def submitModify(request):
 
 def saveChanges(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
-            if admin.type == 1:
-                if request.method == 'POST':
-                    data = json.loads(request.body)
-                    packageName = data['packageName']
+            if request.method == 'POST':
+                data = json.loads(request.body)
+                packageName = data['packageName']
 
-                    if data['diskSpace'] < 0 or data['bandwidth'] < 0 or data['ftpAccounts'] < 0 or data['dataBases'] < 0 or data['emails'] < 0 or data['allowedDomains'] < 0:
-                        data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
 
-                    modifyPack = Package.objects.get(packageName=packageName)
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['modifyPackage'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('saveStatus', 0)
 
-                    modifyPack.diskSpace = data['diskSpace']
-                    modifyPack.bandwidth = data['bandwidth']
-                    modifyPack.ftpAccounts = data['ftpAccounts']
-                    modifyPack.dataBases = data['dataBases']
-                    modifyPack.emailAccounts = data['emails']
-                    modifyPack.allowedDomains = data['allowedDomains']
-                    modifyPack.save()
-
-                    data_ret = {'saveStatus': 1,'error_message': "None"}
+                if data['diskSpace'] < 0 or data['bandwidth'] < 0 or data['ftpAccounts'] < 0 or data['dataBases'] < 0 or \
+                                data['emails'] < 0 or data['allowedDomains'] < 0:
+                    data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
-            else:
-                data_ret = {'saveStatus': 0,'error_message': "Not enough privileges."}
+
+                modifyPack = Package.objects.get(packageName=packageName)
+
+                modifyPack.diskSpace = data['diskSpace']
+                modifyPack.bandwidth = data['bandwidth']
+                modifyPack.ftpAccounts = data['ftpAccounts']
+                modifyPack.dataBases = data['dataBases']
+                modifyPack.emailAccounts = data['emails']
+                modifyPack.allowedDomains = data['allowedDomains']
+                modifyPack.save()
+
+                data_ret = {'saveStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 

@@ -12,6 +12,8 @@ from baseTemplate.models import version
 from plogical.getSystemInformation import SystemInformation
 from django.utils.translation import LANGUAGE_SESSION_KEY
 import CyberCP.settings as settings
+from models import ACL
+from plogical.acl import ACLManager
 # Create your views here.
 
 def verifyLogin(request):
@@ -113,15 +115,19 @@ def verifyLogin(request):
             json_data = json.dumps(data)
             return HttpResponse(json_data)
 
-
 def loadLoginPage(request):
     try:
         userID = request.session['userID']
-        admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
 
         cpuRamDisk = SystemInformation.cpuRamDisk()
 
-        finaData = {"type": admin.type, 'ramUsage': cpuRamDisk['ramUsage'], 'cpuUsage': cpuRamDisk['cpuUsage'],
+        if currentACL['admin'] == 1:
+            admin = 1
+        else:
+            admin = 0
+
+        finaData = {"admin": admin, 'ramUsage': cpuRamDisk['ramUsage'], 'cpuUsage': cpuRamDisk['cpuUsage'],
                     'diskUsage': cpuRamDisk['diskUsage']}
 
         return render(request, 'baseTemplate/homePage.html', finaData)
@@ -132,9 +138,14 @@ def loadLoginPage(request):
         password = hashPassword.hash_password('1234567')
 
         if numberOfAdministrator == 0:
+
+            ACLManager.createDefaultACLs()
+
+            acl = ACL.objects.get(name='admin')
+
             email = 'usman@cyberpersons.com'
             admin = Administrator(userName="admin", password=password, type=1,email=email,
-                                  firstName="Cyber",lastName="Panel")
+                                  firstName="Cyber",lastName="Panel", acl=acl)
             admin.save()
 
             vers = version(currentVersion="1.7",build=0)

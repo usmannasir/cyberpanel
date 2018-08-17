@@ -12,19 +12,20 @@ import subprocess
 import shlex
 import os
 from plogical.virtualHostUtilities import virtualHostUtilities
-
+from plogical.acl import ACLManager
 
 # Create your views here.
 
 
 def loadFileManagerHome(request,domain):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
 
-        admin = Administrator.objects.get(pk=val)
+        admin = Administrator.objects.get(pk=userID)
 
         if Websites.objects.filter(domain=domain).exists():
-            if admin.type == 1:
+            currentACL = ACLManager.loadedACL(userID)
+            if currentACL['admin'] == 1:
                 viewStatus = 1
                 if admin.type == 3:
                     viewStatus = 0
@@ -102,17 +103,17 @@ def downloadFile(request):
 
 def createTemporaryFile(request):
     try:
-        val = request.session['userID']
-
+        userID = request.session['userID']
         data = json.loads(request.body)
         domainName = data['domainName']
 
-        admin = Administrator.objects.get(pk=val)
+        admin = Administrator.objects.get(pk=userID)
 
         ## Create file manager entry
 
         if Websites.objects.filter(domain=domainName).exists():
-            if admin.type == 1:
+            currentACL = ACLManager.loadedACL(userID)
+            if currentACL['admin'] == 1:
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/filemanager.py"
 

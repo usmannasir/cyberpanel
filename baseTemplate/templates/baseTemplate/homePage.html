@@ -16,7 +16,7 @@
 
 
     <!--- Hide statistics for non-admins--->
-    {% if type < 3 %}
+    {% if admin %}
         <div ng-controller="homePageStatus" class="panel">
         <div class="panel-body">
             <h3 class="title-hero">
@@ -100,16 +100,14 @@
             {% trans "Available Functions" %}
             </h3>
 
-            {% if type == 1 %}
-             <!--- If type is admin--->
-             <div class="example-box-wrapper">
+            <div class="example-box-wrapper">
 
 
                  <div class="row">
 
                      <div class="col-md-4">
                             <a href="{% url 'loadUsersHome' %}" title="{% trans 'User Functions' %}" class="tile-box tile-box-shortcut btn-primary">
-                                <span class="bs-badge badge-absolute">4</span>
+                                <span class="bs-badge badge-absolute">9</span>
                                 <div class="tile-header">
                                     {% trans "Users" %}
                                 </div>
@@ -117,10 +115,9 @@
                                     <i class="glyph-icon icon-dashboard"></i>
                                 </div>
                             </a>
-                        </div>
+                     </div>
 
-
-                        <div class="col-md-4">
+                     <div class="col-md-4">
                             <a href="{% url 'loadWebsitesHome' %}" title="{% trans 'Website Functions' %}" class="tile-box tile-box-shortcut btn-primary">
                                 <span class="bs-badge badge-absolute">5</span>
                                 <div class="tile-header">
@@ -131,7 +128,6 @@
                                 </div>
                             </a>
                         </div>
-
 
                      <div class="col-md-4">
                             <a href="{% url 'packagesHome' %}" title="{% trans 'Add/Modify Packages' %}" class="tile-box tile-box-shortcut btn-primary">
@@ -145,18 +141,6 @@
                             </a>
                      </div>
 
-
-
-
-            </div>
-
-
-
-
-
-                 <div class="row">
-
-
                      <div class="col-md-4">
                             <a href="{% url 'loadDatabaseHome' %}" title="{% trans 'Database Functions' %}" class="tile-box tile-box-shortcut btn-primary">
                                 <span class="bs-badge badge-absolute">3</span>
@@ -167,9 +151,9 @@
                                     <i class="glyph-icon icon-dashboard"></i>
                                 </div>
                             </a>
-                 </div>
+                    </div>
 
-                 <div class="col-md-4">
+                     <div class="col-md-4">
                             <a href="{% url 'dnsHome' %}" title="{% trans 'Control DNS' %}" class="tile-box tile-box-shortcut btn-primary">
                                 <span class="bs-badge badge-absolute">4</span>
                                 <div class="tile-header">
@@ -181,10 +165,9 @@
                             </a>
                  </div>
 
-
-                        <div class="col-md-4">
+                     <div class="col-md-4">
                             <a href="{% url 'loadFTPHome' %}" title="{% trans 'FTP Functions' %}" class="tile-box tile-box-shortcut btn-primary">
-                                <span class="bs-badge badge-absolute">2</span>
+                                <span class="bs-badge badge-absolute">3</span>
                                 <div class="tile-header">
                                     {% trans "FTP" %}
                                 </div>
@@ -194,15 +177,9 @@
                             </a>
                         </div>
 
-
-            </div>
-
-                 <div class="row">
-
-
-                 <div class="col-md-4">
+                     <div class="col-md-4">
                             <a href="{% url 'loadBackupHome' %}" title="{% trans 'Back up' %}" class="tile-box tile-box-shortcut btn-primary">
-                                <span class="bs-badge badge-absolute">2</span>
+                                <span class="bs-badge badge-absolute">5</span>
                                 <div class="tile-header">
                                     {% trans "Back up" %}
                                 </div>
@@ -212,44 +189,33 @@
                             </a>
                      </div>
 
-                 <div class="col-md-4">
-                            <a href="{% url 'loadEmailHome' %}" title="{% trans 'Emails' %}" class="tile-box tile-box-shortcut btn-primary">
-                                <span class="bs-badge badge-absolute">4</span>
-                                <div class="tile-header">
-                                    {% trans "Emails" %}
-                                </div>
-                                <div class="tile-content-wrapper">
-                                    <i class="glyph-icon icon-dashboard"></i>
-                                </div>
-                            </a>
-                     </div>
-
+                     <div class="col-md-4">
+                                <a href="{% url 'loadEmailHome' %}" title="{% trans 'Emails' %}" class="tile-box tile-box-shortcut btn-primary">
+                                    <span class="bs-badge badge-absolute">6</span>
+                                    <div class="tile-header">
+                                        {% trans "Emails" %}
+                                    </div>
+                                    <div class="tile-content-wrapper">
+                                        <i class="glyph-icon icon-dashboard"></i>
+                                    </div>
+                                </a>
+                         </div>
 
                      <div class="col-md-4">
-                            <a href="{% url 'loadTuningHome' %}" title="{% trans 'Server Tuning' %}" class="tile-box tile-box-shortcut btn-primary">
-                                <span class="bs-badge badge-absolute">2</span>
-                                <div class="tile-header">
-                                    {% trans "Server Tuning" %}
-                                </div>
-                                <div class="tile-content-wrapper">
-                                    <i class="glyph-icon icon-dashboard"></i>
-                                </div>
-                            </a>
+                                <a href="{% url 'loadSSLHome' %}" title="{% trans 'SSL' %}" class="tile-box tile-box-shortcut btn-primary">
+                                    <span class="bs-badge badge-absolute">3</span>
+                                    <div class="tile-header">
+                                        {% trans "SSL" %}
+                                    </div>
+                                    <div class="tile-content-wrapper">
+                                        <i class="glyph-icon icon-dashboard"></i>
+                                    </div>
+                                </a>
                      </div>
 
+                     {% if admin %}
 
-
-
-
-                 </div>
-
-
-
-                <div class="row">
-
-
-
-                    <div class="col-md-4">
+                     <div class="col-md-4">
                             <a href="{% url 'serverStatusHome' %}" title="{% trans 'Server Status' %}" class="tile-box tile-box-shortcut btn-primary">
                                 <span class="bs-badge badge-absolute">2</span>
                                 <div class="tile-header">
@@ -261,8 +227,7 @@
                             </a>
                      </div>
 
-
-                    <div class="col-md-4">
+                     <div class="col-md-4">
                             <a href="{% url 'loadPHPHome' %}" title="{% trans 'PHP Configurations' %}" class="tile-box tile-box-shortcut btn-primary">
                                 <span class="bs-badge badge-absolute">2</span>
                                 <div class="tile-header">
@@ -286,18 +251,7 @@
                             </a>
                      </div>
 
-
-
-
-
-                 </div>
-
-
-             <div class="row">
-
-
-
-                 <div class="col-md-4">
+                     <div class="col-md-4">
                             <a href="{% url 'securityHome' %}" title="{% trans 'Security' %}" class="tile-box tile-box-shortcut btn-primary">
                                 <span class="bs-badge badge-absolute">4</span>
                                 <div class="tile-header">
@@ -309,135 +263,11 @@
                             </a>
                      </div>
 
-             </div>
-        </div>
-            <!--- If type is admin--->
-
-            {% else %}
-
-            <!--- If type is user--->
-             <div class="example-box-wrapper">
-
-
-                 <div class="row">
-
-                     <div class="col-md-4">
-                            <a href="{% url 'loadUsersHome' %}" title="{% trans 'User Functions' %}" class="tile-box tile-box-shortcut btn-primary">
-                                <span class="bs-badge badge-absolute">4</span>
-                                <div class="tile-header">
-                                    {% trans "Users" %}
-                                </div>
-                                <div class="tile-content-wrapper">
-                                    <i class="glyph-icon icon-dashboard"></i>
-                                </div>
-                            </a>
-                        </div>
-
-
-                        <div class="col-md-4">
-                            <a href="{% url 'loadWebsitesHome' %}" title="{% trans 'Website Functions' %}" class="tile-box tile-box-shortcut btn-primary">
-                                <span class="bs-badge badge-absolute">5</span>
-                                <div class="tile-header">
-                                    {% trans "Websites" %}
-                                </div>
-                                <div class="tile-content-wrapper">
-                                    <i class="glyph-icon icon-dashboard"></i>
-                                </div>
-                            </a>
-                        </div>
-
-
-                     <div class="col-md-4">
-                            <a href="{% url 'loadDatabaseHome' %}" title="{% trans 'Database Functions' %}" class="tile-box tile-box-shortcut btn-primary">
-                                <span class="bs-badge badge-absolute">3</span>
-                                <div class="tile-header">
-                                    {% trans "Databases" %}
-                                </div>
-                                <div class="tile-content-wrapper">
-                                    <i class="glyph-icon icon-dashboard"></i>
-                                </div>
-                            </a>
-                    </div>
-
-
-
-            </div>
-
-
-
-
-
-                 <div class="row">
-
-
-                 <div class="col-md-4">
-                            <a href="{% url 'dnsHome' %}" title="{% trans 'Control DNS' %}" class="tile-box tile-box-shortcut btn-primary">
-                                <span class="bs-badge badge-absolute">4</span>
-                                <div class="tile-header">
-                                    {% trans "DNS" %}
-                                </div>
-                                <div class="tile-content-wrapper">
-                                    <i class="glyph-icon icon-dashboard"></i>
-                                </div>
-                            </a>
-                 </div>
-
-
-                        <div class="col-md-4">
-                            <a href="{% url 'loadFTPHome' %}" title="{% trans 'FTP Functions' %}" class="tile-box tile-box-shortcut btn-primary">
-                                <span class="bs-badge badge-absolute">2</span>
-                                <div class="tile-header">
-                                    {% trans "FTP" %}
-                                </div>
-                                <div class="tile-content-wrapper">
-                                    <i class="glyph-icon icon-dashboard"></i>
-                                </div>
-                            </a>
-                        </div>
-
-                     <div class="col-md-4">
-                            <a href="{% url 'loadBackupHome' %}" title="{% trans 'Back up' %}" class="tile-box tile-box-shortcut btn-primary">
-                                <span class="bs-badge badge-absolute">2</span>
-                                <div class="tile-header">
-                                    {% trans "Back up" %}
-                                </div>
-                                <div class="tile-content-wrapper">
-                                    <i class="glyph-icon icon-dashboard"></i>
-                                </div>
-                            </a>
-                    </div>
-
-
-
-            </div>
-
-                 <div class="row">
-
-
-
-                 <div class="col-md-4">
-                            <a href="{% url 'loadEmailHome' %}" title="{% trans 'Emails' %}" class="tile-box tile-box-shortcut btn-primary">
-                                <span class="bs-badge badge-absolute">4</span>
-                                <div class="tile-header">
-                                    {% trans "Emails" %}
-                                </div>
-                                <div class="tile-content-wrapper">
-                                    <i class="glyph-icon icon-dashboard"></i>
-                                </div>
-                            </a>
-                     </div>
-
-
+                     {% endif %}
 
 
                  </div>
-
-        </div>
-            <!--- If type is user--->
-
-
-            {% endif %}
-
+            </div>
 
     </div>
 

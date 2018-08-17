@@ -24,8 +24,8 @@ import hashlib
 from plogical.mailUtilities import mailUtilities
 from plogical.applicationInstaller import ApplicationInstaller
 import time
+from plogical.acl import ACLManager
 # Create your views here.
-
 
 def loadWebsitesHome(request):
     try:
@@ -37,40 +37,23 @@ def loadWebsitesHome(request):
 
 def createWebsite(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
-            if admin.type == 3:
-                return HttpResponse("Not enough privileges.")
+            currentACL = ACLManager.loadedACL(userID)
 
-            packagesName = []
-            adminNames = []
-
-            if admin.type == 1:
-                admins = Administrator.objects.all()
-
-                for items in admins:
-                    adminNames.append(items.userName)
-
-                packages = Package.objects.all()
-
-                for items in packages:
-                    packagesName.append(items.packageName)
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['createWebsite'] == 1:
+                pass
             else:
-                admins = Administrator.objects.filter(owner=admin.pk)
-                adminNames.append(admin.userName)
+                return ACLManager.loadError()
 
-                for items in admins:
-                    adminNames.append(items.userName)
+            adminNames = ACLManager.loadAllUsers(userID)
+            packagesName = ACLManager.loadPackages(userID, currentACL)
 
-                packages = admin.package_set.all()
-
-                for items in packages:
-                    packagesName.append(items.packageName)
-
-            Data = {'packageList': packagesName,"owernList":adminNames}
-
+            Data = {'packageList': packagesName, "owernList":adminNames}
             return render(request, 'websiteFunctions/createWebsite.html', Data)
+
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
@@ -80,40 +63,18 @@ def createWebsite(request):
 
 def modifyWebsite(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=val)
+            currentACL = ACLManager.loadedACL(userID)
 
-            if admin.type == 3:
-                final = {'error': 1, "error_message": "Not enough privileges."}
-                final_json = json.dumps(final)
-                return HttpResponse(final_json)
-
-            if admin.type == 1:
-                websites = Websites.objects.all()
-                websitesName = []
-
-                for items in websites:
-                    websitesName.append(items.domain)
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['modifyWebsite'] == 1:
+                pass
             else:
-                if admin.type == 2:
-                    websites = admin.websites_set.all()
-                    admins = Administrator.objects.filter(owner=admin.pk)
-                    websitesName = []
+                return ACLManager.loadError()
 
-                    for items in websites:
-                        websitesName.append(items.domain)
-
-                    for items in admins:
-                        webs = items.websites_set.all()
-
-                        for web in webs:
-                            websitesName.append(web.domain)
-                else:
-                    websitesName = []
-                    websites = Websites.objects.filter(admin=admin)
-                    for items in websites:
-                        websitesName.append(items.domain)
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'websiteFunctions/modifyWebsite.html', {'websiteList':websitesName})
         except BaseException, msg:
@@ -125,40 +86,20 @@ def modifyWebsite(request):
 
 def deleteWebsite(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=val)
+            currentACL = ACLManager.loadedACL(userID)
 
-            if admin.type == 3:
-                return HttpResponse('Not enough privileges.')
-
-            if admin.type == 1:
-                websites = Websites.objects.all()
-                websitesName = []
-
-                for items in websites:
-                    websitesName.append(items.domain)
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['deleteWebsite'] == 1:
+                pass
             else:
-                if admin.type == 2:
-                    websites = admin.websites_set.all()
-                    admins = Administrator.objects.filter(owner=admin.pk)
-                    websitesName = []
+                return ACLManager.loadError()
 
-                    for items in websites:
-                        websitesName.append(items.domain)
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
-                    for items in admins:
-                        webs = items.websites_set.all()
-
-                        for web in webs:
-                            websitesName.append(web.domain)
-                else:
-                    websitesName = []
-                    websites = Websites.objects.filter(admin=admin)
-                    for items in websites:
-                        websitesName.append(items.domain)
-
-            return render(request, 'websiteFunctions/deleteWebsite.html', {'websiteList':websitesName})
+            return render(request, 'websiteFunctions/deleteWebsite.html', {'websiteList' : websitesName})
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
@@ -168,38 +109,18 @@ def deleteWebsite(request):
 
 def siteState(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=val)
+            currentACL = ACLManager.loadedACL(userID)
 
-            if admin.type == 3:
-                return HttpResponse('Not enough privileges.')
-
-            if admin.type == 1:
-                websites = Websites.objects.all()
-                websitesName = []
-
-                for items in websites:
-                    websitesName.append(items.domain)
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['suspendWebsite'] == 1:
+                pass
             else:
-                if admin.type == 2:
-                    websites = admin.websites_set.all()
-                    admins = Administrator.objects.filter(owner=admin.pk)
-                    websitesName = []
+                return ACLManager.loadError()
 
-                    for items in websites:
-                        websitesName.append(items.domain)
-
-                    for items in admins:
-                        webs = items.websites_set.all()
-
-                        for web in webs:
-                            websitesName.append(web.domain)
-                else:
-                    websitesName = []
-                    websites = Websites.objects.filter(admin=admin)
-                    for items in websites:
-                        websitesName.append(items.domain)
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'websiteFunctions/suspendWebsite.html', {'websiteList':websitesName})
         except BaseException, msg:
@@ -212,7 +133,6 @@ def siteState(request):
 def submitWebsiteCreation(request):
     try:
         val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
         if request.method == 'POST':
 
             data = json.loads(request.body)
@@ -228,11 +148,23 @@ def submitWebsiteCreation(request):
 
             ####### Limitations check
 
-            if admin.type != 1:
-                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                            'error_message': "Only administrators are allowed to create websites."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+            currentACL = ACLManager.loadedACL(val)
+
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['createWebsite'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('createWebSiteStatus', 0)
+
+            newOwner = Administrator.objects.get(userName=websiteOwner)
+
+            if ACLManager.websitesLimitCheck(newOwner, 1) == 0:
+                data_ret = {'createWebSiteStatus': 0,
+                            'error_message': "You've reached maximum websites limit as a reseller."}
+
+                final_json = json.dumps(data_ret)
+                return HttpResponse(final_json)
 
             ####### Limitations Check End
 
@@ -295,11 +227,13 @@ def submitDomainCreation(request):
                 else:
                     path = "/home/" + masterDomain + "/public_html/" + domain
 
-                val = request.session['userID']
-                admin = Administrator.objects.get(pk=val)
+                userID = request.session['userID']
+                currentACL = ACLManager.loadedACL(userID)
 
-                if admin.type != 1:
+                if currentACL['admin'] != 1:
                     data['openBasedir'] = 1
+
+                admin = Administrator.objects.get(pk=userID)
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
@@ -322,20 +256,13 @@ def submitDomainCreation(request):
 
 def fetchDomains(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
-
                 data = json.loads(request.body)
                 masterDomain = data['masterDomain']
 
-                admin = Administrator.objects.get(pk=val)
                 master = Websites.objects.get(domain=masterDomain)
-
-                if admin.type != 1:
-                    if master.admin != admin:
-                        final_json = json.dumps({'fetchStatus': 0, 'error_message': "You do not own this website."})
-                        return HttpResponse(final_json)
 
                 childDomains = master.childdomains_set.all()
 
@@ -371,15 +298,11 @@ def fetchDomains(request):
 
 def listWebsites(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
 
-            admin = Administrator.objects.get(pk=val)
-            if admin.type == 1:
-                websites = Websites.objects.all()
-            else:
-                websites = Websites.objects.filter(admin=admin)
-
+            currentACL = ACLManager.loadedACL(userID)
+            websites = ACLManager.findAllSites(currentACL, userID)
 
             pages = float(len(websites)) / float(10)
             pagination = []
@@ -406,10 +329,9 @@ def listWebsites(request):
 
 def getFurtherAccounts(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
-
-            admin = Administrator.objects.get(pk=val)
+            currentACL = ACLManager.loadedACL(userID)
 
             if request.method == 'POST':
                 try:
@@ -418,16 +340,11 @@ def getFurtherAccounts(request):
                     pageNumber = int(status)
 
                 except BaseException, msg:
-                    status = str(msg)
-            if admin.type == 1:
-                finalPageNumber = ((pageNumber * 10))-10
-                endPageNumber = finalPageNumber + 10
-                websites = Websites.objects.all()[finalPageNumber:endPageNumber]
+                    logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [getFurtherAccounts]')
 
-            else:
-                finalPageNumber = ((pageNumber * 10)) - 10
-                endPageNumber = finalPageNumber + 10
-                websites = Websites.objects.filter(admin=admin)[finalPageNumber:endPageNumber]
+            finalPageNumber = ((pageNumber * 10)) - 10
+            endPageNumber = finalPageNumber + 10
+            websites = ACLManager.findWebsiteObjects(currentACL, userID)[finalPageNumber:endPageNumber]
 
             json_data = "["
             checker = 0
@@ -474,39 +391,38 @@ def getFurtherAccounts(request):
 
 def submitWebsiteDeletion(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
                 websiteName = data['websiteName']
 
-                admin = Administrator.objects.get(pk=val)
+                currentACL = ACLManager.loadedACL(userID)
 
-                if admin.type == 1:
-
-                    numberOfWebsites = str(Websites.objects.count()+ChildDomains.objects.count())
-
-                    ## Deleting master domain
-
-                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-
-                    execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName + \
-                               " --numberOfSites " + numberOfWebsites
-
-                    subprocess.check_output(shlex.split(execPath))
-
-
-                    data_ret = {'websiteDeleteStatus': 1,'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['deleteWebsite'] == 1:
+                    pass
                 else:
-                    data_ret = {'websiteDeleteStatus': 0, 'error_message': "Only administrators can delete websites."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                    return ACLManager.loadErrorJson('websiteDeleteStatus', 0)
+
+
+                numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
+
+                ## Deleting master domain
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+
+                execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName + \
+                           " --numberOfSites " + numberOfWebsites
+
+                subprocess.check_output(shlex.split(execPath))
+
+                data_ret = {'websiteDeleteStatus': 1, 'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
         except BaseException,msg:
-
-
             data_ret = {'websiteDeleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -552,46 +468,48 @@ def submitDomainDeletion(request):
 
 def submitWebsiteStatus(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
                 websiteName = data['websiteName']
                 state = data['state']
 
-                website = Websites.objects.get(domain=websiteName)
-                admin = Administrator.objects.get(pk=val)
+                currentACL = ACLManager.loadedACL(userID)
 
-                if admin.type == 1:
-                    if state == "Suspend":
-                        confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
-                        command = "sudo mv " + confPath + " " + confPath + "-suspended"
-                        subprocess.call(shlex.split(command))
-                        installUtilities.reStartLiteSpeed()
-                        website.state = 0
-                    else:
-                        confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
-
-                        command = "sudo mv " + confPath + "-suspended" + " " + confPath
-                        subprocess.call(shlex.split(command))
-
-                        command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + confPath
-                        cmd = shlex.split(command)
-                        subprocess.call(cmd)
-
-                        installUtilities.reStartLiteSpeed()
-                        website.state = 1
-
-                    website.save()
-
-                    data_ret = {'websiteStatus': 1,'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['suspendWebsite'] == 1:
+                    pass
                 else:
-                    data_ret = {'websiteStatus': 0, 'error_message': "Only administrators can suspend websites."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                    return ACLManager.loadErrorJson('websiteStatus', 0)
+
+                website = Websites.objects.get(domain=websiteName)
+
+                if state == "Suspend":
+                    confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
+                    command = "sudo mv " + confPath + " " + confPath + "-suspended"
+                    subprocess.call(shlex.split(command))
+                    installUtilities.reStartLiteSpeed()
+                    website.state = 0
+                else:
+                    confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
+
+                    command = "sudo mv " + confPath + "-suspended" + " " + confPath
+                    subprocess.call(shlex.split(command))
+
+                    command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + confPath
+                    cmd = shlex.split(command)
+                    subprocess.call(cmd)
+
+                    installUtilities.reStartLiteSpeed()
+                    website.state = 1
+
+                website.save()
+
+                data_ret = {'websiteStatus': 1, 'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
         except BaseException,msg:
 
@@ -606,20 +524,22 @@ def submitWebsiteStatus(request):
 
 def submitWebsiteModify(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
 
             if request.method == 'POST':
 
-                admin = Administrator.objects.get(pk=val)
+                currentACL = ACLManager.loadedACL(userID)
 
-                if admin.type == 1:
-                    packs = Package.objects.all()
-                    admins = Administrator.objects.all()
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['modifyWebsite'] == 1:
+                    pass
                 else:
-                    data_ret = {'modifyStatus': 0, 'error_message': "Only administrator can see modification data."}
-                    final_json = json.dumps(data_ret)
-                    return HttpResponse(final_json)
+                    return ACLManager.loadErrorJson('modifyStatus', 0)
+
+                packs = ACLManager.loadPackages(userID, currentACL)
+                admins = ACLManager.loadAllUsers(userID)
 
                 ## Get packs name
 
@@ -628,7 +548,7 @@ def submitWebsiteModify(request):
 
 
                 for items in packs:
-                    dic = {"pack":items.packageName}
+                    dic = {"pack":items}
 
                     if checker == 0:
                         json_data = json_data + json.dumps(dic)
@@ -645,7 +565,7 @@ def submitWebsiteModify(request):
                 checker = 0
 
                 for items in admins:
-                    dic = {"adminNames": items.userName}
+                    dic = {"adminNames": items}
 
                     if checker == 0:
                         admin_data = admin_data + json.dumps(dic)
@@ -674,9 +594,6 @@ def submitWebsiteModify(request):
             dic = {'modifyStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
-
-
-
     except KeyError,msg:
         data_ret = {'modifyStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
@@ -684,7 +601,7 @@ def submitWebsiteModify(request):
 
 def saveWebsiteChanges(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
@@ -695,14 +612,14 @@ def saveWebsiteChanges(request):
                 phpVersion = data['phpVersion']
                 newUser = data['admin']
 
-                ## php changes
+                currentACL = ACLManager.loadedACL(userID)
 
-                admin = Administrator.objects.get(pk=val)
-
-                if admin.type!=1:
-                    data_ret = {'saveStatus': 0, 'error_message': 'Only administrator can make changes to websites.'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['modifyWebsite'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('saveStatus', 0)
 
 
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domain
@@ -752,188 +669,118 @@ def saveWebsiteChanges(request):
 
 def domain(request, domain):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
 
-        admin = Administrator.objects.get(pk=val)
+        admin = Administrator.objects.get(pk=userID)
 
         if Websites.objects.filter(domain=domain).exists():
-            if admin.type == 1:
-                website = Websites.objects.get(domain=domain)
+            currentACL = ACLManager.loadedACL(userID)
+            website = Websites.objects.get(domain=domain)
 
-                Data = {}
+            Data = {}
 
-                Data['ftpTotal'] = website.package.ftpAccounts
-                Data['ftpUsed'] = website.users_set.all().count()
+            Data['ftpTotal'] = website.package.ftpAccounts
+            Data['ftpUsed'] = website.users_set.all().count()
 
-                Data['databasesUsed'] = website.databases_set.all().count()
-                Data['databasesTotal'] = website.package.dataBases
+            Data['databasesUsed'] = website.databases_set.all().count()
+            Data['databasesTotal'] = website.package.dataBases
 
-                Data['domain'] = domain
+            Data['domain'] = domain
 
-                diskUsageDetails = virtualHostUtilities.getDiskUsage("/home/"+domain,website.package.diskSpace)
+            diskUsageDetails = virtualHostUtilities.getDiskUsage("/home/" + domain, website.package.diskSpace)
 
-                ## bw usage calculation
+            ## bw usage calculation
 
-                try:
-                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                    execPath = execPath + " findDomainBW --virtualHostName " + domain + " --bandwidth " + str(website.package.bandwidth)
+            try:
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                execPath = execPath + " findDomainBW --virtualHostName " + domain + " --bandwidth " + str(
+                    website.package.bandwidth)
 
-                    output = subprocess.check_output(shlex.split(execPath))
-                    bwData = output.split(",")
-                except BaseException,msg:
-                    logging.CyberCPLogFileWriter.writeToFile(str(msg))
-                    bwData = [0,0]
+                output = subprocess.check_output(shlex.split(execPath))
+                bwData = output.split(",")
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg))
+                bwData = [0, 0]
 
-                ## bw usage calculations
+            ## bw usage calculations
 
-                Data['bwInMBTotal'] = website.package.bandwidth
-                Data['bwInMB'] = bwData[0]
-                Data['bwUsage'] = bwData[1]
+            Data['bwInMBTotal'] = website.package.bandwidth
+            Data['bwInMB'] = bwData[0]
+            Data['bwUsage'] = bwData[1]
 
+            if diskUsageDetails != None:
+                if diskUsageDetails[1] > 100:
+                    diskUsageDetails[1] = 100
 
-
-                if diskUsageDetails!=None:
-                    if diskUsageDetails[1] > 100:
-                        diskUsageDetails[1] = 100
-
-                    Data['diskUsage'] = diskUsageDetails[1]
-                    Data['diskInMB'] = diskUsageDetails[0]
-                    Data['diskInMBTotal'] = website.package.diskSpace
-                else:
-                    Data['diskUsage'] = 0
-                    Data['diskInMB'] = 0
-                    Data['diskInMBTotal'] = website.package.diskSpace
-
-
-                return render(request, 'websiteFunctions/website.html', Data)
+                Data['diskUsage'] = diskUsageDetails[1]
+                Data['diskInMB'] = diskUsageDetails[0]
+                Data['diskInMBTotal'] = website.package.diskSpace
             else:
-                website = Websites.objects.get(domain=domain)
-                if website.admin == admin:
+                Data['diskUsage'] = 0
+                Data['diskInMB'] = 0
+                Data['diskInMBTotal'] = website.package.diskSpace
 
-                    Data = {}
-
-                    Data['ftpTotal'] = website.package.ftpAccounts
-                    Data['ftpUsed'] = website.users_set.all().count()
-
-                    Data['databasesUsed'] = website.databases_set.all().count()
-                    Data['databasesTotal'] = website.package.dataBases
-
-                    Data['domain'] = domain
-
-                    diskUsageDetails = virtualHostUtilities.getDiskUsage("/home/" + domain, website.package.diskSpace)
-
-                    if diskUsageDetails != None:
-                        if diskUsageDetails[1] > 100:
-                            diskUsageDetails[1] = 100
-
-                        Data['diskUsage'] = diskUsageDetails[1]
-                        Data['diskInMB'] = diskUsageDetails[0]
-                        Data['diskInMBTotal'] = website.package.diskSpace
-                    else:
-                        Data['diskUsage'] = 0
-                        Data['diskInMB'] = 0
-                        Data['diskInMBTotal'] = website.package.diskSpace
-
-                    return render(request, 'websiteFunctions/website.html', Data)
-                else:
-                    return render(request, 'websiteFunctions/website.html',
-                                  {"error": 1, "domain": "You do not own this domain."})
+            return render(request, 'websiteFunctions/website.html', Data)
 
         else:
             return render(request, 'websiteFunctions/website.html', {"error":1,"domain": "This domain does not exists."})
     except KeyError:
         return redirect(loadLoginPage)
 
-def launchChild(request,domain, childDomain):
+def launchChild(request, domain, childDomain):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
 
         if ChildDomains.objects.filter(domain=childDomain).exists():
-            if admin.type == 1:
-                website = Websites.objects.get(domain=domain)
+            currentACL = ACLManager.loadedACL(userID)
+            website = Websites.objects.get(domain=domain)
 
-                Data = {}
+            Data = {}
 
-                Data['ftpTotal'] = website.package.ftpAccounts
-                Data['ftpUsed'] = website.users_set.all().count()
+            Data['ftpTotal'] = website.package.ftpAccounts
+            Data['ftpUsed'] = website.users_set.all().count()
 
-                Data['databasesUsed'] = website.databases_set.all().count()
-                Data['databasesTotal'] = website.package.dataBases
+            Data['databasesUsed'] = website.databases_set.all().count()
+            Data['databasesTotal'] = website.package.dataBases
 
-                Data['domain'] = domain
-                Data['childDomain'] = childDomain
+            Data['domain'] = domain
+            Data['childDomain'] = childDomain
 
-                diskUsageDetails = virtualHostUtilities.getDiskUsage("/home/"+domain,website.package.diskSpace)
+            diskUsageDetails = virtualHostUtilities.getDiskUsage("/home/" + domain, website.package.diskSpace)
 
-                ## bw usage calculation
+            ## bw usage calculation
 
-                try:
-                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                    execPath = execPath + " findDomainBW --virtualHostName " + domain + " --bandwidth " + str(website.package.bandwidth)
+            try:
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                execPath = execPath + " findDomainBW --virtualHostName " + domain + " --bandwidth " + str(
+                    website.package.bandwidth)
 
-                    output = subprocess.check_output(shlex.split(execPath))
-                    bwData = output.split(",")
-                except BaseException,msg:
-                    logging.CyberCPLogFileWriter.writeToFile(str(msg))
-                    bwData = [0,0]
+                output = subprocess.check_output(shlex.split(execPath))
+                bwData = output.split(",")
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg))
+                bwData = [0, 0]
 
-                ## bw usage calculations
+            ## bw usage calculations
 
-                Data['bwInMBTotal'] = website.package.bandwidth
-                Data['bwInMB'] = bwData[0]
-                Data['bwUsage'] = bwData[1]
+            Data['bwInMBTotal'] = website.package.bandwidth
+            Data['bwInMB'] = bwData[0]
+            Data['bwUsage'] = bwData[1]
 
+            if diskUsageDetails != None:
+                if diskUsageDetails[1] > 100:
+                    diskUsageDetails[1] = 100
 
-
-                if diskUsageDetails!=None:
-                    if diskUsageDetails[1] > 100:
-                        diskUsageDetails[1] = 100
-
-                    Data['diskUsage'] = diskUsageDetails[1]
-                    Data['diskInMB'] = diskUsageDetails[0]
-                    Data['diskInMBTotal'] = website.package.diskSpace
-                else:
-                    Data['diskUsage'] = 0
-                    Data['diskInMB'] = 0
-                    Data['diskInMBTotal'] = website.package.diskSpace
-
-
-                return render(request, 'websiteFunctions/launchChild.html', Data)
+                Data['diskUsage'] = diskUsageDetails[1]
+                Data['diskInMB'] = diskUsageDetails[0]
+                Data['diskInMBTotal'] = website.package.diskSpace
             else:
-                website = Websites.objects.get(domain=domain)
-                if website.admin == admin:
+                Data['diskUsage'] = 0
+                Data['diskInMB'] = 0
+                Data['diskInMBTotal'] = website.package.diskSpace
 
-                    Data = {}
-
-                    Data['ftpTotal'] = website.package.ftpAccounts
-                    Data['ftpUsed'] = website.users_set.all().count()
-
-                    Data['databasesUsed'] = website.databases_set.all().count()
-                    Data['databasesTotal'] = website.package.dataBases
-
-                    Data['domain'] = domain
-                    Data['childDomain'] = childDomain
-
-                    diskUsageDetails = virtualHostUtilities.getDiskUsage("/home/" + domain, website.package.diskSpace)
-
-                    if diskUsageDetails != None:
-                        if diskUsageDetails[1] > 100:
-                            diskUsageDetails[1] = 100
-
-                        Data['diskUsage'] = diskUsageDetails[1]
-                        Data['diskInMB'] = diskUsageDetails[0]
-                        Data['diskInMBTotal'] = website.package.diskSpace
-                    else:
-                        Data['diskUsage'] = 0
-                        Data['diskInMB'] = 0
-                        Data['diskInMBTotal'] = website.package.diskSpace
-
-                    return render(request, 'websiteFunctions/launchChild.html', Data)
-                else:
-                    return render(request, 'websiteFunctions/launchChild.html',
-                                  {"error": 1, "domain": "You do not own this domain."})
-
+            return render(request, 'websiteFunctions/launchChild.html', Data)
         else:
             return render(request, 'websiteFunctions/launchChild.html', {"error":1,"domain": "This child domain does not exists"})
     except KeyError:
@@ -941,19 +788,12 @@ def launchChild(request,domain, childDomain):
 
 def getDataFromLogFile(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         data = json.loads(request.body)
         logType = data['logType']
         virtualHost = data['virtualHost']
         page = data['page']
 
-        admin = Administrator.objects.get(pk=val)
-        website = Websites.objects.get(domain=virtualHost)
-
-        if admin.type != 1:
-            if website.admin != admin:
-                final_json = json.dumps({'logstatus': 0, 'error_message': "You do not own this website."})
-                return HttpResponse(final_json)
 
         if logType == 1:
             fileName = "/home/" + virtualHost + "/logs/" + virtualHost + ".access_log"
@@ -1016,19 +856,11 @@ def getDataFromLogFile(request):
 
 def fetchErrorLogs(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
 
         data = json.loads(request.body)
         virtualHost = data['virtualHost']
         page = data['page']
-
-        admin = Administrator.objects.get(pk=val)
-        website = Websites.objects.get(domain=virtualHost)
-
-        if admin.type != 1:
-            if website.admin != admin:
-                final_json = json.dumps({'logstatus': 0, 'error_message': "You do not own this website."})
-                return HttpResponse(final_json)
 
         fileName = "/home/" + virtualHost + "/logs/" + virtualHost + ".error_log"
 
@@ -1056,33 +888,16 @@ def fetchErrorLogs(request):
 
 def getDataFromConfigFile(request):
     try:
-        val = request.session['userID']
-
+        userID = request.session['userID']
         if request.method == 'POST':
             try:
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
 
-                admin = Administrator.objects.get(pk=val)
-
-                try:
-                    if admin.type != 1:
-                        childDom = ChildDomains.objects.get(domain=virtualHost)
-                        if childDom.master.admin != admin:
-                            data_ret = {'configstatus': 0, 'error_message': 'You do not own this website.'}
-                            json_data = json.dumps(data_ret)
-                            return HttpResponse(json_data)
-                except:
-                    if admin.type != 1:
-                        website = Websites.objects.get(domain=virtualHost)
-                        if website.admin != admin:
-                            data_ret = {'configstatus': 0, 'error_message': 'You do not own this website.'}
-                            json_data = json.dumps(data_ret)
-                            return HttpResponse(json_data)
-
                 filePath = installUtilities.Server_root_path + "/conf/vhosts/" + virtualHost + "/vhost.conf"
 
-                configData = open(filePath, "r").read()
+                command = 'sudo cat ' + filePath
+                configData = subprocess.check_output(shlex.split(command))
 
                 if len(configData) == 0:
                     status = {"configstatus": 0, "error_message": "Configuration file is currently empty!"}
@@ -1106,19 +921,18 @@ def getDataFromConfigFile(request):
 
 def saveConfigsToFile(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
 
         if request.method == 'POST':
             try:
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
 
-                admin = Administrator.objects.get(pk=val)
+                currentACL = ACLManager.loadedACL(userID)
 
-                if admin.type != 1:
-                    data_ret = {'configstatus': 0, 'error_message': 'Only Administrators can make changes to vhost conf.'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                if currentACL['admin'] != 1:
+                    return ACLManager.loadErrorJson('configstatus', 0)
+
 
                 ## writing data temporary to file
 
@@ -1171,31 +985,18 @@ def saveConfigsToFile(request):
 
 def getRewriteRules(request):
     try:
-        val = request.session['userID']
-
+        userID = request.session['userID']
         if request.method == 'POST':
             try:
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
 
-                admin = Administrator.objects.get(pk=val)
-
                 try:
                     childDom = ChildDomains.objects.get(domain=virtualHost)
-                    if admin.type != 1:
-                        if childDom.master.admin != admin:
-                            data_ret = {'rewriteStatus': 0, 'error_message': 'You do not own this website.'}
-                            json_data = json.dumps(data_ret)
-                            return HttpResponse(json_data)
                     filePath = childDom.path + '/.htaccess'
 
                 except:
                     website = Websites.objects.get(domain=virtualHost)
-                    if admin.type != 1:
-                        if website.admin != admin:
-                            data_ret = {'rewriteStatus': 0, 'error_message': 'You do not own this website.'}
-                            json_data = json.dumps(data_ret)
-                            return HttpResponse(json_data)
                     filePath = "/home/" + virtualHost + "/public_html/.htaccess"
 
                 try:
@@ -1230,7 +1031,7 @@ def getRewriteRules(request):
 
 def saveRewriteRules(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
 
         if request.method == 'POST':
             try:
@@ -1247,28 +1048,14 @@ def saveRewriteRules(request):
 
                 ## writing data temporary to file
 
-                admin = Administrator.objects.get(pk=val)
+                admin = Administrator.objects.get(pk=userID)
+                currentACL = ACLManager.loadedACL(userID)
 
                 try:
                     childDomain = ChildDomains.objects.get(domain=virtualHost)
                     filePath = childDomain.path + '/.htaccess'
-
-                    if admin.type != 1:
-                        if childDomain.master.admin != admin:
-                            data_ret = {'rewriteStatus': 0, 'error_message': 'You do not own this website.'}
-                            json_data = json.dumps(data_ret)
-                            return HttpResponse(json_data)
-
                 except:
                     filePath = "/home/" + virtualHost + "/public_html/.htaccess"
-
-                    if admin.type != 1:
-                        website = Websites.objects.get(domain=virtualHost)
-                        if website.admin != admin:
-                            data_ret = {'rewriteStatus': 0, 'error_message': 'You do not own this website.'}
-                            json_data = json.dumps(data_ret)
-                            return HttpResponse(json_data)
-
 
                 ## save configuration data
 
@@ -1302,30 +1089,20 @@ def saveRewriteRules(request):
 
 def saveSSL(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
                 data = json.loads(request.body)
                 domain = data['virtualHost']
 
-                admin = Administrator.objects.get(pk=val)
+                admin = Administrator.objects.get(pk=userID)
+                currentACL = ACLManager.loadedACL(userID)
 
                 try:
                     website = ChildDomains.objects.get(domain=domain)
-                    if admin.type != 1:
-
-                        if website.master.admin != admin:
-                            data_ret = {'changePHP': 0, 'error_message': 'You do not own this website.'}
-                            json_data = json.dumps(data_ret)
-                            return HttpResponse(json_data)
                 except:
                     website = Websites.objects.get(domain=domain)
-                    if admin.type != 1:
-                        if website.admin != admin:
-                            data_ret = {'changePHP': 0, 'error_message': 'You do not own this website.'}
-                            json_data = json.dumps(data_ret)
-                            return HttpResponse(json_data)
 
                 mailUtilities.checkHome()
 
@@ -1409,7 +1186,7 @@ def saveSSL(request):
 
 def changePHP(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
@@ -1417,23 +1194,8 @@ def changePHP(request):
                 childDomain = data['childDomain']
                 phpVersion = data['phpSelection']
 
-                admin = Administrator.objects.get(pk=val)
-
-                try:
-                    if admin.type != 1:
-                        childDom = ChildDomains.objects.get(domain=childDomain)
-                        if childDom.master.admin != admin:
-                            data_ret = {'changePHP': 0, 'error_message': 'You do not own this website.'}
-                            json_data = json.dumps(data_ret)
-                            return HttpResponse(json_data)
-                except:
-                    if admin.type != 1:
-                        website = Websites.objects.get(domain=childDomain)
-                        if website.admin != admin:
-                            data_ret = {'changePHP': 0, 'error_message': 'You do not own this website.'}
-                            json_data = json.dumps(data_ret)
-                            return HttpResponse(json_data)
-
+                admin = Administrator.objects.get(pk=userID)
+                currentACL = ACLManager.loadedACL(userID)
 
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + childDomain
                 completePathToConfigFile = confPath + "/vhost.conf"
@@ -1451,8 +1213,6 @@ def changePHP(request):
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
-
-
                 data_ret = {'changePHP': 1,'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -1467,38 +1227,13 @@ def changePHP(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def listCron(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=request.session['userID'])
+            currentACL = ACLManager.loadedACL(userID)
 
-            if admin.type == 1:
-                websites = Websites.objects.all()
-                websitesName = []
-
-                for items in websites:
-                    websitesName.append(items.domain)
-            else:
-                if admin.type == 2:
-                    websites = admin.websites_set.all()
-                    admins = Administrator.objects.filter(owner=admin.pk)
-                    websitesName = []
-
-                    for items in websites:
-                        websitesName.append(items.domain)
-
-                    for items in admins:
-                        webs = items.websites_set.all()
-
-                        for web in webs:
-                            websitesName.append(web.domain)
-                else:
-                    websitesName = []
-                    websites = Websites.objects.filter(admin=admin)
-                    for items in websites:
-                        websitesName.append(items.domain)
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'websiteFunctions/listCron.html', {'websiteList': websitesName})
         except BaseException, msg:
@@ -1509,9 +1244,10 @@ def listCron(request):
 
 def getWebsiteCron(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         if request.method == 'POST':
             try:
+                currentACL = ACLManager.loadedACL(userID)
 
                 data = json.loads(request.body)
                 domain = data['domain']
@@ -1525,13 +1261,6 @@ def getWebsiteCron(request):
                     dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
                     json_data = json.dumps(dic)
                     return HttpResponse(json_data)
-
-                if admin.type != 1:
-                    website = Websites.objects.get(domain=domain)
-                    if website.admin != admin:
-                        dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
 
                 cronPath = "/var/spool/cron/" + website.externalApp
                 cmd = 'sudo test -e ' + cronPath + ' && echo Exists'
@@ -1586,10 +1315,10 @@ def getWebsiteCron(request):
 
 def getCronbyLine(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         if request.method == 'POST':
             try:
-
+                currentACL = ACLManager.loadedACL(userID)
                 data = json.loads(request.body)
                 domain = data['domain']
                 line = data['line']
@@ -1604,17 +1333,6 @@ def getCronbyLine(request):
                     dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
                     json_data = json.dumps(dic)
                     return HttpResponse(json_data)
-
-                if admin.type == 1:
-                    pass
-                else:
-                    website = Websites.objects.get(domain=domain)
-                    if website.admin == admin:
-                        pass
-                    else:
-                        dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
 
                 cronPath = "/var/spool/cron/" + website.externalApp
                 crons = []
@@ -1667,10 +1385,10 @@ def getCronbyLine(request):
 
 def saveCronChanges(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         if request.method == 'POST':
             try:
-
+                currentACL = ACLManager.loadedACL(userID)
                 data = json.loads(request.body)
                 domain = data['domain']
                 line = data['line']
@@ -1682,26 +1400,7 @@ def saveCronChanges(request):
                 weekday = data['weekday']
                 command = data['command']
 
-                admin = Administrator.objects.get(pk=request.session['userID'])
                 website = Websites.objects.get(domain=domain)
-
-                if Websites.objects.filter(domain=domain).exists():
-                    pass
-                else:
-                    dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-
-                if admin.type == 1:
-                    pass
-                else:
-                    website = Websites.objects.get(domain=domain)
-                    if website.admin == admin:
-                        pass
-                    else:
-                        dic = {'getWebsiteCron': 0, 'error_message': 'You do not own this domain'}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
 
                 cronPath = "/var/spool/cron/" + website.externalApp
                 tempPath = "/home/cyberpanel/" + website.externalApp + str(randint(10000, 99999)) + ".cron.tmp"
@@ -1757,36 +1456,16 @@ def saveCronChanges(request):
 
 def remCronbyLine(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         if request.method == 'POST':
             try:
-
                 data = json.loads(request.body)
                 domain = data['domain']
                 line = data['line']
 
                 line -= 1
 
-                admin = Administrator.objects.get(pk=request.session['userID'])
                 website = Websites.objects.get(domain=domain)
-
-                if Websites.objects.filter(domain=domain).exists():
-                    pass
-                else:
-                    dic = {'remCronbyLine': 0, 'error_message': 'You do not own this domain'}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-
-                if admin.type == 1:
-                    pass
-                else:
-                    website = Websites.objects.get(domain=domain)
-                    if website.admin == admin:
-                        pass
-                    else:
-                        dic = {'remCronbyLine': 0, 'error_message': 'You do not own this domain'}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
 
                 cronPath = "/var/spool/cron/" + website.externalApp
                 cmd = 'sudo test -e ' + cronPath + ' && echo Exists'
@@ -1848,10 +1527,10 @@ def remCronbyLine(request):
 
 def addNewCron(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         if request.method == 'POST':
             try:
-
+                currentACL = ACLManager.loadedACL(userID)
                 data = json.loads(request.body)
                 domain = data['domain']
 
@@ -1862,24 +1541,7 @@ def addNewCron(request):
                 weekday = data['weekday']
                 command = data['command']
 
-                admin = Administrator.objects.get(pk=request.session['userID'])
                 website = Websites.objects.get(domain=domain)
-
-                if Websites.objects.filter(domain=domain).exists():
-                    pass
-                else:
-                    dic = {'addNewCron': 0, 'error_message': 'You do not own this domain'}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-
-                if admin.type != 1:
-                    website = Websites.objects.get(domain=domain)
-                    if website.admin == admin:
-                        pass
-                    else:
-                        dic = {'addNewCron': 0, 'error_message': 'You do not own this domain'}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
 
                 cronPath = "/var/spool/cron/" + website.externalApp
                 cmd = 'sudo test -e ' + cronPath + ' && echo Exists'
@@ -1940,50 +1602,23 @@ def addNewCron(request):
 
 def domainAlias(request,domain):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
+            website = Websites.objects.get(domain=domain)
 
-            admin = Administrator.objects.get(pk=val)
-
-            if admin.type != 1:
-                website = Websites.objects.get(domain=domain)
-                if website.admin != admin:
-                    raise BaseException('You do not own this website.')
-
-            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
-
-            command = "sudo cat " + confPath
-            httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
-
-
+            finalAlisList = []
+            noAlias = 0
             path = "/home/" + domain + "/public_html"
 
+            aliases = website.aliasdomains_set.all()
 
-            listenerTrueCheck = 0
-            noAlias = 0
-            aliases = []
-
-            for items in httpdConfig:
-                if items.find("listener Default{") > -1 or items.find("Default {") > -1:
-                    listenerTrueCheck = 1
-                    continue
-                if listenerTrueCheck == 1:
-                    if items.find(domain) > -1 and items.find('map') > -1:
-                        data = filter(None, items.split(" "))
-                        if data[1] == domain:
-                            length = len(data)
-                            if length == 3:
-                                break
-                            else:
-                                noAlias = 1
-                                for i in range(3, length):
-                                    aliases.append(data[i].rstrip(','))
-
-            aliases = list(set(aliases))
+            for items in aliases:
+                finalAlisList.append(items.aliasDomain)
+                noAlias = 1
 
             return render(request, 'websiteFunctions/domainAlias.html', {
                                                                            'masterDomain': domain,
-                                                                           'aliases':aliases,
+                                                                           'aliases':finalAlisList,
                                                                            'path':path,
                                                                            'noAlias':noAlias
                                                                         })
@@ -1995,22 +1630,16 @@ def domainAlias(request,domain):
 
 def submitAliasCreation(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         if request.method == 'POST':
-
+            currentACL = ACLManager.loadedACL(userID)
             data = json.loads(request.body)
 
             masterDomain = data['masterDomain']
             aliasDomain = data['aliasDomain']
             ssl = data['ssl']
 
-            admin = Administrator.objects.get(pk=val)
-            if admin.type != 1:
-                website = Websites.objects.get(domain=masterDomain)
-                if website.admin != admin:
-                    data_ret = {'createAliasStatus': 0, 'error_message': 'You do not own this website.'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+            admin = Administrator.objects.get(pk=userID)
 
             sslpath = "/home/" + masterDomain + "/public_html"
 
@@ -2045,22 +1674,15 @@ def submitAliasCreation(request):
 
 def issueAliasSSL(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         if request.method == 'POST':
-
+            currentACL = ACLManager.loadedACL(userID)
             data = json.loads(request.body)
 
             masterDomain = data['masterDomain']
             aliasDomain = data['aliasDomain']
 
-            admin = Administrator.objects.get(pk=val)
-            if admin.type != 1:
-                website = Websites.objects.get(domain=masterDomain)
-                if website.admin != admin:
-                    data_ret = {'sslStatus': 0, 'error_message': 'You do not own this website.'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
+            admin = Administrator.objects.get(pk=userID)
 
             sslpath = "/home/" + masterDomain + "/public_html"
 
@@ -2096,24 +1718,12 @@ def issueAliasSSL(request):
 
 def delateAlias(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         if request.method == 'POST':
-
             data = json.loads(request.body)
 
             masterDomain = data['masterDomain']
             aliasDomain = data['aliasDomain']
-
-            admin = Administrator.objects.get(pk=val)
-            if admin.type != 1:
-                website = Websites.objects.get(domain=masterDomain)
-                if website.admin != admin:
-                    data_ret = {'deleteAlias': 0, 'error_message': 'You do not own this website.'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-
-            sslpath = "/home/" + masterDomain + "/public_html"
 
             ## Create Configurations
 
@@ -2145,7 +1755,7 @@ def delateAlias(request):
 
 def changeOpenBasedir(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
@@ -2153,12 +1763,9 @@ def changeOpenBasedir(request):
                 domainName = data['domainName']
                 openBasedirValue = data['openBasedirValue']
 
-                admin = Administrator.objects.get(id=val)
-
-                if admin.type != 1:
-                    data_ret = {'changeOpenBasedir': 0, 'error_message': 'Only Administrators can change open_basedir value.'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
+                if currentACL['admin'] != 1:
+                    return ACLManager.loadErrorJson('changeOpenBasedir', 0)
 
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
@@ -2191,20 +1798,10 @@ def changeOpenBasedir(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def applicationInstaller(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
-
-            admin = Administrator.objects.get(pk=val)
-
-            if admin.type != 1:
-                website = Websites.objects.get(domain=domain)
-                if website.admin != admin:
-                    raise BaseException('You do not own this website.')
-
-
             return render(request, 'websiteFunctions/applicationInstaller.html')
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -2212,22 +1809,10 @@ def applicationInstaller(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def wordpressInstall(request, domain):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-        try:
-            if admin.type != 1:
-                website = Websites.objects.get(domain=domain)
-                if website.admin != admin:
-                    raise BaseException('You do not own this website.')
-
-
-            return render(request, 'websiteFunctions/installWordPress.html', {'domainName' : domain})
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse(str(msg))
+        userID = request.session['userID']
+        return render(request, 'websiteFunctions/installWordPress.html', {'domainName' : domain})
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -2285,15 +1870,7 @@ def installWordpressStatus(request):
         if request.method == 'POST':
             try:
                 data = json.loads(request.body)
-
-
                 statusFile = data['statusFile']
-
-                if admin.type != 1:
-                    domainName = data['domainName']
-                    website = Websites.objects.get(domain=domainName)
-                    if website.admin != admin:
-                        raise BaseException('You do not own this website.')
 
                 statusData = open(statusFile, 'r').readlines()
 
@@ -2326,22 +1903,10 @@ def installWordpressStatus(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def joomlaInstall(request, domain):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-        try:
-            if admin.type != 1:
-                website = Websites.objects.get(domain=domain)
-                if website.admin != admin:
-                    raise BaseException('You do not own this website.')
-
-
-            return render(request, 'websiteFunctions/installJoomla.html', {'domainName' : domain})
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse(str(msg))
+        userID = request.session['userID']
+        return render(request, 'websiteFunctions/installJoomla.html', {'domainName' : domain})
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -2370,74 +1935,24 @@ def installJoomla(request):
 
                 finalPath = ""
 
-                if home == '0':
-                    path = data['path']
-                    finalPath = "/home/" + domainName + "/public_html/" + path + "/"
-                else:
-                    finalPath = "/home/" + domainName + "/public_html/"
+                admin = Administrator.objects.get(pk=val)
 
-
-                if finalPath.find("..") > -1:
-                    data_ret = {'installStatus': 0,
-                                'error_message': "Specified path must be inside virtual host home!"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-
-                ##
+                ## DB Creation
 
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines('Creating database..,10')
                 statusFile.close()
 
-                admin = Administrator.objects.get(pk=val)
-
-                try:
-                    website = ChildDomains.objects.get(domain=domainName)
-                    externalApp = website.master.externalApp
-
-                    if admin.type != 1:
-                        if website.master.admin != admin:
-                            data_ret = {'installStatus': 0,
-                                        'error_message': "You do not own this website!"}
-                            json_data = json.dumps(data_ret)
-                            return HttpResponse(json_data)
-                except:
-                    website = Websites.objects.get(domain=domainName)
-                    externalApp = website.externalApp
-
-                    if admin.type != 1:
-                        if website.admin != admin:
-                            data_ret = {'installStatus': 0,
-                                        'error_message': "You do not own this website!"}
-                            json_data = json.dumps(data_ret)
-                            return HttpResponse(json_data)
-
-
-                ## DB Creation
-
                 dbName = randomPassword.generate_pass()
                 dbUser = dbName
                 dbPassword = randomPassword.generate_pass()
 
-
-                ## DB Creation
-
-                if website.package.dataBases > website.databases_set.all().count():
-                    pass
-                else:
-                    data_ret = {'installStatus': 0, 'error_message': "0,Maximum database limit reached for this website."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
                 if Databases.objects.filter(dbName=dbName).exists() or Databases.objects.filter(
                         dbUser=dbUser).exists():
-
                     data_ret = {'installStatus': 0,
                                 'error_message': "0,This database or user is already taken."}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
-
 
                 result = mysqlUtilities.createDatabase(dbName, dbUser, dbPassword)
 
@@ -2449,8 +1964,60 @@ def installJoomla(request):
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
-                db = Databases(website=website, dbName=dbName, dbUser=dbUser)
-                db.save()
+                ##
+
+
+
+                try:
+                    website = ChildDomains.objects.get(domain=domainName)
+                    externalApp = website.master.externalApp
+
+                    if website.master.package.dataBases > website.master.databases_set.all().count():
+                        pass
+                    else:
+                        data_ret = {'installStatus': 0,
+                                    'error_message': "0,Maximum database limit reached for this website."}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+
+                    if home == '0':
+                        path = data['path']
+                        finalPath = website.path.rstrip('/') + "/" + path + "/"
+                    else:
+                        finalPath = website.path + "/"
+
+                    db = Databases(website=website.master, dbName=dbName, dbUser=dbUser)
+                    db.save()
+
+                except:
+                    website = Websites.objects.get(domain=domainName)
+                    externalApp = website.externalApp
+
+                    if website.package.dataBases > website.databases_set.all().count():
+                        pass
+                    else:
+                        data_ret = {'installStatus': 0,
+                                    'error_message': "0,Maximum database limit reached for this website."}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+
+                    if home == '0':
+                        path = data['path']
+                        finalPath = "/home/" + domainName + "/public_html/" + path + "/"
+                    else:
+                        finalPath = "/home/" + domainName + "/public_html/"
+
+
+                    db = Databases(website=website, dbName=dbName, dbUser=dbUser)
+                    db.save()
+
+
+
+                if finalPath.find("..") > -1:
+                    data_ret = {'installStatus': 0,
+                                'error_message': "Specified path must be inside virtual host home!"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
 
                 ## Installation
                 salt = randomPassword.generate_pass(32)
@@ -2494,18 +2061,10 @@ def installJoomla(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installJoomla]")
         return HttpResponse("Not Logged in as admin")
 
-
 def setupGit(request, domain):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
-            if admin.type != 1:
-                website = Websites.objects.get(domain=domain)
-                if website.admin != admin:
-                    raise BaseException('You do not own this website.')
-
-
             path = '/home/cyberpanel/' + domain + '.git'
 
             if os.path.exists(path):
@@ -2675,19 +2234,10 @@ def changeBranch(request):
 
 def installPrestaShop(request, domain):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-        try:
-            if admin.type != 1:
-                website = Websites.objects.get(domain=domain)
-                if website.admin != admin:
-                    raise BaseException('You do not own this website.')
+        userID = request.session['userID']
 
+        return render(request, 'websiteFunctions/installPrestaShop.html', {'domainName' : domain})
 
-            return render(request, 'websiteFunctions/installPrestaShop.html', {'domainName' : domain})
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse(str(msg))
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -2724,8 +2274,6 @@ def prestaShopInstall(request):
                 data_ret = {'installStatus': 1, 'error_message': 'None', 'tempStatusPath': extraArgs['tempStatusPath']}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-
-
 
                 ## Installation ends
 

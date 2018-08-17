@@ -16,10 +16,10 @@ import plogical.backupUtilities as backupUtil
 import shlex
 import subprocess
 import requests
-from baseTemplate.models import version
 from plogical.virtualHostUtilities import virtualHostUtilities
 from random import randint
 from plogical.mailUtilities import mailUtilities
+from plogical.acl import ACLManager
 
 
 
@@ -30,80 +30,24 @@ def loadBackupHome(request):
         viewStatus = 1
         if admin.type == 3:
             viewStatus = 0
-
         return render(request,'backup/index.html',{"viewStatus":viewStatus})
-    except KeyError:
-        return redirect(loadLoginPage)
-
-def restoreSite(request):
-    try:
-        val = request.session['userID']
-        try:
-            admin = Administrator.objects.get(pk=request.session['userID'])
-
-            if admin.type == 1:
-
-                path = os.path.join("/home","backup")
-
-                if not os.path.exists(path):
-                    return render(request, 'backup/restore.html')
-                else:
-                    all_files = []
-                    ext = ".tar.gz"
-
-                    command = 'sudo chown -R  cyberpanel:cyberpanel '+ path
-
-                    cmd = shlex.split(command)
-
-                    res = subprocess.call(cmd)
-
-                    files = os.listdir(path)
-                    for filename in files:
-                            if filename.endswith(ext):
-                                all_files.append(filename)
-
-                    return render(request, 'backup/restore.html',{'backups':all_files})
-
-            else:
-                return HttpResponse("You should be admin to perform restores.")
-
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse(str(msg))
     except KeyError:
         return redirect(loadLoginPage)
 
 def backupSite(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
+            currentACL = ACLManager.loadedACL(userID)
 
-            if admin.type == 1:
-                websites = Websites.objects.all()
-                websitesName = []
-
-                for items in websites:
-                    websitesName.append(items.domain)
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['createBackup'] == 1:
+                pass
             else:
-                if admin.type == 2:
-                    websites = admin.websites_set.all()
-                    admins = Administrator.objects.filter(owner=admin.pk)
-                    websitesName = []
+                return ACLManager.loadError()
 
-                    for items in websites:
-                        websitesName.append(items.domain)
-
-                    for items in admins:
-                        webs = items.websites_set.all()
-
-                        for web in webs:
-                            websitesName.append(web.domain)
-                else:
-                    websitesName = []
-                    websites = Websites.objects.filter(admin=admin)
-                    for items in websites:
-                        websitesName.append(items.domain)
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'backup/backup.html', {'websiteList':websitesName})
         except BaseException, msg:
@@ -112,26 +56,62 @@ def backupSite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def restoreSite(request):
+    try:
+        userID = request.session['userID']
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['restoreBackup'] == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            path = os.path.join("/home", "backup")
+
+            if not os.path.exists(path):
+                return render(request, 'backup/restore.html')
+            else:
+                all_files = []
+                ext = ".tar.gz"
+
+                command = 'sudo chown -R  cyberpanel:cyberpanel ' + path
+                cmd = shlex.split(command)
+                subprocess.call(cmd)
+
+                files = os.listdir(path)
+                for filename in files:
+                    if filename.endswith(ext):
+                        all_files.append(filename)
+
+                return render(request, 'backup/restore.html', {'backups': all_files})
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return HttpResponse(str(msg))
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def getCurrentBackups(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
         try:
             if request.method == 'POST':
-
 
                 data = json.loads(request.body)
                 backupDomain = data['websiteToBeBacked']
                 website = Websites.objects.get(domain=backupDomain)
 
-                if admin.type != 1:
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] != 1:
                     if website.admin != admin:
-                        dic = {'fetchStatus': 0, 'error_message': "Only administrator can view this page."}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
+                        return ACLManager.loadErrorJson('fetchStatus', 0)
 
                 backups = website.backups_set.all()
-
 
                 json_data = "["
                 checker = 0
@@ -320,11 +300,10 @@ def cancelBackupCreation(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def deleteBackup(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
         try:
             if request.method == 'POST':
 
@@ -332,11 +311,11 @@ def deleteBackup(request):
                 backupID = data['backupID']
                 backup = Backups.objects.get(id=backupID)
 
-                if admin.type != 1:
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] != 1:
                     if backup.website.admin != admin:
-                        dic = {'deleteStatus': 0, 'error_message': "Only administrator can view this page."}
-                        json_data = json.dumps(dic)
-                        return HttpResponse(json_data)
+                        return ACLManager.loadErrorJson('deleteStatus', 0)
 
                 domainName = backup.website.domain
 
@@ -344,7 +323,7 @@ def deleteBackup(request):
 
                 command = 'sudo rm -f ' + path
                 cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+                subprocess.call(cmd)
 
                 backup.delete()
 
@@ -378,9 +357,7 @@ def submitRestore(request):
                 dir = "CyberPanelRestore"
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-
             execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
-
             subprocess.Popen(shlex.split(execPath))
 
             time.sleep(4)
@@ -393,7 +370,6 @@ def submitRestore(request):
         final_dic = {'restoreStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
-
 
 def restoreStatus(request):
     try:
@@ -454,28 +430,35 @@ def restoreStatus(request):
 
 def backupDestinations(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=val)
-
-        if admin.type == 1:
-            return render(request, 'backup/backupDestinations.html', {})
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['addDeleteDestinations'] == 1:
+            pass
         else:
-            return HttpResponse("You should be admin to add backup destinations.")
+            return ACLManager.loadError()
+
+        return render(request, 'backup/backupDestinations.html', {})
+
     except KeyError:
         return redirect(loadLoginPage)
 
 def submitDestinationCreation(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
-                if admin.type != 1:
-                    dic = {'destStatus': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['addDeleteDestinations'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('destStatus', 0)
 
 
                 destinations = backupUtil.backupUtilities.destinationsPath
@@ -537,15 +520,18 @@ def submitDestinationCreation(request):
 
 def getCurrentBackupDestinations(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
-                if admin.type != 1:
-                    dic = {'fetchStatus': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['addDeleteDestinations'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('fetchStatus', 0)
 
                 records = dest.objects.all()
 
@@ -580,7 +566,6 @@ def getCurrentBackupDestinations(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def getConnectionStatus(request):
     try:
         try:
@@ -612,15 +597,18 @@ def getConnectionStatus(request):
 
 def deleteDestination(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
-                if admin.type != 1:
-                    dic = {'delStatus': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['addDeleteDestinations'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('delStatus',0)
 
 
                 data = json.loads(request.body)
@@ -674,46 +662,49 @@ def deleteDestination(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def scheduleBackup(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=val)
-
-        if admin.type == 1:
-
-            if dest.objects.all().count() <= 1:
-                try:
-                    homeDest = dest(destLoc="Home")
-                    homeDest.save()
-                except:
-                    pass
-            backups = dest.objects.all()
-
-            destinations = []
-
-            for items in backups:
-                destinations.append(items.destLoc)
-
-            return render(request,'backup/backupSchedule.html',{'destinations':destinations})
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['scheDuleBackups'] == 1:
+            pass
         else:
-            return HttpResponse("You should be admin to schedule backups.")
+            return ACLManager.loadError()
+
+        if dest.objects.all().count() <= 1:
+            try:
+                homeDest = dest(destLoc="Home")
+                homeDest.save()
+            except:
+                pass
+        backups = dest.objects.all()
+
+        destinations = []
+
+        for items in backups:
+            destinations.append(items.destLoc)
+
+        return render(request, 'backup/backupSchedule.html', {'destinations': destinations})
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def getCurrentBackupSchedules(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
-                if admin.type != 1:
-                    dic = {'fetchStatus': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['scheDuleBackups'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('fetchStatus', 0)
 
                 records = backupSchedules.objects.all()
 
@@ -749,18 +740,21 @@ def getCurrentBackupSchedules(request):
 
 def submitBackupSchedule(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
                 backupDest = data['backupDest']
                 backupFreq = data['backupFreq']
 
-                if admin.type != 1:
-                    dic = {'scheduleStatus': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['scheDuleBackups'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('scheduleStatus', 0)
 
                 path = "/etc/crontab"
 
@@ -956,18 +950,20 @@ def submitBackupSchedule(request):
         final_json = json.dumps({'scheduleStatus': 0, 'error_message': str(msg)})
         return HttpResponse(final_json)
 
-
 def scheduleDelete(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
-                if admin.type != 1:
-                    dic = {'delStatus': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['scheDuleBackups'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('scheduleStatus', 0)
 
                 data = json.loads(request.body)
                 backupDest = data['destLoc']
@@ -1101,26 +1097,33 @@ def scheduleDelete(request):
 def remoteBackups(request):
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=userID)
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['remoteBackups'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
-        if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+        return render(request, 'backup/remoteBackups.html')
 
-        return render(request,'backup/remoteBackups.html')
     except KeyError:
         return redirect(loadLoginPage)
 
 def submitRemoteBackups(request):
     try:
         userID = request.session['userID']
-        admin = Administrator.objects.get(pk=userID)
         if request.method == 'POST':
 
-            if admin.type != 1:
-                dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                json_data = json.dumps(dic)
-                return HttpResponse(json_data)
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['remoteBackups'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
 
             data = json.loads(request.body)
             ipAddress = data['ipAddress']
@@ -1241,16 +1244,19 @@ def submitRemoteBackups(request):
 
 def starRemoteTransfer(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
                 data = json.loads(request.body)
 
-                if admin.type != 1:
-                    dic = {'remoteTransferStatus': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['remoteBackups'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('remoteTransferStatus', 0)
 
                 ipAddress = data['ipAddress']
                 password = data['password']
@@ -1313,15 +1319,17 @@ def starRemoteTransfer(request):
 
 def getRemoteTransferStatus(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-
+        userID = request.session['userID']
         if request.method == "POST":
 
-            if admin.type != 1:
-                dic = {'remoteTransferStatus': 0, 'error_message': "Only administrator can view this page."}
-                json_data = json.dumps(dic)
-                return HttpResponse(json_data)
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['remoteBackups'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('remoteTransferStatus', 0)
 
             data = json.loads(request.body)
             ipAddress = data['ipAddress']
@@ -1362,18 +1370,20 @@ def getRemoteTransferStatus(request):
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
-
 def remoteBackupRestore(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         try:
             if request.method == "POST":
 
-                if admin.type != 1:
-                    dic = {'remoteRestoreStatus': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif currentACL['remoteBackups'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('remoteRestoreStatus', 0)
 
                 data = json.loads(request.body)
                 backupDir = data['backupDir']
@@ -1410,15 +1420,17 @@ def remoteBackupRestore(request):
 
 def localRestoreStatus(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
         if request.method == "POST":
 
-            if admin.type != 1:
-                data_ret = {'remoteTransferStatus': 0, 'error_message': "No such log found", "status": "None",
-                            "complete": 0}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            elif currentACL['remoteBackups'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('remoteTransferStatus', 0)
 
             data = json.loads(request.body)
             backupDir = data['backupDir']
@@ -1464,13 +1476,15 @@ def localRestoreStatus(request):
 
 def cancelRemoteBackup(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        if admin.type != 1:
-            dic = {'cancelStatus': 0, 'error_message': "Only administrator can view this page."}
-            json_data = json.dumps(dic)
-            return HttpResponse(json_data)
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['remoteBackups'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('cancelStatus', 0)
 
         if request.method == "POST":
 
@@ -1506,8 +1520,6 @@ def cancelRemoteBackup(request):
             data = {'cancelStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data)
             return HttpResponse(json_data)
-
-
     except BaseException, msg:
         data = {'cancelStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data)
