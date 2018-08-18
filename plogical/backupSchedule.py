@@ -174,5 +174,9 @@ class backupSchedule:
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [prepare]")
 
+def main():
+    backupSchedule.prepare()
 
-backupSchedule.prepare()
+
+if __name__ == "__main__":
+    main()

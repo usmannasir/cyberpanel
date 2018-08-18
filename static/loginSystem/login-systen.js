@@ -73,9 +73,8 @@ application.controller('loginSystem', function($scope,$http,$window) {
 
 
                 function ListInitialData(response) {
-                    console.log(response.data)
 
-                    if (response.data.loginStatus == 0)
+                    if (response.data.loginStatus === 0)
                     {
                         $scope.errorMessage = response.data.error_message;
                         $("#loginFailed").fadeIn();
@@ -89,9 +88,7 @@ application.controller('loginSystem', function($scope,$http,$window) {
 
                     $("#verifyingLogin").hide();
                 }
-                function cantLoadInitialData(response) {
-                    console.log("not good");
-                }
+                function cantLoadInitialData(response) {}
 
 
 

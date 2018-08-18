@@ -37,5 +37,9 @@ class backupScheduleLocal:
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
+def main():
+    backupScheduleLocal.prepare()
 
-backupScheduleLocal.prepare()
+
+if __name__ == "__main__":
+    main()

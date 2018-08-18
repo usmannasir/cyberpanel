@@ -533,7 +533,7 @@ app.controller('createACLCTRL', function($scope,$http) {
                 var data = {
 
                    aclName : $scope.aclName,
-                   makeAdmin : $scope.makeAdmin = true,
+                   makeAdmin : $scope.makeAdmin,
 
                    //
                    versionManagement : $scope.versionManagement,

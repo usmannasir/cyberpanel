@@ -5,7 +5,7 @@ fileManager.config(['$interpolateProvider', function($interpolateProvider) {
         $interpolateProvider.endSymbol('$}');
     }]);
 
-fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
+fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader, $window) {
 
     $( document.body ).click(function() {
         rightClickNode.style.display = "none";
@@ -1383,45 +1383,9 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader) {
     $scope.downloadFile = function() {
 
         url = "/filemanager/downloadFile";
-
-        var data = {
-            fileToDownload: $scope.currentPath + "/" + allFilesAndFolders[0],
-            domainRandomSeed:domainRandomSeed,
-            domainName: domainName
-        };
-
-
-        $http.post(url, data).then(ListInitialDatas, cantLoadInitialDatas);
-
-        function ListInitialDatas(response) {
-
-            var blob = new Blob([response.data]);
-
-            //IE case
-              if (!!window.navigator.msSaveBlob){
-                window.navigator.msSaveBlob(blob, allFilesAndFolders[0]);
-                return;
-              }
-
-              //create blob and url
-              var url = URL.createObjectURL(blob);
-
-              //create invisible acnhor, to specify the file name
-              var a = document.createElement('a');
-              document.body.appendChild(a);
-              a.style = "display: none";
-              a.href = url;
-              a.download = allFilesAndFolders[0];
-              a.click();
-
-              setTimeout(function(){
-                URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-              }, 100);
-        }
-
-        function cantLoadInitialDatas(response) {}
-
+        var downloadURL = $scope.currentPath + "/" + allFilesAndFolders[0];
+        var indexPublicHTML = downloadURL.indexOf("public_html") + 11;
+        $window.location.href = '/preview/' + domainName + downloadURL.slice(indexPublicHTML);
     };
 
 
