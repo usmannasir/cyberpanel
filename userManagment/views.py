@@ -622,6 +622,20 @@ def submitACLModifications(request):
 
             acl.save()
 
+            if int(data['adminStatus']) == 1:
+                allUsers = acl.administrator_set.all()
+
+                for items in allUsers:
+                    items.type = 1
+                    items.save()
+            else:
+                allUsers = acl.administrator_set.all()
+
+                for items in allUsers:
+                    items.type = 3
+                    items.save()
+
+
             finalResponse = { 'status': 1}
         else:
             finalResponse = ACLManager.loadErrorJson()

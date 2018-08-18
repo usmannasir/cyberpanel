@@ -32,7 +32,7 @@ class Upgrade:
             r = requests.get(url, verify=True)
             data = json.loads(r.text)
             version_number = str(data['version'])
-            version_build = str(data['build'])
+            version_build = str(0)
             return (version_number + "." + version_build + ".tar.gz")
         except BaseException, msg:
             Upgrade.stdOut(str(msg) + ' [downloadLink]')
@@ -126,8 +126,6 @@ class Upgrade:
 
             command = "virtualenv --system-site-packages /usr/local/CyberCP"
             res = subprocess.call(shlex.split(command))
-
-
         except OSError, msg:
             Upgrade.stdOut(str(msg) + " [setupVirtualEnv]")
             os._exit(0)
@@ -308,7 +306,65 @@ WantedBy=multi-user.target"""
         vers.build = latest['build']
         vers.save()
 
+    @staticmethod
+    def applyLoginSystemMigrations():
+        try:
 
+            cwd = os.getcwd()
+            os.chdir('/usr/local/CyberCP')
+
+            try:
+                ##
+                command = "python manage.py makemigrations loginSystem"
+                res = subprocess.call(shlex.split(command))
+
+                command = "python manage.py migrate loginSystem"
+                res = subprocess.call(shlex.split(command))
+            except:
+                pass
+
+            from loginSystem.models import Administrator, ACL
+
+            adminACL = ACL(name='admin', adminStatus=1)
+            adminACL.save()
+
+            ## Reseller ACL
+
+            resellerACL = ACL(name='reseller',
+                         createNewUser=1,
+                         deleteUser=1,
+                         createWebsite=1,
+                         resellerCenter=1,
+                         modifyWebsite=1,
+                         suspendWebsite=1,
+                         deleteWebsite=1,
+                         createPackage=1,
+                         deletePackage=1,
+                         modifyPackage=1,
+                         createNameServer=1,
+                         restoreBackup=1,
+                         )
+            resellerACL.save()
+
+            ## User ACL
+
+            userACL = ACL(name='user')
+            userACL.save()
+
+            allUsers = Administrator.objects.all()
+
+            for items in allUsers:
+
+                if items.userName == 'admin':
+                    items.acl = adminACL
+                else:
+                    items.acl = userACL
+
+            os.chdir(cwd)
+
+        except OSError, msg:
+            Upgrade.stdOut(str(msg) + " [applyLoginSystemMigrations]")
+            os._exit(0)
 
     @staticmethod
     def upgrade():
@@ -316,15 +372,18 @@ WantedBy=multi-user.target"""
         os.chdir("/usr/local")
 
 
-
         ## Current Version
 
         Version = version.objects.get(pk=1)
 
+        if Version.currentVersion == '1.7' and Version.build == 0:
+            Upgrade.stdOut('You can not upgrade to v1.7.1 via automatic upgrade.')
+            os._exit(0)
 
         ##
 
         versionNumbring = Upgrade.downloadLink()
+
 
         if os.path.exists('/usr/local/CyberPanel.' + versionNumbring):
             os.remove('/usr/local/CyberPanel.' + versionNumbring)
@@ -365,24 +424,6 @@ WantedBy=multi-user.target"""
         shutil.copy("/usr/local/CyberCP/CyberCP/settings.py","/usr/local/settings.py")
 
         Upgrade.stdOut("Settings file backed up.")
-
-        ## Remove Core Files
-
-        count = 1
-        while (1):
-            command = "rm -rf /usr/local/CyberCP"
-            res = subprocess.call(shlex.split(command))
-
-            if res == 1:
-                count = count + 1
-                Upgrade.stdOut(
-                    "Trying to remove old version, trying again, try number: " + str(count))
-                if count == 3:
-                    Upgrade.stdOut("Failed to remove old version! [upgrade]")
-                    os._exit(0)
-            else:
-                Upgrade.stdOut("Old version successfully removed!")
-                break
 
         ## Extract Latest files
 
@@ -523,6 +564,10 @@ WantedBy=multi-user.target"""
             Upgrade.updateGunicornConf()
         command = 'systemctl restart gunicorn.socket'
         subprocess.call(shlex.split(command))
+
+
+        #if Version.currentVersion == '1.7' and Version.build == 0:
+        #    Upgrade.applyLoginSystemMigrations()
 
 
         ## Upgrade OpenLiteSpeed

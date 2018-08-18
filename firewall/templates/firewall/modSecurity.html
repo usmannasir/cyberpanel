@@ -104,6 +104,7 @@
                             <label class="col-sm-4 control-label">SecDebugLogLevel</label>
                             <div class="col-sm-6">
                                 <div class="selector" style="width: 79px;"><span style="width: 57px; -moz-user-select: none;">{$ SecDebugLogLevel $}</span><select ng-model="SecDebugLogLevel" class="custom-select">
+                                    <option>0</option>
                                     <option>1</option>
                                     <option>2</option>
                                     <option>3</option>
@@ -120,17 +121,7 @@
                         <div class="form-group">
                             <label class="col-sm-4 control-label">SecAuditLogParts</label>
                             <div class="col-sm-6">
-                                <div class="selector" style="width: 79px;"><span style="width: 57px; -moz-user-select: none;">{$ SecAuditLogParts $}</span><select ng-model="SecAuditLogParts" class="custom-select">
-                                    <option>A</option>
-                                    <option>AB</option>
-                                    <option>ABI</option>
-                                    <option>ABIJ</option>
-                                    <option>ABIJD</option>
-                                    <option>ABIJDE</option>
-                                    <option>ABIJDEF</option>
-                                    <option>ABIJDEFH</option>
-                                    <option>ABIJDEFHZ</option>
-                                </select><i class="glyph-icon icon-caret-down"></i></div>
+                                <input placeholder="ABIJDEFHZ" type="text" class="form-control" ng-model="SecAuditLogParts"  required>
                             </div>
                         </div>
 

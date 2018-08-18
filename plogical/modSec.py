@@ -57,11 +57,11 @@ class modSec:
 module mod_security {
 modsecurity  on
 modsecurity_rules `
-SecDebugLogLevel 9
+SecDebugLogLevel 0
 SecDebugLog /usr/local/lsws/logs/modsec.log
 SecAuditEngine on
 SecAuditLogRelevantStatus "^(?:5|4(?!04))"
-SecAuditLogParts ABIJDEFHZ
+SecAuditLogParts AFH
 SecAuditLogType Serial
 SecAuditLog /usr/local/lsws/logs/auditmodsec.log
 SecRuleEngine On
