@@ -11,6 +11,7 @@ from loginSystem.views import loadLoginPage
 from models import Domains,Records
 from re import match,I,M
 from websiteFunctions.models import Websites
+from plogical.mailUtilities import mailUtilities
 
 # Create your views here.
 
@@ -31,7 +32,15 @@ def createNameserver(request):
         if admin.type == 3:
             return HttpResponse("You don't have enough priviliges to access this page.")
 
-        return render(request,"dns/createNameServer.html")
+        mailUtilities.checkHome()
+
+        if os.path.exists('/home/cyberpanel/powerdns'):
+            return render(request, "dns/createNameServer.html", {"status": 1})
+        else:
+            return render(request, "dns/createNameServer.html", {"status": 0})
+
+
+
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -202,7 +211,12 @@ def createDNSZone(request):
     try:
         userID = request.session['userID']
         admin = Administrator.objects.get(pk=userID)
-        return render(request,'dns/createDNSZone.html')
+
+        if os.path.exists('/home/cyberpanel/powerdns'):
+            return render(request,'dns/createDNSZone.html', {"status": 1})
+        else:
+            return render(request,'dns/createDNSZone.html', {"status": 0})
+
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -261,6 +275,9 @@ def addDeleteDNSRecords(request):
         admin = Administrator.objects.get(pk=val)
         domainsList = []
 
+        if not os.path.exists('/home/cyberpanel/powerdns'):
+            return render(request,'dns/addDeleteDNSRecords.html', {"status": 0})
+
         if admin.type == 1:
             domains = Domains.objects.all()
             for items in domains:
@@ -276,7 +293,7 @@ def addDeleteDNSRecords(request):
                     pass
 
 
-        return render(request, 'dns/addDeleteDNSRecords.html',{"domainsList":domainsList})
+        return render(request, 'dns/addDeleteDNSRecords.html',{"domainsList":domainsList, "status": 1})
 
     except KeyError:
         return redirect(loadLoginPage)
@@ -325,6 +342,8 @@ def getCurrentRecordsForDomain(request):
                     fetchType = 'SOA'
                 elif currentSelection == 'srvRecord':
                     fetchType = 'SRV'
+                elif currentSelection == 'caaRecord':
+                    fetchType = 'CAA'
 
                 json_data = "["
                 checker = 0
@@ -511,6 +530,19 @@ def addDNSRecord(request):
                     priority = data['priority']
 
                     DNS.createDNSRecord(zone, value, recordType, recordContentSRV, priority, ttl)
+                elif recordType == "CAA":
+
+                    if recordName == "@":
+                        value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
+                    recordContentCAA = data['recordContentCAA']  ## IP or ponting value
+
+                    DNS.createDNSRecord(zone, value, recordType, recordContentCAA, 0, ttl)
 
 
                 final_dic = {'add_status': 1, 'error_message': "None"}
@@ -571,6 +603,10 @@ def deleteDNSZone(request):
         admin = Administrator.objects.get(pk=val)
         domainsList = []
 
+
+        if not os.path.exists('/home/cyberpanel/powerdns'):
+            return render(request,'dns/deleteDNSZone.html', {"status": 0})
+
         if admin.type == 1:
             domains = Domains.objects.all()
             for items in domains:
@@ -586,7 +622,7 @@ def deleteDNSZone(request):
                     pass
 
 
-        return render(request, 'dns/deleteDNSZone.html',{"domainsList":domainsList})
+        return render(request, 'dns/deleteDNSZone.html',{"domainsList":domainsList, "status": 1})
 
     except KeyError:
         return redirect(loadLoginPage)

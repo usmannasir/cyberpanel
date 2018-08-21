@@ -41,7 +41,8 @@
 
 <link rel="stylesheet" type="text/css" href="/static/baseTemplate/assets/themes/admin/layout.css">
 <link rel="stylesheet" type="text/css" href="/static/baseTemplate/assets/themes/admin/color-schemes/default.css">
-
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
+<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}">
 <!-- Components theme, component below was above three CSS files. -->
 
 
@@ -543,6 +544,7 @@
                 <li><a href="{% url 'modSecurity' %}" title="{% trans 'ModSecurity Configurations' %}"><span>{% trans "ModSecurity Conf" %}</span></a></li>
                 <li><a href="{% url 'modSecRules' %}" title="{% trans 'ModSecurity Rules' %}"><span>{% trans "ModSecurity Rules" %}</span></a></li>
                 <li><a href="{% url 'modSecRulesPacks' %}" title="{% trans 'ModSecurity Rules Packs' %}"><span>{% trans "ModSecurity Rules Packs" %}</span></a></li>
+                <li><a href="{% url 'csf' %}" title="{% trans 'ConfigServer Security & Firewall (CSF)' %}"><span>{% trans "CSF" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
@@ -560,6 +562,23 @@
                 <li><a href="{% url 'emailPolicyServer' %}" title="{% trans 'Email Policy Server' %}"><span>{% trans "Email Policy Server" %}</span></a></li>
                 <li><a href="{% url 'listDomains' %}" title="{% trans 'Email Limits' %}"><span>{% trans "Email Limits" %}</span></a></li>
                 <li><a href="{% url 'SpamAssassin' %}" title="{% trans 'SpamAssassin Configurations' %}"><span>{% trans "SpamAssassin" %}</span></a></li>
+            </ul>
+
+        </div><!-- .sidebar-submenu -->
+    </li>
+
+
+    <li id="normalUserJ">
+        <a href="#" title="{% trans 'Manage Services' %}">
+            <i class="glyph-icon icon-linecons-fire"></i>
+            <span>{% trans "Manage Services" %}</span>
+        </a>
+        <div class="sidebar-submenu">
+
+            <ul>
+                <li><a href="{% url 'managePowerDNS' %}" title="{% trans 'Manage PowerDNS' %}"><span>{% trans "Manage PowerDNS" %}</span></a></li>
+                <li><a href="{% url 'managePostfix' %}" title="{% trans 'Manage Postfix' %}"><span>{% trans "Manage Postfix" %}</span></a></li>
+                <li><a href="{% url 'managePureFtpd' %}" title="{% trans 'Manage FTP' %}"><span>{% trans "Manage FTP" %}</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
@@ -590,7 +609,7 @@
 
 
 <!-- Sparklines charts -->
-
+<script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}"></script>
 <script src="{% static 'baseTemplate/custom-js/system-status.js' %}"></script>
 <script src="{% static 'packages/packages.js' %}"></script>
 <script src="{% static 'websiteFunctions/websiteFunctions.js' %}"></script>
@@ -642,6 +661,7 @@
 <script src="{% static 'baseTemplate/bootstrap-toggle.min.js' %}"></script>
 <script src="{% static 'firewall/firewall.js' %}"></script>
 <script src="{% static 'manageSSL/manageSSL.js' %}"></script>
+<script src="{% static 'manageServices/manageServices.js' %}"></script>
 </div>
 </body>
 </html>

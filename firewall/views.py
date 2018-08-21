@@ -14,6 +14,8 @@ import thread
 from plogical.modSec import modSec
 from plogical.installUtilities import installUtilities
 from random import randint
+from plogical.csf import CSF
+import time
 # Create your views here.
 
 
@@ -803,7 +805,6 @@ def installStatusModSec(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def fetchModSecSettings(request):
     try:
         val = request.session['userID']
@@ -1018,7 +1019,6 @@ def modSecRules(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def fetchModSecRules(request):
     try:
         userID = request.session['userID']
@@ -1150,8 +1150,6 @@ def getOWASPAndComodoStatus(request):
             final_dic = {'modSecInstalled': 0}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-
-        confPath = os.path.join(virtualHostUtilities.Server_root, 'conf/httpd_config.conf')
 
         confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
@@ -1357,4 +1355,292 @@ def enableDisableRuleFile(request):
         data_ret = {'saveStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+def csf(request):
+    try:
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
+
+        if admin.type == 3:
+            return HttpResponse("You don't have enough priviliges to access this page.")
+
+        csfInstalled = 1
+
+        try:
+            command = 'sudo csf -h'
+            res = subprocess.call(shlex.split(command))
+            if res == 1:
+                csfInstalled = 0
+        except subprocess.CalledProcessError:
+            csfInstalled = 0
+
+        return render(request,'firewall/csf.html', {'csfInstalled' : csfInstalled})
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def installCSF(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        try:
+
+            if admin.type != 1:
+                final_dic = {'installStatus': 0, 'error_message': 'Not enough privileges.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+
+            execPath = "sudo " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
+            execPath = execPath + " installCSF"
+            subprocess.Popen(shlex.split(execPath))
+
+            time.sleep(2)
+
+            data_ret = {"installStatus": 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException,msg:
+            final_dic = {'installStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'installStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def installStatusCSF(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        try:
+            if request.method == 'POST':
+
+                if admin.type != 1:
+                    final_dic = {'abort': 1, 'installed': 0, 'error_message': 'Not enough privileges.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+                installStatus = unicode(open(CSF.installLogPath, "r").read())
+
+                if installStatus.find("[200]")>-1:
+
+                    command = 'sudo rm -f ' + CSF.installLogPath
+                    subprocess.call(shlex.split(command))
+
+                    final_json = json.dumps({
+                                             'error_message': "None",
+                                             'requestStatus': installStatus,
+                                             'abort':1,
+                                             'installed': 1,
+                                             })
+                    return HttpResponse(final_json)
+                elif installStatus.find("[404]") > -1:
+                    command = 'sudo rm -f ' + CSF.installLogPath
+                    subprocess.call(shlex.split(command))
+                    final_json = json.dumps({
+                                             'abort':1,
+                                             'installed':0,
+                                             'error_message': "None",
+                                             'requestStatus': installStatus,
+                                             })
+                    return HttpResponse(final_json)
+
+                else:
+                    final_json = json.dumps({
+                                             'abort':0,
+                                             'error_message': "None",
+                                             'requestStatus': installStatus,
+                                             })
+                    return HttpResponse(final_json)
+
+
+        except BaseException,msg:
+            final_dic = {'abort':1,'installed':0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'abort':1,'installed':0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def removeCSF(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        try:
+
+            if admin.type != 1:
+                final_dic = {'installStatus': 0, 'error_message': 'Not enough privileges.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+
+            execPath = "sudo " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
+            execPath = execPath + " removeCSF"
+            subprocess.Popen(shlex.split(execPath))
+
+            time.sleep(2)
+
+            data_ret = {"installStatus": 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException,msg:
+            final_dic = {'installStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'installStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def fetchCSFSettings(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        try:
+
+            if admin.type != 1:
+                final_dic = {'fetchStatus': 0, 'error_message': 'Not enough privileges.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+
+            currentSettings = CSF.fetchCSFSettings()
+
+
+            data_ret = {"fetchStatus": 1, 'testingMode' : currentSettings['TESTING'],
+                        'tcpIN' : currentSettings['tcpIN'],
+                        'tcpOUT': currentSettings['tcpOUT'],
+                        'udpIN': currentSettings['udpIN'],
+                        'udpOUT': currentSettings['udpOUT'],
+                        'firewallStatus': currentSettings['firewallStatus']
+                        }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException,msg:
+            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'fetchStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+
+def changeStatus(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        try:
+
+            if admin.type != 1:
+                final_dic = {'status': 0, 'error_message': 'Not enough privileges.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+            data = json.loads(request.body)
+
+            controller = data['controller']
+            status = data['status']
+
+            execPath = "sudo " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
+            execPath = execPath + " changeStatus --controller " + controller + " --status " + status
+            output = subprocess.check_output(shlex.split(execPath))
+
+            if output.find("1,None") > -1:
+                data_ret = {"status": 1}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'status': 0, 'error_message': output}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException,msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'status'
+                     '': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def modifyPorts(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        try:
+
+            if admin.type != 1:
+                final_dic = {'status': 0, 'error_message': 'Not enough privileges.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+            data = json.loads(request.body)
+
+            protocol = data['protocol']
+            ports = data['ports']
+
+            execPath = "sudo " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
+            execPath = execPath + " modifyPorts --protocol " + protocol + " --ports " + ports
+            output = subprocess.check_output(shlex.split(execPath))
+
+            if output.find("1,None") > -1:
+                data_ret = {"status": 1}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'status': 0, 'error_message': output}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException,msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'status'
+                     '': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def modifyIPs(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        try:
+
+            if admin.type != 1:
+                final_dic = {'status': 0, 'error_message': 'Not enough privileges.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+            data = json.loads(request.body)
+
+            mode = data['mode']
+            ipAddress = data['ipAddress']
+
+            if mode == 'allowIP':
+                CSF.allowIP(ipAddress)
+            elif mode == 'blockIP':
+                CSF.blockIP(ipAddress)
+
+            data_ret = {"status": 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException,msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'status'
+                     '': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
 

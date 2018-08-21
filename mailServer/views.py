@@ -18,6 +18,7 @@ import thread
 from dns.models import Domains as dnsDomains
 from dns.models import Records as dnsRecords
 from mailServer.models import Forwardings
+import os
 
 def loadEmailHome(request):
     try:
@@ -31,6 +32,10 @@ def createEmailAccount(request):
     try:
         val = request.session['userID']
         try:
+
+            if not os.path.exists('/home/cyberpanel/postfix'):
+                return render(request, "mailServer/createEmailAccount.html", {"status": 0})
+
             admin = Administrator.objects.get(pk=val)
 
             if admin.type == 1:
@@ -43,7 +48,7 @@ def createEmailAccount(request):
             for items in websites:
                 websitesName.append(items.domain)
 
-            return render(request, 'mailServer/createEmailAccount.html', {'websiteList':websitesName})
+            return render(request, 'mailServer/createEmailAccount.html', {'websiteList':websitesName, "status": 1})
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
@@ -97,6 +102,10 @@ def deleteEmailAccount(request):
     try:
         val = request.session['userID']
         try:
+
+            if not os.path.exists('/home/cyberpanel/postfix'):
+                return render(request, "mailServer/deleteEmailAccount.html", {"status": 0})
+
             admin = Administrator.objects.get(pk=val)
 
             if admin.type == 1:
@@ -109,7 +118,7 @@ def deleteEmailAccount(request):
             for items in websites:
                 websitesName.append(items.domain)
 
-            return render(request, 'mailServer/deleteEmailAccount.html', {'websiteList':websitesName})
+            return render(request, 'mailServer/deleteEmailAccount.html', {'websiteList':websitesName, "status": 1})
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
@@ -210,6 +219,10 @@ def emailForwarding(request):
     try:
         val = request.session['userID']
         try:
+
+            if not os.path.exists('/home/cyberpanel/postfix'):
+                return render(request, "mailServer/emailForwarding.html", {"status": 0})
+
             admin = Administrator.objects.get(pk=val)
 
             if admin.type == 1:
@@ -222,7 +235,7 @@ def emailForwarding(request):
             for items in websites:
                 websitesName.append(items.domain)
 
-            return render(request, 'mailServer/emailForwarding.html', {'websiteList':websitesName})
+            return render(request, 'mailServer/emailForwarding.html', {'websiteList':websitesName, "status": 1})
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
@@ -363,7 +376,11 @@ def changeEmailAccountPassword(request):
     try:
         val = request.session['userID']
         try:
-            admin = Administrator.objects.get(pk=request.session['userID'])
+
+            if not os.path.exists('/home/cyberpanel/postfix'):
+                return render(request, "mailServer/changeEmailPassword.html", {"status": 0})
+
+            admin = Administrator.objects.get(pk=val)
 
             if admin.type == 1:
                 websites = Websites.objects.all()
@@ -375,7 +392,7 @@ def changeEmailAccountPassword(request):
             for items in websites:
                 websitesName.append(items.domain)
 
-            return render(request, 'mailServer/changeEmailPassword.html', {'websiteList':websitesName})
+            return render(request, 'mailServer/changeEmailPassword.html', {'websiteList':websitesName, "status": 1})
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))

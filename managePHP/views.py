@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import sys
 reload(sys)
 sys.setdefaultencoding("utf-8")
-
 from django.shortcuts import render,redirect
 from loginSystem.views import loadLoginPage
 from .models import PHP,installedPackages
@@ -14,7 +13,6 @@ import os
 from plogical.installUtilities import installUtilities
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import re
-import subprocess
 from loginSystem.models import Administrator
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess

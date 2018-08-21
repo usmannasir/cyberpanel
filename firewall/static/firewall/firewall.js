@@ -1564,3 +1564,555 @@ app.controller('modSecRulesPack', function($scope, $http, $timeout, $window) {
 
 
 /* Java script code for ModSec */
+
+
+/* Java script code for CSF */
+
+app.controller('csf', function($scope, $http, $timeout, $window) {
+
+           $scope.csfLoading  = true;
+           $scope.modeSecInstallBox = true;
+           $scope.modsecLoading = true;
+           $scope.failedToStartInallation = true;
+           $scope.couldNotConnect = true;
+           $scope.modSecSuccessfullyInstalled = true;
+           $scope.installationFailed = true;
+
+
+
+           $scope.installCSF = function(){
+
+               $scope.modSecNotifyBox  = true;
+               $scope.modeSecInstallBox = false;
+               $scope.modsecLoading = false;
+               $scope.failedToStartInallation = true;
+               $scope.couldNotConnect = true;
+               $scope.modSecSuccessfullyInstalled = true;
+               $scope.installationFailed = true;
+
+               url = "/firewall/installCSF";
+
+                        var data = {};
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.installStatus === 1){
+
+                        $scope.modSecNotifyBox  = true;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = false;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+                        $scope.modSecSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+                        getRequestStatus();
+
+                    }
+                    else{
+                        $scope.errorMessage = response.data.error_message;
+
+                        $scope.modSecNotifyBox  = false;
+                        $scope.modeSecInstallBox = true;
+                        $scope.modsecLoading = true;
+                        $scope.failedToStartInallation = false;
+                        $scope.couldNotConnect = true;
+                        $scope.modSecSuccessfullyInstalled = true;
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.modSecNotifyBox  = false;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = true;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = false;
+                        $scope.modSecSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+                }
+
+           };
+           function getRequestStatus(){
+
+                        $scope.modSecNotifyBox  = true;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = false;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+                        $scope.modSecSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+                        url = "/firewall/installStatusCSF";
+
+                        var data = {};
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+
+                    if(response.data.abort === 0){
+
+                        $scope.modSecNotifyBox  = true;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = false;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+                        $scope.modSecSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+                        $scope.requestData = response.data.requestStatus;
+                        $timeout(getRequestStatus,1000);
+                    }
+                    else{
+                        // Notifications
+                        $timeout.cancel();
+                        $scope.modSecNotifyBox  = false;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = true;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = true;
+
+                        $scope.requestData = response.data.requestStatus;
+
+                        if(response.data.installed === 0) {
+                            $scope.installationFailed = false;
+                            $scope.errorMessage = response.data.error_message;
+                        }else{
+                            $scope.modSecSuccessfullyInstalled = false;
+                            $timeout(function() {  $window.location.reload(); }, 3000);
+                        }
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                        $scope.modSecNotifyBox  = false;
+                        $scope.modeSecInstallBox = false;
+                        $scope.modsecLoading = true;
+                        $scope.failedToStartInallation = true;
+                        $scope.couldNotConnect = false;
+                        $scope.modSecSuccessfullyInstalled = true;
+                        $scope.installationFailed = true;
+
+
+                }
+
+           }
+
+
+           // After installation
+
+           var currentMain = "generalLI";
+           var currentChild = "general";
+
+           $scope.activateTab = function (newMain, newChild) {
+               $("#"+currentMain).removeClass("ui-tabs-active");
+               $("#"+currentMain).removeClass("ui-state-active");
+
+               $("#"+newMain).addClass("ui-tabs-active");
+               $("#"+newMain).addClass("ui-state-active");
+
+               $('#'+currentChild).hide();
+               $('#'+newChild).show();
+
+               currentMain = newMain;
+               currentChild = newChild;
+           };
+
+
+           $scope.removeCSF = function(){
+
+               $scope.csfLoading = false;
+
+
+               url = "/firewall/removeCSF";
+
+                        var data = {};
+
+                        var config = {
+                            headers : {
+                                'X-CSRFToken': getCookie('csrftoken')
+                                }
+                            };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.csfLoading = true;
+
+
+                    if(response.data.installStatus === 1){
+
+                        new PNotify({
+                            title: 'Successfully removed!',
+                            text: 'CSF successfully removed from server, refreshing page in 3 seconds..',
+                            type:'success'
+                          });
+
+                        $timeout(function() {  $window.location.reload(); }, 3000);
+
+                    }
+                    else{
+                        new PNotify({
+                            title: 'Operation failed!',
+                            text: response.data.error_message,
+                            type:'error'
+                          });
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+
+                    new PNotify({
+                            title: 'Operation failed!',
+                            text: 'Could not connect to server, please refresh this page.',
+                            type:'error'
+                          });
+
+
+                }
+
+           };
+
+           //////// Fetch settings
+
+           //
+           var testingMode = false;
+           var testingCounter = 0;
+
+
+           $('#testingMode').change(function() {
+               testingMode = $(this).prop('checked');
+
+               if(testingCounter !== 0) {
+
+                   if (testingMode === true) {
+                       $scope.changeStatus('testingMode', 'enable');
+                   } else {
+                       $scope.changeStatus('testingMode', 'disable');
+                   }
+               }
+               testingCounter = testingCounter + 1;
+           });
+           //
+
+           //
+           var firewallStatus = false;
+           var firewallCounter = 0;
+
+
+           $('#firewallStatus').change(function() {
+               firewallStatus = $(this).prop('checked');
+
+               if(firewallCounter !== 0) {
+
+                   if (firewallStatus === true) {
+                       $scope.changeStatus('csf', 'enable');
+                   } else {
+                       $scope.changeStatus('csf', 'disable');
+                   }
+               }
+               firewallCounter = firewallCounter + 1;
+           });
+           //
+
+
+
+           $scope.fetchSettings = function(){
+
+               $scope.csfLoading  = false;
+
+               $('#testingMode').bootstrapToggle('off');
+               $('#firewallStatus').bootstrapToggle('off');
+
+               url = "/firewall/fetchCSFSettings";
+
+
+               var data = {};
+
+               var config = {
+                   headers : {
+                       'X-CSRFToken': getCookie('csrftoken')
+                   }
+               };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.csfLoading = true;
+
+                    if(response.data.fetchStatus === 1){
+
+                        new PNotify({
+                            title: 'Successfully fetched!',
+                            text: 'CSF settings successfully fetched.',
+                            type:'success'
+                          });
+
+                        if (response.data.testingMode === 1) {
+                                $('#testingMode').bootstrapToggle('on');
+                        }
+                        if (response.data.firewallStatus === 1) {
+                                $('#firewallStatus').bootstrapToggle('on');
+                        }
+
+                            $scope.tcpIN = response.data.tcpIN;
+                            $scope.tcpOUT = response.data.tcpOUT;
+                            $scope.udpIN = response.data.udpIN;
+                            $scope.udpOUT = response.data.udpOUT;
+                    }else{
+
+                        new PNotify({
+                            title: 'Failed to load!',
+                            text: response.data.error_message,
+                            type:'error'
+                          });
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.csfLoading = true;
+
+                    new PNotify({
+                            title: 'Failed to load!',
+                            text: 'Failed to fetch CSF settings.',
+                            type:'error'
+                          });
+                }
+
+           };
+           $scope.fetchSettings();
+
+
+           $scope.changeStatus = function(controller, status){
+
+               $scope.csfLoading  = false;
+
+
+
+               url = "/firewall/changeStatus";
+
+
+               var data = {
+                   controller: controller,
+                   status : status
+               };
+
+               var config = {
+                   headers : {
+                       'X-CSRFToken': getCookie('csrftoken')
+                   }
+               };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.csfLoading = true;
+
+                    if(response.data.status === 1){
+
+                        new PNotify({
+                            title: 'Success!',
+                            text: 'Changes successfully applied.',
+                            type:'success'
+                          });
+                    }else{
+
+                        new PNotify({
+                            title: 'Error!',
+                            text: response.data.error_message,
+                            type:'error'
+                          });
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.csfLoading = true;
+
+                    new PNotify({
+                            title: 'Failed to load!',
+                            text: 'Failed to fetch CSF settings.',
+                            type:'error'
+                          });
+                }
+
+           };
+
+           $scope.modifyPorts = function(protocol){
+
+               $scope.csfLoading  = false;
+
+               var ports;
+
+               if(protocol === 'TCP_IN'){
+                   ports = $scope.tcpIN;
+               }else if(protocol === 'TCP_OUT'){
+                   ports = $scope.tcpOUT;
+               }else if(protocol === 'UDP_IN'){
+                   ports = $scope.udpIN;
+               }else if(protocol === 'UDP_OUT'){
+                   ports = $scope.udpOUT;
+               }
+
+
+
+               url = "/firewall/modifyPorts";
+
+
+               var data = {
+                   protocol: protocol,
+                   ports : ports
+               };
+
+               var config = {
+                   headers : {
+                       'X-CSRFToken': getCookie('csrftoken')
+                   }
+               };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.csfLoading = true;
+
+                    if(response.data.status === 1){
+
+                        new PNotify({
+                            title: 'Success!',
+                            text: 'Changes successfully applied.',
+                            type:'success'
+                          });
+                    }else{
+
+                        new PNotify({
+                            title: 'Error!',
+                            text: response.data.error_message,
+                            type:'error'
+                          });
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.csfLoading = true;
+
+                    new PNotify({
+                            title: 'Failed to load!',
+                            text: 'Failed to fetch CSF settings.',
+                            type:'error'
+                          });
+                }
+
+           };
+
+           $scope.modifyIPs = function(mode){
+
+               $scope.csfLoading  = false;
+
+               var ipAddress;
+
+               if(mode === 'allowIP'){
+                   ipAddress = $scope.allowIP;
+               }else if(mode === 'blockIP'){
+                   ipAddress = $scope.blockIP;
+               }
+
+
+
+               url = "/firewall/modifyIPs";
+
+
+               var data = {
+                   mode: mode,
+                   ipAddress : ipAddress
+               };
+
+               var config = {
+                   headers : {
+                       'X-CSRFToken': getCookie('csrftoken')
+                   }
+               };
+
+
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+
+                    $scope.csfLoading = true;
+
+                    if(response.data.status === 1){
+
+                        new PNotify({
+                            title: 'Success!',
+                            text: 'Changes successfully applied.',
+                            type:'success'
+                          });
+                    }else{
+
+                        new PNotify({
+                            title: 'Error!',
+                            text: response.data.error_message,
+                            type:'error'
+                          });
+
+                    }
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.csfLoading = true;
+
+                    new PNotify({
+                            title: 'Failed to load!',
+                            text: 'Failed to fetch CSF settings.',
+                            type:'error'
+                          });
+                }
+
+           };
+
+});

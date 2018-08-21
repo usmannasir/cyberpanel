@@ -38,9 +38,8 @@ def loadWebsitesHome(request):
 def createWebsite(request):
     try:
         val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
         try:
-            admin = Administrator.objects.get(pk=val)
-
             if admin.type == 3:
                 return HttpResponse("Not enough privileges.")
 
@@ -224,6 +223,7 @@ def submitWebsiteCreation(request):
             packageName = data['package']
             websiteOwner = data['websiteOwner']
             externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:7]
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
 
             ####### Limitations check
@@ -248,20 +248,18 @@ def submitWebsiteCreation(request):
                        "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + \
                        " --ssl " + str(data['ssl']) + " --sslPath " + sslpath + " --dkimCheck " + str(data['dkimCheck'])\
                        + " --openBasedir " + str(data['openBasedir']) + ' --websiteOwner ' + websiteOwner \
-                       + ' --package ' + packageName
+                       + ' --package ' + packageName + ' --tempStatusPath ' + tempStatusPath
 
-            output = subprocess.check_output(shlex.split(execPath))
+            subprocess.Popen(shlex.split(execPath))
+            time.sleep(2)
 
-            if output.find("1,None") > -1:
-                data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            else:
-                data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+            data_ret = {'createWebSiteStatus': 1, 'error_message': "None", 'tempStatusPath': tempStatusPath}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
     except BaseException, msg:
-        data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
+        data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -274,6 +272,7 @@ def submitDomainCreation(request):
             domain = data['domainName']
             phpSelection = data['phpSelection']
             path = data['path']
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
 
             try:
@@ -285,7 +284,7 @@ def submitDomainCreation(request):
                 execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
                            " --phpVersion '" + phpSelection + "' --ssl " + str(data['ssl']) + " --dkimCheck " + \
                            str(data['dkimCheck']) + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path \
-                           + ' --restore ' + restore
+                           + ' --restore ' + restore + ' --tempStatusPath ' + tempStatusPath
 
             except:
                 restore = '0'
@@ -307,22 +306,17 @@ def submitDomainCreation(request):
                 execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
                            " --phpVersion '" + phpSelection + "' --ssl " + str(data['ssl']) + " --dkimCheck " + str(data['dkimCheck']) \
                            + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path \
-                           + ' --restore ' + restore + ' --websiteOwner ' + admin.userName
+                           + ' --restore ' + restore + ' --websiteOwner ' + admin.userName + ' --tempStatusPath ' + tempStatusPath
 
+            subprocess.Popen(shlex.split(execPath))
+            time.sleep(2)
 
-            output = subprocess.check_output(shlex.split(execPath))
-
-            if output.find("1,None") > -1:
-                data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            else:
-                data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+            data_ret = {'createWebSiteStatus': 1, 'error_message': "None", 'tempStatusPath': tempStatusPath}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
     except BaseException, msg:
-        data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
+        data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -1268,12 +1262,12 @@ def saveRewriteRules(request):
                 except:
                     filePath = "/home/" + virtualHost + "/public_html/.htaccess"
 
-                if admin.type != 1:
-                    website = Websites.objects.get(domain=virtualHost)
-                    if website.admin != admin:
-                        data_ret = {'rewriteStatus': 0, 'error_message': 'You do not own this website.'}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
+                    if admin.type != 1:
+                        website = Websites.objects.get(domain=virtualHost)
+                        if website.admin != admin:
+                            data_ret = {'rewriteStatus': 0, 'error_message': 'You do not own this website.'}
+                            json_data = json.dumps(data_ret)
+                            return HttpResponse(json_data)
 
 
                 ## save configuration data
@@ -2283,7 +2277,6 @@ def installWordpress(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
         return HttpResponse("Not Logged in as admin")
 
-
 def installWordpressStatus(request):
     try:
         val = request.session['userID']
@@ -2294,10 +2287,10 @@ def installWordpressStatus(request):
                 data = json.loads(request.body)
 
 
-                domainName = data['domainName']
                 statusFile = data['statusFile']
 
                 if admin.type != 1:
+                    domainName = data['domainName']
                     website = Websites.objects.get(domain=domainName)
                     if website.admin != admin:
                         raise BaseException('You do not own this website.')
@@ -2334,7 +2327,6 @@ def installWordpressStatus(request):
         return HttpResponse(json_data)
 
 
-
 def joomlaInstall(request, domain):
     try:
         val = request.session['userID']
@@ -2352,7 +2344,6 @@ def joomlaInstall(request, domain):
             return HttpResponse(str(msg))
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def installJoomla(request):
     try:
@@ -2486,6 +2477,251 @@ def installJoomla(request):
                 output = subprocess.Popen(shlex.split(execPath))
 
                 data_ret = {"installStatus": 1, 'tempStatusPath': tempStatusPath}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+
+                ## Installation ends
+
+            except BaseException, msg:
+                data_ret = {'installStatus': 0, 'error_message': str(msg)}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+    except KeyError, msg:
+        status = {"installStatus":0,"error":str(msg)}
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installJoomla]")
+        return HttpResponse("Not Logged in as admin")
+
+
+def setupGit(request, domain):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        try:
+            if admin.type != 1:
+                website = Websites.objects.get(domain=domain)
+                if website.admin != admin:
+                    raise BaseException('You do not own this website.')
+
+
+            path = '/home/cyberpanel/' + domain + '.git'
+
+            if os.path.exists(path):
+
+                ipFile = "/etc/cyberpanel/machineIP"
+                f = open(ipFile)
+                ipData = f.read()
+                ipAddress = ipData.split('\n', 1)[0]
+
+                webhookURL = 'https://' + ipAddress + ':8090/websites/' + domain + '/gitNotify'
+
+                return render(request, 'websiteFunctions/setupGit.html',
+                              {'domainName': domain, 'installed': 1, 'webhookURL': webhookURL})
+            else:
+                command = 'sudo cat /root/.ssh/cyberpanel.pub'
+                deploymentKey = subprocess.check_output(shlex.split(command)).strip('\n')
+
+            return render(request, 'websiteFunctions/setupGit.html', {'domainName' : domain, 'deploymentKey': deploymentKey, 'installed': 0})
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return HttpResponse(str(msg))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def setupGitRepo(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+
+        if request.method == 'POST':
+            try:
+                data = json.loads(request.body)
+
+                mailUtilities.checkHome()
+
+                extraArgs = {}
+                extraArgs['admin'] = admin
+                extraArgs['domainName'] = data['domain']
+                extraArgs['username'] = data['username']
+                extraArgs['reponame'] = data['reponame']
+                extraArgs['branch'] = data['branch']
+                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+                extraArgs['defaultProvider'] = data['defaultProvider']
+
+
+                background = ApplicationInstaller('git', extraArgs)
+                background.start()
+
+                time.sleep(2)
+
+                data_ret = {'installStatus': 1, 'error_message': 'None', 'tempStatusPath': extraArgs['tempStatusPath']}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+            except BaseException, msg:
+                data_ret = {'installStatus': 0, 'error_message': str(msg)}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+    except KeyError, msg:
+        status = {"installStatus":0,"error":str(msg)}
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
+        return HttpResponse("Not Logged in as admin")
+
+def gitNotify(request, domain):
+    try:
+        if request.method == 'POST':
+            try:
+
+                extraArgs = {}
+                extraArgs['domain'] = domain
+
+                background = ApplicationInstaller('pull', extraArgs)
+                background.start()
+
+                data_ret = {'pulled': 1, 'error_message': 'None'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            except BaseException, msg:
+                data_ret = {'pulled': 0, 'error_message': str(msg)}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+    except KeyError, msg:
+        data_ret = {"pulled":0,"error":str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def detachRepo(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+
+        if request.method == 'POST':
+            try:
+                data = json.loads(request.body)
+
+                mailUtilities.checkHome()
+
+                extraArgs = {}
+                extraArgs['domainName'] = data['domain']
+                extraArgs['admin'] = admin
+
+
+                background = ApplicationInstaller('detach', extraArgs)
+                background.start()
+
+                time.sleep(2)
+
+                data_ret = {'status': 1, 'error_message': 'None'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+            except BaseException, msg:
+                data_ret = {'status': 0, 'error_message': str(msg)}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+    except KeyError, msg:
+        status = {"status":0,"error":str(msg)}
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
+        return HttpResponse("Not Logged in as admin")
+
+def changeBranch(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+
+        if request.method == 'POST':
+            try:
+                data = json.loads(request.body)
+
+                mailUtilities.checkHome()
+
+                extraArgs = {}
+                extraArgs['domainName'] = data['domain']
+                extraArgs['githubBranch'] = data['githubBranch']
+                extraArgs['admin'] = admin
+
+
+                background = ApplicationInstaller('changeBranch', extraArgs)
+                background.start()
+
+                time.sleep(2)
+
+                data_ret = {'status': 1, 'error_message': 'None'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+            except BaseException, msg:
+                data_ret = {'status': 0, 'error_message': str(msg)}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+    except KeyError, msg:
+        status = {"status":0,"error":str(msg)}
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installWordpress]")
+        return HttpResponse("Not Logged in as admin")
+
+def installPrestaShop(request, domain):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        try:
+            if admin.type != 1:
+                website = Websites.objects.get(domain=domain)
+                if website.admin != admin:
+                    raise BaseException('You do not own this website.')
+
+
+            return render(request, 'websiteFunctions/installPrestaShop.html', {'domainName' : domain})
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return HttpResponse(str(msg))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def prestaShopInstall(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(id=val)
+        if request.method == 'POST':
+            try:
+                data = json.loads(request.body)
+
+                mailUtilities.checkHome()
+
+                extraArgs = {}
+                extraArgs['admin'] = admin
+                extraArgs['domainName'] = data['domain']
+                extraArgs['home'] = data['home']
+                extraArgs['shopName'] = data['shopName']
+                extraArgs['firstName'] = data['firstName']
+                extraArgs['lastName'] = data['lastName']
+                extraArgs['databasePrefix'] = data['databasePrefix']
+                extraArgs['email'] = data['email']
+                extraArgs['password'] = data['password']
+                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+                if data['home'] == '0':
+                    extraArgs['path'] = data['path']
+
+                background = ApplicationInstaller('prestashop', extraArgs)
+                background.start()
+
+                time.sleep(2)
+
+                data_ret = {'installStatus': 1, 'error_message': 'None', 'tempStatusPath': extraArgs['tempStatusPath']}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 

@@ -147,7 +147,7 @@ def enableDisableEmailLimits(request):
         try:
             if request.method == 'POST':
 
-                admin = Administrator.objects.get(pk=request.session['userID'])
+                admin = Administrator.objects.get(pk=val)
 
                 if admin.type != 1:
                     dic = {'status': 0, 'error_message': "Only administrator can view this page."}
@@ -932,7 +932,6 @@ def emailPolicyServer(request):
 
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def fetchPolicyServerStatus(request):
     try:

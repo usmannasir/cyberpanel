@@ -182,6 +182,7 @@ app.controller('addModifyDNSRecords', function($scope,$http) {
            $(".nsRecord").hide();
            $(".soaRecord").hide();
            $(".srvRecord").hide();
+           $(".caaRecord").hide();
 
 
 
@@ -285,6 +286,13 @@ app.controller('addModifyDNSRecords', function($scope,$http) {
                             data.recordName = $scope.recordName;
                             data.recordContentSRV = $scope.recordContentSRV;
                             data.priority = $scope.priority;
+                            data.ttl = $scope.ttl;
+                            data.recordType = type;
+                        }
+                        else if(type === "CAA"){
+                            data.selectedZone = $scope.selectedZone;
+                            data.recordName = $scope.recordName;
+                            data.recordContentCAA = $scope.recordContentCAA;
                             data.ttl = $scope.ttl;
                             data.recordType = type;
                         }

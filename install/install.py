@@ -687,8 +687,8 @@ class preFlightsChecks:
 
         count = 0
         while (1):
-            command = "wget http://cyberpanel.net/CyberPanel.1.7.0.tar.gz"
-            #command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
+            #command = "wget http://cyberpanel.net/CyberPanel.1.7.0.tar.gz"
+            command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
             res = subprocess.call(shlex.split(command))
 
             if res == 1:
@@ -707,8 +707,8 @@ class preFlightsChecks:
 
         count = 0
         while(1):
-            command = "tar zxf CyberPanel.1.7.0.tar.gz"
-            #command = "tar zxf CyberPanelTemp.tar.gz"
+            #command = "tar zxf CyberPanel.1.7.0.tar.gz"
+            command = "tar zxf CyberPanelTemp.tar.gz"
 
             res = subprocess.call(shlex.split(command))
 
@@ -2052,6 +2052,10 @@ class preFlightsChecks:
             cmd = shlex.split(command)
             subprocess.call(cmd)
 
+            command = 'systemctl restart systemd-logind'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
+
 
             count = 0
 
@@ -2818,6 +2822,85 @@ milter_default_action = accept
             logging.InstallLog.writeToFile(str(msg) + " [setupVirtualEnv]")
             return 0
 
+    @staticmethod
+    def enableDisableDNS(state):
+        try:
+            servicePath = '/home/cyberpanel/powerdns'
+
+            if state == 'Off':
+
+                command = 'sudo systemctl stop pdns'
+                subprocess.call(shlex.split(command))
+
+                command = 'sudo systemctl disable pdns'
+                subprocess.call(shlex.split(command))
+
+                try:
+                    os.remove(servicePath)
+                except:
+                    pass
+
+            else:
+                writeToFile = open(servicePath, 'w+')
+                writeToFile.close()
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [enableDisableDNS]")
+            return 0
+
+    @staticmethod
+    def enableDisableEmail(state):
+        try:
+            servicePath = '/home/cyberpanel/postfix'
+
+            if state == 'Off':
+
+                command = 'sudo systemctl stop postfix'
+                subprocess.call(shlex.split(command))
+
+                command = 'sudo systemctl disable postfix'
+                subprocess.call(shlex.split(command))
+
+                try:
+                    os.remove(servicePath)
+                except:
+                    pass
+
+            else:
+                writeToFile = open(servicePath, 'w+')
+                writeToFile.close()
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [enableDisableEmail]")
+            return 0
+
+    @staticmethod
+    def enableDisableFTP(state):
+        try:
+            servicePath = '/home/cyberpanel/pureftpd'
+
+            if state == 'Off':
+
+                command = 'sudo systemctl stop pure-ftpd'
+                subprocess.call(shlex.split(command))
+
+                command = 'sudo systemctl disable pure-ftpd'
+                subprocess.call(shlex.split(command))
+
+                try:
+                    os.remove(servicePath)
+                except:
+                    pass
+
+            else:
+                writeToFile = open(servicePath, 'w+')
+                writeToFile.close()
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [enableDisableEmail]")
+            return 0
+
+
 
 
 
@@ -2826,6 +2909,9 @@ def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('publicip', help='Please enter public IP for your VPS or dedicated server.')
     parser.add_argument('--mysql', help='Specify number of MySQL instances to be used.')
+    parser.add_argument('--postfix', help='Enable or disable Email Service.')
+    parser.add_argument('--powerdns', help='Enable or disable DNS Service.')
+    parser.add_argument('--ftp', help='Enable or disable ftp Service.')
     args = parser.parse_args()
 
     logging.InstallLog.writeToFile("Starting CyberPanel installation..")
@@ -2843,10 +2929,12 @@ def main():
 
     checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd,"/usr/local/CyberCP")
 
-    try:
-        mysql = args.mysql
-    except:
+    if args.mysql == None:
         mysql = 'One'
+        preFlightsChecks.stdOut("Single MySQL instance version will be installed.")
+    else:
+        mysql = args.mysql
+        preFlightsChecks.stdOut("Dobule MySQL instance version will be installed.")
 
 
     checks.checkPythonVersion()
@@ -2906,7 +2994,24 @@ def main():
     checks.modSecPreReqs()
     checks.setupVirtualEnv()
     checks.setupPHPAndComposer()
-    checks.installation_successfull()
+
+    if args.postfix != None:
+        checks.enableDisableEmail(args.postfix)
+    else:
+        preFlightsChecks.stdOut("Postfix will be installed and enabled.")
+        checks.enableDisableEmail('On')
+
+    if args.powerdns != None:
+        checks.enableDisableDNS(args.powerdns)
+    else:
+        preFlightsChecks.stdOut("PowerDNS will be installed and enabled.")
+        checks.enableDisableDNS('On')
+
+    if args.ftp != None:
+        checks.enableDisableFTP(args.ftp)
+    else:
+        preFlightsChecks.stdOut("Pure-FTPD will be installed and enabled.")
+        checks.enableDisableFTP('On')
 
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
 

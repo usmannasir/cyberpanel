@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the CyberPanel package.
 # FIRST AUTHOR <unasir@litespeedtech.com>, 2017.
 #
-#: baseTemplate/templates/baseTemplate/index.html:176
-#: baseTemplate/templates/baseTemplate/index.html:222
-#: baseTemplate/templates/baseTemplate/index.html:228
-#: baseTemplate/templates/baseTemplate/index.html:234
-#: baseTemplate/templates/baseTemplate/index.html:240
-#: baseTemplate/templates/baseTemplate/index.html:246
-#: baseTemplate/templates/baseTemplate/index.html:252
+#: baseTemplate/templates/baseTemplate/index.html:177
+#: baseTemplate/templates/baseTemplate/index.html:223
+#: baseTemplate/templates/baseTemplate/index.html:229
+#: baseTemplate/templates/baseTemplate/index.html:235
+#: baseTemplate/templates/baseTemplate/index.html:241
+#: baseTemplate/templates/baseTemplate/index.html:247
+#: baseTemplate/templates/baseTemplate/index.html:253
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:198
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:288
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:343
@@ -22,7 +22,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-05-14 14:50+0500\n"
+"POT-Creation-Date: 2018-08-10 23:27+0500\n"
 "PO-Revision-Date: 2017-10-29 19:32+0100\n"
 "Last-Translator: \n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
@@ -33,50 +33,61 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 2.0.4\n"
 
-#: CyberCP/settings.py:167
+#: CyberCP/settings.py:170
 msgid "English"
 msgstr "英语"
 
-#: CyberCP/settings.py:168
+#: CyberCP/settings.py:171
 msgid "Chinese"
 msgstr "中文"
 
-#: CyberCP/settings.py:169
+#: CyberCP/settings.py:172
 msgid "Bulgarian"
 msgstr "保加利亚语"
 
-#: CyberCP/settings.py:170
+#: CyberCP/settings.py:173
 msgid "Portuguese"
 msgstr "葡萄牙语"
 
-#: CyberCP/settings.py:171
+#: CyberCP/settings.py:174
 msgid "Japanese"
 msgstr "日语"
 
-#: CyberCP/settings.py:172
+#: CyberCP/settings.py:175
 msgid "Bosnian"
 msgstr "波斯尼亚语"
 
-#: CyberCP/settings.py:173
+#: CyberCP/settings.py:176
 msgid "Greek"
 msgstr ""
 
-#: CyberCP/settings.py:174
+#: CyberCP/settings.py:177
 msgid "Russian"
 msgstr ""
 
-#: CyberCP/settings.py:175
+#: CyberCP/settings.py:178
 msgid "Turkish"
 msgstr ""
 
-#: CyberCP/settings.py:176
+#: CyberCP/settings.py:179
 msgid "Spanish"
+msgstr ""
+
+#: CyberCP/settings.py:180
+msgid "French"
 msgstr ""
 
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
 msgid "Back up Website"
 msgstr "备份网站"
+
+#: backup/templates/backup/backup.html:14
+#: backup/templates/backup/restore.html:14
+#, fuzzy
+#| msgid "Back up"
+msgid "Backup Docs"
+msgstr "备份"
 
 #: backup/templates/backup/backup.html:15
 msgid "This page can be used to Back up your websites"
@@ -85,11 +96,12 @@ msgstr "这里是网站备份界面"
 #: backup/templates/backup/backup.html:30
 #: databases/templates/databases/createDatabase.html:28
 #: databases/templates/databases/deleteDatabase.html:28
-#: ftp/templates/ftp/createFTPAccount.html:28
-#: mailServer/templates/mailServer/changeEmailPassword.html:28
-#: mailServer/templates/mailServer/createEmailAccount.html:28
-#: mailServer/templates/mailServer/deleteEmailAccount.html:28
+#: ftp/templates/ftp/createFTPAccount.html:40
+#: mailServer/templates/mailServer/changeEmailPassword.html:41
+#: mailServer/templates/mailServer/createEmailAccount.html:41
+#: mailServer/templates/mailServer/deleteEmailAccount.html:41
 #: mailServer/templates/mailServer/dkimManager.html:83
+#: mailServer/templates/mailServer/emailForwarding.html:41
 #: manageSSL/templates/manageSSL/manageSSL.html:29
 #: manageSSL/templates/manageSSL/sslForHostName.html:29
 #: manageSSL/templates/manageSSL/sslForMailServer.html:29
@@ -102,6 +114,8 @@ msgstr "选择网站"
 
 #: backup/templates/backup/backup.html:41
 #: backup/templates/backup/backupSchedule.html:90
+#: mailServer/templates/mailServer/emailForwarding.html:94
+#: mailServer/templates/mailServer/emailForwarding.html:112
 msgid "Destination"
 msgstr "远程目录"
 
@@ -120,7 +134,7 @@ msgstr "文件名"
 #: backup/templates/backup/backup.html:61
 #: backup/templates/backup/backup.html:106
 #: backup/templates/backup/restore.html:63
-#: baseTemplate/templates/baseTemplate/index.html:256
+#: baseTemplate/templates/baseTemplate/index.html:257
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:377
 #: filemanager/templates/filemanager/index.html:215
 #: firewall/templates/firewall/firewall.html:36
@@ -134,7 +148,7 @@ msgid "Running"
 msgstr "进行中"
 
 #: backup/templates/backup/backup.html:81
-#: baseTemplate/templates/baseTemplate/index.html:432
+#: baseTemplate/templates/baseTemplate/index.html:434
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:552
 msgid "Create Back up"
 msgstr "创建备份"
@@ -147,10 +161,11 @@ msgstr "取消备份"
 #: backup/templates/backup/backupDestinations.html:97
 #: backup/templates/backup/backupSchedule.html:89
 #: databases/templates/databases/listDataBases.html:87
-#: dns/templates/dns/addDeleteDNSRecords.html:294
+#: dns/templates/dns/addDeleteDNSRecords.html:308
 #: firewall/templates/firewall/firewall.html:135
 #: firewall/templates/firewall/modSecurityRulesPacks.html:109
-#: ftp/templates/ftp/listFTPAccounts.html:87
+#: ftp/templates/ftp/listFTPAccounts.html:99
+#: mailServer/templates/mailServer/emailForwarding.html:110
 #: managePHP/templates/managePHP/installExtensions.html:62
 msgid "ID"
 msgstr "ID"
@@ -165,21 +180,21 @@ msgstr "日期"
 
 #: backup/templates/backup/backup.html:105
 #: filemanager/templates/filemanager/index.html:213
-#: ftp/templates/ftp/listFTPAccounts.html:90
+#: ftp/templates/ftp/listFTPAccounts.html:102
 msgid "Size"
 msgstr "大小"
 
 #: backup/templates/backup/backup.html:107
 #: backup/templates/backup/backupDestinations.html:100
 #: backup/templates/backup/backupSchedule.html:92
-#: dns/templates/dns/addDeleteDNSRecords.html:300
+#: dns/templates/dns/addDeleteDNSRecords.html:314
 #: filemanager/templates/filemanager/index.html:72
 #: firewall/templates/firewall/firewall.html:140
 #: firewall/templates/firewall/secureSSH.html:122
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:40
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:55
 #: websiteFunctions/templates/websiteFunctions/listCron.html:65
-#: websiteFunctions/templates/websiteFunctions/website.html:481
+#: websiteFunctions/templates/websiteFunctions/website.html:516
 msgid "Delete"
 msgstr "删除"
 
@@ -196,6 +211,13 @@ msgstr "删除成功"
 msgid "Set up Back up Destinations"
 msgstr "设置远程目录"
 
+#: backup/templates/backup/backupDestinations.html:14
+#: backup/templates/backup/backupSchedule.html:13
+#: backup/templates/backup/remoteBackups.html:14
+#: backup/templates/backup/remoteBackups.html:21
+msgid "Remote Backups"
+msgstr "远程备份"
+
 #: backup/templates/backup/backupDestinations.html:15
 msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgstr "这里是远程备份页面(SFTP)"
@@ -206,9 +228,9 @@ msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:30
 #: backup/templates/backup/remoteBackups.html:29
-#: dns/templates/dns/addDeleteDNSRecords.html:67
-#: dns/templates/dns/createNameServer.html:48
-#: dns/templates/dns/createNameServer.html:65
+#: dns/templates/dns/addDeleteDNSRecords.html:81
+#: dns/templates/dns/createNameServer.html:59
+#: dns/templates/dns/createNameServer.html:76
 #: firewall/templates/firewall/firewall.html:138
 msgid "IP Address"
 msgstr "IP地址"
@@ -217,11 +239,12 @@ msgstr "IP地址"
 #: backup/templates/backup/remoteBackups.html:37
 #: databases/templates/databases/createDatabase.html:58
 #: databases/templates/databases/listDataBases.html:90
-#: ftp/templates/ftp/listFTPAccounts.html:91
-#: mailServer/templates/mailServer/changeEmailPassword.html:52
-#: mailServer/templates/mailServer/createEmailAccount.html:51
+#: ftp/templates/ftp/listFTPAccounts.html:103
+#: mailServer/templates/mailServer/changeEmailPassword.html:65
+#: mailServer/templates/mailServer/createEmailAccount.html:64
 #: userManagment/templates/userManagment/createUser.html:113
-#: userManagment/templates/userManagment/modifyUser.html:98
+#: userManagment/templates/userManagment/modifyUser.html:111
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:56
 msgid "Password"
 msgstr "密码"
 
@@ -236,7 +259,7 @@ msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:55
 #: backup/templates/backup/backupSchedule.html:54
-#: baseTemplate/templates/baseTemplate/index.html:434
+#: baseTemplate/templates/baseTemplate/index.html:436
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:554
 msgid "Add Destination"
 msgstr "添加远程目录"
@@ -269,28 +292,43 @@ msgstr "远程目录已添加"
 #: backup/templates/backup/restore.html:95
 #: databases/templates/databases/createDatabase.html:88
 #: databases/templates/databases/deleteDatabase.html:73
-#: dns/templates/dns/addDeleteDNSRecords.html:352
-#: dns/templates/dns/createDNSZone.html:60
-#: dns/templates/dns/createNameServer.html:100
-#: dns/templates/dns/deleteDNSZone.html:67
-#: mailServer/templates/mailServer/changeEmailPassword.html:80
-#: mailServer/templates/mailServer/createEmailAccount.html:79
-#: mailServer/templates/mailServer/deleteEmailAccount.html:79
+#: dns/templates/dns/addDeleteDNSRecords.html:366
+#: dns/templates/dns/createDNSZone.html:71
+#: dns/templates/dns/createNameServer.html:111
+#: dns/templates/dns/deleteDNSZone.html:80
+#: emailPremium/templates/emailPremium/emailLimits.html:101
+#: emailPremium/templates/emailPremium/emailPage.html:119
+#: mailServer/templates/mailServer/changeEmailPassword.html:93
+#: mailServer/templates/mailServer/createEmailAccount.html:92
+#: mailServer/templates/mailServer/deleteEmailAccount.html:92
 #: mailServer/templates/mailServer/dkimManager.html:156
+#: mailServer/templates/mailServer/emailForwarding.html:76
 #: manageSSL/templates/manageSSL/manageSSL.html:60
-#: userManagment/templates/userManagment/createUser.html:152
-#: userManagment/templates/userManagment/modifyUser.html:130
+#: userManagment/templates/userManagment/createUser.html:150
+#: userManagment/templates/userManagment/modifyUser.html:143
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:150
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:126
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:101
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:115
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:101
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:159
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:324
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:378
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:430
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:517
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:637
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:129
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:250
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:296
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:77
-#: websiteFunctions/templates/websiteFunctions/website.html:160
-#: websiteFunctions/templates/websiteFunctions/website.html:393
-#: websiteFunctions/templates/websiteFunctions/website.html:434
-#: websiteFunctions/templates/websiteFunctions/website.html:580
-#: websiteFunctions/templates/websiteFunctions/website.html:634
-#: websiteFunctions/templates/websiteFunctions/website.html:686
-#: websiteFunctions/templates/websiteFunctions/website.html:773
-#: websiteFunctions/templates/websiteFunctions/website.html:915
-#: websiteFunctions/templates/websiteFunctions/website.html:994
+#: websiteFunctions/templates/websiteFunctions/website.html:159
+#: websiteFunctions/templates/websiteFunctions/website.html:412
+#: websiteFunctions/templates/websiteFunctions/website.html:463
+#: websiteFunctions/templates/websiteFunctions/website.html:611
+#: websiteFunctions/templates/websiteFunctions/website.html:665
+#: websiteFunctions/templates/websiteFunctions/website.html:717
+#: websiteFunctions/templates/websiteFunctions/website.html:804
+#: websiteFunctions/templates/websiteFunctions/website.html:924
 msgid "Could not connect to server. Please refresh this page."
 msgstr "无法连接到服务器, 请刷新此页面"
 
@@ -309,7 +347,7 @@ msgstr "备份计划 - Cyberpanel"
 
 #: backup/templates/backup/backupSchedule.html:13
 #: backup/templates/backup/backupSchedule.html:20
-#: baseTemplate/templates/baseTemplate/index.html:435
+#: baseTemplate/templates/baseTemplate/index.html:437
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:555
 msgid "Schedule Back up"
 msgstr "备份计划"
@@ -352,9 +390,9 @@ msgstr "备份 - CyberPanel"
 #: baseTemplate/templates/baseTemplate/homePage.html:207
 #: baseTemplate/templates/baseTemplate/homePage.html:399
 #: baseTemplate/templates/baseTemplate/homePage.html:402
-#: baseTemplate/templates/baseTemplate/index.html:425
 #: baseTemplate/templates/baseTemplate/index.html:427
-#: baseTemplate/templates/baseTemplate/index.html:444
+#: baseTemplate/templates/baseTemplate/index.html:429
+#: baseTemplate/templates/baseTemplate/index.html:446
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:545
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:547
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:564
@@ -386,7 +424,7 @@ msgid "Back up Site"
 msgstr "备份网站"
 
 #: backup/templates/backup/index.html:55
-#: baseTemplate/templates/baseTemplate/index.html:433
+#: baseTemplate/templates/baseTemplate/index.html:435
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:553
 msgid "Restore Back up"
 msgstr "还原备份"
@@ -401,9 +439,10 @@ msgid "Transfer Websites from Remote Server - CyberPanel"
 msgstr "从远程服务器恢复网站 - CyberPanel"
 
 #: backup/templates/backup/remoteBackups.html:14
-#: backup/templates/backup/remoteBackups.html:21
-msgid "Remote Backups"
-msgstr "远程备份"
+#, fuzzy
+#| msgid "Start Transfer"
+msgid "Remote Transfer"
+msgstr "开始迁移"
 
 #: backup/templates/backup/remoteBackups.html:15
 msgid "This feature can import website(s) from remote server"
@@ -418,9 +457,15 @@ msgid "Start Transfer"
 msgstr "开始迁移"
 
 #: backup/templates/backup/remoteBackups.html:59
+#: emailPremium/templates/emailPremium/emailLimits.html:75
+#: emailPremium/templates/emailPremium/emailPage.html:83
+#: emailPremium/templates/emailPremium/emailPage.html:93
 #: filemanager/templates/filemanager/index.html:239
-#: websiteFunctions/templates/websiteFunctions/website.html:319
-#: websiteFunctions/templates/websiteFunctions/website.html:743
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:487
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:612
+#: websiteFunctions/templates/websiteFunctions/website.html:316
+#: websiteFunctions/templates/websiteFunctions/website.html:774
+#: websiteFunctions/templates/websiteFunctions/website.html:899
 msgid "Cancel"
 msgstr "取消"
 
@@ -451,8 +496,8 @@ msgstr "网站"
 
 #: backup/templates/backup/remoteBackups.html:108
 #: baseTemplate/templates/baseTemplate/homePage.html:269
-#: baseTemplate/templates/baseTemplate/index.html:499
-#: baseTemplate/templates/baseTemplate/index.html:501
+#: baseTemplate/templates/baseTemplate/index.html:500
+#: baseTemplate/templates/baseTemplate/index.html:502
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:618
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:620
 #: managePHP/templates/managePHP/installExtensions.html:63
@@ -467,14 +512,16 @@ msgid "Package"
 msgstr "套餐"
 
 #: backup/templates/backup/remoteBackups.html:110
-#: baseTemplate/templates/baseTemplate/index.html:384
-#: baseTemplate/templates/baseTemplate/index.html:386
+#: baseTemplate/templates/baseTemplate/index.html:385
+#: baseTemplate/templates/baseTemplate/index.html:387
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:505
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:507
 #: userManagment/templates/userManagment/createUser.html:47
 #: userManagment/templates/userManagment/modifyUser.html:54
 #: userManagment/templates/userManagment/userProfile.html:50
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:60
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:49
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:49
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:67
 msgid "Email"
 msgstr "Email"
@@ -512,6 +559,13 @@ msgstr "配置"
 #: databases/templates/databases/listDataBases.html:54
 #: firewall/templates/firewall/firewall.html:166
 #: managePHP/templates/managePHP/editPHPConfig.html:221
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:140
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:629
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:119
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:240
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:286
+#: websiteFunctions/templates/websiteFunctions/website.html:402
+#: websiteFunctions/templates/websiteFunctions/website.html:916
 msgid "Error message:"
 msgstr "错误信息: "
 
@@ -528,18 +582,19 @@ msgid "Use the tabs to navigate through the control panel."
 msgstr "通过标签页来浏览控制面板"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:23
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:37
 #: websiteFunctions/templates/websiteFunctions/website.html:37
 msgid "Usage"
 msgstr "使用量"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:34
-#: baseTemplate/templates/baseTemplate/index.html:96
+#: baseTemplate/templates/baseTemplate/index.html:97
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:208
 msgid "CPU Usage"
 msgstr "CPU使用量"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:55
-#: baseTemplate/templates/baseTemplate/index.html:107
+#: baseTemplate/templates/baseTemplate/index.html:108
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:219
 msgid "Ram Usage"
 msgstr "内存使用量"
@@ -556,9 +611,9 @@ msgstr "用户功能"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:114
 #: baseTemplate/templates/baseTemplate/homePage.html:328
-#: baseTemplate/templates/baseTemplate/index.html:296
 #: baseTemplate/templates/baseTemplate/index.html:297
 #: baseTemplate/templates/baseTemplate/index.html:298
+#: baseTemplate/templates/baseTemplate/index.html:299
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:417
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:418
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:419
@@ -573,10 +628,10 @@ msgstr "网站功能"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:127
 #: baseTemplate/templates/baseTemplate/homePage.html:341
-#: baseTemplate/templates/baseTemplate/index.html:226
-#: baseTemplate/templates/baseTemplate/index.html:314
+#: baseTemplate/templates/baseTemplate/index.html:227
 #: baseTemplate/templates/baseTemplate/index.html:315
 #: baseTemplate/templates/baseTemplate/index.html:316
+#: baseTemplate/templates/baseTemplate/index.html:317
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:347
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:435
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:436
@@ -590,9 +645,9 @@ msgid "Add/Modify Packages"
 msgstr "创建/修改套餐"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:140
-#: baseTemplate/templates/baseTemplate/index.html:232
-#: baseTemplate/templates/baseTemplate/index.html:331
-#: baseTemplate/templates/baseTemplate/index.html:333
+#: baseTemplate/templates/baseTemplate/index.html:233
+#: baseTemplate/templates/baseTemplate/index.html:332
+#: baseTemplate/templates/baseTemplate/index.html:334
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:353
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:452
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:454
@@ -608,14 +663,15 @@ msgstr "数据库功能"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:164
 #: baseTemplate/templates/baseTemplate/homePage.html:354
-#: baseTemplate/templates/baseTemplate/index.html:347
 #: baseTemplate/templates/baseTemplate/index.html:348
 #: baseTemplate/templates/baseTemplate/index.html:349
+#: baseTemplate/templates/baseTemplate/index.html:350
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:468
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:469
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:470
 #: packages/templates/packages/createPackage.html:67
 #: packages/templates/packages/modifyPackage.html:73
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:48
 #: websiteFunctions/templates/websiteFunctions/website.html:48
 msgid "Databases"
 msgstr "数据库"
@@ -627,9 +683,9 @@ msgstr "控制DNS"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:176
 #: baseTemplate/templates/baseTemplate/homePage.html:377
-#: baseTemplate/templates/baseTemplate/index.html:238
-#: baseTemplate/templates/baseTemplate/index.html:365
-#: baseTemplate/templates/baseTemplate/index.html:367
+#: baseTemplate/templates/baseTemplate/index.html:239
+#: baseTemplate/templates/baseTemplate/index.html:366
+#: baseTemplate/templates/baseTemplate/index.html:368
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:359
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:486
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:488
@@ -644,12 +700,13 @@ msgstr "FTP功能"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:189
 #: baseTemplate/templates/baseTemplate/homePage.html:390
-#: baseTemplate/templates/baseTemplate/index.html:244
-#: baseTemplate/templates/baseTemplate/index.html:407
+#: baseTemplate/templates/baseTemplate/index.html:245
 #: baseTemplate/templates/baseTemplate/index.html:409
+#: baseTemplate/templates/baseTemplate/index.html:411
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:365
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:527
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:529
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:43
 #: websiteFunctions/templates/websiteFunctions/website.html:43
 msgid "FTP"
 msgstr "FTP"
@@ -671,9 +728,9 @@ msgstr "服务器设置"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:253
 #: baseTemplate/templates/baseTemplate/homePage.html:256
-#: baseTemplate/templates/baseTemplate/index.html:479
-#: baseTemplate/templates/baseTemplate/index.html:481
-#: baseTemplate/templates/baseTemplate/index.html:515
+#: baseTemplate/templates/baseTemplate/index.html:480
+#: baseTemplate/templates/baseTemplate/index.html:482
+#: baseTemplate/templates/baseTemplate/index.html:516
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:598
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:600
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:634
@@ -687,61 +744,64 @@ msgstr "设置PHP参数"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:278
 #: baseTemplate/templates/baseTemplate/homePage.html:281
-#: baseTemplate/templates/baseTemplate/index.html:517
+#: baseTemplate/templates/baseTemplate/index.html:518
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:636
-#: websiteFunctions/templates/websiteFunctions/website.html:117
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:116
+#: websiteFunctions/templates/websiteFunctions/website.html:116
 msgid "Logs"
 msgstr "日志"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:301
 #: baseTemplate/templates/baseTemplate/homePage.html:304
-#: baseTemplate/templates/baseTemplate/index.html:534
-#: baseTemplate/templates/baseTemplate/index.html:536
+#: baseTemplate/templates/baseTemplate/index.html:535
+#: baseTemplate/templates/baseTemplate/index.html:537
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:652
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:654
 msgid "Security"
 msgstr "安全"
 
-#: baseTemplate/templates/baseTemplate/index.html:116
+#: baseTemplate/templates/baseTemplate/index.html:117
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:228
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:55
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:76
 #: websiteFunctions/templates/websiteFunctions/website.html:55
 #: websiteFunctions/templates/websiteFunctions/website.html:76
 msgid "Disk Usage"
 msgstr "硬盘使用量"
 
-#: baseTemplate/templates/baseTemplate/index.html:150
-#: baseTemplate/templates/baseTemplate/index.html:153
-#: baseTemplate/templates/baseTemplate/index.html:157
+#: baseTemplate/templates/baseTemplate/index.html:151
+#: baseTemplate/templates/baseTemplate/index.html:154
+#: baseTemplate/templates/baseTemplate/index.html:158
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:262
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:265
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:269
 msgid "CyberPanel"
 msgstr "CyberPanel"
 
-#: baseTemplate/templates/baseTemplate/index.html:155
-#: baseTemplate/templates/baseTemplate/index.html:159
+#: baseTemplate/templates/baseTemplate/index.html:156
+#: baseTemplate/templates/baseTemplate/index.html:160
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:267
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:271
 msgid "Web Hosting Control Panel"
 msgstr "Web Hosting控制面板"
 
-#: baseTemplate/templates/baseTemplate/index.html:161
+#: baseTemplate/templates/baseTemplate/index.html:162
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:273
 msgid "Close sidebar"
 msgstr "关闭侧边栏"
 
-#: baseTemplate/templates/baseTemplate/index.html:167
+#: baseTemplate/templates/baseTemplate/index.html:168
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:279
 msgid "My Account"
 msgstr "我的账号"
 
-#: baseTemplate/templates/baseTemplate/index.html:184
+#: baseTemplate/templates/baseTemplate/index.html:185
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:296
 msgid "Edit profile"
 msgstr "编辑资料"
 
-#: baseTemplate/templates/baseTemplate/index.html:185
-#: baseTemplate/templates/baseTemplate/index.html:303
+#: baseTemplate/templates/baseTemplate/index.html:186
+#: baseTemplate/templates/baseTemplate/index.html:304
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:297
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:424
 #: userManagment/templates/userManagment/index.html:26
@@ -749,43 +809,43 @@ msgstr "编辑资料"
 msgid "View Profile"
 msgstr "查看资料"
 
-#: baseTemplate/templates/baseTemplate/index.html:192
-#: baseTemplate/templates/baseTemplate/index.html:264
+#: baseTemplate/templates/baseTemplate/index.html:193
+#: baseTemplate/templates/baseTemplate/index.html:265
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:304
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:385
 msgid "Logout"
 msgstr "登出"
 
-#: baseTemplate/templates/baseTemplate/index.html:203
-#: baseTemplate/templates/baseTemplate/index.html:207
-#: baseTemplate/templates/baseTemplate/index.html:211
+#: baseTemplate/templates/baseTemplate/index.html:204
+#: baseTemplate/templates/baseTemplate/index.html:208
+#: baseTemplate/templates/baseTemplate/index.html:212
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:315
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:319
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:323
 msgid "CPU Load Average"
 msgstr "CPU平均负载"
 
-#: baseTemplate/templates/baseTemplate/index.html:216
+#: baseTemplate/templates/baseTemplate/index.html:217
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:337
 msgid "Dashboard Quick Menu"
 msgstr "仪表盘"
 
-#: baseTemplate/templates/baseTemplate/index.html:250
-#: baseTemplate/templates/baseTemplate/index.html:463
+#: baseTemplate/templates/baseTemplate/index.html:251
 #: baseTemplate/templates/baseTemplate/index.html:465
+#: baseTemplate/templates/baseTemplate/index.html:467
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:371
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:582
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:584
 msgid "Tuning"
 msgstr "服务器设置"
 
-#: baseTemplate/templates/baseTemplate/index.html:277
+#: baseTemplate/templates/baseTemplate/index.html:278
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:398
 msgid "Overview"
 msgstr "概览"
 
-#: baseTemplate/templates/baseTemplate/index.html:279
 #: baseTemplate/templates/baseTemplate/index.html:280
+#: baseTemplate/templates/baseTemplate/index.html:281
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:400
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:401
 #, fuzzy
@@ -793,16 +853,16 @@ msgstr "概览"
 msgid "Server IP Address"
 msgstr "IP地址"
 
-#: baseTemplate/templates/baseTemplate/index.html:283
-#: baseTemplate/templates/baseTemplate/index.html:285
+#: baseTemplate/templates/baseTemplate/index.html:284
+#: baseTemplate/templates/baseTemplate/index.html:286
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:404
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:406
 msgid "Dashboard"
 msgstr "仪表盘"
 
-#: baseTemplate/templates/baseTemplate/index.html:287
 #: baseTemplate/templates/baseTemplate/index.html:288
 #: baseTemplate/templates/baseTemplate/index.html:289
+#: baseTemplate/templates/baseTemplate/index.html:290
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:408
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:409
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:410
@@ -810,27 +870,27 @@ msgstr "仪表盘"
 msgid "Version Management"
 msgstr "版本管理"
 
-#: baseTemplate/templates/baseTemplate/index.html:293
+#: baseTemplate/templates/baseTemplate/index.html:294
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:414
 msgid "Main"
 msgstr "主要功能"
 
-#: baseTemplate/templates/baseTemplate/index.html:304
+#: baseTemplate/templates/baseTemplate/index.html:305
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:425
 #: userManagment/templates/userManagment/createUser.html:12
 msgid "Create New User"
 msgstr "创建新用户"
 
-#: baseTemplate/templates/baseTemplate/index.html:305
+#: baseTemplate/templates/baseTemplate/index.html:306
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:426
 #: userManagment/templates/userManagment/index.html:52
 #: userManagment/templates/userManagment/index.html:54
 #: userManagment/templates/userManagment/modifyUser.html:12
-#: userManagment/templates/userManagment/modifyUser.html:111
+#: userManagment/templates/userManagment/modifyUser.html:124
 msgid "Modify User"
 msgstr "修改用户"
 
-#: baseTemplate/templates/baseTemplate/index.html:306
+#: baseTemplate/templates/baseTemplate/index.html:307
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:427
 #: userManagment/templates/userManagment/deleteUser.html:13
 #: userManagment/templates/userManagment/deleteUser.html:20
@@ -840,16 +900,16 @@ msgstr "修改用户"
 msgid "Delete User"
 msgstr "删除用户"
 
-#: baseTemplate/templates/baseTemplate/index.html:321
+#: baseTemplate/templates/baseTemplate/index.html:322
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:442
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:12
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:109
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:118
 #: websiteFunctions/templates/websiteFunctions/index.html:49
 #: websiteFunctions/templates/websiteFunctions/index.html:51
 msgid "Create Website"
 msgstr "创建网站"
 
-#: baseTemplate/templates/baseTemplate/index.html:322
+#: baseTemplate/templates/baseTemplate/index.html:323
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:443
 #: websiteFunctions/templates/websiteFunctions/index.html:34
 #: websiteFunctions/templates/websiteFunctions/index.html:36
@@ -859,7 +919,7 @@ msgstr "创建网站"
 msgid "List Websites"
 msgstr "查看网站"
 
-#: baseTemplate/templates/baseTemplate/index.html:323
+#: baseTemplate/templates/baseTemplate/index.html:324
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:444
 #: websiteFunctions/templates/websiteFunctions/index.html:73
 #: websiteFunctions/templates/websiteFunctions/index.html:75
@@ -869,13 +929,13 @@ msgstr "查看网站"
 msgid "Modify Website"
 msgstr "修改网站"
 
-#: baseTemplate/templates/baseTemplate/index.html:324
+#: baseTemplate/templates/baseTemplate/index.html:325
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:445
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:41
 msgid "Suspend/Unsuspend"
 msgstr "禁用/启用"
 
-#: baseTemplate/templates/baseTemplate/index.html:325
+#: baseTemplate/templates/baseTemplate/index.html:326
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:446
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:12
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:19
@@ -885,7 +945,7 @@ msgstr "禁用/启用"
 msgid "Delete Website"
 msgstr "删除网站"
 
-#: baseTemplate/templates/baseTemplate/index.html:338
+#: baseTemplate/templates/baseTemplate/index.html:339
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:459
 #: packages/templates/packages/createPackage.html:13
 #: packages/templates/packages/createPackage.html:84
@@ -894,7 +954,7 @@ msgstr "删除网站"
 msgid "Create Package"
 msgstr "创建套餐"
 
-#: baseTemplate/templates/baseTemplate/index.html:339
+#: baseTemplate/templates/baseTemplate/index.html:340
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:460
 #: packages/templates/packages/deletePackage.html:12
 #: packages/templates/packages/deletePackage.html:18
@@ -904,7 +964,7 @@ msgstr "创建套餐"
 msgid "Delete Package"
 msgstr "删除套餐"
 
-#: baseTemplate/templates/baseTemplate/index.html:340
+#: baseTemplate/templates/baseTemplate/index.html:341
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:461
 #: packages/templates/packages/index.html:49
 #: packages/templates/packages/index.html:51
@@ -914,7 +974,7 @@ msgstr "删除套餐"
 msgid "Modify Package"
 msgstr "修改套餐"
 
-#: baseTemplate/templates/baseTemplate/index.html:354
+#: baseTemplate/templates/baseTemplate/index.html:355
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:475
 #: databases/templates/databases/createDatabase.html:12
 #: databases/templates/databases/createDatabase.html:19
@@ -925,7 +985,7 @@ msgstr "修改套餐"
 msgid "Create Database"
 msgstr "创建数据库"
 
-#: baseTemplate/templates/baseTemplate/index.html:355
+#: baseTemplate/templates/baseTemplate/index.html:356
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:476
 #: databases/templates/databases/deleteDatabase.html:12
 #: databases/templates/databases/deleteDatabase.html:19
@@ -936,7 +996,7 @@ msgstr "创建数据库"
 msgid "Delete Database"
 msgstr "删除数据库"
 
-#: baseTemplate/templates/baseTemplate/index.html:356
+#: baseTemplate/templates/baseTemplate/index.html:357
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:477
 #: databases/templates/databases/index.html:53
 #: databases/templates/databases/index.html:55
@@ -945,84 +1005,90 @@ msgstr "删除数据库"
 msgid "List Databases"
 msgstr "查看数据库"
 
-#: baseTemplate/templates/baseTemplate/index.html:357
+#: baseTemplate/templates/baseTemplate/index.html:358
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:478
 #: databases/templates/databases/index.html:65
 #: databases/templates/databases/index.html:67
 msgid "PHPMYAdmin"
 msgstr "PHPMYADMIN"
 
-#: baseTemplate/templates/baseTemplate/index.html:372
+#: baseTemplate/templates/baseTemplate/index.html:373
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:493
 #: dns/templates/dns/createNameServer.html:12
-#: dns/templates/dns/createNameServer.html:76 dns/templates/dns/index.html:72
+#: dns/templates/dns/createNameServer.html:87 dns/templates/dns/index.html:72
 #: dns/templates/dns/index.html:74
 msgid "Create Nameserver"
 msgstr "创建名称服务器(NS)"
 
-#: baseTemplate/templates/baseTemplate/index.html:373
+#: baseTemplate/templates/baseTemplate/index.html:374
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:494
 #: dns/templates/dns/createDNSZone.html:12
-#: dns/templates/dns/createDNSZone.html:40 dns/templates/dns/index.html:29
+#: dns/templates/dns/createDNSZone.html:51 dns/templates/dns/index.html:29
 #: dns/templates/dns/index.html:31 dns/templates/dns/index.html:84
 #: dns/templates/dns/index.html:86
 msgid "Create DNS Zone"
 msgstr "创建DNS区域"
 
-#: baseTemplate/templates/baseTemplate/index.html:374
+#: baseTemplate/templates/baseTemplate/index.html:375
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:495
-#: dns/templates/dns/deleteDNSZone.html:40 dns/templates/dns/index.html:41
+#: dns/templates/dns/deleteDNSZone.html:53 dns/templates/dns/index.html:41
 #: dns/templates/dns/index.html:43 dns/templates/dns/index.html:96
 #: dns/templates/dns/index.html:98
 msgid "Delete Zone"
 msgstr "删除DNS区域"
 
-#: baseTemplate/templates/baseTemplate/index.html:375
+#: baseTemplate/templates/baseTemplate/index.html:376
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:496
 msgid "Add/Delete Records"
 msgstr "添加/删除记录"
 
-#: baseTemplate/templates/baseTemplate/index.html:391
+#: baseTemplate/templates/baseTemplate/index.html:392
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:512
 #: mailServer/templates/mailServer/createEmailAccount.html:12
 #: mailServer/templates/mailServer/createEmailAccount.html:19
 msgid "Create Email Account"
 msgstr "创建Email用户"
 
-#: baseTemplate/templates/baseTemplate/index.html:391
+#: baseTemplate/templates/baseTemplate/index.html:392
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:512
-#: mailServer/templates/mailServer/createEmailAccount.html:64
+#: mailServer/templates/mailServer/createEmailAccount.html:77
 #: mailServer/templates/mailServer/index.html:25
 #: mailServer/templates/mailServer/index.html:27
 msgid "Create Email"
 msgstr "创建Email"
 
-#: baseTemplate/templates/baseTemplate/index.html:392
+#: baseTemplate/templates/baseTemplate/index.html:393
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:513
 #: mailServer/templates/mailServer/deleteEmailAccount.html:12
 #: mailServer/templates/mailServer/deleteEmailAccount.html:19
 msgid "Delete Email Account"
 msgstr "删除Email用户"
 
-#: baseTemplate/templates/baseTemplate/index.html:392
+#: baseTemplate/templates/baseTemplate/index.html:393
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:513
-#: mailServer/templates/mailServer/deleteEmailAccount.html:56
+#: mailServer/templates/mailServer/deleteEmailAccount.html:69
 #: mailServer/templates/mailServer/index.html:37
 #: mailServer/templates/mailServer/index.html:39
 msgid "Delete Email"
 msgstr "删除Email"
 
-#: baseTemplate/templates/baseTemplate/index.html:393
+#: baseTemplate/templates/baseTemplate/index.html:394
+#, fuzzy
+#| msgid "Email Log"
+msgid "Email Forwarding"
+msgstr "Email日志"
+
+#: baseTemplate/templates/baseTemplate/index.html:395
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:514
 #: databases/templates/databases/listDataBases.html:73
-#: ftp/templates/ftp/listFTPAccounts.html:73
-#: mailServer/templates/mailServer/changeEmailPassword.html:64
+#: ftp/templates/ftp/listFTPAccounts.html:85
+#: mailServer/templates/mailServer/changeEmailPassword.html:77
 #: mailServer/templates/mailServer/index.html:49
 #: mailServer/templates/mailServer/index.html:51
 msgid "Change Password"
 msgstr "修改Email"
 
-#: baseTemplate/templates/baseTemplate/index.html:394
+#: baseTemplate/templates/baseTemplate/index.html:396
 #: mailServer/templates/mailServer/dkimManager.html:13
 #: mailServer/templates/mailServer/dkimManager.html:22
 #: mailServer/templates/mailServer/dkimManager.html:75
@@ -1031,33 +1097,37 @@ msgstr "修改Email"
 msgid "DKIM Manager"
 msgstr "文件管理"
 
-#: baseTemplate/templates/baseTemplate/index.html:395
+#: baseTemplate/templates/baseTemplate/index.html:397
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:515
 msgid "Access Webmail"
 msgstr "进入Webmail"
 
-#: baseTemplate/templates/baseTemplate/index.html:414
+#: baseTemplate/templates/baseTemplate/index.html:416
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:534
 #: ftp/templates/ftp/createFTPAccount.html:12
 #: ftp/templates/ftp/createFTPAccount.html:19 ftp/templates/ftp/index.html:25
 #: ftp/templates/ftp/index.html:27
-#: websiteFunctions/templates/websiteFunctions/website.html:815
-#: websiteFunctions/templates/websiteFunctions/website.html:818
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:570
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:573
+#: websiteFunctions/templates/websiteFunctions/website.html:857
+#: websiteFunctions/templates/websiteFunctions/website.html:860
 msgid "Create FTP Account"
 msgstr "创建FTP用户"
 
-#: baseTemplate/templates/baseTemplate/index.html:415
+#: baseTemplate/templates/baseTemplate/index.html:417
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:535
 #: ftp/templates/ftp/deleteFTPAccount.html:12
 #: ftp/templates/ftp/deleteFTPAccount.html:18
-#: ftp/templates/ftp/deleteFTPAccount.html:52 ftp/templates/ftp/index.html:37
+#: ftp/templates/ftp/deleteFTPAccount.html:64 ftp/templates/ftp/index.html:37
 #: ftp/templates/ftp/index.html:39
-#: websiteFunctions/templates/websiteFunctions/website.html:827
-#: websiteFunctions/templates/websiteFunctions/website.html:830
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:582
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:585
+#: websiteFunctions/templates/websiteFunctions/website.html:869
+#: websiteFunctions/templates/websiteFunctions/website.html:872
 msgid "Delete FTP Account"
 msgstr "删除FTP用户"
 
-#: baseTemplate/templates/baseTemplate/index.html:416
+#: baseTemplate/templates/baseTemplate/index.html:418
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:536
 #: ftp/templates/ftp/index.html:49 ftp/templates/ftp/index.html:51
 #: ftp/templates/ftp/listFTPAccounts.html:13
@@ -1065,27 +1135,27 @@ msgstr "删除FTP用户"
 msgid "List FTP Accounts"
 msgstr "查看FTP用户"
 
-#: baseTemplate/templates/baseTemplate/index.html:434
+#: baseTemplate/templates/baseTemplate/index.html:436
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:554
 msgid "Add/Delete Destination"
 msgstr "添加/删除远程目录"
 
-#: baseTemplate/templates/baseTemplate/index.html:436
+#: baseTemplate/templates/baseTemplate/index.html:438
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:556
 #, fuzzy
 #| msgid "Remote Backups"
 msgid "Remote Back ups"
 msgstr "远程备份"
 
-#: baseTemplate/templates/baseTemplate/index.html:445
-#: baseTemplate/templates/baseTemplate/index.html:446
+#: baseTemplate/templates/baseTemplate/index.html:447
+#: baseTemplate/templates/baseTemplate/index.html:448
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:565
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:566
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:39
 msgid "SSL"
 msgstr "SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:451
+#: baseTemplate/templates/baseTemplate/index.html:453
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:571
 #: manageSSL/templates/manageSSL/index.html:28
 #: manageSSL/templates/manageSSL/manageSSL.html:13
@@ -1093,50 +1163,45 @@ msgstr "SSL"
 msgid "Manage SSL"
 msgstr "管理SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:452
+#: baseTemplate/templates/baseTemplate/index.html:454
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:572
 #: manageSSL/templates/manageSSL/index.html:40
 msgid "Hostname SSL"
 msgstr "面板SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:453
+#: baseTemplate/templates/baseTemplate/index.html:455
 #, fuzzy
 #| msgid "Server Logs"
 msgid "MailServer SSL"
 msgstr "服务器日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:461
+#: baseTemplate/templates/baseTemplate/index.html:463
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:580
 msgid "Server"
 msgstr "服务器设置"
 
-#: baseTemplate/templates/baseTemplate/index.html:466
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:585
-msgid "NEW"
-msgstr "新功能"
-
-#: baseTemplate/templates/baseTemplate/index.html:471
+#: baseTemplate/templates/baseTemplate/index.html:472
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:590
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
 #: tuning/templates/tuning/liteSpeedTuning.html:12
 msgid "LiteSpeed Tuning"
 msgstr "LiteSpeed设置"
 
-#: baseTemplate/templates/baseTemplate/index.html:472
+#: baseTemplate/templates/baseTemplate/index.html:473
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:591
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13
 msgid "PHP Tuning"
 msgstr "PHP设置"
 
-#: baseTemplate/templates/baseTemplate/index.html:487
+#: baseTemplate/templates/baseTemplate/index.html:488
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:606
 #: serverStatus/templates/serverStatus/index.html:25
 #: serverStatus/templates/serverStatus/index.html:27
 msgid "LiteSpeed Status"
 msgstr "LiteSpeed状态"
 
-#: baseTemplate/templates/baseTemplate/index.html:488
+#: baseTemplate/templates/baseTemplate/index.html:489
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:607
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:15
 #: serverStatus/templates/serverStatus/index.html:37
@@ -1144,61 +1209,63 @@ msgstr "LiteSpeed状态"
 msgid "CyberPanel Main Log File"
 msgstr "Cybapenl主日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:489
+#: baseTemplate/templates/baseTemplate/index.html:490
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:608
 #, fuzzy
 #| msgid "Server Status"
 msgid "Services Status"
 msgstr "服务器状态"
 
-#: baseTemplate/templates/baseTemplate/index.html:506
+#: baseTemplate/templates/baseTemplate/index.html:507
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:625
 #: managePHP/templates/managePHP/installExtensions.html:13
 msgid "Install PHP Extensions"
 msgstr "安装PHP扩展"
 
-#: baseTemplate/templates/baseTemplate/index.html:506
+#: baseTemplate/templates/baseTemplate/index.html:507
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:625
 #: managePHP/templates/managePHP/index.html:24
 #: managePHP/templates/managePHP/index.html:26
 msgid "Install Extensions"
 msgstr "安装扩展"
 
-#: baseTemplate/templates/baseTemplate/index.html:507
+#: baseTemplate/templates/baseTemplate/index.html:508
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:626
 #: managePHP/templates/managePHP/index.html:36
 #: managePHP/templates/managePHP/index.html:38
 msgid "Edit PHP Configs"
 msgstr "编辑PHP配置"
 
-#: baseTemplate/templates/baseTemplate/index.html:522
+#: baseTemplate/templates/baseTemplate/index.html:523
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:641
 msgid "Access Log"
 msgstr "访问日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:523
+#: baseTemplate/templates/baseTemplate/index.html:524
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:642
 #: serverLogs/templates/serverLogs/errorLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:37
 #: serverLogs/templates/serverLogs/index.html:39
-#: websiteFunctions/templates/websiteFunctions/website.html:139
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:138
+#: websiteFunctions/templates/websiteFunctions/website.html:138
 msgid "Error Logs"
 msgstr "错误日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:524
+#: baseTemplate/templates/baseTemplate/index.html:525
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:643
+#: emailPremium/templates/emailPremium/emailPage.html:144
 #: serverLogs/templates/serverLogs/emailLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:49
 #: serverLogs/templates/serverLogs/index.html:51
 msgid "Email Logs"
 msgstr "Email日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:524
+#: baseTemplate/templates/baseTemplate/index.html:525
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:643
 msgid "Email Log"
 msgstr "Email日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:525
+#: baseTemplate/templates/baseTemplate/index.html:526
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:644
 #: serverLogs/templates/serverLogs/ftplogs.html:14
 #: serverLogs/templates/serverLogs/index.html:61
@@ -1206,30 +1273,31 @@ msgstr "Email日志"
 msgid "FTP Logs"
 msgstr "FTP日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:526
+#: baseTemplate/templates/baseTemplate/index.html:527
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:14
 #, fuzzy
 #| msgid "Security Functions"
 msgid "ModSecurity Audit Logs"
 msgstr "安全"
 
-#: baseTemplate/templates/baseTemplate/index.html:526
+#: baseTemplate/templates/baseTemplate/index.html:527
 msgid "ModSec Audit Logs"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:541
+#: baseTemplate/templates/baseTemplate/index.html:542
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:659
 msgid "Firewall Home"
 msgstr "防火墙"
 
-#: baseTemplate/templates/baseTemplate/index.html:541
+#: baseTemplate/templates/baseTemplate/index.html:542
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:659
+#: firewall/templates/firewall/csf.html:118
 #: firewall/templates/firewall/index.html:25
 #: firewall/templates/firewall/index.html:27
 msgid "Firewall"
 msgstr "防火墙"
 
-#: baseTemplate/templates/baseTemplate/index.html:542
+#: baseTemplate/templates/baseTemplate/index.html:543
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:660
 #: firewall/templates/firewall/index.html:36
 #: firewall/templates/firewall/index.html:38
@@ -1238,28 +1306,99 @@ msgstr "防火墙"
 msgid "Secure SSH"
 msgstr "SSH加固"
 
-#: baseTemplate/templates/baseTemplate/index.html:543
+#: baseTemplate/templates/baseTemplate/index.html:544
 #, fuzzy
 #| msgid "Edit PHP Configurations"
 msgid "ModSecurity Configurations"
 msgstr "设置PHP参数"
 
-#: baseTemplate/templates/baseTemplate/index.html:543
+#: baseTemplate/templates/baseTemplate/index.html:544
 #, fuzzy
 #| msgid "Security"
 msgid "ModSecurity Conf"
 msgstr "安全"
 
-#: baseTemplate/templates/baseTemplate/index.html:544
+#: baseTemplate/templates/baseTemplate/index.html:545
 #: firewall/templates/firewall/modSecurityRules.html:20
 #, fuzzy
 #| msgid "Security"
 msgid "ModSecurity Rules"
 msgstr "安全"
 
-#: baseTemplate/templates/baseTemplate/index.html:545
+#: baseTemplate/templates/baseTemplate/index.html:546
 msgid "ModSecurity Rules Packs"
 msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:547
+msgid "ConfigServer Security & Firewall (CSF)"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:547
+#: firewall/templates/firewall/csf.html:21
+#: firewall/templates/firewall/csf.html:85
+#: firewall/templates/firewall/csf.html:94
+msgid "CSF"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:554
+#: baseTemplate/templates/baseTemplate/index.html:556
+#, fuzzy
+#| msgid "Mail Functions"
+msgid "Mail Settings"
+msgstr "邮件功能"
+
+#: baseTemplate/templates/baseTemplate/index.html:557
+#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:585
+msgid "NEW"
+msgstr "新功能"
+
+#: baseTemplate/templates/baseTemplate/index.html:562
+#: emailPremium/templates/emailPremium/policyServer.html:20
+msgid "Email Policy Server"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:563
+#, fuzzy
+#| msgid "Email Logs"
+msgid "Email Limits"
+msgstr "Email日志"
+
+#: baseTemplate/templates/baseTemplate/index.html:564
+#, fuzzy
+#| msgid "Configurations"
+msgid "SpamAssassin Configurations"
+msgstr "配置"
+
+#: baseTemplate/templates/baseTemplate/index.html:564
+#: emailPremium/templates/emailPremium/SpamAssassin.html:20
+#: firewall/templates/firewall/spamassassin.html:20
+msgid "SpamAssassin"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:572
+#: baseTemplate/templates/baseTemplate/index.html:574
+#, fuzzy
+#| msgid "Manage SSL"
+msgid "Manage Services"
+msgstr "管理SSL"
+
+#: baseTemplate/templates/baseTemplate/index.html:579
+#: manageServices/templates/manageServices/managePowerDNS.html:22
+#, fuzzy
+#| msgid "Manage SSL"
+msgid "Manage PowerDNS"
+msgstr "管理SSL"
+
+#: baseTemplate/templates/baseTemplate/index.html:580
+#: manageServices/templates/manageServices/managePostfix.html:22
+msgid "Manage Postfix"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:581
+#, fuzzy
+#| msgid "Manage SSL"
+msgid "Manage FTP"
+msgstr "管理SSL"
 
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:199
 msgid "CPU Status"
@@ -1300,9 +1439,13 @@ msgid "Latest Build"
 msgstr "最新编译"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:66
+#: emailPremium/templates/emailPremium/policyServer.html:52
 #: firewall/templates/firewall/secureSSH.html:78
 #: mailServer/templates/mailServer/dkimManager.html:40
 #: managePHP/templates/managePHP/editPHPConfig.html:148
+#: manageServices/templates/manageServices/managePostfix.html:54
+#: manageServices/templates/manageServices/managePowerDNS.html:54
+#: manageServices/templates/manageServices/managePureFtpd.html:54
 msgid "Error message: "
 msgstr "错误信息: "
 
@@ -1315,16 +1458,25 @@ msgid "Update finished..."
 msgstr "更新完成..."
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:79
+#: emailPremium/templates/emailPremium/SpamAssassin.html:47
+#: emailPremium/templates/emailPremium/SpamAssassin.html:134
+#: emailPremium/templates/emailPremium/policyServer.html:60
+#: firewall/templates/firewall/csf.html:46
 #: firewall/templates/firewall/modSecurity.html:47
 #: firewall/templates/firewall/modSecurity.html:177
 #: firewall/templates/firewall/modSecurityRules.html:53
 #: firewall/templates/firewall/modSecurityRulesPacks.html:88
 #: firewall/templates/firewall/secureSSH.html:87
 #: firewall/templates/firewall/secureSSH.html:172
+#: firewall/templates/firewall/spamassassin.html:47
+#: firewall/templates/firewall/spamassassin.html:177
 #: mailServer/templates/mailServer/dkimManager.html:44
 #: managePHP/templates/managePHP/editPHPConfig.html:157
 #: managePHP/templates/managePHP/editPHPConfig.html:230
 #: managePHP/templates/managePHP/installExtensions.html:114
+#: manageServices/templates/manageServices/managePostfix.html:62
+#: manageServices/templates/manageServices/managePowerDNS.html:62
+#: manageServices/templates/manageServices/managePureFtpd.html:62
 msgid "Could not connect. Please refresh this page."
 msgstr "无法连接, 请刷新此页面"
 
@@ -1343,9 +1495,9 @@ msgstr "数据库名字"
 
 #: databases/templates/databases/createDatabase.html:50
 #: firewall/templates/firewall/secureSSH.html:120
-#: ftp/templates/ftp/createFTPAccount.html:43
-#: ftp/templates/ftp/listFTPAccounts.html:88
-#: mailServer/templates/mailServer/createEmailAccount.html:43
+#: ftp/templates/ftp/createFTPAccount.html:55
+#: ftp/templates/ftp/listFTPAccounts.html:100
+#: mailServer/templates/mailServer/createEmailAccount.html:56
 msgid "User Name"
 msgstr "用户名"
 
@@ -1390,16 +1542,16 @@ msgid "List Databases or change their passwords."
 msgstr "查看数据库或修改密码"
 
 #: databases/templates/databases/listDataBases.html:28
-#: dns/templates/dns/addDeleteDNSRecords.html:28
-#: ftp/templates/ftp/deleteFTPAccount.html:27
-#: ftp/templates/ftp/listFTPAccounts.html:28
+#: dns/templates/dns/addDeleteDNSRecords.html:42
+#: ftp/templates/ftp/deleteFTPAccount.html:39
+#: ftp/templates/ftp/listFTPAccounts.html:40
 #: tuning/templates/tuning/phpTuning.html:28
 msgid "Select Domain"
 msgstr "选择域名"
 
 #: databases/templates/databases/listDataBases.html:46
-#: dns/templates/dns/addDeleteDNSRecords.html:335
-#: ftp/templates/ftp/listFTPAccounts.html:46
+#: dns/templates/dns/addDeleteDNSRecords.html:349
+#: ftp/templates/ftp/listFTPAccounts.html:58
 msgid "Records successfully fetched for"
 msgstr "成功读取记录"
 
@@ -1413,7 +1565,7 @@ msgstr "无法为修改密码 "
 
 #: databases/templates/databases/listDataBases.html:59
 #: firewall/templates/firewall/firewall.html:176
-#: ftp/templates/ftp/listFTPAccounts.html:59
+#: ftp/templates/ftp/listFTPAccounts.html:71
 msgid "Could Not Connect to server. Please refresh this page"
 msgstr "无法连接到服务器, 请刷新此页面"
 
@@ -1422,7 +1574,7 @@ msgid "Database User"
 msgstr "数据库用户"
 
 #: databases/templates/databases/listDataBases.html:98
-#: ftp/templates/ftp/listFTPAccounts.html:100
+#: ftp/templates/ftp/listFTPAccounts.html:112
 msgid "Change"
 msgstr "修改"
 
@@ -1434,6 +1586,13 @@ msgstr "添加/删除DNS记录 - Cyberpanel"
 msgid "Add/Modify DNS Zone"
 msgstr "添加/修改DNS区域"
 
+#: dns/templates/dns/addDeleteDNSRecords.html:13
+#: dns/templates/dns/createDNSZone.html:12
+#: dns/templates/dns/createNameServer.html:12
+#: dns/templates/dns/deleteDNSZone.html:12
+msgid "DNS Docs"
+msgstr ""
+
 #: dns/templates/dns/addDeleteDNSRecords.html:14
 msgid ""
 "On this page you can add/modify dns records for domains whose dns zone is "
@@ -1444,123 +1603,146 @@ msgstr "此页面可以为已创建DNS区域的域名添加/编辑DNS记录 "
 msgid "Add Records"
 msgstr "添加记录"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:59
-#: dns/templates/dns/addDeleteDNSRecords.html:82
-#: dns/templates/dns/addDeleteDNSRecords.html:106
-#: dns/templates/dns/addDeleteDNSRecords.html:129
-#: dns/templates/dns/addDeleteDNSRecords.html:157
-#: dns/templates/dns/addDeleteDNSRecords.html:181
-#: dns/templates/dns/addDeleteDNSRecords.html:205
-#: dns/templates/dns/addDeleteDNSRecords.html:229
-#: dns/templates/dns/addDeleteDNSRecords.html:253
-#: dns/templates/dns/addDeleteDNSRecords.html:296
+#: dns/templates/dns/addDeleteDNSRecords.html:27
+#: dns/templates/dns/createDNSZone.html:24
+#: dns/templates/dns/createNameServer.html:24
+#: dns/templates/dns/deleteDNSZone.html:25
+msgid "PowerDNS is disabled."
+msgstr ""
+
+#: dns/templates/dns/addDeleteDNSRecords.html:29
+#: dns/templates/dns/createDNSZone.html:26
+#: dns/templates/dns/createNameServer.html:26
+#: dns/templates/dns/deleteDNSZone.html:27
+#: ftp/templates/ftp/createFTPAccount.html:28
+#: ftp/templates/ftp/deleteFTPAccount.html:27
+#: ftp/templates/ftp/listFTPAccounts.html:28
+#: mailServer/templates/mailServer/changeEmailPassword.html:28
+#: mailServer/templates/mailServer/createEmailAccount.html:28
+#: mailServer/templates/mailServer/deleteEmailAccount.html:28
+#: mailServer/templates/mailServer/emailForwarding.html:28
+#, fuzzy
+#| msgid "Enable"
+msgid "Enable Now"
+msgstr "开启"
+
+#: dns/templates/dns/addDeleteDNSRecords.html:73
+#: dns/templates/dns/addDeleteDNSRecords.html:96
+#: dns/templates/dns/addDeleteDNSRecords.html:120
+#: dns/templates/dns/addDeleteDNSRecords.html:143
+#: dns/templates/dns/addDeleteDNSRecords.html:171
+#: dns/templates/dns/addDeleteDNSRecords.html:195
+#: dns/templates/dns/addDeleteDNSRecords.html:219
+#: dns/templates/dns/addDeleteDNSRecords.html:243
+#: dns/templates/dns/addDeleteDNSRecords.html:267
+#: dns/templates/dns/addDeleteDNSRecords.html:310
 #: filemanager/templates/filemanager/index.html:212
 #: firewall/templates/firewall/firewall.html:136
 #: serverStatus/templates/serverStatus/litespeedStatus.html:40
 msgid "Name"
 msgstr "名称"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:63
-#: dns/templates/dns/addDeleteDNSRecords.html:86
-#: dns/templates/dns/addDeleteDNSRecords.html:110
-#: dns/templates/dns/addDeleteDNSRecords.html:133
-#: dns/templates/dns/addDeleteDNSRecords.html:161
-#: dns/templates/dns/addDeleteDNSRecords.html:185
-#: dns/templates/dns/addDeleteDNSRecords.html:209
-#: dns/templates/dns/addDeleteDNSRecords.html:233
-#: dns/templates/dns/addDeleteDNSRecords.html:257
-#: dns/templates/dns/addDeleteDNSRecords.html:297
+#: dns/templates/dns/addDeleteDNSRecords.html:77
+#: dns/templates/dns/addDeleteDNSRecords.html:100
+#: dns/templates/dns/addDeleteDNSRecords.html:124
+#: dns/templates/dns/addDeleteDNSRecords.html:147
+#: dns/templates/dns/addDeleteDNSRecords.html:175
+#: dns/templates/dns/addDeleteDNSRecords.html:199
+#: dns/templates/dns/addDeleteDNSRecords.html:223
+#: dns/templates/dns/addDeleteDNSRecords.html:247
+#: dns/templates/dns/addDeleteDNSRecords.html:271
+#: dns/templates/dns/addDeleteDNSRecords.html:311
 msgid "TTL"
 msgstr ""
 
-#: dns/templates/dns/addDeleteDNSRecords.html:73
-#: dns/templates/dns/addDeleteDNSRecords.html:96
-#: dns/templates/dns/addDeleteDNSRecords.html:120
-#: dns/templates/dns/addDeleteDNSRecords.html:147
-#: dns/templates/dns/addDeleteDNSRecords.html:172
-#: dns/templates/dns/addDeleteDNSRecords.html:196
-#: dns/templates/dns/addDeleteDNSRecords.html:220
-#: dns/templates/dns/addDeleteDNSRecords.html:244
-#: dns/templates/dns/addDeleteDNSRecords.html:272
+#: dns/templates/dns/addDeleteDNSRecords.html:87
+#: dns/templates/dns/addDeleteDNSRecords.html:110
+#: dns/templates/dns/addDeleteDNSRecords.html:134
+#: dns/templates/dns/addDeleteDNSRecords.html:161
+#: dns/templates/dns/addDeleteDNSRecords.html:186
+#: dns/templates/dns/addDeleteDNSRecords.html:210
+#: dns/templates/dns/addDeleteDNSRecords.html:234
+#: dns/templates/dns/addDeleteDNSRecords.html:258
+#: dns/templates/dns/addDeleteDNSRecords.html:286
 #: firewall/templates/firewall/firewall.html:117
 msgid "Add"
 msgstr "添加"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:90
+#: dns/templates/dns/addDeleteDNSRecords.html:104
 #, fuzzy
 #| msgid "IP Address"
 msgid "IPV6 Address"
 msgstr "IP地址"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:114
-#: dns/templates/dns/addDeleteDNSRecords.html:141
-#: dns/templates/dns/createDNSZone.html:27
-#: dns/templates/dns/createNameServer.html:27
+#: dns/templates/dns/addDeleteDNSRecords.html:128
+#: dns/templates/dns/addDeleteDNSRecords.html:155
+#: dns/templates/dns/createDNSZone.html:38
+#: dns/templates/dns/createNameServer.html:38
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:52
-#: websiteFunctions/templates/websiteFunctions/website.html:313
+#: websiteFunctions/templates/websiteFunctions/website.html:311
 msgid "Domain Name"
 msgstr "域名"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:137
-#: dns/templates/dns/addDeleteDNSRecords.html:299
+#: dns/templates/dns/addDeleteDNSRecords.html:151
+#: dns/templates/dns/addDeleteDNSRecords.html:313
 msgid "Priority"
 msgstr "优先级"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:166
+#: dns/templates/dns/addDeleteDNSRecords.html:180
 msgid "Policy"
 msgstr "政策"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:190
+#: dns/templates/dns/addDeleteDNSRecords.html:204
 msgid "Text"
 msgstr "内容"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:214
+#: dns/templates/dns/addDeleteDNSRecords.html:228
 #, fuzzy
 #| msgid "Value"
 msgid "SOA Value"
 msgstr "内容"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:238
+#: dns/templates/dns/addDeleteDNSRecords.html:252
 #, fuzzy
 #| msgid "First Nameserver"
 msgid "Name server"
 msgstr "第一名称服务器"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:261
+#: dns/templates/dns/addDeleteDNSRecords.html:275
 #, fuzzy
 #| msgid "Priority"
 msgid "Prioirty"
 msgstr "优先级"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:266
+#: dns/templates/dns/addDeleteDNSRecords.html:280
 msgid "Content"
 msgstr ""
 
-#: dns/templates/dns/addDeleteDNSRecords.html:295
+#: dns/templates/dns/addDeleteDNSRecords.html:309
 msgid "Type"
 msgstr "类型"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:298
+#: dns/templates/dns/addDeleteDNSRecords.html:312
 msgid "Value"
 msgstr "内容"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:327
+#: dns/templates/dns/addDeleteDNSRecords.html:341
 msgid "Cannot fetch records. Error message:"
 msgstr "无法获取记录, 错误信息: "
 
-#: dns/templates/dns/addDeleteDNSRecords.html:331
+#: dns/templates/dns/addDeleteDNSRecords.html:345
 msgid "Cannot add record. Error message: "
 msgstr "无法添加记录, 错误信息: "
 
-#: dns/templates/dns/addDeleteDNSRecords.html:339
+#: dns/templates/dns/addDeleteDNSRecords.html:353
 msgid "Record Successfully Deleted"
 msgstr "成功删除记录"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:343
+#: dns/templates/dns/addDeleteDNSRecords.html:357
 msgid "Cannot delete record. Error message:"
 msgstr "无法删除记录, 错误信息:"
 
-#: dns/templates/dns/addDeleteDNSRecords.html:347
+#: dns/templates/dns/addDeleteDNSRecords.html:361
 msgid "Record Successfully Added."
 msgstr "成功添加记录"
 
@@ -1580,11 +1762,11 @@ msgstr "在此页面创建DNS区域, 您可以在编辑页面修改DNS区域 "
 msgid "Details"
 msgstr "详情"
 
-#: dns/templates/dns/createDNSZone.html:51
+#: dns/templates/dns/createDNSZone.html:62
 msgid "Cannot create DNS Zone. Error message:"
 msgstr "无法创建DNS区域, 错误信息: "
 
-#: dns/templates/dns/createDNSZone.html:55
+#: dns/templates/dns/createDNSZone.html:66
 msgid "DNS Zone for domain:"
 msgstr "域名DNS区域: "
 
@@ -1598,19 +1780,19 @@ msgid ""
 "internet can resolve websites hosted on this server."
 msgstr "您可以在此页面创建名称服务器(NS)以解析您的域名 "
 
-#: dns/templates/dns/createNameServer.html:39
+#: dns/templates/dns/createNameServer.html:50
 msgid "First Nameserver"
 msgstr "第一名称服务器"
 
-#: dns/templates/dns/createNameServer.html:55
+#: dns/templates/dns/createNameServer.html:66
 msgid "Second Nameserver (Back up)"
 msgstr "第二名称服务器(备用)"
 
-#: dns/templates/dns/createNameServer.html:87
+#: dns/templates/dns/createNameServer.html:98
 msgid "Nameserver cannot be created. Error message:"
 msgstr "名称服务器无法创建, 错误信息: "
 
-#: dns/templates/dns/createNameServer.html:91
+#: dns/templates/dns/createNameServer.html:102
 msgid "The following nameservers were successfully created:"
 msgstr "以下名称服务器已成功创建: "
 
@@ -1629,28 +1811,28 @@ msgid ""
 "all its related records as well."
 msgstr "此页面可以删除DNS区域, 删除DNS区域时所有相关的DNS记录也将会被删除 "
 
-#: dns/templates/dns/deleteDNSZone.html:27
+#: dns/templates/dns/deleteDNSZone.html:40
 msgid "Select Zone"
 msgstr "选择DNS区域"
 
-#: dns/templates/dns/deleteDNSZone.html:49
-#: ftp/templates/ftp/deleteFTPAccount.html:61
-#: mailServer/templates/mailServer/deleteEmailAccount.html:64
+#: dns/templates/dns/deleteDNSZone.html:62
+#: ftp/templates/ftp/deleteFTPAccount.html:73
+#: mailServer/templates/mailServer/deleteEmailAccount.html:77
 #: packages/templates/packages/deletePackage.html:49
 #: userManagment/templates/userManagment/deleteUser.html:51
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:51
 msgid "Are you sure?"
 msgstr "您确定？"
 
-#: dns/templates/dns/deleteDNSZone.html:59
+#: dns/templates/dns/deleteDNSZone.html:72
 msgid "Cannot delete zone. Error message: "
 msgstr "无法删除DNS区域, 错误信息: "
 
-#: dns/templates/dns/deleteDNSZone.html:63
+#: dns/templates/dns/deleteDNSZone.html:76
 msgid "Zone for domain:"
 msgstr "DNS区域: "
 
-#: dns/templates/dns/deleteDNSZone.html:63
+#: dns/templates/dns/deleteDNSZone.html:76
 msgid "is successfully erased."
 msgstr "已成功删除"
 
@@ -1673,6 +1855,306 @@ msgstr "添加/删除记录"
 #: dns/templates/dns/index.html:55 dns/templates/dns/index.html:110
 msgid "Add Delete/Records"
 msgstr "添加/删除记录"
+
+#: emailPremium/templates/emailPremium/SpamAssassin.html:3
+#: firewall/templates/firewall/spamassassin.html:3
+#, fuzzy
+#| msgid "Packages - CyberPanel"
+msgid "SpamAssassin - CyberPanel"
+msgstr "套餐 - CyberPanel"
+
+#: emailPremium/templates/emailPremium/SpamAssassin.html:13
+#: firewall/templates/firewall/spamassassin.html:13
+#, fuzzy
+#| msgid "Configurations"
+msgid "SpamAssassin Configurations!"
+msgstr "配置"
+
+#: emailPremium/templates/emailPremium/SpamAssassin.html:13
+msgid "SpamAssassin Docs"
+msgstr ""
+
+#: emailPremium/templates/emailPremium/SpamAssassin.html:14
+#: firewall/templates/firewall/spamassassin.html:14
+#, fuzzy
+#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgid "On this page you can configure SpamAssassin settings."
+msgstr "这里是远程备份页面(SFTP)"
+
+#: emailPremium/templates/emailPremium/SpamAssassin.html:29
+msgid "SpamAssassin is not installed "
+msgstr ""
+
+#: emailPremium/templates/emailPremium/SpamAssassin.html:31
+#: firewall/templates/firewall/csf.html:30
+#: firewall/templates/firewall/modSecurity.html:31
+#: firewall/templates/firewall/modSecurityRules.html:72
+#: firewall/templates/firewall/modSecurityRulesPacks.html:30
+#: firewall/templates/firewall/spamassassin.html:31
+#, fuzzy
+#| msgid "Install"
+msgid "Install Now."
+msgstr "安装"
+
+#: emailPremium/templates/emailPremium/SpamAssassin.html:43
+#: firewall/templates/firewall/csf.html:42
+#: firewall/templates/firewall/modSecurity.html:43
+#: firewall/templates/firewall/spamassassin.html:43
+#, fuzzy
+#| msgid "Cannot add destination. Error message:"
+msgid "Failed to start installation, Error message: "
+msgstr "无法添加远程目录, 错误信息: "
+
+#: emailPremium/templates/emailPremium/SpamAssassin.html:51
+#: firewall/templates/firewall/csf.html:50
+#: firewall/templates/firewall/modSecurity.html:51
+#: firewall/templates/firewall/spamassassin.html:51
+#, fuzzy
+#| msgid "Installation failed. Error message:"
+msgid "Installation failed."
+msgstr "安装失败, 错误信息:"
+
+#: emailPremium/templates/emailPremium/SpamAssassin.html:55
+msgid "SpamAssassin successfully installed, refreshing page in 3 seconds.."
+msgstr ""
+
+#: emailPremium/templates/emailPremium/SpamAssassin.html:66
+msgid "Winter is coming, but so is SpamAssassin."
+msgstr ""
+
+#: emailPremium/templates/emailPremium/SpamAssassin.html:114
+#: emailPremium/templates/emailPremium/policyServer.html:40
+#: firewall/templates/firewall/modSecurity.html:157
+#: firewall/templates/firewall/spamassassin.html:157
+#: manageServices/templates/manageServices/managePostfix.html:42
+#: manageServices/templates/manageServices/managePowerDNS.html:42
+#: manageServices/templates/manageServices/managePureFtpd.html:42
+#, fuzzy
+#| msgid "Save Changes"
+msgid "Save changes."
+msgstr "保存修改"
+
+#: emailPremium/templates/emailPremium/SpamAssassin.html:126
+#, fuzzy
+#| msgid "Could not fetch current configuration. Error message:"
+msgid "Failed to save SpamAssassin configurations. Error message: "
+msgstr "无法读取当前配置, 错误信息:"
+
+#: emailPremium/templates/emailPremium/SpamAssassin.html:130
+#, fuzzy
+#| msgid "Backup Process successfully started."
+msgid "SpamAssassin configurations successfully saved."
+msgstr " 已成功创建."
+
+#: emailPremium/templates/emailPremium/emailLimits.html:13
+#: emailPremium/templates/emailPremium/emailPage.html:13
+#: emailPremium/templates/emailPremium/listDomains.html:14
+#: emailPremium/templates/emailPremium/policyServer.html:13
+#, fuzzy
+#| msgid "Email Logs"
+msgid "Emai Limits Docs"
+msgstr "Email日志"
+
+#: emailPremium/templates/emailPremium/emailLimits.html:14
+msgid "View and change email limits for a domain name."
+msgstr ""
+
+#: emailPremium/templates/emailPremium/emailLimits.html:25
+#, fuzzy
+#| msgid "Resource Usage"
+msgid "Domain Resource Usage"
+msgstr "资源使用量"
+
+#: emailPremium/templates/emailPremium/emailLimits.html:52
+#: emailPremium/templates/emailPremium/emailLimits.html:158
+#: emailPremium/templates/emailPremium/emailPage.html:54
+#: emailPremium/templates/emailPremium/listDomains.html:59
+msgid "Limits are being Applied!"
+msgstr ""
+
+#: emailPremium/templates/emailPremium/emailLimits.html:53
+#: emailPremium/templates/emailPremium/emailLimits.html:159
+#: emailPremium/templates/emailPremium/emailPage.html:55
+#: emailPremium/templates/emailPremium/emailPage.html:61
+#: emailPremium/templates/emailPremium/listDomains.html:60
+#: tuning/templates/tuning/phpTuning.html:91
+msgid "Disable"
+msgstr "关闭"
+
+#: emailPremium/templates/emailPremium/emailLimits.html:54
+#: emailPremium/templates/emailPremium/emailLimits.html:160
+#: emailPremium/templates/emailPremium/emailPage.html:56
+#: emailPremium/templates/emailPremium/listDomains.html:61
+msgid "Limits are not being applied!"
+msgstr ""
+
+#: emailPremium/templates/emailPremium/emailLimits.html:55
+#: emailPremium/templates/emailPremium/emailLimits.html:161
+#: emailPremium/templates/emailPremium/emailPage.html:57
+#: emailPremium/templates/emailPremium/emailPage.html:63
+#: emailPremium/templates/emailPremium/listDomains.html:62
+#: tuning/templates/tuning/phpTuning.html:90
+msgid "Enable"
+msgstr "开启"
+
+#: emailPremium/templates/emailPremium/emailLimits.html:58
+#: emailPremium/templates/emailPremium/emailPage.html:66
+#: filemanager/templates/filemanager/index.html:84
+#: websiteFunctions/templates/websiteFunctions/listCron.html:66
+msgid "Edit"
+msgstr ""
+
+#: emailPremium/templates/emailPremium/emailLimits.html:70
+#: emailPremium/templates/emailPremium/emailPage.html:78
+#, fuzzy
+#| msgid "Memory Soft Limit"
+msgid "Monthly Limit"
+msgstr "内存软限制"
+
+#: emailPremium/templates/emailPremium/emailLimits.html:83
+#: emailPremium/templates/emailPremium/emailPage.html:101
+#, fuzzy
+#| msgid "Change"
+msgid "Change Limits"
+msgstr "修改"
+
+#: emailPremium/templates/emailPremium/emailLimits.html:93
+#: emailPremium/templates/emailPremium/emailPage.html:111
+#, fuzzy
+#| msgid "Cannot create user. Error message:"
+msgid "Can not change limits. Error message:"
+msgstr "无法创建用户, 错误信息:"
+
+#: emailPremium/templates/emailPremium/emailLimits.html:97
+#, fuzzy
+#| msgid "Password successfully changed for :"
+msgid "Limits successfully changed, refreshing in 3 seconds."
+msgstr "已成功为修改密码 :"
+
+#: emailPremium/templates/emailPremium/emailLimits.html:126
+#: emailPremium/templates/emailPremium/emailPage.html:25
+#, fuzzy
+#| msgid "Resource Usage"
+msgid "Email Resource Usage"
+msgstr "资源使用量"
+
+#: emailPremium/templates/emailPremium/emailLimits.html:133
+#, fuzzy
+#| msgid "Search Extensions.."
+msgid "Search Emails.."
+msgstr "搜索扩展..."
+
+#: emailPremium/templates/emailPremium/emailLimits.html:164
+#: emailPremium/templates/emailPremium/listDomains.html:65
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:209
+#, fuzzy
+#| msgid "Manage SSL"
+msgid "Manage"
+msgstr "管理SSL"
+
+#: emailPremium/templates/emailPremium/emailLimits.html:172
+#: emailPremium/templates/emailPremium/emailPage.html:179
+#: emailPremium/templates/emailPremium/listDomains.html:73
+#: websiteFunctions/templates/websiteFunctions/listWebsites.html:53
+msgid "Cannot list websites. Error message:"
+msgstr "无法查看网站, 错误信息:"
+
+#: emailPremium/templates/emailPremium/emailPage.html:14
+msgid "View and change limits for an Email Address."
+msgstr ""
+
+#: emailPremium/templates/emailPremium/emailPage.html:60
+msgid "Logging in ON!"
+msgstr ""
+
+#: emailPremium/templates/emailPremium/emailPage.html:62
+msgid "Logging is Off"
+msgstr ""
+
+#: emailPremium/templates/emailPremium/emailPage.html:88
+#, fuzzy
+#| msgid "Memory Soft Limit"
+msgid "Hourly Limit"
+msgstr "内存软限制"
+
+#: emailPremium/templates/emailPremium/emailPage.html:115
+#, fuzzy
+#| msgid "is successfully created."
+msgid "Limits successfully changed."
+msgstr "已成功添加"
+
+#: emailPremium/templates/emailPremium/emailPage.html:151
+#, fuzzy
+#| msgid "Search Extensions.."
+msgid "Search Emails Logs.."
+msgstr "搜索扩展..."
+
+#: emailPremium/templates/emailPremium/emailPage.html:155
+#, fuzzy
+#| msgid "FTP Logs"
+msgid "Flush Logs"
+msgstr "FTP日志"
+
+#: emailPremium/templates/emailPremium/listDomains.html:3
+#, fuzzy
+#| msgid "Home - CyberPanel"
+msgid "Domains - CyberPanel"
+msgstr "主页 - Cyberpanel"
+
+#: emailPremium/templates/emailPremium/listDomains.html:14
+#: websiteFunctions/templates/websiteFunctions/website.html:272
+#: websiteFunctions/templates/websiteFunctions/website.html:275
+#: websiteFunctions/templates/websiteFunctions/website.html:276
+#: websiteFunctions/templates/websiteFunctions/website.html:293
+#: websiteFunctions/templates/websiteFunctions/website.html:296
+msgid "List Domains"
+msgstr "查看域名"
+
+#: emailPremium/templates/emailPremium/listDomains.html:15
+msgid "On this page you manage emails limits for Domains/Email Addresses"
+msgstr ""
+
+#: emailPremium/templates/emailPremium/listDomains.html:22
+#: packages/templates/packages/createPackage.html:35
+#: packages/templates/packages/modifyPackage.html:40
+#: websiteFunctions/templates/websiteFunctions/website.html:253
+msgid "Domains"
+msgstr "域名"
+
+#: emailPremium/templates/emailPremium/listDomains.html:29
+msgid "Email Policy Server is not enabled "
+msgstr ""
+
+#: emailPremium/templates/emailPremium/listDomains.html:32
+#, fuzzy
+#| msgid "Enable"
+msgid "Enable Now."
+msgstr "开启"
+
+#: emailPremium/templates/emailPremium/policyServer.html:3
+#, fuzzy
+#| msgid "Server Logs - CyberPanel"
+msgid "Email Policy Server - CyberPanel"
+msgstr "服务器日志 - CyberPanel"
+
+#: emailPremium/templates/emailPremium/policyServer.html:13
+#, fuzzy
+#| msgid "Edit PHP Configurations"
+msgid "Email Policy Server Configurations!"
+msgstr "设置PHP参数"
+
+#: emailPremium/templates/emailPremium/policyServer.html:14
+msgid "Turn ON Email Policy Server to use Email Limits Feature. "
+msgstr ""
+
+#: emailPremium/templates/emailPremium/policyServer.html:56
+#: manageServices/templates/manageServices/managePostfix.html:58
+#: manageServices/templates/manageServices/managePowerDNS.html:58
+#: manageServices/templates/manageServices/managePureFtpd.html:58
+#, fuzzy
+#| msgid "is successfully erased."
+msgid "Changes successfully applied."
+msgstr "已成功删除"
 
 #: filemanager/templates/filemanager/index.html:5
 #, fuzzy
@@ -1720,11 +2202,6 @@ msgstr ""
 #| msgid "Username"
 msgid "Rename"
 msgstr "用户名"
-
-#: filemanager/templates/filemanager/index.html:84
-#: websiteFunctions/templates/websiteFunctions/listCron.html:66
-msgid "Edit"
-msgstr ""
 
 #: filemanager/templates/filemanager/index.html:87
 #: filemanager/templates/filemanager/index.html:441
@@ -1798,6 +2275,12 @@ msgstr "PHP版本 "
 msgid "Upload File"
 msgstr ""
 
+#: filemanager/templates/filemanager/index.html:183
+#, fuzzy
+#| msgid "Reload"
+msgid "Upload Limits"
+msgstr "重载"
+
 #: filemanager/templates/filemanager/index.html:190
 msgid "Upload queue"
 msgstr ""
@@ -1819,6 +2302,7 @@ msgid "Progress"
 msgstr ""
 
 #: filemanager/templates/filemanager/index.html:216
+#: mailServer/templates/mailServer/emailForwarding.html:113
 #, fuzzy
 #| msgid "FTP Functions"
 msgid "Actions"
@@ -1938,7 +2422,8 @@ msgstr ""
 #: filemanager/templates/filemanager/index.html:532
 #: filemanager/templates/filemanager/index.html:567
 #: filemanager/templates/filemanager/index.html:597
-#: websiteFunctions/templates/websiteFunctions/website.html:447
+#: filemanager/templates/filemanager/index.html:658
+#: websiteFunctions/templates/websiteFunctions/website.html:476
 msgid "Close"
 msgstr "关闭"
 
@@ -2021,6 +2506,136 @@ msgstr "文件名"
 msgid "Enter new name of file!"
 msgstr ""
 
+#: filemanager/templates/filemanager/index.html:611
+#, fuzzy
+#| msgid "PHP version "
+msgid "Changing permissions for"
+msgstr "PHP版本 "
+
+#: filemanager/templates/filemanager/index.html:620
+msgid "Mode"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:621
+#, fuzzy
+#| msgid "Users"
+msgid "User"
+msgstr "用户"
+
+#: filemanager/templates/filemanager/index.html:622
+msgid "Group"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:623
+msgid "World"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:628
+msgid "Read"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:634
+msgid "Write"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:640
+msgid "Execute"
+msgstr ""
+
+#: filemanager/templates/filemanager/index.html:656
+#, fuzzy
+#| msgid "Select PHP Version"
+msgid "Change Permissions"
+msgstr "选择PHP版本"
+
+#: filemanager/templates/filemanager/index.html:657
+#, fuzzy
+#| msgid "Select PHP Version"
+msgid "Change Recursively"
+msgstr "选择PHP版本"
+
+#: firewall/templates/firewall/csf.html:3
+msgid "CSF (ConfigServer Security and Firewall) - CyberPanel"
+msgstr ""
+
+#: firewall/templates/firewall/csf.html:13
+msgid "CSF (ConfigServer Security and Firewall)!"
+msgstr ""
+
+#: firewall/templates/firewall/csf.html:14
+#, fuzzy
+#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgid ""
+"On this page you can configure CSF (ConfigServer Security and Firewall) "
+"settings."
+msgstr "这里是远程备份页面(SFTP)"
+
+#: firewall/templates/firewall/csf.html:28
+msgid "CSF is not installed "
+msgstr ""
+
+#: firewall/templates/firewall/csf.html:54
+#, fuzzy
+#| msgid "Records successfully fetched for"
+msgid "CSF successfully installed, refreshing page in 3 seconds.."
+msgstr "成功读取记录"
+
+#: firewall/templates/firewall/csf.html:65
+msgid "In winter we must protect each other.."
+msgstr ""
+
+#: firewall/templates/firewall/csf.html:89
+msgid "General"
+msgstr ""
+
+#: firewall/templates/firewall/csf.html:99
+msgid "LFD"
+msgstr ""
+
+#: firewall/templates/firewall/csf.html:108
+msgid "Remove CSF"
+msgstr ""
+
+#: firewall/templates/firewall/csf.html:111
+msgid "Completely Remove CSF"
+msgstr ""
+
+#: firewall/templates/firewall/csf.html:125
+msgid "Testing Mode"
+msgstr ""
+
+#: firewall/templates/firewall/csf.html:132
+msgid "TCP IN Ports"
+msgstr ""
+
+#: firewall/templates/firewall/csf.html:142
+msgid "TCP Out Ports"
+msgstr ""
+
+#: firewall/templates/firewall/csf.html:152
+msgid "UDP In Ports"
+msgstr ""
+
+#: firewall/templates/firewall/csf.html:162
+msgid "UDP Out Ports"
+msgstr ""
+
+#: firewall/templates/firewall/csf.html:180
+#, fuzzy
+#| msgid "Allowed"
+msgid "Allow IP"
+msgstr "可用"
+
+#: firewall/templates/firewall/csf.html:190
+#, fuzzy
+#| msgid "IP Address"
+msgid "Block IP Address"
+msgstr "IP地址"
+
+#: firewall/templates/firewall/csf.html:202
+msgid "Comming Soon."
+msgstr ""
+
 #: firewall/templates/firewall/firewall.html:3
 msgid "Firewall - CyberPanel"
 msgstr "防火墙 - CyberPanel"
@@ -2092,6 +2707,12 @@ msgstr "安全 - CyberPanel"
 msgid "ModSecurity Configurations!"
 msgstr "设置PHP参数"
 
+#: firewall/templates/firewall/modSecurity.html:13
+#: firewall/templates/firewall/modSecurityRules.html:13
+#: firewall/templates/firewall/modSecurityRulesPacks.html:13
+msgid "ModSec Docs"
+msgstr ""
+
 #: firewall/templates/firewall/modSecurity.html:14
 #, fuzzy
 #| msgid "On this page you can set up your Back up destinations. (SFTP)"
@@ -2107,50 +2728,29 @@ msgstr "安全"
 #: firewall/templates/firewall/modSecurity.html:29
 #: firewall/templates/firewall/modSecurityRules.html:70
 #: firewall/templates/firewall/modSecurityRulesPacks.html:28
+#: firewall/templates/firewall/spamassassin.html:29
 msgid "ModSecurity is not installed "
 msgstr ""
 
-#: firewall/templates/firewall/modSecurity.html:31
-#: firewall/templates/firewall/modSecurityRules.html:72
-#: firewall/templates/firewall/modSecurityRulesPacks.html:30
-#, fuzzy
-#| msgid "Install"
-msgid "Install Now."
-msgstr "安装"
-
-#: firewall/templates/firewall/modSecurity.html:43
-#, fuzzy
-#| msgid "Cannot add destination. Error message:"
-msgid "Failed to start installation, Error message: "
-msgstr "无法添加远程目录, 错误信息: "
-
-#: firewall/templates/firewall/modSecurity.html:51
-#, fuzzy
-#| msgid "Installation failed. Error message:"
-msgid "Installation failed."
-msgstr "安装失败, 错误信息:"
-
 #: firewall/templates/firewall/modSecurity.html:55
+#: firewall/templates/firewall/spamassassin.html:55
 msgid "ModSecurity successfully installed, refreshing page in 3 seconds.."
 msgstr ""
 
 #: firewall/templates/firewall/modSecurity.html:66
+#: firewall/templates/firewall/spamassassin.html:66
 msgid "Winter is coming, but so is ModSecurity."
 msgstr ""
 
-#: firewall/templates/firewall/modSecurity.html:157
-#, fuzzy
-#| msgid "Save Changes"
-msgid "Save changes."
-msgstr "保存修改"
-
 #: firewall/templates/firewall/modSecurity.html:169
+#: firewall/templates/firewall/spamassassin.html:169
 #, fuzzy
 #| msgid "Could not fetch current configuration. Error message:"
 msgid "Failed to save ModSecurity configurations. Error message: "
 msgstr "无法读取当前配置, 错误信息:"
 
 #: firewall/templates/firewall/modSecurity.html:173
+#: firewall/templates/firewall/spamassassin.html:173
 #, fuzzy
 #| msgid "Backup Process successfully started."
 msgid "ModSecurity configurations successfully saved."
@@ -2243,6 +2843,12 @@ msgstr "文件名"
 msgid "Secure SSH - CyberPanel"
 msgstr "SSH加固 - CyberPanel"
 
+#: firewall/templates/firewall/secureSSH.html:13
+#, fuzzy
+#| msgid "SSH Keys"
+msgid "SSH Docs"
+msgstr "SSH密钥"
+
 #: firewall/templates/firewall/secureSSH.html:14
 msgid "Secure or harden SSH Configurations."
 msgstr "SSH设置已保存."
@@ -2283,9 +2889,11 @@ msgid "Add Key"
 msgstr "添加密钥"
 
 #: firewall/templates/firewall/secureSSH.html:158
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:343
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:402
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:55
-#: websiteFunctions/templates/websiteFunctions/website.html:599
-#: websiteFunctions/templates/websiteFunctions/website.html:658
+#: websiteFunctions/templates/websiteFunctions/website.html:630
+#: websiteFunctions/templates/websiteFunctions/website.html:689
 msgid "Save"
 msgstr "保存"
 
@@ -2303,35 +2911,41 @@ msgid ""
 "to ftp account."
 msgstr "在列表中选择一个网站, 它的根目录将会设为FTP的根目录 "
 
-#: ftp/templates/ftp/createFTPAccount.html:52
+#: ftp/templates/ftp/createFTPAccount.html:26
+#: ftp/templates/ftp/deleteFTPAccount.html:25
+#: ftp/templates/ftp/listFTPAccounts.html:26
+msgid "PureFTPD is disabled."
+msgstr ""
+
+#: ftp/templates/ftp/createFTPAccount.html:64
 msgid "FTP Password"
 msgstr "FTP密码"
 
-#: ftp/templates/ftp/createFTPAccount.html:59
+#: ftp/templates/ftp/createFTPAccount.html:71
 msgid "Path (Relative)"
 msgstr "相对路径"
 
-#: ftp/templates/ftp/createFTPAccount.html:61
+#: ftp/templates/ftp/createFTPAccount.html:73
 msgid "Leave empty to select default home directory."
 msgstr "留空则设置为默认根目录"
 
-#: ftp/templates/ftp/createFTPAccount.html:72
+#: ftp/templates/ftp/createFTPAccount.html:84
 msgid "Create FTP"
 msgstr "创建FTP用户"
 
-#: ftp/templates/ftp/createFTPAccount.html:80
+#: ftp/templates/ftp/createFTPAccount.html:92
 msgid "Cannot create FTP account. Error message:"
 msgstr "无法创建FTP用户, 错误信息: "
 
-#: ftp/templates/ftp/createFTPAccount.html:84
-#: ftp/templates/ftp/createFTPAccount.html:87
-#: ftp/templates/ftp/deleteFTPAccount.html:75
+#: ftp/templates/ftp/createFTPAccount.html:96
+#: ftp/templates/ftp/createFTPAccount.html:99
+#: ftp/templates/ftp/deleteFTPAccount.html:87
 msgid "FTP Account with username:"
 msgstr "FTP用户: "
 
-#: ftp/templates/ftp/createFTPAccount.html:84
-#: ftp/templates/ftp/createFTPAccount.html:87
-#: userManagment/templates/userManagment/createUser.html:144
+#: ftp/templates/ftp/createFTPAccount.html:96
+#: ftp/templates/ftp/createFTPAccount.html:99
+#: userManagment/templates/userManagment/createUser.html:142
 msgid "is successfully created."
 msgstr "已成功添加"
 
@@ -2343,19 +2957,19 @@ msgstr "删除FTP用户 - CyberPanel"
 msgid "Select domain and delete its related FTP accounts."
 msgstr "选择域名并删除与之相关的FTP用户"
 
-#: ftp/templates/ftp/deleteFTPAccount.html:40
+#: ftp/templates/ftp/deleteFTPAccount.html:52
 msgid "Select FTP Account"
 msgstr "选择FTP用户"
 
-#: ftp/templates/ftp/deleteFTPAccount.html:71
+#: ftp/templates/ftp/deleteFTPAccount.html:83
 msgid "Cannot delete account. Error message:"
 msgstr "无法删除FTP账号, 错误信息: "
 
-#: ftp/templates/ftp/deleteFTPAccount.html:75
+#: ftp/templates/ftp/deleteFTPAccount.html:87
 msgid " is successfully deleted."
 msgstr " 已成功删除"
 
-#: ftp/templates/ftp/deleteFTPAccount.html:79
+#: ftp/templates/ftp/deleteFTPAccount.html:91
 #: userManagment/templates/userManagment/deleteUser.html:70
 msgid "Could not connect to the server. Please refresh this page."
 msgstr "无法连接到服务器, 请刷新此页面"
@@ -2376,16 +2990,16 @@ msgstr "查看FTP用户 - CyberPanel"
 msgid "List FTP Accounts or change their passwords."
 msgstr "查看FTP用户或修改密码"
 
-#: ftp/templates/ftp/listFTPAccounts.html:50
+#: ftp/templates/ftp/listFTPAccounts.html:62
 msgid "Password changed for"
 msgstr "已为修改密码"
 
-#: ftp/templates/ftp/listFTPAccounts.html:54
+#: ftp/templates/ftp/listFTPAccounts.html:66
 msgid ""
 "Cannot change password for <strong>{$ ftpUsername $}</strong>. Error message:"
 msgstr "无法修改 <strong>{$ ftpUsername $}</strong> 的密码, 错误信息:"
 
-#: ftp/templates/ftp/listFTPAccounts.html:89
+#: ftp/templates/ftp/listFTPAccounts.html:101
 msgid "Directory"
 msgstr "目录"
 
@@ -2402,22 +3016,30 @@ msgstr "修改Email密码"
 msgid "Select a website from the list, to change its password."
 msgstr "在列表中选择并修改密码"
 
-#: mailServer/templates/mailServer/changeEmailPassword.html:42
-#: mailServer/templates/mailServer/deleteEmailAccount.html:42
+#: mailServer/templates/mailServer/changeEmailPassword.html:26
+#: mailServer/templates/mailServer/createEmailAccount.html:26
+#: mailServer/templates/mailServer/deleteEmailAccount.html:26
+#: mailServer/templates/mailServer/emailForwarding.html:26
+msgid "Postfix is disabled."
+msgstr ""
+
+#: mailServer/templates/mailServer/changeEmailPassword.html:55
+#: mailServer/templates/mailServer/deleteEmailAccount.html:55
+#: mailServer/templates/mailServer/emailForwarding.html:55
 msgid "Select Email"
 msgstr "选择Email"
 
-#: mailServer/templates/mailServer/changeEmailPassword.html:73
-#: mailServer/templates/mailServer/deleteEmailAccount.html:72
+#: mailServer/templates/mailServer/changeEmailPassword.html:86
+#: mailServer/templates/mailServer/deleteEmailAccount.html:85
 msgid "Cannot delete email account. Error message:"
 msgstr "无法删除Email用户, 错误信息: "
 
-#: mailServer/templates/mailServer/changeEmailPassword.html:77
+#: mailServer/templates/mailServer/changeEmailPassword.html:90
 msgid "Password successfully changed for :"
 msgstr "已成功为修改密码 :"
 
-#: mailServer/templates/mailServer/changeEmailPassword.html:84
-#: mailServer/templates/mailServer/deleteEmailAccount.html:83
+#: mailServer/templates/mailServer/changeEmailPassword.html:97
+#: mailServer/templates/mailServer/deleteEmailAccount.html:96
 msgid "Currently no email accounts exist for this domain."
 msgstr "目前此域名并没有Email"
 
@@ -2429,15 +3051,15 @@ msgstr "创建Email用户 - CyberPanel"
 msgid "Select a website from the list, to create an email account."
 msgstr "请从列表中选择一个网站来创建Email用户"
 
-#: mailServer/templates/mailServer/createEmailAccount.html:72
+#: mailServer/templates/mailServer/createEmailAccount.html:85
 msgid "Cannot create email account. Error message:"
 msgstr "无法创建Email用户, 错误信息: "
 
-#: mailServer/templates/mailServer/createEmailAccount.html:76
+#: mailServer/templates/mailServer/createEmailAccount.html:89
 msgid "Email with id :"
 msgstr "Email ID"
 
-#: mailServer/templates/mailServer/createEmailAccount.html:76
+#: mailServer/templates/mailServer/createEmailAccount.html:89
 msgid " is successfully created."
 msgstr " 已成功创建"
 
@@ -2449,7 +3071,7 @@ msgstr "删除Email用户 - CyberPanel"
 msgid "Select a website from the list, to delete an email account."
 msgstr "请从列表中选择一个网站来删除Email用户"
 
-#: mailServer/templates/mailServer/deleteEmailAccount.html:76
+#: mailServer/templates/mailServer/deleteEmailAccount.html:89
 msgid "Email with id : {$ deletedID $} is successfully deleted."
 msgstr "Email: {$ deletedID $} 已成功删除"
 
@@ -2458,6 +3080,10 @@ msgstr "Email: {$ deletedID $} 已成功删除"
 #| msgid "Manage SSL - CyberPanel"
 msgid "DKIM Manager - CyberPanel"
 msgstr "管理SSL - CyberPanel"
+
+#: mailServer/templates/mailServer/dkimManager.html:13
+msgid "DKIM Docs"
+msgstr ""
 
 #: mailServer/templates/mailServer/dkimManager.html:14
 #, fuzzy
@@ -2470,6 +3096,9 @@ msgid "OpenDKIM is not installed. "
 msgstr ""
 
 #: mailServer/templates/mailServer/dkimManager.html:28
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:67
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:81
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:67
 #, fuzzy
 #| msgid "Install"
 msgid "Install Now"
@@ -2502,6 +3131,38 @@ msgstr ""
 #: mailServer/templates/mailServer/dkimManager.html:112
 msgid "Public Key"
 msgstr ""
+
+#: mailServer/templates/mailServer/emailForwarding.html:3
+#, fuzzy
+#| msgid "Create Email Account - CyberPanel"
+msgid "Setup Email Forwarding - CyberPanel"
+msgstr "创建Email用户 - CyberPanel"
+
+#: mailServer/templates/mailServer/emailForwarding.html:12
+#: mailServer/templates/mailServer/emailForwarding.html:19
+msgid "Setup Email Forwarding"
+msgstr ""
+
+#: mailServer/templates/mailServer/emailForwarding.html:12
+msgid "Forwarding Docs"
+msgstr ""
+
+#: mailServer/templates/mailServer/emailForwarding.html:13
+msgid "This page help you setup email forwarding for your emails."
+msgstr ""
+
+#: mailServer/templates/mailServer/emailForwarding.html:90
+#: mailServer/templates/mailServer/emailForwarding.html:111
+#, fuzzy
+#| msgid "Resource"
+msgid "Source"
+msgstr "资源"
+
+#: mailServer/templates/mailServer/emailForwarding.html:99
+#, fuzzy
+#| msgid "Create Email"
+msgid "Forward Email"
+msgstr "创建Email"
 
 #: mailServer/templates/mailServer/index.html:3
 msgid "Mail Functions - CyberPanel"
@@ -2536,9 +3197,10 @@ msgstr "高级"
 #: managePHP/templates/managePHP/editPHPConfig.html:182
 #: managePHP/templates/managePHP/installExtensions.html:28
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:68
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:473
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:74
-#: websiteFunctions/templates/websiteFunctions/website.html:333
-#: websiteFunctions/templates/websiteFunctions/website.html:729
+#: websiteFunctions/templates/websiteFunctions/website.html:330
+#: websiteFunctions/templates/websiteFunctions/website.html:760
 msgid "Select PHP"
 msgstr "选择PHP版本"
 
@@ -2633,12 +3295,18 @@ msgid "Uninstall"
 msgstr "卸载"
 
 #: managePHP/templates/managePHP/installExtensions.html:94
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:160
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:111
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:125
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:111
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:139
+#: websiteFunctions/templates/websiteFunctions/website.html:422
 msgid "Go Back"
 msgstr "返回"
 
 #: managePHP/templates/managePHP/installExtensions.html:105
 #: tuning/templates/tuning/phpTuning.html:111
-#: userManagment/templates/userManagment/modifyUser.html:135
+#: userManagment/templates/userManagment/modifyUser.html:148
 msgid "Cannot fetch details. Error message:"
 msgstr "无法获取详情, 错误信息: "
 
@@ -2661,6 +3329,12 @@ msgstr "为网站以及主机申请签发Let's Encrypt证书"
 #: manageSSL/templates/manageSSL/manageSSL.html:3
 msgid "Manage SSL - CyberPanel"
 msgstr "管理SSL - CyberPanel"
+
+#: manageSSL/templates/manageSSL/manageSSL.html:13
+#: manageSSL/templates/manageSSL/sslForHostName.html:13
+#: manageSSL/templates/manageSSL/sslForMailServer.html:13
+msgid "SSL Docs"
+msgstr ""
 
 #: manageSSL/templates/manageSSL/manageSSL.html:14
 msgid ""
@@ -2731,6 +3405,68 @@ msgstr ""
 msgid "Could not connect to server, please refresh this page."
 msgstr "无法连接到服务器, 请刷新此页面"
 
+#: manageServices/templates/manageServices/managePostfix.html:3
+#, fuzzy
+#| msgid "Change Email Password - CyberPanel"
+msgid "Manage Email Server (Postfix) - CyberPanel"
+msgstr "修改Email密码 - CyberPanel"
+
+#: manageServices/templates/manageServices/managePostfix.html:13
+msgid "Manage Email Server (Postfix)!"
+msgstr ""
+
+#: manageServices/templates/manageServices/managePostfix.html:13
+#: manageServices/templates/manageServices/managePowerDNS.html:13
+#: manageServices/templates/manageServices/managePureFtpd.html:13
+#, fuzzy
+#| msgid "Server Status"
+msgid "Services Docs"
+msgstr "服务器状态"
+
+#: manageServices/templates/manageServices/managePostfix.html:14
+msgid "Enable or disable Email services. "
+msgstr ""
+
+#: manageServices/templates/manageServices/managePostfix.html:82
+#: manageServices/templates/manageServices/managePowerDNS.html:82
+#: manageServices/templates/manageServices/managePureFtpd.html:82
+msgid "Only administrator can manage services."
+msgstr ""
+
+#: manageServices/templates/manageServices/managePowerDNS.html:3
+#, fuzzy
+#| msgid "Manage SSL - CyberPanel"
+msgid "Manage PowerDNS - CyberPanel"
+msgstr "管理SSL - CyberPanel"
+
+#: manageServices/templates/manageServices/managePowerDNS.html:13
+#, fuzzy
+#| msgid "Manage SSL"
+msgid "Manage PowerDNS!"
+msgstr "管理SSL"
+
+#: manageServices/templates/manageServices/managePowerDNS.html:14
+msgid "Enable or disable DNS services. "
+msgstr ""
+
+#: manageServices/templates/manageServices/managePureFtpd.html:3
+#, fuzzy
+#| msgid "Manage SSL - CyberPanel"
+msgid "Manage FTP Server (Pure FTPD) - CyberPanel"
+msgstr "管理SSL - CyberPanel"
+
+#: manageServices/templates/manageServices/managePureFtpd.html:13
+msgid "Manage FTP Server (Pure FTPD)!"
+msgstr ""
+
+#: manageServices/templates/manageServices/managePureFtpd.html:14
+msgid "Enable or disable FTP services. "
+msgstr ""
+
+#: manageServices/templates/manageServices/managePureFtpd.html:22
+msgid "Manage PureFTPD"
+msgstr ""
+
 #: packages/templates/packages/createPackage.html:3
 msgid "Create Package - CyberPanel"
 msgstr "创建套餐 - CyberPanel"
@@ -2752,12 +3488,6 @@ msgstr "套餐详情"
 #: packages/templates/packages/createPackage.html:26
 msgid "Package Name"
 msgstr "套餐名称"
-
-#: packages/templates/packages/createPackage.html:35
-#: packages/templates/packages/modifyPackage.html:40
-#: websiteFunctions/templates/websiteFunctions/website.html:254
-msgid "Domains"
-msgstr "域名"
 
 #: packages/templates/packages/createPackage.html:39
 #: packages/templates/packages/modifyPackage.html:44
@@ -2841,7 +3571,8 @@ msgstr "访问日志 - CyberPanel"
 #: serverLogs/templates/serverLogs/accessLogs.html:17
 #: serverLogs/templates/serverLogs/index.html:25
 #: serverLogs/templates/serverLogs/index.html:27
-#: websiteFunctions/templates/websiteFunctions/website.html:128
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:127
+#: websiteFunctions/templates/websiteFunctions/website.html:127
 msgid "Access Logs"
 msgstr "访问日志"
 
@@ -3065,6 +3796,7 @@ msgstr "开启GZIP压缩"
 #: tuning/templates/tuning/liteSpeedTuning.html:74
 #: tuning/templates/tuning/phpTuning.html:94
 #: userManagment/templates/userManagment/modifyUser.html:77
+#: userManagment/templates/userManagment/modifyUser.html:90
 msgid "Currently:"
 msgstr "当前:"
 
@@ -3120,14 +3852,6 @@ msgstr "进程硬限制"
 msgid "Persistent Connection"
 msgstr "数据库持久连接"
 
-#: tuning/templates/tuning/phpTuning.html:90
-msgid "Enable"
-msgstr "开启"
-
-#: tuning/templates/tuning/phpTuning.html:91
-msgid "Disable"
-msgstr "关闭"
-
 #: tuning/templates/tuning/phpTuning.html:102
 msgid "Tune PHP"
 msgstr "设置PHP"
@@ -3165,6 +3889,7 @@ msgstr "用户详情"
 #: userManagment/templates/userManagment/createUser.html:28
 #: userManagment/templates/userManagment/modifyUser.html:39
 #: userManagment/templates/userManagment/userProfile.html:25
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:35
 msgid "First Name"
 msgstr "名"
 
@@ -3175,6 +3900,7 @@ msgstr "名 中只能包含字母."
 #: userManagment/templates/userManagment/createUser.html:37
 #: userManagment/templates/userManagment/modifyUser.html:46
 #: userManagment/templates/userManagment/userProfile.html:33
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:42
 msgid "Last Name"
 msgstr "姓"
 
@@ -3190,11 +3916,12 @@ msgstr "无效的Email"
 #: userManagment/templates/userManagment/createUser.html:64
 #: userManagment/templates/userManagment/createUser.html:76
 #: userManagment/templates/userManagment/modifyUser.html:69
+#: userManagment/templates/userManagment/modifyUser.html:83
 msgid "Account Type"
 msgstr "用户类型"
 
 #: userManagment/templates/userManagment/createUser.html:92
-#: userManagment/templates/userManagment/modifyUser.html:88
+#: userManagment/templates/userManagment/modifyUser.html:101
 #: userManagment/templates/userManagment/userProfile.html:67
 #: userManagment/templates/userManagment/userProfile.html:74
 msgid "User Accounts Limit"
@@ -3206,6 +3933,7 @@ msgstr "仅允许数字"
 
 #: userManagment/templates/userManagment/createUser.html:103
 #: userManagment/templates/userManagment/userProfile.html:42
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:71
 msgid "Username"
 msgstr "用户名"
 
@@ -3217,22 +3945,22 @@ msgstr "用户名应当为小写字母."
 msgid "Must contain one number and one special character."
 msgstr "必须一个数字和一个字母."
 
-#: userManagment/templates/userManagment/createUser.html:133
+#: userManagment/templates/userManagment/createUser.html:131
 #: userManagment/templates/userManagment/index.html:40
 #: userManagment/templates/userManagment/index.html:42
 msgid "Create User"
 msgstr "创建用户"
 
-#: userManagment/templates/userManagment/createUser.html:144
-#: userManagment/templates/userManagment/modifyUser.html:122
+#: userManagment/templates/userManagment/createUser.html:142
+#: userManagment/templates/userManagment/modifyUser.html:135
 msgid "Account with username:"
 msgstr "用户名为:"
 
-#: userManagment/templates/userManagment/createUser.html:148
+#: userManagment/templates/userManagment/createUser.html:146
 msgid "Cannot create user. Error message:"
 msgstr "无法创建用户, 错误信息:"
 
-#: userManagment/templates/userManagment/createUser.html:156
+#: userManagment/templates/userManagment/createUser.html:154
 msgid ""
 "Length of first and last name combined should be less than or equal to 20 "
 "characters"
@@ -3278,15 +4006,15 @@ msgstr "在此页面编辑已存在用户."
 msgid "Select Account"
 msgstr "选择用户"
 
-#: userManagment/templates/userManagment/modifyUser.html:122
+#: userManagment/templates/userManagment/modifyUser.html:135
 msgid " is successfully modified."
 msgstr "已成功修改."
 
-#: userManagment/templates/userManagment/modifyUser.html:126
+#: userManagment/templates/userManagment/modifyUser.html:139
 msgid "Cannot modify user. Error message:"
 msgstr "无法编辑用户, 错误信息:"
 
-#: userManagment/templates/userManagment/modifyUser.html:139
+#: userManagment/templates/userManagment/modifyUser.html:152
 msgid "Details fetched."
 msgstr "详情已更新."
 
@@ -3317,6 +4045,57 @@ msgstr "(0为无限制 )"
 msgid "Websites Limit"
 msgstr "网站数量限制"
 
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:3
+#, fuzzy
+#| msgid "Application Installer"
+msgid "Application Installer - CyberPanel"
+msgstr "应用安装器"
+
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:14
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:22
+#: websiteFunctions/templates/websiteFunctions/website.html:948
+msgid "Application Installer"
+msgstr "应用安装器"
+
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:15
+#, fuzzy
+#| msgid "Application Installer"
+msgid "One-click application install."
+msgstr "应用安装器"
+
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:28
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:31
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:34
+#: websiteFunctions/templates/websiteFunctions/website.html:957
+#: websiteFunctions/templates/websiteFunctions/website.html:960
+msgid "Install wordpress with LSCache"
+msgstr "安装Wordpress和LS Cache"
+
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:35
+#: websiteFunctions/templates/websiteFunctions/website.html:961
+msgid "Wordpress with LSCache"
+msgstr "Wordpress和LS Cache"
+
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:41
+#, fuzzy
+#| msgid "Install wordpress with LSCache"
+msgid "Install Joomla with(?) LSCache"
+msgstr "安装Wordpress和LS Cache"
+
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:44
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:47
+#: websiteFunctions/templates/websiteFunctions/website.html:969
+#: websiteFunctions/templates/websiteFunctions/website.html:972
+#, fuzzy
+#| msgid "Install wordpress with LSCache"
+msgid "Install Joomla with LSCache"
+msgstr "安装Wordpress和LS Cache"
+
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:48
+#: websiteFunctions/templates/websiteFunctions/website.html:973
+msgid "Joomla"
+msgstr ""
+
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:3
 msgid "Create New Website - CyberPanel"
 msgstr "创建新网站 - CyberPanel"
@@ -3343,31 +4122,22 @@ msgid "Do not enter WWW, it will be auto created!"
 msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:56
-#: websiteFunctions/templates/websiteFunctions/website.html:317
-#: websiteFunctions/templates/websiteFunctions/website.html:328
+#: websiteFunctions/templates/websiteFunctions/website.html:325
 msgid "Invalid Domain (Note: You don't need to add 'http' or 'https')"
 msgstr "无效域名(注意: 不需要添加http或https)"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:85
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:86
-#: websiteFunctions/templates/websiteFunctions/website.html:350
+#: websiteFunctions/templates/websiteFunctions/website.html:347
 msgid "Additional Features"
 msgstr "额外功能"
 
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:120
-#: websiteFunctions/templates/websiteFunctions/website.html:385
-msgid "Cannot create website. Error message:"
-msgstr "无法创建网站, 错误信息:"
-
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:124
-#: websiteFunctions/templates/websiteFunctions/website.html:389
-msgid "Website with domain"
-msgstr "网站域名"
-
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:124
-#: websiteFunctions/templates/websiteFunctions/website.html:389
-msgid " is Successfully Created"
-msgstr " 已成功创建"
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:144
+#: websiteFunctions/templates/websiteFunctions/website.html:406
+#, fuzzy
+#| msgid "is successfully created."
+msgid "Website succesfully created."
+msgstr "已成功添加"
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:3
 msgid "Delete Website - CyberPanel"
@@ -3430,7 +4200,7 @@ msgid "File System Path"
 msgstr "系统状态"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:53
-#: websiteFunctions/templates/websiteFunctions/website.html:480
+#: websiteFunctions/templates/websiteFunctions/website.html:515
 msgid "Issue"
 msgstr "签发SSL证书"
 
@@ -3479,6 +4249,384 @@ msgstr "网站功能 - CyberPanel"
 msgid "Suspend/Unsuspend Website"
 msgstr "禁用/启用网站"
 
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:3
+#, fuzzy
+#| msgid "Install PHP Extensions - CyberPanel"
+msgid "Install Joomla - CyberPanel"
+msgstr "安装PHP扩展 - CyberPanel"
+
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:12
+#, fuzzy
+#| msgid "Install"
+msgid "Install Joomla"
+msgstr "安装"
+
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:13
+msgid "One-click Joomla Install!"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:20
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:20
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:20
+#, fuzzy
+#| msgid "Installation failed. Error message:"
+msgid "Installation Details"
+msgstr "安装失败, 错误信息:"
+
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:28
+#, fuzzy
+#| msgid "File Name"
+msgid "Site Name"
+msgstr "文件名"
+
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:35
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:35
+#, fuzzy
+#| msgid "Modify User"
+msgid "Login User"
+msgstr "修改用户"
+
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:42
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:42
+#, fuzzy
+#| msgid "Password"
+msgid "Login Password"
+msgstr "密码"
+
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:49
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:63
+#, fuzzy
+#| msgid "Database Name"
+msgid "Database Prefix"
+msgstr "数据库名字"
+
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:56
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:70
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:56
+#: websiteFunctions/templates/websiteFunctions/website.html:321
+msgid "Path"
+msgstr "路径"
+
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:91
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:105
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:91
+msgid "Installation failed. Error message:"
+msgstr "安装失败, 错误信息:"
+
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:95
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:109
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:95
+#, fuzzy
+#| msgid "Installation successful. To complete the setup visit:"
+msgid "Installation successful. Visit:"
+msgstr "安装成功, 请访问网站以完成设置:"
+
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:3
+#, fuzzy
+#| msgid "Install PHP Extensions - CyberPanel"
+msgid "Install PrestaShop - CyberPanel"
+msgstr "安装PHP扩展 - CyberPanel"
+
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:12
+#, fuzzy
+#| msgid "Install"
+msgid "Install PrestaShop"
+msgstr "安装"
+
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:13
+#, fuzzy
+#| msgid "Application Installer"
+msgid "One-click PrestaShop Install!"
+msgstr "应用安装器"
+
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:28
+#, fuzzy
+#| msgid "File Name"
+msgid "Shop Name"
+msgstr "文件名"
+
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:3
+#, fuzzy
+#| msgid "Install PHP Extensions - CyberPanel"
+msgid "Install WordPress - CyberPanel"
+msgstr "安装PHP扩展 - CyberPanel"
+
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:12
+#, fuzzy
+#| msgid "Install"
+msgid "Install WordPress"
+msgstr "安装"
+
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:13
+#, fuzzy
+#| msgid "Install wordpress with LSCache"
+msgid "Install WordPress with LSCache."
+msgstr "安装Wordpress和LS Cache"
+
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:28
+msgid "Blog Title"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:13
+#: websiteFunctions/templates/websiteFunctions/website.html:13
+#, fuzzy
+#| msgid "Previous"
+msgid "Preview"
+msgstr "上一个"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:14
+#: websiteFunctions/templates/websiteFunctions/website.html:14
+msgid "All functions related to a particular site."
+msgstr "所有与网站相关的功能."
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:25
+#: websiteFunctions/templates/websiteFunctions/website.html:25
+msgid "Resource Usage"
+msgstr "资源使用量"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:36
+#: websiteFunctions/templates/websiteFunctions/website.html:36
+msgid "Resource"
+msgstr "资源"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:38
+#: websiteFunctions/templates/websiteFunctions/website.html:38
+msgid "Allowed"
+msgstr "可用"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:60
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:87
+#: websiteFunctions/templates/websiteFunctions/website.html:60
+#: websiteFunctions/templates/websiteFunctions/website.html:87
+msgid "Bandwidth Usage"
+msgstr "流量使用量"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:123
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:126
+#: websiteFunctions/templates/websiteFunctions/website.html:123
+#: websiteFunctions/templates/websiteFunctions/website.html:126
+msgid "Load Access Logs"
+msgstr "读取访问日志"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:134
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:137
+#: websiteFunctions/templates/websiteFunctions/website.html:134
+#: websiteFunctions/templates/websiteFunctions/website.html:137
+msgid "Load Error Logs"
+msgstr "读取错误日志"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:149
+#: websiteFunctions/templates/websiteFunctions/website.html:149
+msgid "Logs Fetched"
+msgstr "日志读取成功"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:154
+#: websiteFunctions/templates/websiteFunctions/website.html:154
+msgid ""
+"Could not fetch logs, see the logs file through command line. Error message:"
+msgstr "无法获取日志, 请使用命令行模式查看日志, 错误信息:"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:175
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:214
+#: websiteFunctions/templates/websiteFunctions/website.html:175
+#: websiteFunctions/templates/websiteFunctions/website.html:214
+msgid "Next"
+msgstr "下一个"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:176
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:215
+#: websiteFunctions/templates/websiteFunctions/website.html:176
+#: websiteFunctions/templates/websiteFunctions/website.html:215
+msgid "Previous"
+msgstr "上一个"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:253
+#: websiteFunctions/templates/websiteFunctions/website.html:540
+msgid "Configurations"
+msgstr "配置"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:262
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:265
+#: websiteFunctions/templates/websiteFunctions/website.html:549
+#: websiteFunctions/templates/websiteFunctions/website.html:552
+msgid "Edit vHost Main Configurations"
+msgstr "编辑vHost主配置"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:266
+#: websiteFunctions/templates/websiteFunctions/website.html:553
+msgid "vHost Conf"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:274
+#: websiteFunctions/templates/websiteFunctions/website.html:561
+msgid "Add Rewrite Rules (.htaccess)"
+msgstr "添加Rewrite Rules (.htaccess)"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:277
+#: websiteFunctions/templates/websiteFunctions/website.html:564
+#, fuzzy
+#| msgid "Add Rewrite Rules (.htaccess)"
+msgid "Rewrite Rules (.htaccess)"
+msgstr "添加Rewrite Rules (.htaccess)"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:278
+#: websiteFunctions/templates/websiteFunctions/website.html:565
+#, fuzzy
+#| msgid "Save Rewrite Rules"
+msgid "Rewrite Rules"
+msgstr "保存Rewrite rules"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:286
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:289
+#: websiteFunctions/templates/websiteFunctions/website.html:573
+#: websiteFunctions/templates/websiteFunctions/website.html:576
+msgid "Add Your Own SSL"
+msgstr "添加SSL证书"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:290
+#: websiteFunctions/templates/websiteFunctions/website.html:577
+msgid "Add SSL"
+msgstr "添加SSL证书"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:298
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:301
+#: websiteFunctions/templates/websiteFunctions/website.html:585
+#: websiteFunctions/templates/websiteFunctions/website.html:588
+#, fuzzy
+#| msgid "Select PHP Version"
+msgid "Change PHP Version"
+msgstr "选择PHP版本"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:302
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:498
+#: websiteFunctions/templates/websiteFunctions/website.html:589
+#: websiteFunctions/templates/websiteFunctions/website.html:785
+#, fuzzy
+#| msgid "Change"
+msgid "Change PHP"
+msgstr "修改"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:314
+#: websiteFunctions/templates/websiteFunctions/website.html:601
+msgid "SSL Saved"
+msgstr "SSL证书已保存"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:319
+#: websiteFunctions/templates/websiteFunctions/website.html:606
+msgid "Could not save SSL. Error message:"
+msgstr "无法保存SSL证书, 错误信息:"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:368
+#: websiteFunctions/templates/websiteFunctions/website.html:655
+msgid "Current configuration in the file fetched."
+msgstr "当前配置读取成功."
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:373
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:386
+#: websiteFunctions/templates/websiteFunctions/website.html:660
+#: websiteFunctions/templates/websiteFunctions/website.html:673
+msgid "Could not fetch current configuration. Error message:"
+msgstr "无法读取当前配置, 错误信息:"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:382
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:434
+#: websiteFunctions/templates/websiteFunctions/website.html:669
+#: websiteFunctions/templates/websiteFunctions/website.html:721
+#, fuzzy
+#| msgid "SSH Configurations Saved."
+msgid "Configurations saved."
+msgstr "SSH设置已保存"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:420
+#: websiteFunctions/templates/websiteFunctions/website.html:707
+msgid "Current rewrite rules in the file fetched."
+msgstr "当前Rewrite rules读取成功."
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:425
+#: websiteFunctions/templates/websiteFunctions/website.html:712
+msgid "Could not fetch current rewrite rules. Error message:"
+msgstr "无法读取当前Rewrite rules, 错误信息:"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:438
+#: websiteFunctions/templates/websiteFunctions/website.html:725
+msgid "Could not save rewrite rules. Error message:"
+msgstr "无法保存Rewrite rules, 错误信息:"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:454
+#: websiteFunctions/templates/websiteFunctions/website.html:741
+msgid "Save Rewrite Rules"
+msgstr "保存Rewrite rules"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:509
+#: websiteFunctions/templates/websiteFunctions/website.html:796
+#, fuzzy
+#| msgid "Cannot create website. Error message:"
+msgid "Failed to change PHP version. Error message:"
+msgstr "无法创建网站, 错误信息:"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:513
+#: websiteFunctions/templates/websiteFunctions/website.html:800
+#, fuzzy
+#| msgid "Password successfully changed for :"
+msgid "PHP successfully changed for: "
+msgstr "已成功为修改密码 :"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:539
+#: websiteFunctions/templates/websiteFunctions/website.html:826
+msgid "Files"
+msgstr "文件"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:547
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:550
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:551
+#: websiteFunctions/templates/websiteFunctions/website.html:834
+#: websiteFunctions/templates/websiteFunctions/website.html:837
+#: websiteFunctions/templates/websiteFunctions/website.html:838
+msgid "File Manager"
+msgstr "文件管理"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:558
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:561
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:599
+#: websiteFunctions/templates/websiteFunctions/website.html:845
+#: websiteFunctions/templates/websiteFunctions/website.html:848
+#: websiteFunctions/templates/websiteFunctions/website.html:886
+msgid "open_basedir Protection"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:562
+#: websiteFunctions/templates/websiteFunctions/website.html:849
+msgid "open_basedir"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:574
+#: websiteFunctions/templates/websiteFunctions/website.html:861
+#, fuzzy
+#| msgid "Create FTP Account"
+msgid "Create FTP Acct"
+msgstr "创建FTP用户"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:586
+#: websiteFunctions/templates/websiteFunctions/website.html:873
+#, fuzzy
+#| msgid "Delete FTP Account"
+msgid "Delete FTP Acct"
+msgstr "删除FTP用户"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:621
+#: websiteFunctions/templates/websiteFunctions/website.html:908
+#, fuzzy
+#| msgid "Save Changes"
+msgid "Apply Changes"
+msgstr "保存修改"
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:633
+#: websiteFunctions/templates/websiteFunctions/website.html:920
+#, fuzzy
+#| msgid "Rule successfully added."
+msgid "Changes successfully saved."
+msgstr "成功添加规则"
+
 #: websiteFunctions/templates/websiteFunctions/listCron.html:3
 #, fuzzy
 #| msgid "Version Management - CyberPanel"
@@ -3491,6 +4639,10 @@ msgstr "版本管理 - Cyberpanel"
 #| msgid "Version Management"
 msgid "Cron Management"
 msgstr "版本管理"
+
+#: websiteFunctions/templates/websiteFunctions/listCron.html:12
+msgid "Cron Docs"
+msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:13
 #, fuzzy
@@ -3613,10 +4765,6 @@ msgstr ""
 msgid "Websites Hosted - CyberPanel"
 msgstr "当前已创建的网站 - CyberPanel"
 
-#: websiteFunctions/templates/websiteFunctions/listWebsites.html:53
-msgid "Cannot list websites. Error message:"
-msgstr "无法查看网站, 错误信息:"
-
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:3
 msgid "Modify Website - CyberPanel"
 msgstr "修改网站 - CyberPanel"
@@ -3636,6 +4784,95 @@ msgstr "无法修改网站, 错误信息:"
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:113
 msgid "Website Details Successfully fetched"
 msgstr "网站详情已成功更新"
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:3
+#, fuzzy
+#| msgid "Version Management - CyberPanel"
+msgid "Git Management - CyberPanel"
+msgstr "版本管理 - Cyberpanel"
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:12
+#, fuzzy
+#| msgid "Version Management"
+msgid "Git Management"
+msgstr "版本管理"
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:13
+msgid "Attach git to your websites."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:21
+msgid "Attach Git"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:29
+msgid "Providers"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:36
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:163
+msgid "Deployment Key"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:67
+msgid ""
+"Before attaching repo to your website, make sure to place your Development "
+"key in your GIT repository."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:79
+#, fuzzy
+#| msgid "Extension Name"
+msgid "Repository Name"
+msgstr "扩展名称"
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:88
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:265
+msgid "Branch"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:99
+msgid "Attach Now"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:123
+msgid "GIT Successfully attached, refreshing page in 3 seconds... Visit:"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:215
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:276
+#, fuzzy
+#| msgid "Change"
+msgid "Change Branch"
+msgstr "修改"
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:225
+msgid "Detach Repo"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:231
+msgid "Webhook URL"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:232
+msgid ""
+"Add this URL to Webhooks section of your Git respository, if you've used "
+"hostname SSL then replace IP with your hostname. Otherwise use IP and "
+"disable SSL check while configuring webhook. This will initiate a pull from "
+"your resposity as soon as you commit some changes."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:244
+#, fuzzy
+#| msgid "Records successfully fetched for"
+msgid "Repo successfully detached, refreshing in 3 seconds.."
+msgstr "成功读取记录"
+
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:290
+#, fuzzy
+#| msgid "Backup successfully cancelled."
+msgid "Branch successfully changed."
+msgstr "已成功添加."
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:3
 msgid "Suspend/Unsuspend Website - CyberPanel"
@@ -3669,304 +4906,105 @@ msgstr "网站 "
 msgid "Successfully "
 msgstr "成功 "
 
-#: websiteFunctions/templates/websiteFunctions/website.html:13
-#, fuzzy
-#| msgid "Previous"
-msgid "Preview"
-msgstr "上一个"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:14
-msgid "All functions related to a particular site."
-msgstr "所有与网站相关的功能."
-
-#: websiteFunctions/templates/websiteFunctions/website.html:25
-msgid "Resource Usage"
-msgstr "资源使用量"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:36
-msgid "Resource"
-msgstr "资源"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:38
-msgid "Allowed"
-msgstr "可用"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:60
-#: websiteFunctions/templates/websiteFunctions/website.html:87
-msgid "Bandwidth Usage"
-msgstr "流量使用量"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:124
-#: websiteFunctions/templates/websiteFunctions/website.html:127
-msgid "Load Access Logs"
-msgstr "读取访问日志"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:135
-#: websiteFunctions/templates/websiteFunctions/website.html:138
-msgid "Load Error Logs"
-msgstr "读取错误日志"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:150
-msgid "Logs Fetched"
-msgstr "日志读取成功"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:155
-msgid ""
-"Could not fetch logs, see the logs file through command line. Error message:"
-msgstr "无法获取日志, 请使用命令行模式查看日志, 错误信息:"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:176
-#: websiteFunctions/templates/websiteFunctions/website.html:215
-msgid "Next"
-msgstr "下一个"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:177
-#: websiteFunctions/templates/websiteFunctions/website.html:216
-msgid "Previous"
-msgstr "上一个"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:262
+#: websiteFunctions/templates/websiteFunctions/website.html:261
+#: websiteFunctions/templates/websiteFunctions/website.html:264
 #: websiteFunctions/templates/websiteFunctions/website.html:265
-#: websiteFunctions/templates/websiteFunctions/website.html:266
 msgid "Add Domains"
 msgstr "添加域名"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:273
-#: websiteFunctions/templates/websiteFunctions/website.html:276
-#: websiteFunctions/templates/websiteFunctions/website.html:277
-#: websiteFunctions/templates/websiteFunctions/website.html:294
-#: websiteFunctions/templates/websiteFunctions/website.html:297
-msgid "List Domains"
-msgstr "查看域名"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:283
+#: websiteFunctions/templates/websiteFunctions/website.html:282
+#: websiteFunctions/templates/websiteFunctions/website.html:285
 #: websiteFunctions/templates/websiteFunctions/website.html:286
-#: websiteFunctions/templates/websiteFunctions/website.html:287
 #, fuzzy
 #| msgid "Domains"
 msgid "Domain Alias"
 msgstr "域名"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:294
-#: websiteFunctions/templates/websiteFunctions/website.html:297
+#: websiteFunctions/templates/websiteFunctions/website.html:293
+#: websiteFunctions/templates/websiteFunctions/website.html:296
 msgid "Add new Cron Job"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:298
+#: websiteFunctions/templates/websiteFunctions/website.html:297
 msgid "Cron Jobs"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:324
-#: websiteFunctions/templates/websiteFunctions/website.html:883
-#: websiteFunctions/templates/websiteFunctions/website.html:934
-msgid "Path"
-msgstr "路径"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:326
+#: websiteFunctions/templates/websiteFunctions/website.html:323
 msgid "This path is relative to: "
 msgstr "此目录相对与:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:326
+#: websiteFunctions/templates/websiteFunctions/website.html:323
 msgid "Leave empty to set default."
 msgstr "留空则设置为默认根目录."
 
-#: websiteFunctions/templates/websiteFunctions/website.html:374
+#: websiteFunctions/templates/websiteFunctions/website.html:380
 msgid "Create Domain"
 msgstr "创建域名"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:416
+#: websiteFunctions/templates/websiteFunctions/website.html:441
 msgid "PHP Version Changed to:"
 msgstr "版本管理:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:420
+#: websiteFunctions/templates/websiteFunctions/website.html:445
 msgid "Deleted:"
 msgstr "删除:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:424
+#: websiteFunctions/templates/websiteFunctions/website.html:449
 msgid "SSL Issued:"
 msgstr "已为签发证书:"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:509
-msgid "Configurations"
-msgstr "配置"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:518
-#: websiteFunctions/templates/websiteFunctions/website.html:521
-msgid "Edit vHost Main Configurations"
-msgstr "编辑vHost主配置"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:522
-msgid "vHost Conf"
-msgstr ""
-
-#: websiteFunctions/templates/websiteFunctions/website.html:530
-msgid "Add Rewrite Rules (.htaccess)"
-msgstr "添加Rewrite Rules (.htaccess)"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:533
+#: websiteFunctions/templates/websiteFunctions/website.html:453
 #, fuzzy
-#| msgid "Add Rewrite Rules (.htaccess)"
-msgid "Rewrite Rules (.htaccess)"
-msgstr "添加Rewrite Rules (.htaccess)"
+#| msgid "Database created successfully."
+msgid "Changes applied successfully."
+msgstr "成功创建数据库"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:534
-#, fuzzy
-#| msgid "Save Rewrite Rules"
-msgid "Rewrite Rules"
-msgstr "保存Rewrite rules"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:542
-#: websiteFunctions/templates/websiteFunctions/website.html:545
-msgid "Add Your Own SSL"
-msgstr "添加SSL证书"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:546
-msgid "Add SSL"
-msgstr "添加SSL证书"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:554
-#: websiteFunctions/templates/websiteFunctions/website.html:557
-#, fuzzy
-#| msgid "Select PHP Version"
-msgid "Change PHP Version"
-msgstr "选择PHP版本"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:558
-#: websiteFunctions/templates/websiteFunctions/website.html:754
-#, fuzzy
-#| msgid "Change"
-msgid "Change PHP"
-msgstr "修改"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:570
-msgid "SSL Saved"
-msgstr "SSL证书已保存"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:575
-msgid "Could not save SSL. Error message:"
-msgstr "无法保存SSL证书, 错误信息:"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:624
-msgid "Current configuration in the file fetched."
-msgstr "当前配置读取成功."
-
-#: websiteFunctions/templates/websiteFunctions/website.html:629
-#: websiteFunctions/templates/websiteFunctions/website.html:642
-msgid "Could not fetch current configuration. Error message:"
-msgstr "无法读取当前配置, 错误信息:"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:638
-#: websiteFunctions/templates/websiteFunctions/website.html:690
-#, fuzzy
-#| msgid "SSH Configurations Saved."
-msgid "Configurations saved."
-msgstr "SSH设置已保存"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:676
-msgid "Current rewrite rules in the file fetched."
-msgstr "当前Rewrite rules读取成功."
-
-#: websiteFunctions/templates/websiteFunctions/website.html:681
-msgid "Could not fetch current rewrite rules. Error message:"
-msgstr "无法读取当前Rewrite rules, 错误信息:"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:694
-msgid "Could not save rewrite rules. Error message:"
-msgstr "无法保存Rewrite rules, 错误信息:"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:710
-msgid "Save Rewrite Rules"
-msgstr "保存Rewrite rules"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:765
-#, fuzzy
-#| msgid "Cannot create website. Error message:"
-msgid "Failed to change PHP version. Error message:"
-msgstr "无法创建网站, 错误信息:"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:769
-#, fuzzy
-#| msgid "Password successfully changed for :"
-msgid "PHP successfully changed for: "
-msgstr "已成功为修改密码 :"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:795
-msgid "Files"
-msgstr "文件"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:803
-#: websiteFunctions/templates/websiteFunctions/website.html:806
-#: websiteFunctions/templates/websiteFunctions/website.html:807
-msgid "File Manager"
-msgstr "文件管理"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:819
-#, fuzzy
-#| msgid "Create FTP Account"
-msgid "Create FTP Acct"
-msgstr "创建FTP用户"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:831
-#, fuzzy
-#| msgid "Delete FTP Account"
-msgid "Delete FTP Acct"
-msgstr "删除FTP用户"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:848
-msgid "Application Installer"
-msgstr "应用安装器"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:857
-#: websiteFunctions/templates/websiteFunctions/website.html:860
-msgid "Install wordpress with LSCache"
-msgstr "安装Wordpress和LS Cache"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:861
-msgid "Wordpress with LSCache"
-msgstr "Wordpress和LS Cache"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:869
-#: websiteFunctions/templates/websiteFunctions/website.html:872
-#, fuzzy
-#| msgid "Install wordpress with LSCache"
-msgid "Install Joomla with(?) LSCache"
-msgstr "安装Wordpress和LS Cache"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:873
-msgid "Joomla"
-msgstr ""
-
-#: websiteFunctions/templates/websiteFunctions/website.html:905
+#: websiteFunctions/templates/websiteFunctions/website.html:981
 #: websiteFunctions/templates/websiteFunctions/website.html:984
-msgid "Installation failed. Error message:"
-msgstr "安装失败, 错误信息:"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:909
-#: websiteFunctions/templates/websiteFunctions/website.html:988
-msgid "Installation successful. To complete the setup visit:"
-msgstr "安装成功, 请访问网站以完成设置:"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:941
-msgid "Site name"
+msgid "Attach Git with this website!"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:948
-#, fuzzy
-#| msgid "Username"
-msgid "Admin Username"
-msgstr "用户名"
+#: websiteFunctions/templates/websiteFunctions/website.html:985
+msgid "Git"
+msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:955
+#: websiteFunctions/templates/websiteFunctions/website.html:994
+#: websiteFunctions/templates/websiteFunctions/website.html:997
 #, fuzzy
-#| msgid "Password"
-msgid "Admin Password"
-msgstr "密码"
+#| msgid "Install"
+msgid "Install Prestashop"
+msgstr "安装"
 
-#: websiteFunctions/templates/websiteFunctions/website.html:962
+#: websiteFunctions/templates/websiteFunctions/website.html:998
+msgid "Prestashop"
+msgstr ""
+
+#~ msgid "Cannot create website. Error message:"
+#~ msgstr "无法创建网站, 错误信息:"
+
+#~ msgid "Website with domain"
+#~ msgstr "网站域名"
+
+#~ msgid " is Successfully Created"
+#~ msgstr " 已成功创建"
+
+#~ msgid "Installation successful. To complete the setup visit:"
+#~ msgstr "安装成功, 请访问网站以完成设置:"
+
 #, fuzzy
-#| msgid "Database Name"
-msgid "Database prefix"
-msgstr "数据库名字"
+#~| msgid "Username"
+#~ msgid "Admin Username"
+#~ msgstr "用户名"
+
+#, fuzzy
+#~| msgid "Password"
+#~ msgid "Admin Password"
+#~ msgstr "密码"
+
+#, fuzzy
+#~| msgid "Database Name"
+#~ msgid "Database prefix"
+#~ msgstr "数据库名字"
 
 #~ msgid "Daily"
 #~ msgstr "每日"
