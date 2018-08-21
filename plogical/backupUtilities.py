@@ -203,7 +203,6 @@ class backupUtilities:
         except BaseException, msg:
             return 0,str(msg)
 
-
     @staticmethod
     def startBackup(tempStoragePath,backupName,backupPath):
         try:
@@ -264,13 +263,11 @@ class backupUtilities:
             ##### Saving SSL Certificates if any
 
             try:
-                pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + domainName
-                if os.path.exists(pathToStoreSSL):
-                    pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-                    pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
+                sslStoragePath = '/etc/letsencrypt/live/' + domainName
 
-                    copy(pathToStoreSSLPrivKey, tempStoragePath + "/privkey.pem")
-                    copy(pathToStoreSSLFullChain, tempStoragePath + "/fullchain.pem")
+                if os.path.exists(sslStoragePath):
+                    make_archive(os.path.join(tempStoragePath, "sslData-" + domainName), 'gztar',
+                                 sslStoragePath)
             except BaseException, msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
@@ -285,20 +282,11 @@ class backupUtilities:
 
                     actualChildDomain = childDomain.find('domain').text
 
-                    pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + actualChildDomain
+                    sslStoragePath = '/etc/letsencrypt/live/' + actualChildDomain
 
-                    if os.path.exists(pathToStoreSSL):
-                        pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-                        pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
-
-                        tempKeyPath = os.path.join(tempStoragePath, actualChildDomain)
-
-                        if not os.path.exists(tempKeyPath):
-                            os.mkdir(tempKeyPath)
-
-                        copy(pathToStoreSSLPrivKey, tempKeyPath + "/privkey.pem")
-                        copy(pathToStoreSSLFullChain, tempKeyPath + "/fullchain.pem")
-
+                    if os.path.exists(sslStoragePath):
+                        make_archive(os.path.join(tempStoragePath, "sslData-" + actualChildDomain), 'gztar',
+                                     sslStoragePath)
             except BaseException, msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
@@ -381,12 +369,10 @@ class backupUtilities:
 
             ####### Pre-creation checks ends
 
-            numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
 
             ## Create Configurations
 
-            result = virtualHostUtilities.createVirtualHost(domain, admin.email, phpSelection, externalApp,
-                                                            numberOfWebsites, 0, 'CyberPanel', 1, 0,
+            result = virtualHostUtilities.createVirtualHost(domain, admin.email, phpSelection, externalApp, 0, 1, 0,
                                                             admin.userName, 'Default')
 
             if result[0] == 0:
@@ -489,24 +475,15 @@ class backupUtilities:
             if result[0] == 1:
                 ## Let us try to restore SSL.
 
-                if os.path.exists(completPath + "/privkey.pem"):
+                sslStoragePath = completPath + "/sslData-" + masterDomain + '.tar.gz'
 
-                    pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + masterDomain
-
-                    if not os.path.exists(pathToStoreSSL):
-                        os.mkdir(pathToStoreSSL)
-
+                if os.path.exists(sslStoragePath):
+                    sslHome = '/etc/letsencrypt/live/' + masterDomain
+                    tar = tarfile.open(sslStoragePath)
+                    tar.extractall(sslHome)
+                    tar.close()
                     sslUtilities.installSSLForDomain(masterDomain)
 
-                    pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-                    pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
-
-                    copy(completPath + "/privkey.pem", pathToStoreSSLPrivKey)
-                    copy(completPath + "/fullchain.pem", pathToStoreSSLFullChain)
-
-                    command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + pathToStoreSSL
-                    cmd = shlex.split(command)
-                    subprocess.call(cmd)
             else:
                 status = open(os.path.join(completPath, 'status'), "w")
                 status.write("Error Message: " + result[1] +
@@ -537,50 +514,32 @@ class backupUtilities:
                     phpSelection = childDomain.find('phpSelection').text
                     path = childDomain.find('path').text
 
-                    finalData = json.dumps(
-                        {'masterDomain': masterDomain, 'domainName': domain, 'phpSelection': phpSelection,
-                         'path': path,
-                         'ssl': 0, 'restore': 1,
-                         'dkimCheck': 0,
-                         'openBasedir':0})
-                    r = requests.post("http://localhost:5003/websites/submitDomainCreation", data=finalData,
-                                      verify=False)
+                    retValues = virtualHostUtilities.createDomain(masterDomain, domain, phpSelection, path, 0, 0, 0, 'admin')
 
-                    data = json.loads(r.text)
-
-                    if data['createWebSiteStatus'] == 1:
+                    if retValues[0] == 1:
                         rmtree(websiteHome)
 
                         ## Let us try to restore SSL for Child Domains.
 
-                        tempPath = os.path.join(completPath, domain)
+                        try:
+                            sslStoragePath = completPath + "/sslData-" + domain + '.tar.gz'
 
-                        if os.path.exists(tempPath + "/privkey.pem"):
+                            if os.path.exists(sslStoragePath):
+                                sslHome = '/etc/letsencrypt/live/' + domain
+                                tar = tarfile.open(sslStoragePath)
+                                tar.extractall(sslHome)
+                                tar.close()
+                                sslUtilities.installSSLForDomain(domain)
+                        except:
+                            logging.CyberCPLogFileWriter.writeToFile('While restoring backup we had minor issues for rebuilding vhost conf for: ' + domain + '. However this will be auto healed.')
 
-                            pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + domain
-
-                            if not os.path.exists(pathToStoreSSL):
-                                os.mkdir(pathToStoreSSL)
-
-                            sslUtilities.installSSLForDomain(domain)
-
-                            pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-                            pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
-
-                            copy(tempPath + "/privkey.pem", pathToStoreSSLPrivKey)
-                            copy(tempPath + "/fullchain.pem", pathToStoreSSLFullChain)
-
-                            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + pathToStoreSSL
-                            cmd = shlex.split(command)
 
                         continue
                     else:
                         status = open(os.path.join(completPath,'status'), "w")
-                        status.write("Error Message: " + data[
-                            'error_message'] + ". Not able to create child domains, aborting. [5009]")
+                        status.write("Error Message: " + retValues[1] + ". Not able to create child domains, aborting. [5009]")
                         status.close()
                         return 0
-
             except BaseException, msg:
                 status = open(os.path.join(completPath,'status'), "w")
                 status.write("Error Message: " + str(msg) +". Not able to create child domains, aborting. [5009]")
@@ -908,7 +867,6 @@ class backupUtilities:
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [verifyHostKey]")
             return [0,str(msg)+" [verifyHostKey]"]
-
 
     @staticmethod
     def createBackupDir(IPAddress,port):

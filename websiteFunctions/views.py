@@ -132,7 +132,16 @@ def siteState(request):
 
 def submitWebsiteCreation(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+
+        currentACL = ACLManager.loadedACL(userID)
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['createWebsite'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('createWebSiteStatus', 0)
+
         if request.method == 'POST':
 
             data = json.loads(request.body)
@@ -146,41 +155,15 @@ def submitWebsiteCreation(request):
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
 
-            ####### Limitations check
-
-            currentACL = ACLManager.loadedACL(val)
-
-            if currentACL['admin'] == 1:
-                pass
-            elif currentACL['createWebsite'] == 1:
-                pass
-            else:
-                return ACLManager.loadErrorJson('createWebSiteStatus', 0)
-
-            newOwner = Administrator.objects.get(userName=websiteOwner)
-
-            if ACLManager.websitesLimitCheck(newOwner, 1) == 0:
-                data_ret = {'createWebSiteStatus': 0,
-                            'error_message': "You've reached maximum websites limit as a reseller."}
-
-                final_json = json.dumps(data_ret)
-                return HttpResponse(final_json)
-
-            ####### Limitations Check End
-
-            numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
-            sslpath = "/home/" + domain + "/public_html"
-
             ## Create Configurations
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createVirtualHost --virtualHostName " + domain + \
                        " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + \
-                       "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + \
-                       " --ssl " + str(data['ssl']) + " --sslPath " + sslpath + " --dkimCheck " + str(data['dkimCheck'])\
-                       + " --openBasedir " + str(data['openBasedir']) + ' --websiteOwner ' + websiteOwner \
-                       + ' --package ' + packageName + ' --tempStatusPath ' + tempStatusPath
+                       "' --virtualHostUser " + externalApp + " --ssl " + str(data['ssl']) + " --dkimCheck " \
+                       + str(data['dkimCheck']) + " --openBasedir " + str(data['openBasedir']) + \
+                       ' --websiteOwner ' + websiteOwner + ' --package ' + packageName + ' --tempStatusPath ' + tempStatusPath
 
             subprocess.Popen(shlex.split(execPath))
             time.sleep(2)
@@ -206,41 +189,26 @@ def submitDomainCreation(request):
             path = data['path']
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
 
-            try:
-                restore = data['restore']
-                restore = '1'
+            if currentACL['admin'] != 1:
+                data['openBasedir'] = 1
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            if len(path) > 0:
+                path = path.lstrip("/")
+                path = "/home/" + masterDomain + "/public_html/" + path
+            else:
+                path = "/home/" + masterDomain + "/public_html/" + domain
 
-                execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
-                           " --phpVersion '" + phpSelection + "' --ssl " + str(data['ssl']) + " --dkimCheck " + \
-                           str(data['dkimCheck']) + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path \
-                           + ' --restore ' + restore + ' --tempStatusPath ' + tempStatusPath
 
-            except:
-                restore = '0'
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-                if len(path) > 0:
-                    path = path.lstrip("/")
-                    path = "/home/" + masterDomain + "/public_html/" + path
-                else:
-                    path = "/home/" + masterDomain + "/public_html/" + domain
-
-                userID = request.session['userID']
-                currentACL = ACLManager.loadedACL(userID)
-
-                if currentACL['admin'] != 1:
-                    data['openBasedir'] = 1
-
-                admin = Administrator.objects.get(pk=userID)
-
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-
-                execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
-                           " --phpVersion '" + phpSelection + "' --ssl " + str(data['ssl']) + " --dkimCheck " + str(data['dkimCheck']) \
-                           + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path \
-                           + ' --restore ' + restore + ' --websiteOwner ' + admin.userName + ' --tempStatusPath ' + tempStatusPath
+            execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
+                       " --phpVersion '" + phpSelection + "' --ssl " + str(data['ssl']) + " --dkimCheck " + str(data['dkimCheck']) \
+                       + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path + ' --websiteOwner ' \
+                       + admin.userName + ' --tempStatusPath ' + tempStatusPath
 
             subprocess.Popen(shlex.split(execPath))
             time.sleep(2)

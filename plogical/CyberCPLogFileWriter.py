@@ -36,3 +36,13 @@ class CyberCPLogFileWriter:
 
         except subprocess.CalledProcessError,msg:
             return "File was empty"
+
+    @staticmethod
+    def statusWriter(tempStatusPath, mesg):
+        try:
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines(mesg)
+            statusFile.close()
+        except BaseException, msg:
+            CyberCPLogFileWriter.writeToFile(str(msg) + ' [statusWriter]')
+

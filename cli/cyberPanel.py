@@ -36,12 +36,11 @@ class cyberPanel:
 
     def createWebsite(self, package, owner, domainName, email, php, ssl, dkim, openBasedir):
         try:
+
             externalApp = "".join(re.findall("[a-zA-Z]+", domainName))[:7]
-            numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-            sslpath = "/home/" + domainName + "/public_html"
             phpSelection = 'PHP ' + php
 
-            result = virtualHostUtilities.createVirtualHost(domainName, email, phpSelection, externalApp, numberOfWebsites, ssl, sslpath, dkim,
+            result = virtualHostUtilities.createVirtualHost(domainName, email, phpSelection, externalApp, ssl, dkim,
                               openBasedir, owner, package)
 
             if result[0] == 1:
@@ -59,7 +58,7 @@ class cyberPanel:
             path = '/home/' + masterDomain + '/public_html/' + domainName
             phpSelection = 'PHP ' + php
 
-            result = virtualHostUtilities.createDomain(masterDomain, domainName, phpSelection, path, ssl, dkim, openBasedir, '0', owner)
+            result = virtualHostUtilities.createDomain(masterDomain, domainName, phpSelection, path, ssl, dkim, openBasedir, owner)
 
             if result[0] == 1:
                 self.printStatus(1,'None')

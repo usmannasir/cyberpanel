@@ -32,12 +32,8 @@ class sslUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [IO Error with main config file [checkIfSSLMap]]")
             return 0
 
-
     @staticmethod
     def installSSLForDomain(virtualHostName):
-
-
-        pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
 
         confPath = sslUtilities.Server_root + "/conf/vhosts/" + virtualHostName
         completePathToConfigFile = confPath + "/vhost.conf"
@@ -52,8 +48,8 @@ class sslUtilities:
                 listener = "listener SSL {" + "\n"
                 address = "  address                 *:443" + "\n"
                 secure = "  secure                  1" + "\n"
-                keyFile = "  keyFile                 " + pathToStoreSSL + "/privkey.pem" + "\n"
-                certFile = "  certFile                " + pathToStoreSSL + "/fullchain.pem" + "\n"
+                keyFile = "  keyFile                  /etc/letsencrypt/live/"+ virtualHostName + "/privkey.pem\n"
+                certFile = "  certFile                 /etc/letsencrypt/live/"+ virtualHostName + "/fullchain.pem\n"
                 certChain = "  certChain               1" + "\n"
                 sslProtocol = "  sslProtocol             30" + "\n"
                 map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
@@ -110,8 +106,8 @@ class sslUtilities:
                     writeSSLConfig = open(completePathToConfigFile,"a")
 
                     vhssl = "vhssl  {" + "\n"
-                    keyFile = "  keyFile                 " + pathToStoreSSL + "/privkey.pem" + "\n"
-                    certFile = "  certFile                " + pathToStoreSSL + "/fullchain.pem" + "\n"
+                    keyFile = "  keyFile                 /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
+                    certFile = "  certFile                /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
                     certChain = "  certChain               1" + "\n"
                     sslProtocol = "  sslProtocol             30" + "\n"
                     final = "}"
@@ -135,7 +131,6 @@ class sslUtilities:
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [installSSLForDomain]]")
             return 0
-
 
     @staticmethod
     def checkSSLListener():
@@ -162,7 +157,6 @@ class sslUtilities:
         except BaseException, msg:
             return [0, "347 " + str(msg) + " [issueSSLForDomain]"]
 
-
     @staticmethod
     def obtainSSLForADomain(virtualHostName,adminEmail,sslpath, aliasDomain = None):
         try:
@@ -175,6 +169,10 @@ class sslUtilities:
             serverIPAddress = ipData.split('\n', 1)[0]
 
             if aliasDomain == None:
+
+                existingCertPath = '/etc/letsencrypt/live/' + virtualHostName + '/README'
+                if os.path.exists(existingCertPath):
+                    return 1
 
                 try:
                     logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName)
@@ -196,47 +194,13 @@ class sslUtilities:
                         logging.CyberCPLogFileWriter.writeToFile('Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName)
                         return 0
 
-                pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
-
-                if not os.path.exists(pathToStoreSSL):
-                    os.mkdir(pathToStoreSSL)
-
-                pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-                pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
-
                 ##
 
                 if output.find('Congratulations!') > -1:
 
-                    ###### Copy SSL To config location ######
-
-                    srcPrivKey = "/etc/letsencrypt/live/" + virtualHostName + "/privkey.pem"
-                    srcFullChain = "/etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem"
-
-                    if os.path.exists(pathToStoreSSLPrivKey):
-                        os.remove(pathToStoreSSLPrivKey)
-                    if os.path.exists(pathToStoreSSLFullChain):
-                        os.remove(pathToStoreSSLFullChain)
-
-                    shutil.copy(srcPrivKey, pathToStoreSSLPrivKey)
-                    shutil.copy(srcFullChain, pathToStoreSSLFullChain)
-
                     return 1
 
                 elif output.find('no action taken.') > -1:
-
-                    ###### Copy SSL To config location ######
-
-                    srcPrivKey = "/etc/letsencrypt/live/" + virtualHostName + "/privkey.pem"
-                    srcFullChain = "/etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem"
-
-                    if os.path.exists(pathToStoreSSLPrivKey):
-                        os.remove(pathToStoreSSLPrivKey)
-                    if os.path.exists(pathToStoreSSLFullChain):
-                        os.remove(pathToStoreSSLFullChain)
-
-                    shutil.copy(srcPrivKey, pathToStoreSSLPrivKey)
-                    shutil.copy(srcFullChain, pathToStoreSSLFullChain)
 
                     return 1
                 elif output.find('Failed authorization procedure') > -1:
@@ -301,42 +265,9 @@ class sslUtilities:
                         "Failed to obtain DNS records for " + virtualHostName + ", issuing self signed certificate.")
                     return 0
 
-            ## SSL Paths
-
-            pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
-
-            if not os.path.exists(pathToStoreSSL):
-                os.mkdir(pathToStoreSSL)
-
-            pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-            pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
-
-
-            ##
-
             output = subprocess.check_output(shlex.split(command))
 
-            data = output.split('\n')
-
             if output.find('Congratulations!')  > -1:
-
-                ###### Copy SSL To config location ######
-
-
-                for items in data:
-                    if items.find(virtualHostName) > -1 and items.find('fullchain.pem') > -1:
-                        srcFullChain = items.strip(' ')
-                    elif items.find(virtualHostName) > -1 and items.find('privkey.pem') > -1:
-                        srcPrivKey = items.strip(' ')
-
-
-                if os.path.exists(pathToStoreSSLPrivKey):
-                    os.remove(pathToStoreSSLPrivKey)
-                if os.path.exists(pathToStoreSSLFullChain):
-                    os.remove(pathToStoreSSLFullChain)
-
-                shutil.copy(srcPrivKey, pathToStoreSSLPrivKey)
-                shutil.copy(srcFullChain, pathToStoreSSLFullChain)
 
                 return 1
 
@@ -370,8 +301,8 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain = None):
             if not os.path.exists(pathToStoreSSL):
                 os.mkdir(pathToStoreSSL)
 
-            pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-            pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
+            pathToStoreSSLPrivKey = "/etc/letsencrypt/live/" + domain + "/privkey.pem"
+            pathToStoreSSLFullChain = "/etc/letsencrypt/live/" + domain + "/fullchain.pem"
 
             command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
             cmd = shlex.split(command)

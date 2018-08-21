@@ -170,7 +170,6 @@ class vhost:
         else:
             return [0,"[61 Not able to create per host virtual configurations [perHostVirtualConf]"]
 
-
     @staticmethod
     def perHostVirtualConf(vhFile, administratorEmail,virtualHostUser, phpVersion, virtualHostName, openBasedir):
         # General Configurations tab
@@ -498,18 +497,12 @@ RewriteFile .htaccess
     def deleteCoreConf(virtualHostName, numberOfSites):
 
         virtualHostPath = "/home/" + virtualHostName
-        try:
+        if os.path.exists(virtualHostPath):
             shutil.rmtree(virtualHostPath)
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + " [Not able to remove virtual host directory from /home continuing..]")
 
-        try:
-            confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
+        confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
+        if os.path.exists(confPath):
             shutil.rmtree(confPath)
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + " [Not able to remove virtual host configuration directory from /conf ]")
 
         try:
             data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
@@ -545,7 +538,6 @@ RewriteFile .htaccess
                         writeDataToFile.writelines(items)
                     if (items.find("}") > -1 and check == 0):
                         check = 1
-
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
@@ -750,7 +742,6 @@ RewriteFile .htaccess
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createAliasSSLMap]")
-
 
     ## Child Domain Functions
 
