@@ -1037,7 +1037,6 @@ app.controller('modSec', function($scope, $http, $timeout, $window) {
 
                         if(response.data.installed === 1) {
 
-
                             if (response.data.modsecurity === 1) {
                                 $('#modsecurity_status').bootstrapToggle('on');
                             }

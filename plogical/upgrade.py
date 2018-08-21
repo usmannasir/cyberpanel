@@ -12,6 +12,7 @@ import requests
 import json
 import time
 from baseTemplate.models import version
+from CyberCP import settings
 
 class Upgrade:
     logPath = "/usr/local/lscp/logs/upgradeLog"
@@ -32,7 +33,7 @@ class Upgrade:
             r = requests.get(url, verify=True)
             data = json.loads(r.text)
             version_number = str(data['version'])
-            version_build = str(0)
+            version_build = str(data['build'])
             return (version_number + "." + version_build + ".tar.gz")
         except BaseException, msg:
             Upgrade.stdOut(str(msg) + ' [downloadLink]')
@@ -41,6 +42,7 @@ class Upgrade:
     @staticmethod
     def setupVirtualEnv():
         try:
+            Upgrade.stdOut('Setting up virtual enviroment for CyberPanel.')
             ##
             count = 0
             while (1):
@@ -114,7 +116,7 @@ class Upgrade:
                     Upgrade.stdOut(
                         "Trying to install project dependant modules, trying again, try number: " + str(count))
                     if count == 3:
-                        Upgrade.InstallLog.writeToFile(
+                        Upgrade.stdOut(
                             "Failed to install project dependant modules! [setupVirtualEnv]")
                         break
                 else:
@@ -124,8 +126,12 @@ class Upgrade:
             command = "systemctl stop gunicorn.socket"
             res = subprocess.call(shlex.split(command))
 
+
             command = "virtualenv --system-site-packages /usr/local/CyberCP"
             res = subprocess.call(shlex.split(command))
+
+            Upgrade.stdOut('Virtual enviroment for CyberPanel successfully installed.')
+
         except OSError, msg:
             Upgrade.stdOut(str(msg) + " [setupVirtualEnv]")
             os._exit(0)
@@ -196,7 +202,6 @@ WantedBy=multi-user.target"""
             Upgrade.stdOut(str(msg) + " [updateGunicornConf]")
             os._exit(0)
 
-
     @staticmethod
     def fileManager():
         ## Copy File manager files
@@ -239,27 +244,16 @@ WantedBy=multi-user.target"""
     @staticmethod
     def setupCLI():
         try:
-            count = 0
-            while (1):
-                command = "ln -s /usr/local/CyberCP/cli/cyberPanel.py /usr/bin/cyberpanel"
-                res = subprocess.call(shlex.split(command))
 
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut(
-                        "Trying to setup CLI, trying again, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut(
-                            "Failed to setup CLI! [setupCLI]")
-                        break
-                else:
-                    Upgrade.stdOut("CLI setup successfull!")
-                    break
+            command = "ln -s /usr/local/CyberCP/cli/cyberPanel.py /usr/bin/cyberpanel"
+            res = subprocess.call(shlex.split(command))
 
             command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
             res = subprocess.call(shlex.split(command))
 
         except OSError, msg:
+            command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
+            res = subprocess.call(shlex.split(command))
             Upgrade.stdOut(str(msg) + " [setupCLI]")
             return 0
 
@@ -313,52 +307,49 @@ WantedBy=multi-user.target"""
             cwd = os.getcwd()
             os.chdir('/usr/local/CyberCP')
 
-            try:
-                ##
-                command = "python manage.py makemigrations loginSystem"
-                res = subprocess.call(shlex.split(command))
+            command = "echo 'CREATE TABLE `loginSystem_acl` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `name` varchar(50) NOT NULL UNIQUE, `adminStatus` integer NOT NULL, `versionManagement` integer NOT NULL, `createNewUser` integer NOT NULL, `deleteUser` integer NOT NULL, `resellerCenter` integer NOT NULL, `changeUserACL` integer NOT NULL, `createWebsite` integer NOT NULL, `modifyWebsite` integer NOT NULL, `suspendWebsite` integer NOT NULL, `deleteWebsite` integer NOT NULL, `createPackage` integer NOT NULL, `deletePackage` integer NOT NULL, `modifyPackage` integer NOT NULL, `createDatabase` integer NOT NULL, `deleteDatabase` integer NOT NULL, `listDatabases` integer NOT NULL, `createNameServer` integer NOT NULL, `createDNSZone` integer NOT NULL, `deleteZone` integer NOT NULL, `addDeleteRecords` integer NOT NULL, `createEmail` integer NOT NULL, `deleteEmail` integer NOT NULL, `emailForwarding` integer NOT NULL, `changeEmailPassword` integer NOT NULL, `dkimManager` integer NOT NULL, `createFTPAccount` integer NOT NULL, `deleteFTPAccount` integer NOT NULL, `listFTPAccounts` integer NOT NULL, `createBackup` integer NOT NULL, `restoreBackup` integer NOT NULL, `addDeleteDestinations` integer NOT NULL, `scheDuleBackups` integer NOT NULL, `remoteBackups` integer NOT NULL, `manageSSL` integer NOT NULL, `hostnameSSL` integer NOT NULL, `mailServerSSL` integer NOT NULL);' | python manage.py dbshell"
+            subprocess.check_output(command, shell=True)
 
-                command = "python manage.py migrate loginSystem"
-                res = subprocess.call(shlex.split(command))
-            except:
-                pass
+            command = "echo 'ALTER TABLE loginSystem_administrator ADD acl_id integer;' | python manage.py dbshell"
+            subprocess.call(command, shell=True)
 
-            from loginSystem.models import Administrator, ACL
+            command = "echo 'ALTER TABLE loginSystem_administrator ADD FOREIGN KEY (acl_id) REFERENCES loginSystem_acl(id);' | python manage.py dbshell"
+            subprocess.check_output(command, shell=True)
 
-            adminACL = ACL(name='admin', adminStatus=1)
-            adminACL.save()
+            dbName = settings.DATABASES['default']['NAME']
+            dbUser = settings.DATABASES['default']['USER']
+            password = settings.DATABASES['default']['PASSWORD']
+            host = settings.DATABASES['default']['HOST']
+            port = settings.DATABASES['default']['PORT']
 
-            ## Reseller ACL
+            if len(port) == 0:
+                port = '3306'
 
-            resellerACL = ACL(name='reseller',
-                         createNewUser=1,
-                         deleteUser=1,
-                         createWebsite=1,
-                         resellerCenter=1,
-                         modifyWebsite=1,
-                         suspendWebsite=1,
-                         deleteWebsite=1,
-                         createPackage=1,
-                         deletePackage=1,
-                         modifyPackage=1,
-                         createNameServer=1,
-                         restoreBackup=1,
-                         )
-            resellerACL.save()
+            passwordCMD = "use " + dbName+";insert into loginSystem_acl (id, name, adminStatus) values (1,'admin',1);"
+            command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
 
-            ## User ACL
 
-            userACL = ACL(name='user')
-            userACL.save()
+            passwordCMD = "use " + dbName + ";insert into loginSystem_acl (id, name, adminStatus, createNewUser, deleteUser, createWebsite, resellerCenter, modifyWebsite, suspendWebsite, deleteWebsite, createPackage, deletePackage, modifyPackage, createNameServer, restoreBackup) values (2,'reseller',0,1,1,1,1,1,1,1,1,1,1,1,1);"
+            command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
 
-            allUsers = Administrator.objects.all()
+            passwordCMD = "use " + dbName + ";insert into loginSystem_acl (id, name) values (3,'user');"
+            command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
 
-            for items in allUsers:
+            passwordCMD = "use " + dbName + ";UPDATE loginSystem_administrator SET  acl_id = 3;"
+            command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
 
-                if items.userName == 'admin':
-                    items.acl = adminACL
-                else:
-                    items.acl = userACL
+            passwordCMD = "use " + dbName + ";UPDATE loginSystem_administrator SET  acl_id = 1 where userName = 'admin';"
+            command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
 
             os.chdir(cwd)
 
@@ -367,18 +358,154 @@ WantedBy=multi-user.target"""
             os._exit(0)
 
     @staticmethod
+    def mailServerMigrations():
+        try:
+            os.chdir('/usr/local/CyberCP')
+
+            command = "echo 'ALTER TABLE e_forwardings DROP PRIMARY KEY;ALTER TABLE e_forwardings ADD id INT AUTO_INCREMENT PRIMARY KEY;' | python manage.py dbshell"
+            res = subprocess.check_output(command, shell=True)
+
+            command = "python manage.py makemigrations emailPremium"
+            res = subprocess.call(shlex.split(command))
+
+            command = "python manage.py migrate emailPremium"
+            res = subprocess.call(shlex.split(command))
+        except:
+            pass
+
+    @staticmethod
+    def enableServices():
+        try:
+            servicePath = '/home/cyberpanel/powerdns'
+            writeToFile = open(servicePath, 'w+')
+            writeToFile.close()
+
+            servicePath = '/home/cyberpanel/postfix'
+            writeToFile = open(servicePath, 'w+')
+            writeToFile.close()
+
+            servicePath = '/home/cyberpanel/pureftpd'
+            writeToFile = open(servicePath, 'w+')
+            writeToFile.close()
+
+        except:
+            pass
+
+    @staticmethod
+    def downloadAndUpgrade(Version, versionNumbring):
+        try:
+            ## Download latest version.
+
+            count = 0
+            while (1):
+                command = "wget https://cyberpanel.net/CyberPanel." + versionNumbring
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    Upgrade.stdOut(
+                        "Downloading latest version, trying again, try number: " + str(count))
+                    if count == 3:
+                        Upgrade.stdOut("Failed to download latest version! [upgrade]")
+                        os._exit(0)
+                else:
+                    Upgrade.stdOut("Latest version successfully downloaded!")
+                    break
+
+            ## Backup settings file.
+
+            Upgrade.stdOut("Backing up settings file.")
+
+            shutil.copy("/usr/local/CyberCP/CyberCP/settings.py", "/usr/local/settings.py")
+
+            Upgrade.stdOut("Settings file backed up.")
+
+            ## Extract Latest files
+
+            count = 1
+            while (1):
+                command = "tar zxf CyberPanel." + versionNumbring
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    Upgrade.stdOut(
+                        "Trying to extract new version, trying again, try number: " + str(count))
+                    if count == 3:
+                        Upgrade.stdOut("Failed to extract new version! [upgrade]")
+                        os._exit(0)
+                else:
+                    Upgrade.stdOut("New version successfully extracted!")
+                    break
+
+            ## Copy settings file
+
+            Upgrade.stdOut('Restoring settings file!')
+
+            data = open("/usr/local/settings.py", 'r').readlines()
+            writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
+
+            for items in data:
+                if items.find("'filemanager',") > -1:
+                    writeToFile.writelines(items)
+                    if Version.currentVersion == '1.6':
+                        writeToFile.writelines("    'emailPremium'\n")
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+
+            Upgrade.stdOut('Settings file restored!')
+
+            ## Move static files
+
+            Upgrade.staticContent()
+
+            ## Upgrade File Manager
+
+            Upgrade.fileManager()
+        except:
+            pass
+
+    @staticmethod
+    def installTLDExtract():
+        try:
+            count = 0
+            while (1):
+                command = "pip install tldextract"
+
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    Upgrade.stdOut(
+                        "Trying to install tldextract, trying again, try number: " + str(count))
+                    if count == 3:
+                        Upgrade.stdOut(
+                            "Failed to install tldextract! [installTLDExtract]")
+                else:
+                    Upgrade.stdOut("tldextract successfully installed!  [pip]")
+                    Upgrade.stdOut("tldextract successfully installed!  [pip]")
+                    break
+        except OSError, msg:
+            Upgrade.stdOut(str(msg) + " [installTLDExtract]")
+            return 0
+
+
+    @staticmethod
     def upgrade():
 
         os.chdir("/usr/local")
-
 
         ## Current Version
 
         Version = version.objects.get(pk=1)
 
-        if Version.currentVersion == '1.7' and Version.build == 0:
-            Upgrade.stdOut('You can not upgrade to v1.7.1 via automatic upgrade.')
-            os._exit(0)
+        command = "systemctl stop gunicorn.socket"
+        res = subprocess.call(shlex.split(command))
+
+        command = "systemctl stop lscpd"
+        res = subprocess.call(shlex.split(command))
 
         ##
 
@@ -392,183 +519,31 @@ WantedBy=multi-user.target"""
             Upgrade.stdOut('Upgrades works for version 1.6 onwards.')
             os._exit(0)
 
-        ## RC Check
+        ##
 
-        rcCheck = 1
-
-        if os.path.exists('/usr/local/CyberCP/postfixSenderPolicy'):
-            rcCheck = 0
-
-        ## Download latest version.
-
-        count = 0
-        while (1):
-            command = "wget https://cyberpanel.net/CyberPanel." + versionNumbring
-            res = subprocess.call(shlex.split(command))
-
-            if res == 1:
-                count = count + 1
-                Upgrade.stdOut(
-                    "Downloading latest version, trying again, try number: " + str(count))
-                if count == 3:
-                    Upgrade.stdOut("Failed to download latest version! [upgrade]")
-                    os._exit(0)
-            else:
-                Upgrade.stdOut("Latest version successfully downloaded!")
-                break
-
-        ## Backup settings file.
-
-        Upgrade.stdOut("Backing up settings file.")
-
-        shutil.copy("/usr/local/CyberCP/CyberCP/settings.py","/usr/local/settings.py")
-
-        Upgrade.stdOut("Settings file backed up.")
-
-        ## Extract Latest files
-
-        count = 1
-        while (1):
-            command = "tar zxf CyberPanel." + versionNumbring
-            res = subprocess.call(shlex.split(command))
-
-            if res == 1:
-                count = count + 1
-                Upgrade.stdOut(
-                    "Trying to extract new version, trying again, try number: " + str(count))
-                if count == 3:
-                    Upgrade.stdOut("Failed to extract new version! [upgrade]")
-                    os._exit(0)
-            else:
-                Upgrade.stdOut("New version successfully extracted!")
-                break
-
-        ## Copy settings file
-
-        Upgrade.stdOut('Restoring settings file!')
+        Upgrade.downloadAndUpgrade(Version, versionNumbring)
 
 
-        data = open("/usr/local/settings.py", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
+        ##
 
-        for items in data:
-            if items.find("'filemanager',") > -1:
-                writeToFile.writelines(items)
-                if Version.currentVersion == '1.6':
-                    writeToFile.writelines("    'emailPremium'\n")
-            else:
-                writeToFile.writelines(items)
+        Upgrade.installTLDExtract()
 
-        writeToFile.close()
+        ##
 
-        Upgrade.stdOut('Settings file restored!')
+        Upgrade.mailServerMigrations()
 
-        ## Move static files
-
-        Upgrade.staticContent()
-
-        ## Upgrade File Manager
-
-        Upgrade.fileManager()
+        ##
 
 
-        ## Install TLDExtract
-
-        count = 1
-        while (1):
-            command = "pip install tldextract"
-            res = subprocess.call(shlex.split(command))
-
-            if res == 1:
-                count = count + 1
-                Upgrade.stdOut(
-                    "Trying to install tldextract, trying again, try number: " + str(count))
-                if count == 3:
-                    Upgrade.stdOut(
-                        "Failed to install tldextract! [upgrade]")
-                    os._exit(0)
-            else:
-                Upgrade.stdOut("tldextract successfully installed!  [pip]")
-                break
-
-
-
-        ## Install dnspython
-
-        #command = "pip install dnspython"
-        #subprocess.call(shlex.split(command))
-
-
-        ## MailServer Model Changes
-
-        if Version.currentVersion == '1.6' and rcCheck :
-            os.chdir('/usr/local/CyberCP')
-
-            count = 1
-            while (1):
-                command = "echo 'ALTER TABLE e_forwardings DROP PRIMARY KEY;ALTER TABLE e_forwardings ADD id INT AUTO_INCREMENT PRIMARY KEY;' | python manage.py dbshell"
-                res = subprocess.check_output(command, shell=True)
-
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut(
-                        "Trying to patch database for email forwarding, trying again, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut(
-                            "Failed to patch database for email forwarding! [upgrade]")
-                        os._exit(0)
-
-                else:
-                    Upgrade.stdOut("Database successfully patched for email forwarding!")
-                    break
-
-            count = 1
-            while (1):
-                command = "python manage.py makemigrations emailPremium"
-                res = subprocess.call(shlex.split(command))
-
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut(
-                        "Trying to setup migration file for email limits, trying again, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut(
-                            "Failed to setup migration file for email limits! [upgrade]")
-                        os._exit(0)
-                else:
-                    Upgrade.stdOut("Migrations file for email limits successfully prepared!")
-                    break
-
-            count = 1
-            while (1):
-                command = "python manage.py migrate emailPremium"
-                res = subprocess.call(shlex.split(command))
-
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut(
-                        "Trying to execute migration file for email limits, trying again, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut(
-                            "Failed to execute migration file for email limits! [upgrade]")
-                        os._exit(0)
-                else:
-                    Upgrade.stdOut("Migrations file for email limits successfully executed!")
-                    break
-
-
-        Upgrade.stdOut('Setting up virtual enviroment for CyberPanel.')
         Upgrade.setupVirtualEnv()
-        Upgrade.stdOut('Virtual enviroment for CyberPanel successfully installed.')
-        if Version.currentVersion == '1.6':
-            Upgrade.updateGunicornConf()
-        command = 'systemctl restart gunicorn.socket'
-        subprocess.call(shlex.split(command))
+        Upgrade.updateGunicornConf()
+
+        ##
 
 
-        #if Version.currentVersion == '1.7' and Version.build == 0:
-        #    Upgrade.applyLoginSystemMigrations()
-
+        if Version.currentVersion == '1.7' and Version.build == 0:
+            Upgrade.applyLoginSystemMigrations()
+            Upgrade.enableServices()
 
         ## Upgrade OpenLiteSpeed
 
@@ -580,6 +555,8 @@ WantedBy=multi-user.target"""
 
         Upgrade.upgradeVersion()
 
+        command = "systemctl start lscpd"
+        res = subprocess.call(shlex.split(command))
 
         Upgrade.stdOut("Upgrade Completed.")
 

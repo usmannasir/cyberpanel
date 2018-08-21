@@ -11,6 +11,7 @@ class CyberCPLogFileWriter:
             file.writelines("[" + time.strftime(
                     "%I-%M-%S-%a-%b-%Y") + "] "+ message + "\n")
             file.close()
+
         except IOError,msg:
             return "Can not write to error file."
 

@@ -20,31 +20,16 @@ from plogical.acl import ACLManager
 def loadFileManagerHome(request,domain):
     try:
         userID = request.session['userID']
-
-        admin = Administrator.objects.get(pk=userID)
-
         if Websites.objects.filter(domain=domain).exists():
+            admin = Administrator.objects.get(pk=userID)
             currentACL = ACLManager.loadedACL(userID)
-            if currentACL['admin'] == 1:
-                viewStatus = 1
-                if admin.type == 3:
-                    viewStatus = 0
 
-                return render(request, 'filemanager/index.html', {"viewStatus": viewStatus})
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                return render(request, 'filemanager/index.html')
             else:
-                website = Websites.objects.get(domain=domain)
-                if website.admin == admin:
-                    viewStatus = 1
-
-                    if admin.type == 3:
-                        viewStatus = 0
-
-                    return render(request, 'filemanager/index.html', {"viewStatus": viewStatus})
-                else:
-                    return HttpResponse("Domain ownership error.")
+                return ACLManager.loadError()
         else:
             return HttpResponse("Domain does not exists.")
-
 
     except KeyError:
         return redirect(loadLoginPage)
@@ -52,10 +37,18 @@ def loadFileManagerHome(request,domain):
 
 def changePermissions(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
         try:
             data = json.loads(request.body)
             domainName = data['domainName']
+
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('permissionsChanged', 0)
 
             website = Websites.objects.get(domain=domainName)
             externalApp = website.externalApp
@@ -99,8 +92,6 @@ def downloadFile(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
-
 def createTemporaryFile(request):
     try:
         userID = request.session['userID']
@@ -109,52 +100,32 @@ def createTemporaryFile(request):
 
         admin = Administrator.objects.get(pk=userID)
 
+        currentACL = ACLManager.loadedACL(userID)
+
+        if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('createTemporaryFile', 0)
+
         ## Create file manager entry
 
         if Websites.objects.filter(domain=domainName).exists():
-            currentACL = ACLManager.loadedACL(userID)
-            if currentACL['admin'] == 1:
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/filemanager.py"
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/filemanager.py"
+            execPath = execPath + " createTemporaryFile --domainName " + domainName
 
-                execPath = execPath + " createTemporaryFile --domainName " + domainName
+            output = subprocess.check_output(shlex.split(execPath))
 
-                output = subprocess.check_output(shlex.split(execPath))
-
-                if output.find("0,") > -1:
-                    data_ret = {'createTemporaryFile': 0, 'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                else:
-                    domainRandomSeed = output.rstrip('\n')
-                    data_ret = {'createTemporaryFile': 1, 'error_message': "None", 'domainRandomSeed':domainRandomSeed}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+            if output.find("0,") > -1:
+                data_ret = {'createTemporaryFile': 0, 'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             else:
-                website = Websites.objects.get(domain=domainName)
-                if website.admin == admin:
-                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/filemanager.py"
-
-                    execPath = execPath + " createTemporaryFile --domainName " + domainName
-
-                    output = subprocess.check_output(shlex.split(execPath))
-
-                    if output.find("0,") > -1:
-                        data_ret = {'createTemporaryFile': 0, 'error_message': "None"}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-
-                    else:
-                        domainRandomSeed = output.rstrip('\n')
-                        data_ret = {'createTemporaryFile': 1, 'error_message': "None", 'domainRandomSeed': domainRandomSeed}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-                else:
-                    data_ret = {'createTemporaryFile': 0, 'error_message': "Domain ownership error."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                domainRandomSeed = output.rstrip('\n')
+                data_ret = {'createTemporaryFile': 1, 'error_message': "None", 'domainRandomSeed': domainRandomSeed}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
     except KeyError:
         return redirect(loadLoginPage)

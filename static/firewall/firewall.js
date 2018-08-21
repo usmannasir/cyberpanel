@@ -985,9 +985,14 @@ app.controller('modSec', function($scope, $http, $timeout, $window) {
 
            ///// ModSec configs
 
+           var modsecurity_status = false;
            var SecAuditEngine = false;
            var SecRuleEngine = false;
 
+
+           $('#modsecurity_status').change(function() {
+                modsecurity_status = $(this).prop('checked');
+           });
 
            $('#SecAuditEngine').change(function() {
                 SecAuditEngine = $(this).prop('checked');
@@ -1003,6 +1008,7 @@ app.controller('modSec', function($scope, $http, $timeout, $window) {
 
                $scope.modsecLoading = false;
 
+               $('#modsecurity_status').bootstrapToggle('off');
                $('#SecAuditEngine').bootstrapToggle('off');
                $('#SecRuleEngine').bootstrapToggle('off');
 
@@ -1031,6 +1037,9 @@ app.controller('modSec', function($scope, $http, $timeout, $window) {
 
                         if(response.data.installed === 1) {
 
+                            if (response.data.modsecurity === 1) {
+                                $('#modsecurity_status').bootstrapToggle('on');
+                            }
                             if (response.data.SecAuditEngine === 1) {
                                 $('#SecAuditEngine').bootstrapToggle('on');
                             }
@@ -1073,12 +1082,13 @@ app.controller('modSec', function($scope, $http, $timeout, $window) {
                         url = "/firewall/saveModSecConfigurations";
 
                         var data = {
+                            modsecurity_status:modsecurity_status,
                             SecAuditEngine:SecAuditEngine,
                             SecRuleEngine:SecRuleEngine,
                             SecDebugLogLevel:$scope.SecDebugLogLevel,
                             SecAuditLogParts:$scope.SecAuditLogParts,
                             SecAuditLogRelevantStatus:$scope.SecAuditLogRelevantStatus,
-                            SecAuditLogType:$scope.SecAuditLogType
+                            SecAuditLogType:$scope.SecAuditLogType,
                         };
 
                         var config = {
@@ -1483,6 +1493,8 @@ app.controller('modSecRulesPack', function($scope, $http, $timeout, $window) {
 
                $scope.modsecLoading = false;
 
+
+
                 url = "/firewall/enableDisableRuleFile";
 
                 var data = {
@@ -1516,12 +1528,6 @@ app.controller('modSecRulesPack', function($scope, $http, $timeout, $window) {
                         $scope.installationFailed = true;
                         $scope.installationSuccess = false;
 
-                        new PNotify({
-                            title: 'Success!',
-                            text: 'Changes successfully applied.',
-                            type:'success'
-                          });
-
                         $scope.fetchRulesFile(packName);
 
                     }else{
@@ -1533,12 +1539,6 @@ app.controller('modSecRulesPack', function($scope, $http, $timeout, $window) {
                         $scope.couldNotConnect = true;
                         $scope.installationFailed = false;
                         $scope.installationSuccess = true;
-
-                        new PNotify({
-                            title: 'Error!',
-                            text: response.data.error_message,
-                            type:'error'
-                          });
 
                         $scope.errorMessage = response.data.error_message;
                     }
@@ -1553,12 +1553,6 @@ app.controller('modSecRulesPack', function($scope, $http, $timeout, $window) {
                     $scope.couldNotConnect = false;
                     $scope.installationFailed = true;
                     $scope.installationSuccess = true;
-
-                    new PNotify({
-                            title: 'Error!',
-                            text: 'Could not connect to server, please refresh this page.',
-                            type:'error'
-                          });
                 }
 
            }

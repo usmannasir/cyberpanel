@@ -652,7 +652,7 @@ def submitZoneDeletion(request):
 
                 if currentACL['admin'] == 1:
                     if delZone.admin != admin:
-                        ACLManager.loadErrorJson()
+                        return ACLManager.loadErrorJson()
 
                 delZone.delete()
 

@@ -393,7 +393,7 @@ def createACLFunc(request):
 
             finalResponse = { 'status': 1}
         else:
-            finalResponse = ACLManager.loadErrorJson()
+            return ACLManager.loadErrorJson()
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
@@ -431,7 +431,7 @@ def deleteACLFunc(request):
             else:
                 finalResponse = {'status': 0, 'errorMesssage' : 'This ACL is currently in used by existing users.'}
         else:
-            finalResponse = ACLManager.loadErrorJson()
+            return ACLManager.loadErrorJson()
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
@@ -535,7 +535,7 @@ def fetchACLDetails(request):
 
             finalResponse['status'] = 1
         else:
-            finalResponse = ACLManager.loadErrorJson()
+            return ACLManager.loadErrorJson()
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)

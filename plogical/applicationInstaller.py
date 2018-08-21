@@ -71,6 +71,41 @@ class ApplicationInstaller(multi.Thread):
         except BaseException, msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.installGit]')
 
+    def dbCreation(self, tempStatusPath, website):
+        try:
+            dbName = randomPassword.generate_pass()
+            dbUser = dbName
+            dbPassword = randomPassword.generate_pass()
+
+            ## DB Creation
+
+            if Databases.objects.filter(dbName=dbName).exists() or Databases.objects.filter(
+                    dbUser=dbUser).exists():
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(
+                    "This database or user is already taken." + " [404]")
+                statusFile.close()
+                return 0
+
+            result = mysqlUtilities.createDatabase(dbName, dbUser, dbPassword)
+
+            if result == 1:
+                pass
+            else:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(
+                    "Not able to create database." + " [404]")
+                statusFile.close()
+                return 0
+
+            db = Databases(website=website, dbName=dbName, dbUser=dbUser)
+            db.save()
+
+            return dbName, dbUser, dbPassword
+
+        except BaseException, msg:
+            logging.writeToFile(str(msg) + '[ApplicationInstallerdbCreation]')
+
     def installWordPress(self):
         try:
 
@@ -83,6 +118,7 @@ class ApplicationInstaller(multi.Thread):
             adminPassword = self.extraArgs['adminPassword']
             adminEmail = self.extraArgs['adminEmail']
 
+            FNULL = open(os.devnull, 'w')
 
             ### Check WP CLI
 
@@ -101,37 +137,59 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Setting up paths,0')
             statusFile.close()
 
+            finalPath = ''
+
             try:
                 website = ChildDomains.objects.get(domain=domainName)
                 externalApp = website.master.externalApp
 
-                if admin.type != 1:
-                    if website.master.admin != admin:
-                        statusFile = open(tempStatusPath, 'w')
-                        statusFile.writelines("You do not own this website." + " [404]")
-                        statusFile.close()
-                        return 0
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = website.path.rstrip('/') + "/" + path + "/"
+                else:
+                    finalPath = website.path
+
+
+                if website.master.package.dataBases > website.master.databases_set.all().count():
+                    pass
+                else:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines(
+                        "Maximum database limit reached for this website." + " [404]")
+                    statusFile.close()
+                    return 0
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
 
             except:
                 website = Websites.objects.get(domain=domainName)
                 externalApp = website.externalApp
 
-                if admin.type != 1:
-                    if website.admin != admin:
-                        statusFile = open(tempStatusPath, 'w')
-                        statusFile.writelines("You do not own this website." + " [404]")
-                        statusFile.close()
-                        return 0
-
-            finalPath = ""
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = "/home/" + domainName + "/public_html/" + path + "/"
+                else:
+                    finalPath = "/home/" + domainName + "/public_html/"
 
 
-            if home == '0':
-                path = self.extraArgs['path']
-                finalPath = "/home/" + domainName + "/public_html/" + path + "/"
-            else:
-                finalPath = "/home/" + domainName + "/public_html/"
+                if website.package.dataBases > website.databases_set.all().count():
+                    pass
+                else:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines(
+                            "Maximum database limit reached for this website." + " [404]")
+                    statusFile.close()
+                    return 0
 
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
 
             ## Security Check
 
@@ -140,8 +198,6 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
                 statusFile.close()
                 return 0
-
-            FNULL = open(os.devnull, 'w')
 
             if not os.path.exists(finalPath):
                 command = 'sudo mkdir -p ' + finalPath
@@ -167,52 +223,6 @@ class ApplicationInstaller(multi.Thread):
                     "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
                 statusFile.close()
                 return 0
-
-
-
-
-            ## DB Creation
-
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Setting up Database,20')
-            statusFile.close()
-
-            dbName = randomPassword.generate_pass()
-            dbUser = dbName
-            dbPassword = randomPassword.generate_pass()
-
-            ## DB Creation
-
-            if website.package.dataBases > website.databases_set.all().count():
-                pass
-            else:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(
-                    "Maximum database limit reached for this website." + " [404]")
-                statusFile.close()
-                return 0
-
-            if Databases.objects.filter(dbName=dbName).exists() or Databases.objects.filter(
-                    dbUser=dbUser).exists():
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(
-                    "This database or user is already taken." + " [404]")
-                statusFile.close()
-                return 0
-
-            result = mysqlUtilities.createDatabase(dbName, dbUser, dbPassword)
-
-            if result == 1:
-                pass
-            else:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(
-                    "Not able to create database." + " [404]")
-                statusFile.close()
-                return 0
-
-            db = Databases(website=website, dbName=dbName, dbUser=dbUser)
-            db.save()
 
 
             ####
@@ -261,13 +271,9 @@ class ApplicationInstaller(multi.Thread):
             ##
 
 
-            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + "/home/" + domainName + "/public_html/"
+            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
             cmd = shlex.split(command)
             res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            vhost.addRewriteRules(domainName)
-            installUtilities.reStartLiteSpeed()
-
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
@@ -277,23 +283,11 @@ class ApplicationInstaller(multi.Thread):
 
         except BaseException, msg:
             # remove the downloaded files
-            try:
-
-                command = "sudo rm -rf " + finalPath
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            except BaseException, msg:
-                logging.writeToFile(str(msg) + " [installWordPress]")
+            FNULL = open(os.devnull, 'w')
 
             homeDir = "/home/" + domainName + "/public_html"
 
             if not os.path.exists(homeDir):
-                FNULL = open(os.devnull, 'w')
-
-                command = 'sudo mkdir ' + homeDir
-                subprocess.call(shlex.split(command))
-
 
                 command = "sudo chown -R " + externalApp + ":" + externalApp + " " + homeDir
                 cmd = shlex.split(command)
@@ -325,9 +319,7 @@ class ApplicationInstaller(multi.Thread):
             password = self.extraArgs['password']
             tempStatusPath = self.extraArgs['tempStatusPath']
 
-
-            ### Check WP CLI
-
+            FNULL = open(os.devnull, 'w')
 
             ## Open Status File
 
@@ -335,37 +327,57 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Setting up paths,0')
             statusFile.close()
 
+            finalPath = ''
+
             try:
                 website = ChildDomains.objects.get(domain=domainName)
                 externalApp = website.master.externalApp
 
-                if admin.type != 1:
-                    if website.master.admin != admin:
-                        statusFile = open(tempStatusPath, 'w')
-                        statusFile.writelines("You do not own this website." + " [404]")
-                        statusFile.close()
-                        return 0
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = website.path.rstrip('/') + "/" + path + "/"
+                else:
+                    finalPath = website.path + "/"
+
+                if website.master.package.dataBases > website.master.databases_set.all().count():
+                    pass
+                else:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines(
+                        "Maximum database limit reached for this website." + " [404]")
+                    statusFile.close()
+                    return 0
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
 
             except:
                 website = Websites.objects.get(domain=domainName)
                 externalApp = website.externalApp
 
-                if admin.type != 1:
-                    if website.admin != admin:
-                        statusFile = open(tempStatusPath, 'w')
-                        statusFile.writelines("You do not own this website." + " [404]")
-                        statusFile.close()
-                        return 0
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = "/home/" + domainName + "/public_html/" + path + "/"
+                else:
+                    finalPath = "/home/" + domainName + "/public_html/"
 
-            finalPath = ""
+                if website.package.dataBases > website.databases_set.all().count():
+                    pass
+                else:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines(
+                            "Maximum database limit reached for this website." + " [404]")
+                    statusFile.close()
+                    return 0
 
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
 
-            if home == '0':
-                path = self.extraArgs['path']
-                finalPath = "/home/" + domainName + "/public_html/" + path + "/"
-            else:
-                finalPath = "/home/" + domainName + "/public_html/"
-
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
 
             ## Security Check
 
@@ -374,8 +386,6 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
                 statusFile.close()
                 return 0
-
-            FNULL = open(os.devnull, 'w')
 
             if not os.path.exists(finalPath):
                 command = 'sudo mkdir -p ' + finalPath
@@ -401,53 +411,6 @@ class ApplicationInstaller(multi.Thread):
                     "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
                 statusFile.close()
                 return 0
-
-
-
-
-            ## DB Creation
-
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Setting up Database,20')
-            statusFile.close()
-
-            dbName = randomPassword.generate_pass()
-            dbUser = dbName
-            dbPassword = randomPassword.generate_pass()
-
-            ## DB Creation
-
-            if website.package.dataBases > website.databases_set.all().count():
-                pass
-            else:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(
-                    "Maximum database limit reached for this website." + " [404]")
-                statusFile.close()
-                return 0
-
-            if Databases.objects.filter(dbName=dbName).exists() or Databases.objects.filter(
-                    dbUser=dbUser).exists():
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(
-                    "This database or user is already taken." + " [404]")
-                statusFile.close()
-                return 0
-
-            result = mysqlUtilities.createDatabase(dbName, dbUser, dbPassword)
-
-            if result == 1:
-                pass
-            else:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(
-                    "Not able to create database." + " [404]")
-                statusFile.close()
-                return 0
-
-            db = Databases(website=website, dbName=dbName, dbUser=dbUser)
-            db.save()
-
 
             ####
 
@@ -488,22 +451,18 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            command = "sudo rm -rf" + finalPath + "install"
+            command = "sudo rm -rf " + finalPath + "install"
             subprocess.call(shlex.split(command))
 
             ##
 
-            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + "/home/" + domainName + "/public_html/"
+            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
             cmd = shlex.split(command)
             res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             command = "sudo rm -f prestashop_1.7.4.2.zip"
             cmd = shlex.split(command)
             res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            vhost.addRewriteRules(domainName)
-            installUtilities.reStartLiteSpeed()
-
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
@@ -513,24 +472,10 @@ class ApplicationInstaller(multi.Thread):
 
         except BaseException, msg:
             # remove the downloaded files
-            try:
-
-                command = "sudo rm -rf " + finalPath
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            except BaseException, msg:
-                logging.writeToFile(str(msg) + " [installWordPress]")
 
             homeDir = "/home/" + domainName + "/public_html"
 
             if not os.path.exists(homeDir):
-                FNULL = open(os.devnull, 'w')
-
-                command = 'sudo mkdir ' + homeDir
-                subprocess.call(shlex.split(command))
-
-
                 command = "sudo chown -R " + externalApp + ":" + externalApp + " " + homeDir
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
@@ -560,9 +505,6 @@ class ApplicationInstaller(multi.Thread):
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Checking if GIT installed..,0')
             statusFile.close()
-
-            finalPath = "/home/" + domainName + "/public_html/"
-
 
             ### Check git
 
@@ -596,24 +538,12 @@ class ApplicationInstaller(multi.Thread):
             try:
                 website = ChildDomains.objects.get(domain=domainName)
                 externalApp = website.master.externalApp
-
-                if admin.type != 1:
-                    if website.master.admin != admin:
-                        statusFile = open(tempStatusPath, 'w')
-                        statusFile.writelines("You do not own this website." + " [404]")
-                        statusFile.close()
-                        return 0
+                finalPath = website.path
 
             except:
                 website = Websites.objects.get(domain=domainName)
                 externalApp = website.externalApp
-
-                if admin.type != 1:
-                    if website.admin != admin:
-                        statusFile = open(tempStatusPath, 'w')
-                        statusFile.writelines("You do not own this website." + " [404]")
-                        statusFile.close()
-                        return 0
+                finalPath = "/home/" + domainName + "/public_html/"
 
             ## Security Check
 
@@ -703,13 +633,20 @@ class ApplicationInstaller(multi.Thread):
         try:
             domain = self.extraArgs['domain']
 
+            try:
+                website = Websites.objects.get(domain=domain)
+                finalPath = "/home/" + domain + "/public_html/"
+            except:
+                childDomain = ChildDomains.objects.get(domain=domain)
+                finalPath = childDomain.path
+
             path = '/home/cyberpanel/' + domain + '.git'
 
             if not os.path.exists(path):
                 logging.writeToFile('Git is not setup for this website.')
                 return 0
 
-            command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" git -C /home/' + domain + '/public_html/  pull'
+            command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" git -C ' + finalPath + '  pull'
             subprocess.check_output(shlex.split(command))
 
             website = Websites.objects.get(domain=domain)
@@ -717,7 +654,7 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + '/home/' + domain + '/public_html/'
+            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
             cmd = shlex.split(command)
             subprocess.call(cmd)
 
@@ -737,30 +674,28 @@ class ApplicationInstaller(multi.Thread):
                 website = ChildDomains.objects.get(domain=domain)
                 externalApp = website.master.externalApp
 
-                if admin.type != 1:
-                    if website.master.admin != admin:
-                        logging.writeToFile("You do not own this website, detach failed. [404]")
-                        return 0
 
             except:
                 website = Websites.objects.get(domain=domain)
                 externalApp = website.externalApp
 
-                if admin.type != 1:
-                    if website.admin != admin:
-                        logging.writeToFile("You do not own this website, detach failed. [404]")
-                        return 0
+            try:
+                website = Websites.objects.get(domain=domain)
+                finalPath = "/home/" + domain + "/public_html/"
+            except:
+                childDomain = ChildDomains.objects.get(domain=domain)
+                finalPath = childDomain.path
 
 
-            command = 'sudo rm -rf  /home/' + domain + '/public_html'
+            command = 'sudo rm -rf ' + finalPath
             subprocess.check_output(shlex.split(command))
 
-            command = 'sudo mkdir  /home/' + domain + '/public_html'
+            command = 'sudo mkdir ' + finalPath
             subprocess.check_output(shlex.split(command))
 
             ##
 
-            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + '/home/' + domain + '/public_html'
+            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
             cmd = shlex.split(command)
             subprocess.call(cmd)
 
@@ -926,10 +861,8 @@ class ApplicationInstaller(multi.Thread):
 
             shutil.rmtree(finalPath + "installation")
 
-            command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + "/home/" + domainName + "/public_html/"
-
+            command = "sudo chown -R " + virtualHostUser + ":" + virtualHostUser + " " + finalPath
             cmd = shlex.split(command)
-
             res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             vhost.addRewriteRules(domainName)
@@ -943,19 +876,20 @@ class ApplicationInstaller(multi.Thread):
 
         except BaseException, msg:
             # remove the downloaded files
-            try:
-                shutil.rmtree(finalPath)
-            except:
-                logging.writeToFile("shutil.rmtree(finalPath)")
 
             homeDir = "/home/" + domainName + "/public_html"
 
             if not os.path.exists(homeDir):
-                FNULL = open(os.devnull, 'w')
-                os.mkdir(homeDir)
-                command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + homeDir
+                command = "sudo chown -R " + virtualHostUser + ":" + virtualHostUser + " " + homeDir
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            try:
+                mysqlUtilities.deleteDatabase(dbName, dbUser)
+                db = Databases.objects.get(dbName=dbName)
+                db.delete()
+            except:
+                pass
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
@@ -968,24 +902,16 @@ class ApplicationInstaller(multi.Thread):
             githubBranch = self.extraArgs['githubBranch']
             admin = self.extraArgs['admin']
 
+
             try:
-                website = ChildDomains.objects.get(domain=domainName)
-
-                if admin.type != 1:
-                    if website.master.admin != admin:
-                        logging.writeToFile("You do not own this website, failed to change branch. [404]")
-                        return 0
-
-            except:
                 website = Websites.objects.get(domain=domainName)
-
-                if admin.type != 1:
-                    if website.admin != admin:
-                        logging.writeToFile("You do not own this website, failed to change branch. [404]")
-                        return 0
+                finalPath = "/home/" + domainName + "/public_html/"
+            except:
+                childDomain = ChildDomains.objects.get(domain=domainName)
+                finalPath = childDomain.path
 
             try:
-                command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" git -C /home/' + domainName + '/public_html/  checkout -b' + githubBranch
+                command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" git -C ' + finalPath + '  checkout -b ' + githubBranch
                 subprocess.check_output(shlex.split(command))
 
             except subprocess.CalledProcessError, msg:

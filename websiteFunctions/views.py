@@ -1866,7 +1866,6 @@ def installWordpressStatus(request):
     try:
         val = request.session['userID']
         admin = Administrator.objects.get(pk=val)
-
         if request.method == 'POST':
             try:
                 data = json.loads(request.body)

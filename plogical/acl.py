@@ -369,4 +369,22 @@ class ACLManager:
 
         return domainsList
 
+    @staticmethod
+    def checkOwnership(domain, admin, currentACL):
+
+        domainName = Websites.objects.get(domain=domain)
+
+        if currentACL['admin'] == 1:
+            return 1
+        elif  domainName.admin == admin:
+            return 1
+        else:
+            if domainName.admin.owner == admin.pk:
+                return 1
+            else:
+                return 0
+
+
+
+
 

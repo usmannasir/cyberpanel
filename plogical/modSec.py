@@ -11,7 +11,7 @@ from mailUtilities import mailUtilities
 class modSec:
     installLogPath = "/home/cyberpanel/modSecInstallLog"
     tempRulesFile = "/home/cyberpanel/tempModSecRules"
-    mirrorPath = "mirror.cyberpanel.net"
+    mirrorPath = "cyberpanel.net"
 
 
     @staticmethod
@@ -448,10 +448,6 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCL
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [enableRuleFile]")
             print "0," + str(msg)
-
-
-
-
 
 
 def main():

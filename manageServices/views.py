@@ -27,6 +27,7 @@ def managePowerDNS(request):
             return ACLManager.loadError()
         try:
             return render(request, 'manageServices/managePowerDNS.html', {"status": 1})
+
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse("See CyberCP main log file.")
