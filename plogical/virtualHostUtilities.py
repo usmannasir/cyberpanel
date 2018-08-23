@@ -147,27 +147,19 @@ class virtualHostUtilities:
     def issueSSL(virtualHost, path, adminEmail):
         try:
 
-            FNULL = open(os.devnull, 'w')
-
             retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
             if retValues[0] == 0:
                 print "0," + str(retValues[1])
-                return
+                return 0, str(retValues[1])
 
             installUtilities.installUtilities.reStartLiteSpeed()
-
-            vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
-            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             print "1,None"
             return 1, None
 
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + "  [issueSSL]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [issueSSL]")
             print "0," + str(msg)
             return 0, str(msg)
 
@@ -435,8 +427,6 @@ class virtualHostUtilities:
     def issueSSLForHostName(virtualHost, path):
         try:
 
-            FNULL = open(os.devnull, 'w')
-
             destPrivKey = "/usr/local/lscp/key.pem"
             destCert = "/usr/local/lscp/cert.pem"
 
@@ -464,26 +454,18 @@ class virtualHostUtilities:
             cmd = shlex.split(command)
             subprocess.call(cmd)
 
-            vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
-            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
             print "1,None"
             return 1,'None'
 
 
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + "  [issueSSLForHostName]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [issueSSLForHostName]")
             print "0," + str(msg)
             return 0, str(msg)
 
     @staticmethod
     def issueSSLForMailServer(virtualHost, path):
         try:
-
-            FNULL = open(os.devnull, 'w')
 
             srcFullChain = '/etc/letsencrypt/live/' + virtualHost + '/fullchain.pem'
             srcPrivKey = '/etc/letsencrypt/live/' + virtualHost + '/privkey.pem'
@@ -529,11 +511,6 @@ class virtualHostUtilities:
 
             shutil.copy(srcPrivKey, "/etc/dovecot/key.pem")
             shutil.copy(srcFullChain, "/etc/dovecot/cert.pem")
-
-            vhostPath = virtualHostUtilities.Server_root + "/conf/vhosts"
-            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             ## Update postmaster address dovecot
 
@@ -582,34 +559,35 @@ class virtualHostUtilities:
     @staticmethod
     def createAlias(masterDomain, aliasDomain, ssl, sslPath, administratorEmail, owner=None):
         try:
-            if owner != None:
-                admin = Administrator.objects.get(userName=owner)
-                DNS.dnsTemplate(aliasDomain, owner)
 
-            if vhost.checkIfAliasExists(aliasDomain) == 0:
+            admin = Administrator.objects.get(userName=owner)
+            DNS.dnsTemplate(aliasDomain, admin)
 
-                confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
-                data = open(confPath, 'r').readlines()
-                writeToFile = open(confPath, 'w')
-                listenerTrueCheck = 0
 
-                for items in data:
-                    if items.find("listener") > -1 and items.find("Default") > -1:
-                        listenerTrueCheck = 1
-                    if items.find(masterDomain) > -1 and items.find('map') > -1 and listenerTrueCheck == 1:
-                        data = filter(None, items.split(" "))
-                        if data[1] == masterDomain:
-                            writeToFile.writelines(items.rstrip('\n') + ", " + aliasDomain + "\n")
-                            listenerTrueCheck = 0
-                    else:
-                        writeToFile.writelines(items)
-
-                writeToFile.close()
-
-                installUtilities.installUtilities.reStartLiteSpeed()
-            else:
+            if vhost.checkIfAliasExists(aliasDomain) == 1:
                 print "0, This domain already exists as vHost or Alias."
                 return
+
+
+            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            data = open(confPath, 'r').readlines()
+            writeToFile = open(confPath, 'w')
+            listenerTrueCheck = 0
+
+            for items in data:
+                if items.find("listener") > -1 and items.find("Default") > -1:
+                    listenerTrueCheck = 1
+                if items.find(masterDomain) > -1 and items.find('map') > -1 and listenerTrueCheck == 1:
+                    data = filter(None, items.split(" "))
+                    if data[1] == masterDomain:
+                        writeToFile.writelines(items.rstrip('\n') + ", " + aliasDomain + "\n")
+                        listenerTrueCheck = 0
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+
+            installUtilities.installUtilities.reStartLiteSpeed()
 
             if ssl == 1:
                 retValues = sslUtilities.issueSSLForDomain(masterDomain, administratorEmail, sslPath, aliasDomain)
@@ -747,7 +725,7 @@ class virtualHostUtilities:
             print "0," + str(msg)
 
     @staticmethod
-    def saveSSL(virtualHost, pathToStoreSSL, keyPath, certPath, sslCheck):
+    def saveSSL(virtualHost, keyPath, certPath):
         try:
 
             pathToStoreSSL = '/etc/letsencrypt/live/' + virtualHost
@@ -769,8 +747,8 @@ class virtualHostUtilities:
             os.remove(keyPath)
             os.remove(certPath)
 
-            website = Websites.objects.get(domain=virtualHost)
-            sslUtilities.sslUtilities.installSSLForDomain(virtualHost, website.adminEmail)
+
+            sslUtilities.sslUtilities.installSSLForDomain(virtualHost)
 
             installUtilities.installUtilities.reStartLiteSpeed()
 
@@ -1071,7 +1049,7 @@ def main():
     elif args.function == "saveRewriteRules":
         virtualHostUtilities.saveRewriteRules(args.virtualHostName,args.path,args.tempPath)
     elif args.function == "saveSSL":
-        virtualHostUtilities.saveSSL(args.virtualHostName,args.path,args.tempKeyPath,args.tempCertPath,args.sslCheck)
+        virtualHostUtilities.saveSSL(args.virtualHostName,args.tempKeyPath,args.tempCertPath)
     elif args.function == "installWordPress":
         virtualHostUtilities.installWordPress(args.virtualHostName,args.path,args.virtualHostUser,args.dbName,args.dbUser,args.dbPassword)
     elif args.function == "installJoomla":

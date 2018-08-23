@@ -25,6 +25,7 @@ from plogical.mailUtilities import mailUtilities
 from plogical.applicationInstaller import ApplicationInstaller
 import time
 from plogical.acl import ACLManager
+from plogical.alias import AliasManager
 # Create your views here.
 
 def loadWebsitesHome(request):
@@ -1064,14 +1065,6 @@ def saveSSL(request):
                 data = json.loads(request.body)
                 domain = data['virtualHost']
 
-                admin = Administrator.objects.get(pk=userID)
-                currentACL = ACLManager.loadedACL(userID)
-
-                try:
-                    website = ChildDomains.objects.get(domain=domain)
-                except:
-                    website = Websites.objects.get(domain=domain)
-
                 mailUtilities.checkHome()
 
                 ## writing data temporary to file
@@ -1089,55 +1082,24 @@ def saveSSL(request):
 
                 ## writing data temporary to file
 
-                pathToStoreSSL = virtualHostUtilities.Server_root + "/conf/vhosts/" + "SSL-" + domain
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
-                if website.ssl == 0:
-                    ## save configuration data
+                execPath = execPath + " saveSSL --virtualHostName " + domain + " --tempKeyPath " + tempKeyPath + " --tempCertPath " + tempCertPath
 
-                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                output = subprocess.check_output(shlex.split(execPath))
 
-                    execPath = execPath + " saveSSL --virtualHostName " + domain + " --path " + pathToStoreSSL + " --tempKeyPath " + tempKeyPath + " --tempCertPath " + tempCertPath + " --sslCheck 0"
-
-                    output = subprocess.check_output(shlex.split(execPath))
-
-                    if output.find("1,None") > -1:
-                        website.ssl = 1
-                        website.save()
-                        data_ret = {'sslStatus': 1, 'error_message': "None"}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-                    else:
-                        logging.CyberCPLogFileWriter.writeToFile(
-                            output)
-                        data_ret = {'sslStatus': 0, 'error_message': output}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-
-                        ## save configuration data ends
-
+                if output.find("1,None") > -1:
+                    data_ret = {'sslStatus': 1, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
                 else:
-                    ## save configuration data
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        output)
+                    data_ret = {'sslStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
 
-                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-
-                    execPath = execPath + " saveSSL --virtualHostName " + domain + " --path " + pathToStoreSSL + " --tempKeyPath " + tempKeyPath + " --tempCertPath " + tempCertPath + " --sslCheck 1"
-
-                    output = subprocess.check_output(shlex.split(execPath))
-
-                    if output.find("1,None") > -1:
-                        website.ssl = 1
-                        website.save()
-                        data_ret = {'sslStatus': 1, 'error_message': "None"}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-                    else:
-                        logging.CyberCPLogFileWriter.writeToFile(
-                            output)
-                        data_ret = {'sslStatus': 0, 'error_message': output}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-
-                        ## save configuration data ends
+                ## save configuration data ends
 
 
         except BaseException,msg:
@@ -1568,21 +1530,23 @@ def addNewCron(request):
         final_json = json.dumps(status)
         return HttpResponse(final_json)
 
-def domainAlias(request,domain):
+def domainAlias(request, domain):
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
         try:
-            website = Websites.objects.get(domain=domain)
 
-            finalAlisList = []
-            noAlias = 0
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+
+            aliasManager = AliasManager(domain)
+            noAlias, finalAlisList = aliasManager.fetchAlisForDomains()
+
             path = "/home/" + domain + "/public_html"
-
-            aliases = website.aliasdomains_set.all()
-
-            for items in aliases:
-                finalAlisList.append(items.aliasDomain)
-                noAlias = 1
 
             return render(request, 'websiteFunctions/domainAlias.html', {
                                                                            'masterDomain': domain,
@@ -1599,15 +1563,22 @@ def domainAlias(request,domain):
 def submitAliasCreation(request):
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
         if request.method == 'POST':
-            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+
             data = json.loads(request.body)
 
             masterDomain = data['masterDomain']
             aliasDomain = data['aliasDomain']
             ssl = data['ssl']
-
-            admin = Administrator.objects.get(pk=userID)
 
             sslpath = "/home/" + masterDomain + "/public_html"
 
@@ -1632,8 +1603,6 @@ def submitAliasCreation(request):
             data_ret = {'createAliasStatus': 1, 'error_message': "None", "existsStatus": 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-
-
 
     except BaseException, msg:
         data_ret = {'createAliasStatus': 0, 'error_message': str(msg), "existsStatus": 0}

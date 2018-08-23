@@ -33,6 +33,31 @@ class sslUtilities:
             return 0
 
     @staticmethod
+    def checkSSLListener():
+        try:
+            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+            for items in data:
+                if items.find("listener SSL") > -1:
+                    return 1
+
+        except BaseException,msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [IO Error with main config file [checkSSLListener]]")
+            return str(msg)
+        return 0
+
+    @staticmethod
+    def getDNSRecords(virtualHostName):
+        try:
+
+            withoutWWW = socket.gethostbyname(virtualHostName)
+            withWWW = socket.gethostbyname('www.' + virtualHostName)
+
+            return [1, withWWW, withoutWWW]
+
+        except BaseException, msg:
+            return [0, "347 " + str(msg) + " [issueSSLForDomain]"]
+
+    @staticmethod
     def installSSLForDomain(virtualHostName):
 
         confPath = sslUtilities.Server_root + "/conf/vhosts/" + virtualHostName
@@ -41,15 +66,15 @@ class sslUtilities:
         try:
             map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
 
-            if sslUtilities.checkSSLListener()!=1:
+            if sslUtilities.checkSSLListener() != 1:
 
                 writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
 
                 listener = "listener SSL {" + "\n"
                 address = "  address                 *:443" + "\n"
                 secure = "  secure                  1" + "\n"
-                keyFile = "  keyFile                  /etc/letsencrypt/live/"+ virtualHostName + "/privkey.pem\n"
-                certFile = "  certFile                 /etc/letsencrypt/live/"+ virtualHostName + "/fullchain.pem\n"
+                keyFile = "  keyFile                  /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
+                certFile = "  certFile                 /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
                 certChain = "  certChain               1" + "\n"
                 sslProtocol = "  sslProtocol             30" + "\n"
                 map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
@@ -78,7 +103,7 @@ class sslUtilities:
                     sslCheck = 0
 
                     for items in data:
-                        if items.find("listener")>-1 and items.find("SSL") > -1:
+                        if items.find("listener") > -1 and items.find("SSL") > -1:
                             sslCheck = 1
 
                         if (sslCheck == 1):
@@ -91,19 +116,18 @@ class sslUtilities:
 
                 ###################### Write per host Configs for SSL ###################
 
-                data = open(completePathToConfigFile,"r").readlines()
+                data = open(completePathToConfigFile, "r").readlines()
 
                 ## check if vhssl is already in vhconf file
 
                 vhsslPresense = 0
 
                 for items in data:
-                    if items.find("vhssl")>-1:
+                    if items.find("vhssl") > -1:
                         vhsslPresense = 1
 
-
                 if vhsslPresense == 0:
-                    writeSSLConfig = open(completePathToConfigFile,"a")
+                    writeSSLConfig = open(completePathToConfigFile, "a")
 
                     vhssl = "vhssl  {" + "\n"
                     keyFile = "  keyFile                 /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
@@ -121,52 +145,21 @@ class sslUtilities:
                     writeSSLConfig.writelines(sslProtocol)
                     writeSSLConfig.writelines(final)
 
-
                     writeSSLConfig.writelines("\n")
 
                     writeSSLConfig.close()
 
             return 1
 
-        except BaseException,msg:
+        except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [installSSLForDomain]]")
             return 0
-
-    @staticmethod
-    def checkSSLListener():
-        try:
-            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
-            for items in data:
-                if items.find("listener SSL") > -1:
-                    return 1
-
-        except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [IO Error with main config file [checkSSLListener]]")
-            return str(msg)
-        return 0
-
-    @staticmethod
-    def getDNSRecords(virtualHostName):
-        try:
-
-            withoutWWW = socket.gethostbyname(virtualHostName)
-            withWWW = socket.gethostbyname('www.' + virtualHostName)
-
-            return [1, withWWW, withoutWWW]
-
-        except BaseException, msg:
-            return [0, "347 " + str(msg) + " [issueSSLForDomain]"]
 
     @staticmethod
     def obtainSSLForADomain(virtualHostName,adminEmail,sslpath, aliasDomain = None):
         try:
 
             ## Obtaining Server IP
-
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            serverIPAddress = ipData.split('\n', 1)[0]
 
             if aliasDomain == None:
 
@@ -176,21 +169,22 @@ class sslUtilities:
 
                 try:
                     logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName)
+
                     command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName
                     output = subprocess.check_output(shlex.split(command))
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        "Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName)
-                except subprocess.CalledProcessError, msg:
+                    logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName)
+
+
+                except subprocess.CalledProcessError:
                     logging.CyberCPLogFileWriter.writeToFile(
                         "Failed to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName)
+
                     try:
-                        logging.CyberCPLogFileWriter.writeToFile(
-                            "Trying to obtain SSL for: " + virtualHostName)
+                        logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName)
                         command = "/usr/local/CyberCP/bin/certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
                         output = subprocess.check_output(shlex.split(command))
-                        logging.CyberCPLogFileWriter.writeToFile(
-                            "Successfully obtained SSL for: " + virtualHostName)
-                    except subprocess.CalledProcessError, msg:
+                        logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName)
+                    except subprocess.CalledProcessError:
                         logging.CyberCPLogFileWriter.writeToFile('Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName)
                         return 0
 
@@ -213,6 +207,11 @@ class sslUtilities:
                     return 0
 
             else:
+
+                ipFile = "/etc/cyberpanel/machineIP"
+                f = open(ipFile)
+                ipData = f.read()
+                serverIPAddress = ipData.split('\n', 1)[0]
 
                 ipRecords = sslUtilities.getDNSRecords(virtualHostName)
 
@@ -265,21 +264,20 @@ class sslUtilities:
                         "Failed to obtain DNS records for " + virtualHostName + ", issuing self signed certificate.")
                     return 0
 
-            output = subprocess.check_output(shlex.split(command))
+                output = subprocess.check_output(shlex.split(command))
 
-            if output.find('Congratulations!')  > -1:
-
-                return 1
-
-            elif output.find('no action taken.') > -1:
-                return 1
-            elif output.find('Failed authorization procedure')  > -1:
-                logging.CyberCPLogFileWriter.writeToFile('Failed authorization procedure for ' + virtualHostName + " while issuing Let's Encrypt SSL.")
-                return 0
-            elif output.find('Too many SSL requests for this domain, please try to get SSL at later time.') > -1:
-                logging.CyberCPLogFileWriter.writeToFile(
-                    'Too many SSL requests for ' + virtualHostName + " please try to get SSL at later time.")
-                return 0
+                if output.find('Congratulations!') > -1:
+                    return 1
+                elif output.find('no action taken.') > -1:
+                    return 1
+                elif output.find('Failed authorization procedure') > -1:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'Failed authorization procedure for ' + virtualHostName + " while issuing Let's Encrypt SSL.")
+                    return 0
+                elif output.find('Too many SSL requests for this domain, please try to get SSL at later time.') > -1:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'Too many SSL requests for ' + virtualHostName + " please try to get SSL at later time.")
+                    return 0
 
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Failed to obtain SSL. [obtainSSLForADomain]]")

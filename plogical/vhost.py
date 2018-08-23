@@ -8,7 +8,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import shutil
 import installUtilities
-from websiteFunctions.models import Websites, ChildDomains
+from websiteFunctions.models import Websites, ChildDomains, aliasDomains
 import subprocess
 import shlex
 import CyberCPLogFileWriter as logging
@@ -413,7 +413,6 @@ RewriteFile .htaccess
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0
 
-
     @staticmethod
     def createConfigInMainVirtualHostFile(virtualHostName):
 
@@ -688,20 +687,10 @@ RewriteFile .htaccess
     @staticmethod
     def checkIfAliasExists(aliasDomain):
         try:
-            confPath = os.path.join(vhost.Server_root, "conf/httpd_config.conf")
-            data = open(confPath, 'r').readlines()
-
-            for items in data:
-                if items.find(aliasDomain) > -1:
-                    domains = filter(None, items.split(" "))
-                    for domain in domains:
-                        if domain.strip(',').strip('\n') == aliasDomain:
-                            return 1
-
-            return 0
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [checkIfAliasExists]")
+            alias = aliasDomains.objects.get(aliasDomain=aliasDomain)
             return 1
+        except BaseException, msg:
+            return 0
 
     @staticmethod
     def checkIfSSLAliasExists(data, aliasDomain):

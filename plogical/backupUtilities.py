@@ -204,23 +204,21 @@ class backupUtilities:
             return 0,str(msg)
 
     @staticmethod
-    def startBackup(tempStoragePath,backupName,backupPath):
+    def startBackup(tempStoragePath, backupName, backupPath):
         try:
 
             ##### Writing the name of backup file.
 
             ## /home/example.com/backup/backupFileName
+
             backupFileNamePath = os.path.join(backupPath,"backupFileName")
-            status = open(backupFileNamePath, "w")
-            status.write(backupName)
-            status.close()
+            logging.CyberCPLogFileWriter.statusWriter(backupFileNamePath, backupName)
 
             #####
 
+            status = os.path.join(backupPath,'status')
 
-            status = open(os.path.join(backupPath,'status'),"w")
-            status.write("Making archive of home directory.\n")
-            status.close()
+            logging.CyberCPLogFileWriter.statusWriter(status, "Making archive of home directory.\n")
 
             ##### Parsing XML Meta file!
 
@@ -236,11 +234,16 @@ class backupUtilities:
 
             make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
+            ##### Saving SSL Certificates if any
+
+            sslStoragePath = '/etc/letsencrypt/live/' + domainName
+
+            if os.path.exists(sslStoragePath):
+                make_archive(os.path.join(tempStoragePath, "sslData-" + domainName), 'gztar', sslStoragePath)
+
             ## backup email accounts
 
-            status = open(os.path.join(backupPath, 'status'), "w")
-            status.write("Backing up email accounts!\n")
-            status.close()
+            logging.CyberCPLogFileWriter.statusWriter(status, "Backing up email accounts!\n")
 
             try:
                 make_archive(os.path.join(tempStoragePath,domainName),'gztar',os.path.join("/home","vmail",domainName))
@@ -254,22 +257,10 @@ class backupUtilities:
 
                 dbName = database.find('dbName').text
 
-                status = open(os.path.join(backupPath,'status'), "w")
-                status.write("Backing up database: " + dbName)
-                status.close()
+                logging.CyberCPLogFileWriter.statusWriter(status, "Backing up database: " + dbName)
+
                 if mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, tempStoragePath) == 0:
                     raise BaseException
-
-            ##### Saving SSL Certificates if any
-
-            try:
-                sslStoragePath = '/etc/letsencrypt/live/' + domainName
-
-                if os.path.exists(sslStoragePath):
-                    make_archive(os.path.join(tempStoragePath, "sslData-" + domainName), 'gztar',
-                                 sslStoragePath)
-            except BaseException, msg:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
 
             ## Child Domains SSL.
@@ -285,8 +276,7 @@ class backupUtilities:
                     sslStoragePath = '/etc/letsencrypt/live/' + actualChildDomain
 
                     if os.path.exists(sslStoragePath):
-                        make_archive(os.path.join(tempStoragePath, "sslData-" + actualChildDomain), 'gztar',
-                                     sslStoragePath)
+                        make_archive(os.path.join(tempStoragePath, "sslData-" + actualChildDomain), 'gztar', sslStoragePath)
             except BaseException, msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
@@ -298,9 +288,7 @@ class backupUtilities:
             rmtree(tempStoragePath)
 
 
-            status = open(os.path.join(backupPath,'status'), "w")
-            status.write("Completed\n")
-            status.close()
+            logging.CyberCPLogFileWriter.statusWriter(status, "Completed\n")
 
 
         except BaseException,msg:
@@ -315,9 +303,7 @@ class backupUtilities:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
             status = open(os.path.join(backupPath,'status'), "w")
-            status.write(backupName + "\n")
-            status.write("Aborted, please check CyberPanel main log file. [5009]")
-            status.close()
+            logging.CyberCPLogFileWriter.statusWriter(status, "Aborted, please check CyberPanel main log file. [5009]")
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
     @staticmethod
@@ -441,16 +427,14 @@ class backupUtilities:
             if not os.path.exists(completPath):
                 os.mkdir(completPath)
 
-            ## writing pid of restore process
+            ## Writing pid of restore process
 
-            pid = open(os.path.join(completPath,'pid'), "w")
-            pid.write(str(os.getpid()))
-            pid.close()
+            pid = os.path.join(completPath,'pid')
 
+            logging.CyberCPLogFileWriter.statusWriter(pid, str(os.getpid()))
 
-            status = open(os.path.join(completPath,'status'), "w")
-            status.write("Extracting Main Archive!")
-            status.close()
+            status = os.path.join(completPath,'status')
+            logging.CyberCPLogFileWriter.statusWriter(status, "Extracting Main Archive!")
 
             ## Converting /home/backup/backup-example-06-50-03-Thu-Feb-2018.tar.gz -> /home/backup/backup-example-06-50-03-Thu-Feb-2018
 
@@ -459,10 +443,7 @@ class backupUtilities:
             tar.close()
 
 
-
-            status = open(os.path.join(completPath,'status'), "w")
-            status.write("Creating Accounts,Databases and DNS records!")
-            status.close()
+            logging.CyberCPLogFileWriter.statusWriter(status, "Creating Accounts,Databases and DNS records!")
 
             ########### Creating website and its dabases
 
@@ -485,23 +466,17 @@ class backupUtilities:
                     sslUtilities.installSSLForDomain(masterDomain)
 
             else:
-                status = open(os.path.join(completPath, 'status'), "w")
-                status.write("Error Message: " + result[1] +
-                             ". Not able to create Account, Databases and DNS Records, aborting. [5009]")
-                status.close()
+                logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + result[1] + ". Not able to create Account, Databases and DNS Records, aborting. [5009]")
                 return 0
 
             ########### Creating child/sub/addon/parked domains
 
-            status = open(os.path.join(completPath,'status'), "w")
-            status.write("Creating Child Domains!")
-            status.close()
+            logging.CyberCPLogFileWriter.statusWriter(status, "Creating Child Domains!")
 
             ## Reading meta file to create subdomains
 
             externalApp = backupMetaData.find('externalApp').text
             websiteHome = os.path.join("/home",masterDomain,"public_html")
-
 
             ### Restoring Child Domains if any.
 
@@ -517,7 +492,8 @@ class backupUtilities:
                     retValues = virtualHostUtilities.createDomain(masterDomain, domain, phpSelection, path, 0, 0, 0, 'admin')
 
                     if retValues[0] == 1:
-                        rmtree(websiteHome)
+                        if os.path.exists(websiteHome):
+                            rmtree(websiteHome)
 
                         ## Let us try to restore SSL for Child Domains.
 
@@ -533,12 +509,9 @@ class backupUtilities:
                         except:
                             logging.CyberCPLogFileWriter.writeToFile('While restoring backup we had minor issues for rebuilding vhost conf for: ' + domain + '. However this will be auto healed.')
 
-
                         continue
                     else:
-                        status = open(os.path.join(completPath,'status'), "w")
-                        status.write("Error Message: " + retValues[1] + ". Not able to create child domains, aborting. [5009]")
-                        status.close()
+                        logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + retValues[1] + ". Not able to create child domains, aborting. [5009]")
                         return 0
             except BaseException, msg:
                 status = open(os.path.join(completPath,'status'), "w")
@@ -549,20 +522,16 @@ class backupUtilities:
 
             ## Restore Aliases
 
-            status = open(os.path.join(completPath, 'status'), "w")
-            status.write("Restoring Domain Aliases!")
-            status.close()
+            logging.CyberCPLogFileWriter.statusWriter(status, "Restoring Domain Aliases!")
 
             aliases = backupMetaData.findall('Aliases/alias')
 
             for items in aliases:
-                virtualHostUtilities.createAlias(masterDomain, items.text, 0, "", "")
+                virtualHostUtilities.createAlias(masterDomain, items.text, 0, "", "", "admin")
 
             ## Restoring email accounts
 
-            status = open(os.path.join(completPath, 'status'), "w")
-            status.write("Restoring email accounts!")
-            status.close()
+            logging.CyberCPLogFileWriter.statusWriter(status, "Restoring email accounts!")
 
             emailAccounts = backupMetaData.findall('emails/emailAccount')
 
@@ -578,9 +547,7 @@ class backupUtilities:
                         raise BaseException(result[1])
 
             except BaseException, msg:
-                status = open(os.path.join(completPath,'status'), "w")
-                status.write("Error Message: " + str(msg) +". Not able to create email accounts, aborting. [5009]")
-                status.close()
+                logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + str(msg) +". Not able to create email accounts, aborting. [5009]")
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
                 return 0
 
@@ -588,9 +555,7 @@ class backupUtilities:
 
             ## restoring databases
 
-            status = open(os.path.join(completPath,'status'), "w")
-            status.write("Restoring Databases")
-            status.close()
+            logging.CyberCPLogFileWriter.statusWriter(status, "Restoring Databases!")
 
             databases = backupMetaData.findall('Databases/database')
 
@@ -602,10 +567,7 @@ class backupUtilities:
 
             ## Databases restored
 
-
-            status = open(os.path.join(completPath, 'status'), "w")
-            status.write("Extracting web home data!")
-            status.close()
+            logging.CyberCPLogFileWriter.statusWriter(status, "Extracting web home data!")
 
             # /home/backup/backup-example-06-50-03-Thu-Feb-2018/public_html.tar.gz
 
@@ -615,9 +577,7 @@ class backupUtilities:
 
             ## extracting email accounts
 
-            status = open(os.path.join(completPath, 'status'), "w")
-            status.write("Extracting email accounts!")
-            status.close()
+            logging.CyberCPLogFileWriter.statusWriter(status, "Extracting email accounts!")
 
             try:
                 pathToCompressedEmails = os.path.join(completPath, masterDomain + ".tar.gz")
@@ -638,9 +598,7 @@ class backupUtilities:
 
             ##
 
-            status = open(os.path.join(completPath,'status'), "w")
-            status.write("Done")
-            status.close()
+            logging.CyberCPLogFileWriter.statusWriter(status, "Done")
 
             installUtilities.reStartLiteSpeed()
 
@@ -921,8 +879,14 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         ## /home/example.com/backup - backupPath
         ## /home/cyberpanel/1047.xml - metaPath
 
+        status = os.path.join(backupPath, 'status')
+        result = backupUtilities.prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath)
 
-        backupUtilities.prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath)
+        if result[0] == 0:
+            logging.CyberCPLogFileWriter.writeToFile(result[1] + ' [5009]')
+            logging.CyberCPLogFileWriter.statusWriter(status, result[1] + ' [5009]')
+            return
+
 
         p = Process(target=backupUtilities.startBackup, args=(tempStoragePath, backupName, backupPath,))
         p.start()
@@ -930,12 +894,10 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         pid.write(str(p.pid))
         pid.close()
 
-        print "1,None"
 
     except BaseException, msg:
         logging.CyberCPLogFileWriter.writeToFile(
             str(msg) + "  [submitBackupCreation]")
-        print "0," + str(msg)
 
 def cancelBackupCreation(backupCancellationDomain,fileName):
     try:
