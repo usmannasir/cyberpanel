@@ -590,8 +590,7 @@ class ApplicationInstaller(multi.Thread):
 
                 command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" git clone ' \
                           '--depth 1 --no-single-branch git@' + defaultProvider +'.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
-                result = subprocess.check_output(shlex.split(command))
-
+                subprocess.check_output(shlex.split(command))
             except subprocess.CalledProcessError, msg:
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines('Failed to clone repository, make sure you deployed your key to repository. [404]')

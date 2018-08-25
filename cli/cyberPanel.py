@@ -71,9 +71,7 @@ class cyberPanel:
 
     def deleteWebsite(self, domainName):
         try:
-
-            numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-            vhost.deleteVirtualHostConfigurations(domainName, numberOfWebsites)
+            vhost.deleteVirtualHostConfigurations(domainName)
             self.printStatus(1, 'None')
 
         except BaseException, msg:

@@ -452,11 +452,12 @@ RewriteFile .htaccess
             return [0,"223 [IO Error with main config file [createConfigInMainVirtualHostFile]]"]
 
     @staticmethod
-    def deleteVirtualHostConfigurations(virtualHostName, numberOfSites):
+    def deleteVirtualHostConfigurations(virtualHostName):
 
         try:
 
             ## Deleting master conf
+            numberOfSites = str(Websites.objects.count() + ChildDomains.objects.count())
             vhost.deleteCoreConf(virtualHostName, numberOfSites)
 
             delWebsite = Websites.objects.get(domain=virtualHostName)
@@ -1000,3 +1001,4 @@ RewriteFile .htaccess
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "223 [IO Error with main config file [createConfigInMainDomainHostFile]]")
             return [0, "223 [IO Error with main config file [createConfigInMainDomainHostFile]]"]
+

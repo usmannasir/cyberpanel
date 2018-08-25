@@ -336,7 +336,7 @@ WantedBy=multi-user.target"""
             cmd = shlex.split(command)
             subprocess.call(cmd)
 
-            passwordCMD = "use " + dbName + ";insert into loginSystem_acl (id, name) values (3,'user');"
+            passwordCMD = "use " + dbName + ";insert into loginSystem_acl (id, name, createDatabase, deleteDatabase, listDatabases, createDNSZone, deleteZone, addDeleteRecords, createEmail, deleteEmail, emailForwarding, changeEmailPassword, dkimManager, createFTPAccount, deleteFTPAccount, listFTPAccounts, createBackup, manageSSL) values (3,'user', 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);"
             command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
             cmd = shlex.split(command)
             subprocess.call(cmd)
@@ -347,6 +347,11 @@ WantedBy=multi-user.target"""
             subprocess.call(cmd)
 
             passwordCMD = "use " + dbName + ";UPDATE loginSystem_administrator SET  acl_id = 1 where userName = 'admin';"
+            command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
+
+            passwordCMD = "use " + dbName + ";alter table loginSystem_administrator drop initUserAccountsLimit;"
             command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
             cmd = shlex.split(command)
             subprocess.call(cmd)

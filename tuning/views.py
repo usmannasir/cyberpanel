@@ -6,9 +6,7 @@ from django.http import HttpResponse
 import json
 import plogical.CyberCPLogFileWriter as logging
 from plogical.tuning import tuning
-from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
-from websiteFunctions.models import Websites,ChildDomains
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex

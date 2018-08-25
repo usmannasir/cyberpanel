@@ -14,7 +14,7 @@ from os.path import join
 from os import listdir, rmdir
 from shutil import move
 from multiprocessing import Process
-from websiteFunctions.models import Websites, ChildDomains
+from websiteFunctions.models import Websites, ChildDomains, aliasDomains
 from loginSystem.models import Administrator
 from packages.models import Package
 import subprocess
@@ -137,8 +137,7 @@ class virtualHostUtilities:
             return 1, 'None'
 
         except BaseException, msg:
-            numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
-            vhost.deleteVirtualHostConfigurations(virtualHostName, numberOfWebsites)
+            vhost.deleteVirtualHostConfigurations(virtualHostName)
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createVirtualHost]")
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) + " [404]")
             return 0, str(msg)
@@ -597,10 +596,14 @@ class virtualHostUtilities:
                 else:
                     vhost.createAliasSSLMap(confPath, masterDomain, aliasDomain)
 
+            website = Websites.objects.get(domain=masterDomain)
+
+            newAlias = aliasDomains(master=website, aliasDomain = aliasDomain)
+            newAlias.save()
+
             print "1,None"
 
         except BaseException, msg:
-
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createAlias]")
             print "0," + str(msg)
 
@@ -663,6 +666,9 @@ class virtualHostUtilities:
 
             writeToFile.close()
             installUtilities.installUtilities.reStartLiteSpeed()
+
+            delAlias = aliasDomains.objects.get(aliasDomain=aliasDomain)
+            delAlias.delete()
 
             print "1,None"
 
@@ -1018,7 +1024,7 @@ def main():
 
         virtualHostUtilities.createVirtualHost(args.virtualHostName, args.administratorEmail, args.phpVersion, args.virtualHostUser, int(args.ssl), dkimCheck, openBasedir, args.websiteOwner, args.package, tempStatusPath)
     elif args.function == "deleteVirtualHostConfigurations":
-        vhost.deleteVirtualHostConfigurations(args.virtualHostName,int(args.numberOfSites))
+        vhost.deleteVirtualHostConfigurations(args.virtualHostName)
     elif args.function == "createDomain":
         try:
             dkimCheck = int(args.dkimCheck)

@@ -7,7 +7,7 @@ django.setup()
 from loginSystem.models import Administrator, ACL
 from django.shortcuts import HttpResponse
 from packages.models import Package
-from websiteFunctions.models import Websites
+from websiteFunctions.models import Websites, ChildDomains
 from dns.models import Domains
 import json
 
@@ -103,6 +103,18 @@ class ACLManager:
             finalResponse['mailServerSSL'] = acl.mailServerSSL
 
         return finalResponse
+
+    @staticmethod
+    def currentContextPermission(currentACL, context):
+        try:
+            if currentACL['admin'] == 1:
+                return 1
+            elif currentACL[context] == 1:
+                return 1
+            else:
+                return 0
+        except:
+            pass
 
     @staticmethod
     def createDefaultACLs():
@@ -372,17 +384,29 @@ class ACLManager:
     @staticmethod
     def checkOwnership(domain, admin, currentACL):
 
-        domainName = Websites.objects.get(domain=domain)
+        try:
+            childDomain = ChildDomains.objects.get(domain=domain)
 
-        if currentACL['admin'] == 1:
-            return 1
-        elif  domainName.admin == admin:
-            return 1
-        else:
-            if domainName.admin.owner == admin.pk:
+            if currentACL['admin'] == 1:
+                return 1
+            elif childDomain.master.admin == admin:
                 return 1
             else:
-                return 0
+                if childDomain.master.admin.owner == admin.pk:
+                    return 1
+
+        except:
+            domainName = Websites.objects.get(domain=domain)
+
+            if currentACL['admin'] == 1:
+                return 1
+            elif  domainName.admin == admin:
+                return 1
+            else:
+                if domainName.admin.owner == admin.pk:
+                    return 1
+                else:
+                    return 0
 
 
 
