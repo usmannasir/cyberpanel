@@ -17,7 +17,7 @@ import subprocess
 import shlex
 import re
 from plogical.mailUtilities import mailUtilities
-from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from plogical.website import WebsiteManager
 # Create your views here.
 
 
@@ -46,80 +46,8 @@ def verifyConn(request):
         return HttpResponse(json_data)
 
 def createWebsite(request):
-    try:
-        if request.method == 'POST':
-
-            data = json.loads(request.body)
-
-            adminUser = data['adminUser']
-            adminPass = data['adminPass']
-            domain = data['domainName']
-            adminEmail = data['ownerEmail']
-            packageName = data['packageName']
-            websiteOwner = data['websiteOwner']
-            ownerPassword = data['ownerPassword']
-            externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:7]
-            data['ssl'] = 0
-            data['dkimCheck'] = 0
-            data['openBasedir'] = 1
-
-
-            phpSelection = "PHP 7.0"
-
-            admin = Administrator.objects.get(userName=adminUser)
-
-            if hashPassword.check_password(admin.password, adminPass):
-                pass
-            else:
-                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
-                            'error_message': "Could not authorize access to API"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            if adminEmail is None:
-                adminEmail = "usman@cyberpersons.com"
-
-            try:
-                websiteOwn = Administrator(userName=websiteOwner, password=hashPassword.hash_password(ownerPassword),
-                                           email=adminEmail, type=3, owner=admin.pk,
-                                           initWebsitesLimit=1)
-                websiteOwn.save()
-            except BaseException,msg:
-                pass
-
-
-            ## Create Configurations
-
-            numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
-            sslpath = "/home/" + domain + "/public_html"
-
-            ## Create Configurations
-
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-
-            execPath = execPath + " createVirtualHost --virtualHostName " + domain + \
-                       " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + \
-                       "' --virtualHostUser " + externalApp + " --numberOfSites " + numberOfWebsites + \
-                       " --ssl " + str(data['ssl']) + " --sslPath " + sslpath + " --dkimCheck " + str(data['dkimCheck']) \
-                       + " --openBasedir " + str(data['openBasedir']) + ' --websiteOwner ' + websiteOwner \
-                       + ' --package ' + packageName
-
-            output = subprocess.check_output(shlex.split(execPath))
-
-            if output.find("1,None") > -1:
-                data_ret = {'createWebSiteStatus': 1, 'error_message': "None", "existsStatus": 0}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            else:
-                data_ret = {'createWebSiteStatus': 0, 'error_message': output, "existsStatus": 0}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-
-    except BaseException, msg:
-        data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
-        json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
+    wm = WebsiteManager()
+    return wm.createWebsiteAPI(json.loads(request.body))
 
 def changeUserPassAPI(request):
     try:

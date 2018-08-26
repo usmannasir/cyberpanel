@@ -29,6 +29,7 @@ from databases.models import Databases
 import randomPassword as randomPassword
 import hashlib
 from mysqlUtilities import mysqlUtilities
+from plogical import hashPassword
 
 class WebsiteManager:
     def __init__(self, domain = None, childDomain = None):
@@ -1895,6 +1896,54 @@ class WebsiteManager:
 
         except BaseException, msg:
             data_ret = {'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def createWebsiteAPI(self, data = None):
+        try:
+
+            adminUser = data['adminUser']
+            adminPass = data['adminPass']
+            adminEmail = data['ownerEmail']
+            websiteOwner = data['websiteOwner']
+            ownerPassword = data['ownerPassword']
+            data['ssl'] = 0
+            data['dkimCheck'] = 0
+            data['openBasedir'] = 1
+            data['adminEmail'] = data['ownerEmail']
+            data['phpSelection'] = "PHP 7.0"
+            data['package'] = data['packageName']
+
+
+
+            admin = Administrator.objects.get(userName=adminUser)
+
+            if hashPassword.check_password(admin.password, adminPass):
+
+                if adminEmail is None:
+                    data['adminEmail'] = "usman@cyberpersons.com"
+
+                try:
+                    websiteOwn = Administrator(userName=websiteOwner,
+                                               password=hashPassword.hash_password(ownerPassword),
+                                               email=adminEmail, type=3, owner=admin.pk,
+                                               initWebsitesLimit=1)
+                    websiteOwn.save()
+                except BaseException:
+                    pass
+
+
+            else:
+                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
+                            'error_message': "Could not authorize access to API"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+            return self.submitWebsiteCreation(admin.pk, data)
+
+        except BaseException, msg:
+            data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
