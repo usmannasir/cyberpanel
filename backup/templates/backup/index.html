@@ -20,53 +20,87 @@
             </h3>
 
              <div class="example-box-wrapper">
-                {% if viewStatus == 0 %}
+                <div class="row">
 
-                    <div class="row">
-                    <div class="col-md-6">
-                                    <a href="{% url 'backupSite' %}" title="{% trans 'Back up Site' %}" class="tile-box tile-box-shortcut btn-primary">
-                                        <div class="tile-header">
-                                            {% trans "Back up" %}
-                                        </div>
-                                        <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
-                                        </div>
-                                    </a>
-                    </div>
+                    {% if createBackup or admin %}
+
+                        <div class="col-md-6">
+                                        <a href="{% url 'backupSite' %}" title="{% trans 'Back up Site' %}" class="tile-box tile-box-shortcut btn-primary">
+                                            <div class="tile-header">
+                                                {% trans "Back up" %}
+                                            </div>
+                                            <div class="tile-content-wrapper">
+                                                <i class="glyph-icon icon-dashboard"></i>
+                                            </div>
+                                        </a>
+                        </div>
+
+                    {% endif %}
+
+                    {% if restoreBackup or admin %}
+
+
+                        <div class="col-md-6">
+                                        <a href="{% url 'restoreSite' %}" title="{% trans 'Restore Back up' %}" class="tile-box tile-box-shortcut btn-primary">
+                                            <div class="tile-header">
+                                                {% trans "Restore" %}
+                                            </div>
+                                            <div class="tile-content-wrapper">
+                                                <i class="glyph-icon icon-dashboard"></i>
+                                            </div>
+                                        </a>
+                        </div>
+
+                    {% endif %}
+
+
+                    {% if addDeleteDestinations or admin %}
+
+                        <div class="col-md-6">
+                                        <a href="{% url 'backupDestinations' %}" title="{% trans 'Add/Delete Destinations' %}" class="tile-box tile-box-shortcut btn-primary">
+                                            <div class="tile-header">
+                                                {% trans "Add/Delete Destinations" %}
+                                            </div>
+                                            <div class="tile-content-wrapper">
+                                                <i class="glyph-icon icon-dashboard"></i>
+                                            </div>
+                                        </a>
+                        </div>
+
+                    {% endif %}
+
+                    {% if scheDuleBackups or admin %}
+
+                        <div class="col-md-6">
+                                        <a href="{% url 'scheduleBackup' %}" title="{% trans 'Schedule Back up' %}" class="tile-box tile-box-shortcut btn-primary">
+                                            <div class="tile-header">
+                                                {% trans "Schedule Back up" %}
+                                            </div>
+                                            <div class="tile-content-wrapper">
+                                                <i class="glyph-icon icon-dashboard"></i>
+                                            </div>
+                                        </a>
+                        </div>
+
+                    {% endif %}
+
+                    {% if remoteBackups or admin %}
+
+                        <div class="col-md-6">
+                                        <a href="{% url 'remoteBackups' %}" title="{% trans 'Remote Back ups' %}" class="tile-box tile-box-shortcut btn-primary">
+                                            <div class="tile-header">
+                                                {% trans "Remote Back ups" %}
+                                            </div>
+                                            <div class="tile-content-wrapper">
+                                                <i class="glyph-icon icon-dashboard"></i>
+                                            </div>
+                                        </a>
+                        </div>
+
+                    {% endif %}
+
 
                 </div>
-
-                 {% else %}
-
-                    <div class="row">
-                    <div class="col-md-6">
-                                    <a href="{% url 'backupSite' %}" title="{% trans 'Back up Site' %}" class="tile-box tile-box-shortcut btn-primary">
-                                        <div class="tile-header">
-                                            {% trans "Back up" %}
-                                        </div>
-                                        <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
-                                        </div>
-                                    </a>
-                    </div>
-
-
-                    <div class="col-md-6">
-                                    <a href="{% url 'restoreSite' %}" title="{% trans 'Restore Back up' %}" class="tile-box tile-box-shortcut btn-primary">
-                                        <div class="tile-header">
-                                            {% trans "Restore" %}
-                                        </div>
-                                        <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
-                                        </div>
-                                    </a>
-                    </div>
-
-
-                </div>
-
-                 {% endif %}
-
              </div>
         </div>
     </div>

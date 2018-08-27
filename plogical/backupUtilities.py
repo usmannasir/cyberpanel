@@ -11,13 +11,9 @@ from shutil import make_archive,rmtree
 import mysqlUtilities
 import tarfile
 from multiprocessing import Process
-import json
-import requests
 import signal
 from installUtilities import installUtilities
 import argparse
-from shutil import move,copy
-from xml.etree import ElementTree
 from virtualHostUtilities import virtualHostUtilities
 from sslUtilities import sslUtilities
 from websiteFunctions.models import Websites, ChildDomains, Backups
@@ -29,9 +25,9 @@ from xml.etree import ElementTree
 from xml.dom import minidom
 from backup.models import DBUsers
 from mailServer.models import Domains as eDomains
-from random import randint
 import time
 from plogical.mailUtilities import mailUtilities
+from shutil import copy
 
 ## I am not the monster that you think I am..
 
@@ -39,6 +35,7 @@ class backupUtilities:
 
     completeKeyPath  = "/home/cyberpanel/.ssh"
     destinationsPath = "/home/cyberpanel/destinations"
+    licenseKey = '/usr/local/lsws/conf/license.key'
 
     @staticmethod
     def prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath):
@@ -229,6 +226,12 @@ class backupUtilities:
 
             domainName = backupMetaData.find('masterDomain').text
 
+            ## Saving original vhost conf file
+
+            completPathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + domainName + '/vhost.conf'
+            if os.path.exists(backupUtilities.licenseKey):
+                copy(completPathToConf, tempStoragePath + '/vhost.conf')
+
             ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
             ## shutil.make_archive
 
@@ -272,6 +275,10 @@ class backupUtilities:
                 for childDomain in childDomains:
 
                     actualChildDomain = childDomain.find('domain').text
+
+                    if os.path.exists(backupUtilities.licenseKey):
+                        completPathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + actualChildDomain + '/vhost.conf'
+                        copy(completPathToConf, tempStoragePath + '/' + actualChildDomain + '.vhost.conf')
 
                     sslStoragePath = '/etc/letsencrypt/live/' + actualChildDomain
 
@@ -498,6 +505,12 @@ class backupUtilities:
                         ## Let us try to restore SSL for Child Domains.
 
                         try:
+
+                            if os.path.exists(backupUtilities.licenseKey):
+                                if os.path.exists(completPath + '/' + domain + '.vhost.conf'):
+                                    completPathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + domain + '/vhost.conf'
+                                    copy(completPath + '/' + domain + '.vhost.conf', completPathToConf)
+
                             sslStoragePath = completPath + "/sslData-" + domain + '.tar.gz'
 
                             if os.path.exists(sslStoragePath):
@@ -586,17 +599,21 @@ class backupUtilities:
                 tar = tarfile.open(pathToCompressedEmails)
                 tar.extractall(emailHome)
                 tar.close()
+
+                ## Change permissions
+
+                command = "chmod -r vmail:vmail " + emailHome
+                subprocess.call(shlex.split(command))
+
             except:
                 pass
 
             ## emails extracted
 
-            ## Change permissions
-
-            command = "chmod -r vmail:vmail " + emailHome
-            subprocess.call(shlex.split(command))
-
-            ##
+            if os.path.exists(backupUtilities.licenseKey):
+                completPathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + masterDomain + '/vhost.conf'
+                if os.path.exists(completPath + '/vhost.conf'):
+                    copy(completPath + '/vhost.conf', completPathToConf)
 
             logging.CyberCPLogFileWriter.statusWriter(status, "Done")
 
@@ -607,9 +624,7 @@ class backupUtilities:
             subprocess.call(cmd)
 
         except BaseException, msg:
-            status = open(os.path.join(completPath,'status'), "w")
-            status.write(str(msg) + " [5009]")
-            status.close()
+            logging.CyberCPLogFileWriter.statusWriter(status, str(msg) + " [5009]")
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
 
     @staticmethod

@@ -90,6 +90,11 @@ def verifyLogin(request):
                         request.session[LANGUAGE_SESSION_KEY] = user_Language
                         request.COOKIES['django_language'] = user_Language
                         settings.LANGUAGE_CODE = user_Language
+                    elif data['languageSelection'] == "Polish":
+                        user_Language = "pl"
+                        request.session[LANGUAGE_SESSION_KEY] = user_Language
+                        request.COOKIES['django_language'] = user_Language
+                        settings.LANGUAGE_CODE = user_Language
                 except:
                     request.session[LANGUAGE_SESSION_KEY] = "en"
                     request.COOKIES['django_language'] = "en"

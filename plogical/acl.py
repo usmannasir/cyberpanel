@@ -10,6 +10,9 @@ from packages.models import Package
 from websiteFunctions.models import Websites, ChildDomains
 from dns.models import Domains
 import json
+from subprocess import call, CalledProcessError
+from shlex import split
+from CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 class ACLManager:
 
@@ -407,6 +410,21 @@ class ACLManager:
                     return 1
                 else:
                     return 0
+
+    @staticmethod
+    def executeCall(command):
+        try:
+            result = call(split(command))
+            if result == 1:
+                return 0, 'Something bad happened'
+            else:
+                return 1, 'None'
+        except CalledProcessError, msg:
+            logging.writeToFile(str(msg) + ' [ACLManager.executeCall]')
+            return 0, str(msg)
+
+
+
 
 
 

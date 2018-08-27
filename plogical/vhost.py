@@ -643,8 +643,10 @@ RewriteFile .htaccess
 
                     inMB = int(float(currentUsed) / (1024.0 * 1024.0))
 
-                    percentage = float(100) / float(totalAllowed)
+                    if totalAllowed == 0:
+                        totalAllowed = 999999
 
+                    percentage = float(100) / float(totalAllowed)
                     percentage = float(percentage) * float(inMB)
                 except:
                     print "0,0"

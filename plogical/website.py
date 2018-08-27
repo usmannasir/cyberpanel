@@ -1395,16 +1395,14 @@ class WebsiteManager:
         try:
 
             currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
 
             self.domain = data['domainName']
             openBasedirValue = data['openBasedirValue']
 
-            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            if currentACL['admin'] == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson('changeOpenBasedir', 0)
-
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
@@ -1914,8 +1912,6 @@ class WebsiteManager:
             data['phpSelection'] = "PHP 7.0"
             data['package'] = data['packageName']
 
-
-
             admin = Administrator.objects.get(userName=adminUser)
 
             if hashPassword.check_password(admin.password, adminPass):
@@ -1932,13 +1928,11 @@ class WebsiteManager:
                 except BaseException:
                     pass
 
-
             else:
                 data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
                             'error_message': "Could not authorize access to API"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-
 
             return self.submitWebsiteCreation(admin.pk, data)
 

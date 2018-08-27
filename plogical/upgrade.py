@@ -62,7 +62,6 @@ class Upgrade:
 
             ##
 
-
             count = 0
             while (1):
                 command = "pip install virtualenv"
@@ -123,12 +122,17 @@ class Upgrade:
                     Upgrade.stdOut("Project dependant modules installed successfully!!")
                     break
 
-            command = "systemctl stop gunicorn.socket"
-            res = subprocess.call(shlex.split(command))
+            try:
+                command = "systemctl stop gunicorn.socket"
+                subprocess.call(shlex.split(command))
+            except:
+                pass
 
-
-            command = "virtualenv --system-site-packages /usr/local/CyberCP"
-            res = subprocess.call(shlex.split(command))
+            try:
+                command = "virtualenv --system-site-packages /usr/local/CyberCP"
+                subprocess.call(shlex.split(command))
+            except:
+                pass
 
             Upgrade.stdOut('Virtual enviroment for CyberPanel successfully installed.')
 
@@ -161,7 +165,6 @@ class Upgrade:
             Upgrade.stdOut(str(msg) + " [upgradeOpenLiteSpeed]")
             os._exit(0)
 
-
     @staticmethod
     def updateGunicornConf():
         try:
@@ -191,12 +194,17 @@ WantedBy=multi-user.target"""
             writeToFile.write(cont)
             writeToFile.close()
 
+            try:
+                command = 'systemctl daemon-reload'
+                subprocess.call(shlex.split(command))
+            except:
+                pass
 
-            command = 'systemctl daemon-reload'
-            subprocess.call(shlex.split(command))
-
-            command = 'systemctl restart gunicorn.socket'
-            subprocess.call(shlex.split(command))
+            try:
+                command = 'systemctl restart gunicorn.socket'
+                subprocess.call(shlex.split(command))
+            except:
+                pass
 
         except BaseException, msg:
             Upgrade.stdOut(str(msg) + " [updateGunicornConf]")
@@ -238,22 +246,34 @@ WantedBy=multi-user.target"""
                 Upgrade.stdOut("File manager successfully upgraded!")
                 break
 
-        command = "chmod -R 777 /usr/local/lsws/Example/html/FileManager"
-        subprocess.call(shlex.split(command))
+        try:
+            command = "chmod -R 777 /usr/local/lsws/Example/html/FileManager"
+            subprocess.call(shlex.split(command))
+        except:
+            pass
 
     @staticmethod
     def setupCLI():
         try:
+            try:
+                command = "ln -s /usr/local/CyberCP/cli/cyberPanel.py /usr/bin/cyberpanel"
+                subprocess.call(shlex.split(command))
+            except:
+                pass
 
-            command = "ln -s /usr/local/CyberCP/cli/cyberPanel.py /usr/bin/cyberpanel"
-            res = subprocess.call(shlex.split(command))
-
-            command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
-            res = subprocess.call(shlex.split(command))
+            try:
+                command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
+                subprocess.call(shlex.split(command))
+            except:
+                pass
 
         except OSError, msg:
-            command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
-            res = subprocess.call(shlex.split(command))
+            try:
+                command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
+                subprocess.call(shlex.split(command))
+            except:
+                pass
+
             Upgrade.stdOut(str(msg) + " [setupCLI]")
             return 0
 
@@ -307,14 +327,23 @@ WantedBy=multi-user.target"""
             cwd = os.getcwd()
             os.chdir('/usr/local/CyberCP')
 
-            command = "echo 'CREATE TABLE `loginSystem_acl` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `name` varchar(50) NOT NULL UNIQUE, `adminStatus` integer NOT NULL DEFAULT 0, `versionManagement` integer NOT NULL DEFAULT 0, `createNewUser` integer NOT NULL DEFAULT 0, `deleteUser` integer NOT NULL DEFAULT 0, `resellerCenter` integer NOT NULL DEFAULT 0, `changeUserACL` integer NOT NULL DEFAULT 0, `createWebsite` integer NOT NULL DEFAULT 0, `modifyWebsite` integer NOT NULL DEFAULT 0, `suspendWebsite` integer NOT NULL DEFAULT 0, `deleteWebsite` integer NOT NULL DEFAULT 0, `createPackage` integer NOT NULL DEFAULT 0, `deletePackage` integer NOT NULL DEFAULT 0, `modifyPackage` integer NOT NULL DEFAULT 0, `createDatabase` integer NOT NULL DEFAULT 0, `deleteDatabase` integer NOT NULL DEFAULT 0, `listDatabases` integer NOT NULL DEFAULT 0, `createNameServer` integer NOT NULL DEFAULT 0, `createDNSZone` integer NOT NULL DEFAULT 0, `deleteZone` integer NOT NULL DEFAULT 0, `addDeleteRecords` integer NOT NULL DEFAULT 0, `createEmail` integer NOT NULL DEFAULT 0, `deleteEmail` integer NOT NULL DEFAULT 0, `emailForwarding` integer NOT NULL DEFAULT 0, `changeEmailPassword` integer NOT NULL DEFAULT 0, `dkimManager` integer NOT NULL DEFAULT 0, `createFTPAccount` integer NOT NULL DEFAULT 0, `deleteFTPAccount` integer NOT NULL DEFAULT 0, `listFTPAccounts` integer NOT NULL DEFAULT 0, `createBackup` integer NOT NULL DEFAULT 0, `restoreBackup` integer NOT NULL DEFAULT 0, `addDeleteDestinations` integer NOT NULL DEFAULT 0, `scheDuleBackups` integer NOT NULL DEFAULT 0, `remoteBackups` integer NOT NULL DEFAULT 0, `manageSSL` integer NOT NULL DEFAULT 0, `hostnameSSL` integer NOT NULL DEFAULT 0, `mailServerSSL` integer NOT NULL DEFAULT 0);' | python manage.py dbshell"
-            subprocess.check_output(command, shell=True)
+            try:
+                command = "echo 'CREATE TABLE `loginSystem_acl` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `name` varchar(50) NOT NULL UNIQUE, `adminStatus` integer NOT NULL DEFAULT 0, `versionManagement` integer NOT NULL DEFAULT 0, `createNewUser` integer NOT NULL DEFAULT 0, `deleteUser` integer NOT NULL DEFAULT 0, `resellerCenter` integer NOT NULL DEFAULT 0, `changeUserACL` integer NOT NULL DEFAULT 0, `createWebsite` integer NOT NULL DEFAULT 0, `modifyWebsite` integer NOT NULL DEFAULT 0, `suspendWebsite` integer NOT NULL DEFAULT 0, `deleteWebsite` integer NOT NULL DEFAULT 0, `createPackage` integer NOT NULL DEFAULT 0, `deletePackage` integer NOT NULL DEFAULT 0, `modifyPackage` integer NOT NULL DEFAULT 0, `createDatabase` integer NOT NULL DEFAULT 0, `deleteDatabase` integer NOT NULL DEFAULT 0, `listDatabases` integer NOT NULL DEFAULT 0, `createNameServer` integer NOT NULL DEFAULT 0, `createDNSZone` integer NOT NULL DEFAULT 0, `deleteZone` integer NOT NULL DEFAULT 0, `addDeleteRecords` integer NOT NULL DEFAULT 0, `createEmail` integer NOT NULL DEFAULT 0, `deleteEmail` integer NOT NULL DEFAULT 0, `emailForwarding` integer NOT NULL DEFAULT 0, `changeEmailPassword` integer NOT NULL DEFAULT 0, `dkimManager` integer NOT NULL DEFAULT 0, `createFTPAccount` integer NOT NULL DEFAULT 0, `deleteFTPAccount` integer NOT NULL DEFAULT 0, `listFTPAccounts` integer NOT NULL DEFAULT 0, `createBackup` integer NOT NULL DEFAULT 0, `restoreBackup` integer NOT NULL DEFAULT 0, `addDeleteDestinations` integer NOT NULL DEFAULT 0, `scheDuleBackups` integer NOT NULL DEFAULT 0, `remoteBackups` integer NOT NULL DEFAULT 0, `manageSSL` integer NOT NULL DEFAULT 0, `hostnameSSL` integer NOT NULL DEFAULT 0, `mailServerSSL` integer NOT NULL DEFAULT 0);' | python manage.py dbshell"
+                subprocess.check_output(command, shell=True)
+            except:
+                pass
 
-            command = "echo 'ALTER TABLE loginSystem_administrator ADD acl_id integer;' | python manage.py dbshell"
-            subprocess.call(command, shell=True)
+            try:
+                command = "echo 'ALTER TABLE loginSystem_administrator ADD acl_id integer;' | python manage.py dbshell"
+                subprocess.call(command, shell=True)
+            except:
+                pass
 
-            command = "echo 'ALTER TABLE loginSystem_administrator ADD FOREIGN KEY (acl_id) REFERENCES loginSystem_acl(id);' | python manage.py dbshell"
-            subprocess.check_output(command, shell=True)
+            try:
+                command = "echo 'ALTER TABLE loginSystem_administrator ADD FOREIGN KEY (acl_id) REFERENCES loginSystem_acl(id);' | python manage.py dbshell"
+                subprocess.check_output(command, shell=True)
+            except:
+                pass
 
             dbName = settings.DATABASES['default']['NAME']
             dbUser = settings.DATABASES['default']['USER']
@@ -325,36 +354,77 @@ WantedBy=multi-user.target"""
             if len(port) == 0:
                 port = '3306'
 
-            passwordCMD = "use " + dbName+";insert into loginSystem_acl (id, name, adminStatus) values (1,'admin',1);"
-            command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            try:
+                passwordCMD = "use " + dbName+";insert into loginSystem_acl (id, name, adminStatus) values (1,'admin',1);"
+                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
+                cmd = shlex.split(command)
+                subprocess.call(cmd)
+            except:
+                pass
 
+            try:
+                passwordCMD = "use " + dbName + ";insert into loginSystem_acl (id, name, adminStatus, createNewUser, deleteUser, createWebsite, resellerCenter, modifyWebsite, suspendWebsite, deleteWebsite, createPackage, deletePackage, modifyPackage, createNameServer, restoreBackup) values (2,'reseller',0,1,1,1,1,1,1,1,1,1,1,1,1);"
+                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
+                cmd = shlex.split(command)
+                subprocess.call(cmd)
+            except:
+                pass
 
-            passwordCMD = "use " + dbName + ";insert into loginSystem_acl (id, name, adminStatus, createNewUser, deleteUser, createWebsite, resellerCenter, modifyWebsite, suspendWebsite, deleteWebsite, createPackage, deletePackage, modifyPackage, createNameServer, restoreBackup) values (2,'reseller',0,1,1,1,1,1,1,1,1,1,1,1,1);"
-            command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            try:
+                passwordCMD = "use " + dbName + ";insert into loginSystem_acl (id, name, createDatabase, deleteDatabase, listDatabases, createDNSZone, deleteZone, addDeleteRecords, createEmail, deleteEmail, emailForwarding, changeEmailPassword, dkimManager, createFTPAccount, deleteFTPAccount, listFTPAccounts, createBackup, manageSSL) values (3,'user', 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);"
+                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
+                cmd = shlex.split(command)
+                subprocess.call(cmd)
+            except:
+                pass
 
-            passwordCMD = "use " + dbName + ";insert into loginSystem_acl (id, name, createDatabase, deleteDatabase, listDatabases, createDNSZone, deleteZone, addDeleteRecords, createEmail, deleteEmail, emailForwarding, changeEmailPassword, dkimManager, createFTPAccount, deleteFTPAccount, listFTPAccounts, createBackup, manageSSL) values (3,'user', 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);"
-            command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            try:
+                passwordCMD = "use " + dbName + ";UPDATE loginSystem_administrator SET  acl_id = 3;"
+                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
+                cmd = shlex.split(command)
+                subprocess.call(cmd)
+            except:
+                pass
 
-            passwordCMD = "use " + dbName + ";UPDATE loginSystem_administrator SET  acl_id = 3;"
-            command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            try:
+                passwordCMD = "use " + dbName + ";UPDATE loginSystem_administrator SET  acl_id = 1 where userName = 'admin';"
+                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
+                cmd = shlex.split(command)
+                subprocess.call(cmd)
+            except:
+                pass
 
-            passwordCMD = "use " + dbName + ";UPDATE loginSystem_administrator SET  acl_id = 1 where userName = 'admin';"
-            command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            try:
+                passwordCMD = "use " + dbName + ";alter table loginSystem_administrator drop initUserAccountsLimit;"
+                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
+                cmd = shlex.split(command)
+                subprocess.call(cmd)
+            except:
+                pass
 
-            passwordCMD = "use " + dbName + ";alter table loginSystem_administrator drop initUserAccountsLimit;"
-            command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            try:
+                passwordCMD = "use " + dbName + ";CREATE TABLE `websiteFunctions_aliasdomains` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `aliasDomain` varchar(75) NOT NULL);"
+                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
+                cmd = shlex.split(command)
+                subprocess.call(cmd)
+            except:
+                pass
+
+            try:
+                passwordCMD = "use " + dbName + ";ALTER TABLE `websiteFunctions_aliasdomains` ADD COLUMN `master_id` integer NOT NULL;"
+                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
+                cmd = shlex.split(command)
+                subprocess.call(cmd)
+            except:
+                pass
+
+            try:
+                passwordCMD = "use " + dbName + ";ALTER TABLE `websiteFunctions_aliasdomains` ADD CONSTRAINT `websiteFunctions_ali_master_id_726c433d_fk_websiteFu` FOREIGN KEY (`master_id`) REFERENCES `websiteFunctions_websites` (`id`);"
+                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
+                cmd = shlex.split(command)
+                subprocess.call(cmd)
+            except:
+                pass
 
             os.chdir(cwd)
 
@@ -366,15 +436,21 @@ WantedBy=multi-user.target"""
     def mailServerMigrations():
         try:
             os.chdir('/usr/local/CyberCP')
-
-            command = "echo 'ALTER TABLE e_forwardings DROP PRIMARY KEY;ALTER TABLE e_forwardings ADD id INT AUTO_INCREMENT PRIMARY KEY;' | python manage.py dbshell"
-            res = subprocess.check_output(command, shell=True)
-
-            command = "python manage.py makemigrations emailPremium"
-            res = subprocess.call(shlex.split(command))
-
-            command = "python manage.py migrate emailPremium"
-            res = subprocess.call(shlex.split(command))
+            try:
+                command = "echo 'ALTER TABLE e_forwardings DROP PRIMARY KEY;ALTER TABLE e_forwardings ADD id INT AUTO_INCREMENT PRIMARY KEY;' | python manage.py dbshell"
+                subprocess.check_output(command, shell=True)
+            except:
+                pass
+            try:
+                command = "python manage.py makemigrations emailPremium"
+                subprocess.call(shlex.split(command))
+            except:
+                pass
+            try:
+                command = "python manage.py migrate emailPremium"
+                subprocess.call(shlex.split(command))
+            except:
+                pass
         except:
             pass
 
@@ -488,6 +564,7 @@ WantedBy=multi-user.target"""
                     if count == 3:
                         Upgrade.stdOut(
                             "Failed to install tldextract! [installTLDExtract]")
+                        break
                 else:
                     Upgrade.stdOut("tldextract successfully installed!  [pip]")
                     Upgrade.stdOut("tldextract successfully installed!  [pip]")
@@ -506,11 +583,16 @@ WantedBy=multi-user.target"""
 
         Version = version.objects.get(pk=1)
 
-        command = "systemctl stop gunicorn.socket"
-        res = subprocess.call(shlex.split(command))
-
-        command = "systemctl stop lscpd"
-        res = subprocess.call(shlex.split(command))
+        try:
+            command = "systemctl stop gunicorn.socket"
+            subprocess.call(shlex.split(command))
+        except:
+            pass
+        try:
+            command = "systemctl stop lscpd"
+            subprocess.call(shlex.split(command))
+        except:
+            pass
 
         ##
 
@@ -546,9 +628,8 @@ WantedBy=multi-user.target"""
         ##
 
 
-        if Version.currentVersion == '1.7' and Version.build == 0:
-            Upgrade.applyLoginSystemMigrations()
-            Upgrade.enableServices()
+        Upgrade.applyLoginSystemMigrations()
+        Upgrade.enableServices()
 
         ## Upgrade OpenLiteSpeed
 
@@ -560,8 +641,11 @@ WantedBy=multi-user.target"""
 
         Upgrade.upgradeVersion()
 
-        command = "systemctl start lscpd"
-        res = subprocess.call(shlex.split(command))
+        try:
+            command = "systemctl start lscpd"
+            subprocess.call(shlex.split(command))
+        except:
+            pass
 
         Upgrade.stdOut("Upgrade Completed.")
 

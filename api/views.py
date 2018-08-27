@@ -58,6 +58,7 @@ def changeUserPassAPI(request):
 
             websiteOwner = data['websiteOwner']
             ownerPassword = data['ownerPassword']
+
             adminUser = data['adminUser']
             adminPass = data['adminPass']
 
@@ -130,7 +131,7 @@ def deleteWebsite(request):
     try:
         if request.method == 'POST':
             data = json.loads(request.body)
-            websiteName = data['domainName']
+            data['websiteName'] = data['domainName']
             adminUser = data['adminUser']
             adminPass = data['adminPass']
 
@@ -144,7 +145,7 @@ def deleteWebsite(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            website = Websites.objects.get(domain=websiteName)
+            website = Websites.objects.get(domain=data['websiteName'])
             websiteOwner = website.admin
 
             if admin.websites_set.all().count() == 0:
@@ -152,19 +153,8 @@ def deleteWebsite(request):
 
             ## Deleting master domain
 
-            numberOfWebsites = str(Websites.objects.count() + ChildDomains.objects.count())
-
-
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-
-            execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName + \
-                       " --numberOfSites " + numberOfWebsites
-
-            subprocess.check_output(shlex.split(execPath))
-
-            data_ret = {'websiteDeleteStatus': 1, 'error_message': "None"}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+            wm = WebsiteManager()
+            return wm.submitWebsiteDeletion(admin.pk, data)
 
     except BaseException, msg:
         data_ret = {'websiteDeleteStatus': 0, 'error_message': str(msg)}
@@ -175,8 +165,6 @@ def submitWebsiteStatus(request):
     try:
         if request.method == 'POST':
             data = json.loads(request.body)
-            websiteName = data['websiteName']
-            state = data['state']
             adminUser = data['adminUser']
             adminPass = data['adminPass']
 
@@ -190,22 +178,8 @@ def submitWebsiteStatus(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            website = Websites.objects.get(domain=websiteName)
-
-            if state == "Suspend":
-                virtualHostUtilities.suspendVirtualHost(websiteName)
-                installUtilities.reStartLiteSpeed()
-                website.state = 0
-            else:
-                virtualHostUtilities.UnsuspendVirtualHost(websiteName)
-                installUtilities.reStartLiteSpeed()
-                website.state = 1
-
-            website.save()
-
-            data_ret = {'websiteStatus': 1, 'error_message': "None"}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+            wm = WebsiteManager()
+            return wm.submitWebsiteStatus(admin.pk, json.loads(request.body))
 
     except BaseException, msg:
         data_ret = {'websiteStatus': 0, 'error_message': str(msg)}
@@ -214,25 +188,21 @@ def submitWebsiteStatus(request):
 
 def loginAPI(request):
     try:
-        if request.method == "POST":
+        username = request.POST['username']
+        password = request.POST['password']
 
-            username = request.POST['username']
-            password = request.POST['password']
+        admin = Administrator.objects.get(userName=username)
 
-            admin = Administrator.objects.get(userName=username)
-
-            if hashPassword.check_password(admin.password, password):
-                request.session['userID'] = admin.pk
-                return redirect(renderBase)
-            else:
-                return HttpResponse("Invalid Credentials.")
-
+        if hashPassword.check_password(admin.password, password):
+            request.session['userID'] = admin.pk
+            return redirect(renderBase)
+        else:
+            return HttpResponse("Invalid Credentials.")
 
     except BaseException, msg:
         data = {'userID': 0, 'loginStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
-
 
 def fetchSSHkey(request):
     try:
@@ -355,7 +325,6 @@ def fetchAccountsFromRemoteServer(request):
         data = {'fetchStatus': 0,'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
-
 
 def FetchRemoteTransferStatus(request):
     try:

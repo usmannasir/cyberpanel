@@ -178,4 +178,5 @@ LANGUAGES = (
     ('tr', _('Turkish')),
     ('es', _('Spanish')),
     ('fr', _('French')),
+    ('pl', _('Polish')),
 )
