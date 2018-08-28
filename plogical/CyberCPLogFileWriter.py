@@ -1,6 +1,7 @@
 import subprocess
 import time
 
+
 class CyberCPLogFileWriter:
     fileName = "/home/cyberpanel/error-logs.txt"
 

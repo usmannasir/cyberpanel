@@ -16,8 +16,9 @@ from plogical.acl import ACLManager
 
 def loadSSLHome(request):
     try:
-        val = request.session['userID']
-        return render(request, 'manageSSL/index.html')
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        return render(request, 'manageSSL/index.html', currentACL)
     except KeyError:
         return redirect(loadLoginPage)
 

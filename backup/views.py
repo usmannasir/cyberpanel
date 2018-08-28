@@ -1,22 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render,redirect
-from django.http import HttpResponse
+from django.shortcuts import redirect
 # Create your views here.
 import json
-from websiteFunctions.models import dest, backupSchedules
-import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
-import os
-import time
-import shlex
-import subprocess
-import requests
-from plogical.virtualHostUtilities import virtualHostUtilities
-from random import randint
-from plogical.mailUtilities import mailUtilities
-from plogical.acl import ACLManager
 from plogical.backupManager import BackupManager
 
 

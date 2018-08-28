@@ -22,8 +22,11 @@
 
              <div class="example-box-wrapper">
                 <div class="row">
-                    <div class="col-md-6">
-                                    <a href="{% url 'createDatabase' %}" title="{% trans 'Create Database' %}" class="tile-box tile-box-shortcut btn-primary">
+
+                {% if manageSSL or admin %}
+
+                    <div class="col-md-4">
+                                    <a href="{% url 'manageSSL' %}" title="{% trans 'Manage SSL' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Manage SSL" %}
                                         </div>
@@ -33,9 +36,13 @@
                                     </a>
                     </div>
 
+                {% endif %}
 
-                    <div class="col-md-6">
-                                    <a href="{% url 'deleteDatabase' %}" title="{% trans 'Delete Database' %}" class="tile-box tile-box-shortcut btn-primary">
+                    {% if hostnameSSL or admin %}
+
+
+                    <div class="col-md-4">
+                                    <a href="{% url 'sslForHostName' %}" title="{% trans 'Hostname SSL' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Hostname SSL" %}
                                         </div>
@@ -44,6 +51,23 @@
                                         </div>
                                     </a>
                     </div>
+
+                    {% endif %}
+
+                {% if mailServerSSL or admin %}
+
+                    <div class="col-md-4">
+                                    <a href="{% url 'sslForMailServer' %}" title="{% trans 'MailServer SSL' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "MailServer SSL" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="glyph-icon icon-dashboard"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+                {% endif %}
 
 
                 </div>
