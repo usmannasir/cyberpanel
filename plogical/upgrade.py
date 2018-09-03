@@ -530,7 +530,7 @@ WantedBy=multi-user.target"""
                 if items.find("'filemanager',") > -1:
                     writeToFile.writelines(items)
                     if Version.currentVersion == '1.6':
-                        writeToFile.writelines("    'emailPremium'\n")
+                        writeToFile.writelines("    'emailPremium',\n")
                 else:
                     writeToFile.writelines(items)
 

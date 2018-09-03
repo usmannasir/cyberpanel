@@ -15,7 +15,7 @@ import subprocess
 import shlex
 from installUtilities import installUtilities
 from django.shortcuts import HttpResponse, render
-from loginSystem.models import Administrator
+from loginSystem.models import Administrator, ACL
 from packages.models import Package
 from mailUtilities import mailUtilities
 from random import randint
@@ -1920,10 +1920,11 @@ class WebsiteManager:
                     data['adminEmail'] = "usman@cyberpersons.com"
 
                 try:
+                    acl = ACL.objects.get(name='user')
                     websiteOwn = Administrator(userName=websiteOwner,
                                                password=hashPassword.hash_password(ownerPassword),
                                                email=adminEmail, type=3, owner=admin.pk,
-                                               initWebsitesLimit=1)
+                                               initWebsitesLimit=1, acl=acl)
                     websiteOwn.save()
                 except BaseException:
                     pass

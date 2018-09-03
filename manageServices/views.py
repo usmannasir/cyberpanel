@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.shortcuts import render
-from loginSystem.models import Administrator
 from django.shortcuts import HttpResponse, redirect
 import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage

@@ -1,7 +1,5 @@
-{% load i18n %}
-{% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
-<html lang="en" ng-app="CyberCP">
+<html lang="en">
 <head>
 
     <style>
@@ -12,156 +10,161 @@
 
     <meta charset="UTF-8">
 <!--[if IE]><meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
-<title>{% block title %}Page Title{% endblock %}</title>
+<title> Monarch UI - Bootstrap Frontend &amp; Admin Template </title>
 <meta name="description" content="">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <!-- Favicons -->
-    {% load static %}
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="../../assets/images/icons/apple-touch-icon-144-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="../../assets/images/icons/apple-touch-icon-114-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="../../assets/images/icons/apple-touch-icon-72-precomposed.png">
+<link rel="apple-touch-icon-precomposed" href="../../assets/images/icons/apple-touch-icon-57-precomposed.png">
+<link rel="shortcut icon" href="../../assets/images/icons/favicon.png">
 
 
 
-<script src = "https://code.angularjs.org/1.6.5/angular.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../assets/bootstrap/css/bootstrap.css">
 
-
-
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/bootstrap/css/bootstrap.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'websiteFunctions/websiteFunctions.css' %}">
 
 <!-- HELPERS -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/animate.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/backgrounds.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/boilerplate.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/border-radius.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/grid.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/page-transitions.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/spacing.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/typography.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/utils.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/colors.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/bootstrap-toggle.min.css' %}">
+<link rel="stylesheet" type="text/css" href="../../assets/helpers/animate.css">
+<link rel="stylesheet" type="text/css" href="../../assets/helpers/backgrounds.css">
+<link rel="stylesheet" type="text/css" href="../../assets/helpers/boilerplate.css">
+<link rel="stylesheet" type="text/css" href="../../assets/helpers/border-radius.css">
+<link rel="stylesheet" type="text/css" href="../../assets/helpers/grid.css">
+<link rel="stylesheet" type="text/css" href="../../assets/helpers/page-transitions.css">
+<link rel="stylesheet" type="text/css" href="../../assets/helpers/spacing.css">
+<link rel="stylesheet" type="text/css" href="../../assets/helpers/typography.css">
+<link rel="stylesheet" type="text/css" href="../../assets/helpers/utils.css">
+<link rel="stylesheet" type="text/css" href="../../assets/helpers/colors.css">
 
 <!-- ELEMENTS -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/badges.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/buttons.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/content-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/dashboard-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/forms.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/images.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/info-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/invoice.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/loading-indicators.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/menus.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/panel-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/response-messages.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/responsive-tables.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/ribbon.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/social-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/tables.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/tile-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/elements/timeline.css' %}">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/badges.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/buttons.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/content-box.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/dashboard-box.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/forms.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/images.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/info-box.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/invoice.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/loading-indicators.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/menus.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/panel-box.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/response-messages.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/responsive-tables.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/ribbon.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/social-box.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/tables.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/tile-box.css">
+<link rel="stylesheet" type="text/css" href="../../assets/elements/timeline.css">
 
 
 
 <!-- ICONS -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/icons/fontawesome/fontawesome.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/icons/linecons/linecons.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/icons/spinnericon/spinnericon.css' %}">
+<link rel="stylesheet" type="text/css" href="../../assets/icons/fontawesome/fontawesome.css">
+<link rel="stylesheet" type="text/css" href="../../assets/icons/linecons/linecons.css">
+<link rel="stylesheet" type="text/css" href="../../assets/icons/spinnericon/spinnericon.css">
 
 
 <!-- WIDGETS -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/accordion-ui/accordion.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/calendar/calendar.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/carousel/carousel.css' %}">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/accordion-ui/accordion.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/calendar/calendar.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/carousel/carousel.css">
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/charts/justgage/justgage.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/charts/morris/morris.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/charts/piegage/piegage.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/charts/xcharts/xcharts.css' %}">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/charts/justgage/justgage.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/charts/morris/morris.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/charts/piegage/piegage.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/charts/xcharts/xcharts.css">
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/chosen/chosen.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/colorpicker/colorpicker.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/datatable/datatable.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/datepicker/datepicker.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/datepicker-ui/datepicker.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/daterangepicker/daterangepicker.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/dialog/dialog.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/dropdown/dropdown.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/dropzone/dropzone.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/file-input/fileinput.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/input-switch/inputswitch.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/input-switch/inputswitch-alt.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/ionrangeslider/ionrangeslider.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/jcrop/jcrop.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/jgrowl-notifications/jgrowl.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/loading-bar/loadingbar.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/maps/vector-maps/vectormaps.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/markdown/markdown.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/modal/modal.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/multi-select/multiselect.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/multi-upload/fileupload.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/nestable/nestable.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/noty-notifications/noty.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/popover/popover.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/pretty-photo/prettyphoto.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/progressbar/progressbar.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/range-slider/rangeslider.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/slidebars/slidebars.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/slider-ui/slider.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/summernote-wysiwyg/summernote-wysiwyg.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/tabs-ui/tabs.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/theme-switcher/themeswitcher.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/timepicker/timepicker.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/tocify/tocify.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/tooltip/tooltip.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/touchspin/touchspin.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/uniform/uniform.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/wizard/wizard.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/widgets/xeditable/xeditable.css' %}">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/chosen/chosen.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/colorpicker/colorpicker.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/datatable/datatable.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/datepicker/datepicker.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/datepicker-ui/datepicker.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/daterangepicker/daterangepicker.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/dialog/dialog.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/dropdown/dropdown.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/dropzone/dropzone.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/file-input/fileinput.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/input-switch/inputswitch.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/input-switch/inputswitch-alt.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/ionrangeslider/ionrangeslider.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/jcrop/jcrop.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/jgrowl-notifications/jgrowl.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/loading-bar/loadingbar.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/maps/vector-maps/vectormaps.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/markdown/markdown.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/modal/modal.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/multi-select/multiselect.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/multi-upload/fileupload.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/nestable/nestable.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/noty-notifications/noty.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/popover/popover.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/pretty-photo/prettyphoto.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/progressbar/progressbar.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/range-slider/rangeslider.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/slidebars/slidebars.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/slider-ui/slider.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/summernote-wysiwyg/summernote-wysiwyg.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/tabs-ui/tabs.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/theme-switcher/themeswitcher.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/timepicker/timepicker.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/tocify/tocify.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/tooltip/tooltip.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/touchspin/touchspin.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/uniform/uniform.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/wizard/wizard.css">
+<link rel="stylesheet" type="text/css" href="../../assets/widgets/xeditable/xeditable.css">
 
 <!-- SNIPPETS -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/chat.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/files-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/login-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/notification-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/progress-box.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/todo.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/user-profile.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/snippets/mobile-navigation.css' %}">
+<link rel="stylesheet" type="text/css" href="../../assets/snippets/chat.css">
+<link rel="stylesheet" type="text/css" href="../../assets/snippets/files-box.css">
+<link rel="stylesheet" type="text/css" href="../../assets/snippets/login-box.css">
+<link rel="stylesheet" type="text/css" href="../../assets/snippets/notification-box.css">
+<link rel="stylesheet" type="text/css" href="../../assets/snippets/progress-box.css">
+<link rel="stylesheet" type="text/css" href="../../assets/snippets/todo.css">
+<link rel="stylesheet" type="text/css" href="../../assets/snippets/user-profile.css">
+<link rel="stylesheet" type="text/css" href="../../assets/snippets/mobile-navigation.css">
 
 <!-- APPLICATIONS -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/applications/mailbox.css' %}">
+<link rel="stylesheet" type="text/css" href="../../assets/applications/mailbox.css">
 
 <!-- Admin theme -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/themes/admin/layout.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/themes/admin/color-schemes/default.css' %}">
+<link rel="stylesheet" type="text/css" href="../../assets/themes/admin/layout.css">
+<link rel="stylesheet" type="text/css" href="../../assets/themes/admin/color-schemes/default.css">
 
 <!-- Components theme -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/themes/components/default.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/themes/components/border-radius.css' %}">
+<link rel="stylesheet" type="text/css" href="../../assets/themes/components/default.css">
+<link rel="stylesheet" type="text/css" href="../../assets/themes/components/border-radius.css">
 
 <!-- Admin responsive -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/responsive-elements.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/helpers/admin-responsive.css' %}">
+<link rel="stylesheet" type="text/css" href="../../assets/helpers/responsive-elements.css">
+<link rel="stylesheet" type="text/css" href="../../assets/helpers/admin-responsive.css">
 
-<!-- Packages -->
+    <!-- JS Core -->
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/percircle.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'packages/packages.css' %}">
+    <script type="text/javascript" src="../../assets/js-core/jquery-core.js"></script>
+    <script type="text/javascript" src="../../assets/js-core/jquery-ui-core.js"></script>
+    <script type="text/javascript" src="../../assets/js-core/jquery-ui-widget.js"></script>
+    <script type="text/javascript" src="../../assets/js-core/jquery-ui-mouse.js"></script>
+    <script type="text/javascript" src="../../assets/js-core/jquery-ui-position.js"></script>
+    <!--<script type="text/javascript" src="../../assets/js-core/transition.js"></script>-->
+    <script type="text/javascript" src="../../assets/js-core/modernizr.js"></script>
+    <script type="text/javascript" src="../../assets/js-core/jquery-cookie.js"></script>
 
-<!-- JS Core -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-core.js' %}"></script>
+
+
 
     <script type="text/javascript">
         $(window).load(function(){
@@ -171,67 +174,254 @@
         });
     </script>
 
-<! -- JS Ends --->
-
 
 
 </head>
 
 
     <body>
-<div id="sb-site">
+    <div id="sb-site">
+    <div class="sb-slidebar bg-black sb-left sb-style-overlay">
+    <div class="scrollable-content scrollable-slim-sidebar">
+        <div class="pad10A">
+            <div class="divider-header">Online</div>
+            <ul class="chat-box">
+                <li>
+                    <div class="status-badge">
+                        <img class="img-circle" width="40" src="../../assets/image-resources/people/testimonial1.jpg" alt="">
+                        <div class="small-badge bg-green"></div>
+                    </div>
+                    <b>
+                        Grace Padilla
+                    </b>
+                    <p>On the other hand, we denounce...</p>
+                    <a href="#" class="btn btn-md no-border radius-all-100 btn-black"><i class="glyph-icon icon-comments-o"></i></a>
+                </li>
+                <li>
+                    <div class="status-badge">
+                        <img class="img-circle" width="40" src="../../assets/image-resources/people/testimonial2.jpg" alt="">
+                        <div class="small-badge bg-green"></div>
+                    </div>
+                    <b>
+                        Carl Gamble
+                    </b>
+                    <p>Dislike men who are so beguiled...</p>
+                    <a href="#" class="btn btn-md no-border radius-all-100 btn-black"><i class="glyph-icon icon-comments-o"></i></a>
+                </li>
+                <li>
+                    <div class="status-badge">
+                        <img class="img-circle" width="40" src="../../assets/image-resources/people/testimonial3.jpg" alt="">
+                        <div class="small-badge bg-green"></div>
+                    </div>
+                    <b>
+                        Michael Poole
+                    </b>
+                    <p>Of pleasure of the moment, so...</p>
+                    <a href="#" class="btn btn-md no-border radius-all-100 btn-black"><i class="glyph-icon icon-comments-o"></i></a>
+                </li>
+                <li>
+                    <div class="status-badge">
+                        <img class="img-circle" width="40" src="../../assets/image-resources/people/testimonial4.jpg" alt="">
+                        <div class="small-badge bg-green"></div>
+                    </div>
+                    <b>
+                        Bill Green
+                    </b>
+                    <p>That they cannot foresee the...</p>
+                    <a href="#" class="btn btn-md no-border radius-all-100 btn-black"><i class="glyph-icon icon-comments-o"></i></a>
+                </li>
+                <li>
+                    <div class="status-badge">
+                        <img class="img-circle" width="40" src="../../assets/image-resources/people/testimonial5.jpg" alt="">
+                        <div class="small-badge bg-green"></div>
+                    </div>
+                    <b>
+                        Cheryl Soucy
+                    </b>
+                    <p>Pain and trouble that are bound...</p>
+                    <a href="#" class="btn btn-md no-border radius-all-100 btn-black"><i class="glyph-icon icon-comments-o"></i></a>
+                </li>
+            </ul>
+            <div class="divider-header">Idle</div>
+            <ul class="chat-box">
+                <li>
+                    <div class="status-badge">
+                        <img class="img-circle" width="40" src="../../assets/image-resources/people/testimonial6.jpg" alt="">
+                        <div class="small-badge bg-orange"></div>
+                    </div>
+                    <b>
+                        Jose Kramer
+                    </b>
+                    <p>Equal blame belongs to those...</p>
+                    <a href="#" class="btn btn-md no-border radius-all-100 btn-black"><i class="glyph-icon icon-comments-o"></i></a>
+                </li>
+                <li>
+                    <div class="status-badge">
+                        <img class="img-circle" width="40" src="../../assets/image-resources/people/testimonial7.jpg" alt="">
+                        <div class="small-badge bg-orange"></div>
+                    </div>
+                    <b>
+                        Dan Garcia
+                    </b>
+                    <p>Weakness of will, which is same...</p>
+                    <a href="#" class="btn btn-md no-border radius-all-100 btn-black"><i class="glyph-icon icon-comments-o"></i></a>
+                </li>
+                <li>
+                    <div class="status-badge">
+                        <img class="img-circle" width="40" src="../../assets/image-resources/people/testimonial8.jpg" alt="">
+                        <div class="small-badge bg-orange"></div>
+                    </div>
+                    <b>
+                        Edward Bridges
+                    </b>
+                    <p>These cases are perfectly simple...</p>
+                    <a href="#" class="btn btn-md no-border radius-all-100 btn-black"><i class="glyph-icon icon-comments-o"></i></a>
+                </li>
+            </ul>
+            <div class="divider-header">Offline</div>
+            <ul class="chat-box">
+                <li>
+                    <div class="status-badge">
+                        <img class="img-circle" width="40" src="../../assets/image-resources/people/testimonial1.jpg" alt="">
+                        <div class="small-badge bg-red"></div>
+                    </div>
+                    <b>
+                        Randy Herod
+                    </b>
+                    <p>In a free hour, when our power...</p>
+                    <a href="#" class="btn btn-md no-border radius-all-100 btn-black"><i class="glyph-icon icon-comments-o"></i></a>
+                </li>
+                <li>
+                    <div class="status-badge">
+                        <img class="img-circle" width="40" src="../../assets/image-resources/people/testimonial2.jpg" alt="">
+                        <div class="small-badge bg-red"></div>
+                    </div>
+                    <b>
+                        Patricia Bagley
+                    </b>
+                    <p>when nothing prevents our being...</p>
+                    <a href="#" class="btn btn-md no-border radius-all-100 btn-black"><i class="glyph-icon icon-comments-o"></i></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
 
-
-
-<!------- ng-controller="systemStatusInfo" ------------>
-
-
-<div   class="sb-slidebar bg-black sb-right sb-style-overlay">
+<div class="sb-slidebar bg-black sb-right sb-style-overlay">
 <div class="scrollable-content scrollable-slim-sidebar">
 <div class="pad15A">
-
-
-
+<a href="#" title="" data-toggle="collapse" data-target="#sidebar-toggle-1" class="popover-title">
+    Cloud status
+    <span class="caret"></span>
+</a>
+<div id="sidebar-toggle-1" class="collapse in">
+    <div class="pad15A container">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="text-center font-gray pad5B text-transform-upr font-size-12">New visits</div>
+                <div class="chart-alt-3 font-gray-dark" data-percent="55"><span>55</span>%</div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center font-gray pad5B text-transform-upr font-size-12">Bounce rate</div>
+                <div class="chart-alt-3 font-gray-dark" data-percent="46"><span>46</span>%</div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center font-gray pad5B text-transform-upr font-size-12">Server load</div>
+                <div class="chart-alt-3 font-gray-dark" data-percent="92"><span>92</span>%</div>
+            </div>
+        </div>
+        <div class="divider mrg15T mrg15B"></div>
+        <div class="text-center">
+            <a href="#" class="btn center-div btn-info mrg5T btn-sm text-transform-upr updateEasyPieChart">
+                <i class="glyph-icon icon-refresh"></i>
+                Update charts
+            </a>
+        </div>
+    </div>
+</div>
 
 <div class="clear"></div>
 
-<a href="#" title="{% trans '' %}" data-toggle="collapse" data-target="#sidebar-toggle-3" class="popover-title">
-    {% trans "CPU Status" %}
+<a href="#" title="" data-toggle="collapse" data-target="#sidebar-toggle-6" class="popover-title">
+    Latest transfers
     <span class="caret"></span>
 </a>
-<div ng-controller="systemStatusInfo" id="sidebar-toggle-3" class="collapse in">
+<div id="sidebar-toggle-6" class="collapse in">
 
-    <ul class="progress-box">
+    <ul class="files-box">
         <li>
-
-            <div class="progress-title">
-                {% trans "CPU Usage" %}
-                <b>{$ cpuUsage $}%</b>
-            </div>
-            <div class="progressbar-small progressbar" data-value="{$ cpuUsage $}">
-                <div class="progressbar-value bg-yellow tooltip-button" title="{$ cpuUsage $}%">
+            <i class="files-icon glyph-icon font-red icon-file-archive-o"></i>
+            <div class="files-content">
+                <b>blog_export.zip</b>
+                <div class="files-date">
+                    <i class="glyph-icon icon-clock-o"></i>
+                    added on <b>22.10.2014</b>
                 </div>
             </div>
-        </li>
-        <li>
-            <b class="pull-right">{$ ramUsage $}%</b>
-            <div class="progress-title">
-                {% trans "Ram Usage" %}
-
-            </div>
-            <div class="progressbar-small progressbar" data-value="{$ ramUsage $}">
-                <div class="progressbar-value bg-red tooltip-button" title="{$ ramUsage $}%"></div>
+            <div class="files-buttons">
+                <a href="#" class="btn btn-xs hover-info tooltip-button" data-placement="left" title="Download">
+                    <i class="glyph-icon icon-cloud-download"></i>
+                </a>
+                <a href="#" class="btn btn-xs hover-danger tooltip-button" data-placement="left" title="Delete">
+                    <i class="glyph-icon icon-times"></i>
+                </a>
             </div>
         </li>
+        <li class="divider"></li>
         <li>
-            <div class="progress-title">
-                {% trans "Disk Usage" %}
-                <b>{$ diskUsage $}%</b>
-            </div>
-            <div class="progressbar" data-value="{$ diskUsage $}">
-                <div class="progressbar-value bg-green">
-                    <div class="progress-label">{$ diskUsage $}%</div>
+            <i class="files-icon glyph-icon icon-file-code-o"></i>
+            <div class="files-content">
+                <b>homepage-test.html</b>
+                <div class="files-date">
+                    <i class="glyph-icon icon-clock-o"></i>
+                    added  <b>19.10.2014</b>
                 </div>
+            </div>
+            <div class="files-buttons">
+                <a href="#" class="btn btn-xs hover-info tooltip-button" data-placement="left" title="Download">
+                    <i class="glyph-icon icon-cloud-download"></i>
+                </a>
+                <a href="#" class="btn btn-xs hover-danger tooltip-button" data-placement="left" title="Delete">
+                    <i class="glyph-icon icon-times"></i>
+                </a>
+            </div>
+        </li>
+        <li class="divider"></li>
+        <li>
+            <i class="files-icon glyph-icon font-yellow icon-file-image-o"></i>
+            <div class="files-content">
+                <b>monthlyReport.jpg</b>
+                <div class="files-date">
+                    <i class="glyph-icon icon-clock-o"></i>
+                    added on <b>10.9.2014</b>
+                </div>
+            </div>
+            <div class="files-buttons">
+                <a href="#" class="btn btn-xs hover-info tooltip-button" data-placement="left" title="Download">
+                    <i class="glyph-icon icon-cloud-download"></i>
+                </a>
+                <a href="#" class="btn btn-xs hover-danger tooltip-button" data-placement="left" title="Delete">
+                    <i class="glyph-icon icon-times"></i>
+                </a>
+            </div>
+        </li>
+        <li class="divider"></li>
+        <li>
+            <i class="files-icon glyph-icon font-green icon-file-word-o"></i>
+            <div class="files-content">
+                <b>new_presentation.doc</b>
+                <div class="files-date">
+                    <i class="glyph-icon icon-clock-o"></i>
+                    added on <b>5.9.2014</b>
+                </div>
+            </div>
+            <div class="files-buttons">
+                <a href="#" class="btn btn-xs hover-info tooltip-button" data-placement="left" title="Download">
+                    <i class="glyph-icon icon-cloud-download"></i>
+                </a>
+                <a href="#" class="btn btn-xs hover-danger tooltip-button" data-placement="left" title="Delete">
+                    <i class="glyph-icon icon-times"></i>
+                </a>
             </div>
         </li>
     </ul>
@@ -240,13 +430,105 @@
 
 <div class="clear"></div>
 
+<a href="#" title="" data-toggle="collapse" data-target="#sidebar-toggle-3" class="popover-title">
+    Tasks for today
+    <span class="caret"></span>
+</a>
+<div id="sidebar-toggle-3" class="collapse in">
+
+    <ul class="progress-box">
+        <li>
+            <div class="progress-title">
+                New features development
+                <b>87%</b>
+            </div>
+            <div class="progressbar-smaller progressbar" data-value="87">
+                <div class="progressbar-value bg-azure">
+                    <div class="progressbar-overlay"></div>
+                </div>
+            </div>
+        </li>
+        <li>
+            <b class="pull-right">66%</b>
+            <div class="progress-title">
+                Finishing uploading files
+
+            </div>
+            <div class="progressbar-smaller progressbar" data-value="66">
+                <div class="progressbar-value bg-red">
+                    <div class="progressbar-overlay"></div>
+                </div>
+            </div>
+        </li>
+        <li>
+            <div class="progress-title">
+                Creating tutorials
+                <b>58%</b>
+            </div>
+            <div class="progressbar-smaller progressbar" data-value="58">
+                <div class="progressbar-value bg-blue-alt"></div>
+            </div>
+        </li>
+        <li>
+            <div class="progress-title">
+                Frontend bonus theme
+                <b>74%</b>
+            </div>
+            <div class="progressbar-smaller progressbar" data-value="74">
+                <div class="progressbar-value bg-purple"></div>
+            </div>
+        </li>
+    </ul>
+
+</div>
+
+<div class="clear"></div>
+
+<a href="#" title="" data-toggle="collapse" data-target="#sidebar-toggle-4" class="popover-title">
+    Pending notifications
+    <span class="bs-label bg-orange tooltip-button" title="Label example">New</span>
+    <span class="caret"></span>
+</a>
+<div id="sidebar-toggle-4" class="collapse in">
+    <ul class="notifications-box notifications-box-alt">
+        <li>
+            <span class="bg-purple icon-notification glyph-icon icon-users"></span>
+            <span class="notification-text">This is an error notification</span>
+            <div class="notification-time">
+                a few seconds ago
+                <span class="glyph-icon icon-clock-o"></span>
+            </div>
+            <a href="#" class="notification-btn btn btn-xs btn-black tooltip-button" data-placement="left" title="View details">
+                <i class="glyph-icon icon-arrow-right"></i>
+            </a>
+        </li>
+        <li>
+            <span class="bg-warning icon-notification glyph-icon icon-ticket"></span>
+            <span class="notification-text">This is a warning notification</span>
+            <div class="notification-time">
+                <b>15</b> minutes ago
+                <span class="glyph-icon icon-clock-o"></span>
+            </div>
+            <a href="#" class="notification-btn btn btn-xs btn-black tooltip-button" data-placement="left" title="View details">
+                <i class="glyph-icon icon-arrow-right"></i>
+            </a>
+        </li>
+        <li>
+            <span class="bg-green icon-notification glyph-icon icon-random"></span>
+            <span class="notification-text font-green">A success message example.</span>
+            <div class="notification-time">
+                <b>2 hours</b> ago
+                <span class="glyph-icon icon-clock-o"></span>
+            </div>
+            <a href="#" class="notification-btn btn btn-xs btn-black tooltip-button" data-placement="left" title="View details">
+                <i class="glyph-icon icon-arrow-right"></i>
+            </a>
+        </li>
+    </ul>
 </div>
 </div>
 </div>
-
-
-
-
+</div>
     <div id="loading">
         <div class="spinner">
             <div class="bounce1"></div>
@@ -259,49 +541,72 @@
         <div id="page-header" class="bg-gradient-9">
     <div id="mobile-navigation">
         <button id="nav-toggle" class="collapsed" data-toggle="collapse" data-target="#page-sidebar"><span></span></button>
-        <a href="{% url "index" %}" class="logo-content-small" title="{% trans 'CyberPanel' %}"></a>
+        <a href="index.html" class="logo-content-small" title="MonarchUI"></a>
     </div>
     <div id="header-logo" class="logo-bg">
-        <a href="{% url "index" %}" class="logo-content-big" title="{% trans 'CyberPanel' %}">
-            Cyber <i>Panel</i>
-            <span>{% trans "Web Hosting Control Panel" %}</span>
+        <a href="index.html" class="logo-content-big" title="MonarchUI">
+            Monarch <i>UI</i>
+            <span>The perfect solution for user interfaces</span>
         </a>
-        <a href="{% url "index" %}" class="logo-content-small" title="{% trans 'CyberPanel' %}">
-            Cyber <i>Panel</i>
-            <span>{% trans "Web Hosting Control Panel" %}</span>
+        <a href="index.html" class="logo-content-small" title="MonarchUI">
+            Monarch <i>UI</i>
+            <span>The perfect solution for user interfaces</span>
         </a>
-        <a id="close-sidebar" href="#" title="{% trans 'Close sidebar' %}">
+        <a id="close-sidebar" href="#" title="Close sidebar">
             <i class="glyph-icon icon-angle-left"></i>
         </a>
     </div>
     <div id="header-nav-left">
-        <div ng-controller="adminController" class="user-account-btn dropdown">
-            <a href="#" title="{% trans 'My Account' %}" class="user-profile clearfix" data-toggle="dropdown">
-                <img width="28" src="{% static 'baseTemplate/assets/image-resources/gravatar.png' %}" alt="Profile image">
-                <span>{$ currentAdmin $}</span>
+        <div class="user-account-btn dropdown">
+            <a href="#" title="My Account" class="user-profile clearfix" data-toggle="dropdown">
+                <img width="28" src="../../assets/image-resources/gravatar.jpg" alt="Profile image">
+                <span>Thomas Barnes</span>
                 <i class="glyph-icon icon-angle-down"></i>
             </a>
             <div class="dropdown-menu float-left">
                 <div class="box-sm">
                     <div class="login-box clearfix">
                         <div class="user-img">
-                            <a href="#" title="{% trans '' %}" class="change-img">Change photo</a>
-                            <img src="{% static 'baseTemplate/assets/image-resources/gravatar.png' %}" alt="">
+                            <a href="#" title="" class="change-img">Change photo</a>
+                            <img src="../../assets/image-resources/gravatar.jpg" alt="">
                         </div>
                         <div class="user-info">
                             <span>
-                                {$ currentAdmin $}
-                                <i>{$ admin_type $}</i>
+                                Thomas Barnes
+                                <i>UX/UI developer</i>
                             </span>
-                            <a href="{% url 'modifyUsers' %}" title="{% trans 'Edit profile' %}">{% trans "Edit profile" %}</a>
-                            <a href="{% url 'viewProfile' %}" title="{% trans 'View Profile' %}">{% trans "View Profile" %}</a>
+                            <a href="#" title="Edit profile">Edit profile</a>
+                            <a href="#" title="View notifications">View notifications</a>
                         </div>
                     </div>
                     <div class="divider"></div>
+                    <ul class="reset-ul mrg5B">
+                        <li>
+                            <a href="#">
+                                <i class="glyph-icon float-right icon-caret-right"></i>
+                                View login page example
+
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <i class="glyph-icon float-right icon-caret-right"></i>
+                                View lockscreen example
+
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <i class="glyph-icon float-right icon-caret-right"></i>
+                                View account details
+
+                            </a>
+                        </li>
+                    </ul>
                     <div class="pad5A button-pane button-pane-alt text-center">
-                        <a href="{% url 'logout' %}" class="btn display-block font-normal btn-danger">
+                        <a href="#" class="btn display-block font-normal btn-danger">
                             <i class="glyph-icon icon-power-off"></i>
-                            {% trans "Logout" %}
+                            Logout
                         </a>
                     </div>
                 </div>
@@ -309,83 +614,333 @@
         </div>
     </div><!-- #header-nav-left -->
 
-
-    <div ng-controller="loadAvg" id="header-nav-right">
-
-        <a class="hide-on-phone" style="background-color: none;width: 33px" href="#" class="hdr-btn" title="{% trans 'CPU Load Average' %}" data-placement="bottom" >
-                <span class="badge bg-yellow">{$ one $}</span>
+    <div id="header-nav-right">
+        <a href="#" class="hdr-btn popover-button" title="Search" data-placement="bottom" data-id="#popover-search">
+            <i class="glyph-icon icon-search"></i>
         </a>
-
-        <a class="hide-on-phone" style="background-color: none;width: 33px" href="#" class="hdr-btn" title="{% trans 'CPU Load Average' %}" data-placement="bottom" >
-            <span class="badge bg-yellow">{$ two $}</span>
-        </a>
-
-        <a class="hide-on-phone" style="background-color: none;width: 33px" href="#" class="hdr-btn" title="{% trans 'CPU Load Average' %}" data-placement="bottom">
-            <span class="badge bg-yellow">{$ three $}</span>
-        </a>
-
-        <a href="#" class="hdr-btn" id="fullscreen-btn" title="{% trans 'Fullscreen' %}">
+        <div class="hide" id="popover-search">
+            <div class="pad5A box-md">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search terms here ...">
+                    <span class="input-group-btn">
+                        <a class="btn btn-primary" href="#">Search</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <a href="#" class="hdr-btn" id="fullscreen-btn" title="Fullscreen">
             <i class="glyph-icon icon-arrows-alt"></i>
         </a>
+        <a href="#" class="hdr-btn sb-toggle-left" id="chatbox-btn" title="Chat sidebar">
+            <i class="glyph-icon icon-linecons-paper-plane"></i>
+        </a>
+        <div class="dropdown" id="notifications-btn">
+            <a data-toggle="dropdown" href="#" title="">
+                <span class="small-badge bg-yellow"></span>
+                <i class="glyph-icon icon-linecons-megaphone"></i>
+            </a>
+            <div class="dropdown-menu box-md float-right">
 
+                <div class="popover-title display-block clearfix pad10A">
+                    Notifications
+                    <a class="text-transform-cap font-primary font-normal btn-link float-right" href="#" title="View more options">
+                        More options...
+                    </a>
+                </div>
+                <div class="scrollable-content scrollable-slim-box">
+                    <ul class="no-border notifications-box">
+                        <li>
+                            <span class="bg-danger icon-notification glyph-icon icon-bullhorn"></span>
+                            <span class="notification-text">This is an error notification</span>
+                            <div class="notification-time">
+                                a few seconds ago
+                                <span class="glyph-icon icon-clock-o"></span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="bg-warning icon-notification glyph-icon icon-users"></span>
+                            <span class="notification-text font-blue">This is a warning notification</span>
+                            <div class="notification-time">
+                                <b>15</b> minutes ago
+                                <span class="glyph-icon icon-clock-o"></span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="bg-green icon-notification glyph-icon icon-sitemap"></span>
+                            <span class="notification-text font-green">A success message example.</span>
+                            <div class="notification-time">
+                                <b>2 hours</b> ago
+                                <span class="glyph-icon icon-clock-o"></span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="bg-azure icon-notification glyph-icon icon-random"></span>
+                            <span class="notification-text">This is an error notification</span>
+                            <div class="notification-time">
+                                a few seconds ago
+                                <span class="glyph-icon icon-clock-o"></span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="bg-warning icon-notification glyph-icon icon-ticket"></span>
+                            <span class="notification-text">This is a warning notification</span>
+                            <div class="notification-time">
+                                <b>15</b> minutes ago
+                                <span class="glyph-icon icon-clock-o"></span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="bg-blue icon-notification glyph-icon icon-user"></span>
+                            <span class="notification-text font-blue">Alternate notification styling.</span>
+                            <div class="notification-time">
+                                <b>2 hours</b> ago
+                                <span class="glyph-icon icon-clock-o"></span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="bg-purple icon-notification glyph-icon icon-user"></span>
+                            <span class="notification-text">This is an error notification</span>
+                            <div class="notification-time">
+                                a few seconds ago
+                                <span class="glyph-icon icon-clock-o"></span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="bg-warning icon-notification glyph-icon icon-user"></span>
+                            <span class="notification-text">This is a warning notification</span>
+                            <div class="notification-time">
+                                <b>15</b> minutes ago
+                                <span class="glyph-icon icon-clock-o"></span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="bg-green icon-notification glyph-icon icon-user"></span>
+                            <span class="notification-text font-green">A success message example.</span>
+                            <div class="notification-time">
+                                <b>2 hours</b> ago
+                                <span class="glyph-icon icon-clock-o"></span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="bg-purple icon-notification glyph-icon icon-user"></span>
+                            <span class="notification-text">This is an error notification</span>
+                            <div class="notification-time">
+                                a few seconds ago
+                                <span class="glyph-icon icon-clock-o"></span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="bg-warning icon-notification glyph-icon icon-user"></span>
+                            <span class="notification-text">This is a warning notification</span>
+                            <div class="notification-time">
+                                <b>15</b> minutes ago
+                                <span class="glyph-icon icon-clock-o"></span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="pad10A button-pane button-pane-alt text-center">
+                    <a href="#" class="btn btn-primary" title="View all notifications">
+                        View all notifications
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="dropdown" id="progress-btn">
+            <a data-toggle="dropdown" href="#" title="">
+                <span class="small-badge bg-azure"></span>
+                <i class="glyph-icon icon-linecons-params"></i>
+            </a>
+            <div class="dropdown-menu pad0A box-sm float-right" id="progress-dropdown">
+                <div class="scrollable-content scrollable-slim-box">
+                    <ul class="no-border progress-box progress-box-links">
+                        <li>
+                            <a href="#" title="">
+                                <b class="pull-right">23%</b>
+                                <div class="progress-title">
+                                    Finishing uploading files
+
+                                </div>
+                                <div class="progressbar-smaller progressbar" data-value="23">
+                                    <div class="progressbar-value bg-blue-alt">
+                                        <div class="progressbar-overlay"></div>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" title="">
+                                <b class="pull-right">91%</b>
+                                <div class="progress-title">
+                                    Roadmap progress
+                                </div>
+                                <div class="progressbar-smaller progressbar" data-value="91">
+                                    <div class="progressbar-value bg-red">
+                                        <div class="progressbar-overlay"></div>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" title="">
+                                <b class="pull-right">58%</b>
+                                <div class="progress-title">
+                                    Images upload
+                                </div>
+                                <div class="progressbar-smaller progressbar" data-value="58">
+                                    <div class="progressbar-value bg-green"></div>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" title="">
+                                <b class="pull-right">74%</b>
+                                <div class="progress-title">
+                                    WordPress migration
+                                </div>
+                                <div class="progressbar-smaller progressbar" data-value="74">
+                                    <div class="progressbar-value bg-purple"></div>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" title="">
+                                 <b class="pull-right">91%</b>
+                                <div class="progress-title">
+                                    Agile development procedures
+                                </div>
+                                <div class="progressbar-smaller progressbar" data-value="91">
+                                    <div class="progressbar-value bg-black">
+                                        <div class="progressbar-overlay"></div>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" title="">
+                                <b class="pull-right">58%</b>
+                                <div class="progress-title">
+                                    Systems integration
+                                </div>
+                                <div class="progressbar-smaller progressbar" data-value="58">
+                                    <div class="progressbar-value bg-azure"></div>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" title="">
+                                 <b class="pull-right">97%</b>
+                                <div class="progress-title">
+                                    Code optimizations
+                                </div>
+                                <div class="progressbar-smaller progressbar" data-value="97">
+                                    <div class="progressbar-value bg-yellow"></div>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="pad5A button-pane button-pane-alt text-center">
+                    <a href="#" class="btn display-block font-normal hover-green" title="View all notifications">
+                        View all notifications
+                    </a>
+                </div>
+            </div>
+        </div>
         <div class="dropdown" id="cloud-btn">
-            <a href="#" data-placement="bottom" class="tooltip-button sb-toggle-right" title="{% trans 'System Status' %}">
+            <a href="#" data-placement="bottom" class="tooltip-button sb-toggle-right" title="Statistics Sidebar">
                 <i class="glyph-icon icon-linecons-cloud"></i>
             </a>
         </div>
         <div class="dropdown" id="dashnav-btn">
-            <a href="#" data-toggle="dropdown" data-placement="bottom" class="popover-button-header tooltip-button" title="{% trans 'Dashboard Quick Menu' %}">
+            <a href="#" data-toggle="dropdown" data-placement="bottom" class="popover-button-header tooltip-button" title="Dashboard Quick Menu">
                 <i class="glyph-icon icon-linecons-cog"></i>
             </a>
             <div class="dropdown-menu float-right">
                 <div class="box-sm">
                     <div class="pad5T pad5B pad10L pad10R dashboard-buttons clearfix">
-                        <a href="{% url 'loadWebsitesHome' %}" class="btn vertical-button remove-border btn-info" title="{% trans '' %}">
+                        <a href="#" class="btn vertical-button hover-blue-alt" title="">
                             <span class="glyph-icon icon-separator-vertical pad0A medium">
                                 <i class="glyph-icon icon-dashboard opacity-80 font-size-20"></i>
                             </span>
-                            {% trans "Websites" %}
+                            Dashboard
                         </a>
-                        <a href="{% url 'packagesHome' %}" class="btn vertical-button remove-border btn-danger" title="{% trans '' %}">
+                        <a href="#" class="btn vertical-button hover-green" title="">
                             <span class="glyph-icon icon-separator-vertical pad0A medium">
                                 <i class="glyph-icon icon-tags opacity-80 font-size-20"></i>
                             </span>
-                            {% trans "Packages" %}
+                            Widgets
                         </a>
-                        <a href="{% url 'dnsHome' %}" class="btn vertical-button remove-border btn-purple" title="{% trans '' %}">
+                        <a href="#" class="btn vertical-button hover-orange" title="">
                             <span class="glyph-icon icon-separator-vertical pad0A medium">
                                 <i class="glyph-icon icon-fire opacity-80 font-size-20"></i>
                             </span>
-                            {% trans "DNS" %}
+                            Tables
                         </a>
-                        <a href="{% url 'loadFTPHome' %}" class="btn vertical-button remove-border btn-azure" title="{% trans '' %}">
+                        <a href="#" class="btn vertical-button hover-orange" title="">
                             <span class="glyph-icon icon-separator-vertical pad0A medium">
                                 <i class="glyph-icon icon-bar-chart-o opacity-80 font-size-20"></i>
                             </span>
-                            {% trans "FTP" %}
+                            Charts
                         </a>
-                        <a href="{% url 'loadTuningHome' %}" class="btn vertical-button remove-border btn-yellow" title="{% trans '' %}">
+                        <a href="#" class="btn vertical-button hover-purple" title="">
                             <span class="glyph-icon icon-separator-vertical pad0A medium">
                                 <i class="glyph-icon icon-laptop opacity-80 font-size-20"></i>
                             </span>
-                            {% trans "Tuning" %}
+                            Buttons
                         </a>
-                        <a href="{% url 'serverStatusHome' %}" class="btn vertical-button remove-border btn-warning" title="{% trans '' %}">
+                        <a href="#" class="btn vertical-button hover-azure" title="">
                             <span class="glyph-icon icon-separator-vertical pad0A medium">
                                 <i class="glyph-icon icon-code opacity-80 font-size-20"></i>
                             </span>
-                            {% trans "Status" %}
+                            Panels
                         </a>
-
                     </div>
-
+                    <div class="divider"></div>
+                    <div class="pad5T pad5B pad10L pad10R dashboard-buttons clearfix">
+                        <a href="#" class="btn vertical-button remove-border btn-info" title="">
+                            <span class="glyph-icon icon-separator-vertical pad0A medium">
+                                <i class="glyph-icon icon-dashboard opacity-80 font-size-20"></i>
+                            </span>
+                            Dashboard
+                        </a>
+                        <a href="#" class="btn vertical-button remove-border btn-danger" title="">
+                            <span class="glyph-icon icon-separator-vertical pad0A medium">
+                                <i class="glyph-icon icon-tags opacity-80 font-size-20"></i>
+                            </span>
+                            Widgets
+                        </a>
+                        <a href="#" class="btn vertical-button remove-border btn-purple" title="">
+                            <span class="glyph-icon icon-separator-vertical pad0A medium">
+                                <i class="glyph-icon icon-fire opacity-80 font-size-20"></i>
+                            </span>
+                            Tables
+                        </a>
+                        <a href="#" class="btn vertical-button remove-border btn-azure" title="">
+                            <span class="glyph-icon icon-separator-vertical pad0A medium">
+                                <i class="glyph-icon icon-bar-chart-o opacity-80 font-size-20"></i>
+                            </span>
+                            Charts
+                        </a>
+                        <a href="#" class="btn vertical-button remove-border btn-yellow" title="">
+                            <span class="glyph-icon icon-separator-vertical pad0A medium">
+                                <i class="glyph-icon icon-laptop opacity-80 font-size-20"></i>
+                            </span>
+                            Buttons
+                        </a>
+                        <a href="#" class="btn vertical-button remove-border btn-warning" title="">
+                            <span class="glyph-icon icon-separator-vertical pad0A medium">
+                                <i class="glyph-icon icon-code opacity-80 font-size-20"></i>
+                            </span>
+                            Panels
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
-        <a class="header-btn" id="logout-btn" href="{% url 'logout' %}" title="{% trans 'Logout' %}">
+        <a class="header-btn" id="logout-btn" href="lockscreen-3.html" title="Lockscreen page example">
             <i class="glyph-icon icon-linecons-lock"></i>
         </a>
-
 
     </div><!-- #header-nav-right -->
 
@@ -395,363 +950,716 @@
 
 
     <ul id="sidebar-menu">
-    <li class="header"><span>{% trans "Overview" %}</span></li>
+    <li class="header"><span>Overview</span></li>
     <li>
-        <a href="#" title="{% trans 'Server IP Address' %}">
-            <i class="glyph-icon tooltip-button icon-laptop" title="{% trans 'Server IP Address' %}" data-original-title=".icon-laptop"></i>
-            <span style="color: #db6868;font-weight: bold;" id="serverIPAddress"></span>
-        </a>
-        <a href="{% url 'index' %}" title="{% trans 'Dashboard' %}">
+        <a href="index.html" title="Admin Dashboard">
             <i class="glyph-icon icon-linecons-tv"></i>
-            <span>{% trans "Dashboard" %}</span>
-        </a>
-        <a href="{% url 'versionManagment' %}" title="{% trans 'Version Management' %}">
-            <i class="glyph-icon tooltip-button icon-cloud-upload" title="{% trans 'Version Management' %}" data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
-            <span>{% trans "Version Management" %}</span>
+            <span>Admin dashboard</span>
         </a>
     </li>
     <li class="divider"></li>
-    <li class="header"><span>{% trans "Main" %}</span></li>
-
+    <li class="no-menu">
+        <a href="../frontend-template/index.html" title="Frontend template">
+            <i class="glyph-icon icon-linecons-beaker"></i>
+            <span>Frontend template</span>
+            <span class="bs-label label-danger">
+                NEW
+            </span>
+        </a>
+    </li>
+    <li class="header"><span>Components</span></li>
     <li>
-        <a href="{% url 'loadUsersHome' %}" title="{% trans 'Users' %}">
-            <i class="glyph-icon icon-users" title="{% trans 'Users' %}"></i>
-            <span>{% trans "Users" %}</span>
+        <a href="#" title="Elements">
+            <i class="glyph-icon icon-linecons-diamond"></i>
+            <span>Elements</span>
         </a>
         <div class="sidebar-submenu">
 
             <ul>
-                <li><a href="{% url 'viewProfile' %}" title="{% trans 'View Profile' %}"><span>{% trans "View Profile" %}</span></a></li>
-                <li id="normalUser"><a href="{% url 'createUser' %}" title="{% trans 'Create New User' %}"><span>{% trans "Create New User" %}</span></a></li>
-                <li id="normalUserA"><a href="{% url 'modifyUsers' %}" title="{% trans 'Modify User' %}"><span>{% trans "Modify User" %}</span></a></li>
-                <li id="normalUserB"><a href="{% url 'deleteUser' %}" title="{% trans 'Delete User' %}"><span>{% trans "Delete User" %}</span></a></li>
-            </ul>
-
-        </div><!-- .sidebar-submenu -->
-    </li>
-
-
-    <li>
-        <a href="{% url 'loadWebsitesHome' %}" title="{% trans 'Websites' %}">
-            <div class="glyph-icon icon-file-word-o" title="{% trans 'Websites' %}"></div>
-            <span>{% trans "Websites" %}</span>
-        </a>
-        <div class="sidebar-submenu">
-
-            <ul>
-                <li id="createWebsite"><a href="{% url 'createWebsite' %}" title="{% trans 'Create Website' %}"><span>{% trans "Create Website" %}</span></a></li>
-                <li><a href="{% url 'listWebsites' %}" title="{% trans 'List Websites' %}"><span>{% trans "List Websites" %}</span></a></li>
-                <li><a href="{% url 'modifyWebsite' %}" title="{% trans 'Modify Website' %}"><span>{% trans "Modify Website" %}</span></a></li>
-                <li id="siteState"><a href="{% url 'siteState' %}" title="{% trans 'Suspend/Unsuspend' %}"><span>{% trans "Suspend/Unsuspend" %}</span></a></li>
-                <li><a href="{% url 'deleteWebsite' %}" title="{% trans 'Delete Website' %}"><span>{% trans "Delete Website" %}</span></a></li>
+                <li><a href="buttons.html" title="Buttons"><span>Buttons</span></a></li>
+                <li><a href="labels-badges.html" title="Labels &amp; Badges"><span>Labels &amp; Badges</span></a></li>
+                <li><a href="content-boxes.html" title="Content boxes"><span>Content boxes</span></a></li>
+                <li><a href="icons.html" title="Icons"><span>Icons</span></a></li>
+                <li><a href="nav-menus.html" title="Navigation menus"><span>Navigation menus</span></a></li>
+                <li><a href="response-messages.html" title="Response messages"><span>Response messages</span></a></li>
+                <li><a href="images.html" title="Images"><span>Images</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
     </li>
     <li>
-        <a id="packageHome" href="{% url 'packagesHome' %}" title="{% trans 'Packages' %}">
-            <i class="glyph-icon icon-cubes"></i>
-            <span>{% trans "Packages" %}</span>
-        </a>
-        <div id="packageSub" class="sidebar-submenu">
-
-            <ul>
-                <li id="createPackage"><a href="{% url 'createPackage' %}" title="{% trans 'Create Package' %}"><span>{% trans "Create Package" %}</span></a></li>
-                <li id="deletePackage"><a href="{% url 'deletePackage' %}" title="{% trans 'Delete Package' %}"><span>{% trans "Delete Package" %}</span></a></li>
-                <li id="modifyPackage"><a href="{% url 'modifyPackage' %}" title="{% trans 'Modify Package' %}"><span>{% trans "Modify Package" %}</span></a></li>
-            </ul>
-
-        </div><!-- .sidebar-submenu -->
-    </li>
-
-    <li>
-        <a href="{% url 'packagesHome' %}" title="{% trans 'Databases' %}">
-            <i class="glyph-icon icon-database" title="{% trans 'Databases' %}"></i>
-            <span>{% trans "Databases" %}</span>
-        </a>
-        <div class="sidebar-submenu">
-
-            <ul>
-                <li><a href="{% url 'createDatabase' %}" title="{% trans 'Create Database' %}"><span>{% trans "Create Database" %}</span></a></li>
-                <li><a href="{% url 'deleteDatabase' %}" title="{% trans 'Delete Database' %}"><span>{% trans "Delete Database" %}</span></a></li>
-                <li><a href="{% url 'listDBs' %}" title="{% trans 'List Databases' %}"><span>{% trans "List Databases" %}</span></a></li>
-                <li><a href="/phpmyadmin/index.php" title="{% trans 'PHPMYAdmin' %}" target="_blank"><span>{% trans "PHPMYAdmin" %}</span></a></li>
-                <!----<li><a href="{% url 'modifyPackage' %}" title="Change Password"><span>Change Password</span></a></li>--->
-            </ul>
-
-        </div><!-- .sidebar-submenu -->
-    </li>
-
-     <li>
-        <a href="{% url 'packagesHome' %}" title="{% trans 'DNS' %}">
+        <a href="#" title="Dashboard boxes">
             <i class="glyph-icon icon-linecons-lightbulb"></i>
-            <span>{% trans "DNS" %}</span>
+            <span>Dashboard boxes</span>
+            <span class="bs-label label-primary">Hot</span>
         </a>
         <div class="sidebar-submenu">
 
             <ul>
-                <li id="normalUserC"><a href="{% url 'createNameserver' %}" title="{% trans 'Create Nameserver' %}"><span>{% trans "Create Nameserver" %}</span></a></li>
-                <li><a href="{% url 'createDNSZone' %}" title="{% trans 'Create DNS Zone' %}"><span>{% trans "Create DNS Zone" %}</span></a></li>
-                <li><a href="{% url 'deleteDNSZone' %}" title="{% trans 'Delete Zone' %}"><span>{% trans "Delete Zone" %}</span></a></li>
-                <li><a href="{% url 'addDeleteDNSRecords' %}" title="{% trans 'Add/Delete Records' %}"><span>{% trans "Add/Delete Records" %}</span></a></li>
+                <li><a href="chart-boxes.html" title="Chart boxes"><span>Chart boxes</span></a></li>
+                <li><a href="tile-boxes.html" title="Tile boxes"><span>Tile boxes</span></a></li>
+                <li><a href="social-boxes.html" title="Social boxes"><span>Social boxes</span></a></li>
+                <li><a href="panel-boxes.html" title="Panel boxes"><span>Panel boxes</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
     </li>
+    <li>
+        <a href="#" title="Widgets">
+            <i class="glyph-icon icon-linecons-wallet"></i>
+            <span>Widgets</span>
+        </a>
+        <div class="sidebar-submenu">
 
+            <ul>
+                <li><a href="tabs.html" title="Responsive tabs"><span>Responsive tabs</span></a></li>
+                <li><a href="collapsable.html" title="Collapsables"><span>Collapsable accordions</span></a></li>
+                <li><a href="bs-carousel.html" title="Bootstrap Carousel"><span>Bootstrap carousel</span></a></li>
+                <li><a href="calendar.html" title="Calendar"><span>Calendar</span></a></li>
+                <li><a href="scrollbars.html" title="Custom scrollbars"><span>Custom scrollbars</span></a></li>
+                <li><a href="modals.html" title="Modals"><span>Modals</span></a></li>
+                <li><a href="notifications.html" title="Notifications"><span>Notifications</span></a></li>
+                <li><a href="lazyload.html" title="Lazyload"><span>Lazyload</span></a></li>
+                <li><a href="loading-feedback.html" title="Loading feedback"><span>Loading feedback</span></a></li>
+                <li><a href="popovers-tooltips.html" title="Popovers &amp; Tooltips"><span>Popovers & Tooltips</span></a></li>
+                <li><a href="progress-bars.html" title="Progress bars"><span>Progress bars</span></a></li>
+                <li><a href="sortable-elements.html" title="Sortable elements"><span>Sortable elements</span></a></li>
+            </ul>
 
+        </div><!-- .sidebar-submenu -->
+    </li>
+    <li>
+        <a href="#" title="Forms UI">
+            <i class="glyph-icon icon-linecons-eye"></i>
+            <span>Forms UI</span>
+        </a>
+        <div class="sidebar-submenu">
 
-        <li>
-        <a href="{% url 'loadEmailHome' %}" title="{% trans 'Email' %}">
+            <ul>
+                <li><a href="forms-elements.html" title="Form elements"><span>Form elements</span></a></li>
+                <li><a href="forms-validation.html" title="Form validation"><span>Form validation</span></a></li>
+                <li><a href="pickers.html" title="Pickers"><span>Pickers</span></a></li>
+                <li><a href="sliders.html" title="Sliders"><span>Sliders</span></a></li>
+                <li><a href="forms-wizard.html" title="Form wizards"><span>Form wizards</span></a></li>
+                <li><a href="forms-masks.html" title="Form input masks"><span>Form input masks</span></a></li>
+                <li><a href="image-crop.html" title="Image crop"><span>Image crop</span></a></li>
+                <li><a href="dropzone-uploader.html" title="Dropzone uploader"><span>Dropzone uploader</span></a></li>
+                <li><a href="multi-uploader.html" title="Multi uploader"><span>Multi uploader</span></a></li>
+                <li><a href="input-knobs.html" title="Input knobs"><span>Input knobs</span></a></li>
+                <li><a href="ckeditor.html" title="Ckeditor"><span>Ckeditor</span></a></li>
+                <li><a href="summernote.html" title="Summernote"><span>Summernote</span></a></li>
+                <li><a href="markdown.html" title="Markdown editor"><span>Markdown editor</span></a></li>
+                <li><a href="inline-editor.html" title="Inline editor"><span>Inline editor</span></a></li>
+            </ul>
+
+        </div><!-- .sidebar-submenu -->
+    </li>
+    <li>
+        <a href="#" title="Advanced tables">
+            <i class="glyph-icon icon-linecons-megaphone"></i>
+            <span>Advanced tables</span>
+        </a>
+        <div class="sidebar-submenu">
+
+            <ul>
+                <li><a href="tables.html" title="Basic tables"><span>Basic tables</span></a></li>
+                <li><a href="responsive-tables.html" title="Responsive tables"><span>Responsive tables</span></a></li>
+                <li><a href="data-tables.html" title="Data tables"><span>Data tables</span></a></li>
+                <li><a href="advanced-datatables.html" title="Advanced data tables"><span>Advanced data tables</span></a></li>
+                <li><a href="fixed-datatables.html" title="Fixed data tables"><span>Fixed data tables</span></a></li>
+                <li><a href="responsive-datatables.html" title="Responsive data tables"><span>Responsive data tables</span></a></li>
+            </ul>
+
+        </div><!-- .sidebar-submenu -->
+    </li>
+    <li>
+        <a href="#" title="Charts">
+            <i class="glyph-icon icon-linecons-paper-plane"></i>
+            <span>Charts</span>
+        </a>
+        <div class="sidebar-submenu">
+
+            <ul>
+                <li><a href="flot-charts.html" title="Flot charts"><span>Flot charts</span></a></li>
+                <li><a href="sparklines.html" title="Sparklines"><span>Sparklines</span></a></li>
+                <li><a href="pie-gages.html" title="PieGages"><span>PieGages</span></a></li>
+                <li><a href="just-gage.html" title="justGage"><span>justGage</span></a></li>
+                <li><a href="morris-charts.html" title="Morris charts"><span>Morris charts</span></a></li>
+                <li><a href="xcharts.html" title="xCharts"><span>xCharts</span></a></li>
+                <li><a href="chart-js.html" title="Chart.js"><span>Chart.js</span></a></li>
+            </ul>
+
+        </div><!-- .sidebar-submenu -->
+    </li>
+    <li>
+        <a href="#" title="Maps">
+            <i class="glyph-icon icon-linecons-sound"></i>
+            <span>Maps</span>
+        </a>
+        <div class="sidebar-submenu">
+
+            <ul>
+                <li><a href="gmaps.html" title="gMaps"><span>gMaps</span></a></li>
+                <li><a href="vector-maps.html" title="Vector maps"><span>Vector maps</span></a></li>
+                <li><a href="mapael.html" title="Mapael"><span>Mapael</span></a></li>
+            </ul>
+
+        </div><!-- .sidebar-submenu -->
+    </li>
+    <li class="header"><span>Extra</span></li>
+    <li>
+        <a href="#" title="Pages">
+            <i class="glyph-icon icon-linecons-fire"></i>
+            <span>Pages</span>
+            <span class="bs-label badge-yellow">NEW</span>
+        </a>
+        <div class="sidebar-submenu">
+
+            <ul>
+                <li><a href="index-alt.html" title="Alternate dashboard"><span>Alternate dashboard</span></a></li>
+                <li><a href="view-profile.html" title="View profile"><span>View profile</span></a></li>
+                <li><a href="faq-section.html" title="FAQ section"><span>FAQ section</span></a></li>
+                <li><a href="auto-menu.html" title="Auto menu"><span>Auto menu</span></a></li>
+                <li><a href="invoice.html" title="Invoice"><span>Invoice</span></a></li>
+                <li><a href="admin-blog.html" title="Blog posts list"><span>Blog posts list</span></a></li>
+                <li><a href="admin-pricing.html" title="Pricing tables"><span>Pricing tables</span></a></li>
+                <li><a href="portfolio-gallery.html" title="Portfolio gallery"><span>Portfolio gallery</span></a></li>
+                <li><a href="portfolio-masonry.html" title="Portfolio masonry"><span>Portfolio masonry</span></a></li>
+                <li><a href="slidebars.html" title="Slidebars"><span>Slidebars</span></a></li>
+            </ul>
+
+        </div><!-- .sidebar-submenu -->
+    </li>
+    <li>
+        <a href="#" title="Other Pages">
+            <i class="glyph-icon icon-linecons-cup"></i>
+            <span>Other Pages</span>
+        </a>
+        <div class="sidebar-submenu">
+
+            <ul>
+                <li><a href="login-1.html" target="_blank" title="Login page 1"><span>Login page 1</span></a></li>
+                <li><a href="login-2.html" target="_blank" title="Login page 2"><span>Login page 2</span></a></li>
+                <li><a href="login-3.html" target="_blank" title="Login page 3"><span>Login page 3</span></a></li>
+                <li><a href="login-4.html" target="_blank" title="Login page 4"><span>Login page 4</span></a></li>
+                <li><a href="login-5.html" target="_blank" title="Login page 5"><span>Login page 5</span></a></li>
+                <li><a href="lockscreen-1.html" target="_blank" title="Lockscreen page 1"><span>Lockscreen page 1</span></a></li>
+                <li><a href="lockscreen-2.html" target="_blank" title="Lockscreen page 2"><span>Lockscreen page 2</span></a></li>
+                <li><a href="lockscreen-3.html" target="_blank" title="Lockscreen page 3"><span>Lockscreen page 3</span></a></li>
+                <li><a href="server-1.html" target="_blank" title="Server page 1"><span>Error 404 page</span></a></li>
+                <li><a href="server-2.html" target="_blank" title="Server page 2"><span>Error 404 alternate</span></a></li>
+                <li><a href="server-3.html" target="_blank" title="Server page 3"><span>Server 500 error</span></a></li>
+            </ul>
+
+        </div><!-- .sidebar-submenu -->
+    </li>
+    <li>
+        <a href="#" title="Mailbox">
             <i class="glyph-icon icon-linecons-mail"></i>
-            <span>{% trans "Email" %}</span>
+            <span>Mailbox</span>
+            <span class="bs-badge badge-danger">3</span>
         </a>
         <div class="sidebar-submenu">
 
             <ul>
-                <li id="normalUserC"><a href="{% url 'createEmailAccount' %}" title="{% trans 'Create Email Account' %}"><span>{% trans "Create Email" %}</span></a></li>
-                <li><a href="{% url 'deleteEmailAccount' %}" title="{% trans 'Delete Email Account' %}"><span>{% trans "Delete Email" %}</span></a></li>
-                <li><a href="{% url 'changeEmailAccountPassword' %}" title="{% trans 'Change Password' %}"><span>{% trans "Change Password" %}</span></a></li>
-                <li><a href="/rainloop/index.php" title="{% trans 'Access Webmail' %}" target="_blank"><span>{% trans "Access Webmail" %}</span></a></li>
-
+                <li><a href="mailbox-inbox.html" title="Inbox"><span>Inbox</span></a></li>
+                <li><a href="mailbox-compose.html" title="Compose message"><span>Compose message</span></a></li>
+                <li><a href="mailbox-single.html" title="Single message"><span>Single message</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
     </li>
-
-
-
-
-
-     <li>
-        <a href="{% url 'packagesHome' %}" title="{% trans 'FTP' %}">
-            <i class="glyph-icon icon-paper-plane"></i>
-            <span>{% trans "FTP" %}</span>
-        </a>
-        <div class="sidebar-submenu">
-
-            <ul>
-                <li><a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}"><span>{% trans "Create FTP Account" %}</span></a></li>
-                <li><a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}"><span>{% trans "Delete FTP Account" %}</span></a></li>
-                <li><a href="{% url 'listFTPAccounts' %}" title="{% trans 'List FTP Accounts' %}"><span>{% trans "List FTP Accounts" %}</span></a></li>
-            </ul>
-
-        </div><!-- .sidebar-submenu -->
-    </li>
-
-
-
     <li>
-        <a href="{% url 'loadBackupHome' %}" title="{% trans 'Back up' %}">
-            <i class="glyph-icon tooltip-button icon-folder" title=".icon-folder"></i>
-            <span>{% trans "Back up" %}</span>
+        <a href="#" title="Snippets">
+            <i class="glyph-icon icon-linecons-cd"></i>
+            <span>Snippets</span>
         </a>
         <div class="sidebar-submenu">
 
             <ul>
-                <li><a href="{% url 'backupSite' %}" title="{% trans 'Create Back up' %}"><span>{% trans "Create Back up" %}</span></a></li>
-                <li id="restoreSite"><a href="{% url 'restoreSite' %}" title="{% trans 'Restore Back up' %}"><span>{% trans "Restore Back up" %}</span></a></li>
-                <li id="backupDestinations"><a href="{% url 'backupDestinations' %}" title="{% trans 'Add Destination' %}"><span>{% trans "Add/Delete Destination" %}</span></a></li>
-                <li id="scheduleBackup"><a href="{% url 'scheduleBackup' %}" title="{% trans 'Schedule Back up' %}"><span>{% trans "Schedule Back up" %}</span></a></li>
-                <li id="remoteBackups"><a href="{% url 'remoteBackups' %}" title="{% trans 'Remote Back ups' %}"><span>{% trans "Remote Back ups" %}</span></a></li>
+                <li><a href="timeline.html" title="Timeline"><span>Timeline</span></a></li>
+                <li><a href="chat.html" title="Chat"><span>Chat</span></a></li>
+                <li><a href="checklist.html" title="Checklist"><span>Checklist</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
     </li>
-
-
     <li>
-        <a href="{% url 'loadSSLHome' %}" title="{% trans 'Back up' %}">
-            <i class="glyph-icon tooltip-button icon-briefcase" title="{% trans 'SSL' %}"></i>
-            <span>{% trans "SSL" %}</span>
-        </a>
-        <div  class="sidebar-submenu">
-
-            <ul>
-                <li><a href="{% url 'manageSSL' %}" title="{% trans 'Manage SSL' %}"><span>{% trans "Manage SSL" %}</span></a></li>
-                <li id="sslA"><a href="{% url 'sslForHostName' %}" title="{% trans 'Hostname SSL' %}"><span>{% trans "Hostname SSL" %}</span></a></li>
-            </ul>
-
-        </div><!-- .sidebar-submenu -->
-    </li>
-
-
-
-    <li id="normalUserD" class="header"><span>{% trans "Server" %}</span></li>
-    <li id="normalUserE">
-        <a href="#" title="{% trans 'Tuning' %}">
-            <i class="glyph-icon icon-linecons-fire"></i>
-            <span>{% trans "Tuning" %}</span>
-            <span class="bs-label badge-yellow">{% trans "NEW" %}</span>
+        <a href="#" title="Helpers">
+            <i class="glyph-icon icon-linecons-doc"></i>
+            <span>Helpers</span>
         </a>
         <div class="sidebar-submenu">
 
             <ul>
-                <li><a href="{% url 'liteSpeedTuning' %}" title="{% trans 'LiteSpeed Tuning' %}"><span>{% trans "LiteSpeed Tuning" %}</span></a></li>
-                <li><a href="{% url 'phpTuning' %}" title="{% trans 'PHP Tuning' %}"><span>{% trans "PHP Tuning" %}</span></a></li>
+                <li><a href="helper-classes.html" title="Helper classes"><span>Helper classes</span></a></li>
+                <li><a href="page-transitions.html" title="Page transitions"><span>Page transitions</span></a></li>
+                <li><a href="animations.html" title="Animations"><span>Animations</span></a></li>
             </ul>
 
         </div><!-- .sidebar-submenu -->
     </li>
-
-        <li id="normalUserF">
-        <a href="#" title="{% trans 'Server Status' %}">
-            <i class="glyph-icon icon-linecons-fire"></i>
-            <span>{% trans "Server Status" %}</span>
-        </a>
-        <div class="sidebar-submenu">
-
-            <ul>
-
-                <li><a href="{% url 'litespeedStatus' %}" title="{% trans 'LiteSpeed Status' %}"><span>{% trans "LiteSpeed Status" %}</span></a></li>
-                <li><a href="{% url 'cyberCPMainLogFile' %}" title="{% trans 'CyberPanel Main Log File' %}"><span>{% trans "CyberPanel Main Log File" %}</span></a></li>
-                <li><a href="{% url 'services' %}" title="{% trans 'Services Status' %}"><span>{% trans "Services Status" %}</span></a></li>
-
-
-            </ul>
-
-        </div><!-- .sidebar-submenu -->
-    </li>
-
-
-    <li id="normalUserP">
-        <a href="{% url 'loadPHPHome' %}" title="{% trans 'PHP' %}">
-            <i class="files-icon glyph-icon icon-file-code-o"></i>
-            <span>{% trans "PHP" %}</span>
-        </a>
-        <div class="sidebar-submenu">
-
-            <ul>
-                <li><a href="{% url 'installExtensions' %}" title="{% trans 'Install PHP Extensions' %}"><span>{% trans "Install Extensions" %}</span></a></li>
-                <li><a href="{% url 'editPHPConfigs' %}" title="{% trans 'Edit PHP Configs' %}"><span>{% trans "Edit PHP Configs" %}</span></a></li>
-            </ul>
-
-        </div><!-- .sidebar-submenu -->
-    </li>
-
-
-    <li id="normalUserG">
-        <a href="{% url 'logsHome' %}" title="{% trans 'Server Status' %}">
-            <i class="glyph-icon icon-linecons-fire"></i>
-            <span>{% trans "Logs" %}</span>
-        </a>
-        <div class="sidebar-submenu">
-
-            <ul>
-                <li><a href="{% url 'accessLogs' %}" title="{% trans 'Access Log' %}"><span>{% trans "Access Log" %}</span></a></li>
-                <li><a href="{% url 'errorLogs' %}" title="{% trans 'Error Logs' %}"><span>{% trans "Error Logs" %}</span></a></li>
-                <li><a href="{% url 'emaillogs' %}" title="{% trans 'Email Logs' %}"><span>{% trans "Email Log" %}</span></a></li>
-                <li><a href="{% url 'ftplogs' %}" title="{% trans 'FTP Logs' %}"><span>{% trans "FTP Logs" %}</span></a></li>
-            </ul>
-
-        </div><!-- .sidebar-submenu -->
-    </li>
-
-
-    <li id="normalUserH">
-        <a href="{% url 'securityHome' %}" title="{% trans 'Security' %}">
-            <i class="glyph-icon icon-linecons-fire"></i>
-            <span>{% trans "Security" %}</span>
-        </a>
-        <div class="sidebar-submenu">
-
-            <ul>
-                <li><a href="{% url 'firewallHome' %}" title="{% trans 'Firewall Home' %}"><span>{% trans "Firewall" %}</span></a></li>
-                <li><a href="{% url 'secureSSH' %}" title="{% trans 'Secure SSH' %}"><span>{% trans "Secure SSH" %}</span></a></li>
-            </ul>
-
-        </div><!-- .sidebar-submenu -->
-    </li>
-
-
     </ul><!-- #sidebar-menu -->
 
 
     </div>
 </div>
+        <div id="page-content-wrapper">
+            <div id="page-content">
 
-    <div id="page-content-wrapper">
-        <div id="page-content">
-
-
-            {% block content %}
-            {% endblock %}
-
-
-        </div>
-
-
-
-    </div>
-
-
-
-
-</div>
-
-
-<!-- WIDGETS -->
+                    <div class="container">
 
 
 <!-- Sparklines charts -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/custom-js/system-status.js' %}"></script>
-<script src="{% static 'packages/packages.js' %}"></script>
-<script src="{% static 'websiteFunctions/websiteFunctions.js' %}"></script>
-<script src="{% static 'tuning/tuning.js' %}"></script>
-<script src="{% static 'serverStatus/serverStatus.js' %}"></script>
-<script src="{% static 'dns/dns.js' %}"></script>
-<script src="{% static 'ftp/ftp.js' %}"></script>
-<script src="{% static 'userManagment/userManagment.js' %}"></script>
-<script src="{% static 'databases/databases.js' %}"></script>
-<script src="{% static 'mailServer/mailServer.js' %}"></script>
-<script src="{% static 'serverLogs/serverLogs.js' %}"></script>
+<script type="text/javascript" src="../../assets/widgets/charts/sparklines/sparklines.js"></script>
+<script type="text/javascript" src="../../assets/widgets/charts/sparklines/sparklines-demo.js"></script>
+
+<!-- Flot charts -->
+
+<script type="text/javascript" src="../../assets/widgets/charts/flot/flot.js"></script>
+<script type="text/javascript" src="../../assets/widgets/charts/flot/flot-resize.js"></script>
+<script type="text/javascript" src="../../assets/widgets/charts/flot/flot-stack.js"></script>
+<script type="text/javascript" src="../../assets/widgets/charts/flot/flot-pie.js"></script>
+<script type="text/javascript" src="../../assets/widgets/charts/flot/flot-tooltip.js"></script>
+<script type="text/javascript" src="../../assets/widgets/charts/flot/flot-demo-1.js"></script>
 
 <!-- PieGage charts -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/bootstrap/js/bootstrap.js' %}"></script>
+<script type="text/javascript" src="../../assets/widgets/charts/piegage/piegage.js"></script>
+<script type="text/javascript" src="../../assets/widgets/charts/piegage/piegage-demo.js"></script>
+
+<div id="page-title">
+    <h2>Dashboard</h2>
+    <p>The most complete user interface framework that can be used to create stunning admin dashboards and presentation websites.</p>
+    <div id="theme-options" class="admin-options">
+    <a href="javascript:void(0);" class="btn btn-primary theme-switcher tooltip-button" data-placement="left" title="Color schemes and layout options">
+        <i class="glyph-icon icon-linecons-cog icon-spin"></i>
+    </a>
+</div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="dashboard-box dashboard-box-chart bg-white content-box">
+            <div class="content-wrapper">
+                <div class="header">
+                    $34,657
+                    <span>Total Earnings<b> in last</b> ten <b>quarters</b></span>
+                </div>
+                <div class="bs-label bg-green">+18%</div>
+                <div class="center-div sparkline-big-alt">1245,1450,1312,1121,986,1489</div>
+                <div class="row list-grade">
+                    <div class="col-md-2">January</div>
+                    <div class="col-md-2">February</div>
+                    <div class="col-md-2">March</div>
+                    <div class="col-md-2">April</div>
+                    <div class="col-md-2">May</div>
+                    <div class="col-md-2">June</div>
+                </div>
+            </div>
+            <div class="button-pane">
+                <div class="size-md float-left">
+                    <a href="#" title="">
+                        Financial statistics
+                    </a>
+                </div>
+                <a href="#" class="btn btn-info float-right tooltip-button" data-placement="top" title="View details">
+                    <i class="glyph-icon icon-plus"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-box dashboard-box-chart bg-white content-box">
+            <div class="content-wrapper">
+                <div class="header">
+                    169
+                    <span>Total Subscriptions<b> in last</b> 6 days</span>
+                </div>
+                <div class="bs-label bg-red">-14%</div>
+                <div class="center-div sparkline-big-alt">21,41,31,50,18,41</div>
+                <div class="row list-grade">
+                    <div class="col-md-2">M</div>
+                    <div class="col-md-2">T</div>
+                    <div class="col-md-2">W</div>
+                    <div class="col-md-2">T</div>
+                    <div class="col-md-2">F</div>
+                    <div class="col-md-2">S</div>
+                </div>
+            </div>
+            <div class="button-pane">
+                <div class="size-md float-left">
+                    <a href="#" title="">
+                        View all members
+                    </a>
+                </div>
+                <a href="#" class="btn btn-default float-right tooltip-button" data-placement="top" title="View details">
+                    <i class="glyph-icon icon-angle-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-box dashboard-box-chart bg-white content-box">
+            <div class="content-wrapper">
+                <div class="header">
+                    8960
+                    <span>Total Downloads<b> in last</b> 6 years</span>
+                </div>
+                <div class="bs-label bg-orange">~51%</div>
+                <div class="center-div sparkline-big-alt">2210,2310,2010,2310,2123,2350</div>
+                <div class="row list-grade">
+                    <div class="col-md-2">2009</div>
+                    <div class="col-md-2">2010</div>
+                    <div class="col-md-2">2011</div>
+                    <div class="col-md-2">2012</div>
+                    <div class="col-md-2">2013</div>
+                    <div class="col-md-2">2014</div>
+                </div>
+            </div>
+            <div class="button-pane">
+                <div class="size-md float-left">
+                    <a href="#" title="">
+                        View more details
+                    </a>
+                </div>
+                <a href="#" class="btn btn-primary float-right tooltip-button" data-placement="top" title="View details">
+                    <i class="glyph-icon icon-caret-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-8">
+        <div class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    Recent sales activity
+                </h3>
+                <div class="example-box-wrapper">
+                    <div id="data-example-1" class="mrg20B" style="width: 100%; height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <a href="#" title="Example tile shortcut" class="tile-box tile-box-alt btn-success">
+                    <div class="tile-header">
+                        Photo Gallery
+                    </div>
+                    <div class="tile-content-wrapper">
+                        <div class="chart-alt-10" data-percent="43"><span>43</span>%</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="#" title="Example tile shortcut" class="tile-box tile-box-alt btn-info">
+                    <div class="tile-header">
+                        Subscriptions
+                    </div>
+                    <div class="tile-content-wrapper">
+                        <div class="chart-alt-10" data-percent="76"><span>76</span>%</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="#" title="Example tile shortcut" class="tile-box tile-box-alt btn-warning">
+                    <div class="tile-header">
+                        New Visitors
+                    </div>
+                    <div class="tile-content-wrapper">
+                        <div class="chart-alt-10" data-percent="11"><span>11</span>%</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="content-box mrg20T">
+            <h3 class="content-box-header bg-primary">
+                Toggle button closed
+                <span class="header-buttons-separator">
+                    <a href="#" class="icon-separator toggle-button">
+                        <i class="glyph-icon icon-chevron-down"></i>
+                    </a>
+                </span>
+            </h3>
+            <div class="content-box-wrapper hide">
+                This content boxes has the header with <code>.bg-default</code>.
+            </div>
+        </div>
+
+        <div class="content-box">
+            <h3 class="content-box-header bg-default">
+                <i class="glyph-icon icon-cog"></i>
+                Live server status
+                <span class="header-buttons-separator">
+                    <a href="#" class="icon-separator">
+                        <i class="glyph-icon icon-question"></i>
+                    </a>
+                    <a href="#" class="icon-separator refresh-button" data-style="dark" data-theme="bg-white" data-opacity="40">
+                        <i class="glyph-icon icon-refresh"></i>
+                    </a>
+                    <a href="#" class="icon-separator remove-button" data-animation="flipOutX">
+                        <i class="glyph-icon icon-times"></i>
+                    </a>
+                </span>
+            </h3>
+            <div class="content-box-wrapper">
+                <div id="data-example-3" style="width: 100%; height: 250px;"></div>
+            </div>
+        </div>
+
+    </div>
+    <div class="col-md-4">
+        <div class="row mrg20B">
+            <div class="col-md-6">
+                <a href="#" title="Example tile shortcut" class="tile-box tile-box-shortcut btn-primary">
+                    <span class="bs-badge badge-absolute">5</span>
+                    <div class="tile-header">
+                        Dashboard
+                    </div>
+                    <div class="tile-content-wrapper">
+                        <i class="glyph-icon icon-dashboard"></i>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="#" title="Example tile shortcut" class="tile-box tile-box-shortcut btn-black">
+                    <span class="bs-badge badge-absolute">5</span>
+                    <div class="tile-header">
+                        Orders
+                    </div>
+                    <div class="tile-content-wrapper">
+                        <i class="glyph-icon icon-cogs"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    Users activity
+                </h3>
+                <div class="example-box-wrapper">
+                    <div class="timeline-box timeline-box-left">
+                        <div class="tl-row">
+                            <div class="tl-item float-right">
+                                <div class="tl-icon bg-red">
+                                    <i class="glyph-icon icon-toggle-on"></i>
+                                </div>
+                                <div class="popover right">
+                                    <div class="arrow"></div>
+                                    <div class="popover-content">
+                                        <div class="tl-label bs-label label-info">Appointment</div>
+                                        <p class="tl-content">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec odio. </p>
+                                        <div class="tl-time">
+                                            <i class="glyph-icon icon-clock-o"></i>
+                                            a few seconds ago
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tl-row">
+                            <div class="tl-item float-right">
+                                <div class="tl-icon bg-primary">
+                                    <i class="glyph-icon icon-wifi"></i>
+                                </div>
+                                <div class="popover right">
+                                    <div class="arrow"></div>
+                                    <div class="popover-content">
+                                        <div class="tl-label bs-label bg-yellow">Teleconference</div>
+                                        <p class="tl-content">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec odio. </p>
+                                        <div class="tl-time">
+                                            <i class="glyph-icon icon-clock-o"></i>
+                                            a few seconds ago
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tl-row">
+                            <div class="tl-item float-right">
+                                <div class="tl-icon bg-black">
+                                    <i class="glyph-icon icon-headphones"></i>
+                                </div>
+                                <div class="popover right">
+                                    <div class="arrow"></div>
+                                    <div class="popover-content">
+                                        <div class="tl-label bs-label label-danger">Meeting</div>
+                                        <p class="tl-content">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec odio. </p>
+                                        <div class="tl-time">
+                                            <i class="glyph-icon icon-clock-o"></i>
+                                            a few seconds ago
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="content-box bg-white post-box">
+            <textarea name="" class="textarea-autosize" placeholder="What are you doing right now?"></textarea>
+            <div class="button-pane">
+                <a href="#" class="btn btn-md btn-link hover-white" title="">
+                    <i class="glyph-icon icon-volume-down"></i>
+                </a>
+                <a href="#" class="btn btn-md btn-link hover-white" title="">
+                    <i class="glyph-icon icon-video-camera"></i>
+                </a>
+                <a href="#" class="btn btn-md btn-link hover-white" title="">
+                    <i class="glyph-icon icon-microphone"></i>
+                </a>
+                <a href="#" class="btn btn-md btn-link hover-white" title="">
+                    <i class="glyph-icon icon-picture-o"></i>
+                </a>
+
+                <a href="#" class="btn btn-md btn-post float-right btn-success" title="">
+                    Post
+                </a>
+
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panel-body">
+                <ul class="todo-box">
+                    <li class="border-red">
+                        <input type="checkbox" name="todo-1" id="todo-1">
+                        <label for="todo-1">This is an example task that i need to finish</label>
+                        <span class="bs-label bg-red" title="">Overdue</span>
+                        <a href="#" class="btn btn-xs btn-danger float-right" title="">
+                            <i class="glyph-icon icon-remove"></i>
+                        </a>
+                        <a href="#" class="btn btn-xs btn-success float-right" title="">
+                            <i class="glyph-icon icon-check"></i>
+                        </a>
+                    </li>
+                    <li class="border-orange">
+                        <input type="checkbox" name="todo-2" id="todo-2">
+                        <label for="todo-2">Update server to a newer version</label>
+                        <span class="bs-label bg-green" title="">2 Weeks</span>
+                        <a href="#" class="btn btn-xs btn-danger float-right" title="">
+                            <i class="glyph-icon icon-remove"></i>
+                        </a>
+                        <a href="#" class="btn btn-xs btn-success float-right" title="">
+                            <i class="glyph-icon icon-check"></i>
+                        </a>
+                    </li>
+                    <li class="border-blue">
+                        <input type="checkbox" name="todo-3" id="todo-3">
+                        <label for="todo-3">Add more awesome template features</label>
+                        <span class="bs-label bg-blue" title="">Tomorrow</span>
+                        <a href="#" class="btn btn-xs btn-danger float-right" title="">
+                            <i class="glyph-icon icon-remove"></i>
+                        </a>
+                        <a href="#" class="btn btn-xs btn-success float-right" title="">
+                            <i class="glyph-icon icon-check"></i>
+                        </a>
+                    </li>
+                    <li class="border-purple">
+                        <input type="checkbox" name="todo-4" id="todo-4">
+                        <label for="todo-4">Never forget to buy milk</label>
+                        <span class="bs-label bg-black" title="">Today</span>
+                        <a href="#" class="btn btn-xs btn-danger float-right" title="">
+                            <i class="glyph-icon icon-remove"></i>
+                        </a>
+                        <a href="#" class="btn btn-xs btn-success float-right" title="">
+                            <i class="glyph-icon icon-check"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+                    </div>
+
+
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- WIDGETS -->
+
+<script type="text/javascript" src="../../assets/bootstrap/js/bootstrap.js"></script>
+
+<!-- Bootstrap Dropdown -->
+
+<!-- <script type="text/javascript" src="../../assets/widgets/dropdown/dropdown.js"></script> -->
+
+<!-- Bootstrap Tooltip -->
+
+<!-- <script type="text/javascript" src="../../assets/widgets/tooltip/tooltip.js"></script> -->
+
+<!-- Bootstrap Popover -->
+
+<!-- <script type="text/javascript" src="../../assets/widgets/popover/popover.js"></script> -->
 
 <!-- Bootstrap Progress Bar -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/progressbar/progressbar.js' %}"></script>
+<script type="text/javascript" src="../../assets/widgets/progressbar/progressbar.js"></script>
+
+<!-- Bootstrap Buttons -->
+
+<!-- <script type="text/javascript" src="../../assets/widgets/button/button.js"></script> -->
+
+<!-- Bootstrap Collapse -->
+
+<!-- <script type="text/javascript" src="../../assets/widgets/collapse/collapse.js"></script> -->
 
 <!-- Superclick -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/superclick/superclick.js' %}"></script>
+<script type="text/javascript" src="../../assets/widgets/superclick/superclick.js"></script>
 
 <!-- Input switch alternate -->
 
+<script type="text/javascript" src="../../assets/widgets/input-switch/inputswitch-alt.js"></script>
+
 <!-- Slim scroll -->
+
+<script type="text/javascript" src="../../assets/widgets/slimscroll/slimscroll.js"></script>
 
 <!-- Slidebars -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/slidebars/slidebars.js' %}"></script>
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/slidebars/slidebars-demo.js' %}"></script>
+<script type="text/javascript" src="../../assets/widgets/slidebars/slidebars.js"></script>
+<script type="text/javascript" src="../../assets/widgets/slidebars/slidebars-demo.js"></script>
 
 <!-- PieGage -->
 
+<script type="text/javascript" src="../../assets/widgets/charts/piegage/piegage.js"></script>
+<script type="text/javascript" src="../../assets/widgets/charts/piegage/piegage-demo.js"></script>
+
 <!-- Screenfull -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/widgets/screenfull/screenfull.js' %}"></script>
+<script type="text/javascript" src="../../assets/widgets/screenfull/screenfull.js"></script>
 
 <!-- Content box -->
 
+<script type="text/javascript" src="../../assets/widgets/content-box/contentbox.js"></script>
+
 <!-- Overlay -->
+
+<script type="text/javascript" src="../../assets/widgets/overlay/overlay.js"></script>
 
 <!-- Widgets init for demo -->
 
+<script type="text/javascript" src="../../assets/js-init/widgets-init.js"></script>
+
 <!-- Theme layout -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/themes/admin/layout.js' %}"></script>
+<script type="text/javascript" src="../../assets/themes/admin/layout.js"></script>
 
 <!-- Theme switcher -->
 
-<script src="{% static 'baseTemplate/percircle.js' %}"></script>
-<script src="{% static 'backup/backup.js' %}"></script>
-<script src="{% static 'managePHP/managePHP.js' %}"></script>
-<script src="{% static 'baseTemplate/bootstrap-toggle.min.js' %}"></script>
-<script src="{% static 'firewall/firewall.js' %}"></script>
-<script src="{% static 'manageSSL/manageSSL.js' %}"></script>
+<script type="text/javascript" src="../../assets/widgets/theme-switcher/themeswitcher.js"></script>
+
 </div>
 </body>
 </html>
