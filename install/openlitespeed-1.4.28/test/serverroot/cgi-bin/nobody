@@ -1,6 +1,0 @@
-#!/bin/sh
-
-cat << EOF
-Content-type: text/plain
-
-EOF
