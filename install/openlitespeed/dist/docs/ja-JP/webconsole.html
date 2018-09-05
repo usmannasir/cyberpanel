@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>Open LiteSpeed Web Serverユーザーズマニュアル - Webコンソール</title>
+  <meta name="description" content="Open LiteSpeed Web Serverユーザーズマニュアル - Webコンソール." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex">
+  <link rel="shortcut icon" href="../img/favicon.ico" />
+  <link rel="stylesheet" type="text/css" href="../css/hdoc.css">
+</head>
+<body>
+<div class="pagewrapper clearfix"><aside class="sidetree ls-col-1-5">
+      <figure>
+        <img src="../img/ols_logo.svg" alt="openlitespeed logo" width="150px"/>
+      </figure>
+<h3 class="ls-text-thin">OpenLiteSpeed Web Server <a href="index.html"> ユーザーズマニュアル</a></h3>
+<h5 class="ls-text-muted">Version 1.4 &nbsp;&#8212;&nbsp;Rev. 3 </h5>
+<hr/>
+<div>
+<ul>
+<li><a href="license.html">ライセンス</a></li>
+<li><a href="intro.html">はじめに</a></li>
+<li><a href="install.html">インストール</a></li>
+<li><a href="admin.html">管理</a>
+	<ul class="level2"><li><a href="ServerStat_Help.html">サービスマネージャ</a></li></ul></li>
+<li><a href="security.html">セキュリティ</a></li>
+<li><a href="config.html">設定</a>
+	<ul class="level2">
+	<li><a href="ServGeneral_Help.html">サーバー全般</a></li>
+        <li><a href="ServLog_Help.html">サーバーログ</a></li>
+	<li><a href="ServTuning_Help.html">サーバーのチューニング</a></li>
+	<li><a href="ServSecurity_Help.html">サーバーのセキュリティ</a></li>
+	<li><a href="ExtApp_Help.html">外部アプリ</a></li>
+                <ul class="level3">
+                <li><a href="External_FCGI.html">Fast CGIアプリ</a></li>
+                <li><a href="External_FCGI_Auth.html">Fast CGIオーソライザー</a></li>
+                <li><a href="External_LSAPI.html">LSAPIアプリ</a></li>
+                <li><a href="External_Servlet.html">サーブレットエンジン</a></li>
+                <li><a href="External_WS.html">Webサーバー</a></li>
+                <li><a href="External_PL.html">パイプロガー</a></li>
+                <li><a href="External_LB.html">ロードバランサ</a></li>
+                </ul>
+	<li><a href="ScriptHandler_Help.html">スクリプトハンドラ</a></li>
+	<li><a href="Rails_Help.html">Rack/Railsの設定</a></li>
+	<li><a href="Module_Help.html">モジュール設定</a></li>
+	<li><a href="Listeners_General_Help.html">リスナー全般</a></li>
+        <li><a href="Listeners_SSL_Help.html">リスナーのSSL</a></li>
+	<li><a href="Templates_Help.html">テンプレート</a></li>
+	<li><a href="VirtualHosts_Help.html">バーチャルホストの基本</a></li>
+	<li><a href="VHGeneral_Help.html">バーチャルホスト全般</a></li>
+	<li><a href="VHSecurity_Help.html">バーチャルホストのセキュリティ</a></li>
+        <li><a href="VHSSL_Help.html">バーチャルホストのSSL</a></li>
+	<li><a href="Rewrite_Help.html">Rewrite</a></li>
+	<li><a href="Context_Help.html">コンテキスト</a></li>
+               <ul class="level3">
+                <li><a href="Static_Context.html">静的コンテテキスト</a></li>
+                <li><a href="Java_Web_App_Context.html">Java Webアプリのコンテキスト</a></li>
+                <li><a href="Servlet_Context.html">サーブレットコンテキスト</a></li>
+                <li><a href="FCGI_Context.html">Fast CGIコンテキスト</a></li>
+                <li><a href="LSAPI_Context.html">LSAPIコンテキスト</a></li>
+                <li><a href="Proxy_Context.html">プロキシコンテキスト</a></li>
+                <li><a href="CGI_Context.html">CGIコンテキスト</a></li>
+                <li><a href="LB_Context.html">ロードバランサコンテキスト</a></li>
+                <li><a href="Redirect_Context.html">コンテキストのリダイレクト</a></li>
+                <li><a href="Rails_Context.html">Rack/Railsのコンテキスト</a></li>
+                <li><a href="Module_Context.html">モジュールハンドラのコンテキスト</a></li>
+                </ul>
+	<li><a href="VHWebSocket_Help.html">Web Socketプロキシ</a></li>
+	</ul>
+</li>
+<li><span class="current"><a href="webconsole.html">Webコンソール</a></span>
+        <ul class="level2">
+        <li><a href="AdminGeneral_Help.html">管理コンソール全般</a></li>
+        <li><a href="AdminSecurity_Help.html">管理コンソールのセキュリティ</a></li>
+	<li><a href="AdminListeners_General_Help.html">管理リスナー全般</a></li>
+        <li><a href="AdminListeners_SSL_Help.html">管理リスナーのSSL</a></li>
+        </ul>
+</li>
+</ul>
+</div>
+</aside>
+<article class="contentwrapper ls-col-3-5 clearfix"><div class="nav-bar ls-spacer-micro-top"><div class="prev">&#171 <a href="config.html">設定</a></div><div class="center"><a href="index.html">ホーム</a></div><div class="next"><a href="CompilePHP_Help.html">PHPのコンパイル</a> &#187;</div></div>
+<h1>Webコンソール</h1>
+
+<p>Web Consoleセクションは、WebAdmin Consoleの設定を制御します。これらの設定の一部は次のとおりです:</p>
+<ul>
+<li>セッションタイムアウト</li>
+<li>ログ設定</li>
+<li>アクセス制御</li>
+<li>管理者の作成/削除</li>
+<li>管理者パスワードをリセット</li>
+<li>WebAdminリスナー & SSL設定</li>
+</ul>
+</article><div  class="ls-col-1-1"><footer class="copyright">Copyright &copy; 2013-2018. <a href="https://www.litespeedtech.com">LiteSpeed Technologies Inc.</a> All rights reserved.</footer>
+</div></div>
+</body>
+</html>

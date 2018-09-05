@@ -1,0 +1,14 @@
+About OpenLiteSpeed's mod_security Module
+
+After OpenLiteSpeed has been installed, there should be a file named mod_security.so in $LSWS_ROOT/modules/. If this file is not there, some error has likely occurred during installation and you will need build the module yourself. Please follow the steps below to build the module:
+
+2. Run following command in /openlitespeed_download/src/modules/modsecurity_ls to make mod_security.so:
+ make -f Makefile.f
+
+Note: If compiling does not work, try "gmake" instead of "make".
+
+3. Copy the file to the modules directory in your OpenLiteSpeed installation. (Normally, it should be $LSWS_ROOT/modules/.)
+
+For configuration instructions, please refer to http://open.litespeedtech.com/mediawiki/index.php/Help:Modules:mod_security
+
+Thanks and enjoy.

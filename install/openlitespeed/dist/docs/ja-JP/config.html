@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>Open LiteSpeed Web Serverユーザーズマニュアル - 設定</title>
+  <meta name="description" content="Open LiteSpeed Web Serverユーザーズマニュアル - 設定." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex">
+  <link rel="shortcut icon" href="../img/favicon.ico" />
+  <link rel="stylesheet" type="text/css" href="../css/hdoc.css">
+</head>
+<body>
+<div class="pagewrapper clearfix"><aside class="sidetree ls-col-1-5">
+      <figure>
+        <img src="../img/ols_logo.svg" alt="openlitespeed logo" width="150px"/>
+      </figure>
+<h3 class="ls-text-thin">OpenLiteSpeed Web Server <a href="index.html"> ユーザーズマニュアル</a></h3>
+<h5 class="ls-text-muted">Version 1.4 &nbsp;&#8212;&nbsp;Rev. 3 </h5>
+<hr/>
+<div>
+<ul>
+<li><a href="license.html">ライセンス</a></li>
+<li><a href="intro.html">はじめに</a></li>
+<li><a href="install.html">インストール</a></li>
+<li><a href="admin.html">管理</a>
+	<ul class="level2"><li><a href="ServerStat_Help.html">サービスマネージャ</a></li></ul></li>
+<li><a href="security.html">セキュリティ</a></li>
+<li><span class="current"><a href="config.html">設定</a></span>
+	<ul class="level2">
+	<li><a href="ServGeneral_Help.html">サーバー全般</a></li>
+        <li><a href="ServLog_Help.html">サーバーログ</a></li>
+	<li><a href="ServTuning_Help.html">サーバーのチューニング</a></li>
+	<li><a href="ServSecurity_Help.html">サーバーのセキュリティ</a></li>
+	<li><a href="ExtApp_Help.html">外部アプリ</a></li>
+                <ul class="level3">
+                <li><a href="External_FCGI.html">Fast CGIアプリ</a></li>
+                <li><a href="External_FCGI_Auth.html">Fast CGIオーソライザー</a></li>
+                <li><a href="External_LSAPI.html">LSAPIアプリ</a></li>
+                <li><a href="External_Servlet.html">サーブレットエンジン</a></li>
+                <li><a href="External_WS.html">Webサーバー</a></li>
+                <li><a href="External_PL.html">パイプロガー</a></li>
+                <li><a href="External_LB.html">ロードバランサ</a></li>
+                </ul>
+	<li><a href="ScriptHandler_Help.html">スクリプトハンドラ</a></li>
+	<li><a href="Rails_Help.html">Rack/Railsの設定</a></li>
+	<li><a href="Module_Help.html">モジュール設定</a></li>
+	<li><a href="Listeners_General_Help.html">リスナー全般</a></li>
+        <li><a href="Listeners_SSL_Help.html">リスナーのSSL</a></li>
+	<li><a href="Templates_Help.html">テンプレート</a></li>
+	<li><a href="VirtualHosts_Help.html">バーチャルホストの基本</a></li>
+	<li><a href="VHGeneral_Help.html">バーチャルホスト全般</a></li>
+	<li><a href="VHSecurity_Help.html">バーチャルホストのセキュリティ</a></li>
+        <li><a href="VHSSL_Help.html">バーチャルホストのSSL</a></li>
+	<li><a href="Rewrite_Help.html">Rewrite</a></li>
+	<li><a href="Context_Help.html">コンテキスト</a></li>
+               <ul class="level3">
+                <li><a href="Static_Context.html">静的コンテテキスト</a></li>
+                <li><a href="Java_Web_App_Context.html">Java Webアプリのコンテキスト</a></li>
+                <li><a href="Servlet_Context.html">サーブレットコンテキスト</a></li>
+                <li><a href="FCGI_Context.html">Fast CGIコンテキスト</a></li>
+                <li><a href="LSAPI_Context.html">LSAPIコンテキスト</a></li>
+                <li><a href="Proxy_Context.html">プロキシコンテキスト</a></li>
+                <li><a href="CGI_Context.html">CGIコンテキスト</a></li>
+                <li><a href="LB_Context.html">ロードバランサコンテキスト</a></li>
+                <li><a href="Redirect_Context.html">コンテキストのリダイレクト</a></li>
+                <li><a href="Rails_Context.html">Rack/Railsのコンテキスト</a></li>
+                <li><a href="Module_Context.html">モジュールハンドラのコンテキスト</a></li>
+                </ul>
+	<li><a href="VHWebSocket_Help.html">Web Socketプロキシ</a></li>
+	</ul>
+</li>
+<li><a href="webconsole.html">Webコンソール</a>
+        <ul class="level2">
+        <li><a href="AdminGeneral_Help.html">管理コンソール全般</a></li>
+        <li><a href="AdminSecurity_Help.html">管理コンソールのセキュリティ</a></li>
+	<li><a href="AdminListeners_General_Help.html">管理リスナー全般</a></li>
+        <li><a href="AdminListeners_SSL_Help.html">管理リスナーのSSL</a></li>
+        </ul>
+</li>
+</ul>
+</div>
+</aside>
+<article class="contentwrapper ls-col-3-5 clearfix"><div class="nav-bar ls-spacer-micro-top"><div class="prev">&#171 <a href="security.html">セキュリティ</a></div><div class="center"><a href="index.html">ホーム</a></div><div class="next"><a href="webconsole.html">Webコンソール</a> &#187;</div></div>
+<h1>設定</h1>
+
+<section>
+<a name="con"></a><h3><b>コンセプト</b></h3>
+
+<p>ここでは、設定の詳細に入る前に知っておくべき基本的な概念をいくつか紹介します。</p>
+
+<a name="vh"></a><h3>バーチャルホスト</h3>
+
+<p>LiteSpeed Webサーバーは、1つのサーバーインスタンスで複数のWebサイト（バーチャルホスト）をホストできます。</p> 
+
+<p>従来、バーチャルホストは、IPベースのバーチャルホストと名前ベースのバーチャルホストの2種類に分類されていました。
+   IPベースのバーチャルホストは、独自の一意のIPアドレスを持つWebサイトです。
+   名前ベースのバーチャルホストは、ドメイン名で区別されるWebサイトであるため、他のサイトとIPアドレスを共有することができます。
+    LiteSpeed Web Serverでは、これらの2つのカテゴリが明確に区別されていません。
+   IPベースのバーチャルホストは、特殊な名前ベースのバーチャルホストと見なされます。 どちらも簡単に構成することも、一緒に混合することもできます。</p>
+<p>他のWebサーバーと異なり、LiteSpeed Web Serverには既定のWebサイトはありません。
+   1つのWebサイトだけがホストされていても、すべてのWebサイトはバーチャルホストとして構成されます。</p> 
+
+<a name="l"></a><h3>リスナー</h3>
+
+<p>LiteSpeed Web Serverでは、リスナは特定のIPアドレスとTCPポートをリッスンするサーバーソケットです。
+   Webサーバーを建物と見なした場合、リスナーはドア（それぞれが独自のIPアドレスとポートを持つ）です。
+   クライアント（ブラウザ）は、リクエストを送信するためにドア（リスナー）を通過する必要があります。</p>
+  
+<p>各リスナーに対して、IPアドレスとポート番号を指定する必要があります。
+   IPアドレスは任意の有効なローカルIPアドレスにすることができます。また、そのマシン上で使用可能なすべてのIPアドレスを参照するワイルドカードIP（*）を設定することもできます。
+   ポートは0〜65535の整数です。
+   HTTPのデフォルトのポートは80で、HTTPSの場合は443です。
+   UNIXマシンでは他のポートも使用できますが、スーパーユーザーのrootのみが1024未満のポートを使用する権限を持っています。</p>
+  
+<p>IPとポートの組み合わせごとに1つのリスナーのみが許可されます。
+   したがって、リスナーがワイルドカードIPアドレスを持つ1つのポートに設定されている場合、特定のIPを指定しても、別のリスナーを同じポートに設定することはできません。
+   たとえば、Webサーバマシンに複数のIPアドレスがあり、すべてのIPアドレスに対してポート8080でHTTPトラフィックを許可する必要がある場合は、次の2つの方法で設定できます。
+   ワイルドカードIP（*）とポート8080を使用して1つのリスナーを設定するか、各IPに1つのリスナーを複数設定し、すべてをポート8080でリッスンします。
+   これらの2つの方法を1つのポートで混在させることはできません。/p>
+    
+<p>LiteSpeed Web Serverには、プレーンとセキュア（SSL）の2種類のリスナーがあります。
+   各セキュアリスナーには、ペアのSSL秘密鍵とSSL証明書が必要です。
+   秘密鍵は、OpenSSLのようなSSLツールキットで生成することができます。
+   SSL証明書は、自己署名することも、VeriSignやThawteなどのSSL証明書発行者から取得することもできます。
+   複数のリスナー間で同じ秘密鍵と証明書のペアを共有できます。</p>    
+
+<a name="map"></a><h3>リスナーからバーチャルホストへのマッピング</h3>
+
+<p>LiteSpeedリスナーからバーチャル・ホスト・マッピングへの柔軟性により、次のことが可能になります：</p>
+<ul>
+<li>1つのリスナーを1つのバーチャルホストにマッピングします。</li>
+<li>1つのリスナを異なるドメイン名の異なるバーチャルホストにマッピングします。</li>
+<li>複数のリスナーを同じバーチャルホストにマップします。</li>
+<li>ドメイン名に応じて、複数のバーチャルホストに複数のリスナーをマップします。</li>
+</ul>
+
+<p>リスナーからバーチャルホストへのマッピングでは、すべてのリスナーには、特定のバーチャルホスト（値）のドメイン名（キー）を指定するキーと値のペアを持つバーチャルホストルックアップテーブルがあります。</p>
+
+<p>ブラウザがWebサーバーからWebページを取得しようとすると、まずDNSルックアップを使用して、そのドメイン名に関連付けられたIPアドレスが検索されます。
+次に、特定のIPとポート上のWebサーバーとのTCP接続を確立する要求を送信します。
+そのIPとポートにリスナーが割り当てられている場合は、接続が確立されます。
+ブラウザはHTTPリクエストを送信します.HTTPリクエストには、アクセスされているWebサイトのドメイン名がヘッダーに含まれています。
+Webサーバーは、リクエスト内のドメイン名について、そのリスナーに関連付けられているルックアップテーブルをチェックします。
+一致するものが見つかると、要求はバーチャルホストにルーティングされて処理されます。</p>
+
+<p>特定のリスナーを介してバーチャルホストにアクセスできるようにするには、次の点を確認する必要があります：</p>
+<ol>
+	<li> DNSは、Webサイトのドメイン名をそのリスナーが使用するIPにマップするように正しく設定されています。
+         DNSの設定方法はこのドキュメントの範囲を超えています。</li>
+    <li>リスナのルックアップテーブルには、そのドメイン名のバーチャルホストへのマッピングが存在します。</li>
+</ol>
+
+<p>ワイルドカードドメイン名「*」を持つ1つのリスナーに対してキャッチオールバーチャルホストを指定できます。
+   サーバーが一致するバーチャルホストを見つけることができない場合、要求はキャッチオールバーチャルホストにルーティングされます。
+   そのようなキャッチオールバーチャルホストが設定されていない場合、Webサーバはエラーコード404を返します。</p>
+
+
+</section>
+</article><div  class="ls-col-1-1"><footer class="copyright">Copyright &copy; 2013-2018. <a href="https://www.litespeedtech.com">LiteSpeed Technologies Inc.</a> All rights reserved.</footer>
+</div></div>
+</body>
+</html>

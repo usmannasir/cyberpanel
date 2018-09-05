@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>Open LiteSpeed Web Serverユーザーズマニュアル - バーチャルホストテンプレート</title>
+  <meta name="description" content="Open LiteSpeed Web Serverユーザーズマニュアル - バーチャルホストテンプレート." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex">
+  <link rel="shortcut icon" href="../img/favicon.ico" />
+  <link rel="stylesheet" type="text/css" href="../css/hdoc.css">
+</head>
+<body>
+<div class="pagewrapper clearfix"><aside class="sidetree ls-col-1-5">
+      <figure>
+        <img src="../img/ols_logo.svg" alt="openlitespeed logo" width="150px"/>
+      </figure>
+<h3 class="ls-text-thin">OpenLiteSpeed Web Server <a href="index.html"> ユーザーズマニュアル</a></h3>
+<h5 class="ls-text-muted">Version 1.4 &nbsp;&#8212;&nbsp;Rev. 3 </h5>
+<hr/>
+<div>
+<ul>
+<li><a href="license.html">ライセンス</a></li>
+<li><a href="intro.html">はじめに</a></li>
+<li><a href="install.html">インストール</a></li>
+<li><a href="admin.html">管理</a>
+	<ul class="level2"><li><a href="ServerStat_Help.html">サービスマネージャ</a></li></ul></li>
+<li><a href="security.html">セキュリティ</a></li>
+<li><a href="config.html">設定</a>
+	<ul class="level2">
+	<li><a href="ServGeneral_Help.html">サーバー全般</a></li>
+        <li><a href="ServLog_Help.html">サーバーログ</a></li>
+	<li><a href="ServTuning_Help.html">サーバーのチューニング</a></li>
+	<li><a href="ServSecurity_Help.html">サーバーのセキュリティ</a></li>
+	<li><a href="ExtApp_Help.html">外部アプリ</a></li>
+                <ul class="level3">
+                <li><a href="External_FCGI.html">Fast CGIアプリ</a></li>
+                <li><a href="External_FCGI_Auth.html">Fast CGIオーソライザー</a></li>
+                <li><a href="External_LSAPI.html">LSAPIアプリ</a></li>
+                <li><a href="External_Servlet.html">サーブレットエンジン</a></li>
+                <li><a href="External_WS.html">Webサーバー</a></li>
+                <li><a href="External_PL.html">パイプロガー</a></li>
+                <li><a href="External_LB.html">ロードバランサ</a></li>
+                </ul>
+	<li><a href="ScriptHandler_Help.html">スクリプトハンドラ</a></li>
+	<li><a href="Rails_Help.html">Rack/Railsの設定</a></li>
+	<li><a href="Module_Help.html">モジュール設定</a></li>
+	<li><a href="Listeners_General_Help.html">リスナー全般</a></li>
+        <li><a href="Listeners_SSL_Help.html">リスナーのSSL</a></li>
+	<li><span class="current"><a href="Templates_Help.html">テンプレート</a></span></li>
+	<li><a href="VirtualHosts_Help.html">バーチャルホストの基本</a></li>
+	<li><a href="VHGeneral_Help.html">バーチャルホスト全般</a></li>
+	<li><a href="VHSecurity_Help.html">バーチャルホストのセキュリティ</a></li>
+        <li><a href="VHSSL_Help.html">バーチャルホストのSSL</a></li>
+	<li><a href="Rewrite_Help.html">Rewrite</a></li>
+	<li><a href="Context_Help.html">コンテキスト</a></li>
+               <ul class="level3">
+                <li><a href="Static_Context.html">静的コンテテキスト</a></li>
+                <li><a href="Java_Web_App_Context.html">Java Webアプリのコンテキスト</a></li>
+                <li><a href="Servlet_Context.html">サーブレットコンテキスト</a></li>
+                <li><a href="FCGI_Context.html">Fast CGIコンテキスト</a></li>
+                <li><a href="LSAPI_Context.html">LSAPIコンテキスト</a></li>
+                <li><a href="Proxy_Context.html">プロキシコンテキスト</a></li>
+                <li><a href="CGI_Context.html">CGIコンテキスト</a></li>
+                <li><a href="LB_Context.html">ロードバランサコンテキスト</a></li>
+                <li><a href="Redirect_Context.html">コンテキストのリダイレクト</a></li>
+                <li><a href="Rails_Context.html">Rack/Railsのコンテキスト</a></li>
+                <li><a href="Module_Context.html">モジュールハンドラのコンテキスト</a></li>
+                </ul>
+	<li><a href="VHWebSocket_Help.html">Web Socketプロキシ</a></li>
+	</ul>
+</li>
+<li><a href="webconsole.html">Webコンソール</a>
+        <ul class="level2">
+        <li><a href="AdminGeneral_Help.html">管理コンソール全般</a></li>
+        <li><a href="AdminSecurity_Help.html">管理コンソールのセキュリティ</a></li>
+	<li><a href="AdminListeners_General_Help.html">管理リスナー全般</a></li>
+        <li><a href="AdminListeners_SSL_Help.html">管理リスナーのSSL</a></li>
+        </ul>
+</li>
+</ul>
+</div>
+</aside>
+<article class="contentwrapper ls-col-3-5 clearfix"><div class="nav-bar ls-spacer-micro-top"><div class="prev">&#171 <a href="Listeners_SSL_Help.html">リスナーSSL</a></div><div class="center"><a href="config.html">設定</a></div><div class="next"><a href="VirtualHosts_Help.html">バーチャルホストの基本</a> &#187;</div></div>
+<h1>バーチャルホストテンプレート</h1><section class="ls-spacer-small-bottom">バーチャルホストテンプレートを使用すると、同様の構成で多くの新しいバーチャルホストを簡単に作成できます。 
+
+
+各テンプレートには、テンプレート構成ファイル、マップされたリスナーのリスト、およびメンバーバーチャルホストのリストが含まれています。
+
+
+テンプレートベースのバーチャルホストを追加するには、管理者は一意のバーチャルホスト名と修飾ドメイン名を持つメンバーをテンプレートメンバーリストに追加するだけです。
+リスナー/バーチャルホストマッピングは、テンプレートのマップされたリスナーリストのすべてのリスナーに対して自動的に追加されます。
+
+
+後で、特定のバーチャルホストの設定をカスタマイズする必要がある場合、そのメンバーバーチャルホストとスタンドアロンバーチャルホスト設定が自動的に作成されます。
+カスタマイズされたバーチャルホストを設定する場合でも、テンプレートはまだ便利な出発点になります。</section>
+<h2 id="top">目次</h2><section class="toc"><section class="toc-row"><header>テンプレートの場所</header><p>
+<a href="#templateName">テンプレート名</a> | <a href="#templateFile">テンプレートファイル</a> | <a href="#mappedListeners">マッピングされたリスナー</a></p></section>
+<section class="toc-row"><header>メンバーバーチャルホスト</header><p>
+<a href="#templateVHName">バーチャルホスト名</a> | <a href="#templateVHDomain">ドメイン</a> | <a href="#templateVHAliases">エイリアス</a> | <a href="#memberVHRoot">メンバーバーチャルホストルート</a></p></section>
+<section class="toc-row"><header>テンプレート設定</header><p>
+<a href="#templateVHRoot">デフォルトのバーチャルホストルート</a> | <a href="#templateVHConfigFile">インスタンス化されたVHost設定ファイル</a> | <a href="#templateVHDocRoot">ドキュメントルート</a> | <a href="#templateFileRef">テンプレートで使用されるファイル名</a></p></section>
+</section>
+<section><div class="helpitem"><article class="ls-helpitem"><div><header id="templateName"><h3>テンプレート名<span class="ls-permlink"><a href="#templateName"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>テンプレートの一意の名前。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="templateFile"><h3>テンプレートファイル<span class="ls-permlink"><a href="#templateFile"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>このテンプレートの構成ファイルへのパスを指定します。 このファイルは$SERVER_ROOT/conf/templates/の中に ".conf"ファイル名で置く必要があります。 指定したファイルが存在しない場合、テンプレートを保存しようとすると、 "CLICK TO CREATE"というリンクが表示されます。 このリンクは新しい空のテンプレートファイルを生成します。 テンプレートを削除すると、その設定は設定から削除されますが、実際のテンプレート設定ファイルは削除されません。</p> <h4>構文</h4><p>パス</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="mappedListeners"><h3>マッピングされたリスナー<span class="ls-permlink"><a href="#mappedListeners"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>このテンプレートがマップするすべてのリスナーの名前を指定します。 このテンプレートのメンバーバーチャルホストのリスナー/バーチャルホストマッピングが、このフィールドで指定されたリスナーに追加されます。 このマッピングは、メンババーチャルホストの個々の設定で設定されたドメイン名とエイリアスに基づいて、リスナをバーチャルホストにマッピングします。</p> <h4>構文</h4><p>カンマ区切りリスト</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="templateVHName"><h3>バーチャルホスト名<span class="ls-permlink"><a href="#templateVHName"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>このバーチャルホストの一意の名前。 この名前は、すべてのテンプレートメンバーバーチャルホストとスタンドアロンバーチャルホストで一意でなければなりません。 ディレクトリパス設定では、この名前は変数<span class="val">$VH_NAME</span>によって参照できます。<br/><br/> 同じ名前のスタンドアロンバーチャルホストも設定されている場合、メンバーバーチャルホスト設定は無視されます。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="templateVHDomain"><h3>ドメイン<span class="ls-permlink"><a href="#templateVHDomain"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>このメンバーバーチャルホストのメインドメイン名を指定します。 空白のままにすると、バーチャルホスト名が使用されます。 これは完全修飾ドメイン名である必要がありますが、IPアドレスも使用できます。 ポート80以外のWebサイトには、<span class="val">：<port></span>を追加することをお勧めします。 ドメイン名を含む設定の場合、このドメインは変数<span class="val">$VH_DOMAIN</span>で参照できます。<br/><br/> このドメイン名は、以下の状況で使用されます: <ol>   <li>要求を処理する際にホストヘッダー内のホスト名を照合する。</li>   <li>FrontPageやAWstatsなどのアドオンのドメイン名設定を入力する。</li>   <li>バーチャルホストテンプレートに基づいてリスナーからバーチャルホストへのマッピングを構成する。</li> </ol></p> <h4>構文</h4><p>ドメイン名</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="templateVHAliases"><h3>エイリアス<span class="ls-permlink"><a href="#templateVHAliases"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>バーチャルホストの代替名を指定します。 すべての可能なホスト名とIPアドレスをこのリストに追加する必要があります。 ワイルドカード文字<span class="val">*</span>と<span class="val">？</span>は名前に使用できます。 ポート80にないWebサイトの場合は、<span class="val">：<port> </span>を追加します。<br/><br/> エイリアスは、以下の状況で使用されます: <ol>   <li>要求を処理するときにホストヘッダー内のホスト名を照合する。</li>   <li>FrontPageやAWstatsなどのアドオンのドメイン名/エイリアス設定を設定する</li>   <li>バーチャルホストテンプレートに基づいてリスナーからバーチャルホストへのマッピングを構成する。</li> </ol></p> <h4>構文</h4><p>ドメイン名のカンマ区切りリスト。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="memberVHRoot"><h3>メンバーバーチャルホストルート<span class="ls-permlink"><a href="#memberVHRoot"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>このバーチャルホストのルートディレクトリを指定します。 ブランクのままにすると、このテンプレートのデフォルトのバーチャルホストルートが使用されます。<br/><br/> Note: これはドキュメントルートでは<b>ありません</b>。 バーチャルホストに関連するすべてのファイル（バーチャルホスト設定、ログファイル、htmlファイル、CGIスクリプトなど）をこのディレクトリの下に配置することをお勧めします。 バーチャルホストのルートは$VH_ROOTと呼ばれます。</p> <h4>構文</h4><p>パス</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="templateVHRoot"><h3>デフォルトのバーチャルホストルート<span class="ls-permlink"><a href="#templateVHRoot"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>このテンプレートを使用して、メンバーバーチャルホストのデフォルトルートディレクトリを指定します。 変数<span class="val">$VH_NAME</span>はパスに指定する必要があります。 これにより、各メンバーテンプレートに名前に基づいて別々のルートディレクトリが自動的に割り当てられます。</p> <h4>構文</h4><p>パス</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="templateVHConfigFile"><h3>インスタンス化されたVHost設定ファイル<span class="ls-permlink"><a href="#templateVHConfigFile"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>メンバーバーチャルホストをインスタンス化するときに生成される構成ファイルの場所を指定します。 変数<span class="val">$VH_NAME</span>は、各バーチャルホストが独自のファイルを持つように、パスに現れなければなりません。 $SERVER_ROOT/conf/vhosts/にある必要があります。 この設定ファイルは、メンバのバーチャルホストをインスタンス化によってテンプレートから移動した場合にのみ作成されます。</p> <h4>構文</h4><p>$VH_NAME変数と.conf接尾辞付きの文字列</p> <h4>ヒント</h4><p><span title="Information" class="ls-icon-info"></span> $VH_NAME/ vhconf.confは管理が簡単です。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="templateVHDocRoot"><h3>ドキュメントルート<span class="ls-permlink"><a href="#templateVHDocRoot"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>各メンバーバーチャルホストのドキュメントルートの一意のパスを指定します。 変数<span class="val">$VH_NAME</span>または<span class="val">$VH_ROOT</span>は、各メンババーチャルホストが独自のドキュメントルートを持つように、パスに現れなければなりません。</p> <h4>構文</h4><p>$VH_NAME又は$VH_ROOT変数を含むパス</p> <h4>例</h4><div class="ls-example">$VH_ROOT/public_html/ 又は $SERVER_ROOT/$VH_NAME/public_html.</div></article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="templateFileRef"><h3>テンプレートで使用されるファイル名<span class="ls-permlink"><a href="#templateFileRef"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>メンバーバーチャルホストに使用されるファイルのパスを指定します。 変数<span class="val">$VH_NAME</span>または<span class="val">$VH_ROOT</span>は、各メンババーチャルホストが独自のファイルを持つように、パスに現れなければなりません。</p> <h4>構文</h4><p>文字列</p> </article> </div>
+</section>
+</article><div  class="ls-col-1-1"><footer class="copyright">Copyright &copy; 2013-2018. <a href="https://www.litespeedtech.com">LiteSpeed Technologies Inc.</a> All rights reserved.</footer>
+</div></div>
+</body>
+</html>

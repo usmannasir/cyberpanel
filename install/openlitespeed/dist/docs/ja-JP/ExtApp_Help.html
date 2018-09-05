@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>Open LiteSpeed Web Serverユーザーズマニュアル - 外部アプリケーション</title>
+  <meta name="description" content="Open LiteSpeed Web Serverユーザーズマニュアル - 外部アプリケーション." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex">
+  <link rel="shortcut icon" href="../img/favicon.ico" />
+  <link rel="stylesheet" type="text/css" href="../css/hdoc.css">
+</head>
+<body>
+<div class="pagewrapper clearfix"><aside class="sidetree ls-col-1-5">
+      <figure>
+        <img src="../img/ols_logo.svg" alt="openlitespeed logo" width="150px"/>
+      </figure>
+<h3 class="ls-text-thin">OpenLiteSpeed Web Server <a href="index.html"> ユーザーズマニュアル</a></h3>
+<h5 class="ls-text-muted">Version 1.4 &nbsp;&#8212;&nbsp;Rev. 3 </h5>
+<hr/>
+<div>
+<ul>
+<li><a href="license.html">ライセンス</a></li>
+<li><a href="intro.html">はじめに</a></li>
+<li><a href="install.html">インストール</a></li>
+<li><a href="admin.html">管理</a>
+	<ul class="level2"><li><a href="ServerStat_Help.html">サービスマネージャ</a></li></ul></li>
+<li><a href="security.html">セキュリティ</a></li>
+<li><a href="config.html">設定</a>
+	<ul class="level2">
+	<li><a href="ServGeneral_Help.html">サーバー全般</a></li>
+        <li><a href="ServLog_Help.html">サーバーログ</a></li>
+	<li><a href="ServTuning_Help.html">サーバーのチューニング</a></li>
+	<li><a href="ServSecurity_Help.html">サーバーのセキュリティ</a></li>
+	<li><span class="current"><a href="ExtApp_Help.html">外部アプリ</a></span></li>
+                <ul class="level3">
+                <li><a href="External_FCGI.html">Fast CGIアプリ</a></li>
+                <li><a href="External_FCGI_Auth.html">Fast CGIオーソライザー</a></li>
+                <li><a href="External_LSAPI.html">LSAPIアプリ</a></li>
+                <li><a href="External_Servlet.html">サーブレットエンジン</a></li>
+                <li><a href="External_WS.html">Webサーバー</a></li>
+                <li><a href="External_PL.html">パイプロガー</a></li>
+                <li><a href="External_LB.html">ロードバランサ</a></li>
+                </ul>
+	<li><a href="ScriptHandler_Help.html">スクリプトハンドラ</a></li>
+	<li><a href="Rails_Help.html">Rack/Railsの設定</a></li>
+	<li><a href="Module_Help.html">モジュール設定</a></li>
+	<li><a href="Listeners_General_Help.html">リスナー全般</a></li>
+        <li><a href="Listeners_SSL_Help.html">リスナーのSSL</a></li>
+	<li><a href="Templates_Help.html">テンプレート</a></li>
+	<li><a href="VirtualHosts_Help.html">バーチャルホストの基本</a></li>
+	<li><a href="VHGeneral_Help.html">バーチャルホスト全般</a></li>
+	<li><a href="VHSecurity_Help.html">バーチャルホストのセキュリティ</a></li>
+        <li><a href="VHSSL_Help.html">バーチャルホストのSSL</a></li>
+	<li><a href="Rewrite_Help.html">Rewrite</a></li>
+	<li><a href="Context_Help.html">コンテキスト</a></li>
+               <ul class="level3">
+                <li><a href="Static_Context.html">静的コンテテキスト</a></li>
+                <li><a href="Java_Web_App_Context.html">Java Webアプリのコンテキスト</a></li>
+                <li><a href="Servlet_Context.html">サーブレットコンテキスト</a></li>
+                <li><a href="FCGI_Context.html">Fast CGIコンテキスト</a></li>
+                <li><a href="LSAPI_Context.html">LSAPIコンテキスト</a></li>
+                <li><a href="Proxy_Context.html">プロキシコンテキスト</a></li>
+                <li><a href="CGI_Context.html">CGIコンテキスト</a></li>
+                <li><a href="LB_Context.html">ロードバランサコンテキスト</a></li>
+                <li><a href="Redirect_Context.html">コンテキストのリダイレクト</a></li>
+                <li><a href="Rails_Context.html">Rack/Railsのコンテキスト</a></li>
+                <li><a href="Module_Context.html">モジュールハンドラのコンテキスト</a></li>
+                </ul>
+	<li><a href="VHWebSocket_Help.html">Web Socketプロキシ</a></li>
+	</ul>
+</li>
+<li><a href="webconsole.html">Webコンソール</a>
+        <ul class="level2">
+        <li><a href="AdminGeneral_Help.html">管理コンソール全般</a></li>
+        <li><a href="AdminSecurity_Help.html">管理コンソールのセキュリティ</a></li>
+	<li><a href="AdminListeners_General_Help.html">管理リスナー全般</a></li>
+        <li><a href="AdminListeners_SSL_Help.html">管理リスナーのSSL</a></li>
+        </ul>
+</li>
+</ul>
+</div>
+</aside>
+<article class="contentwrapper ls-col-3-5 clearfix"><div class="nav-bar ls-spacer-micro-top"><div class="prev">&#171 <a href="ServSecurity_Help.html">サーバーのセキュリティ</a></div><div class="center"><a href="config.html">設定</a></div><div class="next"><a href="ScriptHandler_Help.html">スクリプトハンドラ</a> &#187;</div></div>
+<h1>外部アプリケーション</h1><section class="ls-spacer-small-bottom">LiteSpeed Webサーバーは、動的コンテンツを処理および生成するために外部アプリケーションに要求を転送できます。
+ 
+LiteSpeed Web Serverは、2.0以降、CGI、FastCGI、Webサーバー、サーブレットエンジン、LiteSpeed SAPIアプリケーション、ロードバランサ、およびパイプロガーの7種類の外部アプリケーションをサポートしています。
+
+<ul>
+<li>CGIはCommon Gateway Interfaceの略です。 現在の標準はCGI / 1.1です。  
+CGIアプリケーションはスタンドアロンプロセスで動作します。
+各要求に対してCGIプロセスが開始され、要求終了後に終了します。 
+</li>
+<li>FastCGIは、プロプライエタリなAPI（アプリケーションプログラミングインターフェイス）のオーバーヘッドと複雑さを導入することなく、CGIに内在するパフォーマンスの問題を解決する、高速でオープンで安全なWebサーバーインターフェイスです。
+詳細については、{ext-href}http://www.fastcgi.com{ext-href-end}http://www.fastcgi.com{ext-href-end-a}をご覧ください。
+
+LiteSpeed Web Serverでは、FastCGIアプリケーションは動的応答の生成（応答者の役割）または要求の承認（承認者の役割）の2つの役割を果たすことができます。
+LiteSpeed Web Serverは、ローカルFastCGIとリモートFastCGIの2種類のFastCGIアプリケーションをさらに定義します。
+ローカルFastCGIアプリケーションは、オンデマンドでWebサーバーによって自動的に開始されます。 リモートFastCGIアプリケーションは、Webサーバーによって開始されません。
+   （これらはリモートマシン上または同じマシン上で実行できます。）
+</li>
+<li>WebサーバーはHTTP 1.0 / 1.1プロトコルをサポートするサーバーアプリケーションです。
+LiteSpeed Webサーバーは、透過的な逆プロキシとして機能し、Webサーバーとアプリケーションサーバーを高速化および保護します。
+バックエンドWebサーバーと通信する場合、LiteSpeedは常に最高のパフォーマンスを達成するために永続的な接続を利用しようとします。</li>
+<li>サーブレットエンジンは、JavaサーブレットとJava Server Pagesを実装するApache TomcatやJettyのようなアプリケーションです。
+LiteSpeedはAJPv1.3（Apache JServプロトコルバージョン1.3）を介してサーブレットエンジンと通信できます。
+サーブレットエンジンはWebサーバーから起動できず、リモートマシン上で実行するように設定できます。
+</li>
+<li>LiteSpeed SAPI（LiteSpeed Server Application Programming Interface）アプリケーションは、LiteSpeed Web Serverと最大限の効率を達成するために特別に設計された高速でスケーラブルなサーバーインターフェイスであるLiteSpeed Web Serverと通信するアプリケーションです。
+
+LSAPIの動作メカニズムはFastCGIに似ていますが、LSAPIアプリケーションは同等のFastCGIアプリケーションより最大30％高速です。
+LSAPIは、サポートされるアプリケーションに対してFastCGIよりも強く推奨されます。
+（LSAPIは現在、PHP、Ruby、Pythonで書かれたアプリケーションをサポートしています）。
+
+LSAPIの詳細については、次のURLを参照してください。
+{ext-href}http://www.litespeedtech.com/products/litespeed-sapi/overview/{ext-href-end}http://www.litespeedtech.com/products/litespeed-sapi/overview/{ext-href-end-a}.
+</li>
+<li>ロードバランサはバーチャル外部アプリケーションで、ワークロードに基づいてバックエンドワーカーアプリケーションに要求を割り当てます。
+ワーカーアプリケーションは、CGI、FastCGI、Webサーバー、サーブレットエンジン、またはLSAPIアプリケーションです。
+1つのロードバランサの下でさまざまな種類のアプリケーションを混在させることができます。
+ロードバランサとパイプロガーはワーカーアプリケーションとして使用できません。</li>
+<li>パイプロガーは、アクセスログをリアルタイムで処理したり、アクセスログをデータベースに書き込んだり、リアルタイム統計計算を実行したりするアプリケーションです。</li>
+</ul>
+
+CGIアプリケーションとは異なり、FastCGIアプリケーション、LSAPIアプリケーション、およびサーブレットエンジンは、要求の処理後に終了しません。
+アプリケーションプロセスは維持され、持続し、できるだけ多くの要求を処理します。
+ソケット接続は、複数のリクエストに対しても再利用できます。
+
+外部アプリケーションは、{PAGE = ExtApp_Help}セクションで設定できます。
+ただし、外部アプリケーションは単独では機能しません。
+Webサーバーがどのアプリケーションにどの要求を送信するかを知るように、追加の設定を構成する必要があります。
+LiteSpeed Web Serverでこれを設定するには、2つの方法があります: 
+<ol>
+  <li> 外部アプリケーションを特定のコンテキストのハンドラとして設定します。</li> 
+  <li> ファイルサフィックスバインディングを使用して、外部アプリケーションをスクリプト言語のハンドラとして設定します。</li>
+</ol> 
+
+FastCGIアプリケーション、LSAPIアプリケーション、Webサーバー、サーブレットエンジン、およびロードバランサは、コンテキストまたはスクリプトサフィックスを処理するように構成する前に、{PAGE=ExtApp_Help}セクションで定義する必要があります。
+
+{PAGE=ExtApp_Help}セクションでCGIアプリケーションを定義する必要はありません。 
+
+
+外部アプリケーションは、サーバーレベルまたはバーチャルホストレベルで構成できます。
+サーバーレベルで構成すると、アプリケーションはすべてのバーチャルホストで使用できます。
+バーチャルホストレベルで設定すると、そのバーチャルホストだけが使用できます。</section>
+<h2 id="top">目次</h2><section class="toc"><section class="toc-row"><header>外部アプリケーション設定</header><p>
+<a href="#extAppType">タイプ</a></p></section>
+</section>
+<section><div class="helpitem"><article class="ls-helpitem"><div><header id="extAppType"><h3>タイプ<span class="ls-permlink"><a href="#extAppType"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>外部アプリケーションのタイプを指定します。 アプリケーションタイプは、提供するサービスまたはサーバーとの通信に使用するプロトコルによって区別されます。 以下から選んでください。 <ul> <li><span class="val">FastCGI</span>: <span class="val">Responder</span>ロールを持つFastCGIアプリケーションです。</li> <li><span class="val">FastCGI Authorizer</span>: <span class="val">Authorizer</span>ロールを持つFastCGIアプリケーション</li> <li><span class="val">Servlet Engine</span>: tomcatなどのAJPv13コネクタを持つサーブレットエンジンです。</li> <li><span class="val">Web Server</span>: HTTPプロトコルをサポートするWebサーバーまたはアプリケーションサーバー。</li> <li><span class="val">LiteSpeed SAPI App</span>: LSAPIプロトコルを使用してWebサーバーと通信するアプリケーションです。</li> <li><span class="val">Load Balancer</span>:ワーカーアプリケーション間の負荷を分散できるバーチャルアプリケーションです。</li> <li><span class="val">Piped Logger</span>: STDINストリームで受け取ったアクセスログエントリを処理できるアプリケーションです。</li> </ul></p> <h4>構文</h4><p>ドロップダウンリストから選択</p> <h4>ヒント</h4><p><span title="Information" class="ls-icon-info"></span> ほとんどのアプリケーションは、LSAPIまたはFastCGIプロトコルを使用します。 LSAPIはPHP、Ruby、Pythonをサポートしています。 PerlはFastCGIで使用できます。 （PHP、Ruby、およびPythonはFastCGIを使用して実行するように設定することもできますが、LSAPIを使用する方が高速です）。Javaはサーブレットエンジンを使用します。</p> </article> </div>
+</section>
+</article><div  class="ls-col-1-1"><footer class="copyright">Copyright &copy; 2013-2018. <a href="https://www.litespeedtech.com">LiteSpeed Technologies Inc.</a> All rights reserved.</footer>
+</div></div>
+</body>
+</html>

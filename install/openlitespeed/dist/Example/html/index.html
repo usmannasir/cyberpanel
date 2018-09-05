@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Welcome</title>
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/custom.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+<body>
+<!-- Navigation Menu Starts-->
+<nav class="navbar navbar-fixed-top">
+      <ul class="nav navbar-nav navbar-right">
+			<li class="nav-item active">
+          <a class="nav-link" href="#home">Home<span class="sr-only">(current)</span></a>
+				</li>
+			<li class="nav-item">
+          <a class="nav-link" href="#demo">Demos</a>
+			</li>
+			<li class="nav-item">
+          <a class="nav-link" href="#features">Features</a>
+			</li>
+			<li class="nav-item">
+          <a class="nav-link" href="#resources">Resources</a>
+			</li>
+			<li class="nav-item">
+          <a class="nav-link" href="#news">News</a>
+			</li>
+      </ul>
+</nav><!-- Navigation Menu Ends-->
+<a id="home"></a>
+<!-- Navigation Menu Ends-->
+<div class="container">
+	<div class="header clearfix">
+											<div class="row"></div>
+<!--Jumbotron Starts-->
+   		 	<div class="jumbotron">
+            	<div><img class="center-block img-responsive img-size" src="img/olsws_logo.png" alt="openlitespeed logo"></div>
+		  			<h1>Congratulations</h1>
+   					<p class="lead">You have successfully installed the OpenLiteSpeed Web Server!</p>
+            								<div class="row"></div>
+<!--Button Starts-->
+				<div class="text-center">
+          		<a class="btn btn-lg btn-warning" href="#openModal" role="button">READ ME!</a>
+          		</div>
+<!--Button Ends-->
+<!--Modal Starts-->
+					<div id="openModal" class="modalDialog">
+    					<div>
+							 <div class="close"><a href="#close" title="Close" >X</a></div>
+                   		<h1><span class="text-muted">&#123;</span>&nbsp; Read Me &nbsp;<span class="text-muted">&#125;</span></h1>
+                      			<div class="row">
+                    			<p>You should replace this page with your own web pages.</p>
+                    			<p>It is not recommended to copy files into the directory where this page located, they might be over-written during upgrade or reinstallation.</p>
+								<p>Create a new virtual host and map a listener to it. Have no clue? Please read the <a href="/docs/index.html" title="Documentation" target="_blank">Documentation</a>.</p>
+ 								<p>For your web administration login page, please refer to the installation guide.</p>
+                    			<p>Add&nbsp;<a href="https://www.litespeedtech.com/" target="_blank"><img src="img/powered_by_ols-new.png" alt="openlitespeed logo"></a>&nbsp;the OpenLiteSpeed logo to your web site if you'd like to help us promote the server.</p>
+                    			</div>
+                		</div>
+					</div><!--Modal Ends-->
+			</div><!--Jumbotron Ends-->
+	</div>
+<a id="demo"></a>
+<div class="row">
+</div>
+<!-- 5 Panel Starts-->
+<!--Row Starts-->
+<div class="row row-centered">
+	<h1>Simple Feature Demos</h1>
+											<div class="row"></div>
+<!--Column 1 Starts-->
+			<div class="col-md-4 col-sm-4 col-lg-4 col-centered">
+<!--Panel 1 Starts-->
+				<div class="panel panel-default">
+          				<img class="center-block img-responsive" src="img/cgi-icon.png" alt="cgi">
+          					<div class="panel-heading">
+          						<h3>CGI script</h3>
+          					</div>
+          						<div class="panel-body">Hello World from CGI script
+                				</div>
+       		<br> <!--use for btn vertical alignment-->
+          							<div class="text-center"><a class="btn btn-primary" role="button" onclick="window.open('/cgi-bin/helloworld', 'myWin', 'toolbar=no, directories=no,	location=no, status=yes, menubar=no, resizable=no, scrollbars=yes, width=600,	height=400'); return false">Click Here &raquo;</a>
+          							</div>
+  											<div class="row"></div>
+        		</div><!--Panel 1 Starts-->
+			</div><!--Column 1 Ends-->
+<!--Column 2 Starts-->
+			<div class="col-md-4 col-sm-4 col-lg-4 col-centered">
+<!--Panel 2 Starts-->
+				<div class="panel panel-default">
+          				<img class="center-block img-responsive" src="img/php-icon.png" alt="php">
+          					<div class="panel-heading">
+          						<h3> Test PHP</h3>
+          					</div>
+          						<div class="panel-body">If you enabled PHP during installation, <br>click here to test it
+                				</div>
+         							<div class="text-center"><a class="btn btn-primary" role="button" onclick="window.open('/phpinfo.php', 'myWin', 'toolbar=no, directories=no,	location=no, status=yes, menubar=no, resizable=yes, scrollbars=yes, width=1024,	height=768'); return false">Click Here &raquo;</a>
+         							</div>
+  											<div class="row"></div>
+          		</div><!--Panel 2 Ends-->
+     		</div><!--Column 2 Ends-->
+<!--Column 3 Starts-->
+			<div class="col-md-4 col-sm-4 col-lg-4 col-centered">
+<!--Panel 3 Starts-->
+				<div class="panel panel-default">
+          				<img class="center-block img-responsive" src="img/404-icon.png" alt="404">
+          					<div class="panel-heading">
+          						<h3 >Customized Error Page</h3>
+          					</div>
+          						<div class="panel-body">Missing page
+                				</div>
+                        <br> <!--use for btn vertical alignment-->
+           	   						<div class="text-center"><a class="btn btn-primary" role="button" onclick="window.open('/page_does_not_exist.html', 'myWin', 'toolbar=no, directories=no,	location=no, status=yes, menubar=no, resizable=no, scrollbars=yes, width=600,	height=400'); return false">Click Here &raquo;</a>
+              						</div>
+  											<div class="row"></div>
+				</div><!--Panel 3 Ends-->
+   			</div><!--Column 3 Ends-->
+<!--Column 4 Starts-->
+			<div class="col-md-4 col-sm-4 col-lg-4 col-centered">
+<!--Panel 4 Starts-->
+				<div class="panel panel-default">
+                    	<img class="center-block img-responsive" src="img/pwd_protect-icon.png" alt="password protection">
+          					<div class="panel-heading">
+          					<h3>Authentication</h3>
+          					</div>
+          						<div class="panel-body">Password protected content, <br>user name: test, password: test123
+                				</div>
+									<div class="text-center"><a class="btn btn-primary" role="button" onclick="window.open('/protected/', 'myWin', 'toolbar=no, directories=no,	location=no, status=yes, menubar=no, resizable=no, scrollbars=yes, width=600,	height=400'); return false">Click Here &raquo;</a>
+									</div>
+  											<div class="row"></div>
+				</div><!--Panel 4 Ends-->
+    	 	</div><!--Column 4 Ends-->
+
+<!--Column 5 Starts-->
+			<div class="col-md-4 col-sm-4 col-lg-4 col-centered">
+<!--Panel 5 Starts-->
+				<div class="panel panel-default">
+          				<img class="center-block img-responsive" src="img/blocked_content-icon.png" alt="blocked content">
+							<div class="panel-heading">
+          					<h3>Blocked Content</h3>
+          					</div>
+          						<div class="panel-body">Blocked area
+           						</div>
+                        <br> <!--use for btn vertical alignment-->
+          							<div class="text-center"><a class="btn btn-primary" role="button" onclick="window.open('/blocked/', 'myWin', 'toolbar=no, directories=no,	location=no, status=yes, menubar=no, resizable=no, scrollbars=yes, width=600,	height=400'); return false">Click Here &raquo;</a>
+          							</div>
+            								<div class="row"></div>
+				</div><!--Panel 5 Ends-->
+			</div><!--Column 5 Ends-->
+            <!--Column 6 Starts-->
+			<div class="col-md-4 col-sm-4 col-lg-4 col-centered">
+<!--Panel 6 Starts-->
+				<div class="panel panel-default">
+          				<img class="center-block img-responsive" src="img/file_upload-icon.png" alt="file upload">
+							<div class="panel-heading">
+          					<h3>File Upload</h3>
+          					</div>
+          						<div class="panel-body">Test file upload progress module
+           						</div>
+                        <br> <!--use for btn vertical alignment-->
+          							<div class="text-center"><a class="btn btn-primary" role="button" onclick="window.open('/upload.html', 'myWin', 'toolbar=no, directories=no,	location=no, status=yes, menubar=no, resizable=no, scrollbars=yes, width=875,	height=650'); return false">Click Here &raquo;</a>
+          							</div>
+            								<div class="row"></div>
+				</div><!--Panel 6 Ends-->
+			</div><!--Column 6 Ends-->
+</div> <!-- Row Ends -->
+                                            <div class="row"></div>
+<!--6 panel ends-->
+											<div class="row"></div>
+<a id=features></a>
+<a id=resources></a>
+<a id=news></a>
+<hr class="featurette-divider">
+        									<div class="row"></div>
+	<div class="text-center">
+	<h1>About OpenLiteSpeed</h1>
+	</div>
+											<div class="row"></div>
+<!--Row Starts-->
+		<div class="row row-centered">
+<!--Column 1 Starts-->
+			<div class="col-xs-3 col-centered">
+<!--Panel 1 Starts-->
+				<div class="panel panel-primary">
+    				<div class="panel-heading text-center">Features</div>
+						<p></p>
+								<ul>
+									<li class="list-group-item">Event-driven architecture and extremely low resource overhead</li>
+									<li class="list-group-item">Apache compatible rewrite rules</li>
+									<li class="list-group-item">User friendly WebAdmin GUI</li>
+									<li class="list-group-item">HTTP2, ESI, liteMage cache and Websocket Proxies support</li>
+									<li class="list-group-item">PageSpeed, Lua and Cache Support </li>
+								</ul>
+				</div><!--Panel 1 Ends-->
+			</div><!--Column 1 Ends-->
+<!--Column 2 Starts-->
+			<div class="col-xs-3 col-centered">
+<!--Panel 2 Starts-->
+				<div class="panel panel-primary">
+    				<div class="panel-heading text-center">Resources</div>
+						<p></p>
+								<ul>
+  									<li><a href="http://open.litespeedtech.com/mediawiki/index.php/Help:1-Click_Install" class="list-group-item" target="_blank">1-Click Installation</a></li>
+  									<li><a href="http://open.litespeedtech.com/mediawiki/index.php/Help:Installation" class="list-group-item" target="_blank">OpenLiteSpeed Installation Guide</a></li>
+  									<li><a href="https://groups.google.com/forum/#!forum/openlitespeed-development" class="list-group-item" target="_blank">OpenLiteSpeed Google Group</a></li>
+  									<li><a href="http://open.litespeedtech.com/" class="list-group-item" target="_blank">OpenLiteSpeed Wiki</a></li>
+        							<li><a href="http://openlitespeed.com/" class="list-group-item" target="_blank">Forum</a></li>
+								</ul>
+				</div><!--Panel 2 Ends-->
+			</div><!--Column 2 Ends-->
+<!--Column 3 Starts-->
+            <div class="col-xs-3 col-centered">
+<!--Panel 3 Starts-->
+				<div class="panel panel-primary">
+    				<div class="panel-heading text-center">News</div>
+						<p></p>
+								<ul>
+  									<li><a href="http://open.litespeedtech.com/mediawiki/index.php/Help:1-Click_Install" class="list-group-item" target="_blank">1-Click to install WordPress on OpenLiteSpeed</a></li>
+  									<li><a href="http://open.litespeedtech.com/mediawiki/index.php/Help:4_Line_Install" class="list-group-item" target="_blank">Fully working OpenLiteSpeed install in 4 lines</a></li>
+  									<li><a href="http://open.litespeedtech.com/mediawiki/index.php/Help:Multiple_PHPs" class="list-group-item" target="_blank">Set up multiple PHPs</a></li>
+  									<li><a href="http://open.litespeedtech.com/mediawiki/index.php/Help:1.4_VHost_Config_Change" class="list-group-item" target="_blank">Virtual host configuration location changes in 1.4</a></li>
+  									<li><a href="http://open.litespeedtech.com/mediawiki/index.php/Help:PHP_via_RPM" class="list-group-item" target="_blank">Installing PHP from a Repository</a></li>
+								</ul>
+					</div><!--Panel 3 Ends-->
+				</div><!--Column 3 Ends-->
+	</div><!--Row Ends-->
+											<div class="row"></div>
+<hr class="featurette-divider">
+											<div class="row"></div>
+<!-- FOOTER -->
+      <footer>
+          <img class="center-block img-responsive" src="img/powered_by_ols-new.png" alt="power by openlitespeed">
+											<div class="row"></div>
+        	<p class="pull-right"><a href="#">Back to top</a></p>
+        		<div class="text-center copyright-center"><p>&copy; 2018 LiteSpeed Technologies, Inc. All Rights Reserved.</p>
+        		</div>
+      </footer>
+</div> <!--Container Close-->
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>-->
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+<!--<script src="js/bootstrap.min.js"></script> -->
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>Open LiteSpeed Web Serverユーザーズマニュアル - サーバーログ</title>
+  <meta name="description" content="Open LiteSpeed Web Serverユーザーズマニュアル - サーバーログ." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex">
+  <link rel="shortcut icon" href="../img/favicon.ico" />
+  <link rel="stylesheet" type="text/css" href="../css/hdoc.css">
+</head>
+<body>
+<div class="pagewrapper clearfix"><aside class="sidetree ls-col-1-5">
+      <figure>
+        <img src="../img/ols_logo.svg" alt="openlitespeed logo" width="150px"/>
+      </figure>
+<h3 class="ls-text-thin">OpenLiteSpeed Web Server <a href="index.html"> ユーザーズマニュアル</a></h3>
+<h5 class="ls-text-muted">Version 1.4 &nbsp;&#8212;&nbsp;Rev. 3 </h5>
+<hr/>
+<div>
+<ul>
+<li><a href="license.html">ライセンス</a></li>
+<li><a href="intro.html">はじめに</a></li>
+<li><a href="install.html">インストール</a></li>
+<li><a href="admin.html">管理</a>
+	<ul class="level2"><li><a href="ServerStat_Help.html">サービスマネージャ</a></li></ul></li>
+<li><a href="security.html">セキュリティ</a></li>
+<li><a href="config.html">設定</a>
+	<ul class="level2">
+	<li><a href="ServGeneral_Help.html">サーバー全般</a></li>
+        <li><span class="current"><a href="ServLog_Help.html">サーバーログ</a></span></li>
+	<li><a href="ServTuning_Help.html">サーバーのチューニング</a></li>
+	<li><a href="ServSecurity_Help.html">サーバーのセキュリティ</a></li>
+	<li><a href="ExtApp_Help.html">外部アプリ</a></li>
+                <ul class="level3">
+                <li><a href="External_FCGI.html">Fast CGIアプリ</a></li>
+                <li><a href="External_FCGI_Auth.html">Fast CGIオーソライザー</a></li>
+                <li><a href="External_LSAPI.html">LSAPIアプリ</a></li>
+                <li><a href="External_Servlet.html">サーブレットエンジン</a></li>
+                <li><a href="External_WS.html">Webサーバー</a></li>
+                <li><a href="External_PL.html">パイプロガー</a></li>
+                <li><a href="External_LB.html">ロードバランサ</a></li>
+                </ul>
+	<li><a href="ScriptHandler_Help.html">スクリプトハンドラ</a></li>
+	<li><a href="Rails_Help.html">Rack/Railsの設定</a></li>
+	<li><a href="Module_Help.html">モジュール設定</a></li>
+	<li><a href="Listeners_General_Help.html">リスナー全般</a></li>
+        <li><a href="Listeners_SSL_Help.html">リスナーのSSL</a></li>
+	<li><a href="Templates_Help.html">テンプレート</a></li>
+	<li><a href="VirtualHosts_Help.html">バーチャルホストの基本</a></li>
+	<li><a href="VHGeneral_Help.html">バーチャルホスト全般</a></li>
+	<li><a href="VHSecurity_Help.html">バーチャルホストのセキュリティ</a></li>
+        <li><a href="VHSSL_Help.html">バーチャルホストのSSL</a></li>
+	<li><a href="Rewrite_Help.html">Rewrite</a></li>
+	<li><a href="Context_Help.html">コンテキスト</a></li>
+               <ul class="level3">
+                <li><a href="Static_Context.html">静的コンテテキスト</a></li>
+                <li><a href="Java_Web_App_Context.html">Java Webアプリのコンテキスト</a></li>
+                <li><a href="Servlet_Context.html">サーブレットコンテキスト</a></li>
+                <li><a href="FCGI_Context.html">Fast CGIコンテキスト</a></li>
+                <li><a href="LSAPI_Context.html">LSAPIコンテキスト</a></li>
+                <li><a href="Proxy_Context.html">プロキシコンテキスト</a></li>
+                <li><a href="CGI_Context.html">CGIコンテキスト</a></li>
+                <li><a href="LB_Context.html">ロードバランサコンテキスト</a></li>
+                <li><a href="Redirect_Context.html">コンテキストのリダイレクト</a></li>
+                <li><a href="Rails_Context.html">Rack/Railsのコンテキスト</a></li>
+                <li><a href="Module_Context.html">モジュールハンドラのコンテキスト</a></li>
+                </ul>
+	<li><a href="VHWebSocket_Help.html">Web Socketプロキシ</a></li>
+	</ul>
+</li>
+<li><a href="webconsole.html">Webコンソール</a>
+        <ul class="level2">
+        <li><a href="AdminGeneral_Help.html">管理コンソール全般</a></li>
+        <li><a href="AdminSecurity_Help.html">管理コンソールのセキュリティ</a></li>
+	<li><a href="AdminListeners_General_Help.html">管理リスナー全般</a></li>
+        <li><a href="AdminListeners_SSL_Help.html">管理リスナーのSSL</a></li>
+        </ul>
+</li>
+</ul>
+</div>
+</aside>
+<article class="contentwrapper ls-col-3-5 clearfix"><div class="nav-bar ls-spacer-micro-top"><div class="prev">&#171 <a href="ServGeneral_Help.html">サーバー全般</a></div><div class="center"><a href="config.html">設定</a></div><div class="next"><a href="ServTuning_Help.html">サーバーのチューニング</a> &#187;</div></div>
+<h1>サーバーログ</h1><h2 id="top">目次</h2><section class="toc"><section class="toc-row"><header>サーバーログ</header><p>
+<a href="#log_fileName">ファイル名</a> | <a href="#log_logLevel">ログレベル</a> | <a href="#log_debugLevel">デバッグレベル</a> | <a href="#log_rollingSize">ローテーションサイズ（バイト）</a> | <a href="#log_enableStderrLog">stderrログを有効にする</a></p></section>
+<section class="toc-row"><header>アクセスログ</header><p>
+<a href="#accessLog_fileName">ファイル名</a> | <a href="#accessLog_pipedLogger">パイプロガー</a> | <a href="#accessLog_logFormat">Log Format</a> | <a href="#accessLog_logHeader">ログヘッダー</a> | <a href="#log_rollingSize">ローテーションサイズ（バイト）</a> | <a href="#accessLog_keepDays">保持日数</a> | <a href="#accessLog_compressArchive">アーカイブを圧縮する</a></p></section>
+</section>
+<section><div class="helpitem"><article class="ls-helpitem"><div><header id="log_fileName"><h3>ファイル名<span class="ls-permlink"><a href="#log_fileName"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>ログファイルのパスを指定します。</p> <h4>構文</h4><p>ファイル名への絶対パス又は$SERVER_ROOTからの相対パス</p> <h4>ヒント</h4><p>[パフォーマンス]ログファイルを別のディスクに配置します。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="log_logLevel"><h3>ログレベル<span class="ls-permlink"><a href="#log_logLevel"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>ログファイルに含めるログのレベルを指定します。 使用可能なレベルは、<span class="val">エラー</span>、<span class="val">警告</span>、<span class="val">通知</span>、<span class="val">情報</span>および<span class="val"> DEBUG </span>です。 現在の設定以上のレベルのメッセージのみが記録されます。</p> <h4>構文</h4><p>選択</p> <h4>ヒント</h4><p>[パフォーマンス] <span class="tagl"><a href="#log_debugLevel">デバッグレベル</a></span>が<span class="val"> NONE </span>以外のレベルに設定されていない限り、<span class="val"> DEBUG </span>ログレベルを使用してもパフォーマンスに影響はありません。 ログレベルを<span class="val"> DEBUG </span>に設定し、デバッグレベルを<span class="val"> NONE </span>に設定することをお勧めします。 これらの設定は、ハードディスクにデバッグログを書き込まないことを意味しますが、<span class="tagl"><a href="ServerStat_Help.html#toggleDebugLog">デバッグログを切り替える</a></span>アクションを使用してデバッグ出力を制御することができます。 これにより、デバッグログのオン/オフを切り替えることができ、多忙な運用サーバーのデバッグに役立ちます。</p> <h4>参照</h4><p class="ls-text-small"><span class="tagl"><a href="#log_debugLevel">デバッグレベル</a></span></p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="log_debugLevel"><h3>デバッグレベル<span class="ls-permlink"><a href="#log_debugLevel"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>デバッグログのレベルを指定します。 この機能を使用するには、<span class="tagl"><a href="#log_logLevel">ログレベル</a></span>を<span class="val"> DEBUG </span>に設定する必要があります。 <span class="tagl"><a href="#log_logLevel">ログレベル</a></span>が<span class="val"> DEBUG </span>に設定されていても、「デバッグレベル」が<span class="val"> NONE </span>に設定されていると、デバッグロギングは無効になります。 <span class="tagl"><a href="ServerStat_Help.html#toggleDebugLog">デバッグログを切り替える</a></span>は、再起動せずにライブサーバー上のデバッグレベルを制御するために使用できます。.</p> <h4>構文</h4><p>選択</p> <h4>ヒント</h4><p>[パフォーマンス]重要！ 詳細なデバッグログが必要ない場合は、常にこれを<span class="val"> NONE </span>に設定してください。 アクティブデバッグロギングは、サービスのパフォーマンスを著しく低下させ、非常に短時間でディスクスペースを飽和させる可能性があります。 デバッグログには、各要求と応答の詳細情報が含まれています。<br/> ログレベルを<span class="val"> DEBUG </span>に設定し、デバッグレベルを<span class="val"> NONE </span>に設定することをお勧めします。 これらの設定は、ハードディスクにデバッグログを書き込まないことを意味しますが、<span class="tagl"><a href="ServerStat_Help.html#toggleDebugLog">デバッグログを切り替える</a></span>アクションを使用してデバッグ出力を制御することができます。 これにより、デバッグログのオン/オフを切り替えることができ、多忙な運用サーバーのデバッグに役立ちます。</p> <h4>参照</h4><p class="ls-text-small"><span class="tagl"><a href="#log_logLevel">ログレベル</a></span>, <span class="tagl"><a href="ServerStat_Help.html#toggleDebugLog">デバッグログを切り替える</a></span></p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="log_rollingSize"><h3>ローテーションサイズ（バイト）<span class="ls-permlink"><a href="#log_rollingSize"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>現在のログファイルをロールオーバーする必要があるとき、つまりログローテーションを指定します。 ファイルサイズがロールオーバー制限を超えると、アクティブなログファイルは同じディレクトリにlog_name.mm_dd_yyyy（.sequence）という名前に変更され、新しいアクティブなログファイルが作成されます。 回転ログファイルが実際に作成されると、そのサイズはこのサイズ制限より少し大きくなることがあります。 ログのローテーションを無効にするには、<span class="val"> 0 </span>に設定します。</p> <h4>構文</h4><p>整数</p> <h4>ヒント</h4><p><span title="Information" class="ls-icon-info"></span> キロ、メガ、ギガバイトの数字に「K」、「M」、「G」を追加します。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="log_enableStderrLog"><h3>stderrログを有効にする<span class="ls-permlink"><a href="#log_enableStderrLog"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>サーバーが開始したプロセスからstderr出力を受け取ったときにログに書き込むかどうかを指定します。 有効にすると、stderrメッセージは固定名 "stderr.log"を持つサーバーログと同じディレクトリに記録されます。 無効にすると、すべてのstderr出力は破棄されます。</p> <h4>構文</h4><p>ラジオボックスから選択</p> <h4>ヒント</h4><p><span title="Information" class="ls-icon-info"></span> 設定された外部アプリケーション（PHP、Ruby、Java、Python、Perl）をデバッグする必要がある場合にオンにします。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="accessLog_fileName"><h3>ファイル名<span class="ls-permlink"><a href="#accessLog_fileName"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>アクセスログファイル名。</p> <h4>構文</h4><p>ファイル名への絶対パス又は$SERVER_ROOTからの相対パス</p> <h4>ヒント</h4><p>[パフォーマンス]アクセスログファイルを別のディスクに入れます。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="accessLog_pipedLogger"><h3>パイプロガー<span class="ls-permlink"><a href="#accessLog_pipedLogger"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>LiteSpeedがSTDINストリーム上のパイプを通じて送信するアクセスログデータを受け取る外部アプリケーションを指定します（ファイルハンドルは0）。 このフィールドが指定されると、アクセスログはロガーアプリケーションにのみ送信され、前のエントリで指定されたアクセスログファイルには送信されません。<br/><br/> ロガーアプリケーションは、最初に<span class="tagP"><a href="#ExtApp_Help">外部アプリケーション</a></span>セクションで定義する必要があります。 サーバー・レベルのアクセス・ロギングは、サーバー・レベルで定義された外部ロガー・アプリケーションのみを使用できます。 バーチャルホストレベルのアクセスロギングでは、バーチャルホストレベルで定義されたロガーアプリケーションのみを使用できます。<br/><br/> ロガープロセスは、他の外部（CGI/FastCGI/LSAPI）プロセスと同じ方法で生成されます。 つまり、バーチャルホストの<span class="tagl"><a href="VirtualHosts_Help.html#setUidMode">外部アプリ Set UID モード</a></span>設定で指定されたユーザーIDとして実行され、特権ユーザーのために実行されることはありません。. <br/><br/> LiteSpeed Webサーバーは、複数のロガーアプリケーションのインスタンスが設定されている場合、複数のロガーアプリケーション間で簡単なロードバランシングを実行します。 LiteSpeedサーバーは、常にロガーアプリケーションの数を可能な限り低く抑えようとします。 1つのロガーアプリケーションがアクセスログエントリを時間内に処理できない場合にのみ、サーバーはロガーアプリケーションの別のインスタンスを生成しようとします。 <br/><br/> ロガーがクラッシュした場合、Webサーバーは別のインスタンスを開始しますが、ストリームバッファーのログデータは失われます。 外部ロガーがログ・ストリームの速度と量に追いつけない場合、ログ・データを失う可能性があります。</p> <h4>構文</h4><p>選択</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="accessLog_logFormat"><h3>Log Format<span class="ls-permlink"><a href="#accessLog_logFormat"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p> アクセスログのログ形式を指定します。 ログフォーマットが設定されると、<span class="tagl"><a href="#accessLog_logHeader">ログヘッダー</a></span>の設定より優先されます。</p> <h4>構文</h4><p>文字列。ログフォーマットの構文はApache 2.0のカスタムと互換性があります  <a href="http://httpd.apache.org/docs/current/mod/mod_log_config.html#formats" target="_blank" rel="noopener noreferrer">log format</a>。</p> <h4>例</h4><div class="ls-example"><br> <b>共通ログフォーマット（CLF）</b><br/>     "%h %l %u %t \"%r\" %>s %b"<br/><br/> <b>バーチャルホストによる共通ログフォーマット</b><br/>     "%v %h %l %u %t \"%r\" %>s %b"<br/><br/> <b>NCSA拡張/結合ログフォーマット</b><br/>     "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\" <br/><br/> <b>FoobarのログCookie値</b><br/>     "%{Foobar}C"</div><h4>参照</h4><p class="ls-text-small"><span class="tagl"><a href="#accessLog_logHeader">ログヘッダー</a></span></p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="accessLog_logHeader"><h3>ログヘッダー<span class="ls-permlink"><a href="#accessLog_logHeader"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p><span class="val">Referer</span>、<span class="val">UserAgent</span>、<span class="val">Host</span>のいずれかをHTTPリクエストヘッダとして記録するかどうかを指定します。</p> <h4>構文</h4><p>チェックボックス</p> <h4>ヒント</h4><p>[パフォーマンス]これらのヘッダーがアクセスログに必要ない場合は、これをオフにします。</p> <h4>参照</h4><p class="ls-text-small"><span class="tagl"><a href="#accessLog_logFormat">Log Format</a></span></p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="accessLog_keepDays"><h3>保持日数<span class="ls-permlink"><a href="#accessLog_keepDays"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>アクセスログファイルをディスクに保管する日数を指定します。 指定した日数より古いローテーションしたログファイルのみが削除されます。 現在のログファイルには、それに含まれるデータの日数にかかわらず、表示されません。 古いログファイルを自動削除しない場合は、<span class="val"> 0 </span>に設定します。</p> <h4>構文</h4><p>整数</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="accessLog_compressArchive"><h3>アーカイブを圧縮する<span class="ls-permlink"><a href="#accessLog_compressArchive"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>ディスク領域を節約するためにローテーションしたログファイルを圧縮するかどうかを指定します。</p> <h4>構文</h4><p>ラジオボックスから選択</p> <h4>ヒント</h4><p><span title="Information" class="ls-icon-info"></span> ログファイルは圧縮率が高く、古いログのディスク使用量を減らすために推奨されます。</p> </article> </div>
+</section>
+</article><div  class="ls-col-1-1"><footer class="copyright">Copyright &copy; 2013-2018. <a href="https://www.litespeedtech.com">LiteSpeed Technologies Inc.</a> All rights reserved.</footer>
+</div></div>
+</body>
+</html>

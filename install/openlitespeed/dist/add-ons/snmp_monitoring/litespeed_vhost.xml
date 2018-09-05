@@ -1,0 +1,46 @@
+<interface>
+        <name>Get LiteSpeed Vhosts</name>
+        <description>list litespeed virtual hosts</description>
+        <oid_index>.1.3.6.1.4.1.22253.200</oid_index>
+        <index_order>Vhost:Index</index_order>
+        <index_order_type>numeric</index_order_type>
+        <index_title_format>|chosen_order_field|</index_title_format>
+
+        <fields>
+                <Index>
+                        <name>Index</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>input</direction>
+                        <oid>.1.3.6.1.4.1.22253.200</oid>
+                </Index>
+                <Vhost>
+                        <name>Vhost Name</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>input</direction>
+                        <oid>.1.3.6.1.4.1.22253.201</oid>
+                </Vhost>
+                <ReqProcessing>
+                        <name>Requests Processing</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.202</oid>
+                </ReqProcessing>
+                <ReqSecond>
+                        <name>Requests Per Second</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.203</oid>
+                </ReqSecond>
+                <ReqTotal>
+                        <name>Requests Total</name>
+                        <method>walk</method>
+                        <source>value</source>
+                        <direction>output</direction>
+                        <oid>.1.3.6.1.4.1.22253.204</oid>
+                </ReqTotal>       
+		</fields>
+</interface>

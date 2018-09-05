@@ -342,7 +342,7 @@ class remoteTransferUtilities:
 
 
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateRestore]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.startRestore]")
 
 
 def main():

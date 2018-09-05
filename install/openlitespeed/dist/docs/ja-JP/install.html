@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>Open LiteSpeed Web Serverユーザーズマニュアル - インストール</title>
+  <meta name="description" content="Open LiteSpeed Web Serverユーザーズマニュアル - インストール." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex">
+  <link rel="shortcut icon" href="../img/favicon.ico" />
+  <link rel="stylesheet" type="text/css" href="../css/hdoc.css">
+</head>
+<body>
+<div class="pagewrapper clearfix"><aside class="sidetree ls-col-1-5">
+      <figure>
+        <img src="../img/ols_logo.svg" alt="openlitespeed logo" width="150px"/>
+      </figure>
+<h3 class="ls-text-thin">OpenLiteSpeed Web Server <a href="index.html"> ユーザーズマニュアル</a></h3>
+<h5 class="ls-text-muted">Version 1.4 &nbsp;&#8212;&nbsp;Rev. 3 </h5>
+<hr/>
+<div>
+<ul>
+<li><a href="license.html">ライセンス</a></li>
+<li><a href="intro.html">はじめに</a></li>
+<li><span class="current"><a href="install.html">インストール</a></span></li>
+<li><a href="admin.html">管理</a>
+	<ul class="level2"><li><a href="ServerStat_Help.html">サービスマネージャ</a></li></ul></li>
+<li><a href="security.html">セキュリティ</a></li>
+<li><a href="config.html">設定</a>
+	<ul class="level2">
+	<li><a href="ServGeneral_Help.html">サーバー全般</a></li>
+        <li><a href="ServLog_Help.html">サーバーログ</a></li>
+	<li><a href="ServTuning_Help.html">サーバーのチューニング</a></li>
+	<li><a href="ServSecurity_Help.html">サーバーのセキュリティ</a></li>
+	<li><a href="ExtApp_Help.html">外部アプリ</a></li>
+                <ul class="level3">
+                <li><a href="External_FCGI.html">Fast CGIアプリ</a></li>
+                <li><a href="External_FCGI_Auth.html">Fast CGIオーソライザー</a></li>
+                <li><a href="External_LSAPI.html">LSAPIアプリ</a></li>
+                <li><a href="External_Servlet.html">サーブレットエンジン</a></li>
+                <li><a href="External_WS.html">Webサーバー</a></li>
+                <li><a href="External_PL.html">パイプロガー</a></li>
+                <li><a href="External_LB.html">ロードバランサ</a></li>
+                </ul>
+	<li><a href="ScriptHandler_Help.html">スクリプトハンドラ</a></li>
+	<li><a href="Rails_Help.html">Rack/Railsの設定</a></li>
+	<li><a href="Module_Help.html">モジュール設定</a></li>
+	<li><a href="Listeners_General_Help.html">リスナー全般</a></li>
+        <li><a href="Listeners_SSL_Help.html">リスナーのSSL</a></li>
+	<li><a href="Templates_Help.html">テンプレート</a></li>
+	<li><a href="VirtualHosts_Help.html">バーチャルホストの基本</a></li>
+	<li><a href="VHGeneral_Help.html">バーチャルホスト全般</a></li>
+	<li><a href="VHSecurity_Help.html">バーチャルホストのセキュリティ</a></li>
+        <li><a href="VHSSL_Help.html">バーチャルホストのSSL</a></li>
+	<li><a href="Rewrite_Help.html">Rewrite</a></li>
+	<li><a href="Context_Help.html">コンテキスト</a></li>
+               <ul class="level3">
+                <li><a href="Static_Context.html">静的コンテテキスト</a></li>
+                <li><a href="Java_Web_App_Context.html">Java Webアプリのコンテキスト</a></li>
+                <li><a href="Servlet_Context.html">サーブレットコンテキスト</a></li>
+                <li><a href="FCGI_Context.html">Fast CGIコンテキスト</a></li>
+                <li><a href="LSAPI_Context.html">LSAPIコンテキスト</a></li>
+                <li><a href="Proxy_Context.html">プロキシコンテキスト</a></li>
+                <li><a href="CGI_Context.html">CGIコンテキスト</a></li>
+                <li><a href="LB_Context.html">ロードバランサコンテキスト</a></li>
+                <li><a href="Redirect_Context.html">コンテキストのリダイレクト</a></li>
+                <li><a href="Rails_Context.html">Rack/Railsのコンテキスト</a></li>
+                <li><a href="Module_Context.html">モジュールハンドラのコンテキスト</a></li>
+                </ul>
+	<li><a href="VHWebSocket_Help.html">Web Socketプロキシ</a></li>
+	</ul>
+</li>
+<li><a href="webconsole.html">Webコンソール</a>
+        <ul class="level2">
+        <li><a href="AdminGeneral_Help.html">管理コンソール全般</a></li>
+        <li><a href="AdminSecurity_Help.html">管理コンソールのセキュリティ</a></li>
+	<li><a href="AdminListeners_General_Help.html">管理リスナー全般</a></li>
+        <li><a href="AdminListeners_SSL_Help.html">管理リスナーのSSL</a></li>
+        </ul>
+</li>
+</ul>
+</div>
+</aside>
+<article class="contentwrapper ls-col-3-5 clearfix"><div class="nav-bar ls-spacer-micro-top"><div class="prev">&#171 <a href="intro.html">導入</a></div><div class="center"><a href="index.html">ホーム</a></div><div class="next"><a href="admin.html">管理</a> &#187;</div></div>
+<h1>インストール/アンインストール</h1>
+
+<h3>最小システム要件</h3>
+<ul><li><strong>オペレーティングシステム：</strong>
+	<ul><li>Linux(i386): カーネル 2.4以上, glibc-2.2以上</li>
+		<li>CentOS: 5以上</li>
+		<li>Ubuntu: 8.04以上</li>
+        <li>Debian: 4以上</li>
+		<li>FreeBSD(i386): 4.5以上</li>
+		<li>MacOSX: 10.3以上</li>
+	</ul></li>
+	<li><strong>CPU:</strong>
+		<ul><li>Intel: 80486以上</li>
+			<li>PowerPC: PowerPC G4</li>
+		</ul>
+	</li>
+	<li><strong>メモリ:</strong> 32MB以上</li>
+	<li><strong>ディスク:</strong>
+		<ul><li>インストール: 200MB</li><li>ランタイム：300MB以上、スワップスペースは使用方法によって異なります。</li></ul></li>
+</ul>
+
+<h3>インストール</h3>
+
+<p>インストールはコマンドライン端末で行う必要があります。
+   テストの目的で、LiteSpeed Webサーバーは特権のないユーザーによってホームディレクトリにインストールできます。
+   プロダクション用には、システムディレクトリにインストールする必要があります。</p>
+
+<p>Mac OS Xでは、ルートユーザーはデフォルトで無効になっています。
+   アップルのWebサイトで詳述されている一連の操作を使用して有効にすることができます。
+   sudoコマンドを使用して、rootユーザーを有効にせずにLSWSをシステムディレクトリにインストールすることもできますが、システムフォルダはrootユーザーだけが操作できます。
+   つまり、コマンドライン端末からLSWSを制御したいとき（LSWSを起動または停止したいときなど）には、sudoコマンドを使用する必要があります。</p>
+
+<h4>インストール手順：</h4>
+<ol>
+	<li><p>便利な場所にパッケージをダウンロードして解凍します：</p>
+	<p class="cmd">wget http://open.litespeedtech.com/packages/openlitespeed.1.0.tgz; tar zxf openlitespeed.1.0.tgz</p>
+	</li>
+	
+	<li><p>インストールディレクトリに移動し、パッケージをrootユーザとしてコンパイルしてインストールします（実稼働環境用）：</p>
+		<p class="cmd">cd openlitespeed <br>./configure<br>make && make install</p>
+		<p><strong>ノート：</strong> OpenLiteSpeedをコンパイルしてインストールする前に、PCRE、Expat、OpenSSL、GeoIP、zlibの次のパッケージをインストールする必要があります。</p>
+		<ul><li><strong>CentOS 5. *および6. *</strong>
+			<p class="cmd">wget http://dl.fedoraproject.org/pub/epel/5/i386/epel-release-5-4.noarch.rpm;
+rpm -Uvh epel-release-5-4.noarch.rpm  (CentOS 5.* のみ) </p>
+			<p class="cmd">wget http://dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm; rpm -Uvh epel-release-6-8.noarch.rpm  (CentOS 6.* のみ) </p>		
+			<p class="cmd">yum install gcc gcc-c++ make glibc</p>
+			<p class="cmd">yum install pcre-devel expat-devel openssl-devel geoip-devel zlib-devel</p></li>
+			<li><strong>Ubuntu/Debian</strong>
+			<p class="cmd">apt-get install build-essential</p>
+			<p class="cmd">apt-get install libpcre3-dev libexpat1-dev libssl-dev libgeoip-dev zlib1g-dev</p></li>
+	 		<li><strong>FreeBSD</strong>
+				<p class="cmd">pkg_addまたはportsを使用してください。
+portsを使用した例をいくつか示します。<br/><br/>cd /usr/ports/devel/pcre; make install clean; rehash;<br>
+				cd /usr/ports/net/GeoIP; make install clean; rehash;<br>
+				cd /usr/ports/textproc/expat2; make install clean; rehash;<br>
+				cd /usr/ports/security/openssl; make install clean; rehash;</p></li>
+	 		<li><strong>Mac OS X</strong>
+	 			<p>Install Xcode from https://developer.apple.com/xcode/</p>
+				<p>Install MacPorts from http://www.macports.org/install.php#pkg</p>
+				<p class="cmd">sudo port install pcre expat openssl libgeoip zlib</p>
+				<p><strong>ノート： </strong>OS Xユーザーがconfigureコマンドを実行するとき、PCREパッケージがMacPorts経由で追加されている場合、PCREパッケージを探す場所を指定するパラメータを追加する必要があります。
+これは、MacPortsが非標準の場所（/opt/local/）にインストールするためです。
+例えば：</p> 
+				<p class="cmd">./configure --with-pcre=/opt/local</p></li>
+		</ul>
+	</li>
+	<li>デフォルトでは、インストーラはサンプルサイトをポート8088にインストールし、WebAdminコンソール（LiteSpeed GUI）をポート7080に設定します。
+（ユーザー：admin、パスワード：123456、管理者メール：root@localhost） </li>
+
+</ol>
+
+<h3>スタートする</h3>
+
+<ol>
+	<li><p>サーバープロセスの制御の詳細については、「管理者ガイド」を参照してください。</p>
+	<p>サーバーを起動するには、単に [your_install_dir]/bin/lswsctrl start を実行してください。(それを止めるには、 [your_install_dir]/bin/lswsctrl stop。)</p>
+	</li>
+	<li><p>サンプルサイトがサーバー上で実行されている必要があります。</p>
+	<p>サイトにアクセスするには、ブラウザでhttp：//[アドレス]：8088/にアクセスし、[アドレス]はWebサーバーマシンのIPアドレスまたはドメイン名を指定します。
+サーバーが使用しているマシン上にある場合は、「localhost」を使用します。 "8088"がデフォルトのポートです。
+インストール中にLiteSpeedの別のポートを選択した場合は、指定したポートを使用してください。</p>
+	<p>他のテストページにリンクされているおめでとうページは、上記のアドレスを指し示すとブラウザに読み込まれます。
+そうでない場合は、WebAdminインターフェイスをテストしてみてください。</p>
+	</li>
+	<li><p>WebAdminコンソールのデフォルトポートは7080です。</p>
+	<p>http：// [アドレス]：7080 /をブラウザに入力し、WebAdminインターフェイスに移動します。
+（インストール中にWebAdminのポートを変更した場合は、代わりにそのポートを使用してください）。</p>
+	<p>[アドレス]にサーバーが稼動しているマシンを現在使用している場合は、「localhost」を使用することができます。</p>
+	<p>WebAdminのウェルカムページが読み込まれます。
+[ログオン]リンクをクリックし、インストール時に指定した管理者のユーザー名とパスワードを使用してログオンします。</p>
+	<p>設定に関する詳細については、設定ガイドを参照するか、各ページの上部にある[ヘルプ]リンクをクリックしてください。</p>
+	</li>
+	<li><p>サーバーがファイアウォールを使用している場合は、localhostが信頼できるものであることを確認してください。</p>
+	<p>たとえば、IPTablesを持つLinuxには、LOからのALLOW INPUTルールを含める必要があります。</p>
+	</li>
+	<li><p>WebサイトとWebAdminインターフェイスにアクセスできない場合は、エラーログ [your_install_dir]/logs/error.logを参照してください。</p>
+		<p>TCPポートが他のサーバーアプリケーションと競合する場合は、Webサーバーを使用可能なポートで再インストールする必要があります。
+次のコマンドを使用して、使用可能なポートを見つけることができます：
+<span class="cmd">netstat -an | grep XXXX </span> 
+XXXXはポート番号です。 ポートが使用可能な場合、コマンドは出力を生成しません。</p>
+		<p>スワッピングディレクトリが書き込み可能でない場合は、スワッピングディレクトリの書き込み権限をWebサーバーが実行されているユーザーに許可するか、スワップディレクトリの設定を手動で変更します。
+スワップディレクトリは、サーバーのXML構成ファイルで構成されます。
+[your_install_dir]/conf/httpd_config.xmlに移動します。
+swappingDirのXMLファイルを検索します。
+スワップディレクトリのデフォルトの場所は/tmp/lshttpd/swapです。</p>
+		<p>まだインストールに問題がある場合は、私たちのwikiをチェックするか、サポートフォーラムで問題を投稿してください。</p>
+	</li>
+</ol>
+
+<h3>ノート</h3>
+<ul>
+	<li>OpenLiteSpeedは、ネイティブのLiteSpeed XML設定ファイルとプレーンテキスト設定ファイル（Apacheのhttpd.confの編集に使用されるもの）の両方をサポートします。 
+[your_install_dir]/conf/switch_config.shを実行して、これらの形式を切り替えます。</li>
+	<li>FreeBSD、Mac OS X、Ubuntu、Debianでは、出荷されたPHP（CentOS用）は動作しません。
+OpenLiteSpeedでPHPアプリケーションを実行するには、OpenLiteSpeed用の新しいPHPをビルドする必要があります。</li>
+</ul>
+
+<h1>アンインストール手順</h1>
+<ol>
+	<li>実行中のOpenLiteSpeedを停止する： [your_install_dir]/bin/lswsctrl stop</li>
+	<li>インストールディレクトリを削除します： rm -rf [your_install_dir]</li>
+</ol>
+</article><div  class="ls-col-1-1"><footer class="copyright">Copyright &copy; 2013-2018. <a href="https://www.litespeedtech.com">LiteSpeed Technologies Inc.</a> All rights reserved.</footer>
+</div></div>
+</body>
+</html>

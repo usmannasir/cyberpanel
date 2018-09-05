@@ -74,17 +74,15 @@ def deleteBackup(request):
 
 def submitRestore(request):
     try:
-        userID = request.session['userID']
         wm = BackupManager()
-        return wm.submitRestore(userID, json.loads(request.body))
+        return wm.submitRestore(json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
 
 def restoreStatus(request):
     try:
-        userID = request.session['userID']
         wm = BackupManager()
-        return wm.restoreStatus(userID, json.loads(request.body))
+        return wm.restoreStatus(json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
 

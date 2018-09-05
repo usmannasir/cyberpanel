@@ -280,7 +280,7 @@ class BackupManager:
 
             return HttpResponse(final_json)
 
-    def submitRestore(self, userID = None, data = None):
+    def submitRestore(self, data = None):
         try:
             backupFile = data['backupFile']
             originalFile = "/home/backup/" + backupFile
@@ -293,7 +293,6 @@ class BackupManager:
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
             subprocess.Popen(shlex.split(execPath))
-
             time.sleep(4)
 
             final_dic = {'restoreStatus': 1, 'error_message': "None"}
@@ -304,7 +303,7 @@ class BackupManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def restoreStatus(self, userID = None, data = None):
+    def restoreStatus(self, data = None):
         try:
             backupFile = data['backupFile'].strip(".tar.gz")
 
@@ -1182,10 +1181,8 @@ class BackupManager:
     def remoteBackupRestore(self, userID = None, data = None):
         try:
             currentACL = ACLManager.loadedACL(userID)
-
             if ACLManager.currentContextPermission(currentACL, 'remoteBackups') == 0:
                 return ACLManager.loadErrorJson('remoteTransferStatus', 0)
-
 
             backupDir = data['backupDir']
 

@@ -1,0 +1,149 @@
+#!/usr/bin/perl
+
+use FCGI;
+#use strict;
+
+our %Cache;
+use Symbol qw(delete_package);
+
+*CORE::GLOBAL::exit = \&my_exit;
+
+sub my_exit {
+#	warn "exit() was called";
+}
+
+
+
+
+sub valid_package_name {
+	my($string) = @_;
+	$string =~ s/([^A-Za-z0-9\/])/sprintf('_%2x',unpack('C',$1))/eg;
+	# second pass only for words starting with a digit
+	$string =~ s|/(\d)|sprintf('/_%2x',unpack('C',$1))|eg;
+
+	# Dress it up as a real package name
+	$string =~ s|/|::|g;
+	return 'LSPerld' . $string;
+}
+
+sub execute_file {
+	my($__filename, $__delete) = @_;
+	my $__package;
+	my $__mtime;
+	my $__path;
+	my $__name;
+	return 404 if ( ! -r $__filename || -z _ );
+	$__mtime = -M _;
+	if(defined $Cache{$__filename}[3]
+	   &&
+	   $Cache{$__filename}[3] <= $__mtime)
+	{
+        # we have compiled this subroutine already,
+        # it has not been updated on disk, nothing left to do
+        #print STDERR "already compiled $package->handler\n";
+		$__path = $Cache{$__filename}[0];
+		$__name = $Cache{$__filename}[1];
+		$__package = $Cache{$__filename}[2];
+		chdir( $__path );
+	}
+	else {
+		$__filename =~ /^(\/.*?)\/*([^\/]+)$/;
+		$__path  = $1;
+		$__name  = $2;
+		chdir( $__path );
+
+        local *FH;
+        open FH, $__filename or die "open '$__filename' $!";
+        local($/) = undef;
+        my $__sub = <FH>;
+        close FH;
+
+		$__package = valid_package_name($__filename);
+        #wrap the code into a subroutine inside our unique package
+        my $__eval = qq{package $__package; use subs qw(exit); sub exit { } sub handler { local \$0='$__filename'; $__sub; }};
+        {
+            # hide our variables within this block
+            my($__filename,$__mtime,$__package,$__sub);
+            eval $__eval;
+        }
+		if ( $@ )
+		{
+			warn $@;
+			return 500;
+				
+		}
+
+        #cache it unless we're cleaning out each time
+        if ( ! $__delete )
+		{
+			#$Cache{$filename}{pkgname} = $package;
+			#$Cache{$filename}{mtime} = $mtime;
+			$Cache{$__filename} = [ $__path, $__name, $__package, $__mtime ];
+		}
+	}
+
+	$0=$__filename;
+	@ARGV = ( $__name );
+	my $__QS = $ENV{'QUERY_STRING'};
+	if (( $__QS ne '')&&(index( $__QS, '=' ) == -1 ))
+	{
+		push( @ARGV, split( $__QS ) );
+	}
+	eval {$__package->handler;};
+
+	delete_package($__package) if $__delete;
+	return 0;
+	#take a look if you want
+	#print Devel::Symdump->rnew($package)->as_string, $/;
+}
+
+
+my $req = FCGI::Request();
+my $count = 0;
+my $ret;
+my $max_req = -1;
+if ( $ENV{'FCGI_PERL_MAX_REQ'} eq '' )
+{
+	$max_req = 500;
+}
+else
+{
+	$max_req = int($ENV{'FCGI_PERL_MAX_REQ'}); 
+}
+
+while($req->accept() >= 0) 
+{
+	my $filename = $ENV{'SCRIPT_FILENAME'};
+
+	# Make it looks like ActiveState's PerlEx, otherwise CGI.pm won't reset
+	# request parameters
+	$ENV{'GATEWAY_INTERFACE'} = 'CGI-PerlEx/1.1';
+
+	if ( $filename ne '' )
+	{
+		$ret = execute_file( $filename, 0 );
+		++$count;
+		if ( $ret )
+		{
+			if ( $ret == 404 )
+			{
+				print( "Status: 404\r\nContent-type: text/plain\r\n\r\n",
+					   "ERROR: file not find: \'$filename\'!\n" );
+			}
+			elsif ( $ret == 500 )
+			{
+				print( "Status: 500\r\nContent-type: text/plain\r\n\r\n",
+					   "ERROR: \'$filename\' is not a valid Perl script!\n" );
+			}
+		}
+	}
+	else
+	{
+		print( "Content-type: text/plain\r\n\r\n",
+			   "ERROR: missing environment variable \'SCRIPT_FILENAME\'!\n" );
+	}
+	
+    $req->Finish();
+	last if ( ( $max_req != 0 )&&( $count >= $max_req ) );
+}
+

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>Open LiteSpeed Web Serverユーザーズマニュアル - 管理コンソールのセキュリティ</title>
+  <meta name="description" content="Open LiteSpeed Web Serverユーザーズマニュアル - 管理コンソールのセキュリティ." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex">
+  <link rel="shortcut icon" href="../img/favicon.ico" />
+  <link rel="stylesheet" type="text/css" href="../css/hdoc.css">
+</head>
+<body>
+<div class="pagewrapper clearfix"><aside class="sidetree ls-col-1-5">
+      <figure>
+        <img src="../img/ols_logo.svg" alt="openlitespeed logo" width="150px"/>
+      </figure>
+<h3 class="ls-text-thin">OpenLiteSpeed Web Server <a href="index.html"> ユーザーズマニュアル</a></h3>
+<h5 class="ls-text-muted">Version 1.4 &nbsp;&#8212;&nbsp;Rev. 3 </h5>
+<hr/>
+<div>
+<ul>
+<li><a href="license.html">ライセンス</a></li>
+<li><a href="intro.html">はじめに</a></li>
+<li><a href="install.html">インストール</a></li>
+<li><a href="admin.html">管理</a>
+	<ul class="level2"><li><a href="ServerStat_Help.html">サービスマネージャ</a></li></ul></li>
+<li><a href="security.html">セキュリティ</a></li>
+<li><a href="config.html">設定</a>
+	<ul class="level2">
+	<li><a href="ServGeneral_Help.html">サーバー全般</a></li>
+        <li><a href="ServLog_Help.html">サーバーログ</a></li>
+	<li><a href="ServTuning_Help.html">サーバーのチューニング</a></li>
+	<li><a href="ServSecurity_Help.html">サーバーのセキュリティ</a></li>
+	<li><a href="ExtApp_Help.html">外部アプリ</a></li>
+                <ul class="level3">
+                <li><a href="External_FCGI.html">Fast CGIアプリ</a></li>
+                <li><a href="External_FCGI_Auth.html">Fast CGIオーソライザー</a></li>
+                <li><a href="External_LSAPI.html">LSAPIアプリ</a></li>
+                <li><a href="External_Servlet.html">サーブレットエンジン</a></li>
+                <li><a href="External_WS.html">Webサーバー</a></li>
+                <li><a href="External_PL.html">パイプロガー</a></li>
+                <li><a href="External_LB.html">ロードバランサ</a></li>
+                </ul>
+	<li><a href="ScriptHandler_Help.html">スクリプトハンドラ</a></li>
+	<li><a href="Rails_Help.html">Rack/Railsの設定</a></li>
+	<li><a href="Module_Help.html">モジュール設定</a></li>
+	<li><a href="Listeners_General_Help.html">リスナー全般</a></li>
+        <li><a href="Listeners_SSL_Help.html">リスナーのSSL</a></li>
+	<li><a href="Templates_Help.html">テンプレート</a></li>
+	<li><a href="VirtualHosts_Help.html">バーチャルホストの基本</a></li>
+	<li><a href="VHGeneral_Help.html">バーチャルホスト全般</a></li>
+	<li><a href="VHSecurity_Help.html">バーチャルホストのセキュリティ</a></li>
+        <li><a href="VHSSL_Help.html">バーチャルホストのSSL</a></li>
+	<li><a href="Rewrite_Help.html">Rewrite</a></li>
+	<li><a href="Context_Help.html">コンテキスト</a></li>
+               <ul class="level3">
+                <li><a href="Static_Context.html">静的コンテテキスト</a></li>
+                <li><a href="Java_Web_App_Context.html">Java Webアプリのコンテキスト</a></li>
+                <li><a href="Servlet_Context.html">サーブレットコンテキスト</a></li>
+                <li><a href="FCGI_Context.html">Fast CGIコンテキスト</a></li>
+                <li><a href="LSAPI_Context.html">LSAPIコンテキスト</a></li>
+                <li><a href="Proxy_Context.html">プロキシコンテキスト</a></li>
+                <li><a href="CGI_Context.html">CGIコンテキスト</a></li>
+                <li><a href="LB_Context.html">ロードバランサコンテキスト</a></li>
+                <li><a href="Redirect_Context.html">コンテキストのリダイレクト</a></li>
+                <li><a href="Rails_Context.html">Rack/Railsのコンテキスト</a></li>
+                <li><a href="Module_Context.html">モジュールハンドラのコンテキスト</a></li>
+                </ul>
+	<li><a href="VHWebSocket_Help.html">Web Socketプロキシ</a></li>
+	</ul>
+</li>
+<li><a href="webconsole.html">Webコンソール</a>
+        <ul class="level2">
+        <li><a href="AdminGeneral_Help.html">管理コンソール全般</a></li>
+        <li><span class="current"><a href="AdminSecurity_Help.html">管理コンソールのセキュリティ</a></span></li>
+	<li><a href="AdminListeners_General_Help.html">管理リスナー全般</a></li>
+        <li><a href="AdminListeners_SSL_Help.html">管理リスナーのSSL</a></li>
+        </ul>
+</li>
+</ul>
+</div>
+</aside>
+<article class="contentwrapper ls-col-3-5 clearfix"><div class="nav-bar ls-spacer-micro-top"><div class="prev">&#171 <a href="AdminGeneral_Help.html">管理コンソールの一般</a></div><div class="center"><a href="webconsole.html">Webコンソール</a></div><div class="next"><a href="AdminListeners_General_Help.html">リスナー管理者全般</a> &#187;</div></div>
+<h1>管理コンソールのセキュリティ</h1><h2 id="top">目次</h2><section class="toc"><section class="toc-row"><header><a href="#accessControl">アクセス制御</a></header><p>
+<a href="#accessControl_allow">許可リスト</a> | <a href="#accessControl_deny">拒否リスト</a></p></section>
+<section class="toc-row"><header><a href="#adminUser">WebAdminユーザー</a></header><p>
+</p></section>
+</section>
+<section><div class="helpitem"><article class="ls-helpitem"><div><header id="accessControl"><h3>アクセス制御<span class="ls-permlink"><a href="#accessControl"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>どのサブネットワークおよび/またはIPアドレスがサーバーにアクセスできるかを指定します。 サーバレベルでは、この設定はすべてのバーチャルホストに影響します。 バーチャルホストレベルで各バーチャルホストに固有のアクセス制御を設定することもできます。 バーチャルホストレベルの設定はサーバーレベルの設定を上書きしません。 <br/><br/> ブロック/ IPの許可は、許可リストと拒否リストの組み合わせによって決まります。 特定のIPまたはサブネットワークのみをブロックする場合は、<span class="tagl"><a href="#accessControl_allow">許可リスト</a></span>に<span class="val">*</span>または<span class="val">ALL</span>を入れ、ブロックされたIPまたはサブネットワークを<span class="tagl"><a href="#accessControl_deny">拒否リスト</a></span>。<br/> 特定のIPまたはサブネットワークのみを許可する場合は、<span class="tagl"><a href="#accessControl_deny">拒否リスト</a></span>に<span class="val">*</span>または<span class="val">ALL</span>を入れ、許可されたIPまたはサブネットワークを<span class="tagl"><a href="#accessControl_allow">許可リスト</a></span>。<br/> IPに適合する最小スコープの設定は、アクセスを決定するために使用されます。<br/><br/> <b>サーバーレベル：</b>信頼できるIPまたはサブネットワークは、<span class="tagl"><a href="#accessControl_allow">許可リスト</a></span>に、末尾の "T"を追加することで指定する必要があります。 信頼できるIPまたはサブネットワークは、接続/スロットリング制限の影響を受けません。 信頼できるIP/サブネットワークは、サーバーレベルのアクセス制御でのみ設定できます。</p> <h4>ヒント</h4><p>[セキュリティ]すべてのバーチャルホストに適用される一般的な制限については、サーバーレベルでこれを使用してください。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="accessControl_allow"><h3>許可リスト<span class="ls-permlink"><a href="#accessControl_allow"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>許可されるIPまたはサブネットワークのリストを指定します。 <span class="val">*</span>または<span class="val">ALL</span>が受け入れられます。</p> <h4>構文</h4><p>IPアドレスまたはサブネットワークのカンマ区切りリスト。 末尾の「T」は、<span class="val">192.168.1.*T</span>などの信頼できるIPまたはサブネットワークを示すために使用できます。</p> <h4>例</h4><div class="ls-example"><b>Sub-networks:</b> 192.168.1.0/255.255.255.0, 192.168.1.0/24, 192.168.1, or 192.168.1.*<br/> <b>IPv6 addresses:</b> ::1 or [::1] <br/> <b>IPv6 subnets:</b> 3ffe:302:11:2:20f:1fff:fe29:717c/64 or  [3ffe:302:11:2:20f:1fff:fe29:717c]/64</div><h4>ヒント</h4><p>[セキュリティ]サーバーレベルのアクセス制御で設定された信頼されたIPまたはサブネットワークは、接続/スロットリングの制限から除外されます。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="accessControl_deny"><h3>拒否リスト<span class="ls-permlink"><a href="#accessControl_deny"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>許可されていないIPまたはサブネットワークのリストを指定します。</p> <h4>構文</h4><p>IPアドレスまたはサブネットワークのカンマ区切りリスト。 <span class="val">*</span>または<span class="val">ALL</span>が受け入れられます。</p> <h4>例</h4><div class="ls-example"><b>Sub-networks:</b> 192.168.1.0/255.255.255.0, 192.168.1.0/24, 192.168.1, or 192.168.1.*<br/> <b>IPv6 addresses:</b> ::1 or [::1] <br/> <b>IPv6 subnets:</b> 3ffe:302:11:2:20f:1fff:fe29:717c/64 or  [3ffe:302:11:2:20f:1fff:fe29:717c]/64</div></article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="adminUser"><h3>WebAdminユーザー<span class="ls-permlink"><a href="#adminUser"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>WebAdmin Consoleのユーザー名とパスワードを変更します。 変更を保存するには、古いパスワードを入力して確認する必要があります。</p> </article> </div>
+</section>
+</article><div  class="ls-col-1-1"><footer class="copyright">Copyright &copy; 2013-2018. <a href="https://www.litespeedtech.com">LiteSpeed Technologies Inc.</a> All rights reserved.</footer>
+</div></div>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>Open LiteSpeed Web Serverユーザーズマニュアル - WebAdminコンソール - サービス管理</title>
+  <meta name="description" content="Open LiteSpeed Web Serverユーザーズマニュアル - WebAdminコンソール - サービス管理." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex">
+  <link rel="shortcut icon" href="../img/favicon.ico" />
+  <link rel="stylesheet" type="text/css" href="../css/hdoc.css">
+</head>
+<body>
+<div class="pagewrapper clearfix"><aside class="sidetree ls-col-1-5">
+      <figure>
+        <img src="../img/ols_logo.svg" alt="openlitespeed logo" width="150px"/>
+      </figure>
+<h3 class="ls-text-thin">OpenLiteSpeed Web Server <a href="index.html"> ユーザーズマニュアル</a></h3>
+<h5 class="ls-text-muted">Version 1.4 &nbsp;&#8212;&nbsp;Rev. 3 </h5>
+<hr/>
+<div>
+<ul>
+<li><a href="license.html">ライセンス</a></li>
+<li><a href="intro.html">はじめに</a></li>
+<li><a href="install.html">インストール</a></li>
+<li><a href="admin.html">管理</a>
+	<ul class="level2"><li><span class="current"><a href="ServerStat_Help.html">サービスマネージャ</a></span></li></ul></li>
+<li><a href="security.html">セキュリティ</a></li>
+<li><a href="config.html">設定</a>
+	<ul class="level2">
+	<li><a href="ServGeneral_Help.html">サーバー全般</a></li>
+        <li><a href="ServLog_Help.html">サーバーログ</a></li>
+	<li><a href="ServTuning_Help.html">サーバーのチューニング</a></li>
+	<li><a href="ServSecurity_Help.html">サーバーのセキュリティ</a></li>
+	<li><a href="ExtApp_Help.html">外部アプリ</a></li>
+                <ul class="level3">
+                <li><a href="External_FCGI.html">Fast CGIアプリ</a></li>
+                <li><a href="External_FCGI_Auth.html">Fast CGIオーソライザー</a></li>
+                <li><a href="External_LSAPI.html">LSAPIアプリ</a></li>
+                <li><a href="External_Servlet.html">サーブレットエンジン</a></li>
+                <li><a href="External_WS.html">Webサーバー</a></li>
+                <li><a href="External_PL.html">パイプロガー</a></li>
+                <li><a href="External_LB.html">ロードバランサ</a></li>
+                </ul>
+	<li><a href="ScriptHandler_Help.html">スクリプトハンドラ</a></li>
+	<li><a href="Rails_Help.html">Rack/Railsの設定</a></li>
+	<li><a href="Module_Help.html">モジュール設定</a></li>
+	<li><a href="Listeners_General_Help.html">リスナー全般</a></li>
+        <li><a href="Listeners_SSL_Help.html">リスナーのSSL</a></li>
+	<li><a href="Templates_Help.html">テンプレート</a></li>
+	<li><a href="VirtualHosts_Help.html">バーチャルホストの基本</a></li>
+	<li><a href="VHGeneral_Help.html">バーチャルホスト全般</a></li>
+	<li><a href="VHSecurity_Help.html">バーチャルホストのセキュリティ</a></li>
+        <li><a href="VHSSL_Help.html">バーチャルホストのSSL</a></li>
+	<li><a href="Rewrite_Help.html">Rewrite</a></li>
+	<li><a href="Context_Help.html">コンテキスト</a></li>
+               <ul class="level3">
+                <li><a href="Static_Context.html">静的コンテテキスト</a></li>
+                <li><a href="Java_Web_App_Context.html">Java Webアプリのコンテキスト</a></li>
+                <li><a href="Servlet_Context.html">サーブレットコンテキスト</a></li>
+                <li><a href="FCGI_Context.html">Fast CGIコンテキスト</a></li>
+                <li><a href="LSAPI_Context.html">LSAPIコンテキスト</a></li>
+                <li><a href="Proxy_Context.html">プロキシコンテキスト</a></li>
+                <li><a href="CGI_Context.html">CGIコンテキスト</a></li>
+                <li><a href="LB_Context.html">ロードバランサコンテキスト</a></li>
+                <li><a href="Redirect_Context.html">コンテキストのリダイレクト</a></li>
+                <li><a href="Rails_Context.html">Rack/Railsのコンテキスト</a></li>
+                <li><a href="Module_Context.html">モジュールハンドラのコンテキスト</a></li>
+                </ul>
+	<li><a href="VHWebSocket_Help.html">Web Socketプロキシ</a></li>
+	</ul>
+</li>
+<li><a href="webconsole.html">Webコンソール</a>
+        <ul class="level2">
+        <li><a href="AdminGeneral_Help.html">管理コンソール全般</a></li>
+        <li><a href="AdminSecurity_Help.html">管理コンソールのセキュリティ</a></li>
+	<li><a href="AdminListeners_General_Help.html">管理リスナー全般</a></li>
+        <li><a href="AdminListeners_SSL_Help.html">管理リスナーのSSL</a></li>
+        </ul>
+</li>
+</ul>
+</div>
+</aside>
+<article class="contentwrapper ls-col-3-5 clearfix"><div class="nav-bar ls-spacer-micro-top"><div class="prev">&nbsp;</div><div class="center"><a href="admin.html">管理</a></div><div class="next">&nbsp;</div></div>
+<h1>WebAdminコンソール - サービス管理</h1><section class="ls-spacer-small-bottom">サービスマネージャは、サーバーを監視し、特定のトップレベル機能を制御するための制御室として機能します。
+以下の機能を提供します:
+（サービスマネージャは、アクションメニューまたはホームページからクリックしてアクセスできます。）
+<ul>
+<li>サーバー、リスナー、およびバーチャルホストの現在の状態を監視します。</li>
+<li>正常に再起動して構成の変更を適用します。</li>
+<li>特定のバーチャルホストを有効または無効にします。</li>
+<li>ログビューアからサーバーログを表示します。</li>
+<li>リアルタイムのサーバー統計を監視する。</li>
+</ul></section>
+<h2 id="top">目次</h2><section class="toc"><section class="toc-row"><header>サーバー</header><p>
+<a href="#sname">名前 - サーバー</a> | <a href="#pid">PID</a> | <a href="#servAction">アクション</a> | <a href="#restart">変更を適用する/緩やかなリスタート</a> | <a href="#viewlog">サーバーログビューア</a> | <a href="#realtimerpt">リアルタイム統計</a> | <a href="#toggleDebugLog">デバッグログを切り替える</a></p></section>
+<section class="toc-row"><header>リスナー</header><p>
+<a href="#lname">名前 - リスナー</a> | <a href="#lstatus">ステータス - リスナー</a> | <a href="#lmap">バーチャルホストマッピング</a></p></section>
+<section class="toc-row"><header>バーチャルホスト</header><p>
+<a href="#vname">名前 - バーチャルホスト</a> | <a href="#vstatus">ステータス - バーチャルホスト</a> | <a href="#vaction">アクション - バーチャルホスト</a> | <a href="#venable">有効</a> | <a href="#vdisable">無効</a> | <a href="#vreload">再起動 - バーチャルホスト</a></p></section>
+</section>
+<section><div class="helpitem"><article class="ls-helpitem"><div><header id="sname"><h3>名前 - サーバー<span class="ls-permlink"><a href="#sname"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>このサーバーを識別する一意の名前。 これは一般的な設定で指定された<span class="tagl"><a href="ServGeneral_Help.html#serverName">サーバー名</a></span>です。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="pid"><h3>PID<span class="ls-permlink"><a href="#pid"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>現在のサーバープロセスのPID（プロセスID）。</p> <h4>ヒント</h4><p><span title="Information" class="ls-icon-info"></span> PIDは、サーバーが再起動されるたびに変更されます。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="servAction"><h3>アクション<span class="ls-permlink"><a href="#servAction"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>このメニューからは、次の6つのアクションを使用できます：  <span class="val">緩やかな再起動</span>, <span class="val">デバッグログの切り替え</span>, <span class="val">サーバーログビューア</span>, <span class="val">リアルタイム統計</span>,  <span class="val">バージョンマネージャ</span>, and <span class="val">PHPをコンパイル</span>.  <ul><li><span class="tagl"><a href="#restart">変更を適用する/緩やかなリスタート</a></span>は、処理中のリクエストを中断することなく、正常にサーバプロセスを再起動します。</li> 	<li><span class="tagl"><a href="#toggleDebugLog">デバッグログを切り替える</a></span>は、デバッグログのオン/オフを切り替えます。</li> 	<li><span class="tagl"><a href="#viewlog">サーバーログビューア</a></span>は、ログビューアを介してサーバーログを表示できます。</li> 	<li><span class="tagl"><a href="#realtimerpt">リアルタイム統計</a></span>は、リアルタイムのサーバステータスを表示できます。</li> 	<li><span class="tagl"><a href="#vermgr">バージョン管理</a></span>は、LSWSの新しいバージョンをダウンロードし、異なるバージョン間で切り替えることができます。</li> 	<li>PHPをコンパイルすると、PHPをLiteSpeed Web Server用にコンパイルできます。</li> </ul></p> <h4>ヒント</h4><p><span title="Information" class="ls-icon-info"></span> シェルユーティリティ<span class="cmd">$SERVER_ROOT/bin/lswsctrl</span>を使用してサーバープロセスを制御することもできますが、ログインシェルが必要です。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="restart"><h3>変更を適用する/緩やかなリスタート<span class="ls-permlink"><a href="#restart"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p><span class="val">緩やかな再起動</span>をクリックすると、新しいサーバープロセスが開始されます。 <span class="val">緩やかな再起動</span>の場合、古いサーバープロセスは、すべての要求が完了した後（または<span class="tagl"><a href="#gracefulRestartTimeout">緩やかな再起動タイムアウト（秒）</a></span>に達すると）終了します。<br/><br/> 設定の変更は、次回の再起動時に適用されます。 <span class="val">緩やかな再起動</span>は、サーバーのダウンタイムなしにこれらの変更を適用します。</p> <h4>ヒント</h4><p><span title="Information" class="ls-icon-info"></span> 緩やかな再起動は、新しいサーバー・プロセスを生成するために2秒以下で完了します。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="viewlog"><h3>サーバーログビューア<span class="ls-permlink"><a href="#viewlog"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>Tサーバーログビューアは、現在のサーバーログを参照してエラーまたは問題をチェックするための便利なツールです。 ログ・ビューアーは、サーバーログファイルを指定されたログ・レベルのブロックで検索します。 <br/><br/> デフォルトのブロックサイズは20KBです。 <span class="val">Begin</span>、<span class="val">End</span>、<span class="val">Next</span>、<span class="val">Prev</span>ボタンを使用して、大きなログファイルをナビゲートできます。</p> <h4>ヒント</h4><p><span title="Information" class="ls-icon-info"></span> 動的に生成されるページのサイズは、<span class="tagl"><a href="ServTuning_Help.html#maxDynRespSize">最大動的応答ボディサイズ（バイト）</a></span>によって制限されます。 したがって、ブロックが大きすぎると、ページが切り捨てられることがあります。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="realtimerpt"><h3>リアルタイム統計<span class="ls-permlink"><a href="#realtimerpt"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>リアルタイム統計のリンクは、リアルタイムのサーバステータスレポートを含むページにつながります。 これは、システムを監視するのに便利なツールです。 <br/><br/> このレポートには、サーバー統計のスナップショットが表示されます。 このスナップショットのリフレッシュレートは、右上隅のリフレッシュインターバルドロップダウンリストによって制御されます。<br/><br/> このレポートには、次のセクションが含まれています： <ul><li>サーバーの正常性は、基本的なサーバーの統計情報、稼働時間、負荷、および阻止されたDDoS阻止IPを示します。</li>   <li>現在のトラフィックのスループット、接続、およびリクエストの統計情報を表示します。</li>  <li>バーチャルホストは、各バーチャルホストの要求処理状況と外部アプリケーションの状態を表示します</li>  <li>外部アプリケーションは、現在実行中の外部アプリケーションとその使用状況の統計情報を表示します。   CGIデーモンプロセスlscgidは、常に外部アプリケーションとして実行されます。</li> </ul><br/><br/> リアルタイム統計の行の多くにグラフアイコンがあります。 このアイコンをクリックすると、その行の統計がリアルタイムで更新されたグラフが開きます。<br/><br/> 「サーバー」セクションの「要求」の横に、「詳細」というラベルの付いたリンクがあります。 このリンクをクリックすると、Requests Snapshotが表示されます。ここでは、どのクライアントが特定の種類のリクエストを行っているのか、サイトのどの部分がボトルネックになっているのかを詳しく見ることができます。 青色の領域のフィールドを使用すると、スナップショットをフィルタリングしてサーバーの特定の部分を分離したり、特定の処理を実行しているクライアントを探すことができます。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="toggleDebugLog"><h3>デバッグログを切り替える<span class="ls-permlink"><a href="#toggleDebugLog"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>デバッグログの切り替えは、<span class="tagl"><a href="ServGeneral_Help.html#log_debugLevel">デバッグレベル</a></span>の値を<span class="val">NONE</span>と<span class="val">HIGH</span>の間で切り替えます。 デバッグロギングはパフォーマンスに影響を与え、ハードドライブをすばやく埋めることができるため、通常は本番サーバーで<span class="tagl"><a href="ServGeneral_Help.html#log_debugLevel">デバッグレベル</a></span>を<span class="val">NONE</span>に設定する必要があります。 この機能を代わりに使用して、本番サーバー上の問題をデバッグするために、デバッグログを素早くオン/オフすることができます。 このようにデバッグロギングをオンまたはオフにしても、サーバー構成に表示されるものは変更されません。</p> <h4>ヒント</h4><p><span title="Information" class="ls-icon-info"></span> <span class="tagl"><a href="#toggleDebugLog">デバッグログを切り替える</a></span>は、<span class="tagl"><a href="ServGeneral_Help.html#log_logLevel">ログレベル</a></span>が<span class="val">DEBUG</span>に設定されている場合にのみ機能します。<br/> [パフォーマンス]重要！ デバッグログには、各要求と応答の詳細情報が含まれています。 アクティブデバッグロギングは、サービスパフォーマンスを著しく低下させ、非常に短時間でディスクスペースを飽和させる可能性があります。 この機能は、サーバーの問題を診断しようとすると、短時間しか使用しないでください</p> <h4>参照</h4><p class="ls-text-small"><span class="tagl"><a href="ServGeneral_Help.html#log_debugLevel">デバッグレベル</a></span>, <span class="tagl"><a href="ServGeneral_Help.html#log_logLevel">ログレベル</a></span></p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="lname"><h3>名前 - リスナー<span class="ls-permlink"><a href="#lname"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>このリスナーを識別する固有の名前。 これは、リスナーを設定するときに指定した<span class="tagl"><a href="Listeners_General_Help.html#listenerName">リスナー名</a></span>です。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="lstatus"><h3>ステータス - リスナー<span class="ls-permlink"><a href="#lstatus"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>このリスナーの現在のステータス。 ステータスは<span class="val">Running</span>か<span class="val">Error</span>のいずれかです。</p> <h4>ヒント</h4><p><span title="Information" class="ls-icon-info"></span> リスナーが<span class="val">Error</span>状態にある場合は、サーバーログを表示して理由を調べることができます。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="lmap"><h3>バーチャルホストマッピング<span class="ls-permlink"><a href="#lmap"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>特定のリスナーからのバーチャルホストへの現在確立されているマッピングを表示します。 バーチャルホスト名は括弧内に表示され、このリスナーに一致するドメイン名が続きます。</p> <h4>ヒント</h4><p><span title="Information" class="ls-icon-info"></span> バーチャルホストが正常にロードされていない場合（バーチャルホストの致命的なエラー）、そのバーチャルホストへのマッピングは表示されません。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="vname"><h3>名前 - バーチャルホスト<span class="ls-permlink"><a href="#vname"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>このバーチャルホストを識別する一意の名前。 これは、このバーチャルホストを設定するときに指定した<span class="tagl"><a href="VirtualHosts_Help.html#vhName">バーチャルホスト名</a></span>です。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="vstatus"><h3>ステータス - バーチャルホスト<span class="ls-permlink"><a href="#vstatus"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>バーチャルホストの現在のステータス。   ステータスは<span class="val">Running</span>、<span class="val">Stopped</span>、<span class="val">Restart Required</span>、または<span class="val">Running - Removed from onfiguration</span>です。  <ul>     <li><span class="val">Running</span>は、バーチャルホストがロードされ、サービス中であることを意味します。</li>     <li><span class="val">Stopped</span>は、バーチャルホストがロードされていてもサービスされていない（無効になっている）ことを意味します。 </li>     <li><span class="val">Restart Required</span>は、これが新しく追加されたバーチャルホストであり、サーバがまだ設定をロードしていないことを意味します。 </li>     <li><span class="val">Running - Removed from Configuration</span>は、バーチャルホストがサーバの設定から削除されたが、まだ稼働中であることを意味します。 </li> </ul></p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="vaction"><h3>アクション - バーチャルホスト<span class="ls-permlink"><a href="#vaction"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>このフィールドには、バーチャルホストを無効化、有効化、または再起動するためのボタンが表示されます。 1つのバーチャルホストで実行されたアクションは、残りのWebサーバーには影響しません。</p> <h4>ヒント</h4><p><span title="Information" class="ls-icon-info"></span> バーチャルホストをコンテンツを更新するときに一時的に無効にすることをお勧めします。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="venable"><h3>有効<span class="ls-permlink"><a href="#venable"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p><span class="val">有効</span>アクションは、停止したバーチャルホストを起動します。 これにより、新しい要求を受け入れることができます。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="vdisable"><h3>無効<span class="ls-permlink"><a href="#vdisable"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p><span class="val">無効</span>アクションは、実行中のバーチャルホストを停止します。 新しいリクエストは受け付けられませんが、処理中のリクエストは通常通り終了します。</p> </article> </div>
+<div class="helpitem"><article class="ls-helpitem"><div><header id="vreload"><h3>再起動 - バーチャルホスト<span class="ls-permlink"><a href="#vreload"></a></span><span class="top"><a href="#top">&#8657;</a></span></h3></header></div><h4>説明</h4><p>Restartアクションにより、Webサーバーはこのバーチャルホストの最新の構成をロードします。 処理中のリクエストは古い設定で終了します。 新しい設定は新しいリクエストにのみ適用されます。 バーチャルホストへのすべてのハングは、この方法でオンザフライで適用できます。</p> </article> </div>
+</section>
+</article><div  class="ls-col-1-1"><footer class="copyright">Copyright &copy; 2013-2018. <a href="https://www.litespeedtech.com">LiteSpeed Technologies Inc.</a> All rights reserved.</footer>
+</div></div>
+</body>
+</html>

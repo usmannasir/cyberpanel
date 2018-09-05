@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>Open LiteSpeed Web Serverユーザーズマニュアル - セキュリティ</title>
+  <meta name="description" content="Open LiteSpeed Web Serverユーザーズマニュアル - セキュリティ." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex">
+  <link rel="shortcut icon" href="../img/favicon.ico" />
+  <link rel="stylesheet" type="text/css" href="../css/hdoc.css">
+</head>
+<body>
+<div class="pagewrapper clearfix"><aside class="sidetree ls-col-1-5">
+      <figure>
+        <img src="../img/ols_logo.svg" alt="openlitespeed logo" width="150px"/>
+      </figure>
+<h3 class="ls-text-thin">OpenLiteSpeed Web Server <a href="index.html"> ユーザーズマニュアル</a></h3>
+<h5 class="ls-text-muted">Version 1.4 &nbsp;&#8212;&nbsp;Rev. 3 </h5>
+<hr/>
+<div>
+<ul>
+<li><a href="license.html">ライセンス</a></li>
+<li><a href="intro.html">はじめに</a></li>
+<li><a href="install.html">インストール</a></li>
+<li><a href="admin.html">管理</a>
+	<ul class="level2"><li><a href="ServerStat_Help.html">サービスマネージャ</a></li></ul></li>
+<li><span class="current"><a href="security.html">セキュリティ</a></span></li>
+<li><a href="config.html">設定</a>
+	<ul class="level2">
+	<li><a href="ServGeneral_Help.html">サーバー全般</a></li>
+        <li><a href="ServLog_Help.html">サーバーログ</a></li>
+	<li><a href="ServTuning_Help.html">サーバーのチューニング</a></li>
+	<li><a href="ServSecurity_Help.html">サーバーのセキュリティ</a></li>
+	<li><a href="ExtApp_Help.html">外部アプリ</a></li>
+                <ul class="level3">
+                <li><a href="External_FCGI.html">Fast CGIアプリ</a></li>
+                <li><a href="External_FCGI_Auth.html">Fast CGIオーソライザー</a></li>
+                <li><a href="External_LSAPI.html">LSAPIアプリ</a></li>
+                <li><a href="External_Servlet.html">サーブレットエンジン</a></li>
+                <li><a href="External_WS.html">Webサーバー</a></li>
+                <li><a href="External_PL.html">パイプロガー</a></li>
+                <li><a href="External_LB.html">ロードバランサ</a></li>
+                </ul>
+	<li><a href="ScriptHandler_Help.html">スクリプトハンドラ</a></li>
+	<li><a href="Rails_Help.html">Rack/Railsの設定</a></li>
+	<li><a href="Module_Help.html">モジュール設定</a></li>
+	<li><a href="Listeners_General_Help.html">リスナー全般</a></li>
+        <li><a href="Listeners_SSL_Help.html">リスナーのSSL</a></li>
+	<li><a href="Templates_Help.html">テンプレート</a></li>
+	<li><a href="VirtualHosts_Help.html">バーチャルホストの基本</a></li>
+	<li><a href="VHGeneral_Help.html">バーチャルホスト全般</a></li>
+	<li><a href="VHSecurity_Help.html">バーチャルホストのセキュリティ</a></li>
+        <li><a href="VHSSL_Help.html">バーチャルホストのSSL</a></li>
+	<li><a href="Rewrite_Help.html">Rewrite</a></li>
+	<li><a href="Context_Help.html">コンテキスト</a></li>
+               <ul class="level3">
+                <li><a href="Static_Context.html">静的コンテテキスト</a></li>
+                <li><a href="Java_Web_App_Context.html">Java Webアプリのコンテキスト</a></li>
+                <li><a href="Servlet_Context.html">サーブレットコンテキスト</a></li>
+                <li><a href="FCGI_Context.html">Fast CGIコンテキスト</a></li>
+                <li><a href="LSAPI_Context.html">LSAPIコンテキスト</a></li>
+                <li><a href="Proxy_Context.html">プロキシコンテキスト</a></li>
+                <li><a href="CGI_Context.html">CGIコンテキスト</a></li>
+                <li><a href="LB_Context.html">ロードバランサコンテキスト</a></li>
+                <li><a href="Redirect_Context.html">コンテキストのリダイレクト</a></li>
+                <li><a href="Rails_Context.html">Rack/Railsのコンテキスト</a></li>
+                <li><a href="Module_Context.html">モジュールハンドラのコンテキスト</a></li>
+                </ul>
+	<li><a href="VHWebSocket_Help.html">Web Socketプロキシ</a></li>
+	</ul>
+</li>
+<li><a href="webconsole.html">Webコンソール</a>
+        <ul class="level2">
+        <li><a href="AdminGeneral_Help.html">管理コンソール全般</a></li>
+        <li><a href="AdminSecurity_Help.html">管理コンソールのセキュリティ</a></li>
+	<li><a href="AdminListeners_General_Help.html">管理リスナー全般</a></li>
+        <li><a href="AdminListeners_SSL_Help.html">管理リスナーのSSL</a></li>
+        </ul>
+</li>
+</ul>
+</div>
+</aside>
+<article class="contentwrapper ls-col-3-5 clearfix"><div class="nav-bar ls-spacer-micro-top"><div class="prev">&#171 <a href="admin.html">管理</a></div><div class="center"><a href="index.html">ホーム</a></div><div class="next"><a href="config.html">設定</a> &#187;</div></div>
+<h1>セキュリティ</h1>
+
+<p>LiteSpeed Web Serverは、セキュリティを最優先事項として設計されています。
+LSWSはSSLをサポートし、サーバおよびバーチャルホストレベルでのアクセス制御、コンテキスト固有の領域保護を備えています。
+これらの標準機能に加えて、LSWSには次の特別なセキュリティ機能もあります： </p>
+
+<ol>
+	<li><h3>接続レベルの制限：</h3>
+	  <ul>
+	    <li>IPレベルのスロットリングにより、接続数に関係なく、単一のIPアドレスとの間でネットワーク帯域幅が制限されます。</li>
+	    <li> IPレベルの接続アカウンティングは、単一のIPアドレスからの同時接続数を制限します。
+WebAdminコンソールで、接続のソフト制限、接続ハード制限、猶予期間、および禁止期間設定を使用してこれを制御できます。 </li>
+	  </ul>
+	</li>
+	<li><h3>リクエストのチェック：</h3>
+	  	<p> すべてのHTTPリクエストは、LiteSpeed Web Serverによって検証されます。"/" デコードされたURLでは許可されないため、隠しファイルや親ディレクトリへのアクセスが拒否されます。</p>
+	    <p>要求サイズは、LiteSpeed Web Serverの最大要求URL長、最大要求ヘッダー長、および最大要求本体長設定によって制限されます。</p>
+    </li>
+	<li><h3>静的ファイルのチェック：</h3>
+  		<p>LiteSpeed Web Serverは、次の条件を満たす場合にのみ静的ファイルを提供します：</p>
+	  <ul>
+	    <li>このファイルは誰でも読むことができます。</li>
+	    <li>ファイルが実行可能ではありません。</li>
+	    <li>ファイルがアクセス拒否ディレクトリリストにありません。</li>
+	    <li>シンボリックリンクが許可されていない場合、ファイルにシンボリックリンクは含まれません。 </li>
+	    <li>デフォルトでは、LiteSpeed Web Serverはファイルをリスト表示してディレクトリのインデックスを作成しません。明示的に有効にする必要があります。</li>
+	  </ul>
+	</li>
+	<li><h3>外部アプリケーションファイアウォール：</h3>
+		<p>LiteSpeed Web Serverは、動的コンテンツを処理/生成するために要求を外部アプリケーションに転送します。
+これらのアプリケーションは、多くのシステムリソースを使用できます。
+たとえば、スワップスペースを使用する必要がある場合など、システムリソース消費量が一定のポイントに達すると、システム全体のパフォーマンスが著しく低下します。
+DoS攻撃を実行する1つの方法は、煩雑な外部アプリケーションへの同時リクエストをWebサーバーに氾濫させることです。</p>
+<p>LiteSpeed Web Serverは、要求をパイプライン処理し、外部アプリケーションの同時使用レベルを制御して、システムリソースの過消費を防ぎます。
+LSWSは要求をキャッシュし、完了した要求のみを外部アプリケーションに転送します。
+つまり、サーバーがリクエストを受信している間に、外部アプリケーションが待機することはありません。
+LSWSはまた、外部アプリケーションの応答をキャッシュして、応答が完了するとすぐに外部アプリケーションを解放し、クライアントが完全な応答を受け取るのを待つ必要がないようにします。
+このようにして、サーバーはより少ない外部アプリケーション・インスタンスを使用してより多くの同時要求を処理し、より高いパフォーマンスとスケーラビリティーを達成することができます。
+  LiteSpeed Web Serverは、独自のバーチャルメモリを使用して要求と応答の本体をキャッシュし、パフォーマンスを犠牲にせずにシステムメモリの使用を最小限に抑えます。 </p></li>
+  <li><h3>CGIリソースの消費制限：</h3>
+<p>LiteSpeed Web Serverは、CGIアプリケーションで使用できるシステムリソースの量を制限します。
+CGIスクリプトへのリクエストごとに、Webサーバーはそれを処理するためにスタンドアロンCGIプロセスを開始する必要があります。
+Unixシステムでは、並行プロセスの数が制限されています。
+CGIリソースの消費制限により、Webサーバーが起動できる同時CGIインスタンスの最大数を構成できます。
+過度の並行プロセスは、システム全体のパフォーマンスを低下させます。 （CGIプロセスはDoS攻撃の一般的な武器です。）
+CGIアプリケーションによって生成されるプロセスの数を制御するために、ユーザーごとにシステムプロセスの制限を指定することができます。
+各プロセスは、CPUとメモリの制限によってさらに制限されます。</p>
+</li>
+  <li><h3>suEXECによる強化されたCGI/FastCGIセキュリティ</h3>
+<p>CGIまたはFast CGIスクリプトのセキュリティリスクを軽減するため、LiteSpeed Web ServerはCGIスクリプトが "suEXEC"モードで実行することでアクセスできるシステムリソースを制限できます。
+"suEXEC"は、WebサーバーのユーザーIDとは異なるユーザーIDを持つCGIまたはFast CGIスクリプトを開始します。
+これにより、あるユーザーのCGIスクリプトが他のユーザーのファイルにアクセスするのを防ぐことで、共有ホスティング環境のセキュリティが大幅に向上します。</p>
+</li>
+</ol>
+</article><div  class="ls-col-1-1"><footer class="copyright">Copyright &copy; 2013-2018. <a href="https://www.litespeedtech.com">LiteSpeed Technologies Inc.</a> All rights reserved.</footer>
+</div></div>
+</body>
+</html>
