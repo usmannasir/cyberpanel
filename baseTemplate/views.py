@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from plogical.getSystemInformation import SystemInformation
-from loginSystem.models import Administrator, ACL
 import json
 from loginSystem.views import loadLoginPage
 import re
@@ -15,6 +14,7 @@ import shlex
 import os
 import plogical.CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
+from plogical.aclVMM import vmmACLManager
 # Create your views here.
 
 
@@ -35,6 +35,29 @@ def renderBase(request):
         return render(request, 'baseTemplate/homePage.html', finaData)
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def VMM(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if vmmACLManager.inspectHyperVisor() == 0:
+            return vmmACLManager.loadError()
+
+        if currentACL['admin'] == 1:
+            admin = 1
+        else:
+            admin = 0
+
+        cpuRamDisk = SystemInformation.cpuRamDisk()
+
+        finaData = {"admin": admin,'ramUsage':cpuRamDisk['ramUsage'],'cpuUsage':cpuRamDisk['cpuUsage'],'diskUsage':cpuRamDisk['diskUsage'] }
+
+        return render(request, 'baseTemplate/homePageVMM.html', finaData)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def getAdminStatus(request):
     try:

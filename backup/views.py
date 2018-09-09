@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import redirect
-# Create your views here.
+from django.shortcuts import redirect, HttpResponse, render
 import json
 from loginSystem.views import loadLoginPage
 from plogical.backupManager import BackupManager
-
+from loginSystem.models import Administrator
+import plogical.CyberCPLogFileWriter as logging
+from vpsManagement.vpsManager import VPSManager
 
 def loadBackupHome(request):
     try:
@@ -211,5 +212,48 @@ def cancelRemoteBackup(request):
         userID = request.session['userID']
         wm = BackupManager()
         return wm.cancelRemoteBackup(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+## Snapshots
+
+def createSnapshots(request, hostName):
+    try:
+        userID = request.session['userID']
+        vmm = VPSManager()
+        return vmm.createSnapshots(request, userID, hostName)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fetchCurrentSnapshots(request):
+    try:
+        userID = request.session['userID']
+        vmm = VPSManager()
+        return vmm.fetchCurrentSnapshots(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def submitSnapshotCreation(request):
+    try:
+        userID = request.session['userID']
+        vmm = VPSManager()
+        return vmm.submitSnapshotCreation(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def deletSnapshot(request):
+    try:
+        userID = request.session['userID']
+        vmm = VPSManager()
+        return vmm.deletSnapshot(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def revertToSnapshot(request):
+    try:
+        userID = request.session['userID']
+        vmm = VPSManager()
+        return vmm.revertToSnapshot(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)

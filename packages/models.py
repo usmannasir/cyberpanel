@@ -15,3 +15,12 @@ class Package(models.Model):
     dataBases = models.IntegerField(default=0)
     ftpAccounts = models.IntegerField(default=0)
     allowedDomains = models.IntegerField(default=0)
+
+
+class VMPackage(models.Model):
+    admin = models.ForeignKey(Administrator,on_delete=models.CASCADE)
+    packageName = models.CharField(max_length=50,unique=True)
+    diskSpace = models.CharField(max_length=50)
+    bandwidth = models.CharField(max_length=50)
+    guaranteedRam = models.CharField(max_length=50, default='1024')
+    cpuCores = models.CharField(max_length=50, default='1')

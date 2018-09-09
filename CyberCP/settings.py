@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'xr%j*p!*$0d%(-(e%@-*hyoz4$f%y77coq0u)6pwmjg4)q&19f'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -58,8 +58,12 @@ INSTALLED_APPS = [
     'manageSSL',
     'api',
     'filemanager',
-    'manageServices',
     'emailPremium',
+    'manageServices',
+    'ipManagement',
+    'vpsManagement',
+    'hypervisor'
+
 ]
 
 MIDDLEWARE = [

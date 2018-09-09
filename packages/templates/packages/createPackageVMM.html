@@ -1,0 +1,102 @@
+{% extends "baseTemplate/indexVMM.html" %}
+{% load i18n %}
+{% block title %}{% trans "Create Package - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div ng-controller="createPackageVMM" class="container">
+<div id="page-title">
+   <h2>{% trans "Create Package" %}</h2>
+   <p>{% trans "Packages define resources for your VPS, you need to add package before creating a VPS." %}</p>
+</div>
+<div class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Package Details" %} <img ng-hide="tronLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div class="example-box-wrapper">
+
+
+            <form   action="/" class="form-horizontal bordered-row">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Package Name" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="packageName" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Disk Space" %}</label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control" ng-model="diskSpace" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Guranteed Ram" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="guaranteedRam" required>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Bandwidth" %}</label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control" ng-model="bandwidth" required>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "CPU Cores" %}</label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control" ng-model="cpuCores" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="insertPackInDB()" class="btn btn-primary btn-lg btn-block">{% trans "Create Package" %}</button>
+
+                    </div>
+                </div>
+
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div ng-hide="poolCreationFailed" class="alert alert-danger">
+                                        <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="poolCreated" class="alert alert-success">
+                                <p>{$ successMessage $}</p>
+                            </div>
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <p>{% trans "Could not connect to server, please refresh this page." %}</p>
+                            </div>
+                    </div>
+                </div>
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+{% endblock %}
+

@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from loginSystem.views import loadLoginPage
 from loginSystem.models import Administrator
 import json
-from .models import Package
+from .models import Package, VMPackage
 import plogical.CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
 
@@ -16,10 +16,9 @@ from plogical.acl import ACLManager
 def packagesHome(request):
     try:
         val = request.session['userID']
+        return render(request, 'packages/index.html', {})
     except KeyError:
         return redirect(loadLoginPage)
-
-    return render(request,'packages/index.html',{})
 
 def createPacakge(request):
 
@@ -244,6 +243,213 @@ def saveChanges(request):
                 modifyPack.save()
 
                 data_ret = {'saveStatus': 1, 'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException,msg:
+            data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError,msg:
+        data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+
+##
+
+def packagesHomeVMM(request):
+    try:
+        val = request.session['userID']
+        return render(request, 'packages/indexVMM.html', {})
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def createPacakgeVMM(request):
+    try:
+        val = request.session['userID']
+
+        admin = Administrator.objects.get(pk=val)
+
+        if admin.type == 3:
+            return HttpResponse("You don't have enough privileges to access this page.")
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+    return render(request,'packages/createPackageVMM.html',{"admin":admin.userName})
+
+def deletePacakgeVMM(request):
+
+    try:
+        val = request.session['userID']
+        try:
+
+            admin = Administrator.objects.get(pk=val)
+
+            if admin.type == 3:
+                return HttpResponse("You don't have enough privileges to access this page.")
+
+            if admin.type == 1:
+                packages = VMPackage.objects.all()
+            else:
+                packages = VMPackage.objects.filter(admin=admin)
+
+            packageList = []
+            for items in packages:
+                packageList.append(items.packageName)
+
+        except BaseException,msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return HttpResponse("Please see CyberCP Main Log File")
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+    return render(request,'packages/deletePackageVMM.html',{"packageList" : packageList})
+
+def submitPackageVMM(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+                data = json.loads(request.body)
+                packageName = data['packageName']
+                diskSpace = data['diskSpace']
+                guaranteedRam = data['guaranteedRam']
+                bandwidth = data['bandwidth']
+                cpuCores = data['cpuCores']
+
+                admin = Administrator.objects.get(pk=request.session['userID'])
+
+                packageName = packageName
+
+                package = VMPackage(admin=admin,
+                                  packageName=packageName,
+                                  diskSpace=diskSpace,
+                                  guaranteedRam=guaranteedRam,
+                                  bandwidth=bandwidth,
+                                  cpuCores=cpuCores,
+                                  )
+
+                package.save()
+
+                data_ret = {'success': 1,'error_message': "None", 'successMessage': 'Package successfully created!'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException,msg:
+            data_ret = {'success': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def submitDeleteVMM(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+                data = json.loads(request.body)
+                packageName = data['packageName']
+
+                delPackage = VMPackage.objects.get(packageName=packageName)
+                delPackage.delete()
+
+                data_ret = {'deleteStatus': 1,'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException,msg:
+            data_ret = {'deleteStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+    except KeyError,msg:
+        data_ret = {'deleteStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def modifyPackageVMM(request):
+    try:
+        val = request.session['userID']
+        try:
+            admin = Administrator.objects.get(pk=val)
+
+            if admin.type == 3:
+                return HttpResponse("You don't have enough privileges to access this page.")
+
+            if admin.type == 1:
+                packages = VMPackage.objects.all()
+            else:
+                packages = VMPackage.objects.filter(admin=admin)
+
+            packageList = []
+            for items in packages:
+                packageList.append(items.packageName)
+            return render(request, 'packages/modifyPackageVMM.html', {"packList": packageList})
+
+        except BaseException,msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return HttpResponse("Please see CyberCP Main Log File")
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def submitModifyVMM(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                data = json.loads(request.body)
+                packageName = data['packageName']
+
+                modifyPack = VMPackage.objects.get(packageName=packageName)
+
+                diskSpace = modifyPack.diskSpace
+                guaranteedRam = modifyPack.guaranteedRam
+                bandwidth = modifyPack.bandwidth
+                cpuCores = modifyPack.cpuCores
+
+                data_ret = {'modifyStatus': 1,
+                            'error_message': "None",
+                            'packageName' : packageName,
+                            'diskSpace':diskSpace,
+                            'guaranteedRam':guaranteedRam,
+                            'bandwidth': bandwidth,
+                            'cpuCores': cpuCores,
+                            }
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException,msg:
+            data_ret = {'modifyStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError,msg:
+        data_ret = {'modifyStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def saveChangesVMM(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                data = json.loads(request.body)
+                packageName = data['packageName']
+
+                modifyPack = VMPackage.objects.get(packageName=packageName)
+
+                modifyPack.diskSpace = data['diskSpace']
+                modifyPack.bandwidth = data['bandwidth']
+                modifyPack.guaranteedRam = data['guaranteedRam']
+                modifyPack.cpuCores = data['cpuCores']
+                modifyPack.save()
+
+                data_ret = {'saveStatus': 1,'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 

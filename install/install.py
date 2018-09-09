@@ -15,13 +15,18 @@ import random
 class preFlightsChecks:
 
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
+    templates = 'images.cyberpanel.net/templates'
 
-    def __init__(self,rootPath,ip,path,cwd,cyberPanelPath):
+    def __init__(self, rootPath, ip, path , cwd , cyberPanelPath, interfaceName, netmask, gateway):
         self.ipAddr = ip
         self.path = path
         self.cwd = cwd
         self.server_root_path = rootPath
         self.cyberPanelPath = cyberPanelPath
+
+        self.interfaceName = interfaceName
+        self.netmask = netmask
+        self.gateway = gateway
 
     @staticmethod
     def stdOut(message):
@@ -622,6 +627,35 @@ class preFlightsChecks:
                     preFlightsChecks.stdOut("psutil successfully installed!")
                     break
 
+    def installLibvirtPython(self):
+
+        try:
+            count = 0
+            while (1):
+                command = "pip install libvirt-python"
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to install libvirt-python, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to install libvirt-python, exiting installer! [install_psutil]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        os._exit(0)
+                else:
+                    logging.InstallLog.writeToFile("libvirt-python successfully installed!")
+                    preFlightsChecks.stdOut("libvirt-python successfully installed!")
+                    break
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [installLibvirtPython]")
+            return 0
+        except subprocess.CalledProcessError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [installLibvirtPython]")
+
+            return 0
+
+
     def fix_selinux_issue(self):
         try:
             cmd = []
@@ -687,7 +721,7 @@ class preFlightsChecks:
 
         count = 0
         while (1):
-            command = "wget http://cyberpanel.net/CyberPanel.1.7.1.tar.gz"
+            command = "wget http://cyberpanel.net/CyberPanelTron.tar.gz"
             #command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
             res = subprocess.call(shlex.split(command))
 
@@ -707,7 +741,7 @@ class preFlightsChecks:
 
         count = 0
         while(1):
-            command = "tar zxf CyberPanel.1.7.1.tar.gz"
+            command = "tar zxf CyberPanelTron.tar.gz"
             #command = "tar zxf CyberPanelTemp.tar.gz"
 
             res = subprocess.call(shlex.split(command))
@@ -776,6 +810,8 @@ class preFlightsChecks:
 
         logging.InstallLog.writeToFile("settings.py updated!")
 
+        self.setupVirtualEnv()
+
         ### Applying migrations
 
 
@@ -784,7 +820,7 @@ class preFlightsChecks:
         count = 0
 
         while(1):
-            command = "python manage.py makemigrations"
+            command = "/usr/local/CyberCP/bin/python2 manage.py makemigrations"
             res = subprocess.call(shlex.split(command))
 
             if res == 1:
@@ -804,7 +840,7 @@ class preFlightsChecks:
         count = 0
 
         while(1):
-            command = "python manage.py migrate"
+            command = "/usr/local/CyberCP/bin/python2 manage.py migrate"
 
             res = subprocess.call(shlex.split(command))
 
@@ -870,7 +906,6 @@ class preFlightsChecks:
                 logging.InstallLog.writeToFile("Owner for '/usr/local/CyberCP' successfully changed!")
                 preFlightsChecks.stdOut("Owner for '/usr/local/CyberCP' successfully changed!")
                 break
-
 
     def install_unzip(self):
         try:
@@ -1106,7 +1141,6 @@ class preFlightsChecks:
 
         return 1
 
-
     def setup_email_Passwords(self,mysqlPassword, mysql):
         try:
 
@@ -1220,7 +1254,6 @@ class preFlightsChecks:
             return 0
 
         return 1
-
 
     def setup_postfix_davecot_config(self, mysql):
         try:
@@ -1844,7 +1877,6 @@ class preFlightsChecks:
 
         return 1
 
-
     def downoad_and_install_raindloop(self):
         try:
             ###########
@@ -2022,7 +2054,6 @@ class preFlightsChecks:
             logging.InstallLog.writeToFile(str(msg) + " [reStartLiteSpeed]")
             return 0
         return 1
-
 
     def installFirewalld(self):
         try:
@@ -2718,9 +2749,7 @@ milter_default_action = accept
     @staticmethod
     def setupVirtualEnv():
         try:
-
             ##
-
             count = 0
             while (1):
                 command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
@@ -2900,8 +2929,222 @@ milter_default_action = accept
             logging.InstallLog.writeToFile(str(msg) + " [enableDisableEmail]")
             return 0
 
+    @staticmethod
+    def setupPipPacks():
+        try:
+            ##
+            count = 0
+            while (1):
+                command = "pip install -r /usr/local/CyberCP/requirments.txt"
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Trying to install project dependant modules, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Failed to install project dependant modules! [setupPipPacks]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        os._exit(0)
+                else:
+                    logging.InstallLog.writeToFile("Project dependant modules installed successfully!")
+                    preFlightsChecks.stdOut("Project dependant modules installed successfully!!")
+                    break
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [setupPipPacks]")
+            return 0
+
+    ########### KVM
+
+    def installKVM(self):
+        try:
+            count = 0
+            while (1):
+
+                command = 'yum -y install qemu-kvm qemu-img libvirt libvirt-client virt-install libguestfs-tools libvirt-devel'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Trying to install KVM, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Unable to install KVM, installation abored. [installKVM]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        sys.exit()
+                        break
+                else:
+                    command = 'systemctl start libvirtd'
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
+
+                    command = 'systemctl enable libvirtd'
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
+
+                    logging.InstallLog.writeToFile("Succcessfully installed KVM!")
+                    preFlightsChecks.stdOut("Succcessfully installed KVM!")
+                    break
+
+            return 1
 
 
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [installKVM]")
+            return 0
+        except ValueError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [installKVM]")
+            return 0
+
+    def setupBridge(self):
+        try:
+
+            preFlightsChecks.stdOut('Setting up network Bridge!')
+
+            device = 'DEVICE="virbr0"\n'
+            bootProto = 'BOOTPROTO="static"\n'
+            ipAddress = 'IPADDR="' + self.ipAddr + '"\n'
+            netmask = 'NETMASK="' + self.netmask + '"\n'
+            gateway = 'GATEWAY="' + self.gateway + '"\n'
+            dns1 = "DNS1=8.8.8.8\n"
+            onBoot = 'ONBOOT="yes"\n'
+            type = 'TYPE="Bridge"\n'
+            nmControlled = 'NM_CONTROLLED="no"\n'
+
+            path = "/etc/sysconfig/network-scripts/ifcfg-virbr0"
+
+            writeToFile = open(path, 'w')
+
+            writeToFile.writelines(device)
+            writeToFile.writelines(bootProto)
+            writeToFile.writelines(ipAddress)
+            writeToFile.writelines(netmask)
+            writeToFile.writelines(gateway)
+            writeToFile.writelines(dns1)
+            writeToFile.writelines(onBoot)
+            writeToFile.writelines(type)
+            writeToFile.writelines(nmControlled)
+
+            writeToFile.close()
+
+
+            ###
+
+            path = "/etc/sysconfig/network-scripts/ifcfg-" + self.interfaceName
+
+            writeToFile = open(path, 'w')
+
+            writeToFile.writelines('DEVICE=' + self.interfaceName + "\n")
+            writeToFile.writelines('TYPE=Ethernet\n')
+            writeToFile.writelines('BOOTPROTO=none\n')
+            writeToFile.writelines('ONBOOT=yes\n')
+            writeToFile.writelines('NM_CONTROLLED=no\n')
+            writeToFile.writelines('BRIDGE=virbr0\n')
+
+            writeToFile.close()
+
+            ##
+
+            command = 'systemctl restart network'
+            subprocess.call(shlex.split(command))
+
+            preFlightsChecks.stdOut('Network bridge is up and running.')
+
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [setupBridge]")
+            return 0
+        except ValueError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [setupBridge]")
+            return 0
+
+    def downloadImages(self):
+        try:
+            imagesPath = "/var/lib/libvirt/templates"
+
+            if not os.path.exists(imagesPath):
+                os.mkdir(imagesPath)
+
+            os.chdir(imagesPath)
+
+            command = 'wget ' + preFlightsChecks.templates + "/debian-9.img"
+            subprocess.call(shlex.split(command))
+
+            command = 'wget ' + preFlightsChecks.templates + "/fedora-28.img"
+            subprocess.call(shlex.split(command))
+
+            command = 'wget ' + preFlightsChecks.templates + "/ubuntu-16.04.img"
+            subprocess.call(shlex.split(command))
+
+            os.chdir(self.cwd)
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [downloadImages]")
+            return 0
+        except ValueError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [downloadImages]")
+            return 0
+
+    def installNoVNC(self):
+        try:
+            vncPath = "/usr/local/lscp/cyberpanel"
+
+            os.chdir(vncPath)
+
+            command = 'yum install git -y'
+            subprocess.call(shlex.split(command))
+
+            command = 'git clone https://github.com/novnc/noVNC'
+            subprocess.call(shlex.split(command))
+
+            os.chdir(self.cwd)
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [installNoVNC]")
+            return 0
+        except ValueError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [installNoVNC]")
+            return 0
+
+    def downloadAndInstallE2fsprogs(self):
+        try:
+
+
+            e2fs = "/e2fs"
+
+            if not os.path.exists(e2fs):
+                os.mkdir(e2fs)
+
+            os.chdir(e2fs)
+
+            command = 'wget https://excellmedia.dl.sourceforge.net/project/e2fsprogs/e2fsprogs/v1.44.4/e2fsprogs-1.44.4.tar.gz'
+            subprocess.call(shlex.split(command))
+
+            command = 'tar zxf e2fsprogs-1.44.4.tar.gz'
+            subprocess.call(shlex.split(command))
+
+            os.chdir('e2fsprogs-1.44.4')
+
+            command = './configure'
+            subprocess.call(shlex.split(command))
+
+            command = 'make'
+            subprocess.call(shlex.split(command))
+
+            command = 'make install'
+            subprocess.call(shlex.split(command))
+
+            os.chdir(self.cwd)
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [installNoVNC]")
+            return 0
+        except ValueError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [installNoVNC]")
+            return 0
 
 
 def main():
@@ -2912,14 +3155,25 @@ def main():
     parser.add_argument('--postfix', help='Enable or disable Email Service.')
     parser.add_argument('--powerdns', help='Enable or disable DNS Service.')
     parser.add_argument('--ftp', help='Enable or disable ftp Service.')
+
+
+    parser.add_argument('--gateway', help='Gateway of main server IP.')
+    parser.add_argument('--netmask', help='Netmask of main server IP.')
+    parser.add_argument('--interfaceName', help='Interface name that you want to enslave.')
     args = parser.parse_args()
 
     logging.InstallLog.writeToFile("Starting CyberPanel installation..")
     preFlightsChecks.stdOut("Starting CyberPanel installation..")
 
-    ## Writing public IP
-
     os.mkdir("/etc/cyberpanel")
+
+    #### KVM Args
+
+    interfaceName = open("/etc/cyberpanel/interfaceName", "w")
+    interfaceName.writelines(args.interfaceName)
+    interfaceName.close()
+
+    ## Writing public IP
 
     machineIP = open("/etc/cyberpanel/machineIP", "w")
     machineIP.writelines(args.publicip)
@@ -2927,7 +3181,7 @@ def main():
 
     cwd = os.getcwd()
 
-    checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd,"/usr/local/CyberCP")
+    checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd,"/usr/local/CyberCP", args.interfaceName, args.netmask, args.gateway)
 
     if args.mysql == None:
         mysql = 'One'
@@ -2978,6 +3232,17 @@ def main():
     checks.install_python_requests()
     checks.install_default_keys()
 
+    ## KVM
+
+    checks.installKVM()
+    checks.setupBridge()
+    #checks.downloadImages()
+    checks.installNoVNC()
+    checks.downloadAndInstallE2fsprogs()
+    checks.installLibvirtPython()
+
+    ##
+
     checks.installCertBot()
     checks.test_Requests()
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
@@ -2992,8 +3257,8 @@ def main():
     checks.configureOpenDKIM()
 
     checks.modSecPreReqs()
-    checks.setupVirtualEnv()
     checks.setupPHPAndComposer()
+
 
     if args.postfix != None:
         checks.enableDisableEmail(args.postfix)

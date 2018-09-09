@@ -68,10 +68,8 @@
 
 
 </head>
-
-
     <body>
-<div id="sb-site">
+        <div id="sb-site">
 
 
 
@@ -281,11 +279,15 @@
             <i class="glyph-icon tooltip-button icon-laptop" title="{% trans 'Server IP Address' %}" data-original-title=".icon-laptop"></i>
             <span style="color: #db6868;font-weight: bold;" id="serverIPAddress"></span>
         </a>
-        <a href="{% url 'index' %}" title="{% trans 'Dashboard' %}">
+        <a href="{% url 'index' %}" title="{% trans 'CyberPanel' %}">
             <i class="glyph-icon icon-linecons-tv"></i>
-            <span>{% trans "Dashboard" %}</span>
+            <span>{% trans "CyberPanel" %}</span>
         </a>
-        <a class="versionManagement" href="{% url 'versionManagment' %}" title="{% trans 'Version Management' %}">
+        <a href="{% url 'VMM' %}" title="{% trans 'CyberTron' %}">
+            <i class="glyph-icon tooltip-button icon-hdd-o"></i>
+            <span>{% trans "CyberTron" %}</span>
+        </a>
+        <a id="versionManagement" href="{% url 'versionManagment' %}" title="{% trans 'Version Management' %}">
             <i class="glyph-icon tooltip-button icon-cloud-upload" title="{% trans 'Version Management' %}" data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
             <span>{% trans "Version Management" %}</span>
         </a>
@@ -651,5 +653,5 @@
 <script src="{% static 'manageSSL/manageSSL.js' %}"></script>
 <script src="{% static 'manageServices/manageServices.js' %}"></script>
 </div>
-</body>
+    </body>
 </html>

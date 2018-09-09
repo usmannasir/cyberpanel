@@ -1,0 +1,99 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Create Snapshots - CyberTron" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div ng-controller="snapshotsCTRL" class="container">
+<div id="page-title">
+   <h2>{% trans "Snapshots" %}</h2>
+   <p>{% trans "On this page you can create, delete or revert to Virtual Machine Snapshot." %}</p>
+</div>
+
+<div class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Snapshots for" %} <span id="hostname">{{ hostName }}</span> <img ng-hide="tronLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+
+            <form action="/" class="form-horizontal bordered-row">
+
+            <!------ Modification form that appears after a click --------------->
+            <div ng-hide="createSnapshotBTN" class="form-group">
+                <div class="col-sm-4">
+                    <button ng-click="showSnapshotForm()" class="btn ra-100 btn-blue-alt">{% trans 'Create Snapshot'  %}</button>
+                </div>
+            </div>
+
+            <table ng-hide="snapshotTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" ng-hide="aliasTable">
+                <thead>
+                <tr>
+                    <th>{% trans "ID" %}</th>
+                    <th>{% trans "VPS Name" %}</th>
+                    <th>{% trans "Snapshot Name" %}</th>
+                    <th>{% trans "Creation Time" %}</th>
+                    <th>{% trans "Operations" %}</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                    <tr ng-repeat="snapshot in snapshots track by $index">
+                        <td ng-bind="snapshot.id"></td>
+                        <td ng-bind="snapshot.hostname"></td>
+                        <td ng-bind="snapshot.name"></td>
+                        <td ng-bind="snapshot.creationTime"></td>
+                        <td>
+                            <button type="button" ng-click="revertToSnapshot(snapshot.name)" class="btn ra-100 btn-purple">{% trans "Revert" %}</button>
+                            <button type="button" ng-click="deleteSnapshot(snapshot.name)" class="btn ra-100 btn-purple">{% trans "Delete" %}</button>
+                        </td>
+                    </tr>
+
+                </tbody>
+                </table>
+
+            <!------ Modification form that appears after a click --------------->
+
+                <hr>
+
+                <div ng-hide="createSnapshotBox">
+                    <form  action="/" class="form-horizontal bordered-row ng-scope ng-dirty ng-valid-parse ng-valid ng-valid-required">
+                        <input type="hidden" ng-value="line" required="">
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Snapshot Name" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="snapshotName" required="">
+                            </div>
+                        </div>
+
+                        <hr>
+
+                    </form>
+                    <div  class="form-group">
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-4">
+                            <button type="button" ng-click="createSnapShot()" class="btn btn-primary btn-lg btn-block">{% trans "Create Snapshot" %}</button>
+                        </div>
+                    </div>
+                </div>
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

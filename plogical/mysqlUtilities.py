@@ -138,7 +138,6 @@ class mysqlUtilities:
 
             cmd = shlex.split(command)
 
-
             with open(tempStoragePath + "/" + databaseName + '.sql', 'r') as f:
                 res = subprocess.call(cmd, stdin=f)
 

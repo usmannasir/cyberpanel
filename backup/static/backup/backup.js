@@ -1551,3 +1551,479 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
 });
 
 ///** Backup site ends **///
+
+
+/////////////// Snapshots
+
+/* Java script code for Snapshots */
+app.controller('snapshotsCTRL', function($scope,$http) {
+
+    $scope.getCurrentSnapshots = function(){
+
+        $scope.tronLoading = false;
+
+        var url = "/backup/fetchCurrentSnapshots";
+
+        var data = {
+            hostName: $("#hostname").text()
+        };
+
+        var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+                    $scope.tronLoading = true;
+                    $scope.snapshotTable = false;
+
+                    if(response.data.success === 1){
+
+                        $scope.snapshots = JSON.parse(response.data.data);
+                    }
+                    else
+                    {
+                        new PNotify({
+                            title: 'Operation Failed!',
+                            text: response.data.error_message,
+                            type:'error'
+                          });
+
+                    }
+                }
+        function cantLoadInitialDatas(response) {
+                    new PNotify({
+                            title: 'Operation Failed!',
+                            text: 'Could not connect to server, please refresh this page',
+                            type:'error'
+                          });
+
+                }
+
+    };
+    $scope.getCurrentSnapshots();
+
+    /// Administrative Tasks
+
+    $scope.tronLoading = true;
+    $scope.createSnapshotBox = true;
+
+
+    $scope.showSnapshotForm = function () {
+        $scope.createSnapshotBox = false;
+        $scope.createSnapshotBTN = true;
+        $scope.snapshotTable = true;
+
+    };
+
+
+    $scope.createSnapShot = function(){
+
+        $scope.tronLoading = false;
+
+
+        var url = "/backup/submitSnapshotCreation";
+
+        var data = {
+            hostName: $("#hostname").text(),
+            snapshotName: $scope.snapshotName
+        };
+
+        var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+                    $scope.tronLoading = true;
+
+                    if(response.data.success === 1){
+
+                        new PNotify({
+                            title: 'Operation Successfull!',
+                            text: response.data.successMessage,
+                            type:'success'
+                          });
+
+                        $scope.getCurrentSnapshots();
+                        $scope.createSnapshotBox = true;
+                        $scope.createSnapshotBTN = false;
+
+                    }
+                    else
+                    {
+
+                        new PNotify({
+                            title: 'Operation failed!',
+                            text: response.data.error_message,
+                            type:'error'
+                          });
+                    }
+                }
+        function cantLoadInitialDatas(response) {
+
+                    $scope.tronLoading = true;
+                    new PNotify({
+                            title: 'Operation failed!',
+                            text: "Could not connect to server. Please refresh this page.",
+                            type:'error'
+                          });
+
+
+                }
+
+    };
+    $scope.deleteSnapshot = function(snapshotName){
+
+        $scope.tronLoading = false;
+
+
+        var url = "/backup/deletSnapshot";
+
+        var data = {
+            hostName: $("#hostname").text(),
+            snapshotName: snapshotName
+        };
+
+        var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+                    $scope.tronLoading = true;
+
+                    if(response.data.success === 1){
+
+                        new PNotify({
+                            title: 'Operation Successfull!',
+                            text: response.data.successMessage,
+                            type:'success'
+                          });
+
+                        $scope.getCurrentSnapshots();
+
+                    }
+                    else
+                    {
+
+                        new PNotify({
+                            title: 'Operation failed!',
+                            text: response.data.error_message,
+                            type:'error'
+                          });
+                    }
+                }
+        function cantLoadInitialDatas(response) {
+
+                    $scope.tronLoading = true;
+                    new PNotify({
+                            title: 'Operation failed!',
+                            text: "Could not connect to server. Please refresh this page.",
+                            type:'error'
+                          });
+
+
+                }
+
+    };
+    $scope.revertToSnapshot = function(snapshotName){
+
+        $scope.tronLoading = false;
+
+
+        var url = "/backup/revertToSnapshot";
+
+        var data = {
+            hostName: $("#hostname").text(),
+            snapshotName: snapshotName
+        };
+
+        var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+                    $scope.tronLoading = true;
+
+                    if(response.data.success === 1){
+
+                        new PNotify({
+                            title: 'Operation Successfull!',
+                            text: response.data.successMessage,
+                            type:'success'
+                          });
+
+                    }
+                    else
+                    {
+
+                        new PNotify({
+                            title: 'Operation failed!',
+                            text: response.data.error_message,
+                            type:'error'
+                          });
+                    }
+                }
+        function cantLoadInitialDatas(response) {
+
+                    $scope.tronLoading = true;
+                    new PNotify({
+                            title: 'Operation failed!',
+                            text: "Could not connect to server. Please refresh this page.",
+                            type:'error'
+                          });
+
+
+                }
+
+    };
+
+
+    $scope.changeRootPassword = function(vpsID){
+
+        $scope.tronLoading = false;
+
+
+        var url = "/vps/changeRootPassword";
+
+        var data = {
+            hostName: $("#vpsHostname").text(),
+            newPassword: $scope.newPassword
+        };
+
+        var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+                    $scope.tronLoading = true;
+
+                    if(response.data.success === 1){
+
+                        $scope.successMessage = response.data.successMessage;
+
+                        new PNotify({
+                            title: 'Operation Successfull!',
+                            text: response.data.successMessage,
+                            type:'success'
+                          });
+
+                    }
+                    else
+                    {
+                        new PNotify({
+                            title: 'Operation failed!',
+                            text: response.data.error_message,
+                            type:'error'
+                          });
+                    }
+                }
+        function cantLoadInitialDatas(response) {
+
+                    $scope.tronLoading = true;
+                    new PNotify({
+                            title: 'Operation failed!',
+                            text: "Could not connect to server. Please refresh this page.",
+                            type:'error'
+                          });
+
+
+                }
+
+    };
+    $scope.reinstallOS = function(vpsID){
+
+        $scope.tronLoading = false;
+
+
+        var url = "/vps/reInstallOS";
+
+        var data = {
+            hostName: $("#vpsHostname").text(),
+            rootPassword: $scope.reinstallPassword
+        };
+
+        var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+                    $scope.tronLoading = true;
+
+                    if(response.data.success === 1){
+
+                        $scope.successMessage = response.data.successMessage;
+
+                        new PNotify({
+                            title: 'Operation Successfull!',
+                            text: response.data.successMessage,
+                            type:'success'
+                          });
+
+                    }
+                    else
+                    {
+
+                        new PNotify({
+                            title: 'Operation failed!',
+                            text: response.data.error_message,
+                            type:'error'
+                          });
+                    }
+                }
+        function cantLoadInitialDatas(response) {
+
+                    $scope.tronLoading = true;
+                    new PNotify({
+                            title: 'Operation failed!',
+                            text: "Could not connect to server. Please refresh this page.",
+                            type:'error'
+                          });
+
+
+                }
+
+    };
+
+
+    $scope.restartVPS = function(vpsID){
+
+        $scope.tronLoading = false;
+        $scope.poolCreationFailed = true;
+        $scope.poolCreated = true;
+        $scope.couldNotConnect = true;
+
+
+
+        var url = "/vps/restartVPS";
+
+        var data = {vpsID: vpsID};
+
+        var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+                    if(response.data.success === 1){
+
+                        $scope.tronLoading = true;
+                        $scope.poolCreationFailed = true;
+                        $scope.poolCreated = false;
+                        $scope.couldNotConnect = true;
+                        $scope.successMessage = response.data.successMessage;
+                        $scope.getFurtherVPS(currentPageNumber);
+                    }
+                    else
+                    {
+                        $scope.tronLoading = true;
+                        $scope.poolCreationFailed = false;
+                        $scope.poolCreated = true;
+                        $scope.couldNotConnect = true;
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+                }
+        function cantLoadInitialDatas(response) {
+                    $scope.tronLoading = true;
+                    $scope.poolCreationFailed = true;
+                    $scope.poolCreated = true;
+                    $scope.couldNotConnect = false;
+
+                }
+
+    };
+    $scope.shutdownVPS = function(vpsID){
+
+        $scope.tronLoading = false;
+        $scope.poolCreationFailed = true;
+        $scope.poolCreated = true;
+        $scope.couldNotConnect = true;
+
+
+
+        var url = "/vps/shutdownVPS";
+
+        var data = {vpsID: vpsID};
+
+        var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+                    if(response.data.success === 1){
+
+                        $scope.tronLoading = true;
+                        $scope.poolCreationFailed = true;
+                        $scope.poolCreated = false;
+                        $scope.couldNotConnect = true;
+                        $scope.successMessage = response.data.successMessage;
+                        $scope.getFurtherVPS(currentPageNumber);
+                    }
+                    else
+                    {
+                        $scope.tronLoading = true;
+                        $scope.poolCreationFailed = false;
+                        $scope.poolCreated = true;
+                        $scope.couldNotConnect = true;
+                        $scope.errorMessage = response.data.error_message;
+
+                    }
+                }
+        function cantLoadInitialDatas(response) {
+                    $scope.tronLoading = true;
+                    $scope.poolCreationFailed = true;
+                    $scope.poolCreated = true;
+                    $scope.couldNotConnect = false;
+
+                }
+
+    };
+
+});
+/* Java script code for Snapshots ends here */

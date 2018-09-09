@@ -58,7 +58,7 @@ app.controller('createUserCtr', function($scope,$http) {
                 function ListInitialDatas(response) {
 
 
-                    if(response.data.createStatus == 1){
+                    if(response.data.createStatus === 1){
 
                         $scope.userCreated = false;
                         $scope.userCreationFailed = true;

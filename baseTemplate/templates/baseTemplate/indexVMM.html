@@ -1,0 +1,392 @@
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+<!DOCTYPE html>
+<html lang="en" ng-app="CyberCP">
+<head>
+
+    <style>
+        /* Loading Spinner */
+        .spinner{margin:0;width:70px;height:18px;margin:-35px 0 0 -9px;position:absolute;top:50%;left:50%;text-align:center}.spinner > div{width:18px;height:18px;background-color:#333;border-radius:100%;display:inline-block;-webkit-animation:bouncedelay 1.4s infinite ease-in-out;animation:bouncedelay 1.4s infinite ease-in-out;-webkit-animation-fill-mode:both;animation-fill-mode:both}.spinner .bounce1{-webkit-animation-delay:-.32s;animation-delay:-.32s}.spinner .bounce2{-webkit-animation-delay:-.16s;animation-delay:-.16s}@-webkit-keyframes bouncedelay{0%,80%,100%{-webkit-transform:scale(0.0)}40%{-webkit-transform:scale(1.0)}}@keyframes bouncedelay{0%,80%,100%{transform:scale(0.0);-webkit-transform:scale(0.0)}40%{transform:scale(1.0);-webkit-transform:scale(1.0)}}
+    </style>
+
+
+    <meta charset="UTF-8">
+<!--[if IE]><meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
+<title>{% block title %}Page Title{% endblock %}</title>
+<meta name="description" content="">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<!-- Favicons -->
+    {% load static %}
+
+<script src = "https://code.angularjs.org/1.6.5/angular.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+
+<!-- HELPERS -->
+
+<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/finalBase/finalBase.css' %}">
+
+<!-- ELEMENTS -->
+
+<!-- ICONS -->
+
+<!-- WIDGETS -->
+
+<!-- SNIPPETS -->
+
+<!-- APPLICATIONS -->
+<!-- Admin theme -->
+
+<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/finalBase/finalBaseTheme.css' %}">
+
+<link rel="stylesheet" type="text/css" href="/static/baseTemplate/assets/themes/admin/layout.css">
+<link rel="stylesheet" type="text/css" href="/static/baseTemplate/assets/themes/admin/color-schemes/default.css">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
+<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}">
+<!-- Components theme, component below was above three CSS files. -->
+
+
+
+<!-- Admin responsive -->
+
+
+<!-- Packages -->
+
+
+<!-- JS Core -->
+
+<script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-core.min.js' %}"></script>
+    <script type="text/javascript">
+        $(window).load(function(){
+            setTimeout(function() {
+                $('#loading').fadeOut( 400, "linear" );
+            }, 300);
+        });
+    </script>
+
+<!-- JS Ends -->
+
+
+</head>
+    <body>
+        <div id="sb-site">
+
+
+
+<!------- ng-controller="systemStatusInfo" ------------>
+
+
+<div   class="sb-slidebar bg-black sb-right sb-style-overlay">
+<div class="scrollable-content scrollable-slim-sidebar">
+<div class="pad15A">
+
+
+
+
+<div class="clear"></div>
+
+
+<div ng-controller="systemStatusInfo" id="sidebar-toggle-3" class="collapse in">
+
+    <ul class="progress-box">
+        <li>
+
+            <div class="progress-title">
+                {% trans "CPU Usage" %}
+                <b>{$ cpuUsage $}%</b>
+            </div>
+            <div class="progressbar-small progressbar" data-value="{$ cpuUsage $}">
+                <div class="progressbar-value bg-yellow tooltip-button" title="{$ cpuUsage $}%">
+                </div>
+            </div>
+        </li>
+        <li>
+            <b class="pull-right">{$ ramUsage $}%</b>
+            <div class="progress-title">
+                {% trans "Ram Usage" %}
+
+            </div>
+            <div class="progressbar-small progressbar" data-value="{$ ramUsage $}">
+                <div class="progressbar-value bg-red tooltip-button" title="{$ ramUsage $}%"></div>
+            </div>
+        </li>
+        <li>
+            <div class="progress-title">
+                {% trans "Disk Usage" %}
+                <b>{$ diskUsage $}%</b>
+            </div>
+            <div class="progressbar" data-value="{$ diskUsage $}">
+                <div class="progressbar-value bg-green">
+                    <div class="progress-label">{$ diskUsage $}%</div>
+                </div>
+            </div>
+        </li>
+    </ul>
+
+</div>
+
+<div class="clear"></div>
+
+</div>
+</div>
+</div>
+
+
+
+
+    <div id="loading">
+        <div class="spinner">
+            <div class="bounce1"></div>
+            <div class="bounce2"></div>
+            <div class="bounce3"></div>
+        </div>
+    </div>
+
+    <div id="page-wrapper">
+        <div id="page-header" class="bg-gradient-9">
+    <div id="mobile-navigation">
+        <button id="nav-toggle" class="collapsed" data-toggle="collapse" data-target="#page-sidebar"><span></span></button>
+        <a href="{% url "index" %}" class="logo-content-small" title="{% trans 'CyberPanel' %}"></a>
+    </div>
+    <div id="header-logo" class="logo-bg">
+        <a href="{% url "index" %}" class="logo-content-big" title="{% trans 'CyberPanel' %}">
+            Cyber <i>Panel</i>
+            <span>{% trans "Web Hosting Control Panel" %}</span>
+        </a>
+        <a href="{% url "index" %}" class="logo-content-small" title="{% trans 'CyberPanel' %}">
+            Cyber <i>Panel</i>
+            <span>{% trans "Web Hosting Control Panel" %}</span>
+        </a>
+        <a id="close-sidebar" href="#" title="{% trans 'Close sidebar' %}">
+            <i class="glyph-icon icon-angle-left"></i>
+        </a>
+    </div>
+    <div id="header-nav-left">
+        <div ng-controller="adminController" class="user-account-btn dropdown">
+            <a href="#" title="{% trans 'My Account' %}" class="user-profile clearfix" data-toggle="dropdown">
+                <img width="28" src="{% static 'baseTemplate/assets/image-resources/gravatar.png' %}" alt="Profile image">
+                <span>{$ currentAdmin $}</span>
+                <i class="glyph-icon icon-angle-down"></i>
+            </a>
+            <div class="dropdown-menu float-left">
+                <div class="box-sm">
+                    <div class="login-box clearfix">
+                        <div class="user-img">
+                            <a href="#" title="{% trans '' %}" class="change-img">Change photo</a>
+                            <img src="{% static 'baseTemplate/assets/image-resources/gravatar.png' %}" alt="">
+                        </div>
+                        <div class="user-info">
+                            <span>
+                                {$ currentAdmin $}
+                                <i>{$ admin_type $}</i>
+                            </span>
+                            <a href="{% url 'modifyUsers' %}" title="{% trans 'Edit profile' %}">{% trans "Edit profile" %}</a>
+                            <a href="{% url 'viewProfile' %}" title="{% trans 'View Profile' %}">{% trans "View Profile" %}</a>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="pad5A button-pane button-pane-alt text-center">
+                        <a href="{% url 'logout' %}" class="btn display-block font-normal btn-danger">
+                            <i class="glyph-icon icon-power-off"></i>
+                            {% trans "Logout" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!-- #header-nav-left -->
+
+
+    <div ng-controller="loadAvg" id="header-nav-right">
+
+        <a class="hide-on-phone" style="background-color: none;width: 33px" href="#" class="hdr-btn" title="{% trans 'CPU Load Average' %}" data-placement="bottom" >
+                <span class="badge bg-yellow">{$ one $}</span>
+        </a>
+
+        <a class="hide-on-phone" style="background-color: none;width: 33px" href="#" class="hdr-btn" title="{% trans 'CPU Load Average' %}" data-placement="bottom" >
+            <span class="badge bg-yellow">{$ two $}</span>
+        </a>
+
+        <a class="hide-on-phone" style="background-color: none;width: 33px" href="#" class="hdr-btn" title="{% trans 'CPU Load Average' %}" data-placement="bottom">
+            <span class="badge bg-yellow">{$ three $}</span>
+        </a>
+
+        <div class="dropdown" id="dashnav-btn">
+            <a href="#" data-toggle="dropdown" data-placement="bottom" class="popover-button-header tooltip-button" title="{% trans 'Dashboard Quick Menu' %}">
+                <i class="glyph-icon icon-linecons-cog"></i>
+            </a>
+            <div class="dropdown-menu float-right">
+                <div class="box-sm">
+                    <div class="pad5T pad5B pad10L pad10R dashboard-buttons clearfix">
+                        <a href="{% url 'loadWebsitesHome' %}" class="btn vertical-button remove-border btn-info" title="{% trans '' %}">
+                            <span class="glyph-icon icon-separator-vertical pad0A medium">
+                                <i class="glyph-icon icon-dashboard opacity-80 font-size-20"></i>
+                            </span>
+                            {% trans "Websites" %}
+                        </a>
+                        <a href="{% url 'packagesHome' %}" class="btn vertical-button remove-border btn-danger" title="{% trans '' %}">
+                            <span class="glyph-icon icon-separator-vertical pad0A medium">
+                                <i class="glyph-icon icon-tags opacity-80 font-size-20"></i>
+                            </span>
+                            {% trans "Packages" %}
+                        </a>
+                        <a href="{% url 'dnsHome' %}" class="btn vertical-button remove-border btn-purple" title="{% trans '' %}">
+                            <span class="glyph-icon icon-separator-vertical pad0A medium">
+                                <i class="glyph-icon icon-fire opacity-80 font-size-20"></i>
+                            </span>
+                            {% trans "DNS" %}
+                        </a>
+                        <a href="{% url 'loadFTPHome' %}" class="btn vertical-button remove-border btn-azure" title="{% trans '' %}">
+                            <span class="glyph-icon icon-separator-vertical pad0A medium">
+                                <i class="glyph-icon icon-bar-chart-o opacity-80 font-size-20"></i>
+                            </span>
+                            {% trans "FTP" %}
+                        </a>
+                        <a href="{% url 'loadTuningHome' %}" class="btn vertical-button remove-border btn-yellow" title="{% trans '' %}">
+                            <span class="glyph-icon icon-separator-vertical pad0A medium">
+                                <i class="glyph-icon icon-laptop opacity-80 font-size-20"></i>
+                            </span>
+                            {% trans "Tuning" %}
+                        </a>
+                        <a href="{% url 'serverStatusHome' %}" class="btn vertical-button remove-border btn-warning" title="{% trans '' %}">
+                            <span class="glyph-icon icon-separator-vertical pad0A medium">
+                                <i class="glyph-icon icon-code opacity-80 font-size-20"></i>
+                            </span>
+                            {% trans "Status" %}
+                        </a>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <a class="header-btn" id="logout-btn" href="{% url 'logout' %}" title="{% trans 'Logout' %}">
+            <i class="glyph-icon icon-linecons-lock"></i>
+        </a>
+
+
+    </div><!-- #header-nav-right -->
+
+</div>
+<div id="page-sidebar">
+    <div class="scroll-sidebar">
+
+
+    <ul id="sidebar-menu">
+    <li class="header"><span>{% trans "Overview" %}</span></li>
+    <li>
+        <a href="#" title="{% trans 'Server IP Address' %}">
+            <i class="glyph-icon tooltip-button icon-laptop" title="{% trans 'Server IP Address' %}" data-original-title=".icon-laptop"></i>
+            <span style="color: #db6868;font-weight: bold;" id="serverIPAddress"></span>
+        </a>
+        <a href="{% url 'index' %}" title="{% trans 'CyberPanel' %}">
+            <i class="glyph-icon icon-linecons-tv"></i>
+            <span>{% trans "CyberPanel" %}</span>
+        </a>
+        <a href="{% url 'VMM' %}" title="{% trans 'CyberTron' %}">
+            <i class="glyph-icon tooltip-button icon-hdd-o"></i>
+            <span>{% trans "CyberTron" %}</span>
+        </a>
+        <a id="versionManagement" href="{% url 'versionManagment' %}" title="{% trans 'Version Management' %}">
+            <i class="glyph-icon tooltip-button icon-cloud-upload" title="{% trans 'Version Management' %}" data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
+            <span>{% trans "Version Management" %}</span>
+        </a>
+    </li>
+    <li class="divider"></li>
+    <li class="header"><span>{% trans "Main" %}</span></li>
+
+    <li>
+        <a id="packageHome" href="#" title="{% trans 'Servers' %}">
+            <i class="glyph-icon tooltip-button icon-laptop"></i>
+            <span>{% trans "Servers" %}</span>
+        </a>
+        <div id="packageSub" class="sidebar-submenu">
+
+            <ul>
+                <li id="createPackage"><a href="{% url 'createHypervisor' %}" title="{% trans 'Create Server' %}"><span>{% trans "Create Server" %}</span></a></li>
+                <li id="deletePackage"><a href="{% url 'listHVs' %}" title="{% trans 'List Servers' %}"><span>{% trans "List Servers" %}</span></a></li>
+            </ul>
+
+        </div><!-- .sidebar-submenu -->
+    </li>
+
+    <li>
+        <a id="packageHome" href="{% url 'packagesHome' %}" title="{% trans 'Packages' %}">
+            <i class="glyph-icon icon-cubes"></i>
+            <span>{% trans "Packages" %}</span>
+        </a>
+        <div id="packageSub" class="sidebar-submenu">
+
+            <ul>
+                <li id="createPackage"><a href="{% url 'createPackageVMM' %}" title="{% trans 'Create Package' %}"><span>{% trans "Create Package" %}</span></a></li>
+                <li id="deletePackage"><a href="{% url 'deletePackageVMM' %}" title="{% trans 'Delete Package' %}"><span>{% trans "Delete Package" %}</span></a></li>
+                <li id="modifyPackage"><a href="{% url 'modifyPackageVMM' %}" title="{% trans 'Modify Package' %}"><span>{% trans "Modify Package" %}</span></a></li>
+            </ul>
+
+        </div><!-- .sidebar-submenu -->
+    </li>
+
+    <li>
+        <a href="{% url 'loadUsersHome' %}" title="{% trans 'IP Management' %}">
+            <i class="glyph-icon tooltip-button icon-wifi" title="{% trans 'IP Management' %}"></i>
+            <span>{% trans "IP Management" %}</span>
+        </a>
+        <div class="sidebar-submenu">
+
+            <ul>
+                <li><a href="{% url 'createIPPool' %}" title="{% trans 'Create IP Pool' %}"><span>{% trans "Create IP Pool" %}</span></a></li>
+                <li><a href="{% url 'listIPPools' %}" title="{% trans 'List IP Pools' %}"><span>{% trans "List IP Pools" %}</span></a></li>
+            </ul>
+
+        </div><!-- .sidebar-submenu -->
+    </li>
+
+    <li>
+        <a href="" title="{% trans 'VPS Management' %}">
+            <div class="glyph-icon tooltip-button icon-tasks" title="{% trans 'VPS Management' %}"></div>
+            <span>{% trans "VPS Management" %}</span>
+        </a>
+        <div class="sidebar-submenu">
+
+            <ul>
+                <li><a href="{% url 'createVPS' %}" title="{% trans 'Create VPS' %}"><span>{% trans "Create VPS" %}</span></a></li>
+                <li><a href="{% url 'listVPSs' %}" title="{% trans 'List VPS' %}"><span>{% trans "List VPS" %}</span></a></li>
+                <li><a href="{% url 'sshKeys' %}" title="{% trans 'SSH Keys' %}"><span>{% trans "SSH Keys" %}</span></a></li>
+            </ul>
+
+        </div><!-- .sidebar-submenu -->
+    </li>
+
+    </ul><!-- #sidebar-menu -->
+
+    </div>
+</div>
+
+    <div id="page-content-wrapper">
+        <div id="page-content">
+
+
+            {% block content %}
+            {% endblock %}
+
+        </div>
+
+    </div>
+
+</div>
+
+
+        <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}"></script>
+        <script src="{% static 'baseTemplate/custom-js/system-status.js' %}"></script>
+        <script src="{% static 'packages/packages.js' %}"></script>
+        <script src="{% static 'hypervisor/hypervisor.js' %}"></script>
+
+        <script type="text/javascript" src="{% static 'baseTemplate/assets/finalJS/final.js' %}"></script>
+
+        <script src="{% static 'backup/backup.js' %}"></script>
+        <script src="{% static 'baseTemplate/bootstrap-toggle.min.js' %}"></script>
+        <script src="{% static 'ipManagement/ipManagement.js' %}"></script>
+        <script src="{% static 'vpsManagement/vpsManagement.js' %}"></script>
+</div>
+    </body>
+</html>

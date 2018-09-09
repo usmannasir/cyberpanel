@@ -1,0 +1,209 @@
+{% extends "baseTemplate/indexVMM.html" %}
+{% load i18n %}
+{% block title %}{% trans "List IP Pools - CyberTron" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "List IP Pools" %}</h2>
+   <p>{% trans "On this page you list IP pools to view their IP addresses or assign MAC." %}</p>
+</div>
+<div ng-controller="listIPPoolsCTRL" class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "List Pools" %} <img ng-hide="tronLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+
+            <form action="/" class="form-horizontal bordered-row">
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Pool" %} </label>
+                    <div class="col-sm-6">
+                        <select ng-change="fetchRecords()" ng-model="poolName" class="form-control">
+                            {% for items in ipPools %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div ng-hide="currentRecords" class="form-group">
+                    <label class="col-sm-1 control-label"></label>
+                    <div class="col-sm-3">
+                         <button data-toggle="modal" data-target="#deletePool" class="btn ra-100 btn-danger">{% trans 'Delete Pool' %}</button>
+                         <!--- Delete Pool --->
+                            <div class="modal fade" id="deletePool" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                            <h4 class="modal-title">{% trans "You are doing to delete an IP Pool.." %} <img ng-hide="tronLoading" src="{% static 'images/loading.gif' %}"></h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>{% trans 'Are you sure?' %}</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Close' %}</button>
+                                            <button data-dismiss="modal" ng-click="deletePool()" type="button" class="btn btn-primary">{% trans 'Confirm' %}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <!--- Delete Pool --->
+                    </div>
+                    <div class="col-sm-3">
+                         <button data-toggle="modal" data-target="#singleIP" class="btn ra-100 btn-blue-alt">{% trans 'Add Single IP' %}</button>
+                        <!--- Add Single IP --->
+                            <div class="modal fade" id="singleIP" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                            <h4 class="modal-title">{% trans "Add single IP to this pool." %} <img ng-hide="tronLoading" src="{% static 'images/loading.gif' %}"></h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="form-group">
+                                                <label style="color: green" class="col-sm-3 control-label">{% trans "IP Address " %}</label>
+                                                <div class="col-sm-6">
+                                                    <input  type="text"  class="form-control" ng-model="newIP" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Close' %}</button>
+                                            <button data-dismiss="modal" ng-click="addSingleIP()" type="button" class="btn btn-primary">{% trans 'Add IP' %}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <!--- Delete Pool --->
+                    </div>
+                    <div class="col-sm-3">
+                         <button data-toggle="modal" data-target="#multipleIPs" class="btn ra-100 btn-blue-alt">{% trans 'Add Multiple IPs' %}</button>
+                        <!--- Add Mutiple IPs --->
+                            <div class="modal fade" id="multipleIPs" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                            <h4 class="modal-title">{% trans "Add Multiple IPs to this pool." %} <img ng-hide="tronLoading" src="{% static 'images/loading.gif' %}"></h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="form-group">
+                                                <label style="color: green" class="col-sm-3 control-label">{% trans "Starting IP" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input  type="text"  class="form-control" ng-model="startingIP" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="form-group">
+                                                <label style="color: green" class="col-sm-3 control-label">{% trans "Ending IP" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input  type="text"  class="form-control" ng-model="endingIP" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Close' %}</button>
+                                            <button data-dismiss="modal" ng-click="addMultipleIP()" type="button" class="btn btn-primary">{% trans 'Add IPs' %}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <!--- Add Multiple IPs --->
+                    </div>
+                </div>
+
+
+                <div ng-hide="macBox" class="form-group">
+                    <label style="color: green" class="col-sm-3 control-label">{% trans "Changing MAC for: " %} {$ macIP $}</label>
+                    <div class="col-sm-6">
+                        <input  type="text"  class="form-control" ng-model="newMac" required>
+                    </div>
+                </div>
+
+                <div ng-hide="macBox" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button ng-click="changeMacFinal()" type="button"  class="btn btn-primary btn-lg btn-block">{% trans "Change MAC" %}</button>
+                    </div>
+                </div>
+
+
+            <!------ List of records --------------->
+
+                <div ng-hide="currentRecords" class="form-group">
+
+                    <div  class="col-sm-12">
+
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "IP" %}</th>
+                                <th>{% trans "Assignment" %}</th>
+                                <th>{% trans "MAC" %}</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="record in records track by $index">
+                                <td ng-bind="record.id"></td>
+                                <td ng-bind="record.ipAddr"></td>
+                                <td ng-bind="record.used"></td>
+                                <td ng-bind="record.macAddress"></td>
+                                <td >
+                                    <button type="button" ng-click="changeMac(record.ipAddr)" class="btn ra-100 btn-purple">{% trans "Edit Mac" %}</button>
+                                    <button type="button" ng-click="deleteIP(record.id)" class="btn ra-100 btn-purple">{% trans "Delete IP" %}</button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            <!------ List of records --------------->
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div ng-hide="poolCreationFailed" class="alert alert-danger">
+                                        <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="poolCreated" class="alert alert-success">
+                                <p>{$ successMessage $}</p>
+                            </div>
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <p>{% trans "Could not connect to server, please refresh this page." %}</p>
+                            </div>
+                    </div>
+                </div>
+
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

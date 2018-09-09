@@ -1,0 +1,193 @@
+{% extends "baseTemplate/indexVMM.html" %}
+{% load i18n %}
+{% block title %}{% trans "Create VPS - CyberTron" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div ng-controller="createVPSCTRL" class="container">
+<div id="page-title">
+   <h2>{% trans "Create VPS" %}</h2>
+   <p>{% trans "On this page you can create a VPS!" %}</p>
+</div>
+<div class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "VPS Details" %} <img ng-hide="tronLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div class="example-box-wrapper">
+
+
+            <form  action="/" class="form-horizontal bordered-row">
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Package" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-model="vpsPackage" class="form-control">
+                            {% for items in packageNames %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Server" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-change="findIPs()" ng-model="hvName" class="form-control">
+                            {% for items in hvNames %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "VPS Owner" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-model="vpsOwner" class="form-control">
+                            {% for items in ownerNames %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Operating System" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-model="osName" class="form-control">
+                                <option>centos-6</option>
+                                <option>centos-7.2</option>
+                                <option>debian-9</option>
+                                <option>ubuntu-16.04</option>
+                                <option>ubuntu-18.04</option>
+                                <option>fedora-28</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "IP Addresses" %}</label>
+                    <div class="col-sm-4">
+                        <input  type="text" class="form-control" ng-model="vpsIP" readonly>
+                    </div>
+                    <div class="col-sm-4">
+                        <select ng-model="vpsIP" class="form-control">
+                                <option ng-repeat="ip in ips">{$ ip.ipAddr $}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Hostname" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="hostname" required>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "SSH Key (Optional)" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-model="sshKey" class="form-control">
+                            {% for items in sshKeys %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Root Password" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="rootPassword" required>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Network Speed" %}</label>
+                    <div class="col-sm-4">
+                        <input  type="text" class="form-control" ng-model="networkSpeed" required>
+                    </div>
+                    <div class="col-sm-4">
+                        <select ng-model="networkSpeed" class="form-control">
+                                <option>256Kbit</option>
+                                <option>512Kbit</option>
+                                <option>1Mbit</option>
+                                <option>5Mbit</option>
+                                <option>10Mbit</option>
+                                <option>20Mbit</option>
+                                <option>30Mbit</option>
+                                <option>40Mbit</option>
+                                <option>50Mbit</option>
+                                <option>60Mbit</option>
+                                <option>70Mbit</option>
+                                <option>80Mbit</option>
+                                <option>90Mbit</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="createVPS()" class="btn btn-primary btn-lg btn-block">{% trans "Create VPS" %}</button>
+
+                    </div>
+                </div>
+
+
+                <div ng-hide="installationProgress" class="form-group">
+                    <label class="col-sm-2 control-label"></label>
+                    <div class="col-sm-7">
+
+                            <div class="alert alert-success text-center">
+                                        <h2>{$ currentStatus $}</h2>
+                            </div>
+
+                            <div class="progress">
+                              <div id="installProgress" class="progress-bar" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                                <span class="sr-only">70% Complete</span>
+                              </div>
+                            </div>
+
+                            <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="success" class="alert alert-success">
+                                <p>{% trans "Website succesfully created." %}</p>
+                            </div>
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+
+
+                    </div>
+                </div>
+
+                <div ng-hide="installationProgress" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                        <button type="button" ng-disabled="goBackDisable"  ng-click="goBack()" class="btn btn-primary btn-lg btn-block">{% trans "Go Back" %}</button>
+                    </div>
+                </div>
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+{% endblock %}
+

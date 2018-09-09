@@ -1,0 +1,85 @@
+{% extends "baseTemplate/indexVMM.html" %}
+{% load i18n %}
+{% block title %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block content %}
+
+
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Home" %}</h2>
+   <p>{% trans "Use the tabs to navigate through the control panel." %}</p>
+</div>
+
+<div class="panel">
+        <div class="panel-body">
+            <h3 class="title-hero">
+            {% trans "Available Functions" %}
+            </h3>
+
+            <div class="example-box-wrapper">
+
+
+                 <div class="row">
+
+                     <div class="col-md-4">
+                            <a href="{% url 'loadHVHome' %}" title="{% trans 'Servers' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">2</span>
+                                <div class="tile-header">
+                                    {% trans "Servers" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                     </div>
+
+                     <div class="col-md-4">
+                            <a href="{% url 'packagesHomeVMM' %}" title="{% trans 'Packages' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">3</span>
+                                <div class="tile-header">
+                                    {% trans "Packages" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                        </div>
+
+                     <div class="col-md-4">
+                            <a href="{% url 'listIPHome' %}" title="{% trans 'IP Management' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">2</span>
+                                <div class="tile-header">
+                                    {% trans "IP Management" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                     </div>
+
+                     <div class="col-md-4">
+                            <a href="{% url 'vpsHome' %}" title="{% trans 'VPS Management' %}" class="tile-box tile-box-shortcut btn-primary">
+                                <span class="bs-badge badge-absolute">3</span>
+                                <div class="tile-header">
+                                    {% trans "VPS Management" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="glyph-icon icon-dashboard"></i>
+                                </div>
+                            </a>
+                    </div>
+
+                 </div>
+            </div>
+
+    </div>
+
+    </div>
+
+</div>
+
+
+{% endblock %}

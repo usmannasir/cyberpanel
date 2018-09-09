@@ -453,6 +453,27 @@ class virtualHostUtilities:
             cmd = shlex.split(command)
             subprocess.call(cmd)
 
+            command = 'hostname ' + virtualHost
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
+
+            hostNamePath = '/etc/cyberpanel/hostname'
+
+            hostname = open(hostNamePath, 'w')
+            hostname.write(virtualHost)
+            hostname.close()
+
+            f = open(pathToStoreSSLPrivKey)
+            key = f.read()
+            f = open(pathToStoreSSLFullChain)
+            cert = f.read()
+
+            f= open('/usr/local/lscp/cyberpanel/noVNC/utils/self.pem', 'w')
+            f.write(key)
+            f.write(cert)
+            f.close()
+
+
             print "1,None"
             return 1,'None'
 

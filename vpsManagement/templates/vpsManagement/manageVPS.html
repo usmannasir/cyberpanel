@@ -1,0 +1,402 @@
+{% extends "baseTemplate/indexVMM.html" %}
+{% load i18n %}
+{% block title %}{{ hostName }} - CyberPanel{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div ng-controller="manageVPSCTRL" class="container">
+
+    <div id="page-title">
+        <h2 ><span id="vpsHostname">{{ hostName }}</span></h2>
+       <p>{% trans "All functions related to a particular VPS." %}</p>
+    </div>
+
+    {% if not error %}
+
+
+    <div class="example-box-wrapper">
+
+         <div style="border-radius: 25px;border-color:#3498db" class="content-box">
+
+             <h3 class="content-box-header bg-blue">
+                 {% trans "Virtual Machine Information" %} <img ng-hide="tronLoading" src="{% static 'images/loading.gif' %}">
+             </h3>
+
+
+             <div class="content-box-wrapper">
+                 <div class="row">
+
+                            <div class="col-md-6">
+                                <table class="table table-bordered">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "Parameter" %}</th>
+                                        <th>{% trans "Value" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td><code>{% trans "Owner" %}</code></td>
+                                        <td><span class="bs-badge badge-success">{{ owner }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>{% trans "IP Address" %}</code></td>
+                                        <td><span class="bs-badge badge-success">{{ ipAddr }}</span></td>
+                                    </tr>
+
+
+                                    <tr>
+                                        <td><code>{% trans "Package" %}</code></td>
+                                        <td><span class="bs-badge badge-success">{{ package }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>{% trans "Disk Used" %}</code></td>
+                                        <td><span class="bs-badge badge-success">{{ sizeInMB }} MB</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>{% trans "VNC Port" %}</code></td>
+                                        <td><span class="bs-badge badge-success">{{ vncPort }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>{% trans "Websocket Port" %}</code></td>
+                                        <td><span class="bs-badge badge-success">{{ websocketPort }}</span></td>
+                                    </tr>
+
+
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="col-md-6">
+                                      <div class="panel">
+                                        <div class="panel-body">
+                                            <div class="example-box-wrapper">
+                                            <h3 class="title-hero">
+                                                {% trans "Disk Usage" %}
+                                            </h3>
+                                                <div class="progressbar" data-value="{{ diskUsage }}">
+                                                    <div class="progressbar-value bg-primary">
+                                                        <div class="progress-overlay"></div>
+                                                        <div class="progress-label">{{ diskUsage }}%</div>
+                                                    </div>
+                                                </div>
+
+                                                <h3 class="title-hero">
+                                                {% trans "Ram Usage" %}
+                                                </h3>
+                                                <div class="progressbar" data-value="{{ ramUsage }}">
+                                                    <div class="progressbar-value bg-primary">
+                                                        <div class="progress-overlay"></div>
+                                                        <div class="progress-label">{{ ramUsage }}%</div>
+                                                    </div>
+                                                </div>
+
+
+                                                <h3 class="title-hero">
+                                                {% trans "Bandwidth Usage" %}
+                                                </h3>
+                                                <div class="progressbar" data-value="{{ bwUsage }}">
+                                                    <div class="progressbar-value bg-primary">
+                                                        <div class="progress-overlay"></div>
+                                                        <div class="progress-label">{{ bwUsage }} %</div>
+                                                    </div>
+                                                </div>
+
+
+
+                                            </div>
+
+                                        </div>
+                                      </div>
+                            </div>
+
+                        </div>
+             </div>
+
+
+         </div>
+    </div>
+
+    <div class="example-box-wrapper">
+       <div style="border-radius: 25px;border-color:#3498db" class="content-box">
+
+           <h3 class="content-box-header bg-blue">
+               {% trans "Administrative Tasks" %} <img  ng-hide="tronLoading" src="/static/images/loading.gif">
+           </h3>
+
+           <div class="content-box-wrapper">
+
+               <div class="row">
+
+                        <div class="col-md-4" style="margin-bottom: 2%;">
+                                    <a href="" ng-click="showHostnameBox()" title="{% trans 'Change Hostname' %}" href="" >
+                                        <img  src="{% static 'vpsManagement/hostname.png'  %}">
+                                    </a>
+                                    <a ng-click="showHostnameBox()" title="{% trans 'Change Hostname' %}" href="" title="{% trans 'Change Hostname' %}">
+                                        <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Change Hostname" %}</span>
+                                    </a>
+
+                        </div>
+
+                        <div class="col-md-4" style="margin-bottom: 2%;">
+                                    <a href="" ng-click="showChangePasswordBox()" title="{% trans 'Change Password' %}" href="" title="{% trans 'List Domains' %}">
+                                        <img  src="{% static 'vpsManagement/changePassword.png'  %}">
+                                    </a>
+                                    <a ng-click="showChangePasswordBox()" title="{% trans 'Change Password' %}" href="" title="{% trans 'Change Password' %}">
+                                        <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Change Password" %}</span>
+                                    </a>
+
+                        </div>
+
+                        <div class="col-md-4" style="margin-bottom: 2%;">
+                                    <a href="" ng-click="showReinstallBox()" title="{% trans 'Reinstall' %}" title="{% trans 'Reinstall' %}">
+                                        <img  src="{% static 'vpsManagement/install.png'  %}">
+                                    </a>
+                                    <a href="" ng-click="showReinstallBox()"  title="{% trans 'Reinstall' %}" title="{% trans 'Reinstall' %}">
+                                        <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Reinstall" %}</span>
+                                    </a>
+
+                        </div>
+
+                 <!---------- HTML For Changine Hostname --------------->
+
+                   <div ng-hide="hostNameBox"  class="col-md-12">
+                     <form  action="/" class="form-horizontal bordered-row">
+
+                         <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Hostname" %}</label>
+                            <div class="col-sm-6">
+                                <input placeholder="{% trans 'Enter new Hostname. (VPS will be restarted)' %}"  type="text" class="form-control" ng-model="newHostname" required>
+                            </div>
+                            <a ng-click="hideAdminTasks()" href=""><img src="{% static 'vpsManagement/close-32.png' %}"></a>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                 <button type="button" ng-click="changeHostname()" class="btn btn-primary btn-lg btn-block">{% trans "Change Hostname" %}</button>
+
+                            </div>
+                        </div>
+
+
+                    </form>
+                   </div>
+
+                 <!---------- HTML For Changine Hostname --------------->
+
+                 <!---------- HTML For Changing Root password --------------->
+
+                   <div ng-hide="rootPasswordBox" class="col-md-12">
+                     <form  action="/" class="form-horizontal bordered-row">
+
+                         <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "New Password" %}</label>
+                            <div class="col-sm-6">
+                                <input placeholder="{% trans 'Enter new Password. (VPS will be restarted)' %}"  type="text" class="form-control" ng-model="newPassword" required>
+                            </div>
+                            <a ng-click="hideAdminTasks()" href=""><img src="{% static 'vpsManagement/close-32.png' %}"></a>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                 <button type="button" ng-click="changeRootPassword()" class="btn btn-primary btn-lg btn-block">{% trans "Change Password" %}</button>
+                            </div>
+                        </div>
+
+
+                    </form>
+                   </div>
+
+                 <!---------- HTML For Changing Root password --------------->
+
+
+                 <!---------- HTML For Reinstall --------------->
+
+                   <div ng-hide="reinstallBox"  class="col-md-12">
+                     <form  action="/" class="form-horizontal bordered-row">
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Operating System" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="osName" class="form-control">
+                                        <option>centos-6</option>
+                                        <option>centos-7.2</option>
+                                        <option>debian-8</option>
+                                        <option>ubuntu-16.04</option>
+                                </select>
+                            </div>
+                            <a ng-click="hideAdminTasks()" href=""><img src="{% static 'vpsManagement/close-32.png' %}"></a>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "SSH Key (Optional)" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="sshKey" class="form-control">
+                                    {% for items in sshKeys %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "New Password" %}</label>
+                            <div class="col-sm-6">
+                                <input placeholder="{% trans 'You will loose data after reinstall.' %}"  type="text" class="form-control" ng-model="reinstallPassword" required>
+                            </div>
+                         </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                 <button type="button" data-toggle="modal" data-target="#myModal" class="btn btn-primary btn-lg btn-block">{% trans "Reinstall" %}</button>
+
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationProgress" class="form-group">
+                            <label class="col-sm-2 control-label"></label>
+                            <div class="col-sm-7">
+
+                                    <div class="alert alert-success text-center">
+                                                <h2>{$ currentStatus $}</h2>
+                                    </div>
+
+                                    <div class="progress">
+                                      <div id="installProgress" class="progress-bar" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                                        <span class="sr-only">70% Complete</span>
+                                      </div>
+                                    </div>
+
+                                    <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                        <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                                    </div>
+
+                                    <div ng-hide="success" class="alert alert-success">
+                                        <p>{% trans "Website succesfully created." %}</p>
+                                    </div>
+
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                    </div>
+
+
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationProgress" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-disabled="goBackDisable"  ng-click="goBack()" class="btn btn-primary btn-lg btn-block">{% trans "Go Back" %}</button>
+                            </div>
+                        </div>
+
+
+                    </form>
+
+                     <!--- Modal Body --->
+
+                    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                    <h4 class="modal-title">{% trans "Warning you will loose all the data.." %} <img ng-hide="tronLoading" src="{% static 'images/loading.gif' %}"></h4>
+                                </div>
+                                <div class="modal-body">
+                                    <p>{% trans 'Are you sure?' %}</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Close' %}</button>
+                                    <button data-dismiss="modal" ng-click="reinstallOS()" type="button" class="btn btn-primary">{% trans 'Confirm' %}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                <!--- Modal Body --->
+                   </div>
+
+                 <!---------- HTML For Reinstall --------------->
+
+
+
+               </div>
+
+           </div>
+       </div>
+   </div>
+
+    <div class="example-box-wrapper">
+       <div style="border-radius: 25px;border-color:#3498db" class="content-box">
+
+           <h3 class="content-box-header bg-blue">
+               {% trans "Backups/Snapshots/Console" %} <img  ng-hide="tronLoading" src="/static/images/loading.gif">
+           </h3>
+
+           <div class="content-box-wrapper">
+
+               <div class="row">
+
+                   <div class="col-md-4" style="margin-bottom: 2%;">
+                                    <a ng-click="setupVNC()" href="#" title="{% trans 'Console' %}" href="" >
+                                        <img  src="{% static 'vpsManagement/console.png'  %}">
+                                    </a>
+                                    <a ng-click="setupVNC()" title="{% trans 'Console' %}" href="#">
+                                        <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans " Access Console" %}</span>
+                                    </a>
+
+                        </div>
+
+                   <div class="col-md-4" style="margin-bottom: 2%;">
+                                    <a href="" ng-click="showChangePasswordBox()" title="{% trans 'Backups' %}" href="" title="{% trans 'Backups' %}">
+                                        <img  src="{% static 'vpsManagement/backup.png'  %}">
+                                    </a>
+                                    <a ng-click="showChangePasswordBox()" title="{% trans 'Backups' %}" href="" title="{% trans 'Backups' %}">
+                                        <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans " Take Backups" %}</span>
+                                    </a>
+
+                   </div>
+
+                   <div class="col-md-4" style="margin-bottom: 2%;">
+                                    <a target="_blank" href="{{ snapshotsURL }}" title="{% trans 'Create Snapshots' %}" >
+                                        <img  src="{% static 'vpsManagement/snapshots.png'  %}">
+                                    </a>
+                                    <a target="_blank" href="{{ snapshotsURL }}" title="{% trans 'Create Snapshots' %}">
+                                        <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Create Snapshots" %}</span>
+                                    </a>
+
+                   </div>
+
+               </div>
+
+           </div>
+       </div>
+   </div>
+
+
+    {% else %}
+
+    <div class="alert alert-danger">
+            <p>{{ hostName }}</p>
+        </div>
+
+
+    {% endif %}
+
+
+
+
+</div>
+
+
+
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "baseTemplate/indexVMM.html" %}
+{% load i18n %}
+{% block title %}{% trans "Add Server - CyberTron" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div ng-controller="addHyperVisorCTRL" class="container">
+<div id="page-title">
+   <h2>{% trans "Add Server" %}</h2>
+   <p>{% trans "On this page you can add remote servers who have CyberPanel already installed!" %}</p>
+</div>
+<div class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Server Details" %} <img ng-hide="tronLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div class="example-box-wrapper">
+
+            <form   action="/" class="form-horizontal bordered-row">
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Name" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="name">
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+
+                    <label class="col-sm-3 control-label">{% trans "Server Owner" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-model="serverOwner" class="form-control">
+                            {% for items in ownerNames %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "IP Addresses" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="serverIP">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "User name" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="userName">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="password" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Storage Path" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="storagePath">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="submitCreateHyperVisor()" class="btn btn-primary btn-lg btn-block">{% trans "Add Server" %}</button>
+
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+{% endblock %}
+

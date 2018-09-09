@@ -11,8 +11,13 @@ urlpatterns = [
     #url(r'^upgrade',views.upgrade, name='upgrade'),
 
     url(r'^UpgradeStatus',views.upgradeStatus, name='UpgradeStatus'),
-
     url(r'^upgradeVersion',views.upgradeVersion, name='upgradeVersion'),
+
+    ## VMM
+
+    url(r'^VMM$',views.VMM, name='VMM'),
+
+
 
 
 

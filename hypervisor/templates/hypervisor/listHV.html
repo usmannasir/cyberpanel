@@ -1,0 +1,147 @@
+{% extends "baseTemplate/indexVMM.html" %}
+{% load i18n %}
+{% block title %}{% trans "List Servers - CyberTron" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div ng-controller="listHVCTRL" class="container">
+
+    <div id="page-title">
+       <h2 id="domainNamePage">{% trans "List Servers" %}</h2>
+       <p>{% trans "Manage your servers on this page." %}</p>
+    </div>
+
+<div class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Servers" %} <img ng-hide="tronLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div class="example-box-wrapper">
+
+            <table ng-hide="hvTable" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="datatable-example">
+                <thead>
+                <tr>
+                    <th>{% trans 'ID' %}</th>
+                    <th>{% trans 'Owner' %}</th>
+                    <th>{% trans 'Name' %}</th>
+                    <th>{% trans 'IP Address' %}</th>
+                    <th>{% trans 'VMs' %}</th>
+                    <th>{% trans 'Storage Path' %}</th>
+                    <th>{% trans 'Operations' %}</th>
+
+                </tr>
+                </thead>
+                <tbody>
+
+                {% for items in hvs %}
+
+                <tr>
+
+                    <td>{{ items.id }}</td>
+                    <td>{{ items.hypervisorOwner }}</td>
+                    <td>{{ items.hypervisorName }}</td>
+                    <td>{{ items.hypervisorIP }}</td>
+                    <td>{{ items.vms }}</td>
+                    <td>{{ items.hypervisorStoragePath }}</td>
+                    <td>
+                        <a data-toggle="modal" data-target="#myModal" style="margin-right: 2%;" title="{% trans 'Restart Server' %}" ng-click="setValues('{{ items.hypervisorIP }}', 'restart')"  href=""><img  src="{% static 'vpsManagement/restart.png' %}"></a>
+                        <a data-toggle="modal" data-target="#myModal" style="margin-right: 2%;" title="{% trans 'Power Off Server' %}" ng-click="setValues('{{ items.hypervisorIP }}', 'shutdown')" href=""><img  src="{% static 'vpsManagement/powerOff.png' %}"></a>
+                        <a data-toggle="modal" data-target="#myModal" style="margin-right: 2%;" title="{% trans 'Delete Server' %}" ng-click="setValues('{{ items.hypervisorIP }}', 'delete')" href=""><img  src="{% static 'vpsManagement/delete.png' %}"></a>
+                        <a data-toggle="modal" data-target="#myModal" href="" title="{% trans 'Edit Server' %}" ng-click="setValues('{{ items.hypervisorName }}')"><img  src="{% static 'vpsManagement/settings-gears.png' %}"></a>
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+                </tbody>
+                </table>
+
+                <!--- Modal Body --->
+
+                    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                    <h4 class="modal-title">{$ action $} {$ hypervisorIP $} <img ng-hide="tronLoading" src="{% static 'images/loading.gif' %}"></h4>
+                                </div>
+                                <div class="modal-body">
+                                    <p>{% trans 'Are you sure?' %}</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Close' %}</button>
+                                    <button data-dismiss="modal" ng-click="controlCommands()" type="button" class="btn btn-primary">{% trans 'Confirm' %}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                <!--- Modal Body --->
+
+
+            <form ng-hide="hvForm" action="/" class="form-horizontal bordered-row">
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Name" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="name" readonly>
+                    </div>
+                    <a style="margin-right: 2%;" title="{% trans 'Go Back' %}" ng-click="hidehvForm()" href=""><img  src="{% static 'vpsManagement/delete.png' %}"></a>
+                </div>
+
+
+                <div class="form-group">
+
+                    <label class="col-sm-3 control-label">{% trans "Server Owner" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-model="serverOwner" class="form-control">
+                            {% for items in ownerNames %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "User name" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="userName">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="password" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Storage Path" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="storagePath">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="submitHyperVisorChanges()" class="btn btn-primary btn-lg btn-block">{% trans "Save Changes" %}</button>
+
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+</div>
+
+{% endblock %}

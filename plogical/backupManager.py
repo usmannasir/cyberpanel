@@ -293,6 +293,7 @@ class BackupManager:
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
             subprocess.Popen(shlex.split(execPath))
+
             time.sleep(4)
 
             final_dic = {'restoreStatus': 1, 'error_message': "None"}
@@ -1181,8 +1182,10 @@ class BackupManager:
     def remoteBackupRestore(self, userID = None, data = None):
         try:
             currentACL = ACLManager.loadedACL(userID)
+
             if ACLManager.currentContextPermission(currentACL, 'remoteBackups') == 0:
                 return ACLManager.loadErrorJson('remoteTransferStatus', 0)
+
 
             backupDir = data['backupDir']
 

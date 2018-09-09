@@ -1,0 +1,84 @@
+{% extends "baseTemplate/indexVMM.html" %}
+{% load i18n %}
+{% block title %}{% trans "SSH Keys - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "SSH Keys" %} - <a  target="_blank" href="http://go.cyberpanel.net/ssh-docs" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "SSH Docs" %}</span></a></h2>
+   <p>{% trans "Add or delete SSH keys to be added to virtual machines" %}</p>
+</div>
+
+<div ng-controller="sshKeys" class="panel">
+
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "Secure SSH" %} <img ng-hide="tronLoading" src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <form  action="/" class="form-horizontal bordered-row">
+
+                                <div class="form-group">
+
+                                    <div  class="col-sm-12">
+
+                                        <table class="table">
+                                            <thead>
+                                            <tr>
+                                                <th>{% trans "Key Name" %}</th>
+                                                <th>{% trans "Key" %}</th>
+                                                <th>{% trans "Delete" %}</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr ng-repeat="record in records track by $index">
+                                                <td ng-bind="record.keyName">root</td>
+                                                <td><textarea ng-bind="record.key" rows="7" class="form-control"></textarea></td>
+                                                <td ng-click="deleteKey(record.keyName)"><img src="{% static 'images/delete.png' %}"></td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div ng-hide="keyBox" class="form-group">
+                                    <div style="margin-bottom: 1%" class="col-sm-6">
+                                        <input placeholder="Give your key a name."  type="text" class="form-control" ng-model="keyName" required>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <textarea placeholder="Paste your public key here..." ng-model="keyData" rows="6" class="form-control">{{ logs }}</textarea>
+                                    </div>
+                                </div>
+
+                                <div ng-hide="showKeyBox" class="form-group">
+                                    <label class="col-sm-3 control-label"></label>
+                                    <div class="col-sm-4">
+                                        <button type="button" ng-click="addKey()" class="btn btn-primary btn-lg btn-block">{% trans "Add Key" %}</button>
+                                    </div>
+                                </div>
+
+                                <div ng-hide="keyBox" class="form-group">
+                                    <label class="col-sm-3 control-label"></label>
+                                    <div class="col-sm-4">
+                                        <button type="button" ng-click="saveKey()" class="btn btn-primary btn-lg btn-block">{% trans "Save" %}</button>
+                                    </div>
+                                </div>
+
+
+                            </form>
+
+                </div>
+            </div>
+        </div>
+
+
+</div>
+
+
+{% endblock %}

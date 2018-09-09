@@ -46,6 +46,14 @@ urlpatterns = [
 
     url(r'^cancelRemoteBackup', views.cancelRemoteBackup, name='cancelRemoteBackup'),
 
+    ## Snapshots
+
+    url(r'^revertToSnapshot$', views.revertToSnapshot, name='revertToSnapshot'),
+    url(r'^deletSnapshot$', views.deletSnapshot, name='deletSnapshot'),
+    url(r'^submitSnapshotCreation$', views.submitSnapshotCreation, name='submitSnapshotCreation'),
+    url(r'^fetchCurrentSnapshots$', views.fetchCurrentSnapshots, name='fetchCurrentSnapshots'),
+    url(r'^(?P<hostName>(.*))/snapshots$', views.createSnapshots, name='createSnapshots'),
+
 
 
 

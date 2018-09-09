@@ -1,0 +1,114 @@
+{% extends "baseTemplate/indexVMM.html" %}
+{% load i18n %}
+{% block title %}{% trans "Create IP Pool - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Create IP Pool" %}</h2>
+   <p>{% trans "Create IP Pool on this page." %}</p>
+</div>
+<div ng-controller="createIPPoolCTRL" class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Pool Details" %} <img ng-hide="tronLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div class="example-box-wrapper">
+
+
+            <form  action="/"  class="form-horizontal bordered-row">
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Server" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-model="hvName" class="form-control">
+                            {% for items in hvNames %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Pool Name" %}</label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control" ng-model="poolName" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Gateway" %}</label>
+                    <div class="col-sm-6">
+                        <input name="dspace"  type="text" class="form-control" ng-model="poolGateway" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "NetMask" %}</label>
+                    <div class="col-sm-6">
+                        <input name="dspace"  type="text" class="form-control" ng-model="poolNetmask" required>
+                    </div>
+                </div>
+
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Starting IP" %}</label>
+                    <div class="col-sm-6">
+                        <input name="bwidth"  type="text" class="form-control" ng-model="poolStartingIP" required>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Ending IP" %}</label>
+                    <div class="col-sm-6">
+                        <input name="eaccts" type="text" class="form-control" ng-model="poolEndingIP" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="createIPPool()" class="btn btn-primary btn-lg btn-block">{% trans "Create Pool" %}</button>
+
+                    </div>
+                </div>
+
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div ng-hide="poolCreationFailed" class="alert alert-danger">
+                                        <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="poolCreated" class="alert alert-success">
+                                <p>{$ successMessage $}</p>
+                            </div>
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <p>{% trans "Could not connect to server, please refresh this page." %}</p>
+                            </div>
+                    </div>
+                </div>
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+{% endblock %}
+

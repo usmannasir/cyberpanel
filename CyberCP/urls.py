@@ -37,4 +37,7 @@ urlpatterns = [
     url(r'^filemanager/',include('filemanager.urls')),
     url(r'^emailPremium/',include('emailPremium.urls')),
     url(r'^manageservices/',include('manageServices.urls')),
+    url(r'^ip/', include('ipManagement.urls')),
+    url(r'^vps/',include('vpsManagement.urls')),
+    url(r'^hv/',include('hypervisor.urls')),
 ]

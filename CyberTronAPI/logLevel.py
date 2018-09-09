@@ -1,0 +1,2 @@
+class logLevel:
+    debug = False
