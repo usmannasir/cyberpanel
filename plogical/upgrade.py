@@ -185,7 +185,6 @@ ExecStart=/usr/local/CyberCP/bin/gunicorn --pid /run/gunicorn/gucpid   \
           --bind 127.0.0.1:5003 CyberCP.wsgi
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s TERM $MAINPID
-PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target"""

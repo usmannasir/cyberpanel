@@ -271,6 +271,12 @@ class vmmACLManager:
 
             return vmObjects
 
+    @staticmethod
+    def findOsNames():
+        path = '/home/cyberpanel/os'
+        data = open(path, 'r').readlines()
+        return data
+
 
 
 

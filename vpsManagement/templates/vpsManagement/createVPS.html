@@ -60,12 +60,9 @@
                     <label class="col-sm-3 control-label">{% trans "Operating System" %}</label>
                     <div class="col-sm-6">
                         <select ng-model="osName" class="form-control">
-                                <option>centos-6</option>
-                                <option>centos-7.2</option>
-                                <option>debian-9</option>
-                                <option>ubuntu-16.04</option>
-                                <option>ubuntu-18.04</option>
-                                <option>fedora-28</option>
+                            {% for items in osNames %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                 </div>
@@ -97,6 +94,13 @@
                                 <option>{{ items }}</option>
                             {% endfor %}
                         </select>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Initial Script (Optional)" %}</label>
+                    <div class="col-sm-6">
+                        <input placeholder="Path to initial script."  type="text" class="form-control" ng-model="initialScript" required>
                     </div>
                 </div>
 

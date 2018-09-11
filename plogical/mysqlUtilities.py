@@ -24,7 +24,7 @@ class mysqlUtilities:
             data = f.read()
             password = data.split('\n', 1)[0]
 
-            createDB = "CREATE DATABASE "+dbname
+            createDB = "CREATE DATABASE " + dbname
 
             command = 'sudo mysql -u root -p' + password + ' -e "' + createDB + '"'
             cmd = shlex.split(command)
@@ -142,7 +142,7 @@ class mysqlUtilities:
                 res = subprocess.call(cmd, stdin=f)
 
             if res == 1:
-                logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " +databaseName +"! [restoreDatabaseBackup]")
+                logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " + databaseName +"! [restoreDatabaseBackup]")
                 return 0
 
             passwordCMD = "use mysql;SET PASSWORD FOR '"+databaseName+"'@'localhost' = '"+dbPassword+"';FLUSH PRIVILEGES;"

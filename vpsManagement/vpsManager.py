@@ -39,8 +39,9 @@ class VPSManager:
             sshKeys = vmmACLManager.findSSHkeyNames(currentACL, userID)
             packageNames = vmmACLManager.findAllPackages(currentACL, userID)
             ownerNames = ACLManager.loadAllUsers(userID)
+            osNames = vmmACLManager.findOsNames()
 
-            data = {'hvNames': hvNames, 'sshKeys': sshKeys, 'packageNames': packageNames, 'ownerNames': ownerNames}
+            data = {'hvNames': hvNames, 'sshKeys': sshKeys, 'packageNames': packageNames, 'ownerNames': ownerNames, 'osNames': osNames}
 
             return render(request, 'vpsManagement/createVPS.html', data)
 
@@ -242,6 +243,7 @@ class VPSManager:
 
                 snapshotsURL = '/backup/' + hostName + '/snapshots'
                 sshKeys = vmmACLManager.findSSHkeyNames(currentACL, userID)
+                osNames = vmmACLManager.findOsNames()
 
 
                 return render(request, 'vpsManagement/manageVPS.html', {'hostName':hostName,
@@ -256,7 +258,8 @@ class VPSManager:
                                                                         'bwUsage':bwPercentage,
                                                                         'consoleURL':consoleURL,
                                                                         'snapshotsURL':snapshotsURL,
-                                                                        'sshKeys' : sshKeys
+                                                                        'sshKeys' : sshKeys,
+                                                                        'osNames': osNames
                                                                         })
             else:
                 return render(request, 'vpsManagement/manageVPS.html',
@@ -616,7 +619,6 @@ class VPSManager:
             final_json = json.dumps({'status': 0, 'errorMessage': str(msg)})
             return HttpResponse(final_json)
 
-
     def startWebsocketServer(self, userID = None, data = None):
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -641,7 +643,7 @@ class VPSManager:
             backVNCPort = str(vps.websocketPort + 5900)
 
 
-            command = '/usr/local/lscp/cyberpanel/noVNC/utils/launch.sh --listen ' + frontVNCPort + ' --vnc ' \
+            command = 'sudo /usr/local/lscp/cyberpanel/noVNC/utils/launch.sh --listen ' + frontVNCPort + ' --vnc ' \
                       +  vncHostIP + ':' + backVNCPort + ' --cert /usr/local/lscp/cyberpanel/noVNC/utils/self.pem'
             subprocess.Popen(shlex.split(command))
 

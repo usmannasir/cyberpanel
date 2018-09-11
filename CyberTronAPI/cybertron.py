@@ -8,7 +8,7 @@ import threading as multi
 from CyberTronLogger import CyberTronLogger as logger
 from inspect import stack
 from shlex import split
-from subprocess import call,CalledProcessError
+from subprocess import call,CalledProcessError, Popen
 from os.path import join
 from random import randint
 from logLevel import logLevel
@@ -227,7 +227,7 @@ class CyberTron(multi.Thread):
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) + ' [404]')
             return 0
 
-    def buildCustomDisk(self, vmName, osName, size, rootPassword, uploadCommand, tempStatusPath):
+    def buildCustomDisk(self, vmName, osName, size, rootPassword, uploadCommand, tempStatusPath, sshKey = None, initialScript = None):
         try:
 
             sourcePath = join(virtualMachineAPI.templatesPath, osName + ".img")
@@ -267,8 +267,23 @@ class CyberTron(multi.Thread):
                 logger.operationsLog("Disk resized and ready to use for: " + vmName + ".", "Debug",
                                      stack()[0][3])
 
-            command = "sudo virt-customize -a " + finalPath + " --root-password password:" + rootPassword + uploadCommand
-            call(split(command))
+            if sshKey == None:
+                if initialScript == None:
+                    command = "sudo virt-customize -a " + finalPath + " --root-password password:" + rootPassword + uploadCommand
+                    call(split(command))
+                else:
+                    command = "sudo virt-customize -a " + finalPath + " --root-password password:" + rootPassword + uploadCommand \
+                              + ' --commands-from-file ' + initialScript
+                    call(split(command))
+            else:
+                if initialScript == None:
+                    command = "sudo virt-customize -a " + finalPath + " --root-password password:" + rootPassword + uploadCommand + " --ssh-inject 'root:string:" + sshKey + "'"
+                    call(split(command))
+                else:
+                    command = "sudo virt-customize -a " + finalPath + " --root-password password:" + rootPassword + uploadCommand \
+                              + ' --commands-from-file ' + initialScript + " --ssh-inject 'root:string:" + sshKey + "'"
+                    call(split(command))
+
 
             if result == 1:
                 raise CalledProcessError
@@ -291,7 +306,7 @@ class CyberTron(multi.Thread):
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) + ' [404]')
             return 0
 
-    def setupVMDisk(self, vmName, osName, uploadSource, rootPassword, package, tempStatusPath, sshKey = None):
+    def setupVMDisk(self, vmName, osName, uploadSource, rootPassword, package, tempStatusPath, sshKey = None, initialScript = None):
         try:
             size = package.diskSpace + 'G'
 
@@ -308,17 +323,26 @@ class CyberTron(multi.Thread):
 
             finalImageLocation = join(CyberTron.imagesPath, vmName + '.qcow2')
 
+
             ## "virt-builder centos-7.1 -o /var/lib/libvirt/images192.168.100.1.qcow2 --size 50G --format qcow2 --upload ifcfg-eth0:/etc/sysconfig/network-scripts/ --upload network:/etc/sysconfig
 
             if osName == 'debian-9' or osName == 'fedora-28' or osName == 'ubuntu-16.04':
-                self.buildCustomDisk(vmName, osName, size, rootPassword, uploadCommand, tempStatusPath)
+                self.buildCustomDisk(vmName, osName, size, rootPassword, uploadCommand, tempStatusPath, sshKey, initialScript)
             else:
                 if sshKey != None:
-                    command = "sudo virt-builder " + osName + " -o " + finalImageLocation + " --size " + size + \
-                              " --format qcow2 --root-password password:" + rootPassword + uploadCommand + " --ssh-inject 'root:string:" + sshKey + "'"
+                    if initialScript == None:
+                        command = "sudo virt-builder " + osName + " -o " + finalImageLocation + " --size " + size + \
+                                  " --format qcow2 --root-password password:" + rootPassword + uploadCommand + " --ssh-inject 'root:string:" + sshKey + "'"
+                    else:
+                        command = "sudo virt-builder " + osName + " -o " + finalImageLocation + " --size " + size + \
+                                  " --format qcow2 --root-password password:" + rootPassword + uploadCommand + " --ssh-inject 'root:string:" + sshKey + "'" + ' --commands-from-file ' + initialScript
                 else:
-                    command = "sudo virt-builder " + osName + " -o " + finalImageLocation + " --size " + size + \
-                              " --format qcow2 --root-password password:" + rootPassword + uploadCommand
+                    if initialScript == None:
+                        command = "sudo virt-builder " + osName + " -o " + finalImageLocation + " --size " + size + \
+                                  " --format qcow2 --root-password password:" + rootPassword + uploadCommand
+                    else:
+                        command = "sudo virt-builder " + osName + " -o " + finalImageLocation + " --size " + size + \
+                                  " --format qcow2 --root-password password:" + rootPassword + uploadCommand + ' --commands-from-file ' + initialScript
 
                 result = call(split(command))
 
@@ -400,6 +424,11 @@ class CyberTron(multi.Thread):
             except:
                 sshKey = None
 
+            try:
+                initialScript = data['initialScript']
+            except:
+                initialScript = None
+
 
             owner = Administrator.objects.get(userName=vpsOwner)
             package = Package.objects.get(packageName=vpsPackage)
@@ -428,7 +457,7 @@ class CyberTron(multi.Thread):
             logging.CyberCPLogFileWriter.statusWriter(data['tempStatusPath'],
                                                       'Creating virtual machine disk..,20')
 
-            if self.setupVMDisk(hostname, osName, uploadSource, rootPassword, package, data['tempStatusPath'], sshKey) == 0:
+            if self.setupVMDisk(hostname, osName, uploadSource, rootPassword, package, data['tempStatusPath'], sshKey, initialScript) == 0:
                 logging.CyberCPLogFileWriter.statusWriter(data['tempStatusPath'], 'Failed to setup virtual machine disk. [404]')
                 return 0
 
@@ -486,4 +515,3 @@ class CyberTron(multi.Thread):
             logger.writeToFile(str(msg), "Error", stack()[0][3])
             logging.CyberCPLogFileWriter.statusWriter(data['tempStatusPath'], str(msg) + ' [404]')
             return 0
-

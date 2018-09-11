@@ -65,7 +65,8 @@ app.controller('createVPSCTRL', function($scope, $http, $timeout) {
                     rootPassword: $scope.rootPassword,
                     networkSpeed: $scope.networkSpeed,
                     osName: $scope.osName,
-                    sshKey: $scope.sshKey
+                    sshKey: $scope.sshKey,
+                    initialScript: $scope.initialScript
                 };
 
         var config = {
@@ -879,6 +880,35 @@ app.controller('manageVPSCTRL', function($scope, $http, $timeout) {
                     $scope.poolCreated = true;
                     $scope.couldNotConnect = false;
 
+                }
+
+    };
+
+    $scope.setupVNC = function(){
+
+        $scope.tronLoading = false;
+
+        var url = "/vps/startWebsocketServer";
+
+        var data = {hostname: $("#vpsHostname").text()};
+
+        var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+                    $scope.tronLoading = true;
+                    if(response.data.success === 1){
+                        window.open(response.data.finalURL);
+                    }
+                }
+        function cantLoadInitialDatas(response) {
+                    $scope.tronLoading = true;
                 }
 
     };

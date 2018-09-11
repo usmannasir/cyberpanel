@@ -366,21 +366,13 @@ class vhost:
                 confFile.writelines(php_admin_value)
             confFile.writelines(endPHPIniOverride)
 
-
-            slashContext = """
-context / {
-  location                $DOC_ROOT/
-  allowBrowse             1
-
-  rewrite  {
-    enable                1
-RewriteFile .htaccess
-
-  }
-  addDefaultCharset       off
+            htaccessAutoLoad = """
+rewrite  {
+  enable                  1
+  autoLoadHtaccess        1
 }
 """
-            confFile.write(slashContext)
+            confFile.write(htaccessAutoLoad)
 
             confFile.close()
 
@@ -945,20 +937,13 @@ RewriteFile .htaccess
             confFile.writelines(procHardLimit)
             confFile.writelines(extprocessorEnd)
 
-            slashContext = """
-context / {
-  location                $DOC_ROOT/
-  allowBrowse             1
-
-  rewrite  {
-    enable                1
-RewriteFile .htaccess
-
-  }
-  addDefaultCharset       off
+            htaccessAutoLoad = """
+rewrite  {
+  enable                  1
+  autoLoadHtaccess        1
 }
 """
-            confFile.write(slashContext)
+            confFile.write(htaccessAutoLoad)
 
             confFile.close()
 

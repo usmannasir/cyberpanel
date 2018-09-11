@@ -227,10 +227,9 @@
                             <label class="col-sm-3 control-label">{% trans "Operating System" %}</label>
                             <div class="col-sm-6">
                                 <select ng-model="osName" class="form-control">
-                                        <option>centos-6</option>
-                                        <option>centos-7.2</option>
-                                        <option>debian-8</option>
-                                        <option>ubuntu-16.04</option>
+                                    {% for items in osNames %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <a ng-click="hideAdminTasks()" href=""><img src="{% static 'vpsManagement/close-32.png' %}"></a>

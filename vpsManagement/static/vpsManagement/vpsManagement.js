@@ -65,7 +65,8 @@ app.controller('createVPSCTRL', function($scope, $http, $timeout) {
                     rootPassword: $scope.rootPassword,
                     networkSpeed: $scope.networkSpeed,
                     osName: $scope.osName,
-                    sshKey: $scope.sshKey
+                    sshKey: $scope.sshKey,
+                    initialScript: $scope.initialScript
                 };
 
         var config = {
