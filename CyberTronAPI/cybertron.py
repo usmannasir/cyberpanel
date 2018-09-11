@@ -366,7 +366,7 @@ class CyberTron(multi.Thread):
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) + ' [404]')
             return 0
 
-    def bootVirtualMachine(self, package, vmName, vncHost, vncPort, vncPassword, webSocketPort, hostname, bridgeName, tempStatusPath):
+    def bootVirtualMachine(self, package, vmName, vncHost, vncPort, vncPassword, webSocketPort, hostname, bridgeName, isoPath, tempStatusPath):
         try:
 
             if logLevel.debug == True:
@@ -376,10 +376,19 @@ class CyberTron(multi.Thread):
 
             # virt-install --name 109.238.12.214 --ram 2048 --vcpus=1 --disk 109.238.12.214.qcow2 --graphics vnc,listen=localhost,port=5500 --noautoconsole --hvm --import --os-type=linux --os-variant=rhel7 --network bridge=virbr0
 
-            command = "sudo virt-install --name " + hostname + " --ram " + str(package.guaranteedRam) + " --vcpu " + str(package.cpuCores) + " --disk " + \
-                      finalImageLocation + " --graphics vnc,listen=" + vncHost + ",port=" + vncPort + ",password=" + vncPassword + \
-                      " --noautoconsole --hvm --import --autostart --os-type=linux " \
-                      + "--network bridge=" + bridgeName
+            if isoPath == None:
+
+                command = "sudo virt-install --name " + hostname + " --ram " + str(package.guaranteedRam) + " --vcpu " + str(package.cpuCores) + " --disk " + \
+                          finalImageLocation + " --graphics vnc,listen=" + vncHost + ",port=" + vncPort + ",password=" + vncPassword + \
+                          " --noautoconsole --hvm --import --autostart --os-type=linux " \
+                          + "--network bridge=" + bridgeName
+            else:
+                size = package.diskSpace
+                command = "sudo virt-install --name " + hostname + " --ram " + str(package.guaranteedRam) + " --vcpu " \
+                          + str(package.cpuCores) + " --disk path=" + finalImageLocation + ",size=" + size + \
+                          " --graphics vnc,listen=" + vncHost + ",port=" + vncPort + ",password=" + vncPassword + \
+                          " --noautoconsole --hvm --autostart --os-type=linux " \
+                          + "--network bridge=" + bridgeName + ' --cdrom=' + isoPath
 
             result = call(split(command))
 
@@ -407,7 +416,6 @@ class CyberTron(multi.Thread):
     def createVirtualMachine(self, data):
         try:
 
-            osName = data['osName']
             vpsPackage = data['vpsPackage']
             vpsOwner = data['vpsOwner']
             vpsIP = data['vpsIP']
@@ -429,6 +437,11 @@ class CyberTron(multi.Thread):
             except:
                 initialScript = None
 
+            try:
+                isoPath = data['isoPath']
+            except:
+                isoPath = None
+                osName = data['osName']
 
             owner = Administrator.objects.get(userName=vpsOwner)
             package = Package.objects.get(packageName=vpsPackage)
@@ -444,22 +457,24 @@ class CyberTron(multi.Thread):
                 logging.CyberCPLogFileWriter.statusWriter(data['tempStatusPath'], 'Hostname is already taken. [404]')
                 return 0, 'Hostname is already taken.'
 
-            logging.CyberCPLogFileWriter.statusWriter(data['tempStatusPath'], 'Starting to create virtual machine..,10')
 
-            logger.operationsLog('Starting to create virtual machine: ' + vpsIP, 'Info', stack()[0][3])
+            if isoPath == None:
+                logging.CyberCPLogFileWriter.statusWriter(data['tempStatusPath'], 'Starting to create virtual machine..,10')
 
-            ##
+                logger.operationsLog('Starting to create virtual machine: ' + vpsIP, 'Info', stack()[0][3])
 
-            uploadSource = self.setupNetworkingFiles(vpsIP, osName, ip.pool, hostname, data['tempStatusPath'])
+                ##
 
-            ##
+                uploadSource = self.setupNetworkingFiles(vpsIP, osName, ip.pool, hostname, data['tempStatusPath'])
 
-            logging.CyberCPLogFileWriter.statusWriter(data['tempStatusPath'],
-                                                      'Creating virtual machine disk..,20')
+                ##
 
-            if self.setupVMDisk(hostname, osName, uploadSource, rootPassword, package, data['tempStatusPath'], sshKey, initialScript) == 0:
-                logging.CyberCPLogFileWriter.statusWriter(data['tempStatusPath'], 'Failed to setup virtual machine disk. [404]')
-                return 0
+                logging.CyberCPLogFileWriter.statusWriter(data['tempStatusPath'],
+                                                          'Creating virtual machine disk..,20')
+
+                if self.setupVMDisk(hostname, osName, uploadSource, rootPassword, package, data['tempStatusPath'], sshKey, initialScript) == 0:
+                    logging.CyberCPLogFileWriter.statusWriter(data['tempStatusPath'], 'Failed to setup virtual machine disk. [404]')
+                    return 0
 
             logging.CyberCPLogFileWriter.statusWriter(data['tempStatusPath'],
                                                       'Booting virtual machine..,80')
@@ -481,7 +496,7 @@ class CyberTron(multi.Thread):
 
             vncPassword = randomPassword.generate_pass(50)
 
-            if self.bootVirtualMachine(package, hostname, vncHost, str(vncPort), vncPassword, str(webSocketPort), hostname, 'virbr0', data['tempStatusPath']) == 0:
+            if self.bootVirtualMachine(package, hostname, vncHost, str(vncPort), vncPassword, str(webSocketPort), hostname, 'virbr0', isoPath, data['tempStatusPath']) == 0:
                 logging.CyberCPLogFileWriter.statusWriter(data['tempStatusPath'], 'Failed to boot virtual machine. [404]')
                 return 0
 

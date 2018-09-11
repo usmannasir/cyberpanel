@@ -10,7 +10,19 @@ app.controller('createVPSCTRL', function($scope, $http, $timeout) {
     $scope.goBackDisable = true;
     $scope.installationDetailsForm = false;
     $scope.installationProgress = true;
+    $scope.isoBox = true;
+    $scope.osBox = false;
     var statusFile;
+
+    $scope.installationMethod = function (method) {
+        if(method === 'os'){
+            $scope.isoBox = true;
+            $scope.osBox = false;
+        }else{
+            $scope.isoBox = false;
+            $scope.osBox = true;
+        }
+    };
 
     $scope.findIPs = function(){
 
@@ -52,8 +64,6 @@ app.controller('createVPSCTRL', function($scope, $http, $timeout) {
         $scope.installationProgress = false;
         $scope.currentStatus = "Starting creation..";
 
-
-
         var url = "/vps/submitVPSCreation";
 
         var data = {
@@ -66,7 +76,8 @@ app.controller('createVPSCTRL', function($scope, $http, $timeout) {
                     networkSpeed: $scope.networkSpeed,
                     osName: $scope.osName,
                     sshKey: $scope.sshKey,
-                    initialScript: $scope.initialScript
+                    initialScript: $scope.initialScript,
+                    isoPath: $scope.isoPath
                 };
 
         var config = {
@@ -643,6 +654,19 @@ app.controller('manageVPSCTRL', function($scope, $http, $timeout) {
     $scope.couldNotConnect = true;
     var statusFile;
 
+    $scope.isoBox = true;
+    $scope.osBox = false;
+
+    $scope.installationMethod = function (method) {
+        if(method === 'os'){
+            $scope.isoBox = true;
+            $scope.osBox = false;
+        }else{
+            $scope.isoBox = false;
+            $scope.osBox = true;
+        }
+    };
+
     $scope.goBack = function () {
         $scope.installationDetailsForm = false;
         $scope.installationProgress = true;
@@ -745,7 +769,8 @@ app.controller('manageVPSCTRL', function($scope, $http, $timeout) {
             hostname: $("#vpsHostname").text(),
             osName : $scope.osName,
             sshKey : $scope.sshKey,
-            rootPassword: $scope.reinstallPassword
+            rootPassword: $scope.reinstallPassword,
+            isoPath : $scope.isoPath
         };
 
         var config = {

@@ -224,15 +224,23 @@
                      <form  action="/" class="form-horizontal bordered-row">
 
                         <div ng-hide="installationDetailsForm" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Operating System" %}</label>
-                            <div class="col-sm-6">
+                            <label class="col-sm-3 control-label"></label>
+                            <div style="margin-bottom: 2%" class="col-sm-9">
+                                <a ng-click="installationMethod('os')" class="btn btn-border btn-alt border-green btn-link font-green" href="" title=""><span>{% trans 'Select OS' %}</span></a>
+                                <a ng-click="installationMethod('iso')" class="btn btn-border btn-alt border-green btn-link font-green" href="" title=""><span>{% trans 'Attach ISO' %}</span></a>
+                            </div>
+                            <label ng-hide="osBox" class="col-sm-3 control-label">{% trans "Operating System" %}</label>
+                            <div ng-hide="osBox" class="col-sm-6">
                                 <select ng-model="osName" class="form-control">
                                     {% for items in osNames %}
                                         <option>{{ items }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
-                            <a ng-click="hideAdminTasks()" href=""><img src="{% static 'vpsManagement/close-32.png' %}"></a>
+                            <label ng-hide="isoBox" class="col-sm-3 control-label">{% trans "ISO Path" %}</label>
+                            <div ng-hide="isoBox" class="col-sm-6">
+                                <input placeholder="You will have to complete installation via console."  type="text" class="form-control" ng-model="isoPath" required>
+                            </div>
                         </div>
 
                         <div ng-hide="installationDetailsForm" class="form-group">
