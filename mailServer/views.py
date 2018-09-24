@@ -311,8 +311,9 @@ def submitForwardDeletion(request):
 
                 data = json.loads(request.body)
                 destination = data['destination']
+                source = data['source']
 
-                forwarding = Forwardings.objects.get(destination=destination)
+                forwarding = Forwardings.objects.get(destination=destination, source=source)
                 forwarding.delete()
 
                 data_ret = {'deleteForwardingStatus': 1, 'error_message': "None", 'successMessage':'Successfully deleted!'}

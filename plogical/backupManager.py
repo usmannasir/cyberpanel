@@ -152,9 +152,9 @@ class BackupManager:
             return HttpResponse(final_json)
 
         except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
             final_dic = {'metaStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
-
             return HttpResponse(final_json)
 
     def backupStatus(self, userID = None, data = None):

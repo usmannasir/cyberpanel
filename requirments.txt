@@ -52,4 +52,3 @@ urllib3==1.22
 zope.component==4.4.1
 zope.event==4.3.0
 zope.interface==4.5.0
-libvirt-python==4.6.0

@@ -864,21 +864,12 @@ class backupUtilities:
     @staticmethod
     def getAliases(masterDomain):
         try:
-
-            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
-            command = "sudo cat " + confPath
-            data = subprocess.check_output(shlex.split(command)).splitlines()
             aliases = []
+            master = Websites.objects.get(domain=masterDomain)
+            aliasDomains = master.aliasdomains_set.all()
 
-            for items in data:
-                if items.find(masterDomain) > -1 and items.find('map') > -1:
-                    data = filter(None, items.split(" "))
-                    if data[1] == masterDomain:
-                        length = len(data)
-                        for i in range(3, length):
-                            currentAlias = data[i].rstrip(',').strip('\n')
-                            aliases.append(currentAlias)
-
+            for items in aliasDomains:
+                aliases.append(items.aliasDomain)
 
             return aliases
 
