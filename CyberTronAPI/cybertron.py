@@ -26,6 +26,7 @@ from os import remove
 class CyberTron(multi.Thread):
     imagesPath = join('/var', 'lib', 'libvirt', 'images')
     templatesPath = join('/var', 'lib', 'libvirt', 'templates')
+    templates = 'images.cyberpanel.net/templates'
 
     def __init__(self, data):
         multi.Thread.__init__(self)
@@ -235,6 +236,17 @@ class CyberTron(multi.Thread):
             finalPath = join(virtualMachineAPI.imagesPath, vmName + ".qcow2")
 
             ## Creating temporary disk image.
+            logging.CyberCPLogFileWriter.writeToFile(sourcePath + ' spath')
+
+            if not os.path.exists('/var/lib/libvirt/templates'):
+                command = 'sudo mkdir -p /var/lib/libvirt/templates/'
+                call(split(command))
+
+            if not os.path.exists(sourcePath):
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Downloading image, it will take some time..,20')
+                command = 'wget -O ' + sourcePath + ' ' + CyberTron.templates + "/" + osName + '.img'
+                call(split(command))
+
 
             command = "sudo cp " + sourcePath + " " + tempPath
             result = call(split(command))
@@ -322,6 +334,7 @@ class CyberTron(multi.Thread):
                 uploadCommand = " --upload " + uploadSource[0] + ":" + "/etc/sysconfig/network-scripts/ifcfg-ens3"
 
             finalImageLocation = join(CyberTron.imagesPath, vmName + '.qcow2')
+            osName = osName.strip('\n')
 
 
             ## "virt-builder centos-7.1 -o /var/lib/libvirt/images192.168.100.1.qcow2 --size 50G --format qcow2 --upload ifcfg-eth0:/etc/sysconfig/network-scripts/ --upload network:/etc/sysconfig
@@ -366,7 +379,7 @@ class CyberTron(multi.Thread):
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) + ' [404]')
             return 0
 
-    def bootVirtualMachine(self, package, vmName, vncHost, vncPort, vncPassword, webSocketPort, hostname, bridgeName, isoPath, tempStatusPath):
+    def bootVirtualMachine(self, package, vmName, vncHost, vncPort, vncPassword, ip, hostname, bridgeName, isoPath, tempStatusPath):
         try:
 
             if logLevel.debug == True:
@@ -376,19 +389,24 @@ class CyberTron(multi.Thread):
 
             # virt-install --name 109.238.12.214 --ram 2048 --vcpus=1 --disk 109.238.12.214.qcow2 --graphics vnc,listen=localhost,port=5500 --noautoconsole --hvm --import --os-type=linux --os-variant=rhel7 --network bridge=virbr0
 
+            macStr = ''
+
+            if ip.macAddress != 'Auto':
+                macStr = ',mac=' + ip.macAddress
+
             if isoPath == None:
 
                 command = "sudo virt-install --name " + hostname + " --ram " + str(package.guaranteedRam) + " --vcpu " + str(package.cpuCores) + " --disk " + \
                           finalImageLocation + " --graphics vnc,listen=" + vncHost + ",port=" + vncPort + ",password=" + vncPassword + \
                           " --noautoconsole --hvm --import --autostart --os-type=linux " \
-                          + "--network bridge=" + bridgeName
+                          + "--network bridge=" + bridgeName + macStr
             else:
                 size = package.diskSpace
                 command = "sudo virt-install --name " + hostname + " --ram " + str(package.guaranteedRam) + " --vcpu " \
                           + str(package.cpuCores) + " --disk path=" + finalImageLocation + ",size=" + size + \
                           " --graphics vnc,listen=" + vncHost + ",port=" + vncPort + ",password=" + vncPassword + \
                           " --noautoconsole --hvm --autostart --os-type=linux " \
-                          + "--network bridge=" + bridgeName + ' --cdrom=' + isoPath
+                          + "--network bridge=" + bridgeName + + macStr + ' --cdrom=' + isoPath
 
             result = call(split(command))
 
@@ -496,7 +514,7 @@ class CyberTron(multi.Thread):
 
             vncPassword = randomPassword.generate_pass(50)
 
-            if self.bootVirtualMachine(package, hostname, vncHost, str(vncPort), vncPassword, str(webSocketPort), hostname, 'virbr0', isoPath, data['tempStatusPath']) == 0:
+            if self.bootVirtualMachine(package, hostname, vncHost, str(vncPort), vncPassword, ip, hostname, 'virbr0', isoPath, data['tempStatusPath']) == 0:
                 logging.CyberCPLogFileWriter.statusWriter(data['tempStatusPath'], 'Failed to boot virtual machine. [404]')
                 return 0
 

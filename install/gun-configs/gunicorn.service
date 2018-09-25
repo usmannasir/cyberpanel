@@ -5,8 +5,8 @@ After=network.target
 
 [Service]
 PIDFile=/run/gunicorn/pid
-User=cyberpanel
-Group=cyberpanel
+User=root
+Group=root
 RuntimeDirectory=gunicorn
 WorkingDirectory=/usr/local/CyberCP
 ExecStart=/usr/local/CyberCP/bin/gunicorn --pid /run/gunicorn/gucpid   \

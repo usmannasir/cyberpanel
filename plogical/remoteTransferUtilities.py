@@ -192,6 +192,7 @@ class remoteTransferUtilities:
                                 writeToFile.close()
                                 break
                     except:
+                        logging.CyberCPLogFileWriter.writeToFile(str(msg))
                         pass
 
                 writeToFile = open(backupLogPath, "a")

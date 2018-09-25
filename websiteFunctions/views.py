@@ -48,7 +48,7 @@ def siteState(request):
     try:
         userID = request.session['userID']
         wm = WebsiteManager()
-        return wm.suspendWebsite(request, userID)
+        return wm.siteState(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 

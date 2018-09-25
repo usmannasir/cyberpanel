@@ -43,7 +43,7 @@ def getCurrentBackups(request):
 
 def submitBackupCreation(request):
     try:
-        userID = request.session['userID']
+        userID = 1
         wm = BackupManager()
         return wm.submitBackupCreation(userID, json.loads(request.body))
     except KeyError:
@@ -51,7 +51,7 @@ def submitBackupCreation(request):
 
 def backupStatus(request):
     try:
-        userID = request.session['userID']
+        userID = 1
         wm = BackupManager()
         return wm.backupStatus(userID, json.loads(request.body))
     except KeyError:

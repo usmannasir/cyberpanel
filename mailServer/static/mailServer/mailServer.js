@@ -1011,7 +1011,7 @@ app.controller('emailForwarding', function($scope,$http) {
 
     };
 
-    $scope.deleteForwarding = function(destination){
+    $scope.deleteForwarding = function(source, destination){
 
         $scope.creationBox = true;
         $scope.emailDetails = true;
@@ -1025,7 +1025,8 @@ app.controller('emailForwarding', function($scope,$http) {
 
 
                 var data = {
-                    destination:destination
+                    destination:destination,
+                    source: source
                 };
 
                 var config = {

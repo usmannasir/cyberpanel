@@ -9,6 +9,17 @@ from firewallUtilities import FirewallUtilities
 import time
 import string
 import random
+import sys
+import subprocess
+import shutil
+import installLog as logging
+import argparse
+import os
+import shlex
+from firewallUtilities import FirewallUtilities
+import time
+import string
+import random
 
 # There can not be peace without first a great suffering.
 
@@ -3146,6 +3157,30 @@ milter_default_action = accept
             logging.InstallLog.writeToFile(str(msg) + " [installNoVNC]")
             return 0
 
+    def touchOSFile(self):
+        try:
+            osPath = "/home/cyberpanel/os"
+
+            osS = """centos-6
+centos-7.2
+debian-9
+fedora-28    
+ubuntu-16.04
+ubuntu-18.04
+"""
+
+            osFile = open(osPath, 'w')
+            osFile.write(osS)
+            osFile.close()
+
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [touchOSFile]")
+            return 0
+        except ValueError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [touchOSFile]")
+            return 0
+
+
 
 def main():
 
@@ -3258,6 +3293,7 @@ def main():
 
     checks.modSecPreReqs()
     checks.setupPHPAndComposer()
+    checks.touchOSFile()
 
 
     if args.postfix != None:

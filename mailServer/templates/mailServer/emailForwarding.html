@@ -118,7 +118,7 @@
                                 <td ng-bind="record.id"></td>
                                 <td ng-bind="record.source"></td>
                                 <td ng-bind="record.destination"></td>
-                                <td ng-click="deleteForwarding(record.destination)"><img src="{% static 'images/delete.png' %}"></td>
+                                <td ng-click="deleteForwarding(record.source, record.destination)"><img src="{% static 'images/delete.png' %}"></td>
                             </tr>
                             </tbody>
                         </table>
