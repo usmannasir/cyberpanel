@@ -346,7 +346,7 @@ class FirewallManager:
                     if items.find("ssh-rsa") > -1:
                         keydata = items.split(" ")
 
-                        key = "ssh-rsa " + keydata[1][:50] + " ... " + keydata[2]
+                        key = "ssh-rsa " + keydata[1][:50] + "  ..  " + keydata[2]
 
                         try:
                             userName = keydata[2][:keydata[2].index("@")]

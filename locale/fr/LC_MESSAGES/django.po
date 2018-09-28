@@ -10,19 +10,11 @@
 #: baseTemplate/templates/baseTemplate/index.html:241
 #: baseTemplate/templates/baseTemplate/index.html:247
 #: baseTemplate/templates/baseTemplate/index.html:253
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:198
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:288
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:343
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:349
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:355
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:361
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:367
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:373
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-08-28 00:56+0500\n"
+"POT-Creation-Date: 2018-09-28 11:29+0500\n"
 "PO-Revision-Date: 2018-07-30 15:35+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -76,6 +68,12 @@ msgstr "Espanol"
 #: CyberCP/settings.py:180
 msgid "French"
 msgstr ""
+
+#: CyberCP/settings.py:181
+#, fuzzy
+#| msgid "Policy"
+msgid "Polish"
+msgstr "Politique"
 
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
@@ -133,7 +131,6 @@ msgstr "Nom de fichier"
 #: backup/templates/backup/backup.html:106
 #: backup/templates/backup/restore.html:63
 #: baseTemplate/templates/baseTemplate/index.html:257
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:377
 #: filemanager/templates/filemanager/index.html:215
 #: firewall/templates/firewall/firewall.html:36
 #: firewall/templates/firewall/modSecurityRulesPacks.html:112
@@ -147,7 +144,6 @@ msgstr "Fonctionnement"
 
 #: backup/templates/backup/backup.html:81
 #: baseTemplate/templates/baseTemplate/index.html:430
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:552
 #: userManagment/templates/userManagment/createACL.html:326
 #: userManagment/templates/userManagment/modifyACL.html:331
 msgid "Create Back up"
@@ -264,7 +260,6 @@ msgstr "Serveur de sauvegarde Port SSH, laisser vide pour 22"
 #: backup/templates/backup/backupDestinations.html:55
 #: backup/templates/backup/backupSchedule.html:54
 #: baseTemplate/templates/baseTemplate/index.html:432
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:554
 msgid "Add Destination"
 msgstr "Ajouter une destination"
 
@@ -351,7 +346,6 @@ msgstr "Programme de sauvegarde - CyberPanel"
 #: backup/templates/backup/backupSchedule.html:20
 #: backup/templates/backup/index.html:75 backup/templates/backup/index.html:77
 #: baseTemplate/templates/baseTemplate/index.html:433
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:555
 msgid "Schedule Back up"
 msgstr "Calendrier Sauvegarder"
 
@@ -393,9 +387,6 @@ msgstr "Retour à la page d'accueil - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:423
 #: baseTemplate/templates/baseTemplate/index.html:425
 #: baseTemplate/templates/baseTemplate/index.html:442
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:545
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:547
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:564
 msgid "Back up"
 msgstr "Sauvegarder"
 
@@ -425,7 +416,6 @@ msgstr "Sauvegarder le site"
 
 #: backup/templates/backup/index.html:44
 #: baseTemplate/templates/baseTemplate/index.html:431
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:553
 #: userManagment/templates/userManagment/createACL.html:335
 #: userManagment/templates/userManagment/modifyACL.html:340
 msgid "Restore Back up"
@@ -443,7 +433,6 @@ msgstr "Sauvegarde externe"
 
 #: backup/templates/backup/index.html:90 backup/templates/backup/index.html:92
 #: baseTemplate/templates/baseTemplate/index.html:434
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:556
 #: userManagment/templates/userManagment/createACL.html:365
 #: userManagment/templates/userManagment/modifyACL.html:370
 msgid "Remote Back ups"
@@ -512,8 +501,6 @@ msgstr "Site Internet"
 #: baseTemplate/templates/baseTemplate/homePage.html:234
 #: baseTemplate/templates/baseTemplate/index.html:494
 #: baseTemplate/templates/baseTemplate/index.html:496
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:618
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:620
 #: managePHP/templates/managePHP/installExtensions.html:63
 msgid "PHP"
 msgstr ""
@@ -528,8 +515,6 @@ msgstr "Paquet"
 #: backup/templates/backup/remoteBackups.html:110
 #: baseTemplate/templates/baseTemplate/index.html:387
 #: baseTemplate/templates/baseTemplate/index.html:389
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:505
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:507
 #: userManagment/templates/userManagment/createUser.html:47
 #: userManagment/templates/userManagment/modifyUser.html:53
 #: userManagment/templates/userManagment/userProfile.html:50
@@ -603,13 +588,11 @@ msgstr "Usage"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:34
 #: baseTemplate/templates/baseTemplate/index.html:97
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:208
 msgid "CPU Usage"
 msgstr "L'utilisation du processeur"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:55
 #: baseTemplate/templates/baseTemplate/index.html:108
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:219
 msgid "Ram Usage"
 msgstr "Utilisation de RAM"
 
@@ -626,9 +609,6 @@ msgstr "Fonctions utilisateur"
 #: baseTemplate/templates/baseTemplate/index.html:297
 #: baseTemplate/templates/baseTemplate/index.html:298
 #: baseTemplate/templates/baseTemplate/index.html:299
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:417
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:418
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:419
 msgid "Users"
 msgstr "Utilisateurs"
 
@@ -642,10 +622,6 @@ msgstr "Fonctions de site Web"
 #: baseTemplate/templates/baseTemplate/index.html:319
 #: baseTemplate/templates/baseTemplate/index.html:320
 #: baseTemplate/templates/baseTemplate/index.html:321
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:347
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:435
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:436
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:437
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:21
 msgid "Websites"
 msgstr "Sites Internet"
@@ -658,9 +634,6 @@ msgstr "Ajouter / Modifier des paquets"
 #: baseTemplate/templates/baseTemplate/index.html:233
 #: baseTemplate/templates/baseTemplate/index.html:336
 #: baseTemplate/templates/baseTemplate/index.html:338
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:353
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:452
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:454
 #: packages/templates/packages/index.html:13
 msgid "Packages"
 msgstr "Paquets"
@@ -674,9 +647,6 @@ msgstr "Fonctions de base de données"
 #: baseTemplate/templates/baseTemplate/index.html:352
 #: baseTemplate/templates/baseTemplate/index.html:353
 #: baseTemplate/templates/baseTemplate/index.html:354
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:468
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:469
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:470
 #: packages/templates/packages/createPackage.html:67
 #: packages/templates/packages/modifyPackage.html:73
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:48
@@ -692,9 +662,6 @@ msgstr "Contrôler le DNS"
 #: baseTemplate/templates/baseTemplate/index.html:239
 #: baseTemplate/templates/baseTemplate/index.html:370
 #: baseTemplate/templates/baseTemplate/index.html:372
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:359
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:486
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:488
 msgid "DNS"
 msgstr ""
 
@@ -707,9 +674,6 @@ msgstr "Fonctions FTP"
 #: baseTemplate/templates/baseTemplate/index.html:245
 #: baseTemplate/templates/baseTemplate/index.html:407
 #: baseTemplate/templates/baseTemplate/index.html:409
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:365
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:527
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:529
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:43
 #: websiteFunctions/templates/websiteFunctions/website.html:43
 msgid "FTP"
@@ -726,8 +690,6 @@ msgstr ""
 #: baseTemplate/templates/baseTemplate/homePage.html:208
 #: baseTemplate/templates/baseTemplate/index.html:443
 #: baseTemplate/templates/baseTemplate/index.html:444
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:565
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:566
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:39
 msgid "SSL"
 msgstr ""
@@ -737,9 +699,6 @@ msgstr ""
 #: baseTemplate/templates/baseTemplate/index.html:475
 #: baseTemplate/templates/baseTemplate/index.html:477
 #: baseTemplate/templates/baseTemplate/index.html:509
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:598
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:600
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:634
 #: emailPremium/templates/emailPremium/policyServer.html:30
 #: serverStatus/templates/serverStatus/index.html:13
 msgid "Server Status"
@@ -752,7 +711,6 @@ msgstr "Configurations PHP"
 #: baseTemplate/templates/baseTemplate/homePage.html:243
 #: baseTemplate/templates/baseTemplate/homePage.html:246
 #: baseTemplate/templates/baseTemplate/index.html:511
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:636
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:116
 #: websiteFunctions/templates/websiteFunctions/website.html:116
 msgid "Logs"
@@ -762,13 +720,10 @@ msgstr ""
 #: baseTemplate/templates/baseTemplate/homePage.html:258
 #: baseTemplate/templates/baseTemplate/index.html:527
 #: baseTemplate/templates/baseTemplate/index.html:529
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:652
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:654
 msgid "Security"
 msgstr "Sécurité"
 
 #: baseTemplate/templates/baseTemplate/index.html:117
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:228
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:55
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:76
 #: websiteFunctions/templates/websiteFunctions/website.html:55
@@ -779,38 +734,28 @@ msgstr "Utilisation du disque"
 #: baseTemplate/templates/baseTemplate/index.html:151
 #: baseTemplate/templates/baseTemplate/index.html:154
 #: baseTemplate/templates/baseTemplate/index.html:158
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:262
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:265
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:269
 msgid "CyberPanel"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:156
 #: baseTemplate/templates/baseTemplate/index.html:160
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:267
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:271
 msgid "Web Hosting Control Panel"
 msgstr "Panneau de contrôle d'hébergement Web"
 
 #: baseTemplate/templates/baseTemplate/index.html:162
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:273
 msgid "Close sidebar"
 msgstr "Fermer la barre latérale"
 
 #: baseTemplate/templates/baseTemplate/index.html:168
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:279
 msgid "My Account"
 msgstr "Mon compte"
 
 #: baseTemplate/templates/baseTemplate/index.html:185
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:296
 msgid "Edit profile"
 msgstr "Editer le profil"
 
 #: baseTemplate/templates/baseTemplate/index.html:186
 #: baseTemplate/templates/baseTemplate/index.html:304
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:297
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:424
 #: userManagment/templates/userManagment/index.html:26
 #: userManagment/templates/userManagment/index.html:28
 msgid "View Profile"
@@ -818,59 +763,42 @@ msgstr "Voir le profil"
 
 #: baseTemplate/templates/baseTemplate/index.html:193
 #: baseTemplate/templates/baseTemplate/index.html:265
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:304
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:385
 msgid "Logout"
 msgstr "Déconnection"
 
 #: baseTemplate/templates/baseTemplate/index.html:204
 #: baseTemplate/templates/baseTemplate/index.html:208
 #: baseTemplate/templates/baseTemplate/index.html:212
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:315
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:319
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:323
 msgid "CPU Load Average"
 msgstr "Charge de processeur moyenne"
 
 #: baseTemplate/templates/baseTemplate/index.html:217
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:337
 msgid "Dashboard Quick Menu"
 msgstr "Menu rapide du tableau de bord"
 
 #: baseTemplate/templates/baseTemplate/index.html:251
 #: baseTemplate/templates/baseTemplate/index.html:460
 #: baseTemplate/templates/baseTemplate/index.html:462
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:371
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:582
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:584
 msgid "Tuning"
 msgstr "Réglage"
 
 #: baseTemplate/templates/baseTemplate/index.html:278
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:398
 msgid "Overview"
 msgstr "Aperçu"
 
 #: baseTemplate/templates/baseTemplate/index.html:280
 #: baseTemplate/templates/baseTemplate/index.html:281
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:400
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:401
 msgid "Server IP Address"
 msgstr "Adresse IP du serveur"
 
 #: baseTemplate/templates/baseTemplate/index.html:284
 #: baseTemplate/templates/baseTemplate/index.html:286
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:404
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:406
 msgid "Dashboard"
 msgstr "Tableau de bord"
 
 #: baseTemplate/templates/baseTemplate/index.html:288
 #: baseTemplate/templates/baseTemplate/index.html:289
 #: baseTemplate/templates/baseTemplate/index.html:290
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:408
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:409
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:410
 #: baseTemplate/templates/baseTemplate/versionManagment.html:10
 #: userManagment/templates/userManagment/createACL.html:48
 #: userManagment/templates/userManagment/createACL.html:53
@@ -880,12 +808,10 @@ msgid "Version Management"
 msgstr "Gestion de version"
 
 #: baseTemplate/templates/baseTemplate/index.html:294
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:414
 msgid "Main"
 msgstr "Principale"
 
 #: baseTemplate/templates/baseTemplate/index.html:305
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:425
 #: userManagment/templates/userManagment/createACL.html:65
 #: userManagment/templates/userManagment/createUser.html:12
 #: userManagment/templates/userManagment/modifyACL.html:68
@@ -893,7 +819,6 @@ msgid "Create New User"
 msgstr "Créer un nouvel utilisateur"
 
 #: baseTemplate/templates/baseTemplate/index.html:306
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:426
 #: userManagment/templates/userManagment/index.html:52
 #: userManagment/templates/userManagment/index.html:54
 #: userManagment/templates/userManagment/modifyUser.html:12
@@ -902,7 +827,6 @@ msgid "Modify User"
 msgstr "Modifier l'utilisateur"
 
 #: baseTemplate/templates/baseTemplate/index.html:307
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:427
 #: userManagment/templates/userManagment/createACL.html:83
 #: userManagment/templates/userManagment/deleteUser.html:13
 #: userManagment/templates/userManagment/deleteUser.html:20
@@ -952,7 +876,6 @@ msgid "Modify ACL"
 msgstr "Modifier l'utilisateur"
 
 #: baseTemplate/templates/baseTemplate/index.html:326
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:442
 #: userManagment/templates/userManagment/createACL.html:104
 #: userManagment/templates/userManagment/modifyACL.html:109
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:12
@@ -963,7 +886,6 @@ msgid "Create Website"
 msgstr "Créer un site Web"
 
 #: baseTemplate/templates/baseTemplate/index.html:327
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:443
 #: websiteFunctions/templates/websiteFunctions/index.html:34
 #: websiteFunctions/templates/websiteFunctions/index.html:36
 #: websiteFunctions/templates/websiteFunctions/index.html:61
@@ -973,7 +895,6 @@ msgid "List Websites"
 msgstr "Liste des sites Web"
 
 #: baseTemplate/templates/baseTemplate/index.html:328
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:444
 #: userManagment/templates/userManagment/createACL.html:113
 #: userManagment/templates/userManagment/modifyACL.html:118
 #: websiteFunctions/templates/websiteFunctions/index.html:73
@@ -985,13 +906,11 @@ msgid "Modify Website"
 msgstr "Modifier le site Web"
 
 #: baseTemplate/templates/baseTemplate/index.html:329
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:445
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:41
 msgid "Suspend/Unsuspend"
 msgstr "Suspendre / Dé-Suspendre"
 
 #: baseTemplate/templates/baseTemplate/index.html:330
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:446
 #: userManagment/templates/userManagment/changeUserACL.html:19
 #: userManagment/templates/userManagment/createACL.html:131
 #: userManagment/templates/userManagment/deleteACL.html:19
@@ -1005,7 +924,6 @@ msgid "Delete Website"
 msgstr "Supprimer le site Web"
 
 #: baseTemplate/templates/baseTemplate/index.html:343
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:459
 #: packages/templates/packages/createPackage.html:13
 #: packages/templates/packages/createPackage.html:84
 #: packages/templates/packages/index.html:25
@@ -1016,7 +934,6 @@ msgid "Create Package"
 msgstr "Créer un paquet"
 
 #: baseTemplate/templates/baseTemplate/index.html:344
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:460
 #: packages/templates/packages/deletePackage.html:12
 #: packages/templates/packages/deletePackage.html:18
 #: packages/templates/packages/deletePackage.html:40
@@ -1028,7 +945,6 @@ msgid "Delete Package"
 msgstr "Supprimer le paquet"
 
 #: baseTemplate/templates/baseTemplate/index.html:345
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:461
 #: packages/templates/packages/index.html:49
 #: packages/templates/packages/index.html:51
 #: packages/templates/packages/modifyPackage.html:9
@@ -1040,33 +956,28 @@ msgid "Modify Package"
 msgstr "Modifier le package"
 
 #: baseTemplate/templates/baseTemplate/index.html:359
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:475
 #: databases/templates/databases/createDatabase.html:12
 #: databases/templates/databases/createDatabase.html:19
 #: databases/templates/databases/createDatabase.html:68
 #: databases/templates/databases/index.html:25
 #: databases/templates/databases/index.html:27
-#: manageSSL/templates/manageSSL/index.html:26
 #: userManagment/templates/userManagment/createACL.html:174
 #: userManagment/templates/userManagment/modifyACL.html:179
 msgid "Create Database"
 msgstr "Créer une base"
 
 #: baseTemplate/templates/baseTemplate/index.html:360
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:476
 #: databases/templates/databases/deleteDatabase.html:12
 #: databases/templates/databases/deleteDatabase.html:19
 #: databases/templates/databases/deleteDatabase.html:53
 #: databases/templates/databases/index.html:37
 #: databases/templates/databases/index.html:39
-#: manageSSL/templates/manageSSL/index.html:38
 #: userManagment/templates/userManagment/createACL.html:183
 #: userManagment/templates/userManagment/modifyACL.html:188
 msgid "Delete Database"
 msgstr "Supprimer la base"
 
 #: baseTemplate/templates/baseTemplate/index.html:361
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:477
 #: databases/templates/databases/index.html:53
 #: databases/templates/databases/index.html:55
 #: databases/templates/databases/listDataBases.html:13
@@ -1077,14 +988,12 @@ msgid "List Databases"
 msgstr "Liste des bases de données"
 
 #: baseTemplate/templates/baseTemplate/index.html:362
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:478
 #: databases/templates/databases/index.html:65
 #: databases/templates/databases/index.html:67
 msgid "PHPMYAdmin"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:377
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:493
 #: dns/templates/dns/createNameServer.html:12
 #: dns/templates/dns/createNameServer.html:87 dns/templates/dns/index.html:72
 #: dns/templates/dns/index.html:74
@@ -1094,7 +1003,6 @@ msgid "Create Nameserver"
 msgstr "Créer un Nameserver"
 
 #: baseTemplate/templates/baseTemplate/index.html:378
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:494
 #: dns/templates/dns/createDNSZone.html:12
 #: dns/templates/dns/createDNSZone.html:51 dns/templates/dns/index.html:29
 #: dns/templates/dns/index.html:31 dns/templates/dns/index.html:84
@@ -1103,7 +1011,6 @@ msgid "Create DNS Zone"
 msgstr "Créer une zone DNS"
 
 #: baseTemplate/templates/baseTemplate/index.html:379
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:495
 #: dns/templates/dns/deleteDNSZone.html:53 dns/templates/dns/index.html:41
 #: dns/templates/dns/index.html:43 dns/templates/dns/index.html:96
 #: dns/templates/dns/index.html:98
@@ -1113,19 +1020,16 @@ msgid "Delete Zone"
 msgstr "Supprimer la zone"
 
 #: baseTemplate/templates/baseTemplate/index.html:380
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:496
 msgid "Add/Delete Records"
 msgstr "Ajouter / Supprimer des enregistrements"
 
 #: baseTemplate/templates/baseTemplate/index.html:394
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:512
 #: mailServer/templates/mailServer/createEmailAccount.html:12
 #: mailServer/templates/mailServer/createEmailAccount.html:19
 msgid "Create Email Account"
 msgstr "Créer un compte de messagerie"
 
 #: baseTemplate/templates/baseTemplate/index.html:394
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:512
 #: mailServer/templates/mailServer/createEmailAccount.html:77
 #: mailServer/templates/mailServer/index.html:25
 #: mailServer/templates/mailServer/index.html:27
@@ -1135,14 +1039,12 @@ msgid "Create Email"
 msgstr "Créer un email"
 
 #: baseTemplate/templates/baseTemplate/index.html:395
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:513
 #: mailServer/templates/mailServer/deleteEmailAccount.html:12
 #: mailServer/templates/mailServer/deleteEmailAccount.html:19
 msgid "Delete Email Account"
 msgstr "Supprimer le compte de messagerie"
 
 #: baseTemplate/templates/baseTemplate/index.html:395
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:513
 #: mailServer/templates/mailServer/deleteEmailAccount.html:69
 #: mailServer/templates/mailServer/index.html:37
 #: mailServer/templates/mailServer/index.html:39
@@ -1158,7 +1060,6 @@ msgid "Email Forwarding"
 msgstr "Email d'expéditeur"
 
 #: baseTemplate/templates/baseTemplate/index.html:397
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:514
 #: databases/templates/databases/listDataBases.html:73
 #: ftp/templates/ftp/listFTPAccounts.html:85
 #: mailServer/templates/mailServer/changeEmailPassword.html:77
@@ -1177,12 +1078,10 @@ msgid "DKIM Manager"
 msgstr "Gérer DKIM"
 
 #: baseTemplate/templates/baseTemplate/index.html:399
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:515
 msgid "Access Webmail"
 msgstr "Accéder au Webmail"
 
 #: baseTemplate/templates/baseTemplate/index.html:414
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:534
 #: ftp/templates/ftp/createFTPAccount.html:12
 #: ftp/templates/ftp/createFTPAccount.html:19 ftp/templates/ftp/index.html:25
 #: ftp/templates/ftp/index.html:27
@@ -1196,7 +1095,6 @@ msgid "Create FTP Account"
 msgstr "Créer un compte FTP"
 
 #: baseTemplate/templates/baseTemplate/index.html:415
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:535
 #: ftp/templates/ftp/deleteFTPAccount.html:12
 #: ftp/templates/ftp/deleteFTPAccount.html:18
 #: ftp/templates/ftp/deleteFTPAccount.html:64 ftp/templates/ftp/index.html:37
@@ -1211,7 +1109,6 @@ msgid "Delete FTP Account"
 msgstr "Supprimer le compte FTP"
 
 #: baseTemplate/templates/baseTemplate/index.html:416
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:536
 #: ftp/templates/ftp/index.html:49 ftp/templates/ftp/index.html:51
 #: ftp/templates/ftp/listFTPAccounts.html:13
 #: ftp/templates/ftp/listFTPAccounts.html:19
@@ -1221,7 +1118,6 @@ msgid "List FTP Accounts"
 msgstr "Liste des comptes FTP"
 
 #: baseTemplate/templates/baseTemplate/index.html:432
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:554
 #: userManagment/templates/userManagment/createACL.html:344
 #: userManagment/templates/userManagment/modifyACL.html:349
 #, fuzzy
@@ -1229,8 +1125,8 @@ msgid "Add/Delete Destination"
 msgstr "Sauvegarde externe"
 
 #: baseTemplate/templates/baseTemplate/index.html:449
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:571
-#: manageSSL/templates/manageSSL/index.html:28
+#: manageSSL/templates/manageSSL/index.html:29
+#: manageSSL/templates/manageSSL/index.html:31
 #: manageSSL/templates/manageSSL/manageSSL.html:13
 #: manageSSL/templates/manageSSL/manageSSL.html:20
 #: userManagment/templates/userManagment/createACL.html:378
@@ -1239,47 +1135,44 @@ msgid "Manage SSL"
 msgstr "Gérer SSL"
 
 #: baseTemplate/templates/baseTemplate/index.html:450
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:572
-#: manageSSL/templates/manageSSL/index.html:40
+#: manageSSL/templates/manageSSL/index.html:45
+#: manageSSL/templates/manageSSL/index.html:47
 #: userManagment/templates/userManagment/createACL.html:387
 #: userManagment/templates/userManagment/modifyACL.html:392
 msgid "Hostname SSL"
 msgstr "Nom d'hôte SSL"
 
 #: baseTemplate/templates/baseTemplate/index.html:451
+#: manageSSL/templates/manageSSL/index.html:60
+#: manageSSL/templates/manageSSL/index.html:62
 #: userManagment/templates/userManagment/createACL.html:396
 #: userManagment/templates/userManagment/modifyACL.html:401
 msgid "MailServer SSL"
 msgstr "Serveur de messagerie SSL"
 
 #: baseTemplate/templates/baseTemplate/index.html:457
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:580
 msgid "Server"
 msgstr "Serveur"
 
 #: baseTemplate/templates/baseTemplate/index.html:467
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:590
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
 #: tuning/templates/tuning/liteSpeedTuning.html:12
 msgid "LiteSpeed Tuning"
 msgstr "Réglage de la vitesse"
 
 #: baseTemplate/templates/baseTemplate/index.html:468
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:591
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13
 msgid "PHP Tuning"
 msgstr "Réglage de PHP"
 
 #: baseTemplate/templates/baseTemplate/index.html:483
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:606
 #: serverStatus/templates/serverStatus/index.html:25
 #: serverStatus/templates/serverStatus/index.html:27
 msgid "LiteSpeed Status"
 msgstr "Statut de vitesse"
 
 #: baseTemplate/templates/baseTemplate/index.html:484
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:607
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:15
 #: serverStatus/templates/serverStatus/index.html:37
 #: serverStatus/templates/serverStatus/index.html:39
@@ -1287,37 +1180,31 @@ msgid "CyberPanel Main Log File"
 msgstr "Fichier journal principal de CyberPanel"
 
 #: baseTemplate/templates/baseTemplate/index.html:485
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:608
 msgid "Services Status"
 msgstr "Statut des services"
 
 #: baseTemplate/templates/baseTemplate/index.html:501
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:625
 #: managePHP/templates/managePHP/installExtensions.html:13
 msgid "Install PHP Extensions"
 msgstr "Installer les extensions PHP"
 
 #: baseTemplate/templates/baseTemplate/index.html:501
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:625
 #: managePHP/templates/managePHP/index.html:24
 #: managePHP/templates/managePHP/index.html:26
 msgid "Install Extensions"
 msgstr "Installer des extensions"
 
 #: baseTemplate/templates/baseTemplate/index.html:502
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:626
 #: managePHP/templates/managePHP/index.html:36
 #: managePHP/templates/managePHP/index.html:38
 msgid "Edit PHP Configs"
 msgstr "Modifier les configurations PHP"
 
 #: baseTemplate/templates/baseTemplate/index.html:516
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:641
 msgid "Access Log"
 msgstr "Journal d'accès"
 
 #: baseTemplate/templates/baseTemplate/index.html:517
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:642
 #: serverLogs/templates/serverLogs/errorLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:37
 #: serverLogs/templates/serverLogs/index.html:39
@@ -1327,7 +1214,6 @@ msgid "Error Logs"
 msgstr "Journaux d'erreurs"
 
 #: baseTemplate/templates/baseTemplate/index.html:518
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:643
 #: emailPremium/templates/emailPremium/emailPage.html:144
 #: serverLogs/templates/serverLogs/emailLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:49
@@ -1336,12 +1222,10 @@ msgid "Email Logs"
 msgstr "Journaux Email"
 
 #: baseTemplate/templates/baseTemplate/index.html:518
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:643
 msgid "Email Log"
 msgstr "Journal de messagerie"
 
 #: baseTemplate/templates/baseTemplate/index.html:519
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:644
 #: serverLogs/templates/serverLogs/ftplogs.html:14
 #: serverLogs/templates/serverLogs/index.html:61
 #: serverLogs/templates/serverLogs/index.html:63
@@ -1358,12 +1242,10 @@ msgid "ModSec Audit Logs"
 msgstr "Journaux d'audit ModSec"
 
 #: baseTemplate/templates/baseTemplate/index.html:534
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:659
 msgid "Firewall Home"
 msgstr "Pare-feu Accueil"
 
 #: baseTemplate/templates/baseTemplate/index.html:534
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:659
 #: firewall/templates/firewall/csf.html:118
 #: firewall/templates/firewall/index.html:25
 #: firewall/templates/firewall/index.html:27
@@ -1371,7 +1253,6 @@ msgid "Firewall"
 msgstr "Pare-feu"
 
 #: baseTemplate/templates/baseTemplate/index.html:535
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:660
 #: firewall/templates/firewall/index.html:36
 #: firewall/templates/firewall/index.html:38
 #: firewall/templates/firewall/secureSSH.html:13
@@ -1413,7 +1294,6 @@ msgid "Mail Settings"
 msgstr "Paramètres de messagerie"
 
 #: baseTemplate/templates/baseTemplate/index.html:549
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:585
 msgid "NEW"
 msgstr "NOUVEAU"
 
@@ -1454,18 +1334,6 @@ msgstr "Gérer Postfix"
 #: baseTemplate/templates/baseTemplate/index.html:572
 msgid "Manage FTP"
 msgstr "Gérer le FTP"
-
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:199
-msgid "CPU Status"
-msgstr "Statut du processeur"
-
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:327
-msgid "Fullscreen"
-msgstr "Plein écran"
-
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:332
-msgid "System Status"
-msgstr "État du système"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
@@ -5006,6 +4874,15 @@ msgstr "SSL émis:"
 #: websiteFunctions/templates/websiteFunctions/website.html:453
 msgid "Changes applied successfully."
 msgstr "Modifications appliquées avec succès"
+
+#~ msgid "CPU Status"
+#~ msgstr "Statut du processeur"
+
+#~ msgid "Fullscreen"
+#~ msgstr "Plein écran"
+
+#~ msgid "System Status"
+#~ msgstr "État du système"
 
 #~ msgid "Update started..."
 #~ msgstr "Mise à jour a commencé"
