@@ -33,7 +33,7 @@ class ACLManager:
             serverIPAddress = "192.168.100.1"
 
         finalResponse['serverIPAddress'] = serverIPAddress
-        finalResponse['adminName'] = admin.firstName + " " + admin.lastName[:3]
+        finalResponse['adminName'] = admin.firstName + " " + admin.lastName
 
         if admin.acl.adminStatus == 1:
             finalResponse['admin'] = 1
