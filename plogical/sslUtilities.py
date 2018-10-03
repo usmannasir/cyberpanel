@@ -294,10 +294,9 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain = None):
             else:
                 return [0, "210 Failed to install SSL for domain. [issueSSLForDomain]"]
         else:
-            pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + domain
-
-            if not os.path.exists(pathToStoreSSL):
-                os.mkdir(pathToStoreSSL)
+            pathToStoreSSL = "/etc/letsencrypt/live/" + domain
+            command = 'mkdir -p ' + pathToStoreSSL
+            subprocess.call(shlex.split(command))
 
             pathToStoreSSLPrivKey = "/etc/letsencrypt/live/" + domain + "/privkey.pem"
             pathToStoreSSLFullChain = "/etc/letsencrypt/live/" + domain + "/fullchain.pem"

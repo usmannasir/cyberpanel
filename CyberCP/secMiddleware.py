@@ -12,14 +12,23 @@ class secMiddleware:
             try:
                 data = json.loads(request.body)
                 for key, value in data.iteritems():
-                    if type(value) == int or type(value) == bool or key == 'configData':
+                    if type(value) == str or type(value) == unicode:
+                        pass
+                    else:
+                        continue
+                    if key == 'configData' or key == 'rewriteRules' or key == 'modSecRules':
                         continue
                     if value.find(';') > -1 or value.find('&&') > -1 or value.find('|') > -1 or value.find('...') > -1:
                         logging.writeToFile(request.body)
-                        return HttpResponse('Error')
+                        final_dic = {'error_message': "Data supplied is not accepted.",
+                                     "errorMessage": "Data supplied is not accepted."}
+                        final_json = json.dumps(final_dic)
+                        return HttpResponse(final_json)
                     if key.find(';') > -1 or key.find('&&') > -1 or key.find('|') > -1 or key.find('...') > -1:
                         logging.writeToFile(request.body)
-                        return HttpResponse('Error')
+                        final_dic = {'error_message': "Data supplied is not accepted.", "errorMessage": "Data supplied is not accepted."}
+                        final_json = json.dumps(final_dic)
+                        return HttpResponse(final_json)
             except BaseException, msg:
                 logging.writeToFile(str(msg))
                 response = self.get_response(request)

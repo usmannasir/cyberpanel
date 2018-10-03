@@ -8,6 +8,7 @@ from loginSystem.views import loadLoginPage
 import plogical.CyberCPLogFileWriter as logging
 import json
 from plogical.website import WebsiteManager
+from websiteFunctions.pluginManager import pluginManager
 
 def loadWebsitesHome(request):
     try:
@@ -63,16 +64,40 @@ def listWebsites(request):
 def submitWebsiteCreation(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
         wm = WebsiteManager()
-        return wm.submitWebsiteCreation(userID, json.loads(request.body))
+        coreResult = wm.submitWebsiteCreation(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request)
+        if result != 200:
+            return result
+
+        return coreResult
+
     except KeyError:
         return redirect(loadLoginPage)
 
 def submitDomainCreation(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preDomainCreation(request)
+        if result != 200:
+            return result
+
         wm = WebsiteManager()
-        return wm.submitDomainCreation(userID, json.loads(request.body))
+        coreResult = wm.submitDomainCreation(userID, json.loads(request.body))
+
+        result = pluginManager.postDomainCreation(request)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -94,11 +119,20 @@ def getFurtherAccounts(request):
 
 def submitWebsiteDeletion(request):
     try:
-
         userID = request.session['userID']
-        wm = WebsiteManager()
-        return wm.submitWebsiteDeletion(userID, json.loads(request.body))
 
+        result = pluginManager.preWebsiteDeletion(request)
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.submitWebsiteDeletion(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteDeletion(request)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -106,8 +140,19 @@ def submitDomainDeletion(request):
     try:
 
         userID = request.session['userID']
+
+        result = pluginManager.preDomainDeletion(request)
+        if result != 200:
+            return result
+
         wm = WebsiteManager()
-        return wm.submitDomainDeletion(userID, json.loads(request.body))
+        coreResult = wm.submitDomainDeletion(userID, json.loads(request.body))
+
+        result = pluginManager.postDomainDeletion(request)
+        if result != 200:
+            return result
+
+        return coreResult
 
     except KeyError:
         return redirect(loadLoginPage)
@@ -116,8 +161,19 @@ def submitWebsiteStatus(request):
     try:
 
         userID = request.session['userID']
+
+        result = pluginManager.preWebsiteSuspension(request)
+        if result != 200:
+            return result
+
         wm = WebsiteManager()
-        return wm.submitWebsiteStatus(userID, json.loads(request.body))
+        coreResult = wm.submitWebsiteStatus(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteSuspension(request)
+        if result != 200:
+            return result
+
+        return coreResult
 
     except KeyError:
         return redirect(loadLoginPage)
@@ -136,8 +192,19 @@ def saveWebsiteChanges(request):
     try:
 
         userID = request.session['userID']
+
+        result = pluginManager.preWebsiteModification(request)
+        if result != 200:
+            return result
+
         wm = WebsiteManager()
-        return wm.saveWebsiteChanges(userID, json.loads(request.body))
+        coreResult = wm.saveWebsiteChanges(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteModification(request)
+        if result != 200:
+            return result
+
+        return coreResult
 
     except KeyError:
         return redirect(loadLoginPage)
@@ -186,9 +253,22 @@ def getDataFromConfigFile(request):
 
 def saveConfigsToFile(request):
     try:
+
         userID = request.session['userID']
+
+        result = pluginManager.preSaveConfigsToFile(request)
+        if result != 200:
+            return result
+
         wm = WebsiteManager()
-        return wm.saveConfigsToFile(userID, json.loads(request.body))
+        coreResult = wm.saveConfigsToFile(userID, json.loads(request.body))
+
+        result = pluginManager.postSaveConfigsToFile(request)
+        if result != 200:
+            return result
+
+        return coreResult
+
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -202,25 +282,64 @@ def getRewriteRules(request):
 
 def saveRewriteRules(request):
     try:
+
         userID = request.session['userID']
+
+        result = pluginManager.preSaveRewriteRules(request)
+        if result != 200:
+            return result
+
         wm = WebsiteManager()
-        return wm.saveRewriteRules(userID, json.loads(request.body))
+        coreResult = wm.saveRewriteRules(userID, json.loads(request.body))
+
+        result = pluginManager.postSaveRewriteRules(request)
+        if result != 200:
+            return result
+
+        return coreResult
+
     except KeyError:
         return redirect(loadLoginPage)
 
 def saveSSL(request):
     try:
+
         userID = request.session['userID']
+
+        result = pluginManager.preSaveSSL(request)
+        if result != 200:
+            return result
+
         wm = WebsiteManager()
-        return wm.saveSSL(userID, json.loads(request.body))
+        coreResult = wm.saveSSL(userID, json.loads(request.body))
+
+        result = pluginManager.postSaveSSL(request)
+        if result != 200:
+            return result
+
+        return coreResult
+
     except KeyError:
         return redirect(loadLoginPage)
 
 def changePHP(request):
     try:
+
         userID = request.session['userID']
+
+        result = pluginManager.preChangePHP(request)
+        if result != 200:
+            return result
+
         wm = WebsiteManager()
-        return wm.changePHP(userID, json.loads(request.body))
+        coreResult = wm.changePHP(userID, json.loads(request.body))
+
+        result = pluginManager.postChangePHP(request)
+        if result != 200:
+            return result
+
+        return coreResult
+
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -259,16 +378,38 @@ def saveCronChanges(request):
 def remCronbyLine(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preRemCronbyLine(request)
+        if result != 200:
+            return result
+
         wm = WebsiteManager()
-        return wm.remCronbyLine(userID, json.loads(request.body))
+        coreResult = wm.remCronbyLine(userID, json.loads(request.body))
+
+        result = pluginManager.postRemCronbyLine(request)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def addNewCron(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preAddNewCron(request)
+        if result != 200:
+            return result
+
         wm = WebsiteManager()
-        return wm.addNewCron(userID, json.loads(request.body))
+        coreResult = wm.addNewCron(userID, json.loads(request.body))
+
+        result = pluginManager.postAddNewCron(request)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -283,8 +424,19 @@ def domainAlias(request, domain):
 def submitAliasCreation(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preSubmitAliasCreation(request)
+        if result != 200:
+            return result
+
         wm = WebsiteManager()
-        return wm.submitAliasCreation(userID, json.loads(request.body))
+        coreResult = wm.submitAliasCreation(userID, json.loads(request.body))
+
+        result = pluginManager.postSubmitAliasCreation(request)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -299,27 +451,40 @@ def issueAliasSSL(request):
 def delateAlias(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preDelateAlias(request)
+        if result != 200:
+            return result
+
         wm = WebsiteManager()
-        return wm.delateAlias(userID, json.loads(request.body))
+        coreResult = wm.delateAlias(userID, json.loads(request.body))
+
+        result = pluginManager.postDelateAlias(request)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def changeOpenBasedir(request):
     try:
-        userID = request.session['userID']
-        wm = WebsiteManager()
-        return wm.changeOpenBasedir(userID, json.loads(request.body))
-    except KeyError:
-        return redirect(loadLoginPage)
 
-def applicationInstaller(request):
-    try:
         userID = request.session['userID']
-        try:
-            return render(request, 'websiteFunctions/applicationInstaller.html')
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse(str(msg))
+
+        result = pluginManager.preChangeOpenBasedir(request)
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.changeOpenBasedir(userID, json.loads(request.body))
+
+        result = pluginManager.postChangeOpenBasedir(request)
+        if result != 200:
+            return result
+
+        return coreResult
+
     except KeyError:
         return redirect(loadLoginPage)
 

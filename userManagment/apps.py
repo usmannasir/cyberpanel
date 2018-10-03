@@ -6,3 +6,6 @@ from django.apps import AppConfig
 
 class UsermanagmentConfig(AppConfig):
     name = 'userManagment'
+
+    def ready(self):
+        import signals

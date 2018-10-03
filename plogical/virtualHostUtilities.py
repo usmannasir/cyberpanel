@@ -736,8 +736,8 @@ class virtualHostUtilities:
 
             pathToStoreSSL = '/etc/letsencrypt/live/' + virtualHost
 
-            if not os.path.exists(pathToStoreSSL):
-                os.mkdir(pathToStoreSSL)
+            command = 'mkdir -p ' + pathToStoreSSL
+            subprocess.call(shlex.split(command))
 
             pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
             pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
