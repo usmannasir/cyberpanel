@@ -71,11 +71,6 @@ urlpatterns = [
     ## Openbasedir
     url(r'^changeOpenBasedir$',views.changeOpenBasedir,name="changeOpenBasedir"),
 
-
-    ## Application Installer
-
-    url(r'^applicationInstaller$',views.applicationInstaller,name="applicationInstaller"),
-
     ## WP Install
 
     url(r'^(?P<domain>([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)/wordpressInstall$', views.wordpressInstall, name='wordpressInstall'),
