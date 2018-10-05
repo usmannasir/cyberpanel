@@ -1,674 +1,154 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
-from django.shortcuts import render,redirect
-from django.http import HttpResponse
-import json
-from plogical.dnsUtilities import DNS
-from loginSystem.models import Administrator
-import os
+from django.shortcuts import redirect
 from loginSystem.views import loadLoginPage
-from models import Domains,Records
-from re import match,I,M
-from websiteFunctions.models import Websites
-from plogical.mailUtilities import mailUtilities
-from plogical.acl import ACLManager
+from dnsManager import DNSManager
+from pluginManager import pluginManager
 
 # Create your views here.
 
 def loadDNSHome(request):
     try:
         userID = request.session['userID']
-        admin = Administrator.objects.get(pk=userID)
-
-        return render(request,'dns/index.html',{"type":admin.type})
+        dm = DNSManager()
+        return dm.loadDNSHome(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 
 def createNameserver(request):
     try:
         userID = request.session['userID']
-
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        elif currentACL['createNameServer'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        mailUtilities.checkHome()
-
-        if os.path.exists('/home/cyberpanel/powerdns'):
-            return render(request, "dns/createNameServer.html", {"status": 1})
-        else:
-            return render(request, "dns/createNameServer.html", {"status": 0})
-
-
-
+        dm = DNSManager()
+        return dm.createNameserver(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 
 def NSCreation(request):
     try:
         userID = request.session['userID']
-        try:
-            if request.method == 'POST':
-                admin = Administrator.objects.get(pk=userID)
 
-                currentACL = ACLManager.loadedACL(userID)
+        result = pluginManager.preNSCreation(request)
+        if result != 200:
+            return result
 
-                if currentACL['admin'] == 1:
-                    pass
-                elif currentACL['createNameServer'] == 1:
-                    pass
-                else:
-                    return ACLManager.loadErrorJson('NSCreation', 0)
+        dm = DNSManager()
+        coreResult = dm.NSCreation(userID, request.body)
 
+        result = pluginManager.postNSCreation(request, coreResult)
+        if result != 200:
+            return result
 
-                data = json.loads(request.body)
-                domainForNS = data['domainForNS']
-                ns1 = data['ns1']
-                ns2 = data['ns2']
-                firstNSIP = data['firstNSIP']
-                secondNSIP = data['secondNSIP']
-
-                if Domains.objects.filter(name=domainForNS).count() == 0:
-                    newZone = Domains(admin=admin,name=domainForNS, type="NATIVE")
-                    newZone.save()
-
-                    content = "ns1." + domainForNS + " hostmaster." + domainForNS + " 1 10800 3600 604800 3600"
-
-                    soaRecord = Records(domainOwner=newZone,
-                                        domain_id=newZone.id,
-                                        name=domainForNS,
-                                        type="SOA",
-                                        content=content,
-                                        ttl=3600,
-                                        prio=0,
-                                        disabled=0,
-                                        auth=1)
-                    soaRecord.save()
-
-                    ## NS1
-
-                    record = Records(domainOwner=newZone,
-                                        domain_id=newZone.id,
-                                        name=domainForNS,
-                                        type="NS",
-                                        content=ns1,
-                                        ttl=3600,
-                                        prio=0,
-                                        disabled=0,
-                                        auth=1)
-                    record.save()
-
-
-
-                    record = Records(domainOwner=newZone,
-                                     domain_id=newZone.id,
-                                     name=ns1,
-                                     type="A",
-                                     content=firstNSIP,
-                                     ttl=3600,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
-
-                    ## NS2
-
-
-                    record = Records(domainOwner=newZone,
-                                     domain_id=newZone.id,
-                                     name=domainForNS,
-                                     type="NS",
-                                     content=ns2,
-                                     ttl=3600,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
-
-
-                    record = Records(domainOwner=newZone,
-                                     domain_id=newZone.id,
-                                     name=ns2,
-                                     type="A",
-                                     content=secondNSIP,
-                                     ttl=3600,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
-
-                    final_dic = {'NSCreation': 1, 'error_message': "None"}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
-                else:
-
-                    newZone = Domains.objects.get(name=domainForNS)
-
-                    ## NS1
-
-                    record = Records(domainOwner=newZone,
-                                     domain_id=newZone.id,
-                                     name=domainForNS,
-                                     type="NS",
-                                     content=ns1,
-                                     ttl=3600,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
-
-                    record = Records(domainOwner=newZone,
-                                     domain_id=newZone.id,
-                                     name=ns1,
-                                     type="A",
-                                     content=firstNSIP,
-                                     ttl=3600,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
-
-                    ## NS2
-
-
-                    record = Records(domainOwner=newZone,
-                                     domain_id=newZone.id,
-                                     name=domainForNS,
-                                     type="NS",
-                                     content=ns2,
-                                     ttl=3600,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
-
-                    record = Records(domainOwner=newZone,
-                                     domain_id=newZone.id,
-                                     name=ns2,
-                                     type="A",
-                                     content=secondNSIP,
-                                     ttl=3600,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
-
-                    final_dic = {'NSCreation': 1, 'error_message': "None"}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
-
-        except BaseException, msg:
-            final_dic = {'NSCreation': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
-
-    except KeyError, msg:
-        final_dic = {'NSCreation': 0, 'error_message': str(msg)}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
 
 def createDNSZone(request):
     try:
         userID = request.session['userID']
-
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        elif currentACL['createDNSZone'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        if os.path.exists('/home/cyberpanel/powerdns'):
-            return render(request,'dns/createDNSZone.html', {"status": 1})
-        else:
-            return render(request,'dns/createDNSZone.html', {"status": 0})
-
+        dm = DNSManager()
+        return dm.createDNSZone(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 
 def zoneCreation(request):
     try:
         userID = request.session['userID']
-        try:
-            if request.method == 'POST':
 
-                admin = Administrator.objects.get(pk=userID)
-                currentACL = ACLManager.loadedACL(userID)
+        result = pluginManager.preZoneCreation(request)
+        if result != 200:
+            return result
 
-                if currentACL['admin'] == 1:
-                    pass
-                elif currentACL['createDNSZone'] == 1:
-                    pass
-                else:
-                    return ACLManager.loadErrorJson('zoneCreation', 0)
+        dm = DNSManager()
+        coreResult =  dm.zoneCreation(userID, request.body)
 
-                data = json.loads(request.body)
-                zoneDomain = data['zoneDomain']
+        result = pluginManager.postZoneCreation(request, coreResult)
+        if result != 200:
+            return result
 
-                newZone = Domains(admin=admin, name=zoneDomain, type="NATIVE")
-                newZone.save()
-
-                content = "ns1." + zoneDomain + " hostmaster." + zoneDomain + " 1 10800 3600 604800 3600"
-
-                soaRecord = Records(domainOwner=newZone,
-                                    domain_id=newZone.id,
-                                    name=zoneDomain,
-                                    type="SOA",
-                                    content=content,
-                                    ttl=3600,
-                                    prio=0,
-                                    disabled=0,
-                                    auth=1)
-                soaRecord.save()
-
-
-                final_dic = {'zoneCreation': 1}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-
-        except BaseException,msg:
-
-            final_dic = {'zoneCreation': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-
-            return HttpResponse(final_json)
-
-    except KeyError,msg:
-        final_dic = {'zoneCreation': 0, 'error_message': str(msg)}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
 
 def addDeleteDNSRecords(request):
     try:
         userID = request.session['userID']
-
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        elif currentACL['addDeleteRecords'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        if not os.path.exists('/home/cyberpanel/powerdns'):
-            return render(request,'dns/addDeleteDNSRecords.html', {"status": 0})
-
-        domainsList = ACLManager.findAllDomains(currentACL, userID)
-
-        return render(request, 'dns/addDeleteDNSRecords.html',{"domainsList":domainsList, "status": 1})
-
+        dm = DNSManager()
+        return dm.addDeleteDNSRecords(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 
 def getCurrentRecordsForDomain(request):
     try:
         userID = request.session['userID']
-        try:
-            if request.method == 'POST':
-
-                data = json.loads(request.body)
-                zoneDomain = data['selectedZone']
-                currentSelection = data['currentSelection']
-
-                currentACL = ACLManager.loadedACL(userID)
-
-                if currentACL['admin'] == 1:
-                    pass
-                elif currentACL['addDeleteRecords'] == 1:
-                    pass
-                else:
-                    return ACLManager.loadErrorJson('fetchStatus', 1)
-
-                if not os.path.exists('/home/cyberpanel/powerdns'):
-                    return render(request, 'dns/addDeleteDNSRecords.html', {"status": 0})
-
-
-                domain = Domains.objects.get(name=zoneDomain)
-                records = Records.objects.filter(domain_id=domain.id)
-
-
-                fetchType = ""
-
-                if currentSelection == 'aRecord':
-                    fetchType = 'A'
-                elif currentSelection == 'aaaaRecord':
-                    fetchType = 'AAAA'
-                elif currentSelection == 'cNameRecord':
-                    fetchType = 'CNAME'
-                elif currentSelection == 'mxRecord':
-                    fetchType = 'MX'
-                elif currentSelection == 'txtRecord':
-                    fetchType = 'TXT'
-                elif currentSelection == 'spfRecord':
-                    fetchType = 'SPF'
-                elif currentSelection == 'nsRecord':
-                    fetchType = 'NS'
-                elif currentSelection == 'soaRecord':
-                    fetchType = 'SOA'
-                elif currentSelection == 'srvRecord':
-                    fetchType = 'SRV'
-                elif currentSelection == 'caaRecord':
-                    fetchType = 'CAA'
-
-                json_data = "["
-                checker = 0
-
-
-                for items in records:
-                    if items.type == fetchType:
-                        dic = {'id': items.id,
-                               'type': items.type,
-                               'name': items.name,
-                               'content': items.content,
-                               'priority': items.prio,
-                               'ttl':items.ttl
-                               }
-
-
-                        if checker == 0:
-                            json_data = json_data + json.dumps(dic)
-                            checker = 1
-                        else:
-                            json_data = json_data + ',' + json.dumps(dic)
-                    else:
-                        continue
-
-
-                json_data = json_data + ']'
-                final_json = json.dumps({'fetchStatus': 1, 'error_message': "None","data":json_data})
-                return HttpResponse(final_json)
-
-        except BaseException,msg:
-            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-
-            return HttpResponse(final_json)
+        dm = DNSManager()
+        return dm.getCurrentRecordsForDomain(userID, request.body)
     except KeyError:
-        final_dic = {'fetchStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        return redirect(loadLoginPage)
 
 def addDNSRecord(request):
     try:
         userID = request.session['userID']
-        try:
-            if request.method == 'POST':
 
-                data = json.loads(request.body)
-                zoneDomain = data['selectedZone']
-                recordType = data['recordType']
-                recordName = data['recordName']
-                ttl = int(data['ttl'])
+        result = pluginManager.preAddDNSRecord(request)
+        if result != 200:
+            return result
 
-                currentACL = ACLManager.loadedACL(userID)
+        dm = DNSManager()
+        coreResult =  dm.addDNSRecord(userID, request.body)
 
-                if currentACL['admin'] == 1:
-                    pass
-                elif currentACL['addDeleteRecords'] == 1:
-                    pass
-                else:
-                    return ACLManager.loadErrorJson('add_status', 0)
+        result = pluginManager.postAddDNSRecord(request, coreResult)
+        if result != 200:
+            return result
 
+        return coreResult
 
-                zone = Domains.objects.get(name=zoneDomain)
-                value = ""
-
-
-                if recordType == "A":
-
-                    recordContentA = data['recordContentA']  ## IP or ponting value
-
-                    if recordName == "@":
-                        value = zoneDomain
-                    ## re.match
-                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
-                        value = recordName
-                    else:
-                        value = recordName + "." + zoneDomain
-
-
-                    DNS.createDNSRecord(zone, value, recordType, recordContentA, 0, ttl )
-
-                elif recordType == "MX":
-
-                    if recordName == "@":
-                        value = zoneDomain
-                    ## re.match
-                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
-                        value = recordName
-                    else:
-                        value = recordName + "." + zoneDomain
-
-                    recordContentMX = data['recordContentMX']
-                    priority = data['priority']
-
-                    DNS.createDNSRecord(zone, value, recordType, recordContentMX, priority, ttl)
-
-                elif recordType == "AAAA":
-
-
-                    if recordName == "@":
-                        value = zoneDomain
-                    ## re.match
-                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
-                        value = recordName
-                    else:
-                        value = recordName + "." + zoneDomain
-
-                    recordContentAAAA = data['recordContentAAAA']  ## IP or ponting value
-
-                    DNS.createDNSRecord(zone, value, recordType, recordContentAAAA, 0, ttl)
-
-                elif recordType == "CNAME":
-
-                    if recordName == "@":
-                        value = zoneDomain
-                    ## re.match
-                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
-                        value = recordName
-                    else:
-                        value = recordName + "." + zoneDomain
-
-
-                    recordContentCNAME = data['recordContentCNAME']  ## IP or ponting value
-
-                    DNS.createDNSRecord(zone, value, recordType, recordContentCNAME, 0, ttl)
-
-                elif recordType == "SPF":
-
-                    if recordName == "@":
-                        value = zoneDomain
-                    ## re.match
-                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
-                        value = recordName
-                    else:
-                        value = recordName + "." + zoneDomain
-
-                    recordContentSPF = data['recordContentSPF']  ## IP or ponting value
-
-                    DNS.createDNSRecord(zone, value, recordType, recordContentSPF, 0, ttl)
-
-                elif recordType == "TXT":
-
-                    if recordName == "@":
-                        value = zoneDomain
-                    ## re.match
-                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
-                        value = recordName
-                    else:
-                        value = recordName + "." + zoneDomain
-
-                    recordContentTXT = data['recordContentTXT']  ## IP or ponting value
-
-                    DNS.createDNSRecord(zone, value, recordType, recordContentTXT, 0, ttl)
-
-                elif recordType == "SOA":
-
-                    recordContentSOA = data['recordContentSOA']
-
-                    DNS.createDNSRecord(zone, value, recordType, recordContentSOA, 0, ttl)
-
-                elif recordType == "NS":
-
-                    recordContentNS = data['recordContentNS']
-
-                    if recordContentNS == "@":
-                        recordContentNS = "ns1." + zoneDomain
-                    ## re.match
-                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordContentNS, M | I):
-                        recordContentNS = recordContentNS
-                    else:
-                        recordContentNS = recordContentNS + "." + zoneDomain
-
-                    DNS.createDNSRecord(zone, recordName, recordType, recordContentNS, 0, ttl)
-
-                elif recordType == "SRV":
-
-                    if recordName == "@":
-                        value = zoneDomain
-                    ## re.match
-                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName, M | I):
-                        value = recordName
-                    else:
-                        value = recordName + "." + zoneDomain
-
-                    recordContentSRV = data['recordContentSRV']
-                    priority = data['priority']
-
-                    DNS.createDNSRecord(zone, value, recordType, recordContentSRV, priority, ttl)
-
-                elif recordType == "CAA":
-                    if recordName == "@":
-                        value = zoneDomain
-                    ## re.match
-                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName,
-                               M | I):
-                        value = recordName
-                    else:
-                        value = recordName + "." + zoneDomain
-                    recordContentCAA = data['recordContentCAA']  ## IP or ponting value
-                    DNS.createDNSRecord(zone, value, recordType, recordContentCAA, 0, ttl)
-
-
-                final_dic = {'add_status': 1, 'error_message': "None"}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-
-
-        except BaseException,msg:
-            final_dic = {'add_status': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
-    except KeyError,msg:
-        final_dic = {'add_status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+    except KeyError:
+        return redirect(loadLoginPage)
 
 def deleteDNSRecord(request):
     try:
         userID = request.session['userID']
-        try:
-            if request.method == 'POST':
 
-                data = json.loads(request.body)
-                id = data['id']
+        result = pluginManager.preDeleteDNSRecord(request)
+        if result != 200:
+            return result
 
-                currentACL = ACLManager.loadedACL(userID)
+        dm = DNSManager()
+        coreResult =  dm.deleteDNSRecord(userID, request.body)
 
-                if currentACL['admin'] == 1:
-                    pass
-                elif currentACL['addDeleteRecords'] == 1:
-                    pass
-                else:
-                    return ACLManager.loadErrorJson('delete_status', 0)
+        result = pluginManager.postDeleteDNSRecord(request, coreResult)
+        if result != 200:
+            return result
 
-                delRecord = Records.objects.get(id=id)
-                delRecord.delete()
-
-                final_dic = {'delete_status': 1, 'error_message': "None"}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-
-        except BaseException,msg:
-            final_dic = {'delete_status': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
-    except KeyError,msg:
-        final_dic = {'delete_status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
 
 def deleteDNSZone(request):
-
     try:
         userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        elif currentACL['deleteZone'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        if not os.path.exists('/home/cyberpanel/powerdns'):
-            return render(request, 'dns/addDeleteDNSRecords.html', {"status": 0})
-
-        domainsList = ACLManager.findAllDomains(currentACL, userID)
-
-        return render(request, 'dns/deleteDNSZone.html',{"domainsList":domainsList, "status": 1})
-
+        dm = DNSManager()
+        return dm.getCurrentRecordsForDomain(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 
 def submitZoneDeletion(request):
     try:
         userID = request.session['userID']
-        try:
-            if request.method == 'POST':
-                data = json.loads(request.body)
-                zoneDomain = data['zoneDomain']
+        result = pluginManager.preSubmitZoneDeletion(request)
+        if result != 200:
+            return result
 
-                currentACL = ACLManager.loadedACL(userID)
+        dm = DNSManager()
+        coreResult = dm.submitZoneDeletion(userID, request.body)
 
-                if currentACL['admin'] == 1:
-                    pass
-                elif currentACL['deleteZone'] == 1:
-                    pass
-                else:
-                    return ACLManager.loadErrorJson('delete_status', 0)
+        result = pluginManager.postSubmitZoneDeletion(request, coreResult)
+        if result != 200:
+            return result
 
-                delZone = Domains.objects.get(name=zoneDomain)
-                admin = Administrator.objects.get(pk=userID)
-
-                if currentACL['admin'] == 1:
-                    if delZone.admin != admin:
-                        return ACLManager.loadErrorJson()
-
-                delZone.delete()
-
-                final_dic = {'delete_status': 1, 'error_message': "None"}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-
-
-        except BaseException,msg:
-            final_dic = {'delete_status': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
-    except KeyError,msg:
-        final_dic = {'delete_status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
 
 
 

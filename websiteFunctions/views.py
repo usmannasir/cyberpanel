@@ -5,7 +5,6 @@ from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
-import plogical.CyberCPLogFileWriter as logging
 import json
 from plogical.website import WebsiteManager
 from websiteFunctions.pluginManager import pluginManager
@@ -73,7 +72,7 @@ def submitWebsiteCreation(request):
         wm = WebsiteManager()
         coreResult = wm.submitWebsiteCreation(userID, json.loads(request.body))
 
-        result = pluginManager.postWebsiteCreation(request)
+        result = pluginManager.postWebsiteCreation(request, coreResult)
         if result != 200:
             return result
 
@@ -93,7 +92,7 @@ def submitDomainCreation(request):
         wm = WebsiteManager()
         coreResult = wm.submitDomainCreation(userID, json.loads(request.body))
 
-        result = pluginManager.postDomainCreation(request)
+        result = pluginManager.postDomainCreation(request, coreResult)
         if result != 200:
             return result
 
@@ -128,7 +127,7 @@ def submitWebsiteDeletion(request):
         wm = WebsiteManager()
         coreResult = wm.submitWebsiteDeletion(userID, json.loads(request.body))
 
-        result = pluginManager.postWebsiteDeletion(request)
+        result = pluginManager.postWebsiteDeletion(request, coreResult)
         if result != 200:
             return result
 
@@ -148,7 +147,7 @@ def submitDomainDeletion(request):
         wm = WebsiteManager()
         coreResult = wm.submitDomainDeletion(userID, json.loads(request.body))
 
-        result = pluginManager.postDomainDeletion(request)
+        result = pluginManager.postDomainDeletion(request, coreResult)
         if result != 200:
             return result
 
@@ -169,7 +168,7 @@ def submitWebsiteStatus(request):
         wm = WebsiteManager()
         coreResult = wm.submitWebsiteStatus(userID, json.loads(request.body))
 
-        result = pluginManager.postWebsiteSuspension(request)
+        result = pluginManager.postWebsiteSuspension(request, coreResult)
         if result != 200:
             return result
 
@@ -200,7 +199,7 @@ def saveWebsiteChanges(request):
         wm = WebsiteManager()
         coreResult = wm.saveWebsiteChanges(userID, json.loads(request.body))
 
-        result = pluginManager.postWebsiteModification(request)
+        result = pluginManager.postWebsiteModification(request, coreResult)
         if result != 200:
             return result
 
@@ -263,7 +262,7 @@ def saveConfigsToFile(request):
         wm = WebsiteManager()
         coreResult = wm.saveConfigsToFile(userID, json.loads(request.body))
 
-        result = pluginManager.postSaveConfigsToFile(request)
+        result = pluginManager.postSaveConfigsToFile(request, coreResult)
         if result != 200:
             return result
 
@@ -292,7 +291,7 @@ def saveRewriteRules(request):
         wm = WebsiteManager()
         coreResult = wm.saveRewriteRules(userID, json.loads(request.body))
 
-        result = pluginManager.postSaveRewriteRules(request)
+        result = pluginManager.postSaveRewriteRules(request, coreResult)
         if result != 200:
             return result
 
@@ -313,7 +312,7 @@ def saveSSL(request):
         wm = WebsiteManager()
         coreResult = wm.saveSSL(userID, json.loads(request.body))
 
-        result = pluginManager.postSaveSSL(request)
+        result = pluginManager.postSaveSSL(request, coreResult)
         if result != 200:
             return result
 
@@ -334,7 +333,7 @@ def changePHP(request):
         wm = WebsiteManager()
         coreResult = wm.changePHP(userID, json.loads(request.body))
 
-        result = pluginManager.postChangePHP(request)
+        result = pluginManager.postChangePHP(request, coreResult)
         if result != 200:
             return result
 
@@ -386,7 +385,7 @@ def remCronbyLine(request):
         wm = WebsiteManager()
         coreResult = wm.remCronbyLine(userID, json.loads(request.body))
 
-        result = pluginManager.postRemCronbyLine(request)
+        result = pluginManager.postRemCronbyLine(request, coreResult)
         if result != 200:
             return result
 
@@ -405,7 +404,7 @@ def addNewCron(request):
         wm = WebsiteManager()
         coreResult = wm.addNewCron(userID, json.loads(request.body))
 
-        result = pluginManager.postAddNewCron(request)
+        result = pluginManager.postAddNewCron(request, coreResult)
         if result != 200:
             return result
 
@@ -432,7 +431,7 @@ def submitAliasCreation(request):
         wm = WebsiteManager()
         coreResult = wm.submitAliasCreation(userID, json.loads(request.body))
 
-        result = pluginManager.postSubmitAliasCreation(request)
+        result = pluginManager.postSubmitAliasCreation(request, coreResult)
         if result != 200:
             return result
 
@@ -459,7 +458,7 @@ def delateAlias(request):
         wm = WebsiteManager()
         coreResult = wm.delateAlias(userID, json.loads(request.body))
 
-        result = pluginManager.postDelateAlias(request)
+        result = pluginManager.postDelateAlias(request, coreResult)
         if result != 200:
             return result
 
@@ -479,7 +478,7 @@ def changeOpenBasedir(request):
         wm = WebsiteManager()
         coreResult = wm.changeOpenBasedir(userID, json.loads(request.body))
 
-        result = pluginManager.postChangeOpenBasedir(request)
+        result = pluginManager.postChangeOpenBasedir(request, coreResult)
         if result != 200:
             return result
 

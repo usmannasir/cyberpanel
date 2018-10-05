@@ -4,8 +4,11 @@ from CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 class pluginManagerGlobal:
     @staticmethod
-    def globalPlug(request, eventInQuest):
-        hookReturn = eventInQuest.send(sender=None, request=request)
+    def globalPlug(request, eventInQuest, response = None):
+        if response == None:
+            hookReturn = eventInQuest.send(sender=None, request=request)
+        else:
+            hookReturn = eventInQuest.send(sender=None, request=request, response = response)
         for items in hookReturn:
             if type(items[1] == HttpResponse):
                 return items[1]

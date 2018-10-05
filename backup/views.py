@@ -6,6 +6,7 @@ from django.shortcuts import redirect
 import json
 from loginSystem.views import loadLoginPage
 from plogical.backupManager import BackupManager
+from backup.pluginManager import pluginManager
 
 
 def loadBackupHome(request):
@@ -43,8 +44,16 @@ def getCurrentBackups(request):
 def submitBackupCreation(request):
     try:
         userID = 1
+
+        result = pluginManager.preSubmitBackupCreation(request)
+        if result != 200:
+            return result
+
         wm = BackupManager()
-        return wm.submitBackupCreation(userID, json.loads(request.body))
+        coreResult =  wm.submitBackupCreation(userID, json.loads(request.body))
+
+        return coreResult
+
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -67,15 +76,33 @@ def cancelBackupCreation(request):
 def deleteBackup(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preDeleteBackup(request)
+        if result != 200:
+            return result
+
         wm = BackupManager()
-        return wm.deleteBackup(userID, json.loads(request.body))
+        coreResult = wm.deleteBackup(userID, json.loads(request.body))
+
+        result = pluginManager.postDeleteBackup(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
     except KeyError:
         return redirect(loadLoginPage)
 
 def submitRestore(request):
     try:
+        result = pluginManager.preSubmitRestore(request)
+        if result != 200:
+            return result
+
         wm = BackupManager()
-        return wm.submitRestore(json.loads(request.body))
+        coreResult = wm.submitRestore(json.loads(request.body))
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -97,8 +124,19 @@ def backupDestinations(request):
 def submitDestinationCreation(request):
     try:
         userID = request.session['userID']
-        bm = BackupManager()
-        return bm.submitDestinationCreation(userID, json.loads(request.body))
+
+        result = pluginManager.preSubmitDestinationCreation(request)
+        if result != 200:
+            return result
+
+        wm = BackupManager()
+        coreResult = wm.submitDestinationCreation(userID, json.loads(request.body))
+
+        result = pluginManager.postSubmitDestinationCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -121,8 +159,18 @@ def getConnectionStatus(request):
 def deleteDestination(request):
     try:
         userID = request.session['userID']
-        bm = BackupManager()
-        return bm.deleteDestination(userID, json.loads(request.body))
+        result = pluginManager.preDeleteDestination(request)
+        if result != 200:
+            return result
+
+        wm = BackupManager()
+        coreResult = wm.deleteDestination(userID, json.loads(request.body))
+
+        result = pluginManager.postDeleteDestination(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -145,16 +193,36 @@ def getCurrentBackupSchedules(request):
 def submitBackupSchedule(request):
     try:
         userID = request.session['userID']
+        result = pluginManager.preSubmitBackupSchedule(request)
+        if result != 200:
+            return result
+
         wm = BackupManager()
-        return wm.submitBackupSchedule(userID, json.loads(request.body))
+        coreResult = wm.submitBackupSchedule(userID, json.loads(request.body))
+
+        result = pluginManager.postSubmitBackupSchedule(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def scheduleDelete(request):
     try:
         userID = request.session['userID']
+        result = pluginManager.preScheduleDelete(request)
+        if result != 200:
+            return result
+
         wm = BackupManager()
-        return wm.scheduleDelete(userID, json.loads(request.body))
+        coreResult = wm.scheduleDelete(userID, json.loads(request.body))
+
+        result = pluginManager.postScheduleDelete(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -169,16 +237,36 @@ def remoteBackups(request):
 def submitRemoteBackups(request):
     try:
         userID = request.session['userID']
+        result = pluginManager.preSubmitRemoteBackups(request)
+        if result != 200:
+            return result
+
         wm = BackupManager()
-        return wm.submitRemoteBackups(userID, json.loads(request.body))
+        coreResult = wm.submitRemoteBackups(userID, json.loads(request.body))
+
+        result = pluginManager.postSubmitRemoteBackups(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def starRemoteTransfer(request):
     try:
         userID = request.session['userID']
+        result = pluginManager.preStarRemoteTransfer(request)
+        if result != 200:
+            return result
+
         wm = BackupManager()
-        return wm.starRemoteTransfer(userID, json.loads(request.body))
+        coreResult = wm.starRemoteTransfer(userID, json.loads(request.body))
+
+        result = pluginManager.postStarRemoteTransfer(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -193,8 +281,18 @@ def getRemoteTransferStatus(request):
 def remoteBackupRestore(request):
     try:
         userID = request.session['userID']
+        result = pluginManager.preRemoteBackupRestore(request)
+        if result != 200:
+            return result
+
         wm = BackupManager()
-        return wm.remoteBackupRestore(userID, json.loads(request.body))
+        coreResult = wm.remoteBackupRestore(userID, json.loads(request.body))
+
+        result = pluginManager.postRemoteBackupRestore(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
