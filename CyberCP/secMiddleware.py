@@ -16,7 +16,7 @@ class secMiddleware:
                         pass
                     else:
                         continue
-                    if key == 'configData' or key == 'rewriteRules' or key == 'modSecRules':
+                    if key == 'configData' or key == 'rewriteRules' or key == 'modSecRules' or key == 'recordContentTXT':
                         continue
                     if value.find(';') > -1 or value.find('&&') > -1 or value.find('|') > -1 or value.find('...') > -1:
                         logging.writeToFile(request.body)

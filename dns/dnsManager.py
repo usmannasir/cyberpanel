@@ -258,6 +258,7 @@ class DNSManager:
             if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
                 return ACLManager.loadErrorJson('fetchStatus', 0)
 
+
             zoneDomain = data['selectedZone']
             currentSelection = data['currentSelection']
 
@@ -532,7 +533,6 @@ class DNSManager:
 
             delZone = Domains.objects.get(name=zoneDomain)
             admin = Administrator.objects.get(pk=userID)
-
             if currentACL['admin'] == 1:
                 if delZone.admin != admin:
                     return ACLManager.loadErrorJson()

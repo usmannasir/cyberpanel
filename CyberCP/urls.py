@@ -37,4 +37,5 @@ urlpatterns = [
     url(r'^filemanager/',include('filemanager.urls')),
     url(r'^emailPremium/',include('emailPremium.urls')),
     url(r'^manageservices/',include('manageServices.urls')),
+    url(r'^plugins/',include('pluginHolder.urls')),
 ]

@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'api',
     'filemanager',
     'manageServices',
+    'pluginHolder',
     'emailPremium',
 ]
 

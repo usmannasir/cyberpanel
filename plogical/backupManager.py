@@ -140,7 +140,7 @@ class BackupManager:
             ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018
             tempStoragePath = os.path.join(backupPath, backupName)
 
-            execPath = "sudo nice -n python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " submitBackupCreation --tempStoragePath " + tempStoragePath + " --backupName " \
                        + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain
 
@@ -290,7 +290,7 @@ class BackupManager:
             else:
                 dir = "CyberPanelRestore"
 
-            execPath = "sudo nice -n python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
             subprocess.Popen(shlex.split(execPath))
             time.sleep(4)

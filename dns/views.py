@@ -4,6 +4,7 @@ from django.shortcuts import redirect
 from loginSystem.views import loadLoginPage
 from dnsManager import DNSManager
 from pluginManager import pluginManager
+import json
 
 # Create your views here.
 
@@ -32,7 +33,7 @@ def NSCreation(request):
             return result
 
         dm = DNSManager()
-        coreResult = dm.NSCreation(userID, request.body)
+        coreResult = dm.NSCreation(userID, json.loads(request.body))
 
         result = pluginManager.postNSCreation(request, coreResult)
         if result != 200:
@@ -59,7 +60,7 @@ def zoneCreation(request):
             return result
 
         dm = DNSManager()
-        coreResult =  dm.zoneCreation(userID, request.body)
+        coreResult =  dm.zoneCreation(userID, json.loads(request.body))
 
         result = pluginManager.postZoneCreation(request, coreResult)
         if result != 200:
@@ -81,7 +82,7 @@ def getCurrentRecordsForDomain(request):
     try:
         userID = request.session['userID']
         dm = DNSManager()
-        return dm.getCurrentRecordsForDomain(userID, request.body)
+        return dm.getCurrentRecordsForDomain(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -94,7 +95,7 @@ def addDNSRecord(request):
             return result
 
         dm = DNSManager()
-        coreResult =  dm.addDNSRecord(userID, request.body)
+        coreResult =  dm.addDNSRecord(userID, json.loads(request.body))
 
         result = pluginManager.postAddDNSRecord(request, coreResult)
         if result != 200:
@@ -114,7 +115,7 @@ def deleteDNSRecord(request):
             return result
 
         dm = DNSManager()
-        coreResult =  dm.deleteDNSRecord(userID, request.body)
+        coreResult =  dm.deleteDNSRecord(userID, json.loads(request.body))
 
         result = pluginManager.postDeleteDNSRecord(request, coreResult)
         if result != 200:
@@ -128,7 +129,7 @@ def deleteDNSZone(request):
     try:
         userID = request.session['userID']
         dm = DNSManager()
-        return dm.getCurrentRecordsForDomain(request, userID)
+        return dm.deleteDNSZone(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -140,7 +141,7 @@ def submitZoneDeletion(request):
             return result
 
         dm = DNSManager()
-        coreResult = dm.submitZoneDeletion(userID, request.body)
+        coreResult = dm.submitZoneDeletion(userID, json.loads(request.body))
 
         result = pluginManager.postSubmitZoneDeletion(request, coreResult)
         if result != 200:

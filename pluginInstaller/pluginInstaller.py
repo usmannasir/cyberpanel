@@ -46,13 +46,11 @@ class pluginInstaller:
     def upgradingURLs(pluginName):
         data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r').readlines()
         writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w')
-        print('hello world')
 
         for items in data:
             if items.find("manageservices") > -1:
                 writeToFile.writelines(items)
                 writeToFile.writelines("    url(r'^" + pluginName + "/',include('" + pluginName + ".urls')),\n")
-                print('hello world')
             else:
                 writeToFile.writelines(items)
 
@@ -74,28 +72,77 @@ class pluginInstaller:
         data = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'r').readlines()
         writeToFile = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'w')
 
-        pluginCheck = 0
-
         for items in data:
-            if items.find('<span>{% trans "Plugins" %}</span>') > -1:
-                pluginCheck = 1
-            elif pluginCheck == 1 and items.find('<ul>'):
+            if items.find("{% url 'installed' %}") > -1:
                 writeToFile.writelines(items)
-                writeToFile.writelines('<li><a href="{% url \'' + pluginName + '\' %}" title="{% trans \'' + pluginName + '\' %}"><span>{% trans "' + pluginName + '" %}</span></a></li>')
-                pluginCheck = 0
+                writeToFile.writelines(
+                    '<li><a href="{% url \'' + pluginName + '\' %}" title="{% trans \'' + pluginName + '\' %}"><span>{% trans "' + pluginName + '" %}</span></a></li>')
             else:
                 writeToFile.writelines(items)
 
         writeToFile.close()
 
     @staticmethod
+    def staticContent():
+        currentDir = os.getcwd()
+
+        command = "rm -rf /usr/local/lscp/cyberpanel/static"
+        subprocess.call(shlex.split(command))
+
+        os.chdir('/usr/local/CyberCP')
+
+        command = "python manage.py collectstatic --noinput"
+        subprocess.call(shlex.split(command))
+
+        command = "mv /usr/local/CyberCP/static /usr/local/lscp/cyberpanel"
+        subprocess.call(shlex.split(command))
+
+
+        os.chdir(currentDir)
+
+    @staticmethod
+    def preScript(pluginName):
+        pluginHome = '/usr/local/CyberCP/' + pluginName
+
+        if os.path.exists(pluginHome + '/pre_install'):
+            command = 'chmod +x ' + pluginHome + '/pre_install'
+            subprocess.call(shlex.split(command))
+
+            command = pluginHome + '/pre_install'
+            subprocess.call(shlex.split(command))
+
+    @staticmethod
+    def postScript(pluginName):
+        pluginHome = '/usr/local/CyberCP/' + pluginName
+
+        if os.path.exists(pluginHome + '/post_install'):
+            command = 'chmod +x ' + pluginHome + '/post_install'
+            subprocess.call(shlex.split(command))
+
+            command = pluginHome + '/post_install'
+            subprocess.call(shlex.split(command))
+
+
+    @staticmethod
     def installPlugin(pluginName):
         try:
             ##
 
-            pluginInstaller.stdOut('Extracting plugin.')
+            pluginInstaller.stdOut('Extracting plugin..')
             pluginInstaller.extractPlugin(pluginName)
             pluginInstaller.stdOut('Plugin extracted.')
+
+            ##
+
+            pluginInstaller.stdOut('Executing pre_install script..')
+            pluginInstaller.preScript(pluginName)
+            pluginInstaller.stdOut('pre_install executed.')
+
+            ##
+
+            pluginInstaller.stdOut('Executing post_install script..')
+            pluginInstaller.postScript(pluginName)
+            pluginInstaller.stdOut('post_install executed.')
 
             ##
 
@@ -122,6 +169,14 @@ class pluginInstaller:
             pluginInstaller.stdOut('Adding interface link..')
             pluginInstaller.addInterfaceLink(pluginName)
             pluginInstaller.stdOut('Interface link added.')
+
+            ##
+
+            ##
+
+            pluginInstaller.stdOut('Upgrading static content..')
+            pluginInstaller.staticContent()
+            pluginInstaller.stdOut('Static content upgraded.')
 
             ##
 
