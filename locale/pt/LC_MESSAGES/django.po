@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-28 11:29+0500\n"
+"POT-Creation-Date: 2018-10-10 13:01+0500\n"
 "PO-Revision-Date: 2017-10-21 00:03+0100\n"
 "Last-Translator: \n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
@@ -24,55 +24,61 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 2.0.4\n"
 
-#: CyberCP/settings.py:170
+#: CyberCP/settings.py:171
 msgid "English"
 msgstr "Inglês"
 
-#: CyberCP/settings.py:171
+#: CyberCP/settings.py:172
 msgid "Chinese"
 msgstr "Chinês"
 
-#: CyberCP/settings.py:172
+#: CyberCP/settings.py:173
 msgid "Bulgarian"
 msgstr ""
 
-#: CyberCP/settings.py:173
+#: CyberCP/settings.py:174
 msgid "Portuguese"
 msgstr ""
 
-#: CyberCP/settings.py:174
+#: CyberCP/settings.py:175
 msgid "Japanese"
 msgstr ""
 
-#: CyberCP/settings.py:175
+#: CyberCP/settings.py:176
 msgid "Bosnian"
 msgstr ""
 
-#: CyberCP/settings.py:176
+#: CyberCP/settings.py:177
 msgid "Greek"
 msgstr ""
 
-#: CyberCP/settings.py:177
+#: CyberCP/settings.py:178
 msgid "Russian"
 msgstr ""
 
-#: CyberCP/settings.py:178
+#: CyberCP/settings.py:179
 msgid "Turkish"
 msgstr ""
 
-#: CyberCP/settings.py:179
+#: CyberCP/settings.py:180
 msgid "Spanish"
 msgstr ""
 
-#: CyberCP/settings.py:180
+#: CyberCP/settings.py:181
 msgid "French"
 msgstr ""
 
-#: CyberCP/settings.py:181
+#: CyberCP/settings.py:182
 #, fuzzy
 #| msgid "English"
 msgid "Polish"
 msgstr "Inglês"
+
+#: CyberCP/settings.py:183
+#, fuzzy
+#| msgid "File Name"
+msgid "Vietnamese"
+msgstr "Nome do Ficheiro"
 
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
@@ -1403,6 +1409,25 @@ msgstr ""
 msgid "Manage FTP"
 msgstr "Gerir SSL"
 
+#: baseTemplate/templates/baseTemplate/index.html:579
+#: baseTemplate/templates/baseTemplate/index.html:581
+#: pluginHolder/templates/pluginHolder/plugins.html:14
+#: pluginHolder/templates/pluginHolder/plugins.html:21
+msgid "Plugins"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:586
+#, fuzzy
+#| msgid "Install Extensions"
+msgid "Installed Plugins"
+msgstr "Instalar Extensões"
+
+#: baseTemplate/templates/baseTemplate/index.html:586
+#, fuzzy
+#| msgid "Install"
+msgid "Installed"
+msgstr "Instalar"
+
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
 msgstr "Gestão de Versões - CyberPanel"
@@ -1594,6 +1619,7 @@ msgstr "Ativar"
 #: dns/templates/dns/addDeleteDNSRecords.html:328
 #: filemanager/templates/filemanager/index.html:212
 #: firewall/templates/firewall/firewall.html:136
+#: pluginHolder/templates/pluginHolder/plugins.html:28
 #: serverStatus/templates/serverStatus/litespeedStatus.html:40
 msgid "Name"
 msgstr "Nome"
@@ -1677,6 +1703,7 @@ msgid "Content"
 msgstr ""
 
 #: dns/templates/dns/addDeleteDNSRecords.html:327
+#: pluginHolder/templates/pluginHolder/plugins.html:29
 msgid "Type"
 msgstr "Tipo"
 
@@ -2047,6 +2074,7 @@ msgstr "Gerir SSL"
 #: emailPremium/templates/emailPremium/emailLimits.html:172
 #: emailPremium/templates/emailPremium/emailPage.html:179
 #: emailPremium/templates/emailPremium/listDomains.html:73
+#: pluginHolder/templates/pluginHolder/plugins.html:51
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:53
 msgid "Cannot list websites. Error message:"
 msgstr "Impossível listar websites. Mensagem de erro:"
@@ -3316,6 +3344,7 @@ msgid "Extension Name"
 msgstr "Nome da Extensão"
 
 #: managePHP/templates/managePHP/installExtensions.html:65
+#: pluginHolder/templates/pluginHolder/plugins.html:30
 msgid "Description"
 msgstr "Descrição"
 
@@ -3605,6 +3634,18 @@ msgstr "Detalhes do Pacato Obtidos com Sucesso"
 #: packages/templates/packages/modifyPackage.html:112
 msgid "Successfully Modified"
 msgstr "Alterado com Sucesso"
+
+#: pluginHolder/templates/pluginHolder/plugins.html:15
+#, fuzzy
+#| msgid "List Databases  - CyberPanel"
+msgid "List of installed plugins on your CyberPanel."
+msgstr "Listar Bases de Dos - CyberPanel"
+
+#: pluginHolder/templates/pluginHolder/plugins.html:31
+#, fuzzy
+#| msgid "Latest Version"
+msgid "Version"
+msgstr "Última Versão"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:3
 msgid "Access Logs - CyberPanel"

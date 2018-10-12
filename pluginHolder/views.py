@@ -13,17 +13,18 @@ def installed(request):
     pluginPath = '/home/cyberpanel/plugins'
     pluginList = []
 
-    for plugin in os.listdir(pluginPath):
-        data = {}
-        completePath = '/usr/local/CyberCP/' + plugin + '/meta.xml'
-        pluginMetaData = ElementTree.parse(completePath)
+    if os.path.exists(pluginPath):
+        for plugin in os.listdir(pluginPath):
+            data = {}
+            completePath = '/usr/local/CyberCP/' + plugin + '/meta.xml'
+            pluginMetaData = ElementTree.parse(completePath)
 
-        data['name'] = pluginMetaData.find('name').text
-        data['type'] = pluginMetaData.find('type').text
-        data['desc'] = pluginMetaData.find('description').text
-        data['version'] = pluginMetaData.find('version').text
+            data['name'] = pluginMetaData.find('name').text
+            data['type'] = pluginMetaData.find('type').text
+            data['desc'] = pluginMetaData.find('description').text
+            data['version'] = pluginMetaData.find('version').text
 
-        pluginList.append(data)
+            pluginList.append(data)
 
 
     return render(request, 'pluginHolder/plugins.html',{'plugins': pluginList})

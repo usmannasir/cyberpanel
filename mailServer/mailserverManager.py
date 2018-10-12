@@ -386,18 +386,24 @@ class MailServerManager:
             data = json.loads(self.request.body)
             domainName = data['domainName']
 
-            path = "/etc/opendkim/keys/" + domainName + "/default.txt"
-            command = "sudo cat " + path
-            output = subprocess.check_output(shlex.split(command))
+            try:
+                path = "/etc/opendkim/keys/" + domainName + "/default.txt"
+                command = "sudo cat " + path
+                output = subprocess.check_output(shlex.split(command))
 
-            path = "/etc/opendkim/keys/" + domainName + "/default.private"
-            command = "sudo cat " + path
-            privateKey = subprocess.check_output(shlex.split(command))
+                path = "/etc/opendkim/keys/" + domainName + "/default.private"
+                command = "sudo cat " + path
+                privateKey = subprocess.check_output(shlex.split(command))
 
-            data_ret = {'fetchStatus': 1, 'keysAvailable': 1, 'publicKey': output[53:269],
-                        'privateKey': privateKey, 'dkimSuccessMessage': 'Keys successfully fetched!',
-                        'error_message': "None"}
-            json_data = json.dumps(data_ret)
+                data_ret = {'fetchStatus': 1, 'keysAvailable': 1, 'publicKey': output[53:269],
+                            'privateKey': privateKey, 'dkimSuccessMessage': 'Keys successfully fetched!',
+                            'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            except BaseException, msg:
+                data_ret = {'fetchStatus': 1, 'keysAvailable': 0, 'error_message': str(msg)}
+                json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException, msg:

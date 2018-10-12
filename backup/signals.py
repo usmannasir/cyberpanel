@@ -2,8 +2,26 @@
 
 from django.dispatch import Signal
 
+## This event is fired before CyberPanel core load template for create backup page.
+preBackupSite = Signal(providing_args=["request"])
+
+## This event is fired after CyberPanel core load template for create backup page.
+postBackupSite = Signal(providing_args=["request", "response"])
+
+## This event is fired before CyberPanel core load template for restore backup page.
+preRestoreSite = Signal(providing_args=["request"])
+
+## This event is fired after CyberPanel core load template for restore backup page.
+postRestoreSite = Signal(providing_args=["request", "response"])
+
 ## This event is fired before CyberPanel core start creating backup of a website
 preSubmitBackupCreation = Signal(providing_args=["request"])
+
+## This event is fired before CyberPanel core starts to load status of backup started earlier througb submitBackupCreation
+preBackupStatus = Signal(providing_args=["request"])
+
+## This event is fired after CyberPanel core has loaded backup status
+postBackupStatus = Signal(providing_args=["request", "response"])
 
 ## This event is fired before CyberPanel core start deletion of a backup
 preDeleteBackup = Signal(providing_args=["request"])

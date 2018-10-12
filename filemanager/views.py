@@ -56,7 +56,7 @@ def changePermissions(request):
             command = "sudo chown -R " + externalApp + ":" + externalApp +" /home/"+domainName
             subprocess.call(shlex.split(command))
 
-            command = "sudo chown -R nobody:nobody /home/" + domainName+"/logs"
+            command = "sudo chown -R lscpd:lscpd /home/" + domainName+"/logs"
             subprocess.call(shlex.split(command))
 
             data_ret = {'permissionsChanged': 1, 'error_message': "None"}

@@ -208,7 +208,7 @@ class FTPUtilities:
 
 
 
-            command = "sudo chown -R nobody:cyberpanel " + directory
+            command = "sudo chown -R lscpd:cyberpanel " + directory
 
             cmd = shlex.split(command)
 

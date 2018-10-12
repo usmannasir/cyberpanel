@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-28 11:29+0500\n"
+"POT-Creation-Date: 2018-10-10 13:01+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,52 +25,56 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: CyberCP/settings.py:170
+#: CyberCP/settings.py:171
 msgid "English"
 msgstr ""
 
-#: CyberCP/settings.py:171
+#: CyberCP/settings.py:172
 msgid "Chinese"
 msgstr ""
 
-#: CyberCP/settings.py:172
+#: CyberCP/settings.py:173
 msgid "Bulgarian"
 msgstr ""
 
-#: CyberCP/settings.py:173
+#: CyberCP/settings.py:174
 msgid "Portuguese"
 msgstr ""
 
-#: CyberCP/settings.py:174
+#: CyberCP/settings.py:175
 msgid "Japanese"
 msgstr ""
 
-#: CyberCP/settings.py:175
+#: CyberCP/settings.py:176
 msgid "Bosnian"
 msgstr ""
 
-#: CyberCP/settings.py:176
+#: CyberCP/settings.py:177
 msgid "Greek"
 msgstr ""
 
-#: CyberCP/settings.py:177
+#: CyberCP/settings.py:178
 msgid "Russian"
 msgstr ""
 
-#: CyberCP/settings.py:178
+#: CyberCP/settings.py:179
 msgid "Turkish"
 msgstr ""
 
-#: CyberCP/settings.py:179
+#: CyberCP/settings.py:180
 msgid "Spanish"
 msgstr ""
 
-#: CyberCP/settings.py:180
+#: CyberCP/settings.py:181
 msgid "French"
 msgstr ""
 
-#: CyberCP/settings.py:181
+#: CyberCP/settings.py:182
 msgid "Polish"
+msgstr ""
+
+#: CyberCP/settings.py:183
+msgid "Vietnamese"
 msgstr ""
 
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
@@ -1313,6 +1317,21 @@ msgstr ""
 msgid "Manage FTP"
 msgstr ""
 
+#: baseTemplate/templates/baseTemplate/index.html:579
+#: baseTemplate/templates/baseTemplate/index.html:581
+#: pluginHolder/templates/pluginHolder/plugins.html:14
+#: pluginHolder/templates/pluginHolder/plugins.html:21
+msgid "Plugins"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:586
+msgid "Installed Plugins"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:586
+msgid "Installed"
+msgstr ""
+
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
 msgstr ""
@@ -1496,6 +1515,7 @@ msgstr ""
 #: dns/templates/dns/addDeleteDNSRecords.html:328
 #: filemanager/templates/filemanager/index.html:212
 #: firewall/templates/firewall/firewall.html:136
+#: pluginHolder/templates/pluginHolder/plugins.html:28
 #: serverStatus/templates/serverStatus/litespeedStatus.html:40
 msgid "Name"
 msgstr ""
@@ -1571,6 +1591,7 @@ msgid "Content"
 msgstr ""
 
 #: dns/templates/dns/addDeleteDNSRecords.html:327
+#: pluginHolder/templates/pluginHolder/plugins.html:29
 msgid "Type"
 msgstr ""
 
@@ -1897,6 +1918,7 @@ msgstr ""
 #: emailPremium/templates/emailPremium/emailLimits.html:172
 #: emailPremium/templates/emailPremium/emailPage.html:179
 #: emailPremium/templates/emailPremium/listDomains.html:73
+#: pluginHolder/templates/pluginHolder/plugins.html:51
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:53
 msgid "Cannot list websites. Error message:"
 msgstr ""
@@ -2995,6 +3017,7 @@ msgid "Extension Name"
 msgstr ""
 
 #: managePHP/templates/managePHP/installExtensions.html:65
+#: pluginHolder/templates/pluginHolder/plugins.html:30
 msgid "Description"
 msgstr ""
 
@@ -3258,6 +3281,14 @@ msgstr ""
 
 #: packages/templates/packages/modifyPackage.html:112
 msgid "Successfully Modified"
+msgstr ""
+
+#: pluginHolder/templates/pluginHolder/plugins.html:15
+msgid "List of installed plugins on your CyberPanel."
+msgstr ""
+
+#: pluginHolder/templates/pluginHolder/plugins.html:31
+msgid "Version"
 msgstr ""
 
 #: serverLogs/templates/serverLogs/accessLogs.html:3

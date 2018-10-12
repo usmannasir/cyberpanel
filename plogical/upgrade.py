@@ -501,6 +501,9 @@ WantedBy=multi-user.target"""
 
             Upgrade.stdOut("Settings file backed up.")
 
+            if os.path.exists('/usr/local/CyberCP/bin'):
+                shutil.rmtree('/usr/local/CyberCP/bin')
+
             ## Extract Latest files
 
             count = 1
@@ -520,15 +523,24 @@ WantedBy=multi-user.target"""
                     break
 
             ## Copy settings file
+            data = open("/usr/local/settings.py", 'r').readlines()
+
+            pluginCheck = 1
+            for items in data:
+                if items.find('pluginHolder') > -1:
+                    pluginCheck = 0
+
 
             Upgrade.stdOut('Restoring settings file!')
 
-            data = open("/usr/local/settings.py", 'r').readlines()
+
             writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
 
             for items in data:
                 if items.find("'filemanager',") > -1:
                     writeToFile.writelines(items)
+                    if pluginCheck == 1:
+                        writeToFile.writelines("    'pluginHolder',\n")
                     if Version.currentVersion == '1.6':
                         writeToFile.writelines("    'emailPremium',\n")
                 else:
@@ -573,6 +585,113 @@ WantedBy=multi-user.target"""
             Upgrade.stdOut(str(msg) + " [installTLDExtract]")
             return 0
 
+    @staticmethod
+    def installLSCPD():
+        try:
+
+            Upgrade.stdOut("Starting LSCPD installation..")
+
+            count = 0
+
+            while(1):
+                command = 'yum -y install gcc gcc-c++ make autoconf glibc rcs'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    Upgrade.stdOut("Trying to install LSCPD prerequisites, trying again, try number: " + str(count))
+                    if count == 3:
+                        Upgrade.stdOut("Failed to install LSCPD prerequisites.")
+                        os._exit(0)
+                else:
+                    Upgrade.stdOut("LSCPD prerequisites successfully installed!")
+                    break
+
+            count = 0
+
+            while(1):
+                command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel which curl'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    Upgrade.stdOut("Trying to install LSCPD prerequisites, trying again, try number: " + str(count))
+                    if count == 3:
+                        Upgrade.stdOut("Failed to install LSCPD prerequisites.")
+                        os._exit(0)
+                else:
+                    Upgrade.stdOut("LSCPD prerequisites successfully installed!")
+                    break
+
+            command = 'wget https://cyberpanel.net/lscp.tar.gz'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
+
+            count = 0
+
+            while(1):
+
+                command = 'tar zxf lscp.tar.gz -C /usr/local/'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    Upgrade.stdOut("Trying to configure LSCPD, trying again, try number: " + str(count))
+                    if count == 3:
+                        Upgrade.stdOut("Failed to configure LSCPD, exiting installer! [installLSCPD]")
+                        os._exit(0)
+                else:
+                    Upgrade.stdOut("LSCPD successfully configured!")
+                    break
+
+            try:
+                os.remove("/usr/local/lscp/fcgi-bin/lsphp")
+                shutil.copy("/usr/local/lsws/lsphp70/bin/lsphp","/usr/local/lscp/fcgi-bin/lsphp")
+            except:
+                pass
+
+            command = 'adduser lscpd -M -d /usr/local/lscp'
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+
+            command = 'groupadd lscpd'
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+
+            command = 'usermod -a -G lscpd lscpd'
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+
+            command = 'usermod -a -G lsadm lscpd'
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+
+            command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
+
+            command = 'systemctl daemon-reload'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
+
+            command = 'systemctl restart lscpd'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
+
+            Upgrade.stdOut("LSCPD successfully installed!")
+            Upgrade.stdOut("LSCPD successfully installed!")
+
+        except OSError, msg:
+            Upgrade.stdOut(str(msg) + " [installLSCPD]")
+            return 0
+        except ValueError, msg:
+            Upgrade.stdOut(str(msg) + " [installLSCPD]")
+            return 0
+
+        return 1
 
     @staticmethod
     def upgrade():
@@ -635,6 +754,7 @@ WantedBy=multi-user.target"""
 
         Upgrade.upgradeOpenLiteSpeed()
         Upgrade.setupCLI()
+        Upgrade.installLSCPD()
         time.sleep(3)
 
         ## Upgrade version

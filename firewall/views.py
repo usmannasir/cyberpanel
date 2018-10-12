@@ -1,14 +1,8 @@
-from django.shortcuts import render,redirect
-from django.http import HttpResponse
+from django.shortcuts import redirect
 import json
-import shlex
-import subprocess
 from loginSystem.views import loadLoginPage
-from plogical.virtualHostUtilities import virtualHostUtilities
-from plogical.csf import CSF
-import time
-from plogical.acl import ACLManager
-from plogical.firewallManager import FirewallManager
+from firewallManager import FirewallManager
+from pluginManager import pluginManager
 # Create your views here.
 
 
@@ -23,8 +17,18 @@ def securityHome(request):
 def firewallHome(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preFirewallHome(request)
+        if result != 200:
+            return result
         fm = FirewallManager()
-        return fm.firewallHome(request, userID)
+        coreResult = fm.firewallHome(request, userID)
+
+        result = pluginManager.postFirewallHome(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -39,56 +43,134 @@ def getCurrentRules(request):
 def addRule(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preAddRule(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.addRule(userID, json.loads(request.body))
+        coreResult = fm.addRule(userID, json.loads(request.body))
+
+        result = pluginManager.postAddRule(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def deleteRule(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preDeleteRule(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.deleteRule(userID, json.loads(request.body))
+        coreResult = fm.deleteRule(userID, json.loads(request.body))
+
+        result = pluginManager.postDeleteRule(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def reloadFirewall(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preReloadFirewall(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.reloadFirewall(userID)
+        coreResult = fm.reloadFirewall(userID)
+
+        result = pluginManager.postReloadFirewall(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def startFirewall(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preStartFirewall(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.startFirewall(userID)
+        coreResult = fm.startFirewall(userID)
+
+        result = pluginManager.postStartFirewall(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def stopFirewall(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preStopFirewall(request)
+        if result != 200:
+            return result
+
+
         fm = FirewallManager()
-        return fm.stopFirewall(userID)
+        coreResult = fm.stopFirewall(userID)
+
+        result = pluginManager.postStopFirewall(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def firewallStatus(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preFirewallStatus(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.firewallStatus(userID)
+        coreResult = fm.firewallStatus(userID)
+
+        result = pluginManager.postFirewallStatus(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def secureSSH(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preSecureSSH(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.secureSSH(request, userID)
+        coreResult = fm.secureSSH(request, userID)
+
+        result = pluginManager.postSecureSSH(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -103,32 +185,75 @@ def getSSHConfigs(request):
 def saveSSHConfigs(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preSaveSSHConfigs(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.saveSSHConfigs(userID, json.loads(request.body))
+        coreResult = fm.saveSSHConfigs(userID, json.loads(request.body))
+
+        result = pluginManager.postSaveSSHConfigs(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def deleteSSHKey(request):
     try:
         userID = request.session['userID']
+        result = pluginManager.preDeleteSSHKey(request)
+
+        if result != 200:
+            return result
         fm = FirewallManager()
-        return fm.deleteSSHKey(userID, json.loads(request.body))
+        coreResult = fm.deleteSSHKey(userID, json.loads(request.body))
+
+        result = pluginManager.postDeleteSSHKey(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def addSSHKey(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preAddSSHKey(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.addSSHKey(userID, json.loads(request.body))
+        coreResult = fm.addSSHKey(userID, json.loads(request.body))
+
+        result = pluginManager.postAddSSHKey(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def loadModSecurityHome(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preLoadModSecurityHome(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.loadModSecurityHome(request, userID)
+        coreResult = fm.loadModSecurityHome(request, userID)
+
+        result = pluginManager.postLoadModSecurityHome(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -159,16 +284,38 @@ def fetchModSecSettings(request):
 def saveModSecConfigurations(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preSaveModSecConfigurations(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.saveModSecConfigurations(userID, json.loads(request.body))
+        coreResult = fm.saveModSecConfigurations(userID, json.loads(request.body))
+
+        result = pluginManager.postSaveModSecConfigurations(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def modSecRules(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preModSecRules(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.modSecRules(request, userID)
+        coreResult = fm.modSecRules(request, userID)
+
+        result = pluginManager.postModSecRules(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -183,325 +330,221 @@ def fetchModSecRules(request):
 def saveModSecRules(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preSaveModSecRules(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.saveModSecRules(userID, json.loads(request.body))
+        coreResult = fm.saveModSecRules(userID, json.loads(request.body))
+
+        result = pluginManager.postSaveModSecRules(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def modSecRulesPacks(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preModSecRulesPacks(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.modSecRulesPacks(request, userID)
+        coreResult = fm.modSecRulesPacks(request, userID)
+
+        result = pluginManager.postModSecRulesPacks(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def getOWASPAndComodoStatus(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preGetOWASPAndComodoStatus(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.getOWASPAndComodoStatus(userID, json.loads(request.body))
+        coreResult = fm.getOWASPAndComodoStatus(userID, json.loads(request.body))
+
+        result = pluginManager.postGetOWASPAndComodoStatus(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def installModSecRulesPack(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preInstallModSecRulesPack(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.installModSecRulesPack(userID, json.loads(request.body))
+        coreResult = fm.installModSecRulesPack(userID, json.loads(request.body))
+
+        result = pluginManager.postInstallModSecRulesPack(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def getRulesFiles(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preGetRulesFiles(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.getRulesFiles(userID, json.loads(request.body))
+        coreResult = fm.getRulesFiles(userID, json.loads(request.body))
+
+        result = pluginManager.postGetRulesFiles(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def enableDisableRuleFile(request):
     try:
         userID = request.session['userID']
+
+        result = pluginManager.preEnableDisableRuleFile(request)
+        if result != 200:
+            return result
+
         fm = FirewallManager()
-        return fm.enableDisableRuleFile(userID, json.loads(request.body))
+        coreResult = fm.enableDisableRuleFile(userID, json.loads(request.body))
+
+        result = pluginManager.postEnableDisableRuleFile(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def csf(request):
     try:
         userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
+        result = pluginManager.preCSF(request)
+        if result != 200:
+            return result
 
-        csfInstalled = 1
+        fm = FirewallManager(request)
+        coreResult = fm.csf()
 
-        try:
-            command = 'sudo csf -h'
-            res = subprocess.call(shlex.split(command))
-            if res == 1:
-                csfInstalled = 0
-        except subprocess.CalledProcessError:
-            csfInstalled = 0
+        result = pluginManager.postCSF(request, coreResult)
+        if result != 200:
+            return result
 
-        return render(request,'firewall/csf.html', {'csfInstalled' : csfInstalled})
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
 def installCSF(request):
     try:
         userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson('installStatus', 0)
-        try:
-
-            execPath = "sudo " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
-            execPath = execPath + " installCSF"
-            subprocess.Popen(shlex.split(execPath))
-
-            time.sleep(2)
-
-            data_ret = {"installStatus": 1}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-        except BaseException,msg:
-            final_dic = {'installStatus': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+        fm = FirewallManager(request)
+        return fm.installCSF()
     except KeyError:
-        final_dic = {'installStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        return redirect(loadLoginPage)
 
 def installStatusCSF(request):
     try:
         userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-        try:
-            if request.method == 'POST':
-
-                installStatus = unicode(open(CSF.installLogPath, "r").read())
-
-                if installStatus.find("[200]")>-1:
-
-                    command = 'sudo rm -f ' + CSF.installLogPath
-                    subprocess.call(shlex.split(command))
-
-                    final_json = json.dumps({
-                                             'error_message': "None",
-                                             'requestStatus': installStatus,
-                                             'abort':1,
-                                             'installed': 1,
-                                             })
-                    return HttpResponse(final_json)
-                elif installStatus.find("[404]") > -1:
-                    command = 'sudo rm -f ' + CSF.installLogPath
-                    subprocess.call(shlex.split(command))
-                    final_json = json.dumps({
-                                             'abort':1,
-                                             'installed':0,
-                                             'error_message': "None",
-                                             'requestStatus': installStatus,
-                                             })
-                    return HttpResponse(final_json)
-
-                else:
-                    final_json = json.dumps({
-                                             'abort':0,
-                                             'error_message': "None",
-                                             'requestStatus': installStatus,
-                                             })
-                    return HttpResponse(final_json)
-
-
-        except BaseException,msg:
-            final_dic = {'abort':1,'installed':0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+        fm = FirewallManager(request)
+        return fm.installStatusCSF()
     except KeyError:
-        final_dic = {'abort':1,'installed':0, 'error_message': "Not Logged In, please refresh the page or login again."}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        return redirect(loadLoginPage)
 
 def removeCSF(request):
     try:
         userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson('installStatus', 0)
-        try:
-
-            execPath = "sudo " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
-            execPath = execPath + " removeCSF"
-            subprocess.Popen(shlex.split(execPath))
-
-            time.sleep(2)
-
-            data_ret = {"installStatus": 1}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-        except BaseException,msg:
-            final_dic = {'installStatus': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+        fm = FirewallManager(request)
+        return fm.removeCSF()
     except KeyError:
-        final_dic = {'installStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        return redirect(loadLoginPage)
 
 def fetchCSFSettings(request):
     try:
         userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson('fetchStatus', 0)
-        try:
-
-            currentSettings = CSF.fetchCSFSettings()
-
-
-            data_ret = {"fetchStatus": 1, 'testingMode' : currentSettings['TESTING'],
-                        'tcpIN' : currentSettings['tcpIN'],
-                        'tcpOUT': currentSettings['tcpOUT'],
-                        'udpIN': currentSettings['udpIN'],
-                        'udpOUT': currentSettings['udpOUT'],
-                        'firewallStatus': currentSettings['firewallStatus']
-                        }
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-        except BaseException,msg:
-            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+        fm = FirewallManager(request)
+        return fm.fetchCSFSettings()
     except KeyError:
-        final_dic = {'fetchStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        return redirect(loadLoginPage)
 
 def changeStatus(request):
     try:
         userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson()
-        try:
+        result = pluginManager.preChangeStatus(request)
+        if result != 200:
+            return result
 
-            data = json.loads(request.body)
+        fm = FirewallManager(request)
+        coreResult = fm.changeStatus()
 
-            controller = data['controller']
-            status = data['status']
+        result = pluginManager.postChangeStatus(request, coreResult)
+        if result != 200:
+            return result
 
-            execPath = "sudo " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
-            execPath = execPath + " changeStatus --controller " + controller + " --status " + status
-            output = subprocess.check_output(shlex.split(execPath))
-
-            if output.find("1,None") > -1:
-                data_ret = {"status": 1}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            else:
-                data_ret = {'status': 0, 'error_message': output}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-        except BaseException,msg:
-            final_dic = {'status': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+        return coreResult
     except KeyError:
-        final_dic = {'status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        return redirect(loadLoginPage)
 
 def modifyPorts(request):
     try:
         userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson()
+        result = pluginManager.preModifyPorts(request)
+        if result != 200:
+            return result
 
-        try:
-            data = json.loads(request.body)
+        fm = FirewallManager(request)
+        coreResult = fm.modifyPorts()
 
-            protocol = data['protocol']
-            ports = data['ports']
+        result = pluginManager.postModifyPorts(request, coreResult)
+        if result != 200:
+            return result
 
-            execPath = "sudo " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
-            execPath = execPath + " modifyPorts --protocol " + protocol + " --ports " + ports
-            output = subprocess.check_output(shlex.split(execPath))
-
-            if output.find("1,None") > -1:
-                data_ret = {"status": 1}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            else:
-                data_ret = {'status': 0, 'error_message': output}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-        except BaseException,msg:
-            final_dic = {'status': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+        return coreResult
     except KeyError:
-        final_dic = {'status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        return redirect(loadLoginPage)
 
 def modifyIPs(request):
     try:
         userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson()
-        try:
+        result = pluginManager.preModifyIPs(request)
+        if result != 200:
+            return result
 
-            data = json.loads(request.body)
+        fm = FirewallManager(request)
+        coreResult = fm.modifyIPs()
 
-            mode = data['mode']
-            ipAddress = data['ipAddress']
+        result = pluginManager.postModifyIPs(request, coreResult)
+        if result != 200:
+            return result
 
-            if mode == 'allowIP':
-                CSF.allowIP(ipAddress)
-            elif mode == 'blockIP':
-                CSF.blockIP(ipAddress)
-
-            data_ret = {"status": 1}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-
-        except BaseException,msg:
-            final_dic = {'status': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+        return coreResult
     except KeyError:
-        final_dic = {'status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        return redirect(loadLoginPage)

@@ -1043,29 +1043,7 @@ class InstallCyberPanel:
 
             while(1):
 
-                command = 'tar zxf openlitespeed.tar.gz'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    count = count + 1
-                    InstallCyberPanel.stdOut("Trying to extract LSCPD, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Failed to extract LSCPD, exiting installer! [installLSCPD]")
-                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("LSCPD successfully extracted!")
-                    InstallCyberPanel.stdOut("LSCPD successfully extracted!")
-                    break
-
-            os.chdir("openlitespeed")
-
-            count = 0
-
-            while(1):
-
-                command = './configure --with-lscpd --prefix=/usr/local/lscp'
+                command = 'tar zxf lscp.tar.gz -C /usr/local/'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -1079,50 +1057,6 @@ class InstallCyberPanel:
                 else:
                     logging.InstallLog.writeToFile("LSCPD successfully configured!")
                     InstallCyberPanel.stdOut("LSCPD successfully extracted!")
-                    break
-
-            count = 0
-
-            while(1):
-
-                command = 'make'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    count = count + 1
-                    InstallCyberPanel.stdOut("Trying to compile LSCPD, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Failed to compile LSCPD, exiting installer! [installLSCPD]")
-                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("LSCPD successfully complied!")
-                    InstallCyberPanel.stdOut("LSCPD successfully compiled!")
-                    break
-
-            count = 0
-
-            while(1):
-
-                command = 'make install'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    count = count + 1
-                    InstallCyberPanel.stdOut("Trying to compile LSCPD, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Failed to compile LSCPD, exiting installer! [installLSCPD]")
-                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("LSCPD successfully complied!")
-                    InstallCyberPanel.stdOut("LSCPD successfully compiled!")
                     break
 
             count = 0
@@ -1149,10 +1083,26 @@ class InstallCyberPanel:
             except:
                 pass
 
+            command = 'adduser lscpd -M -d /usr/local/lscp'
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+
+            command = 'groupadd lscpd'
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+
+            command = 'usermod -a -G lscpd lscpd'
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+
+            command = 'usermod -a -G lsadm lscpd'
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+
+            os.mkdir('/usr/local/lscp/cyberpanel')
 
             logging.InstallLog.writeToFile("LSCPD successfully installed!")
             InstallCyberPanel.stdOut("LSCPD successfully installed!")
-
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [installLSCPD]")

@@ -30,7 +30,6 @@ class CSF(multi.Thread):
 
     def installCSF(self):
         try:
-
             ##
 
             command = 'wget ' + CSF.csfURL
@@ -106,6 +105,7 @@ class CSF(multi.Thread):
         try:
 
             ##
+
             os.chdir('/etc/csf')
 
             command = './uninstall.sh'
@@ -115,6 +115,19 @@ class CSF(multi.Thread):
             os.chdir('/usr/local/CyberCP')
 
             #
+
+            command = 'systemctl unmask firewalld'
+            subprocess.call(shlex.split(command))
+
+            #
+
+            command = 'systemctl start firewalld'
+            subprocess.call(shlex.split(command))
+
+            ##
+
+            command = 'systemctl enable firewalld'
+            subprocess.call(shlex.split(command))
 
             return 1
         except BaseException, msg:

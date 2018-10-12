@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-28 11:29+0500\n"
+"POT-Creation-Date: 2018-10-10 13:01+0500\n"
 "PO-Revision-Date: 2018-01-04 22:12+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -24,55 +24,61 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 1.8.13\n"
 
-#: CyberCP/settings.py:170
+#: CyberCP/settings.py:171
 msgid "English"
 msgstr "Αγγλικά"
 
-#: CyberCP/settings.py:171
+#: CyberCP/settings.py:172
 msgid "Chinese"
 msgstr "Κινέζικα"
 
-#: CyberCP/settings.py:172
+#: CyberCP/settings.py:173
 msgid "Bulgarian"
 msgstr "Βουλγάρικα"
 
-#: CyberCP/settings.py:173
+#: CyberCP/settings.py:174
 msgid "Portuguese"
 msgstr "Πορτογαλικά"
 
-#: CyberCP/settings.py:174
+#: CyberCP/settings.py:175
 msgid "Japanese"
 msgstr "Ιαπωνικά"
 
-#: CyberCP/settings.py:175
+#: CyberCP/settings.py:176
 msgid "Bosnian"
 msgstr ""
 
-#: CyberCP/settings.py:176
+#: CyberCP/settings.py:177
 msgid "Greek"
 msgstr ""
 
-#: CyberCP/settings.py:177
+#: CyberCP/settings.py:178
 msgid "Russian"
 msgstr ""
 
-#: CyberCP/settings.py:178
+#: CyberCP/settings.py:179
 msgid "Turkish"
 msgstr ""
 
-#: CyberCP/settings.py:179
+#: CyberCP/settings.py:180
 msgid "Spanish"
 msgstr ""
 
-#: CyberCP/settings.py:180
+#: CyberCP/settings.py:181
 msgid "French"
 msgstr ""
 
-#: CyberCP/settings.py:181
+#: CyberCP/settings.py:182
 #, fuzzy
 #| msgid "Policy"
 msgid "Polish"
 msgstr "Πολιτική"
+
+#: CyberCP/settings.py:183
+#, fuzzy
+#| msgid "File Name"
+msgid "Vietnamese"
+msgstr "Όνομα Αρχείου"
 
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
@@ -1396,6 +1402,25 @@ msgstr ""
 msgid "Manage FTP"
 msgstr "Διαχείριση SSL"
 
+#: baseTemplate/templates/baseTemplate/index.html:579
+#: baseTemplate/templates/baseTemplate/index.html:581
+#: pluginHolder/templates/pluginHolder/plugins.html:14
+#: pluginHolder/templates/pluginHolder/plugins.html:21
+msgid "Plugins"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:586
+#, fuzzy
+#| msgid "Install Extensions"
+msgid "Installed Plugins"
+msgstr "Εγκατάσταση Eπεκτάσεων"
+
+#: baseTemplate/templates/baseTemplate/index.html:586
+#, fuzzy
+#| msgid "Install"
+msgid "Installed"
+msgstr "Εγκατάσταση"
+
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
 msgstr "Διαχείριση έκδοσης - CyberPanel"
@@ -1590,6 +1615,7 @@ msgstr "Ενεργοποίηση"
 #: dns/templates/dns/addDeleteDNSRecords.html:328
 #: filemanager/templates/filemanager/index.html:212
 #: firewall/templates/firewall/firewall.html:136
+#: pluginHolder/templates/pluginHolder/plugins.html:28
 #: serverStatus/templates/serverStatus/litespeedStatus.html:40
 msgid "Name"
 msgstr "Όνομα"
@@ -1673,6 +1699,7 @@ msgid "Content"
 msgstr ""
 
 #: dns/templates/dns/addDeleteDNSRecords.html:327
+#: pluginHolder/templates/pluginHolder/plugins.html:29
 msgid "Type"
 msgstr "Μορφή"
 
@@ -2045,6 +2072,7 @@ msgstr "Διαχείριση SSL"
 #: emailPremium/templates/emailPremium/emailLimits.html:172
 #: emailPremium/templates/emailPremium/emailPage.html:179
 #: emailPremium/templates/emailPremium/listDomains.html:73
+#: pluginHolder/templates/pluginHolder/plugins.html:51
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:53
 msgid "Cannot list websites. Error message:"
 msgstr "Δεν είναι δυνατή η λίστα ιστότοπων. Μήνυμα λάθους:"
@@ -3337,6 +3365,7 @@ msgid "Extension Name"
 msgstr "Όνομα Επέκτασης"
 
 #: managePHP/templates/managePHP/installExtensions.html:65
+#: pluginHolder/templates/pluginHolder/plugins.html:30
 msgid "Description"
 msgstr "Περιγραφή"
 
@@ -3635,6 +3664,18 @@ msgstr "Επιτυχής λήψη στοιχείων του πακέτου"
 #: packages/templates/packages/modifyPackage.html:112
 msgid "Successfully Modified"
 msgstr "Τροποποιήθηκε με Επιτυχία"
+
+#: pluginHolder/templates/pluginHolder/plugins.html:15
+#, fuzzy
+#| msgid "List Databases  - CyberPanel"
+msgid "List of installed plugins on your CyberPanel."
+msgstr "Λίστα Βάσεων Δεδομένων  - CyberPanel"
+
+#: pluginHolder/templates/pluginHolder/plugins.html:31
+#, fuzzy
+#| msgid "Latest Version"
+msgid "Version"
+msgstr "Τελευταία έκδοση"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:3
 msgid "Access Logs - CyberPanel"

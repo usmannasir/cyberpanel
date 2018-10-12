@@ -69,9 +69,7 @@ class HandleRequest(multi.Thread):
 
     def manageRequest(self, completeData):
         try:
-
             completeData = completeData.split('\n')
-
             for items in completeData:
                 tempData = items.split('=')
                 if tempData[0] == 'sasl_username':
@@ -81,6 +79,9 @@ class HandleRequest(multi.Thread):
                     emailAddress = tempData[1]
                     domainName = emailAddress.split('@')[1]
                 elif tempData[0] == 'recipient':
+                    if len(tempData[1]) == 0:
+                        self.connection.sendall('action=dunno\n\n')
+                        return
                     destination = tempData[1]
 
 

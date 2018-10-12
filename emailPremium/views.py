@@ -24,6 +24,114 @@ from plogical.acl import ACLManager
 
 # Create your views here.
 
+## Email Policy Server
+
+def emailPolicyServer(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        return render(request, 'emailPremium/policyServer.html')
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fetchPolicyServerStatus(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+        try:
+            if request.method == 'POST':
+
+                command = 'sudo cat /etc/postfix/main.cf'
+                output = subprocess.check_output(shlex.split(command)).split('\n')
+
+                installCheck = 0
+
+                for items in output:
+                    if items.find('check_policy_service unix:/var/log/policyServerSocket') > -1:
+                        installCheck = 1
+                        break
+
+
+                data_ret = {'status': 1, 'error_message': 'None', 'installCheck' : installCheck}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+        except BaseException,msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError,msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg))
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def savePolicyServerStatus(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+        try:
+            if request.method == 'POST':
+
+                data = json.loads(request.body)
+
+                policServerStatus = data['policServerStatus']
+
+                install = '0'
+
+                if policServerStatus == True:
+                    install = "1"
+
+                ## save configuration data
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+
+                execPath = execPath + " savePolicyServerStatus --install " + install
+
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    data_ret = {'status': 1, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'status': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+
+        except BaseException,msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError,msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg))
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+## Email Policy Server configs
+
 def listDomains(request):
     try:
         userID = request.session['userID']
@@ -787,7 +895,13 @@ def fetchSpamAssassinSettings(request):
                                 report_safe = 1
                         if items.find('rewrite_header ') > -1:
                             tempData = items.split(' ')
-                            rewrite_header = tempData[1] + " " + tempData[2].strip('\n')
+                            rewrite_header = ''
+                            counter = 0
+                            for headerData in tempData:
+                                if counter == 0:
+                                    counter = counter + 1
+                                    continue
+                                rewrite_header = rewrite_header + headerData.strip('\n') + ' '
                             continue
                         if items.find('required_score ') > -1:
                             required_score = items.split(' ')[1].strip('\n')
@@ -893,111 +1007,5 @@ def saveSpamAssassinConfigurations(request):
     except KeyError,msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         data_ret = {'saveStatus': 0, 'error_message': str(msg)}
-        json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
-
-## Email Policy Server
-
-def emailPolicyServer(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        return render(request, 'emailPremium/policyServer.html')
-
-    except KeyError:
-        return redirect(loadLoginPage)
-
-def fetchPolicyServerStatus(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson()
-        try:
-            if request.method == 'POST':
-
-                command = 'sudo cat /etc/postfix/main.cf'
-                output = subprocess.check_output(shlex.split(command)).split('\n')
-
-                installCheck = 0
-
-                for items in output:
-                    if items.find('check_policy_service unix:/var/log/policyServerSocket') > -1:
-                        installCheck = 1
-                        break
-
-
-                data_ret = {'status': 1, 'error_message': 'None', 'installCheck' : installCheck}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-
-        except BaseException,msg:
-            data_ret = {'status': 0, 'error_message': str(msg)}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-    except KeyError,msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg))
-        data_ret = {'status': 0, 'error_message': str(msg)}
-        json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
-
-def savePolicyServerStatus(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson()
-        try:
-            if request.method == 'POST':
-
-                data = json.loads(request.body)
-
-                policServerStatus = data['policServerStatus']
-
-                install = '0'
-
-                if policServerStatus == True:
-                    install = "1"
-
-                ## save configuration data
-
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
-
-                execPath = execPath + " savePolicyServerStatus --install " + install
-
-                output = subprocess.check_output(shlex.split(execPath))
-
-                if output.find("1,None") > -1:
-                    data_ret = {'status': 1, 'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-                else:
-                    data_ret = {'status': 0, 'error_message': output}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-
-        except BaseException,msg:
-            data_ret = {'status': 0, 'error_message': str(msg)}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-    except KeyError,msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg))
-        data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

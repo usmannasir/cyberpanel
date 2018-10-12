@@ -75,13 +75,13 @@ class mailUtilities:
             if not os.path.exists(finalPath):
                 shutil.copy(path, finalPath)
 
-            command = 'chown -R nobody:nobody /usr/local/lscp/cyberpanel/rainloop'
+            command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop'
 
             cmd = shlex.split(command)
 
             res = subprocess.call(cmd)
 
-            command = 'chown -R nobody:nobody /usr/local/lscp/cyberpanel/rainloop/data/_data_'
+            command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_'
 
             cmd = shlex.split(command)
 
@@ -528,6 +528,9 @@ milter_default_action = accept
             if install == '1':
                 if not os.path.exists('/etc/systemd/system/cpecs.service'):
                     shutil.copy("/usr/local/CyberCP/postfixSenderPolicy/cpecs.service", "/etc/systemd/system/cpecs.service")
+
+                command = 'systemctl enable cpecs'
+                subprocess.call(shlex.split(command))
 
                 command = 'systemctl start cpecs'
                 subprocess.call(shlex.split(command))

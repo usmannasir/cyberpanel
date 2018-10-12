@@ -687,7 +687,7 @@ class preFlightsChecks:
 
         count = 0
         while (1):
-            command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
+            command = "wget http://cyberpanel.net/CyberPanel.1.7.2.tar.gz"
             #command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
             res = subprocess.call(shlex.split(command))
 
@@ -707,7 +707,7 @@ class preFlightsChecks:
 
         count = 0
         while(1):
-            command = "tar zxf CyberPanelTemp.tar.gz"
+            command = "tar zxf CyberPanel.1.7.2.tar.gz"
             #command = "tar zxf CyberPanelTemp.tar.gz"
 
             res = subprocess.call(shlex.split(command))
@@ -1035,7 +1035,7 @@ class preFlightsChecks:
 
             os.mkdir('/usr/local/lscp/cyberpanel/phpmyadmin/tmp')
 
-            command = 'chown -R nobody:nobody /usr/local/lscp/cyberpanel/phpmyadmin'
+            command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/phpmyadmin'
             subprocess.call(shlex.split(command))
 
         except OSError, msg:
@@ -1851,7 +1851,7 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-                command = 'chown -R nobody:nobody /usr/local/lscp/cyberpanel/'
+                command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -1963,7 +1963,7 @@ class preFlightsChecks:
 
             while(1):
 
-                command = 'chown -R nobody:nobody .'
+                command = 'chown -R lscpd:lscpd .'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 

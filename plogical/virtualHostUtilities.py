@@ -576,7 +576,7 @@ class virtualHostUtilities:
             for items in data:
                 if items.find("listener") > -1 and items.find("Default") > -1:
                     listenerTrueCheck = 1
-                if items.find(masterDomain) > -1 and items.find('map') > -1 and listenerTrueCheck == 1:
+                if items.find(' ' + masterDomain) > -1 and items.find('map') > -1 and listenerTrueCheck == 1:
                     data = filter(None, items.split(" "))
                     if data[1] == masterDomain:
                         writeToFile.writelines(items.rstrip('\n') + ", " + aliasDomain + "\n")

@@ -1,59 +1,79 @@
+#: baseTemplate/templates/baseTemplate/index.html:177
+#: baseTemplate/templates/baseTemplate/index.html:223
+#: baseTemplate/templates/baseTemplate/index.html:229
+#: baseTemplate/templates/baseTemplate/index.html:235
+#: baseTemplate/templates/baseTemplate/index.html:241
+#: baseTemplate/templates/baseTemplate/index.html:247
+#: baseTemplate/templates/baseTemplate/index.html:253
 msgid ""
 msgstr ""
+"Project-Id-Version: cyberpanel\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-10-10 13:01+0500\n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: vi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 2.1.1\n"
-"Project-Id-Version: cyberpanel\n"
-"Language: vi\n"
-"POT-Creation-Date: \n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
 
-#: CyberCP/settings.py:170
+#: CyberCP/settings.py:171
 msgid "English"
 msgstr "Tiếng Anh"
 
-#: CyberCP/settings.py:171
+#: CyberCP/settings.py:172
 msgid "Chinese"
 msgstr "Tiếng Trung"
 
-#: CyberCP/settings.py:172
+#: CyberCP/settings.py:173
 msgid "Bulgarian"
 msgstr "Tiếng Bungari"
 
-#: CyberCP/settings.py:173
+#: CyberCP/settings.py:174
 msgid "Portuguese"
 msgstr "Bồ đào nha"
 
-#: CyberCP/settings.py:174
+#: CyberCP/settings.py:175
 msgid "Japanese"
 msgstr "Tiếng Nhật"
 
-#: CyberCP/settings.py:175
+#: CyberCP/settings.py:176
 msgid "Bosnian"
 msgstr "Tiếng Bosnia"
 
-#: CyberCP/settings.py:176
+#: CyberCP/settings.py:177
 msgid "Greek"
 msgstr "Hy Lạp"
 
-#: CyberCP/settings.py:177
+#: CyberCP/settings.py:178
 msgid "Russian"
 msgstr "Tiếng Nga"
 
-#: CyberCP/settings.py:178
+#: CyberCP/settings.py:179
 msgid "Turkish"
 msgstr "Thổ Nhĩ Kỳ"
 
-#: CyberCP/settings.py:179
+#: CyberCP/settings.py:180
 msgid "Spanish"
 msgstr "Tây Ban Nha"
 
-#: CyberCP/settings.py:180
+#: CyberCP/settings.py:181
 msgid "French"
 msgstr "Tiếng Pháp"
+
+#: CyberCP/settings.py:182
+#, fuzzy
+#| msgid "Policy"
+msgid "Polish"
+msgstr "Chính sách"
+
+#: CyberCP/settings.py:183
+#, fuzzy
+#| msgid "Filename"
+msgid "Vietnamese"
+msgstr "Tên tệp"
 
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
@@ -111,7 +131,6 @@ msgstr "Tên tệp"
 #: backup/templates/backup/backup.html:106
 #: backup/templates/backup/restore.html:63
 #: baseTemplate/templates/baseTemplate/index.html:257
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:377
 #: filemanager/templates/filemanager/index.html:215
 #: firewall/templates/firewall/firewall.html:36
 #: firewall/templates/firewall/modSecurityRulesPacks.html:112
@@ -125,7 +144,6 @@ msgstr "Đang chạy"
 
 #: backup/templates/backup/backup.html:81
 #: baseTemplate/templates/baseTemplate/index.html:430
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:552
 #: userManagment/templates/userManagment/createACL.html:326
 #: userManagment/templates/userManagment/modifyACL.html:331
 msgid "Create Back up"
@@ -199,11 +217,13 @@ msgstr "Sao lưu từ xa"
 
 #: backup/templates/backup/backupDestinations.html:15
 msgid "On this page you can set up your Back up destinations. (SFTP)"
-msgstr "Trên trang này, bạn có thể thiết lập các vị trí Back up của mình. (SFTP)"
+msgstr ""
+"Trên trang này, bạn có thể thiết lập các vị trí Back up của mình. (SFTP)"
 
 #: backup/templates/backup/backupDestinations.html:21
 msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
-msgstr "Thiết lập điểm đến vi trí Back up (cổng SSH phải là 22 trên máy chủ dự phòng)"
+msgstr ""
+"Thiết lập điểm đến vi trí Back up (cổng SSH phải là 22 trên máy chủ dự phòng)"
 
 #: backup/templates/backup/backupDestinations.html:30
 #: backup/templates/backup/remoteBackups.html:29
@@ -239,7 +259,6 @@ msgstr "Cổng SSH máy chủ sao lưu, mặc định cổng 22."
 #: backup/templates/backup/backupDestinations.html:55
 #: backup/templates/backup/backupSchedule.html:54
 #: baseTemplate/templates/baseTemplate/index.html:432
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:554
 msgid "Add Destination"
 msgstr "Thêm Vị trí"
 
@@ -326,13 +345,16 @@ msgstr "Lên lịch Sao lưu - CyberPanel"
 #: backup/templates/backup/backupSchedule.html:20
 #: backup/templates/backup/index.html:75 backup/templates/backup/index.html:77
 #: baseTemplate/templates/baseTemplate/index.html:433
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:555
 msgid "Schedule Back up"
 msgstr "Lên lịch Sao lưu"
 
 #: backup/templates/backup/backupSchedule.html:14
-msgid "On this page you can schedule Back ups to localhost or remote server (If you have added one)."
-msgstr "Tại đây, bạn có thể lên lịch Back up cho máy chủ cục bộ hoặc máy chủ từ xa (Nếu bạn đã thêm)."
+msgid ""
+"On this page you can schedule Back ups to localhost or remote server (If you "
+"have added one)."
+msgstr ""
+"Tại đây, bạn có thể lên lịch Back up cho máy chủ cục bộ hoặc máy chủ từ xa "
+"(Nếu bạn đã thêm)."
 
 #: backup/templates/backup/backupSchedule.html:29
 msgid "Select Destination"
@@ -364,9 +386,6 @@ msgstr "Trang Sao lưu - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:423
 #: baseTemplate/templates/baseTemplate/index.html:425
 #: baseTemplate/templates/baseTemplate/index.html:442
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:545
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:547
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:564
 msgid "Back up"
 msgstr "Back up"
 
@@ -396,7 +415,6 @@ msgstr "Sao lưu trang web"
 
 #: backup/templates/backup/index.html:44
 #: baseTemplate/templates/baseTemplate/index.html:431
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:553
 #: userManagment/templates/userManagment/createACL.html:335
 #: userManagment/templates/userManagment/modifyACL.html:340
 msgid "Restore Back up"
@@ -413,7 +431,6 @@ msgstr "Thêm / xóa điểm đến"
 
 #: backup/templates/backup/index.html:90 backup/templates/backup/index.html:92
 #: baseTemplate/templates/baseTemplate/index.html:434
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:556
 #: userManagment/templates/userManagment/createACL.html:365
 #: userManagment/templates/userManagment/modifyACL.html:370
 msgid "Remote Back ups"
@@ -481,8 +498,6 @@ msgstr "Website"
 #: baseTemplate/templates/baseTemplate/homePage.html:234
 #: baseTemplate/templates/baseTemplate/index.html:494
 #: baseTemplate/templates/baseTemplate/index.html:496
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:618
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:620
 #: managePHP/templates/managePHP/installExtensions.html:63
 msgid "PHP"
 msgstr "PHP"
@@ -497,8 +512,6 @@ msgstr "Gói"
 #: backup/templates/backup/remoteBackups.html:110
 #: baseTemplate/templates/baseTemplate/index.html:387
 #: baseTemplate/templates/baseTemplate/index.html:389
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:505
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:507
 #: userManagment/templates/userManagment/createUser.html:47
 #: userManagment/templates/userManagment/modifyUser.html:53
 #: userManagment/templates/userManagment/userProfile.html:50
@@ -519,8 +532,14 @@ msgid "Restore Website"
 msgstr "Khôi phục trang web"
 
 #: backup/templates/backup/restore.html:15
-msgid "This page can be used to restore your websites, Back up should be generated from CyberPanel Back up generation tool, it will detect all Back ups under <strong>/home/backup</strong>."
-msgstr "Trang này có thể được sử dụng để khôi phục trang web của bạn, Sao lưu sẽ được tạo từ công cụ tạo sao lưu CyberPanel, nó sẽ phát hiện tất cả Sao lưu trong <strong> / home / backup </ strong>."
+msgid ""
+"This page can be used to restore your websites, Back up should be generated "
+"from CyberPanel Back up generation tool, it will detect all Back ups under "
+"<strong>/home/backup</strong>."
+msgstr ""
+"Trang này có thể được sử dụng để khôi phục trang web của bạn, Sao lưu sẽ "
+"được tạo từ công cụ tạo sao lưu CyberPanel, nó sẽ phát hiện tất cả Sao lưu "
+"trong <strong> / home / backup </ strong>."
 
 #: backup/templates/backup/restore.html:30
 msgid "Select Back up"
@@ -565,13 +584,11 @@ msgstr "Sử dụng"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:34
 #: baseTemplate/templates/baseTemplate/index.html:97
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:208
 msgid "CPU Usage"
 msgstr "Sử dụng CPU"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:55
 #: baseTemplate/templates/baseTemplate/index.html:108
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:219
 msgid "Ram Usage"
 msgstr "Sử dụng Ram"
 
@@ -588,9 +605,6 @@ msgstr "Chức năng người dùng"
 #: baseTemplate/templates/baseTemplate/index.html:297
 #: baseTemplate/templates/baseTemplate/index.html:298
 #: baseTemplate/templates/baseTemplate/index.html:299
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:417
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:418
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:419
 msgid "Users"
 msgstr "Người dùng"
 
@@ -604,10 +618,6 @@ msgstr "Chức năng trang web"
 #: baseTemplate/templates/baseTemplate/index.html:319
 #: baseTemplate/templates/baseTemplate/index.html:320
 #: baseTemplate/templates/baseTemplate/index.html:321
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:347
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:435
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:436
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:437
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:21
 msgid "Websites"
 msgstr "Trang web"
@@ -620,9 +630,6 @@ msgstr "Thêm / sửa đổi gói"
 #: baseTemplate/templates/baseTemplate/index.html:233
 #: baseTemplate/templates/baseTemplate/index.html:336
 #: baseTemplate/templates/baseTemplate/index.html:338
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:353
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:452
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:454
 #: packages/templates/packages/index.html:13
 msgid "Packages"
 msgstr "Gói"
@@ -636,9 +643,6 @@ msgstr "Hàm cơ sở dữ liệu"
 #: baseTemplate/templates/baseTemplate/index.html:352
 #: baseTemplate/templates/baseTemplate/index.html:353
 #: baseTemplate/templates/baseTemplate/index.html:354
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:468
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:469
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:470
 #: packages/templates/packages/createPackage.html:67
 #: packages/templates/packages/modifyPackage.html:73
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:48
@@ -654,9 +658,6 @@ msgstr "Điều khiển DNS"
 #: baseTemplate/templates/baseTemplate/index.html:239
 #: baseTemplate/templates/baseTemplate/index.html:370
 #: baseTemplate/templates/baseTemplate/index.html:372
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:359
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:486
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:488
 msgid "DNS"
 msgstr "DNS"
 
@@ -669,9 +670,6 @@ msgstr "Chức năng FTP"
 #: baseTemplate/templates/baseTemplate/index.html:245
 #: baseTemplate/templates/baseTemplate/index.html:407
 #: baseTemplate/templates/baseTemplate/index.html:409
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:365
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:527
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:529
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:43
 #: websiteFunctions/templates/websiteFunctions/website.html:43
 msgid "FTP"
@@ -688,8 +686,6 @@ msgstr "Email"
 #: baseTemplate/templates/baseTemplate/homePage.html:208
 #: baseTemplate/templates/baseTemplate/index.html:443
 #: baseTemplate/templates/baseTemplate/index.html:444
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:565
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:566
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:39
 msgid "SSL"
 msgstr "SSL"
@@ -699,9 +695,6 @@ msgstr "SSL"
 #: baseTemplate/templates/baseTemplate/index.html:475
 #: baseTemplate/templates/baseTemplate/index.html:477
 #: baseTemplate/templates/baseTemplate/index.html:509
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:598
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:600
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:634
 #: emailPremium/templates/emailPremium/policyServer.html:30
 #: serverStatus/templates/serverStatus/index.html:13
 msgid "Server Status"
@@ -714,7 +707,6 @@ msgstr "Cấu hình PHP"
 #: baseTemplate/templates/baseTemplate/homePage.html:243
 #: baseTemplate/templates/baseTemplate/homePage.html:246
 #: baseTemplate/templates/baseTemplate/index.html:511
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:636
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:116
 #: websiteFunctions/templates/websiteFunctions/website.html:116
 msgid "Logs"
@@ -724,13 +716,10 @@ msgstr "Logs"
 #: baseTemplate/templates/baseTemplate/homePage.html:258
 #: baseTemplate/templates/baseTemplate/index.html:527
 #: baseTemplate/templates/baseTemplate/index.html:529
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:652
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:654
 msgid "Security"
 msgstr "Bảo mật"
 
 #: baseTemplate/templates/baseTemplate/index.html:117
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:228
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:55
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:76
 #: websiteFunctions/templates/websiteFunctions/website.html:55
@@ -741,38 +730,28 @@ msgstr "Sử dụng đĩa"
 #: baseTemplate/templates/baseTemplate/index.html:151
 #: baseTemplate/templates/baseTemplate/index.html:154
 #: baseTemplate/templates/baseTemplate/index.html:158
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:262
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:265
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:269
 msgid "CyberPanel"
 msgstr "CyberPanel Việt Nam"
 
 #: baseTemplate/templates/baseTemplate/index.html:156
 #: baseTemplate/templates/baseTemplate/index.html:160
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:267
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:271
 msgid "Web Hosting Control Panel"
 msgstr "Bảng điều khiển lưu trữ web"
 
 #: baseTemplate/templates/baseTemplate/index.html:162
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:273
 msgid "Close sidebar"
 msgstr "Đóng thanh bên"
 
 #: baseTemplate/templates/baseTemplate/index.html:168
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:279
 msgid "My Account"
 msgstr "Tài khoản của tôi"
 
 #: baseTemplate/templates/baseTemplate/index.html:185
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:296
 msgid "Edit profile"
 msgstr "Chỉnh sửa hồ sơ"
 
 #: baseTemplate/templates/baseTemplate/index.html:186
 #: baseTemplate/templates/baseTemplate/index.html:304
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:297
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:424
 #: userManagment/templates/userManagment/index.html:26
 #: userManagment/templates/userManagment/index.html:28
 msgid "View Profile"
@@ -780,59 +759,42 @@ msgstr "Xem hồ sơ"
 
 #: baseTemplate/templates/baseTemplate/index.html:193
 #: baseTemplate/templates/baseTemplate/index.html:265
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:304
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:385
 msgid "Logout"
 msgstr "Đăng xuất"
 
 #: baseTemplate/templates/baseTemplate/index.html:204
 #: baseTemplate/templates/baseTemplate/index.html:208
 #: baseTemplate/templates/baseTemplate/index.html:212
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:315
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:319
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:323
 msgid "CPU Load Average"
 msgstr "Trung bình tải CPU"
 
 #: baseTemplate/templates/baseTemplate/index.html:217
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:337
 msgid "Dashboard Quick Menu"
 msgstr "Bảng điều khiển Quick Menu"
 
 #: baseTemplate/templates/baseTemplate/index.html:251
 #: baseTemplate/templates/baseTemplate/index.html:460
 #: baseTemplate/templates/baseTemplate/index.html:462
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:371
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:582
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:584
 msgid "Tuning"
 msgstr "Điều chỉnh"
 
 #: baseTemplate/templates/baseTemplate/index.html:278
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:398
 msgid "Overview"
 msgstr "Tổng quan"
 
 #: baseTemplate/templates/baseTemplate/index.html:280
 #: baseTemplate/templates/baseTemplate/index.html:281
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:400
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:401
 msgid "Server IP Address"
 msgstr "Địa chỉ IP máy chủ"
 
 #: baseTemplate/templates/baseTemplate/index.html:284
 #: baseTemplate/templates/baseTemplate/index.html:286
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:404
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:406
 msgid "Dashboard"
 msgstr "Bảng điều khiển"
 
 #: baseTemplate/templates/baseTemplate/index.html:288
 #: baseTemplate/templates/baseTemplate/index.html:289
 #: baseTemplate/templates/baseTemplate/index.html:290
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:408
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:409
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:410
 #: baseTemplate/templates/baseTemplate/versionManagment.html:10
 #: userManagment/templates/userManagment/createACL.html:48
 #: userManagment/templates/userManagment/createACL.html:53
@@ -842,12 +804,10 @@ msgid "Version Management"
 msgstr "Quản lý phiên bản"
 
 #: baseTemplate/templates/baseTemplate/index.html:294
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:414
 msgid "Main"
 msgstr "Main"
 
 #: baseTemplate/templates/baseTemplate/index.html:305
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:425
 #: userManagment/templates/userManagment/createACL.html:65
 #: userManagment/templates/userManagment/createUser.html:12
 #: userManagment/templates/userManagment/modifyACL.html:68
@@ -855,7 +815,6 @@ msgid "Create New User"
 msgstr "Tạo người dùng mới"
 
 #: baseTemplate/templates/baseTemplate/index.html:306
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:426
 #: userManagment/templates/userManagment/index.html:52
 #: userManagment/templates/userManagment/index.html:54
 #: userManagment/templates/userManagment/modifyUser.html:12
@@ -864,7 +823,6 @@ msgid "Modify User"
 msgstr "Sửa đổi người dùng"
 
 #: baseTemplate/templates/baseTemplate/index.html:307
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:427
 #: userManagment/templates/userManagment/createACL.html:83
 #: userManagment/templates/userManagment/deleteUser.html:13
 #: userManagment/templates/userManagment/deleteUser.html:20
@@ -906,7 +864,6 @@ msgid "Modify ACL"
 msgstr "Sửa đổi ACL"
 
 #: baseTemplate/templates/baseTemplate/index.html:326
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:442
 #: userManagment/templates/userManagment/createACL.html:104
 #: userManagment/templates/userManagment/modifyACL.html:109
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:12
@@ -917,7 +874,6 @@ msgid "Create Website"
 msgstr "Tạo trang web"
 
 #: baseTemplate/templates/baseTemplate/index.html:327
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:443
 #: websiteFunctions/templates/websiteFunctions/index.html:34
 #: websiteFunctions/templates/websiteFunctions/index.html:36
 #: websiteFunctions/templates/websiteFunctions/index.html:61
@@ -927,7 +883,6 @@ msgid "List Websites"
 msgstr "Danh sách trang web"
 
 #: baseTemplate/templates/baseTemplate/index.html:328
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:444
 #: userManagment/templates/userManagment/createACL.html:113
 #: userManagment/templates/userManagment/modifyACL.html:118
 #: websiteFunctions/templates/websiteFunctions/index.html:73
@@ -939,13 +894,11 @@ msgid "Modify Website"
 msgstr "Sửa đổi trang web"
 
 #: baseTemplate/templates/baseTemplate/index.html:329
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:445
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:41
 msgid "Suspend/Unsuspend"
 msgstr "Tạm ngưng / Hủy tạm ngưng"
 
 #: baseTemplate/templates/baseTemplate/index.html:330
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:446
 #: userManagment/templates/userManagment/changeUserACL.html:19
 #: userManagment/templates/userManagment/createACL.html:131
 #: userManagment/templates/userManagment/deleteACL.html:19
@@ -959,7 +912,6 @@ msgid "Delete Website"
 msgstr "Xóa trang web"
 
 #: baseTemplate/templates/baseTemplate/index.html:343
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:459
 #: packages/templates/packages/createPackage.html:13
 #: packages/templates/packages/createPackage.html:84
 #: packages/templates/packages/index.html:25
@@ -970,7 +922,6 @@ msgid "Create Package"
 msgstr "Tạo gói"
 
 #: baseTemplate/templates/baseTemplate/index.html:344
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:460
 #: packages/templates/packages/deletePackage.html:12
 #: packages/templates/packages/deletePackage.html:18
 #: packages/templates/packages/deletePackage.html:40
@@ -982,7 +933,6 @@ msgid "Delete Package"
 msgstr "Xóa gói"
 
 #: baseTemplate/templates/baseTemplate/index.html:345
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:461
 #: packages/templates/packages/index.html:49
 #: packages/templates/packages/index.html:51
 #: packages/templates/packages/modifyPackage.html:9
@@ -994,33 +944,28 @@ msgid "Modify Package"
 msgstr "Sửa đổi gói"
 
 #: baseTemplate/templates/baseTemplate/index.html:359
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:475
 #: databases/templates/databases/createDatabase.html:12
 #: databases/templates/databases/createDatabase.html:19
 #: databases/templates/databases/createDatabase.html:68
 #: databases/templates/databases/index.html:25
 #: databases/templates/databases/index.html:27
-#: manageSSL/templates/manageSSL/index.html:26
 #: userManagment/templates/userManagment/createACL.html:174
 #: userManagment/templates/userManagment/modifyACL.html:179
 msgid "Create Database"
 msgstr "Tạo cơ sở dữ liệu"
 
 #: baseTemplate/templates/baseTemplate/index.html:360
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:476
 #: databases/templates/databases/deleteDatabase.html:12
 #: databases/templates/databases/deleteDatabase.html:19
 #: databases/templates/databases/deleteDatabase.html:53
 #: databases/templates/databases/index.html:37
 #: databases/templates/databases/index.html:39
-#: manageSSL/templates/manageSSL/index.html:38
 #: userManagment/templates/userManagment/createACL.html:183
 #: userManagment/templates/userManagment/modifyACL.html:188
 msgid "Delete Database"
 msgstr "Xóa cơ sở dữ liệu"
 
 #: baseTemplate/templates/baseTemplate/index.html:361
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:477
 #: databases/templates/databases/index.html:53
 #: databases/templates/databases/index.html:55
 #: databases/templates/databases/listDataBases.html:13
@@ -1031,14 +976,12 @@ msgid "List Databases"
 msgstr "Danh sách cơ sở dữ liệu"
 
 #: baseTemplate/templates/baseTemplate/index.html:362
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:478
 #: databases/templates/databases/index.html:65
 #: databases/templates/databases/index.html:67
 msgid "PHPMYAdmin"
 msgstr "PHPMYAdmin"
 
 #: baseTemplate/templates/baseTemplate/index.html:377
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:493
 #: dns/templates/dns/createNameServer.html:12
 #: dns/templates/dns/createNameServer.html:87 dns/templates/dns/index.html:72
 #: dns/templates/dns/index.html:74
@@ -1048,7 +991,6 @@ msgid "Create Nameserver"
 msgstr "Tạo máy chủ định danh"
 
 #: baseTemplate/templates/baseTemplate/index.html:378
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:494
 #: dns/templates/dns/createDNSZone.html:12
 #: dns/templates/dns/createDNSZone.html:51 dns/templates/dns/index.html:29
 #: dns/templates/dns/index.html:31 dns/templates/dns/index.html:84
@@ -1057,7 +999,6 @@ msgid "Create DNS Zone"
 msgstr "Tạo Vùng DNS"
 
 #: baseTemplate/templates/baseTemplate/index.html:379
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:495
 #: dns/templates/dns/deleteDNSZone.html:53 dns/templates/dns/index.html:41
 #: dns/templates/dns/index.html:43 dns/templates/dns/index.html:96
 #: dns/templates/dns/index.html:98
@@ -1067,19 +1008,16 @@ msgid "Delete Zone"
 msgstr "Xóa Zone"
 
 #: baseTemplate/templates/baseTemplate/index.html:380
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:496
 msgid "Add/Delete Records"
 msgstr "Thêm / xóa bản ghi"
 
 #: baseTemplate/templates/baseTemplate/index.html:394
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:512
 #: mailServer/templates/mailServer/createEmailAccount.html:12
 #: mailServer/templates/mailServer/createEmailAccount.html:19
 msgid "Create Email Account"
 msgstr "Tạo tài khoản email"
 
 #: baseTemplate/templates/baseTemplate/index.html:394
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:512
 #: mailServer/templates/mailServer/createEmailAccount.html:77
 #: mailServer/templates/mailServer/index.html:25
 #: mailServer/templates/mailServer/index.html:27
@@ -1089,14 +1027,12 @@ msgid "Create Email"
 msgstr "Tạo email"
 
 #: baseTemplate/templates/baseTemplate/index.html:395
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:513
 #: mailServer/templates/mailServer/deleteEmailAccount.html:12
 #: mailServer/templates/mailServer/deleteEmailAccount.html:19
 msgid "Delete Email Account"
 msgstr "Xóa tài khoản email"
 
 #: baseTemplate/templates/baseTemplate/index.html:395
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:513
 #: mailServer/templates/mailServer/deleteEmailAccount.html:69
 #: mailServer/templates/mailServer/index.html:37
 #: mailServer/templates/mailServer/index.html:39
@@ -1112,7 +1048,6 @@ msgid "Email Forwarding"
 msgstr "Chuyển tiếp email"
 
 #: baseTemplate/templates/baseTemplate/index.html:397
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:514
 #: databases/templates/databases/listDataBases.html:73
 #: ftp/templates/ftp/listFTPAccounts.html:85
 #: mailServer/templates/mailServer/changeEmailPassword.html:77
@@ -1131,12 +1066,10 @@ msgid "DKIM Manager"
 msgstr "Trình quản lý DKIM"
 
 #: baseTemplate/templates/baseTemplate/index.html:399
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:515
 msgid "Access Webmail"
 msgstr "Truy cập Webmail"
 
 #: baseTemplate/templates/baseTemplate/index.html:414
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:534
 #: ftp/templates/ftp/createFTPAccount.html:12
 #: ftp/templates/ftp/createFTPAccount.html:19 ftp/templates/ftp/index.html:25
 #: ftp/templates/ftp/index.html:27
@@ -1150,7 +1083,6 @@ msgid "Create FTP Account"
 msgstr "Tạo tài khoản FTP"
 
 #: baseTemplate/templates/baseTemplate/index.html:415
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:535
 #: ftp/templates/ftp/deleteFTPAccount.html:12
 #: ftp/templates/ftp/deleteFTPAccount.html:18
 #: ftp/templates/ftp/deleteFTPAccount.html:64 ftp/templates/ftp/index.html:37
@@ -1165,7 +1097,6 @@ msgid "Delete FTP Account"
 msgstr "Xóa tài khoản FTP"
 
 #: baseTemplate/templates/baseTemplate/index.html:416
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:536
 #: ftp/templates/ftp/index.html:49 ftp/templates/ftp/index.html:51
 #: ftp/templates/ftp/listFTPAccounts.html:13
 #: ftp/templates/ftp/listFTPAccounts.html:19
@@ -1175,15 +1106,14 @@ msgid "List FTP Accounts"
 msgstr "Liệt kê tài khoản FTP"
 
 #: baseTemplate/templates/baseTemplate/index.html:432
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:554
 #: userManagment/templates/userManagment/createACL.html:344
 #: userManagment/templates/userManagment/modifyACL.html:349
 msgid "Add/Delete Destination"
 msgstr "Thêm / xóa đích"
 
 #: baseTemplate/templates/baseTemplate/index.html:449
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:571
-#: manageSSL/templates/manageSSL/index.html:28
+#: manageSSL/templates/manageSSL/index.html:29
+#: manageSSL/templates/manageSSL/index.html:31
 #: manageSSL/templates/manageSSL/manageSSL.html:13
 #: manageSSL/templates/manageSSL/manageSSL.html:20
 #: userManagment/templates/userManagment/createACL.html:378
@@ -1192,47 +1122,44 @@ msgid "Manage SSL"
 msgstr "Quản lý SSL"
 
 #: baseTemplate/templates/baseTemplate/index.html:450
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:572
-#: manageSSL/templates/manageSSL/index.html:40
+#: manageSSL/templates/manageSSL/index.html:45
+#: manageSSL/templates/manageSSL/index.html:47
 #: userManagment/templates/userManagment/createACL.html:387
 #: userManagment/templates/userManagment/modifyACL.html:392
 msgid "Hostname SSL"
 msgstr "Máy chủ SSL"
 
 #: baseTemplate/templates/baseTemplate/index.html:451
+#: manageSSL/templates/manageSSL/index.html:60
+#: manageSSL/templates/manageSSL/index.html:62
 #: userManagment/templates/userManagment/createACL.html:396
 #: userManagment/templates/userManagment/modifyACL.html:401
 msgid "MailServer SSL"
 msgstr "MailServer SSL"
 
 #: baseTemplate/templates/baseTemplate/index.html:457
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:580
 msgid "Server"
 msgstr "Máy chủ"
 
 #: baseTemplate/templates/baseTemplate/index.html:467
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:590
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
 #: tuning/templates/tuning/liteSpeedTuning.html:12
 msgid "LiteSpeed Tuning"
 msgstr "Điều chỉnh LiteSpeed"
 
 #: baseTemplate/templates/baseTemplate/index.html:468
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:591
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13
 msgid "PHP Tuning"
 msgstr "Điều chỉnh PHP"
 
 #: baseTemplate/templates/baseTemplate/index.html:483
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:606
 #: serverStatus/templates/serverStatus/index.html:25
 #: serverStatus/templates/serverStatus/index.html:27
 msgid "LiteSpeed Status"
 msgstr "Trạng thái LiteSpeed"
 
 #: baseTemplate/templates/baseTemplate/index.html:484
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:607
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:15
 #: serverStatus/templates/serverStatus/index.html:37
 #: serverStatus/templates/serverStatus/index.html:39
@@ -1240,37 +1167,31 @@ msgid "CyberPanel Main Log File"
 msgstr "Tệp Log chính của CyberPanel"
 
 #: baseTemplate/templates/baseTemplate/index.html:485
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:608
 msgid "Services Status"
 msgstr "Trạng thái Dịch vụ"
 
 #: baseTemplate/templates/baseTemplate/index.html:501
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:625
 #: managePHP/templates/managePHP/installExtensions.html:13
 msgid "Install PHP Extensions"
 msgstr "Cài đặt phần mở rộng PHP"
 
 #: baseTemplate/templates/baseTemplate/index.html:501
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:625
 #: managePHP/templates/managePHP/index.html:24
 #: managePHP/templates/managePHP/index.html:26
 msgid "Install Extensions"
 msgstr "Cài đặt tiện ích mở rộng"
 
 #: baseTemplate/templates/baseTemplate/index.html:502
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:626
 #: managePHP/templates/managePHP/index.html:36
 #: managePHP/templates/managePHP/index.html:38
 msgid "Edit PHP Configs"
 msgstr "Chỉnh sửa PHP Configs"
 
 #: baseTemplate/templates/baseTemplate/index.html:516
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:641
 msgid "Access Log"
 msgstr "Nhật ký truy cập"
 
 #: baseTemplate/templates/baseTemplate/index.html:517
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:642
 #: serverLogs/templates/serverLogs/errorLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:37
 #: serverLogs/templates/serverLogs/index.html:39
@@ -1280,7 +1201,6 @@ msgid "Error Logs"
 msgstr "Logs lỗi"
 
 #: baseTemplate/templates/baseTemplate/index.html:518
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:643
 #: emailPremium/templates/emailPremium/emailPage.html:144
 #: serverLogs/templates/serverLogs/emailLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:49
@@ -1289,12 +1209,10 @@ msgid "Email Logs"
 msgstr "Logs email"
 
 #: baseTemplate/templates/baseTemplate/index.html:518
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:643
 msgid "Email Log"
 msgstr "Log email"
 
 #: baseTemplate/templates/baseTemplate/index.html:519
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:644
 #: serverLogs/templates/serverLogs/ftplogs.html:14
 #: serverLogs/templates/serverLogs/index.html:61
 #: serverLogs/templates/serverLogs/index.html:63
@@ -1311,12 +1229,10 @@ msgid "ModSec Audit Logs"
 msgstr "Logs ModSec Audit"
 
 #: baseTemplate/templates/baseTemplate/index.html:534
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:659
 msgid "Firewall Home"
 msgstr "Trang Tường lửa"
 
 #: baseTemplate/templates/baseTemplate/index.html:534
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:659
 #: firewall/templates/firewall/csf.html:118
 #: firewall/templates/firewall/index.html:25
 #: firewall/templates/firewall/index.html:27
@@ -1324,7 +1240,6 @@ msgid "Firewall"
 msgstr "Tường lửa"
 
 #: baseTemplate/templates/baseTemplate/index.html:535
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:660
 #: firewall/templates/firewall/index.html:36
 #: firewall/templates/firewall/index.html:38
 #: firewall/templates/firewall/secureSSH.html:13
@@ -1366,7 +1281,6 @@ msgid "Mail Settings"
 msgstr "Cài đặt Email"
 
 #: baseTemplate/templates/baseTemplate/index.html:549
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:585
 msgid "NEW"
 msgstr "MỚI"
 
@@ -1408,25 +1322,36 @@ msgstr "Quản lý Postfix"
 msgid "Manage FTP"
 msgstr "Quản lý FTP"
 
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:199
-msgid "CPU Status"
-msgstr "Trạng thái CPU"
+#: baseTemplate/templates/baseTemplate/index.html:579
+#: baseTemplate/templates/baseTemplate/index.html:581
+#: pluginHolder/templates/pluginHolder/plugins.html:14
+#: pluginHolder/templates/pluginHolder/plugins.html:21
+msgid "Plugins"
+msgstr ""
 
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:327
-msgid "Fullscreen"
-msgstr "Toàn màn hình"
+#: baseTemplate/templates/baseTemplate/index.html:586
+#, fuzzy
+#| msgid "Install Extensions"
+msgid "Installed Plugins"
+msgstr "Cài đặt tiện ích mở rộng"
 
-#: baseTemplate/templates/baseTemplate/indexJavaFixed.html:332
-msgid "System Status"
-msgstr "Trạng thái hệ thống"
+#: baseTemplate/templates/baseTemplate/index.html:586
+#, fuzzy
+#| msgid "Install"
+msgid "Installed"
+msgstr "Cài đặt"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
 msgstr "Quản lý phiên bản - CyberPanel"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:11
-msgid "On this page you can manage versions and or upgrade to latest version of CyberPanel"
-msgstr "Trên trang này, bạn có thể quản lý phiên bản và nâng cấp lên phiên bản CyberPanel mới nhất"
+msgid ""
+"On this page you can manage versions and or upgrade to latest version of "
+"CyberPanel"
+msgstr ""
+"Trên trang này, bạn có thể quản lý phiên bản và nâng cấp lên phiên bản "
+"CyberPanel mới nhất"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:25
 msgid "Current Version"
@@ -1558,8 +1483,12 @@ msgid "DNS Docs"
 msgstr "Tài liệu DNS"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:14
-msgid "On this page you can add/modify dns records for domains whose dns zone is already created."
-msgstr "Trên trang này, bạn có thể thêm / sửa đổi các bản ghi dns cho các miền có vùng dns đã được tạo."
+msgid ""
+"On this page you can add/modify dns records for domains whose dns zone is "
+"already created."
+msgstr ""
+"Trên trang này, bạn có thể thêm / sửa đổi các bản ghi dns cho các miền có "
+"vùng dns đã được tạo."
 
 #: dns/templates/dns/addDeleteDNSRecords.html:19
 msgid "Add Records"
@@ -1599,6 +1528,7 @@ msgstr "Bật ngay"
 #: dns/templates/dns/addDeleteDNSRecords.html:328
 #: filemanager/templates/filemanager/index.html:212
 #: firewall/templates/firewall/firewall.html:136
+#: pluginHolder/templates/pluginHolder/plugins.html:28
 #: serverStatus/templates/serverStatus/litespeedStatus.html:40
 msgid "Name"
 msgstr "Tên"
@@ -1674,6 +1604,7 @@ msgid "Content"
 msgstr "Nội dung"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:327
+#: pluginHolder/templates/pluginHolder/plugins.html:29
 msgid "Type"
 msgstr "Kiểu"
 
@@ -1706,8 +1637,12 @@ msgid "Create DNS Zone - CyberPanel"
 msgstr "Tạo vùng DNS - CyberPanel"
 
 #: dns/templates/dns/createDNSZone.html:13
-msgid "This page is used to create DNS zone, to edit dns zone you can visit Modify DNS Zone Page."
-msgstr "Trang web này được sử dụng để tạo vùng DNS, để chỉnh sửa vùng dns, bạn có thể truy cập Sửa đổi Vùng DNS Trang."
+msgid ""
+"This page is used to create DNS zone, to edit dns zone you can visit Modify "
+"DNS Zone Page."
+msgstr ""
+"Trang web này được sử dụng để tạo vùng DNS, để chỉnh sửa vùng dns, bạn có "
+"thể truy cập Sửa đổi Vùng DNS Trang."
 
 #: dns/templates/dns/createDNSZone.html:18
 #: dns/templates/dns/createNameServer.html:18
@@ -1728,8 +1663,13 @@ msgid "Create Nameserver - CyberPanel"
 msgstr "Tạo máy chủ tên - CyberPanel"
 
 #: dns/templates/dns/createNameServer.html:13
-msgid "You can use this page to setup nameservers using which people on the internet can resolve websites hosted on this server."
-msgstr "Bạn có thể sử dụng trang này để thiết lập Nameserver bằng cách sử dụng những người trên internet có thể giải quyết các trang web được lưu trữ trên máy chủ này."
+msgid ""
+"You can use this page to setup nameservers using which people on the "
+"internet can resolve websites hosted on this server."
+msgstr ""
+"Bạn có thể sử dụng trang này để thiết lập Nameserver bằng cách sử dụng những "
+"người trên internet có thể giải quyết các trang web được lưu trữ trên máy "
+"chủ này."
 
 #: dns/templates/dns/createNameServer.html:50
 msgid "First Nameserver"
@@ -1759,8 +1699,12 @@ msgid "Delete DNS Zone"
 msgstr "Xóa vùng DNS"
 
 #: dns/templates/dns/deleteDNSZone.html:13
-msgid "This page can be used to delete DNS Zone. Deleting the DNS zone will remove all its related records as well."
-msgstr "Trang này có thể được sử dụng để xóa DNS Zone. Việc xóa vùng DNS cũng sẽ xóa tất cả các bản ghi liên quan của nó."
+msgid ""
+"This page can be used to delete DNS Zone. Deleting the DNS zone will remove "
+"all its related records as well."
+msgstr ""
+"Trang này có thể được sử dụng để xóa DNS Zone. Việc xóa vùng DNS cũng sẽ xóa "
+"tất cả các bản ghi liên quan của nó."
 
 #: dns/templates/dns/deleteDNSZone.html:40
 msgid "Select Zone"
@@ -1994,6 +1938,7 @@ msgstr "Quản lý"
 #: emailPremium/templates/emailPremium/emailLimits.html:172
 #: emailPremium/templates/emailPremium/emailPage.html:179
 #: emailPremium/templates/emailPremium/listDomains.html:73
+#: pluginHolder/templates/pluginHolder/plugins.html:51
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:53
 msgid "Cannot list websites. Error message:"
 msgstr "Không thể liệt kê các trang web. Lỗi:"
@@ -2041,7 +1986,8 @@ msgstr "Danh sách tên miền"
 
 #: emailPremium/templates/emailPremium/listDomains.html:15
 msgid "On this page you manage emails limits for Domains/Email Addresses"
-msgstr "Trên trang này, bạn quản lý các giới hạn email cho Tên miền / Địa chỉ Email"
+msgstr ""
+"Trên trang này, bạn quản lý các giới hạn email cho Tên miền / Địa chỉ Email"
 
 #: emailPremium/templates/emailPremium/listDomains.html:22
 #: packages/templates/packages/createPackage.html:35
@@ -2282,8 +2228,12 @@ msgid "New File Name"
 msgstr "Tên tệp mới"
 
 #: filemanager/templates/filemanager/index.html:385
-msgid "File will be created in your current directory, if it already exists it will not overwirte."
-msgstr "Tệp sẽ được tạo trong thư mục hiện tại của bạn, nếu nó đã tồn tại, nó sẽ không bị ghi đè lên."
+msgid ""
+"File will be created in your current directory, if it already exists it will "
+"not overwirte."
+msgstr ""
+"Tệp sẽ được tạo trong thư mục hiện tại của bạn, nếu nó đã tồn tại, nó sẽ "
+"không bị ghi đè lên."
 
 #: filemanager/templates/filemanager/index.html:387
 msgid "Create File"
@@ -2434,8 +2384,12 @@ msgid "CSF (ConfigServer Security and Firewall)!"
 msgstr "CSF (ConfigServer Security and Firewall)!"
 
 #: firewall/templates/firewall/csf.html:14
-msgid "On this page you can configure CSF (ConfigServer Security and Firewall) settings."
-msgstr "Trên trang này, bạn có thể cấu hình các thiết lập CSF (ConfigServer Security and Firewall)."
+msgid ""
+"On this page you can configure CSF (ConfigServer Security and Firewall) "
+"settings."
+msgstr ""
+"Trên trang này, bạn có thể cấu hình các thiết lập CSF (ConfigServer Security "
+"and Firewall)."
 
 #: firewall/templates/firewall/csf.html:28
 msgid "CSF is not installed "
@@ -2506,8 +2460,12 @@ msgid "Add/Delete Firewall Rules"
 msgstr "Thêm / xóa quy tắc tường lửa"
 
 #: firewall/templates/firewall/firewall.html:14
-msgid "On this page you can add/delete firewall rules. (By default all ports are blocked, except mentioned below)"
-msgstr "Trên trang này, bạn có thể thêm / xóa các quy tắc tường lửa. (Theo mặc định tất cả các cổng bị chặn, ngoại trừ cổng được đề cập bên dưới)"
+msgid ""
+"On this page you can add/delete firewall rules. (By default all ports are "
+"blocked, except mentioned below)"
+msgstr ""
+"Trên trang này, bạn có thể thêm / xóa các quy tắc tường lửa. (Theo mặc định "
+"tất cả các cổng bị chặn, ngoại trừ cổng được đề cập bên dưới)"
 
 #: firewall/templates/firewall/firewall.html:19
 msgid "Add/Delete Rules"
@@ -2692,8 +2650,12 @@ msgid "Permit Root Login"
 msgstr "Cho phép Root đăng nhập"
 
 #: firewall/templates/firewall/secureSSH.html:60
-msgid "Before disabling root login, make sure you have another account with sudo priviliges on server."
-msgstr "Trước khi vô hiệu hóa đăng nhập qua root, hãy chắc chắn rằng bạn có một tài khoản khác với quyền sudo trên máy chủ."
+msgid ""
+"Before disabling root login, make sure you have another account with sudo "
+"priviliges on server."
+msgstr ""
+"Trước khi vô hiệu hóa đăng nhập qua root, hãy chắc chắn rằng bạn có một tài "
+"khoản khác với quyền sudo trên máy chủ."
 
 #: firewall/templates/firewall/secureSSH.html:82
 msgid "SSH Configurations Saved."
@@ -2725,8 +2687,12 @@ msgid "Create FTP Account - CyberPanel"
 msgstr "Tạo tài khoản FTP - CyberPanel"
 
 #: ftp/templates/ftp/createFTPAccount.html:13
-msgid "Select the website from list, and its home directory will be set as the path to ftp account."
-msgstr "Chọn trang web từ danh sách và thư mục chính của nó sẽ được đặt làm đường dẫn đến tài khoản ftp."
+msgid ""
+"Select the website from list, and its home directory will be set as the path "
+"to ftp account."
+msgstr ""
+"Chọn trang web từ danh sách và thư mục chính của nó sẽ được đặt làm đường "
+"dẫn đến tài khoản ftp."
 
 #: ftp/templates/ftp/createFTPAccount.html:26
 #: ftp/templates/ftp/deleteFTPAccount.html:25
@@ -2812,8 +2778,10 @@ msgid "Password changed for"
 msgstr "Đã thay đổi mật khẩu cho"
 
 #: ftp/templates/ftp/listFTPAccounts.html:66
-msgid "Cannot change password for <strong>{$ ftpUsername $}</strong>. Error message:"
-msgstr "Không thể thay đổi mật khẩu cho <strong> {$ ftpUsername $} </ strong>. Lỗi:"
+msgid ""
+"Cannot change password for <strong>{$ ftpUsername $}</strong>. Error message:"
+msgstr ""
+"Không thể thay đổi mật khẩu cho <strong> {$ ftpUsername $} </ strong>. Lỗi:"
 
 #: ftp/templates/ftp/listFTPAccounts.html:101
 msgid "Directory"
@@ -3081,6 +3049,7 @@ msgid "Extension Name"
 msgstr "Tên tiện ích mở rộng"
 
 #: managePHP/templates/managePHP/installExtensions.html:65
+#: pluginHolder/templates/pluginHolder/plugins.html:30
 msgid "Description"
 msgstr "Mô tả"
 
@@ -3137,8 +3106,12 @@ msgid "SSL Docs"
 msgstr "Tài liệu SSL"
 
 #: manageSSL/templates/manageSSL/manageSSL.html:14
-msgid "This page can be used to issue Let’s Encrypt SSL for existing websites on server."
-msgstr "Trang này có thể được sử dụng để tạo Let’s Encrypt SSL cho các trang web hiện có trên máy chủ."
+msgid ""
+"This page can be used to issue Let’s Encrypt SSL for existing websites on "
+"server."
+msgstr ""
+"Trang này có thể được sử dụng để tạo Let’s Encrypt SSL cho các trang web "
+"hiện có trên máy chủ."
 
 #: manageSSL/templates/manageSSL/manageSSL.html:42
 #: manageSSL/templates/manageSSL/sslForHostName.html:42
@@ -3256,8 +3229,12 @@ msgstr "Tạo Gói - CyberPanel"
 #: packages/templates/packages/index.html:14
 #: packages/templates/packages/modifyPackage.html:10
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:13
-msgid "Packages define resources for your websites, you need to add package before creating a website."
-msgstr "Gói xác định tài nguyên cho trang web của bạn, bạn cần phải thêm gói trước khi tạo trang web."
+msgid ""
+"Packages define resources for your websites, you need to add package before "
+"creating a website."
+msgstr ""
+"Gói xác định tài nguyên cho trang web của bạn, bạn cần phải thêm gói trước "
+"khi tạo trang web."
 
 #: packages/templates/packages/createPackage.html:19
 msgid "Package Details"
@@ -3342,6 +3319,18 @@ msgstr "Chi tiết gói đã được tải thành công"
 msgid "Successfully Modified"
 msgstr "Đã sửa đổi thành công"
 
+#: pluginHolder/templates/pluginHolder/plugins.html:15
+#, fuzzy
+#| msgid "List Databases  - CyberPanel"
+msgid "List of installed plugins on your CyberPanel."
+msgstr "Danh sách cơ sở dữ liệu - CyberPanel"
+
+#: pluginHolder/templates/pluginHolder/plugins.html:31
+#, fuzzy
+#| msgid "Latest Version"
+msgid "Version"
+msgstr "Phiên bản mới nhất"
+
 #: serverLogs/templates/serverLogs/accessLogs.html:3
 msgid "Access Logs - CyberPanel"
 msgstr "Logs truy cập - CyberPanel"
@@ -3423,8 +3412,13 @@ msgid "Server Logs"
 msgstr "Nhật ký máy chủ"
 
 #: serverLogs/templates/serverLogs/index.html:14
-msgid "These are the logs from main server, to see logs for your website navigate to: Websites -> List Websites -> Select Website -> View Logs."
-msgstr "Đây là các nhật ký từ máy chủ chính, để xem nhật ký cho trang web của bạn điều hướng đến: Trang web -> Liệt kê các trang web -> Chọn Trang web -> Xem nhật ký."
+msgid ""
+"These are the logs from main server, to see logs for your website navigate "
+"to: Websites -> List Websites -> Select Website -> View Logs."
+msgstr ""
+"Đây là các nhật ký từ máy chủ chính, để xem nhật ký cho trang web của bạn "
+"điều hướng đến: Trang web -> Liệt kê các trang web -> Chọn Trang web -> Xem "
+"nhật ký."
 
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:3
 msgid "ModSecurity Audit Logs - CyberPanel"
@@ -3439,8 +3433,12 @@ msgid "CyberPanel Main Log File - CyberPanel"
 msgstr "Tệp nhật ký chính của CyberPanel - CyberPanel"
 
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:16
-msgid "This log file corresponds to errors generated by CyberPanel for your domain errors log you can look into /home/domain/logs."
-msgstr "Tệp nhật ký này tương ứng với lỗi do CyberPanel tạo ra cho bản ghi lỗi miền của bạn, bạn có thể xem / home / domain / logs."
+msgid ""
+"This log file corresponds to errors generated by CyberPanel for your domain "
+"errors log you can look into /home/domain/logs."
+msgstr ""
+"Tệp nhật ký này tương ứng với lỗi do CyberPanel tạo ra cho bản ghi lỗi miền "
+"của bạn, bạn có thể xem / home / domain / logs."
 
 #: serverStatus/templates/serverStatus/index.html:3
 msgid "Server Status - CyberPanel"
@@ -3459,8 +3457,11 @@ msgid "LiteSpeed Status:"
 msgstr "Trạng thái LiteSpeed:"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:17
-msgid "On this page you can get information regarding your LiteSpeed processes."
-msgstr "Trên trang này, bạn có thể nhận thông tin về các quy trình LiteSpeed ​​của mình."
+msgid ""
+"On this page you can get information regarding your LiteSpeed processes."
+msgstr ""
+"Trên trang này, bạn có thể nhận thông tin về các quy trình LiteSpeed ​​của "
+"mình."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:32
 msgid "LiteSpeed Processes"
@@ -3483,8 +3484,12 @@ msgid "Worker Process"
 msgstr ""
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:67
-msgid "Could not fetch details, either LiteSpeed is not running or some error occurred, please see CyberPanel Main log file."
-msgstr "Không thể tìm nạp chi tiết, LiteSpeed ​​không được chạy hoặc một số lỗi xảy ra, vui lòng xem tệp Log chính CyberPanel."
+msgid ""
+"Could not fetch details, either LiteSpeed is not running or some error "
+"occurred, please see CyberPanel Main log file."
+msgstr ""
+"Không thể tìm nạp chi tiết, LiteSpeed ​​không được chạy hoặc một số lỗi xảy "
+"ra, vui lòng xem tệp Log chính CyberPanel."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:72
 msgid "Reboot Litespeed"
@@ -3508,7 +3513,9 @@ msgstr "Dịch vụ - CyberPanel"
 
 #: serverStatus/templates/serverStatus/services.html:25
 msgid "Show stats for services and actions (Start, Stop, Restart)"
-msgstr "Hiển thị số liệu thống kê cho các dịch vụ và hành động (Bắt đầu, Dừng, Khởi động lại)"
+msgstr ""
+"Hiển thị số liệu thống kê cho các dịch vụ và hành động (Bắt đầu, Dừng, Khởi "
+"động lại)"
 
 #: tuning/templates/tuning/index.html:3
 msgid "Server Tuning - CyberPanel"
@@ -3519,16 +3526,24 @@ msgid "Server Tuning"
 msgstr "Điều chỉnh máy chủ"
 
 #: tuning/templates/tuning/index.html:13
-msgid "On this page you can set runing parameters for your webserver depending on your hardware."
-msgstr "Trên trang này, bạn có thể thiết lập các thông số chạy cho máy chủ web của bạn tùy thuộc vào phần cứng của bạn."
+msgid ""
+"On this page you can set runing parameters for your webserver depending on "
+"your hardware."
+msgstr ""
+"Trên trang này, bạn có thể thiết lập các thông số chạy cho máy chủ web của "
+"bạn tùy thuộc vào phần cứng của bạn."
 
 #: tuning/templates/tuning/liteSpeedTuning.html:3
 msgid "LiteSpeed Tuning - CyberPanel"
 msgstr "Điều chỉnh LiteSpeed ​​- CyberPanel"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:13
-msgid "You can use this page to tweak your server according to your website requirments."
-msgstr "Bạn có thể sử dụng trang này để tinh chỉnh máy chủ phù hợp với trang web của bạn."
+msgid ""
+"You can use this page to tweak your server according to your website "
+"requirments."
+msgstr ""
+"Bạn có thể sử dụng trang này để tinh chỉnh máy chủ phù hợp với trang web của "
+"bạn."
 
 #: tuning/templates/tuning/liteSpeedTuning.html:18
 msgid "Tuning Details"
@@ -3569,8 +3584,12 @@ msgid "Tune Web Server"
 msgstr "Điều chỉnh máy chủ web"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:92
-msgid "Cannot fetch Current Value, but you can still submit new changes, error reported from server:"
-msgstr "Không thể tìm nạp Giá trị hiện tại, nhưng bạn vẫn có thể gửi thay đổi mới, lỗi được báo cáo từ máy chủ:"
+msgid ""
+"Cannot fetch Current Value, but you can still submit new changes, error "
+"reported from server:"
+msgstr ""
+"Không thể tìm nạp Giá trị hiện tại, nhưng bạn vẫn có thể gửi thay đổi mới, "
+"lỗi được báo cáo từ máy chủ:"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:96
 msgid "Cannot save details, Error Message: "
@@ -3662,8 +3681,12 @@ msgid "Create new ACL - CyberPanel"
 msgstr "Tạo ACL mới - CyberPanel"
 
 #: userManagment/templates/userManagment/createACL.html:13
-msgid "Create new Access Control defination, that specifies what CyberPanel users can do."
-msgstr "Tạo quyền truy cập Kiểm soát truy cập mới, xác định những gì người dùng CyberPanel có thể thực hiện."
+msgid ""
+"Create new Access Control defination, that specifies what CyberPanel users "
+"can do."
+msgstr ""
+"Tạo quyền truy cập Kiểm soát truy cập mới, xác định những gì người dùng "
+"CyberPanel có thể thực hiện."
 
 #: userManagment/templates/userManagment/createACL.html:19
 #: userManagment/templates/userManagment/modifyACL.html:19
@@ -3749,7 +3772,9 @@ msgstr "Tạo người dùng mới - CyberPanel"
 
 #: userManagment/templates/userManagment/createUser.html:13
 msgid "Create root, reseller or normal users on this page."
-msgstr "Tạo người dùng gốc, người bán lại hoặc người dùng thông thường trên trang này."
+msgstr ""
+"Tạo người dùng gốc, người bán lại hoặc người dùng thông thường trên trang "
+"này."
 
 #: userManagment/templates/userManagment/createUser.html:19
 msgid "User Details"
@@ -3810,7 +3835,9 @@ msgid "Cannot create user. Error message:"
 msgstr "Không thể tạo người dùng. Lỗi:"
 
 #: userManagment/templates/userManagment/createUser.html:124
-msgid "Length of first and last name combined should be less than or equal to 20 characters"
+msgid ""
+"Length of first and last name combined should be less than or equal to 20 "
+"characters"
 msgstr "Độ dài của họ và tên kết hợp phải nhỏ hơn hoặc bằng 20 ký tự"
 
 #: userManagment/templates/userManagment/deleteACL.html:3
@@ -3827,7 +3854,8 @@ msgstr "Xóa người dùng - CyberPanel"
 
 #: userManagment/templates/userManagment/deleteUser.html:14
 msgid "Websites owned by this user will automatically transfer to the root."
-msgstr "Các trang web do người dùng này sở hữu sẽ tự động chuyển sang thư mục gốc."
+msgstr ""
+"Các trang web do người dùng này sở hữu sẽ tự động chuyển sang thư mục gốc."
 
 #: userManagment/templates/userManagment/deleteUser.html:61
 msgid "Cannot delete user. Error message:"
@@ -3971,8 +3999,12 @@ msgstr "Tạo trang web mới - CyberPanel"
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:13
 #: websiteFunctions/templates/websiteFunctions/index.html:14
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:15
-msgid "On this page you can launch, list, modify and delete websites from your server."
-msgstr "Trên trang này, bạn có thể khởi chạy, liệt kê, sửa đổi và xóa các trang web khỏi máy chủ của mình."
+msgid ""
+"On this page you can launch, list, modify and delete websites from your "
+"server."
+msgstr ""
+"Trên trang này, bạn có thể khởi chạy, liệt kê, sửa đổi và xóa các trang web "
+"khỏi máy chủ của mình."
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:20
 msgid "Website Details"
@@ -4008,8 +4040,12 @@ msgid "Delete Website - CyberPanel"
 msgstr "Xóa trang web - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:13
-msgid "This page can be used to delete website, once deleted it can not be recovered."
-msgstr "Trang này có thể được sử dụng để xóa trang web, sau khi xóa sẽ không thể phục hồi được."
+msgid ""
+"This page can be used to delete website, once deleted it can not be "
+"recovered."
+msgstr ""
+"Trang này có thể được sử dụng để xóa trang web, sau khi xóa sẽ không thể "
+"phục hồi được."
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:61
 msgid "Cannot delete website, Error message: "
@@ -4029,8 +4065,12 @@ msgid "Domain Aliases"
 msgstr "Domain Aliases"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:13
-msgid "With Domain Aliases you can visit example.com using example.net and view the same content."
-msgstr "Với Domain Aliases, bạn có thể truy cập example.com bằng example.net và xem cùng một nội dung."
+msgid ""
+"With Domain Aliases you can visit example.com using example.net and view the "
+"same content."
+msgstr ""
+"Với Domain Aliases, bạn có thể truy cập example.com bằng example.net và xem "
+"cùng một nội dung."
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:29
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:105
@@ -4063,8 +4103,12 @@ msgid "Alias Domain"
 msgstr "Alias Domain"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:93
-msgid "For SSL to work DNS of domain should point to server, otherwise self signed SSL will be issued, you can add your own SSL later."
-msgstr "Đối với SSL để làm việc với DNS của tên miền nên trỏ đến máy chủ, nếu không SSL đã ký tự sẽ được cấp, bạn có thể thêm SSL của riêng mình sau này."
+msgid ""
+"For SSL to work DNS of domain should point to server, otherwise self signed "
+"SSL will be issued, you can add your own SSL later."
+msgstr ""
+"Đối với SSL để làm việc với DNS của tên miền nên trỏ đến máy chủ, nếu không "
+"SSL đã ký tự sẽ được cấp, bạn có thể thêm SSL của riêng mình sau này."
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:114
 msgid "Operation failed. Error message:"
@@ -4230,7 +4274,8 @@ msgstr "Tải thành công Logs"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:154
 #: websiteFunctions/templates/websiteFunctions/website.html:154
-msgid "Could not fetch logs, see the logs file through command line. Error message:"
+msgid ""
+"Could not fetch logs, see the logs file through command line. Error message:"
 msgstr "Không thể tìm nạp Logs, xem tệp nhật ký thông qua command line. Lỗi:"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:175
@@ -4604,8 +4649,12 @@ msgid "Deployment Key"
 msgstr "Khóa triển khai"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:67
-msgid "Before attaching repo to your website, make sure to place your Development key in your GIT repository."
-msgstr "Trước khi đính kèm repo vào trang web của bạn, hãy đảm bảo đặt khóa Phát triển của bạn trong kho lưu trữ GIT của bạn."
+msgid ""
+"Before attaching repo to your website, make sure to place your Development "
+"key in your GIT repository."
+msgstr ""
+"Trước khi đính kèm repo vào trang web của bạn, hãy đảm bảo đặt khóa Phát "
+"triển của bạn trong kho lưu trữ GIT của bạn."
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:79
 msgid "Repository Name"
@@ -4638,8 +4687,16 @@ msgid "Webhook URL"
 msgstr "URL Webhook"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:232
-msgid "Add this URL to Webhooks section of your Git respository, if you've used hostname SSL then replace IP with your hostname. Otherwise use IP and disable SSL check while configuring webhook. This will initiate a pull from your resposity as soon as you commit some changes."
-msgstr "Thêm URL này vào phần Webhooks trong Kho lưu trữ Git của bạn, nếu bạn đã sử dụng hostname SSL thì hãy thay thế IP bằng tên máy chủ của bạn. Nếu không, hãy sử dụng IP và tắt kiểm tra SSL trong khi định cấu hình webhook. Việc này sẽ tự bắt đầu pull từ resposity ngay khi bạn commit ."
+msgid ""
+"Add this URL to Webhooks section of your Git respository, if you've used "
+"hostname SSL then replace IP with your hostname. Otherwise use IP and "
+"disable SSL check while configuring webhook. This will initiate a pull from "
+"your resposity as soon as you commit some changes."
+msgstr ""
+"Thêm URL này vào phần Webhooks trong Kho lưu trữ Git của bạn, nếu bạn đã sử "
+"dụng hostname SSL thì hãy thay thế IP bằng tên máy chủ của bạn. Nếu không, "
+"hãy sử dụng IP và tắt kiểm tra SSL trong khi định cấu hình webhook. Việc này "
+"sẽ tự bắt đầu pull từ resposity ngay khi bạn commit ."
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:244
 msgid "Repo successfully detached, refreshing in 3 seconds.."
@@ -4729,3 +4786,12 @@ msgstr "Đã cấp SSL:"
 #: websiteFunctions/templates/websiteFunctions/website.html:453
 msgid "Changes applied successfully."
 msgstr "Đã áp dụng thay đổi thành công."
+
+#~ msgid "CPU Status"
+#~ msgstr "Trạng thái CPU"
+
+#~ msgid "Fullscreen"
+#~ msgstr "Toàn màn hình"
+
+#~ msgid "System Status"
+#~ msgstr "Trạng thái hệ thống"

@@ -45,7 +45,7 @@ def submitDBCreation(request):
             return result
 
         dm = DatabaseManager()
-        coreResult = dm.submitDBCreation(userID, request.data)
+        coreResult = dm.submitDBCreation(userID, json.loads(request.body))
 
         result = pluginManager.postSubmitDBCreation(request, coreResult)
         if result != 200:

@@ -4,8 +4,32 @@ from plogical.pluginManagerGlobal import pluginManagerGlobal
 class pluginManager:
 
     @staticmethod
+    def preBackupSite(request):
+        return pluginManagerGlobal.globalPlug(request, preBackupSite)
+
+    @staticmethod
+    def postBackupSite(request, response):
+        return pluginManagerGlobal.globalPlug(request, postBackupSite, response)
+
+    @staticmethod
+    def preRestoreSite(request):
+        return pluginManagerGlobal.globalPlug(request, preRestoreSite)
+
+    @staticmethod
+    def postRestoreSite(request, response):
+        return pluginManagerGlobal.globalPlug(request, postRestoreSite, response)
+
+    @staticmethod
     def preSubmitBackupCreation(request):
         return pluginManagerGlobal.globalPlug(request, preSubmitBackupCreation)
+
+    @staticmethod
+    def preBackupStatus(request):
+        return pluginManagerGlobal.globalPlug(request, preBackupStatus)
+
+    @staticmethod
+    def postBackupStatus(request, response):
+        return pluginManagerGlobal.globalPlug(request, postBackupStatus, response)
 
     @staticmethod
     def preDeleteBackup(request):

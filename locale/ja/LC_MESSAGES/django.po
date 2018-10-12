@@ -14,8 +14,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-28 11:29+0500\n"
-"PO-Revision-Date: 2017-10-31 23:38+0900\n"
+"POT-Creation-Date: 2018-10-10 13:01+0500\n"
+"PO-Revision-Date: 2018-09-21 15:46+0900\n"
 "Last-Translator: @ kazuo210 <kazu.nito@gmail.com>\n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
 "Language: ja\n"
@@ -23,57 +23,63 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 1.8.7.1\n"
+"X-Generator: Poedit 2.1.1\n"
 
-#: CyberCP/settings.py:170
+#: CyberCP/settings.py:171
 msgid "English"
 msgstr "英語"
 
-#: CyberCP/settings.py:171
+#: CyberCP/settings.py:172
 msgid "Chinese"
 msgstr "中国語"
 
-#: CyberCP/settings.py:172
+#: CyberCP/settings.py:173
 msgid "Bulgarian"
 msgstr "ブルガリア語"
 
-#: CyberCP/settings.py:173
+#: CyberCP/settings.py:174
 msgid "Portuguese"
 msgstr "ポルトガル語"
 
-#: CyberCP/settings.py:174
+#: CyberCP/settings.py:175
 msgid "Japanese"
 msgstr "日本語"
 
-#: CyberCP/settings.py:175
+#: CyberCP/settings.py:176
 msgid "Bosnian"
 msgstr "ボスニア語"
 
-#: CyberCP/settings.py:176
-msgid "Greek"
-msgstr ""
-
 #: CyberCP/settings.py:177
-msgid "Russian"
-msgstr ""
+msgid "Greek"
+msgstr "ギリシャ語"
 
 #: CyberCP/settings.py:178
-msgid "Turkish"
-msgstr ""
+msgid "Russian"
+msgstr "ロシア語"
 
 #: CyberCP/settings.py:179
-msgid "Spanish"
-msgstr ""
+msgid "Turkish"
+msgstr "トルコ語"
 
 #: CyberCP/settings.py:180
-msgid "French"
-msgstr ""
+msgid "Spanish"
+msgstr "スペイン語"
 
 #: CyberCP/settings.py:181
+msgid "French"
+msgstr "フランス語"
+
+#: CyberCP/settings.py:182
 #, fuzzy
 #| msgid "Policy"
 msgid "Polish"
 msgstr "ポリシ"
+
+#: CyberCP/settings.py:183
+#, fuzzy
+#| msgid "Filename"
+msgid "Vietnamese"
+msgstr "ファイル名"
 
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
@@ -82,10 +88,8 @@ msgstr "Web サイトのバックアップ"
 
 #: backup/templates/backup/backup.html:14
 #: backup/templates/backup/restore.html:14
-#, fuzzy
-#| msgid "Back up"
 msgid "Backup Docs"
-msgstr "バックアップ"
+msgstr "バックアップのドキュメント"
 
 #: backup/templates/backup/backup.html:15
 msgid "This page can be used to Back up your websites"
@@ -127,7 +131,7 @@ msgstr "ホーム"
 #: backup/templates/backup/restore.html:62
 #: filemanager/templates/filemanager/index.html:160
 msgid "File Name"
-msgstr "﻿﻿ファイル名"
+msgstr "ファイル名"
 
 #: backup/templates/backup/backup.html:61
 #: backup/templates/backup/backup.html:106
@@ -224,6 +228,7 @@ msgstr "このページでは、バックアップ先を設定できます。 �
 #: backup/templates/backup/backupDestinations.html:21
 msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
 msgstr ""
+"バックアップ先の設定（バックアップサーバでSSHポート22にする必要があります）"
 
 #: backup/templates/backup/backupDestinations.html:30
 #: backup/templates/backup/remoteBackups.html:29
@@ -254,7 +259,7 @@ msgstr "ポート"
 
 #: backup/templates/backup/backupDestinations.html:47
 msgid "Backup server SSH Port, leave empty for 22."
-msgstr ""
+msgstr "バックアップサーバーの SSH ポート 22 は、空のままにしてください。"
 
 #: backup/templates/backup/backupDestinations.html:55
 #: backup/templates/backup/backupSchedule.html:54
@@ -268,10 +273,8 @@ msgid "Connection to"
 msgstr "接続"
 
 #: backup/templates/backup/backupDestinations.html:69
-#, fuzzy
-#| msgid "failed. Please delete and re-add."
 msgid "failed. Please delete and re-add. "
-msgstr "失敗しました。削除して再追加してください。"
+msgstr "失敗しました。削除して再追加してください。 "
 
 #: backup/templates/backup/backupDestinations.html:73
 msgid "successful."
@@ -341,7 +344,7 @@ msgstr "接続を確認"
 
 #: backup/templates/backup/backupSchedule.html:3
 msgid "Schedule Back up - CyberPanel"
-msgstr "バックアップスケジュール -  Cyber​​Panel"
+msgstr "バックアップスケジュール - Cyber​​Panel"
 
 #: backup/templates/backup/backupSchedule.html:13
 #: backup/templates/backup/backupSchedule.html:20
@@ -428,29 +431,23 @@ msgid "Restore"
 msgstr "復元"
 
 #: backup/templates/backup/index.html:60 backup/templates/backup/index.html:62
-#, fuzzy
-#| msgid "Add/Delete Destination"
 msgid "Add/Delete Destinations"
-msgstr "バックアップ先の追加/削除"
+msgstr "宛先の追加/削除"
 
 #: backup/templates/backup/index.html:90 backup/templates/backup/index.html:92
 #: baseTemplate/templates/baseTemplate/index.html:434
 #: userManagment/templates/userManagment/createACL.html:365
 #: userManagment/templates/userManagment/modifyACL.html:370
-#, fuzzy
-#| msgid "Remote Backups"
 msgid "Remote Back ups"
 msgstr "リモートバックアップ"
 
 #: backup/templates/backup/remoteBackups.html:3
 msgid "Transfer Websites from Remote Server - CyberPanel"
-msgstr "リモートサーバーからWebサイトを転送 -  Cyber​​Panel"
+msgstr "リモートサーバーからWebサイトを転送 - Cyber​​Panel"
 
 #: backup/templates/backup/remoteBackups.html:14
-#, fuzzy
-#| msgid "Start Transfer"
 msgid "Remote Transfer"
-msgstr "転送を開始"
+msgstr "リモート転送"
 
 #: backup/templates/backup/remoteBackups.html:15
 msgid "This feature can import website(s) from remote server"
@@ -532,7 +529,7 @@ msgstr "メール"
 
 #: backup/templates/backup/restore.html:3
 msgid "Restore Website - CyberPanel"
-msgstr "Web サイトの復元 -  Cyber​​Panel"
+msgstr "Web サイトの復元 - Cyber​​Panel"
 
 #: backup/templates/backup/restore.html:14
 #: backup/templates/backup/restore.html:21
@@ -554,10 +551,8 @@ msgid "Select Back up"
 msgstr "バックアップを選択"
 
 #: backup/templates/backup/restore.html:61
-#, fuzzy
-#| msgid "Configurations"
 msgid "Condition"
-msgstr "設定"
+msgstr "条件"
 
 #: backup/templates/backup/restore.html:86
 #: databases/templates/databases/deleteDatabase.html:64
@@ -794,10 +789,8 @@ msgstr "概要"
 
 #: baseTemplate/templates/baseTemplate/index.html:280
 #: baseTemplate/templates/baseTemplate/index.html:281
-#, fuzzy
-#| msgid "IP Address"
 msgid "Server IP Address"
-msgstr "IP アドレス"
+msgstr "サーバの IP アドレス"
 
 #: baseTemplate/templates/baseTemplate/index.html:284
 #: baseTemplate/templates/baseTemplate/index.html:286
@@ -850,40 +843,30 @@ msgstr "ユーザーの削除"
 #: userManagment/templates/userManagment/modifyACL.html:78
 #: userManagment/templates/userManagment/resellerCenter.html:12
 #: userManagment/templates/userManagment/resellerCenter.html:19
-#, fuzzy
-#| msgid "Reseller"
 msgid "Reseller Center"
-msgstr "代理店"
+msgstr "リセラーセンター"
 
 #: baseTemplate/templates/baseTemplate/index.html:309
 #: userManagment/templates/userManagment/changeUserACL.html:12
 #: userManagment/templates/userManagment/createACL.html:92
 #: userManagment/templates/userManagment/modifyACL.html:97
-#, fuzzy
-#| msgid "Create User"
 msgid "Change User ACL"
-msgstr "ユーザーを作成"
+msgstr "ユーザー ACL の変更"
 
 #: baseTemplate/templates/baseTemplate/index.html:310
 #: userManagment/templates/userManagment/createACL.html:12
-#, fuzzy
-#| msgid "Create New User"
 msgid "Create New ACL"
-msgstr "新しいユーザーの作成"
+msgstr "新しい ACL の作成"
 
 #: baseTemplate/templates/baseTemplate/index.html:311
 #: userManagment/templates/userManagment/deleteACL.html:12
 #: userManagment/templates/userManagment/deleteACL.html:42
-#, fuzzy
-#| msgid "Delete"
 msgid "Delete ACL"
-msgstr "削除"
+msgstr "ACL の削除"
 
 #: baseTemplate/templates/baseTemplate/index.html:312
-#, fuzzy
-#| msgid "Modify User"
 msgid "Modify ACL"
-msgstr "ユーザーの変更"
+msgstr "ACL の変更"
 
 #: baseTemplate/templates/baseTemplate/index.html:326
 #: userManagment/templates/userManagment/createACL.html:104
@@ -1066,10 +1049,8 @@ msgstr "メールの削除"
 #: baseTemplate/templates/baseTemplate/index.html:396
 #: userManagment/templates/userManagment/createACL.html:263
 #: userManagment/templates/userManagment/modifyACL.html:268
-#, fuzzy
-#| msgid "Email Log"
 msgid "Email Forwarding"
-msgstr "メールログ"
+msgstr "Eメール転送"
 
 #: baseTemplate/templates/baseTemplate/index.html:397
 #: databases/templates/databases/listDataBases.html:73
@@ -1086,10 +1067,8 @@ msgstr "パスワードの変更"
 #: mailServer/templates/mailServer/dkimManager.html:75
 #: userManagment/templates/userManagment/createACL.html:283
 #: userManagment/templates/userManagment/modifyACL.html:288
-#, fuzzy
-#| msgid "File Manager"
 msgid "DKIM Manager"
-msgstr "ファイル 管理"
+msgstr "DKIM マネージャ"
 
 #: baseTemplate/templates/baseTemplate/index.html:399
 msgid "Access Webmail"
@@ -1160,10 +1139,8 @@ msgstr "ホスト名 SSL"
 #: manageSSL/templates/manageSSL/index.html:62
 #: userManagment/templates/userManagment/createACL.html:396
 #: userManagment/templates/userManagment/modifyACL.html:401
-#, fuzzy
-#| msgid "Server Logs"
 msgid "MailServer SSL"
-msgstr "サーバーログ"
+msgstr "MailServer SSL"
 
 #: baseTemplate/templates/baseTemplate/index.html:457
 msgid "Server"
@@ -1195,10 +1172,8 @@ msgid "CyberPanel Main Log File"
 msgstr "Cyber​​Panel メインログファイル"
 
 #: baseTemplate/templates/baseTemplate/index.html:485
-#, fuzzy
-#| msgid "Server Status"
 msgid "Services Status"
-msgstr "サーバーの状態"
+msgstr "サービスの状態"
 
 #: baseTemplate/templates/baseTemplate/index.html:501
 #: managePHP/templates/managePHP/installExtensions.html:13
@@ -1251,14 +1226,12 @@ msgstr "FTP ログ"
 
 #: baseTemplate/templates/baseTemplate/index.html:520
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:14
-#, fuzzy
-#| msgid "Security Functions"
 msgid "ModSecurity Audit Logs"
-msgstr "セキュリティ機能"
+msgstr "ModSecurity 監査ログ"
 
 #: baseTemplate/templates/baseTemplate/index.html:520
 msgid "ModSec Audit Logs"
-msgstr ""
+msgstr "ModSec の監査ログ"
 
 #: baseTemplate/templates/baseTemplate/index.html:534
 msgid "Firewall Home"
@@ -1280,45 +1253,37 @@ msgid "Secure SSH"
 msgstr "SSH のセキュリティ"
 
 #: baseTemplate/templates/baseTemplate/index.html:536
-#, fuzzy
-#| msgid "Edit PHP Configurations"
 msgid "ModSecurity Configurations"
-msgstr "PHP 設定の編集"
+msgstr "ModSecurity の設定"
 
 #: baseTemplate/templates/baseTemplate/index.html:536
-#, fuzzy
-#| msgid "Security"
 msgid "ModSecurity Conf"
-msgstr "セキュリティ"
+msgstr "ModSecurity Conf"
 
 #: baseTemplate/templates/baseTemplate/index.html:537
 #: firewall/templates/firewall/modSecurityRules.html:20
-#, fuzzy
-#| msgid "Security"
 msgid "ModSecurity Rules"
-msgstr "セキュリティ"
+msgstr "ModSecurity ルール"
 
 #: baseTemplate/templates/baseTemplate/index.html:538
 msgid "ModSecurity Rules Packs"
-msgstr ""
+msgstr "ModSecurity ルールパック"
 
 #: baseTemplate/templates/baseTemplate/index.html:539
 msgid "ConfigServer Security & Firewall (CSF)"
-msgstr ""
+msgstr "ConfigServer セキュリティとファイアウォール (CSF)"
 
 #: baseTemplate/templates/baseTemplate/index.html:539
 #: firewall/templates/firewall/csf.html:21
 #: firewall/templates/firewall/csf.html:85
 #: firewall/templates/firewall/csf.html:94
 msgid "CSF"
-msgstr ""
+msgstr "CSF"
 
 #: baseTemplate/templates/baseTemplate/index.html:546
 #: baseTemplate/templates/baseTemplate/index.html:548
-#, fuzzy
-#| msgid "Mail Functions"
 msgid "Mail Settings"
-msgstr "メール機能"
+msgstr "メール設定"
 
 #: baseTemplate/templates/baseTemplate/index.html:549
 msgid "NEW"
@@ -1327,54 +1292,63 @@ msgstr "新規"
 #: baseTemplate/templates/baseTemplate/index.html:554
 #: emailPremium/templates/emailPremium/policyServer.html:20
 msgid "Email Policy Server"
-msgstr ""
+msgstr "Eメールポリシーサーバー"
 
 #: baseTemplate/templates/baseTemplate/index.html:555
-#, fuzzy
-#| msgid "Email Logs"
 msgid "Email Limits"
-msgstr "メールログ"
+msgstr "Eメール制限"
 
 #: baseTemplate/templates/baseTemplate/index.html:556
-#, fuzzy
-#| msgid "Configurations"
 msgid "SpamAssassin Configurations"
-msgstr "設定"
+msgstr "SpamAssassinの設定"
 
 #: baseTemplate/templates/baseTemplate/index.html:556
 #: emailPremium/templates/emailPremium/SpamAssassin.html:20
 #: firewall/templates/firewall/spamassassin.html:20
 msgid "SpamAssassin"
-msgstr ""
+msgstr "Spamassassin"
 
 #: baseTemplate/templates/baseTemplate/index.html:563
 #: baseTemplate/templates/baseTemplate/index.html:565
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage Services"
-msgstr "SSL の管理"
+msgstr "サービスの管理"
 
 #: baseTemplate/templates/baseTemplate/index.html:570
 #: manageServices/templates/manageServices/managePowerDNS.html:22
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage PowerDNS"
-msgstr "SSL の管理"
+msgstr "PowerDNS の管理"
 
 #: baseTemplate/templates/baseTemplate/index.html:571
 #: manageServices/templates/manageServices/managePostfix.html:22
 msgid "Manage Postfix"
-msgstr ""
+msgstr "postfixの管理"
 
 #: baseTemplate/templates/baseTemplate/index.html:572
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage FTP"
-msgstr "SSL の管理"
+msgstr "FTP の管理"
+
+#: baseTemplate/templates/baseTemplate/index.html:579
+#: baseTemplate/templates/baseTemplate/index.html:581
+#: pluginHolder/templates/pluginHolder/plugins.html:14
+#: pluginHolder/templates/pluginHolder/plugins.html:21
+msgid "Plugins"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:586
+#, fuzzy
+#| msgid "Install Extensions"
+msgid "Installed Plugins"
+msgstr "拡張機能のインストール"
+
+#: baseTemplate/templates/baseTemplate/index.html:586
+#, fuzzy
+#| msgid "Install"
+msgid "Installed"
+msgstr "インストール"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
-msgstr "バージョン管理 -  Cyber​​Panel"
+msgstr "バージョン管理 - Cyber​​Panel"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:11
 msgid ""
@@ -1402,7 +1376,7 @@ msgstr "最新のビルド"
 
 #: databases/templates/databases/createDatabase.html:3
 msgid "Create New Database - CyberPanel"
-msgstr "新しいデータベースの作成 -  Cyber​​Panel"
+msgstr "新しいデータベースの作成 - Cyber​​Panel"
 
 #: databases/templates/databases/createDatabase.html:13
 msgid "Create a new database on this page."
@@ -1431,7 +1405,7 @@ msgstr "データベースが作成されました。"
 
 #: databases/templates/databases/deleteDatabase.html:3
 msgid "Delete Database - CyberPanel"
-msgstr "データベースの削除 -  Cyber​​Panel"
+msgstr "データベースの削除 - Cyber​​Panel"
 
 #: databases/templates/databases/deleteDatabase.html:13
 msgid "Delete an existing database on this page."
@@ -1447,7 +1421,7 @@ msgstr "データベースが削除されました。"
 
 #: databases/templates/databases/index.html:3
 msgid "Database Functions - CyberPanel"
-msgstr "データベース機能 -  Cyber​​Panel"
+msgstr "データベース機能 - Cyber​​Panel"
 
 #: databases/templates/databases/index.html:13
 msgid "Create, edit and delete databases on this page."
@@ -1455,7 +1429,7 @@ msgstr "このページでデータベースの作成、編集、削除を行い
 
 #: databases/templates/databases/listDataBases.html:3
 msgid "List Databases  - CyberPanel"
-msgstr "データベースの一覧 -  Cyber​​Panel"
+msgstr "データベースの一覧 - Cyber​​Panel"
 
 #: databases/templates/databases/listDataBases.html:14
 msgid "List Databases or change their passwords."
@@ -1511,7 +1485,7 @@ msgstr "DNS ゾーンの追加/変更"
 #: dns/templates/dns/createNameServer.html:12
 #: dns/templates/dns/deleteDNSZone.html:12
 msgid "DNS Docs"
-msgstr ""
+msgstr "DNS のドキュメント"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:14
 msgid ""
@@ -1530,7 +1504,7 @@ msgstr "レコードを追加"
 #: dns/templates/dns/createNameServer.html:24
 #: dns/templates/dns/deleteDNSZone.html:25
 msgid "PowerDNS is disabled."
-msgstr ""
+msgstr "PowerDNS は無効です。"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:29
 #: dns/templates/dns/createDNSZone.html:26
@@ -1543,10 +1517,8 @@ msgstr ""
 #: mailServer/templates/mailServer/createEmailAccount.html:28
 #: mailServer/templates/mailServer/deleteEmailAccount.html:28
 #: mailServer/templates/mailServer/emailForwarding.html:28
-#, fuzzy
-#| msgid "Enable"
 msgid "Enable Now"
-msgstr "有効化"
+msgstr "今すぐ有効にする"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:74
 #: dns/templates/dns/addDeleteDNSRecords.html:97
@@ -1561,6 +1533,7 @@ msgstr "有効化"
 #: dns/templates/dns/addDeleteDNSRecords.html:328
 #: filemanager/templates/filemanager/index.html:212
 #: firewall/templates/firewall/firewall.html:136
+#: pluginHolder/templates/pluginHolder/plugins.html:28
 #: serverStatus/templates/serverStatus/litespeedStatus.html:40
 msgid "Name"
 msgstr "名称"
@@ -1577,7 +1550,7 @@ msgstr "名称"
 #: dns/templates/dns/addDeleteDNSRecords.html:298
 #: dns/templates/dns/addDeleteDNSRecords.html:329
 msgid "TTL"
-msgstr ""
+msgstr "TTL"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:88
 #: dns/templates/dns/addDeleteDNSRecords.html:111
@@ -1594,10 +1567,8 @@ msgid "Add"
 msgstr "追加"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:105
-#, fuzzy
-#| msgid "IP Address"
 msgid "IPV6 Address"
-msgstr "IP アドレス"
+msgstr "IPv6 アドレス"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:129
 #: dns/templates/dns/addDeleteDNSRecords.html:156
@@ -1622,28 +1593,23 @@ msgid "Text"
 msgstr "テキスト"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:229
-#, fuzzy
-#| msgid "Value"
 msgid "SOA Value"
-msgstr "値"
+msgstr "SOA の値"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:253
-#, fuzzy
-#| msgid "First Nameserver"
 msgid "Name server"
-msgstr "ファーストネームサーバー"
+msgstr "ネームサーバ"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:276
-#, fuzzy
-#| msgid "Priority"
 msgid "Prioirty"
-msgstr "優先度"
+msgstr "優先"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:281
 msgid "Content"
-msgstr ""
+msgstr "コンテンツ"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:327
+#: pluginHolder/templates/pluginHolder/plugins.html:29
 msgid "Type"
 msgstr "種別"
 
@@ -1673,7 +1639,7 @@ msgstr "レコードが追加されました。"
 
 #: dns/templates/dns/createDNSZone.html:3
 msgid "Create DNS Zone - CyberPanel"
-msgstr "DNSゾーンの作成 -  Cyber​​Panel"
+msgstr "DNSゾーンの作成 - Cyber​​Panel"
 
 #: dns/templates/dns/createDNSZone.html:13
 msgid ""
@@ -1699,7 +1665,7 @@ msgstr "ドメインの DNS ゾーン:"
 
 #: dns/templates/dns/createNameServer.html:3
 msgid "Create Nameserver - CyberPanel"
-msgstr "ネームサーバーの作成 -  Cyber​​Panel"
+msgstr "ネームサーバーの作成 - Cyber​​Panel"
 
 #: dns/templates/dns/createNameServer.html:13
 msgid ""
@@ -1727,7 +1693,7 @@ msgstr "次のネームサーバーが作成されました:"
 
 #: dns/templates/dns/deleteDNSZone.html:3
 msgid "Delete DNS Zone - CyberPanel"
-msgstr "DNSゾーンの削除 -  Cyber​​Panel"
+msgstr "DNSゾーンの削除 - Cyber​​Panel"
 
 #: dns/templates/dns/deleteDNSZone.html:12
 #: dns/templates/dns/deleteDNSZone.html:18
@@ -1772,7 +1738,7 @@ msgstr "消去されました。"
 
 #: dns/templates/dns/index.html:3
 msgid "DNS Functions - CyberPanel"
-msgstr "DNS 機能 -  Cyber​​Panel"
+msgstr "DNS 機能 - Cyber​​Panel"
 
 #: dns/templates/dns/index.html:12
 msgid "DNS Functions"
@@ -1792,32 +1758,26 @@ msgstr "削除/レコードを追加"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:3
 #: firewall/templates/firewall/spamassassin.html:3
-#, fuzzy
-#| msgid "Packages - CyberPanel"
 msgid "SpamAssassin - CyberPanel"
-msgstr "パッケージ -  Cyber​​Panel"
+msgstr "SpamAssassin - CyberPanel"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:13
 #: firewall/templates/firewall/spamassassin.html:13
-#, fuzzy
-#| msgid "Configurations"
 msgid "SpamAssassin Configurations!"
-msgstr "設定"
+msgstr "SpamAssassinの設定する！"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:13
 msgid "SpamAssassin Docs"
-msgstr ""
+msgstr "SpamAssassin のドキュメント"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:14
 #: firewall/templates/firewall/spamassassin.html:14
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can configure SpamAssassin settings."
-msgstr "このページでは、バックアップ先を設定できます。 （SFTP）"
+msgstr "このページでは、SpamAssassin の設定を構成できます。"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:29
 msgid "SpamAssassin is not installed "
-msgstr ""
+msgstr "SpamAssassin がインストールされていません "
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:31
 #: firewall/templates/firewall/csf.html:30
@@ -1825,19 +1785,15 @@ msgstr ""
 #: firewall/templates/firewall/modSecurityRules.html:72
 #: firewall/templates/firewall/modSecurityRulesPacks.html:30
 #: firewall/templates/firewall/spamassassin.html:31
-#, fuzzy
-#| msgid "Install"
 msgid "Install Now."
-msgstr "インストール"
+msgstr "今すぐインストールする。"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:43
 #: firewall/templates/firewall/csf.html:42
 #: firewall/templates/firewall/modSecurity.html:43
 #: firewall/templates/firewall/spamassassin.html:43
-#, fuzzy
-#| msgid "Cannot add destination. Error message:"
 msgid "Failed to start installation, Error message: "
-msgstr "宛先を追加できません。エラーメッセージ:"
+msgstr "インストールの開始に失敗しました。エラーメッセージ： "
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:47
 #: emailPremium/templates/emailPremium/SpamAssassin.html:134
@@ -1865,18 +1821,16 @@ msgstr "接続できませんでした。このページを更新してくださ
 #: firewall/templates/firewall/csf.html:50
 #: firewall/templates/firewall/modSecurity.html:51
 #: firewall/templates/firewall/spamassassin.html:51
-#, fuzzy
-#| msgid "Installation failed. Error message:"
 msgid "Installation failed."
-msgstr "インストールに失敗しました。エラー メッセージ:"
+msgstr "インストールに失敗しました。"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:55
 msgid "SpamAssassin successfully installed, refreshing page in 3 seconds.."
-msgstr ""
+msgstr "SpamAssassinがインストールされ、3秒後にページが再表示されます.."
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:66
 msgid "Winter is coming, but so is SpamAssassin."
-msgstr ""
+msgstr "冬は来ますが、SpamAssassin もそうです。"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:114
 #: emailPremium/templates/emailPremium/policyServer.html:40
@@ -1885,48 +1839,38 @@ msgstr ""
 #: manageServices/templates/manageServices/managePostfix.html:42
 #: manageServices/templates/manageServices/managePowerDNS.html:42
 #: manageServices/templates/manageServices/managePureFtpd.html:42
-#, fuzzy
-#| msgid "Save Changes"
 msgid "Save changes."
-msgstr "変更を保存"
+msgstr "変更を保存する。"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:126
-#, fuzzy
-#| msgid "Could not fetch current configuration. Error message:"
 msgid "Failed to save SpamAssassin configurations. Error message: "
-msgstr "現在の設定を取得できませんでした。エラー メッセージ:"
+msgstr "SpamAssassin の設定を保存できませんでした。 エラーメッセージ： "
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:130
-#, fuzzy
-#| msgid "Backup Process successfully started."
 msgid "SpamAssassin configurations successfully saved."
-msgstr "バックアップ処理が開始されました。"
+msgstr "SpamAssassin 設定が保存されました。"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:13
 #: emailPremium/templates/emailPremium/emailPage.html:13
 #: emailPremium/templates/emailPremium/listDomains.html:14
 #: emailPremium/templates/emailPremium/policyServer.html:13
-#, fuzzy
-#| msgid "Email Logs"
 msgid "Emai Limits Docs"
-msgstr "メールログ"
+msgstr "Eメールの制限ドキュメント"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14
 msgid "View and change email limits for a domain name."
-msgstr ""
+msgstr "ドメイン名のEメールの制限を表示および変更します。"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:25
-#, fuzzy
-#| msgid "Resource Usage"
 msgid "Domain Resource Usage"
-msgstr "リソースの使用量"
+msgstr "ドメインリソースの使用状況"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:52
 #: emailPremium/templates/emailPremium/emailLimits.html:158
 #: emailPremium/templates/emailPremium/emailPage.html:54
 #: emailPremium/templates/emailPremium/listDomains.html:59
 msgid "Limits are being Applied!"
-msgstr ""
+msgstr "制限が適用されています！"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:53
 #: emailPremium/templates/emailPremium/emailLimits.html:159
@@ -1942,7 +1886,7 @@ msgstr "無効化"
 #: emailPremium/templates/emailPremium/emailPage.html:56
 #: emailPremium/templates/emailPremium/listDomains.html:61
 msgid "Limits are not being applied!"
-msgstr ""
+msgstr "制限が適用されていません!"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:55
 #: emailPremium/templates/emailPremium/emailLimits.html:161
@@ -1959,104 +1903,81 @@ msgstr "有効化"
 #: filemanager/templates/filemanager/index.html:708
 #: websiteFunctions/templates/websiteFunctions/listCron.html:66
 msgid "Edit"
-msgstr ""
+msgstr "編集"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:70
 #: emailPremium/templates/emailPremium/emailPage.html:78
-#, fuzzy
-#| msgid "Memory Soft Limit"
 msgid "Monthly Limit"
-msgstr "メモリ使用量のソフトリミット"
+msgstr "月限度"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:83
 #: emailPremium/templates/emailPremium/emailPage.html:101
-#, fuzzy
-#| msgid "Change"
 msgid "Change Limits"
-msgstr "変更"
+msgstr "制限の変更する"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:93
 #: emailPremium/templates/emailPremium/emailPage.html:111
-#, fuzzy
-#| msgid "Cannot create user. Error message:"
 msgid "Can not change limits. Error message:"
-msgstr "ユーザーを作成できません。エラーメッセージ:"
+msgstr "制限を変更することはできません。 エラーメッセージ："
 
 #: emailPremium/templates/emailPremium/emailLimits.html:97
-#, fuzzy
-#| msgid "Password successfully changed for :"
 msgid "Limits successfully changed, refreshing in 3 seconds."
-msgstr "パスワードが変更されました:"
+msgstr "制限が正常に変更され、3秒後に再表示されます。"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:126
 #: emailPremium/templates/emailPremium/emailPage.html:25
-#, fuzzy
-#| msgid "Resource Usage"
 msgid "Email Resource Usage"
-msgstr "リソースの使用量"
+msgstr "Eメールリソースの使用状況"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:133
-#, fuzzy
-#| msgid "Search Extensions.."
 msgid "Search Emails.."
-msgstr "拡張機能を検索.."
+msgstr "Eメールを検索.."
 
 #: emailPremium/templates/emailPremium/emailLimits.html:164
 #: emailPremium/templates/emailPremium/listDomains.html:65
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:209
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage"
-msgstr "SSL の管理"
+msgstr "管理"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:172
 #: emailPremium/templates/emailPremium/emailPage.html:179
 #: emailPremium/templates/emailPremium/listDomains.html:73
+#: pluginHolder/templates/pluginHolder/plugins.html:51
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:53
 msgid "Cannot list websites. Error message:"
 msgstr "Web サイトの一覧が表示できません。エラーメッセージ:"
 
 #: emailPremium/templates/emailPremium/emailPage.html:14
 msgid "View and change limits for an Email Address."
-msgstr ""
+msgstr "Eメールアドレスの制限を表示および変更します。"
 
 #: emailPremium/templates/emailPremium/emailPage.html:60
 msgid "Logging in ON!"
-msgstr ""
+msgstr "ロギングがオンです！"
 
 #: emailPremium/templates/emailPremium/emailPage.html:62
 msgid "Logging is Off"
-msgstr ""
+msgstr "ロギングがオフです"
 
 #: emailPremium/templates/emailPremium/emailPage.html:88
-#, fuzzy
-#| msgid "Memory Soft Limit"
 msgid "Hourly Limit"
-msgstr "メモリ使用量のソフトリミット"
+msgstr "時間制限"
 
 #: emailPremium/templates/emailPremium/emailPage.html:115
-#, fuzzy
-#| msgid "is successfully created."
 msgid "Limits successfully changed."
-msgstr "作成されました。"
+msgstr "制限が変更されました。"
 
 #: emailPremium/templates/emailPremium/emailPage.html:151
-#, fuzzy
-#| msgid "Search Extensions.."
 msgid "Search Emails Logs.."
-msgstr "拡張機能を検索.."
+msgstr "メールのログを検索.."
 
 #: emailPremium/templates/emailPremium/emailPage.html:155
-#, fuzzy
-#| msgid "FTP Logs"
 msgid "Flush Logs"
-msgstr "FTP ログ"
+msgstr "ログをフラッシュする"
 
 #: emailPremium/templates/emailPremium/listDomains.html:3
-#, fuzzy
-#| msgid "Home - CyberPanel"
 msgid "Domains - CyberPanel"
-msgstr "ホーム - CyberPanel"
+msgstr "ドメイン - CyberPanel"
 
 #: emailPremium/templates/emailPremium/listDomains.html:14
 #: websiteFunctions/templates/websiteFunctions/website.html:272
@@ -2069,7 +1990,7 @@ msgstr "ドメインの一覧"
 
 #: emailPremium/templates/emailPremium/listDomains.html:15
 msgid "On this page you manage emails limits for Domains/Email Addresses"
-msgstr ""
+msgstr "このページでは、ドメイン/EメールアドレスのEメールの制限を管理します"
 
 #: emailPremium/templates/emailPremium/listDomains.html:22
 #: packages/templates/packages/createPackage.html:35
@@ -2080,29 +2001,24 @@ msgstr "ドメイン"
 
 #: emailPremium/templates/emailPremium/listDomains.html:29
 msgid "Email Policy Server is not enabled "
-msgstr ""
+msgstr "Eメールポリシーサーバーが有効になっていません "
 
 #: emailPremium/templates/emailPremium/listDomains.html:32
-#, fuzzy
-#| msgid "Enable"
 msgid "Enable Now."
-msgstr "有効化"
+msgstr "今すぐ有効にする。"
 
 #: emailPremium/templates/emailPremium/policyServer.html:3
-#, fuzzy
-#| msgid "Server Logs - CyberPanel"
 msgid "Email Policy Server - CyberPanel"
-msgstr "サーバーログ -  Cyber​​Panel"
+msgstr "Eメールポリシーサーバー - CyberPanel"
 
 #: emailPremium/templates/emailPremium/policyServer.html:13
-#, fuzzy
-#| msgid "Edit PHP Configurations"
 msgid "Email Policy Server Configurations!"
-msgstr "PHP 設定の編集"
+msgstr "Eメールポリシーサーバー構成する！"
 
 #: emailPremium/templates/emailPremium/policyServer.html:14
 msgid "Turn ON Email Policy Server to use Email Limits Feature. "
 msgstr ""
+"Eメール制限機能を使用するには、Eメールポリシーサーバーをオンにします。 "
 
 #: emailPremium/templates/emailPremium/policyServer.html:52
 #: firewall/templates/firewall/secureSSH.html:78
@@ -2118,91 +2034,73 @@ msgstr "エラーメッセージ: "
 #: manageServices/templates/manageServices/managePostfix.html:58
 #: manageServices/templates/manageServices/managePowerDNS.html:58
 #: manageServices/templates/manageServices/managePureFtpd.html:58
-#, fuzzy
-#| msgid "is successfully erased."
 msgid "Changes successfully applied."
-msgstr "消去されました。"
+msgstr "変更は適用されました。"
 
 #: filemanager/templates/filemanager/index.html:5
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "File Manager - CyberPanel"
-msgstr "SSL の管理 -  Cyber​​Panel"
+msgstr "ファイル管理 - CyberPanel"
 
 #: filemanager/templates/filemanager/index.html:43
-#, fuzzy
-#| msgid "File Manager"
 msgid " File Manager"
-msgstr "ファイル 管理"
+msgstr " ファイルマネジャー"
 
 #: filemanager/templates/filemanager/index.html:63
 #: filemanager/templates/filemanager/index.html:205
 #: filemanager/templates/filemanager/index.html:236
-#, fuzzy
-#| msgid "Reload"
 msgid "Upload"
-msgstr "再読み込み"
+msgstr "アップロード"
 
 #: filemanager/templates/filemanager/index.html:66
-#, fuzzy
-#| msgid "File"
 msgid "New File"
-msgstr "ファイル"
+msgstr "新しいファイル"
 
 #: filemanager/templates/filemanager/index.html:69
 msgid "New Folder"
-msgstr ""
+msgstr "新しいフォルダ"
 
 #: filemanager/templates/filemanager/index.html:75
 #: filemanager/templates/filemanager/index.html:566
 #: filemanager/templates/filemanager/index.html:702
 msgid "Copy"
-msgstr ""
+msgstr "コピー"
 
 #: filemanager/templates/filemanager/index.html:78
 #: filemanager/templates/filemanager/index.html:531
 #: filemanager/templates/filemanager/index.html:700
 msgid "Move"
-msgstr ""
+msgstr "移動"
 
 #: filemanager/templates/filemanager/index.html:81
 #: filemanager/templates/filemanager/index.html:596
 #: filemanager/templates/filemanager/index.html:703
-#, fuzzy
-#| msgid "Username"
 msgid "Rename"
-msgstr "ユーザー名"
+msgstr "名前を変更"
 
 #: filemanager/templates/filemanager/index.html:87
 #: filemanager/templates/filemanager/index.html:441
 #: filemanager/templates/filemanager/index.html:468
 #: filemanager/templates/filemanager/index.html:706
 msgid "Compress"
-msgstr ""
+msgstr "圧縮"
 
 #: filemanager/templates/filemanager/index.html:90
 #: filemanager/templates/filemanager/index.html:496
 #: filemanager/templates/filemanager/index.html:707
 msgid "Extract"
-msgstr ""
+msgstr "抽出"
 
 #: filemanager/templates/filemanager/index.html:93
-#, fuzzy
-#| msgid "PHP version "
 msgid "Fix Permissions"
-msgstr "PHP バージョン "
+msgstr "権限を修正する"
 
 #: filemanager/templates/filemanager/index.html:111
-#, fuzzy
-#| msgid "Current Package:"
 msgid "Current Path"
-msgstr "現在のパッケージ:"
+msgstr "現在のパス"
 
 #: filemanager/templates/filemanager/index.html:139
-#, fuzzy
-#| msgid "Back up"
 msgid "Back"
-msgstr "バックアップ"
+msgstr "戻る"
 
 #: filemanager/templates/filemanager/index.html:143
 #: serverLogs/templates/serverLogs/accessLogs.html:42
@@ -2216,103 +2114,85 @@ msgid "Refresh"
 msgstr "更新"
 
 #: filemanager/templates/filemanager/index.html:147
-#, fuzzy
-#| msgid "Select Email"
 msgid "Select All"
-msgstr "メールを選択"
+msgstr "すべてを選択"
 
 #: filemanager/templates/filemanager/index.html:151
-#, fuzzy
-#| msgid "Select Email"
 msgid "UnSelect All"
-msgstr "メールを選択"
+msgstr "すべてを選択解除"
 
 #: filemanager/templates/filemanager/index.html:161
-#, fuzzy
-#| msgid "Size"
 msgid "Size (KB)"
-msgstr "サイズ"
+msgstr "サイズ (KB)"
 
 #: filemanager/templates/filemanager/index.html:162
 msgid "Last Modified"
-msgstr ""
+msgstr "最終更新日"
 
 #: filemanager/templates/filemanager/index.html:163
-#, fuzzy
-#| msgid "PHP version "
 msgid "Permissions"
-msgstr "PHP バージョン "
+msgstr "権限"
 
 #: filemanager/templates/filemanager/index.html:183
 msgid "Upload File"
-msgstr ""
+msgstr "ファイルをアップロードする"
 
 #: filemanager/templates/filemanager/index.html:183
-#, fuzzy
-#| msgid "Reload"
 msgid "Upload Limits"
-msgstr "再読み込み"
+msgstr "アップロードの制限"
 
 #: filemanager/templates/filemanager/index.html:190
 msgid "Upload queue"
-msgstr ""
+msgstr "アップロードキュー"
 
 #: filemanager/templates/filemanager/index.html:191
 msgid "Queue length:"
-msgstr ""
+msgstr "キューの長さ:"
 
 #: filemanager/templates/filemanager/index.html:198
 msgid "Drop"
-msgstr ""
+msgstr "破棄"
 
 #: filemanager/templates/filemanager/index.html:199
 msgid "Drop Files here to upload them."
-msgstr ""
+msgstr "アップロードするファイルをここにドロップします。"
 
 #: filemanager/templates/filemanager/index.html:214
 msgid "Progress"
-msgstr ""
+msgstr "進行状況"
 
 #: filemanager/templates/filemanager/index.html:216
 #: mailServer/templates/mailServer/emailForwarding.html:113
-#, fuzzy
-#| msgid "FTP Functions"
 msgid "Actions"
-msgstr "FTP 機能"
+msgstr "操作"
 
 #: filemanager/templates/filemanager/index.html:242
 msgid "Remove"
-msgstr ""
+msgstr "除去"
 
 #: filemanager/templates/filemanager/index.html:252
 msgid "Queue progress:"
-msgstr ""
+msgstr "キューの進行状況:"
 
 #: filemanager/templates/filemanager/index.html:261
-#, fuzzy
-#| msgid "Cannot tune. Error message:"
 msgid "can not be uploaded, Error message:"
-msgstr "チューニングできません。エラー メッセージ:"
+msgstr "アップロードできません、エラーメッセージ："
 
 #: filemanager/templates/filemanager/index.html:265
 msgid "Upload all"
-msgstr ""
+msgstr "すべてをアップロードする"
 
 #: filemanager/templates/filemanager/index.html:268
-#, fuzzy
-#| msgid "Cancel"
 msgid "Cancel all"
-msgstr "キャンセル"
+msgstr "すべてをキャンセル"
 
 #: filemanager/templates/filemanager/index.html:271
 msgid "Remove all"
-msgstr ""
+msgstr "すべて削除する"
 
 #: filemanager/templates/filemanager/index.html:307
-#, fuzzy
-#| msgid "Rule successfully added."
 msgid "File Successfully saved."
-msgstr "ルールが追加されました。"
+msgstr "ファイルが保存されました。"
 
 #: filemanager/templates/filemanager/index.html:314
 #: firewall/templates/firewall/secureSSH.html:68
@@ -2324,72 +2204,56 @@ msgid "Save Changes"
 msgstr "変更を保存"
 
 #: filemanager/templates/filemanager/index.html:331
-#, fuzzy
-#| msgid "Create New User"
 msgid "Create new folder!"
-msgstr "新しいユーザーの作成"
+msgstr "新しいフォルダを作成します！"
 
 #: filemanager/templates/filemanager/index.html:339
-#, fuzzy
-#| msgid "File Name"
 msgid "New Folder Name"
-msgstr "﻿﻿ファイル名"
+msgstr "﻿﻿新しいフォルダ名"
 
 #: filemanager/templates/filemanager/index.html:341
 msgid "Folder will be created in your current directory"
-msgstr ""
+msgstr "現在のディレクトリにフォルダが作成されます"
 
 #: filemanager/templates/filemanager/index.html:343
-#, fuzzy
-#| msgid "Create User"
 msgid "Create Folder"
-msgstr "ユーザーを作成"
+msgstr "フォルダの作成"
 
 #: filemanager/templates/filemanager/index.html:356
-#, fuzzy
-#| msgid "is successfully created."
 msgid "Folder Successfully created."
-msgstr "作成されました。"
+msgstr "フォルダが作成されました。"
 
 #: filemanager/templates/filemanager/index.html:375
-#, fuzzy
-#| msgid "Create New User"
 msgid "Create new file!"
-msgstr "新しいユーザーの作成"
+msgstr "新しいファイルを作成します！"
 
 #: filemanager/templates/filemanager/index.html:383
-#, fuzzy
-#| msgid "File Name"
 msgid "New File Name"
-msgstr "﻿﻿ファイル名"
+msgstr "﻿﻿新しいファイル名"
 
 #: filemanager/templates/filemanager/index.html:385
 msgid ""
 "File will be created in your current directory, if it already exists it will "
 "not overwirte."
 msgstr ""
+"ファイルは現在のディレクトリに作成されます。すでに存在する場合は上書きされま"
+"せん。"
 
 #: filemanager/templates/filemanager/index.html:387
-#, fuzzy
-#| msgid "Create Email"
 msgid "Create File"
-msgstr "メールの作成"
+msgstr "ファイルの作成"
 
 #: filemanager/templates/filemanager/index.html:400
-#, fuzzy
-#| msgid "is successfully created."
 msgid "File Successfully created."
-msgstr "作成されました。"
+msgstr "ファイルが作成されました。"
 
 #: filemanager/templates/filemanager/index.html:416
-#, fuzzy
-#| msgid "Configurations"
 msgid "Confirm Deletion!"
-msgstr "設定"
+msgstr "削除を確認してください！"
 
 #: filemanager/templates/filemanager/index.html:425
 msgid "Confirm"
-msgstr ""
+msgstr "確認"
 
 #: filemanager/templates/filemanager/index.html:426
 #: filemanager/templates/filemanager/index.html:469
@@ -2403,221 +2267,197 @@ msgstr "閉じる"
 
 #: filemanager/templates/filemanager/index.html:449
 msgid "List of files/folder!"
-msgstr ""
+msgstr "ファイル/フォルダの一覧！"
 
 #: filemanager/templates/filemanager/index.html:453
-#, fuzzy
-#| msgid "File Name"
 msgid "Compressed File Name"
-msgstr "﻿﻿ファイル名"
+msgstr "圧縮ファイル名"
 
 #: filemanager/templates/filemanager/index.html:455
-#, fuzzy
-#| msgid "Extension Name"
 msgid "Enter without extension name!"
-msgstr "拡張機能名"
+msgstr "拡張名なしで入力してください！"
 
 #: filemanager/templates/filemanager/index.html:459
 msgid "Compression Type"
-msgstr ""
+msgstr "圧縮タイプ"
 
 #: filemanager/templates/filemanager/index.html:484
 msgid "Extracting"
-msgstr ""
+msgstr "抽出"
 
 #: filemanager/templates/filemanager/index.html:492
 msgid "Extract in"
-msgstr ""
+msgstr "抽出する"
 
 #: filemanager/templates/filemanager/index.html:494
 msgid "You can enter . to extract in current directory!"
-msgstr ""
+msgstr ". を入力することができます。 現在のディレクトリに抽出します！"
 
 #: filemanager/templates/filemanager/index.html:512
-#, fuzzy
-#| msgid "Files"
 msgid "Move Files"
-msgstr "ファイル"
+msgstr "ファイルを移動する"
 
 #: filemanager/templates/filemanager/index.html:520
 #: filemanager/templates/filemanager/index.html:555
 msgid "List of files/folders!"
-msgstr ""
+msgstr "ファイル/フォルダの一覧！"
 
 #: filemanager/templates/filemanager/index.html:524
 msgid "Move to"
-msgstr ""
+msgstr "移動先"
 
 #: filemanager/templates/filemanager/index.html:526
 msgid "Enter a path to move your files!"
-msgstr ""
+msgstr "ファイルを移動するパスを入力してください！"
 
 #: filemanager/templates/filemanager/index.html:547
-#, fuzzy
-#| msgid "Files"
 msgid "Copy Files"
-msgstr "ファイル"
+msgstr "ファイルのコピー"
 
 #: filemanager/templates/filemanager/index.html:559
 msgid "Copy to"
-msgstr ""
+msgstr "コピー先"
 
 #: filemanager/templates/filemanager/index.html:561
 msgid "Enter a path to copy your files to!"
-msgstr ""
+msgstr "ファイルをコピーするパスを入力してください！"
 
 #: filemanager/templates/filemanager/index.html:581
 msgid "Renaming"
-msgstr ""
+msgstr "名前の変更"
 
 #: filemanager/templates/filemanager/index.html:589
-#, fuzzy
-#| msgid "File Name"
 msgid "New Name"
-msgstr "﻿﻿ファイル名"
+msgstr "新しい名前"
 
 #: filemanager/templates/filemanager/index.html:591
 msgid "Enter new name of file!"
-msgstr ""
+msgstr "ファイルの新しい名前を入力してください！"
 
 #: filemanager/templates/filemanager/index.html:611
-#, fuzzy
-#| msgid "PHP version "
 msgid "Changing permissions for"
-msgstr "PHP バージョン "
+msgstr "権限を変更する"
 
 #: filemanager/templates/filemanager/index.html:620
 msgid "Mode"
-msgstr ""
+msgstr "モード"
 
 #: filemanager/templates/filemanager/index.html:621
-#, fuzzy
-#| msgid "Users"
 msgid "User"
 msgstr "ユーザー"
 
 #: filemanager/templates/filemanager/index.html:622
 msgid "Group"
-msgstr ""
+msgstr "グループ"
 
 #: filemanager/templates/filemanager/index.html:623
 msgid "World"
-msgstr ""
+msgstr "ワールド"
 
 #: filemanager/templates/filemanager/index.html:628
 msgid "Read"
-msgstr ""
+msgstr "読み取り"
 
 #: filemanager/templates/filemanager/index.html:634
 msgid "Write"
-msgstr ""
+msgstr "書き込み"
 
 #: filemanager/templates/filemanager/index.html:640
 msgid "Execute"
-msgstr ""
+msgstr "実行"
 
 #: filemanager/templates/filemanager/index.html:656
 #: filemanager/templates/filemanager/index.html:704
-#, fuzzy
-#| msgid "Select PHP Version"
 msgid "Change Permissions"
-msgstr "PHP バージョンを選択"
+msgstr "権限を変更する"
 
 #: filemanager/templates/filemanager/index.html:657
-#, fuzzy
-#| msgid "Select PHP Version"
 msgid "Change Recursively"
-msgstr "PHP バージョンを選択"
+msgstr "再帰的に変更する"
 
 #: filemanager/templates/filemanager/index.html:701
 msgid "Download"
-msgstr ""
+msgstr "ダウンロード"
 
 #: firewall/templates/firewall/csf.html:3
 msgid "CSF (ConfigServer Security and Firewall) - CyberPanel"
-msgstr ""
+msgstr "CSF (ConfigServer セキュリティとファイアウォール) - CyberPanel"
 
 #: firewall/templates/firewall/csf.html:13
 msgid "CSF (ConfigServer Security and Firewall)!"
-msgstr ""
+msgstr "CSF (ConfigServer セキュリティとファイアウォール)！"
 
 #: firewall/templates/firewall/csf.html:14
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid ""
 "On this page you can configure CSF (ConfigServer Security and Firewall) "
 "settings."
-msgstr "このページでは、バックアップ先を設定できます。 （SFTP）"
+msgstr ""
+"このページでは、CSF（ConfigServer Security and Firewall）の設定を構成できま"
+"す。"
 
 #: firewall/templates/firewall/csf.html:28
 msgid "CSF is not installed "
-msgstr ""
+msgstr "CSF がインストールされていません "
 
 #: firewall/templates/firewall/csf.html:54
-#, fuzzy
-#| msgid "Records successfully fetched for"
 msgid "CSF successfully installed, refreshing page in 3 seconds.."
-msgstr "レコードが取得されました"
+msgstr "CSFがインストールされ、3秒後にページが再表示されます。"
 
 #: firewall/templates/firewall/csf.html:65
 msgid "In winter we must protect each other.."
-msgstr ""
+msgstr "冬にはお互いを守る必要があります.."
 
 #: firewall/templates/firewall/csf.html:89
 msgid "General"
-msgstr ""
+msgstr "全般"
 
 #: firewall/templates/firewall/csf.html:99
 msgid "LFD"
-msgstr ""
+msgstr "LFD"
 
 #: firewall/templates/firewall/csf.html:108
 msgid "Remove CSF"
-msgstr ""
+msgstr "CSFを削除する"
 
 #: firewall/templates/firewall/csf.html:111
 msgid "Completely Remove CSF"
-msgstr ""
+msgstr "完全に CSF を削除する"
 
 #: firewall/templates/firewall/csf.html:125
 msgid "Testing Mode"
-msgstr ""
+msgstr "テストモード"
 
 #: firewall/templates/firewall/csf.html:132
 msgid "TCP IN Ports"
-msgstr ""
+msgstr "TCP 入力ポート"
 
 #: firewall/templates/firewall/csf.html:142
 msgid "TCP Out Ports"
-msgstr ""
+msgstr "TCP 出力ポート"
 
 #: firewall/templates/firewall/csf.html:152
 msgid "UDP In Ports"
-msgstr ""
+msgstr "UDP 入力ポート"
 
 #: firewall/templates/firewall/csf.html:162
 msgid "UDP Out Ports"
-msgstr ""
+msgstr "UDP 出力ポート"
 
 #: firewall/templates/firewall/csf.html:180
-#, fuzzy
-#| msgid "Allowed"
 msgid "Allow IP"
-msgstr "許可"
+msgstr "IP を許可する"
 
 #: firewall/templates/firewall/csf.html:190
-#, fuzzy
-#| msgid "IP Address"
 msgid "Block IP Address"
-msgstr "IP アドレス"
+msgstr "IP アドレスをブロックする"
 
 #: firewall/templates/firewall/csf.html:202
 msgid "Comming Soon."
-msgstr ""
+msgstr "近日公開。"
 
 #: firewall/templates/firewall/firewall.html:3
 msgid "Firewall - CyberPanel"
-msgstr "ファイアウォール -  Cyber​​Panel"
+msgstr "ファイアウォール - Cyber​​Panel"
 
 #: firewall/templates/firewall/firewall.html:13
 msgid "Add/Delete Firewall Rules"
@@ -2666,7 +2506,7 @@ msgstr "ルールが追加されました。"
 
 #: firewall/templates/firewall/index.html:3
 msgid "Security - CyberPanel"
-msgstr "セキュリティ -  Cyber​​Panel"
+msgstr "セキュリティ - Cyber​​Panel"
 
 #: firewall/templates/firewall/index.html:12
 msgid "Security Functions"
@@ -2677,160 +2517,120 @@ msgid "Manage the security of the server on this page."
 msgstr "このページでサーバーセキュリティを管理します。"
 
 #: firewall/templates/firewall/modSecurity.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity - CyberPanel"
-msgstr "セキュリティ -  Cyber​​Panel"
+msgstr "ModSecurity - CyberPanel"
 
 #: firewall/templates/firewall/modSecurity.html:13
-#, fuzzy
-#| msgid "Edit PHP Configurations"
 msgid "ModSecurity Configurations!"
-msgstr "PHP 設定の編集"
+msgstr "ModSecurity の設定する！"
 
 #: firewall/templates/firewall/modSecurity.html:13
 #: firewall/templates/firewall/modSecurityRules.html:13
 #: firewall/templates/firewall/modSecurityRulesPacks.html:13
 msgid "ModSec Docs"
-msgstr ""
+msgstr "ModSec のドキュメント"
 
 #: firewall/templates/firewall/modSecurity.html:14
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can configure ModSecurity settings."
-msgstr "このページでは、バックアップ先を設定できます。 （SFTP）"
+msgstr "このページでは、ModSecurity 設定を構成できます。"
 
 #: firewall/templates/firewall/modSecurity.html:20
-#, fuzzy
-#| msgid "Security"
 msgid "ModSecurity"
-msgstr "セキュリティ"
+msgstr "ModSecurity"
 
 #: firewall/templates/firewall/modSecurity.html:29
 #: firewall/templates/firewall/modSecurityRules.html:70
 #: firewall/templates/firewall/modSecurityRulesPacks.html:28
 #: firewall/templates/firewall/spamassassin.html:29
 msgid "ModSecurity is not installed "
-msgstr ""
+msgstr "ModSecurity がインストールされていません "
 
 #: firewall/templates/firewall/modSecurity.html:55
 #: firewall/templates/firewall/spamassassin.html:55
 msgid "ModSecurity successfully installed, refreshing page in 3 seconds.."
-msgstr ""
+msgstr "ModSecurityがインストールされ、3秒後にページが再表示されます.."
 
 #: firewall/templates/firewall/modSecurity.html:66
 #: firewall/templates/firewall/spamassassin.html:66
 msgid "Winter is coming, but so is ModSecurity."
-msgstr ""
+msgstr "冬は来ますが、ModSecurity もそうです。"
 
 #: firewall/templates/firewall/modSecurity.html:160
 #: firewall/templates/firewall/spamassassin.html:169
-#, fuzzy
-#| msgid "Could not fetch current configuration. Error message:"
 msgid "Failed to save ModSecurity configurations. Error message: "
-msgstr "現在の設定を取得できませんでした。エラー メッセージ:"
+msgstr "ModSecurity 設定を保存できませんでした。 エラーメッセージ： "
 
 #: firewall/templates/firewall/modSecurity.html:164
 #: firewall/templates/firewall/spamassassin.html:173
-#, fuzzy
-#| msgid "Backup Process successfully started."
 msgid "ModSecurity configurations successfully saved."
-msgstr "バックアップ処理が開始されました。"
+msgstr "ModSecurity 設定が保存されました。"
 
 #: firewall/templates/firewall/modSecurityRules.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity Rules - CyberPanel"
-msgstr "セキュリティ -  Cyber​​Panel"
+msgstr "ModSecurity ルール - CyberPanel"
 
 #: firewall/templates/firewall/modSecurityRules.html:13
-#, fuzzy
-#| msgid "Security"
 msgid "ModSecurity Rules!"
-msgstr "セキュリティ"
+msgstr "ModSecurity ルール!"
 
 #: firewall/templates/firewall/modSecurityRules.html:14
-#, fuzzy
-#| msgid ""
-#| "On this page you can launch, list, modify and delete websites from your "
-#| "server."
 msgid "On this page you can add/delete ModSecurity rules."
-msgstr ""
-"このページでは、サーバーから Web サイトを起動、一覧表示、変更、削除することが"
-"できます。"
+msgstr "このページでは、ModSecurity ルールを追加/削除できます。"
 
 #: firewall/templates/firewall/modSecurityRules.html:42
-#, fuzzy
-#| msgid "Save Rewrite Rules"
 msgid "Save Rules!"
-msgstr "Rewrite ルールを保存"
+msgstr "ルールを保存する！"
 
 #: firewall/templates/firewall/modSecurityRules.html:49
 msgid "ModSecurity Rules Saved"
-msgstr ""
+msgstr "ModSecurity ルールが保存されました"
 
 #: firewall/templates/firewall/modSecurityRules.html:58
-#, fuzzy
-#| msgid "Could not save rewrite rules. Error message:"
 msgid "Could not save rules, Error message: "
-msgstr "rewrite ルールを保存できませんでした。エラー メッセージ:"
+msgstr "ルールを保存できませんでした。エラーメッセージ： "
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity Rules Packs - CyberPanel"
-msgstr "セキュリティ -  Cyber​​Panel"
+msgstr "ModSecurity ルールパック - CyberPanel"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:13
 #: firewall/templates/firewall/modSecurityRulesPacks.html:20
-#, fuzzy
-#| msgid "Modify Package"
 msgid "ModSecurity Rules Packages!"
-msgstr "パッケージの変更"
+msgstr "ModSecurity ルールパッケージ!"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:14
 msgid "Install/Un-install ModSecurity rules packages."
-msgstr ""
+msgstr "ModSecurity ルールパッケージのインストール/アンインストールします。"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:60
 #: firewall/templates/firewall/modSecurityRulesPacks.html:71
-#, fuzzy
-#| msgid "Configurations"
 msgid "Configure"
 msgstr "設定"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:84
 #: firewall/templates/firewall/modSecurityRulesPacks.html:96
-#, fuzzy
-#| msgid "Action successful."
 msgid "Operation successful."
-msgstr "操作は終了しました。"
+msgstr "操作は成功しました。"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:92
-#, fuzzy
-#| msgid "Action failed. Error message:"
 msgid "Operation failed, Error message: "
-msgstr "操作が失敗しました。エラーメッセージ:"
+msgstr "操作に失敗しました。エラーメッセージ: "
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:110
 msgid "Supplier"
-msgstr ""
+msgstr "サプライヤ"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:111
-#, fuzzy
-#| msgid "File Name"
 msgid "Filename"
-msgstr "﻿﻿ファイル名"
+msgstr "ファイル名"
 
 #: firewall/templates/firewall/secureSSH.html:3
 msgid "Secure SSH - CyberPanel"
 msgstr "SSH のセキュリティ - Cyber​​Panel"
 
 #: firewall/templates/firewall/secureSSH.html:13
-#, fuzzy
-#| msgid "SSH Keys"
 msgid "SSH Docs"
-msgstr "SSH キー"
+msgstr "SSH のドキュメント"
 
 #: firewall/templates/firewall/secureSSH.html:14
 msgid "Secure or harden SSH Configurations."
@@ -2888,7 +2688,7 @@ msgstr "SSH キーが削除されました"
 
 #: ftp/templates/ftp/createFTPAccount.html:3
 msgid "Create FTP Account - CyberPanel"
-msgstr "FTP アカウントの作成 -  Cyber​​Panel"
+msgstr "FTP アカウントの作成 - Cyber​​Panel"
 
 #: ftp/templates/ftp/createFTPAccount.html:13
 msgid ""
@@ -2902,7 +2702,7 @@ msgstr ""
 #: ftp/templates/ftp/deleteFTPAccount.html:25
 #: ftp/templates/ftp/listFTPAccounts.html:26
 msgid "PureFTPD is disabled."
-msgstr ""
+msgstr "PureFTPDは無効です。"
 
 #: ftp/templates/ftp/createFTPAccount.html:64
 msgid "FTP Password"
@@ -2938,7 +2738,7 @@ msgstr "作成されました。"
 
 #: ftp/templates/ftp/deleteFTPAccount.html:3
 msgid "Delete FTP Account - CyberPanel"
-msgstr "FTP アカウントの削除 -  Cyber​​Panel"
+msgstr "FTP アカウントの削除 - Cyber​​Panel"
 
 #: ftp/templates/ftp/deleteFTPAccount.html:13
 msgid "Select domain and delete its related FTP accounts."
@@ -2963,7 +2763,7 @@ msgstr "サーバーに接続できませんでした。 このページを更�
 
 #: ftp/templates/ftp/index.html:3
 msgid "FTP Functions - CyberPanel"
-msgstr "FTP 機能 -  Cyber​​Panel"
+msgstr "FTP 機能 - Cyber​​Panel"
 
 #: ftp/templates/ftp/index.html:13
 msgid "Delete and create FTP accounts on this page."
@@ -3012,7 +2812,7 @@ msgstr "リストボックスから Web サイトを選択し、パスワード�
 #: mailServer/templates/mailServer/deleteEmailAccount.html:26
 #: mailServer/templates/mailServer/emailForwarding.html:26
 msgid "Postfix is disabled."
-msgstr ""
+msgstr "Postfixは無効です。"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:55
 #: mailServer/templates/mailServer/deleteEmailAccount.html:55
@@ -3036,7 +2836,7 @@ msgstr "現在、このドメインにはメールアカウントはありませ
 
 #: mailServer/templates/mailServer/createEmailAccount.html:3
 msgid "Create Email Account - CyberPanel"
-msgstr "メールアカウントの作成 -  Cyber​​Panel"
+msgstr "メールアカウントの作成 - Cyber​​Panel"
 
 #: mailServer/templates/mailServer/createEmailAccount.html:13
 msgid "Select a website from the list, to create an email account."
@@ -3057,7 +2857,7 @@ msgstr " 作成されました。"
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:3
 msgid "Delete Email Account - CyberPanel"
-msgstr "メールアカウントの削除 -  Cyber​​Panel"
+msgstr "メールアカウントの削除 - Cyber​​Panel"
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:13
 msgid "Select a website from the list, to delete an email account."
@@ -3069,97 +2869,81 @@ msgid "Email with id : {$ deletedID $} is successfully deleted."
 msgstr "ID 付きメール: {$ deletedID $}は削除されました。"
 
 #: mailServer/templates/mailServer/dkimManager.html:3
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "DKIM Manager - CyberPanel"
-msgstr "SSL の管理 -  Cyber​​Panel"
+msgstr "DKIM マネージャ - CyberPanel"
 
 #: mailServer/templates/mailServer/dkimManager.html:13
 msgid "DKIM Docs"
-msgstr ""
+msgstr "DKIM のドキュメント"
 
 #: mailServer/templates/mailServer/dkimManager.html:14
-#, fuzzy
-#| msgid "This page can be used to Back up your websites"
 msgid "This page can be used to generate and view DKIM keys for Domains"
-msgstr "このページは、Web サイトをバックアップするために使用することができます"
+msgstr "このページは、ドメインのDKIMキーの生成と表示に使用できます"
 
 #: mailServer/templates/mailServer/dkimManager.html:27
 msgid "OpenDKIM is not installed. "
-msgstr ""
+msgstr "OpenDKIMがインストールされていません。 "
 
 #: mailServer/templates/mailServer/dkimManager.html:28
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:67
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:81
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:67
-#, fuzzy
-#| msgid "Install"
 msgid "Install Now"
-msgstr "インストール"
+msgstr "今すぐにインストールする"
 
 #: mailServer/templates/mailServer/dkimManager.html:48
 msgid "OpenDKIM successfully installed, refreshing page in 3 seconds.."
-msgstr ""
+msgstr "OpenDKIMがインストールされ、3秒後にページが再表示されます.."
 
 #: mailServer/templates/mailServer/dkimManager.html:97
-#, fuzzy
-#| msgid "Currently no email accounts exist for this domain."
 msgid "Keys not available for this domain."
-msgstr "現在、このドメインにはメールアカウントはありません。"
+msgstr "このドメインでは使用できないキーです。"
 
 #: mailServer/templates/mailServer/dkimManager.html:98
 msgid "Generate Now"
-msgstr ""
+msgstr "今すぐ生成する"
 
 #: mailServer/templates/mailServer/dkimManager.html:110
-#, fuzzy
-#| msgid "Domains"
 msgid "Domain"
 msgstr "ドメイン"
 
 #: mailServer/templates/mailServer/dkimManager.html:111
 msgid "Private Key"
-msgstr ""
+msgstr "秘密鍵"
 
 #: mailServer/templates/mailServer/dkimManager.html:112
 msgid "Public Key"
-msgstr ""
+msgstr "公開鍵"
 
 #: mailServer/templates/mailServer/emailForwarding.html:3
-#, fuzzy
-#| msgid "Create Email Account - CyberPanel"
 msgid "Setup Email Forwarding - CyberPanel"
-msgstr "メールアカウントの作成 -  Cyber​​Panel"
+msgstr "Eメール転送の設定 - CyberPanel"
 
 #: mailServer/templates/mailServer/emailForwarding.html:12
 #: mailServer/templates/mailServer/emailForwarding.html:19
 msgid "Setup Email Forwarding"
-msgstr ""
+msgstr "Eメール転送のセットアップ"
 
 #: mailServer/templates/mailServer/emailForwarding.html:12
 msgid "Forwarding Docs"
-msgstr ""
+msgstr "ドキュメントの転送"
 
 #: mailServer/templates/mailServer/emailForwarding.html:13
 msgid "This page help you setup email forwarding for your emails."
-msgstr ""
+msgstr "このページは、EメールのEメール転送を設定するのに役立ちます。"
 
 #: mailServer/templates/mailServer/emailForwarding.html:90
 #: mailServer/templates/mailServer/emailForwarding.html:111
-#, fuzzy
-#| msgid "Resource"
 msgid "Source"
-msgstr "リソース"
+msgstr "送信元"
 
 #: mailServer/templates/mailServer/emailForwarding.html:99
-#, fuzzy
-#| msgid "Create Email"
 msgid "Forward Email"
-msgstr "メールの作成"
+msgstr "Eメール転送"
 
 #: mailServer/templates/mailServer/index.html:3
 msgid "Mail Functions - CyberPanel"
-msgstr "メール機能 -  Cyber​​Panel"
+msgstr "メール機能 - Cyber​​Panel"
 
 #: mailServer/templates/mailServer/index.html:12
 msgid "Mail Functions"
@@ -3171,7 +2955,7 @@ msgstr "このページでメールアカウントを管理します。"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:3
 msgid "Edit PHP Configurations - CyberPanel"
-msgstr "PHP 設定の編集 -  Cyber​​Panel"
+msgstr "PHP 設定の編集 - Cyber​​Panel"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:14
 #: managePHP/templates/managePHP/editPHPConfig.html:21
@@ -3226,10 +3010,8 @@ msgid "upload_max_filesize"
 msgstr "upload_max_filesize"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:119
-#, fuzzy
-#| msgid "upload_max_filesize"
 msgid "post_max_size"
-msgstr "upload_max_filesize"
+msgstr "post_max_size"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:126
 msgid "max_input_time"
@@ -3242,7 +3024,7 @@ msgstr "PHP 設定が保存されました。"
 
 #: managePHP/templates/managePHP/index.html:3
 msgid "Manage PHP Installations - CyberPanel"
-msgstr "PHPインストールの管理 -  Cyber​​Panel"
+msgstr "PHPインストールの管理 - Cyber​​Panel"
 
 #: managePHP/templates/managePHP/index.html:12
 msgid "Manage PHP Installations"
@@ -3254,7 +3036,7 @@ msgstr "必要に応じて PHP 設定を編集します。"
 
 #: managePHP/templates/managePHP/installExtensions.html:3
 msgid "Install PHP Extensions - CyberPanel"
-msgstr "PHP 拡張機能のインストール -  Cyber​​Panel"
+msgstr "PHP 拡張機能のインストール - Cyber​​Panel"
 
 #: managePHP/templates/managePHP/installExtensions.html:14
 msgid "Install/uninstall php extensions on this page."
@@ -3274,6 +3056,7 @@ msgid "Extension Name"
 msgstr "拡張機能名"
 
 #: managePHP/templates/managePHP/installExtensions.html:65
+#: pluginHolder/templates/pluginHolder/plugins.html:30
 msgid "Description"
 msgstr "説明"
 
@@ -3309,7 +3092,7 @@ msgstr "操作を実行できません。エラー メッセージ:"
 
 #: manageSSL/templates/manageSSL/index.html:3
 msgid "SSL Functions - CyberPanel"
-msgstr "SSL 機能 -  Cyber​​Panel"
+msgstr "SSL 機能 - Cyber​​Panel"
 
 #: manageSSL/templates/manageSSL/index.html:13
 msgid "SSL Functions"
@@ -3321,13 +3104,13 @@ msgstr "Web サイトとホスト名で Let’s Encrypt SSL を発行します�
 
 #: manageSSL/templates/manageSSL/manageSSL.html:3
 msgid "Manage SSL - CyberPanel"
-msgstr "SSL の管理 -  Cyber​​Panel"
+msgstr "SSL の管理 - Cyber​​Panel"
 
 #: manageSSL/templates/manageSSL/manageSSL.html:13
 #: manageSSL/templates/manageSSL/sslForHostName.html:13
 #: manageSSL/templates/manageSSL/sslForMailServer.html:13
 msgid "SSL Docs"
-msgstr ""
+msgstr "SSL のドキュメント"
 
 #: manageSSL/templates/manageSSL/manageSSL.html:14
 msgid ""
@@ -3355,7 +3138,7 @@ msgstr "SSLが発行されました"
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:3
 msgid "Issue SSL For Hostname - CyberPanel"
-msgstr "ホスト名のSSLを発行 -  Cyber​​Panel"
+msgstr "ホスト名のSSLを発行 - Cyber​​Panel"
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:13
 #: manageSSL/templates/manageSSL/sslForHostName.html:20
@@ -3365,8 +3148,8 @@ msgstr "ホスト名にSSLを発行する"
 #: manageSSL/templates/manageSSL/sslForHostName.html:14
 msgid "Let’s Encrypt SSL for hostname to access CyberPanel on verified SSL."
 msgstr ""
-"検証済みのSSLでCyber​​Panelにアクセスするために、ホスト名でLet’s Encrypt SSLを"
-"申請する。"
+"検証済みの SSL で Cyber​​Panel にアクセスするために、ホスト名で Let’s Encrypt "
+"SSL を申請する。"
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:56
 #: manageSSL/templates/manageSSL/sslForHostName.html:60
@@ -3374,99 +3157,81 @@ msgid "SSL Issued. You can now access CyberPanel at:"
 msgstr "SSL が発行されました。 CyberPanel にアクセスできるようになりました:"
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:3
-#, fuzzy
-#| msgid "Issue SSL For Hostname - CyberPanel"
 msgid "Issue SSL For MailServer - CyberPanel"
-msgstr "ホスト名のSSLを発行 -  Cyber​​Panel"
+msgstr "MailServer の SSL を発行する - CyberPanel"
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:13
 #: manageSSL/templates/manageSSL/sslForMailServer.html:20
-#, fuzzy
-#| msgid "Issue SSL For Hostname"
 msgid "Issue SSL For MailServer"
-msgstr "ホスト名にSSLを発行する"
+msgstr "MailServer の SSL を発行する"
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:14
-#, fuzzy
-#| msgid "Issue Let’s Encrypt SSLs for websites and hostname."
 msgid "Let’s Encrypt SSL for MailServer (Postfix/Dovecot)."
-msgstr "Web サイトとホスト名で Let’s Encrypt SSL を発行します。"
+msgstr "MailServer の Let’s Encrypt SSL（Postfix / Dovecot）。"
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:56
 msgid "SSL Issued, your mail server now uses Lets Encrypt!"
-msgstr ""
+msgstr "SSLが発行されました。メールサーバーは、Lets Encryptを使用できます！"
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:60
-#, fuzzy
-#| msgid "Could not connect to server. Please refresh this page."
 msgid "Could not connect to server, please refresh this page."
-msgstr "サーバーに接続できませんでした。 このページを更新してください。"
+msgstr "サーバーに接続できませんでした。 ページを更新してください。"
 
 #: manageServices/templates/manageServices/managePostfix.html:3
-#, fuzzy
-#| msgid "Change Email Password - CyberPanel"
 msgid "Manage Email Server (Postfix) - CyberPanel"
-msgstr "メール パスワードの変更 - CyberPanel"
+msgstr "Eメールサーバの管理 (Postfix) - CyberPanel"
 
 #: manageServices/templates/manageServices/managePostfix.html:13
 msgid "Manage Email Server (Postfix)!"
-msgstr ""
+msgstr "Eメールサーバの管理 (Postfix)する！"
 
 #: manageServices/templates/manageServices/managePostfix.html:13
 #: manageServices/templates/manageServices/managePowerDNS.html:13
 #: manageServices/templates/manageServices/managePureFtpd.html:13
-#, fuzzy
-#| msgid "Server Status"
 msgid "Services Docs"
-msgstr "サーバーの状態"
+msgstr "サービスのドキュメント"
 
 #: manageServices/templates/manageServices/managePostfix.html:14
 msgid "Enable or disable Email services. "
-msgstr ""
+msgstr "Eメールサービスを有効または無効にします。 "
 
 #: manageServices/templates/manageServices/managePostfix.html:82
 #: manageServices/templates/manageServices/managePowerDNS.html:82
 #: manageServices/templates/manageServices/managePureFtpd.html:82
 msgid "Only administrator can manage services."
-msgstr ""
+msgstr "管理者だけがサービスを管理できます。"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:3
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "Manage PowerDNS - CyberPanel"
-msgstr "SSL の管理 -  Cyber​​Panel"
+msgstr "PowerDNS の管理 - Cyber​​Panel"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:13
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage PowerDNS!"
-msgstr "SSL の管理"
+msgstr "PowerDNS の管理する！"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:14
 msgid "Enable or disable DNS services. "
-msgstr ""
+msgstr "DNS サービスを有効または無効にします。 "
 
 #: manageServices/templates/manageServices/managePureFtpd.html:3
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "Manage FTP Server (Pure FTPD) - CyberPanel"
-msgstr "SSL の管理 -  Cyber​​Panel"
+msgstr "FTPサーバーの管理 (Pure FTPD) - CyberPanel"
 
 #: manageServices/templates/manageServices/managePureFtpd.html:13
 msgid "Manage FTP Server (Pure FTPD)!"
-msgstr ""
+msgstr "FTPサーバーの管理 (Pure FTPD)する！"
 
 #: manageServices/templates/manageServices/managePureFtpd.html:14
 msgid "Enable or disable FTP services. "
-msgstr ""
+msgstr "FTP サービスを有効または無効にします。 "
 
 #: manageServices/templates/manageServices/managePureFtpd.html:22
 msgid "Manage PureFTPD"
-msgstr ""
+msgstr "PureFTPD の管理"
 
 #: packages/templates/packages/createPackage.html:3
 msgid "Create Package - CyberPanel"
-msgstr "パッケージの作成 -  Cyber​​Panel"
+msgstr "パッケージの作成 - Cyber​​Panel"
 
 #: packages/templates/packages/createPackage.html:14
 #: packages/templates/packages/deletePackage.html:13
@@ -3525,7 +3290,7 @@ msgstr "作成されました"
 
 #: packages/templates/packages/deletePackage.html:3
 msgid "Delete Package - CyberPanel"
-msgstr "パッケージの削除 -  Cyber​​Panel"
+msgstr "パッケージの削除 - Cyber​​Panel"
 
 #: packages/templates/packages/deletePackage.html:27
 #: packages/templates/packages/modifyPackage.html:24
@@ -3545,11 +3310,11 @@ msgstr " 削除されました"
 
 #: packages/templates/packages/index.html:3
 msgid "Packages - CyberPanel"
-msgstr "パッケージ -  Cyber​​Panel"
+msgstr "パッケージ - Cyber​​Panel"
 
 #: packages/templates/packages/modifyPackage.html:3
 msgid "Modify Package - CyberPanel"
-msgstr "パッケージの変更 -  Cyber​​Panel"
+msgstr "パッケージの変更 - Cyber​​Panel"
 
 #: packages/templates/packages/modifyPackage.html:104
 msgid "Cannot fetch package details. Error message:"
@@ -3562,6 +3327,18 @@ msgstr "パッケージの詳細が取得されました"
 #: packages/templates/packages/modifyPackage.html:112
 msgid "Successfully Modified"
 msgstr "更新されました"
+
+#: pluginHolder/templates/pluginHolder/plugins.html:15
+#, fuzzy
+#| msgid "List Databases  - CyberPanel"
+msgid "List of installed plugins on your CyberPanel."
+msgstr "データベースの一覧 - Cyber​​Panel"
+
+#: pluginHolder/templates/pluginHolder/plugins.html:31
+#, fuzzy
+#| msgid "Latest Version"
+msgid "Version"
+msgstr "最新バージョン"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:3
 msgid "Access Logs - CyberPanel"
@@ -3593,10 +3370,8 @@ msgstr "最後の50行"
 #: serverLogs/templates/serverLogs/errorLogs.html:42
 #: serverLogs/templates/serverLogs/ftplogs.html:42
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:42
-#, fuzzy
-#| msgid "Server Logs"
 msgid "Clear Logs"
-msgstr "サーバーログ"
+msgstr "ログのクリア"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:52
 #: serverLogs/templates/serverLogs/emailLogs.html:49
@@ -3621,7 +3396,7 @@ msgstr ""
 #: serverLogs/templates/serverLogs/emailLogs.html:3
 #: serverLogs/templates/serverLogs/errorLogs.html:3
 msgid "Error Logs - CyberPanel"
-msgstr "エラーログ -  Cyber​​Panel"
+msgstr "エラーログ - Cyber​​Panel"
 
 #: serverLogs/templates/serverLogs/emailLogs.html:15
 msgid "Email Logs for main web server."
@@ -3633,7 +3408,7 @@ msgstr "メイン Web サーバーのエラーログ。"
 
 #: serverLogs/templates/serverLogs/ftplogs.html:3
 msgid "FTP Logs - CyberPanel"
-msgstr "FTP ログ -  Cyber​​Panel"
+msgstr "FTP ログ - Cyber​​Panel"
 
 #: serverLogs/templates/serverLogs/ftplogs.html:15
 msgid "FTP Logs for main web server."
@@ -3641,7 +3416,7 @@ msgstr "メイン Web サーバーの FTP ログ。"
 
 #: serverLogs/templates/serverLogs/index.html:3
 msgid "Server Logs - CyberPanel"
-msgstr "サーバーログ -  Cyber​​Panel"
+msgstr "サーバーログ - Cyber​​Panel"
 
 #: serverLogs/templates/serverLogs/index.html:13
 msgid "Server Logs"
@@ -3656,20 +3431,16 @@ msgstr ""
 "します: Web サイト -> Web サイトの一覧 ->Web サイトの選択 -> ログの表示."
 
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity Audit Logs - CyberPanel"
-msgstr "セキュリティ -  Cyber​​Panel"
+msgstr "ModSecurity 監査ログ - CyberPanel"
 
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:15
-#, fuzzy
-#| msgid "Security Functions"
 msgid "ModSecurity Audit logs"
-msgstr "セキュリティ機能"
+msgstr "ModSecurity 監査ログ"
 
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:3
 msgid "CyberPanel Main Log File - CyberPanel"
-msgstr "Cyber​​Panel メインログファイル -  Cyber​​Panel"
+msgstr "Cyber​​Panel メインログファイル - Cyber​​Panel"
 
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:16
 msgid ""
@@ -3689,7 +3460,7 @@ msgstr "LiteSpeed の状態とログファイルを表示します。"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:3
 msgid "LiteSpeed Status - CyberPanel"
-msgstr "LiteSpeed の状態 -  Cyber​​Panel"
+msgstr "LiteSpeed の状態 - Cyber​​Panel"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:16
 msgid "LiteSpeed Status:"
@@ -3725,8 +3496,8 @@ msgid ""
 "Could not fetch details, either LiteSpeed is not running or some error "
 "occurred, please see CyberPanel Main log file."
 msgstr ""
-"詳細を取得できませんでした.LiteSpeedが実行されていないか、何らかのエラーが発"
-"生しました。Cyber​​Panelメインログファイルを参照してください。"
+"詳細を取得できませんでした. LiteSpeed が実行されていないか、何らかのエラーが"
+"発生しました。Cyber​​Panel メインログファイルを参照してください。"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:72
 msgid "Reboot Litespeed"
@@ -3746,18 +3517,16 @@ msgid "Could not connect to server."
 msgstr "サーバーに接続できませんでした。"
 
 #: serverStatus/templates/serverStatus/services.html:3
-#, fuzzy
-#| msgid "Server Logs - CyberPanel"
 msgid "Services - CyberPanel"
-msgstr "サーバーログ -  Cyber​​Panel"
+msgstr "サービス - CyberPanel"
 
 #: serverStatus/templates/serverStatus/services.html:25
 msgid "Show stats for services and actions (Start, Stop, Restart)"
-msgstr ""
+msgstr "サービスと操作の統計情報を表示する（開始、停止、再起動）"
 
 #: tuning/templates/tuning/index.html:3
 msgid "Server Tuning - CyberPanel"
-msgstr "サーバーのチューニング -  Cyber​​Panel"
+msgstr "サーバーのチューニング - Cyber​​Panel"
 
 #: tuning/templates/tuning/index.html:12
 msgid "Server Tuning"
@@ -3773,7 +3542,7 @@ msgstr ""
 
 #: tuning/templates/tuning/liteSpeedTuning.html:3
 msgid "LiteSpeed Tuning - CyberPanel"
-msgstr "LiteSpeed チューニング  -  Cyber​​Panel"
+msgstr "LiteSpeed チューニング - Cyber​​Panel"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:13
 msgid ""
@@ -3838,7 +3607,7 @@ msgstr "Web サーバーをチューニングしました。"
 
 #: tuning/templates/tuning/phpTuning.html:3
 msgid "PHP Tuning - CyberPanel"
-msgstr "PHP チューニング -  Cyber​​Panel"
+msgstr "PHP チューニング - Cyber​​Panel"
 
 #: tuning/templates/tuning/phpTuning.html:14
 msgid "Set how each version of PHP behaves in your server here."
@@ -3881,26 +3650,20 @@ msgid "Details Successfully fetched."
 msgstr "詳細が取得されました。"
 
 #: tuning/templates/tuning/phpTuning.html:124
-#, fuzzy
-#| msgid "PHP version "
 msgid "PHP for "
-msgstr "PHP バージョン "
+msgstr "PHP 用 "
 
 #: tuning/templates/tuning/phpTuning.html:124
 msgid "Successfully tuned."
 msgstr "調整されました。"
 
 #: userManagment/templates/userManagment/changeUserACL.html:3
-#, fuzzy
-#| msgid "Create New User - CyberPanel"
 msgid "Change User ACL - CyberPanel"
-msgstr "新しいユーザーの作成する -  Cyber​​Panel"
+msgstr "ユーザー ACL の変更 - Cyber​​Panel"
 
 #: userManagment/templates/userManagment/changeUserACL.html:13
-#, fuzzy
-#| msgid "This page can be used to Back up your websites"
 msgid "This page can be used to change ACL for CyberPanel users."
-msgstr "このページは、Web サイトをバックアップするために使用することができます"
+msgstr "このページは、CyberPanel ユーザーの ACL を変更するために使用できます。"
 
 #: userManagment/templates/userManagment/changeUserACL.html:28
 #: userManagment/templates/userManagment/deleteUser.html:29
@@ -3912,142 +3675,106 @@ msgstr "ユーザーを選択"
 #: userManagment/templates/userManagment/createUser.html:60
 #: userManagment/templates/userManagment/deleteACL.html:28
 #: userManagment/templates/userManagment/modifyACL.html:28
-#, fuzzy
-#| msgid "Select Email"
 msgid "Select ACL"
-msgstr "メールを選択"
+msgstr "ACL を選択"
 
 #: userManagment/templates/userManagment/changeUserACL.html:55
-#, fuzzy
-#| msgid "Change"
 msgid "Change ACL"
-msgstr "変更"
+msgstr "ACL の変更"
 
 #: userManagment/templates/userManagment/createACL.html:3
-#, fuzzy
-#| msgid "Create New User - CyberPanel"
 msgid "Create new ACL - CyberPanel"
-msgstr "新しいユーザーの作成する -  Cyber​​Panel"
+msgstr "新しい ACL の作成する - CyberPanel"
 
 #: userManagment/templates/userManagment/createACL.html:13
 msgid ""
 "Create new Access Control defination, that specifies what CyberPanel users "
 "can do."
 msgstr ""
+"CyberPanel ユーザーが何ができるのかを指定する新しいアクセス制御定義を作成しま"
+"す。"
 
 #: userManagment/templates/userManagment/createACL.html:19
 #: userManagment/templates/userManagment/modifyACL.html:19
-#, fuzzy
-#| msgid "Details"
 msgid "ACL Details"
-msgstr "詳細"
+msgstr "ACL の詳細"
 
 #: userManagment/templates/userManagment/createACL.html:28
-#, fuzzy
-#| msgid "Last Name"
 msgid "ACL Name"
-msgstr "姓"
+msgstr "ACL名"
 
 #: userManagment/templates/userManagment/createACL.html:41
 #: userManagment/templates/userManagment/modifyACL.html:44
-#, fuzzy
-#| msgid "Admin"
 msgid "Make Admin"
-msgstr "管理者"
+msgstr "管理者に設定"
 
 #: userManagment/templates/userManagment/createACL.html:60
 #: userManagment/templates/userManagment/modifyACL.html:63
-#, fuzzy
-#| msgid "Version Management"
 msgid "User Management"
-msgstr "バージョン管理"
+msgstr "ユーザー管理"
 
 #: userManagment/templates/userManagment/createACL.html:99
 #: userManagment/templates/userManagment/modifyACL.html:104
-#, fuzzy
-#| msgid "Version Management"
 msgid "Website Management"
-msgstr "バージョン管理"
+msgstr "Web サイトの管理"
 
 #: userManagment/templates/userManagment/createACL.html:122
 #: userManagment/templates/userManagment/modifyACL.html:127
-#, fuzzy
-#| msgid "Suspend/Unsuspend Website"
 msgid "Suspend Website"
-msgstr "Web サイトの休止/休止解除"
+msgstr "Web サイトを一時停止"
 
 #: userManagment/templates/userManagment/createACL.html:139
 #: userManagment/templates/userManagment/modifyACL.html:144
-#, fuzzy
-#| msgid "Package Name"
 msgid "Package Management"
-msgstr "パッケージ名"
+msgstr "パッケージ管理"
 
 #: userManagment/templates/userManagment/createACL.html:169
 #: userManagment/templates/userManagment/modifyACL.html:174
-#, fuzzy
-#| msgid "Database Name"
 msgid "Database Management"
-msgstr "データベース名"
+msgstr "データベース管理"
 
 #: userManagment/templates/userManagment/createACL.html:199
 #: userManagment/templates/userManagment/modifyACL.html:204
-#, fuzzy
-#| msgid "Version Management"
 msgid "DNS Management"
-msgstr "バージョン管理"
+msgstr "DNS 管理"
 
 #: userManagment/templates/userManagment/createACL.html:232
 #: userManagment/templates/userManagment/modifyACL.html:237
-#, fuzzy
-#| msgid "Add/Delete Rules"
 msgid "Add/Delete"
-msgstr "ルールの追加/削除"
+msgstr "追加/削除"
 
 #: userManagment/templates/userManagment/createACL.html:240
 #: userManagment/templates/userManagment/modifyACL.html:245
-#, fuzzy
-#| msgid "Version Management"
 msgid "Email Management"
-msgstr "バージョン管理"
+msgstr "Eメール管理"
 
 #: userManagment/templates/userManagment/createACL.html:291
 #: userManagment/templates/userManagment/modifyACL.html:296
-#, fuzzy
-#| msgid "Version Management"
 msgid "FTP Management"
-msgstr "バージョン管理"
+msgstr "FTP の管理"
 
 #: userManagment/templates/userManagment/createACL.html:321
 #: userManagment/templates/userManagment/modifyACL.html:326
-#, fuzzy
-#| msgid "Version Management"
 msgid "Backup Management"
-msgstr "バージョン管理"
+msgstr "バックアップ管理"
 
 #: userManagment/templates/userManagment/createACL.html:355
 #: userManagment/templates/userManagment/modifyACL.html:360
-#, fuzzy
-#| msgid "Schedule Back up"
 msgid "Achedule Back up"
-msgstr "バックアップスケジュール"
+msgstr "スケジュールバックアップ"
 
 #: userManagment/templates/userManagment/createACL.html:373
 #: userManagment/templates/userManagment/modifyACL.html:378
-#, fuzzy
-#| msgid "Version Management"
 msgid "SSL Management"
-msgstr "バージョン管理"
+msgstr "SSL管理"
 
 #: userManagment/templates/userManagment/createACL.html:405
-#, fuzzy
-#| msgid "Create Email"
 msgid "Create ACL"
-msgstr "メールの作成"
+msgstr "ACL の作成"
 
 #: userManagment/templates/userManagment/createUser.html:3
 msgid "Create New User - CyberPanel"
-msgstr "新しいユーザーの作成する -  Cyber​​Panel"
+msgstr "新しいユーザーの作成する - Cyber​​Panel"
 
 #: userManagment/templates/userManagment/createUser.html:13
 msgid "Create root, reseller or normal users on this page."
@@ -4118,20 +3845,16 @@ msgid ""
 msgstr "結合された姓と名の長さは20文字以下でなければなりません"
 
 #: userManagment/templates/userManagment/deleteACL.html:3
-#, fuzzy
-#| msgid "Delete User - CyberPanel"
 msgid "Delete ACL - CyberPanel"
-msgstr "ユーザーの削除 -  Cyber​​Panel"
+msgstr "ACL の削除 - CyberPanel"
 
 #: userManagment/templates/userManagment/deleteACL.html:13
-#, fuzzy
-#| msgid "This page can be used to suspend/unsuspend website."
 msgid "This page can be used to delete ACL."
-msgstr "このページは Web サイトの休止/休止解除に使用できます。"
+msgstr "このページを使用してACLを削除できます。"
 
 #: userManagment/templates/userManagment/deleteUser.html:3
 msgid "Delete User - CyberPanel"
-msgstr "ユーザーの削除 -  Cyber​​Panel"
+msgstr "ユーザーの削除 - Cyber​​Panel"
 
 #: userManagment/templates/userManagment/deleteUser.html:14
 msgid "Websites owned by this user will automatically transfer to the root."
@@ -4147,31 +3870,27 @@ msgstr "ユーザー "
 
 #: userManagment/templates/userManagment/index.html:3
 msgid "User Functions - CyberPanel"
-msgstr "ユーザ機能 -  Cyber​​Panel"
+msgstr "ユーザ機能 - Cyber​​Panel"
 
 #: userManagment/templates/userManagment/index.html:14
 msgid "Create, edit and delete users on this page."
 msgstr "このページでユーザーを作成、編集、削除を行います。"
 
 #: userManagment/templates/userManagment/modifyACL.html:3
-#, fuzzy
-#| msgid "Modify User - CyberPanel"
 msgid "Modify an ACL - CyberPanel"
-msgstr "ユーザーの変更 -  Cyber​​Panel"
+msgstr "ACL を変更する - CyberPanel"
 
 #: userManagment/templates/userManagment/modifyACL.html:12
 msgid "Modify an ACL"
-msgstr ""
+msgstr "ACL を変更する"
 
 #: userManagment/templates/userManagment/modifyACL.html:13
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can modify an existing ACL."
-msgstr "このページでは、バックアップ先を設定できます。 （SFTP）"
+msgstr "このページでは、既存の ACL を変更できます。"
 
 #: userManagment/templates/userManagment/modifyUser.html:3
 msgid "Modify User - CyberPanel"
-msgstr "ユーザーの変更 -  Cyber​​Panel"
+msgstr "ユーザーの変更 - Cyber​​Panel"
 
 #: userManagment/templates/userManagment/modifyUser.html:13
 msgid "Modify existing user settings on this page."
@@ -4194,20 +3913,16 @@ msgid "Details fetched."
 msgstr "詳細が取得されました。"
 
 #: userManagment/templates/userManagment/resellerCenter.html:3
-#, fuzzy
-#| msgid "Restore Website - CyberPanel"
 msgid "Reseller Center - CyberPanel"
-msgstr "Web サイトの復元 -  Cyber​​Panel"
+msgstr "リセラーセンター - CyberPanel"
 
 #: userManagment/templates/userManagment/resellerCenter.html:13
 msgid "Change owner of users and change websites limits."
-msgstr ""
+msgstr "ユーザーの所有者を変更し、Web サイトの制限を変更します。"
 
 #: userManagment/templates/userManagment/resellerCenter.html:40
-#, fuzzy
-#| msgid "Select Owner"
 msgid "New Owner"
-msgstr "所有者を選択"
+msgstr "新しい所有者"
 
 #: userManagment/templates/userManagment/userProfile.html:3
 msgid "Account Details - CyberPanel"
@@ -4223,20 +3938,16 @@ msgid "List the account details for the currently logged in user."
 msgstr "現在ログインしているユーザーアカウントの詳細を一覧表示します。"
 
 #: userManagment/templates/userManagment/userProfile.html:58
-#, fuzzy
-#| msgid "Account Level"
 msgid "Account ACL"
-msgstr "アカウントレベル"
+msgstr "アカウント ACL"
 
 #: userManagment/templates/userManagment/userProfile.html:67
 msgid "( 0 = Unlimited )"
 msgstr "( 0 = 無制限 )"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:3
-#, fuzzy
-#| msgid "Application Installer"
 msgid "Application Installer - CyberPanel"
-msgstr "アプリケーションインストーラー"
+msgstr "アプリケーションインストラー - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:14
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:22
@@ -4246,10 +3957,8 @@ msgid "Application Installer"
 msgstr "アプリケーションインストーラー"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:15
-#, fuzzy
-#| msgid "Application Installer"
 msgid "One-click application install."
-msgstr "アプリケーションインストーラー"
+msgstr "ワンクリックでアプリケーションをインストール。"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:28
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:31
@@ -4259,7 +3968,7 @@ msgstr "アプリケーションインストーラー"
 #: websiteFunctions/templates/websiteFunctions/website.html:957
 #: websiteFunctions/templates/websiteFunctions/website.html:960
 msgid "Install wordpress with LSCache"
-msgstr "LSCache で Wordpress をインストールする"
+msgstr "LSCache と Wordpress をインストールする"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:35
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:672
@@ -4268,10 +3977,8 @@ msgid "Wordpress with LSCache"
 msgstr "Wordpress の LSCache"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:41
-#, fuzzy
-#| msgid "Install wordpress with LSCache"
 msgid "Install Joomla with(?) LSCache"
-msgstr "LSCache で Wordpress をインストールする"
+msgstr "LSCache(?)  と Joomla をインストールする"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:44
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:47
@@ -4279,20 +3986,18 @@ msgstr "LSCache で Wordpress をインストールする"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:683
 #: websiteFunctions/templates/websiteFunctions/website.html:969
 #: websiteFunctions/templates/websiteFunctions/website.html:972
-#, fuzzy
-#| msgid "Install wordpress with LSCache"
 msgid "Install Joomla with LSCache"
-msgstr "LSCache で Wordpress をインストールする"
+msgstr "LSCache と Joomla をインストールする"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:48
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:684
 #: websiteFunctions/templates/websiteFunctions/website.html:973
 msgid "Joomla"
-msgstr ""
+msgstr "Joomla"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:3
 msgid "Create New Website - CyberPanel"
-msgstr "新しい Web サイトの作成する -  Cyber​​Panel"
+msgstr "新しい Web サイトの作成する - Cyber​​Panel"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:13
 #: websiteFunctions/templates/websiteFunctions/index.html:14
@@ -4315,7 +4020,7 @@ msgstr "所有者を選択"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:54
 msgid "Do not enter WWW, it will be auto created!"
-msgstr ""
+msgstr "WWW を入力しないでください、自動的に作成されます！"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:56
 #: websiteFunctions/templates/websiteFunctions/website.html:325
@@ -4331,14 +4036,12 @@ msgstr "その他の機能"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:144
 #: websiteFunctions/templates/websiteFunctions/website.html:406
-#, fuzzy
-#| msgid "is successfully created."
 msgid "Website succesfully created."
-msgstr "作成されました。"
+msgstr "Web サイトが作成されました。"
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:3
 msgid "Delete Website - CyberPanel"
-msgstr "Web サイトの削除 -  Cyber​​Panel"
+msgstr "Web サイトの削除 - Cyber​​Panel"
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:13
 msgid ""
@@ -4357,46 +4060,38 @@ msgid "Successfully Deleted."
 msgstr "削除されました。"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:3
-#, fuzzy
-#| msgid "Home - CyberPanel"
 msgid "Domain Aliases - CyberPanel"
-msgstr "ホーム - CyberPanel"
+msgstr "ドメインエイリアス- CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:12
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:19
-#, fuzzy
-#| msgid "Domain Name"
 msgid "Domain Aliases"
-msgstr "ドメイン名"
+msgstr "ドメインエイリアス"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:13
 msgid ""
 "With Domain Aliases you can visit example.com using example.net and view the "
 "same content."
 msgstr ""
+"ドメインエイリアスを使用すると、example.netを使用して example.com にアクセス"
+"して同じコンテンツを表示できます。"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:29
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:105
-#, fuzzy
-#| msgid "Create Email"
 msgid "Create Alias"
-msgstr "メールの作成"
+msgstr "エイリアスの作成"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:36
-#, fuzzy
-#| msgid "Create Domain"
 msgid "Master Domain"
-msgstr "ドメインの作成"
+msgstr "マスタドメイン"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:37
 msgid "Alias"
-msgstr ""
+msgstr "エイリアス"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:38
-#, fuzzy
-#| msgid "System Status"
 msgid "File System Path"
-msgstr "システムの状態"
+msgstr "ファイルシステムのパス"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:53
 #: websiteFunctions/templates/websiteFunctions/website.html:515
@@ -4405,13 +4100,11 @@ msgstr "発行"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:63
 msgid "Domain Aliases not found."
-msgstr ""
+msgstr "ドメインエイリアスが見つかりません。"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:79
-#, fuzzy
-#| msgid "List Domains"
 msgid "Alias Domain"
-msgstr "ドメインの一覧"
+msgstr "エイリアスドメイン"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:93
 msgid ""
@@ -4422,24 +4115,20 @@ msgstr ""
 "署名された SSL が発行されます。後で独自の SSL を追加できます。"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:114
-#, fuzzy
-#| msgid "Action failed. Error message:"
 msgid "Operation failed. Error message:"
-msgstr "操作が失敗しました。エラーメッセージ:"
+msgstr "操作に失敗しました。エラーメッセージ:"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:118
 msgid "Alias successfully created. Refreshing page in 3 seconds..."
-msgstr ""
+msgstr "エイリアスが作成されました。3秒後にページが再表示されます..."
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:122
-#, fuzzy
-#| msgid "Action successful."
 msgid "Operation Successfull."
-msgstr "操作は終了しました。"
+msgstr "操作は成功しました。"
 
 #: websiteFunctions/templates/websiteFunctions/index.html:3
 msgid "Website Functions - CyberPanel"
-msgstr "Web サイト機能 -  Cyber​​Panel"
+msgstr "Web サイト機能 - Cyber​​Panel"
 
 #: websiteFunctions/templates/websiteFunctions/index.html:89
 #: websiteFunctions/templates/websiteFunctions/index.html:91
@@ -4449,55 +4138,41 @@ msgid "Suspend/Unsuspend Website"
 msgstr "Web サイトの休止/休止解除"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:3
-#, fuzzy
-#| msgid "Install PHP Extensions - CyberPanel"
 msgid "Install Joomla - CyberPanel"
-msgstr "PHP 拡張機能のインストール -  Cyber​​Panel"
+msgstr "Joomla をインストールする - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:12
-#, fuzzy
-#| msgid "Install"
 msgid "Install Joomla"
-msgstr "インストール"
+msgstr "Joomla をインストールする"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:13
 msgid "One-click Joomla Install!"
-msgstr ""
+msgstr "ワンクリックで Joomla をインストール！"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:20
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:20
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:20
-#, fuzzy
-#| msgid "Installation failed. Error message:"
 msgid "Installation Details"
-msgstr "インストールに失敗しました。エラー メッセージ:"
+msgstr "インストールの詳細"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:28
-#, fuzzy
-#| msgid "File Name"
 msgid "Site Name"
-msgstr "﻿﻿ファイル名"
+msgstr "サイト名"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:35
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:35
-#, fuzzy
-#| msgid "Modify User"
 msgid "Login User"
-msgstr "ユーザーの変更"
+msgstr "ログインユーザー"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:42
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:42
-#, fuzzy
-#| msgid "Password"
 msgid "Login Password"
-msgstr "パスワード"
+msgstr "ログインパスワード"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:49
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:63
-#, fuzzy
-#| msgid "Database Name"
 msgid "Database Prefix"
-msgstr "データベース名"
+msgstr "データベースプレフィックス"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:56
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:70
@@ -4515,63 +4190,45 @@ msgstr "インストールに失敗しました。エラー メッセージ:"
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:95
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:109
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:95
-#, fuzzy
-#| msgid "Installation successful. To complete the setup visit:"
 msgid "Installation successful. Visit:"
-msgstr "インストールに成功しました。 セットアップを完了するには:"
+msgstr "インストールが成功しました。訪問："
 
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:3
-#, fuzzy
-#| msgid "Install PHP Extensions - CyberPanel"
 msgid "Install PrestaShop - CyberPanel"
-msgstr "PHP 拡張機能のインストール -  Cyber​​Panel"
+msgstr "Prestashop をインストールする - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:12
-#, fuzzy
-#| msgid "Install"
 msgid "Install PrestaShop"
-msgstr "インストール"
+msgstr "PrestaShop をインストールする"
 
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:13
-#, fuzzy
-#| msgid "Application Installer"
 msgid "One-click PrestaShop Install!"
-msgstr "アプリケーションインストーラー"
+msgstr "ワンクリックでPrestaShopをインストールする！"
 
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:28
-#, fuzzy
-#| msgid "File Name"
 msgid "Shop Name"
-msgstr "﻿﻿ファイル名"
+msgstr "店舗名"
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:3
-#, fuzzy
-#| msgid "Install PHP Extensions - CyberPanel"
 msgid "Install WordPress - CyberPanel"
-msgstr "PHP 拡張機能のインストール -  Cyber​​Panel"
+msgstr "WordPress のインストール - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:12
-#, fuzzy
-#| msgid "Install"
 msgid "Install WordPress"
-msgstr "インストール"
+msgstr "WordPressをインストールする"
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:13
-#, fuzzy
-#| msgid "Install wordpress with LSCache"
 msgid "Install WordPress with LSCache."
-msgstr "LSCache で Wordpress をインストールする"
+msgstr "LSCache と Wordpress をインストールする。"
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:28
 msgid "Blog Title"
-msgstr ""
+msgstr "ブログタイトル"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:13
 #: websiteFunctions/templates/websiteFunctions/website.html:13
-#, fuzzy
-#| msgid "Previous"
 msgid "Preview"
-msgstr "前へ"
+msgstr "プレビュー"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:14
 #: websiteFunctions/templates/websiteFunctions/website.html:14
@@ -4656,7 +4313,7 @@ msgstr "メイン vHost 設定の編集"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:266
 #: websiteFunctions/templates/websiteFunctions/website.html:553
 msgid "vHost Conf"
-msgstr ""
+msgstr "vHost Conf"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:274
 #: websiteFunctions/templates/websiteFunctions/website.html:561
@@ -4665,17 +4322,13 @@ msgstr "Rewrite ルールを追加 (.htaccess)"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:277
 #: websiteFunctions/templates/websiteFunctions/website.html:564
-#, fuzzy
-#| msgid "Add Rewrite Rules (.htaccess)"
 msgid "Rewrite Rules (.htaccess)"
-msgstr "Rewrite ルールを追加 (.htaccess)"
+msgstr "Rewrite ルール (.htaccess)"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:278
 #: websiteFunctions/templates/websiteFunctions/website.html:565
-#, fuzzy
-#| msgid "Save Rewrite Rules"
 msgid "Rewrite Rules"
-msgstr "Rewrite ルールを保存"
+msgstr "Rewrite ルール"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:286
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:289
@@ -4693,19 +4346,15 @@ msgstr "SSL を追加"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:301
 #: websiteFunctions/templates/websiteFunctions/website.html:585
 #: websiteFunctions/templates/websiteFunctions/website.html:588
-#, fuzzy
-#| msgid "Select PHP Version"
 msgid "Change PHP Version"
-msgstr "PHP バージョンを選択"
+msgstr "PHP のバージョンを変更する"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:302
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:498
 #: websiteFunctions/templates/websiteFunctions/website.html:589
 #: websiteFunctions/templates/websiteFunctions/website.html:785
-#, fuzzy
-#| msgid "Change"
 msgid "Change PHP"
-msgstr "変更"
+msgstr "PHP を変更する"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:314
 #: websiteFunctions/templates/websiteFunctions/website.html:601
@@ -4733,10 +4382,8 @@ msgstr "現在の設定を取得できませんでした。エラー メッセ�
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:434
 #: websiteFunctions/templates/websiteFunctions/website.html:669
 #: websiteFunctions/templates/websiteFunctions/website.html:721
-#, fuzzy
-#| msgid "SSH Configurations Saved."
 msgid "Configurations saved."
-msgstr "SSH の設定が保存されました。"
+msgstr "設定が保存されました。"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:420
 #: websiteFunctions/templates/websiteFunctions/website.html:707
@@ -4760,17 +4407,13 @@ msgstr "Rewrite ルールを保存"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:509
 #: websiteFunctions/templates/websiteFunctions/website.html:796
-#, fuzzy
-#| msgid "Cannot create website. Error message:"
 msgid "Failed to change PHP version. Error message:"
-msgstr "Web サイトを作成できません。エラーメッセージ："
+msgstr "PHP バージョンの変更に失敗しました。 エラーメッセージ："
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:513
 #: websiteFunctions/templates/websiteFunctions/website.html:800
-#, fuzzy
-#| msgid "Password successfully changed for :"
 msgid "PHP successfully changed for: "
-msgstr "パスワードが変更されました:"
+msgstr "PHP が変更されました: "
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:538
 #: websiteFunctions/templates/websiteFunctions/website.html:826
@@ -4793,185 +4436,161 @@ msgstr "ファイル 管理"
 #: websiteFunctions/templates/websiteFunctions/website.html:848
 #: websiteFunctions/templates/websiteFunctions/website.html:886
 msgid "open_basedir Protection"
-msgstr ""
+msgstr "open_basedir 保護"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:561
 #: websiteFunctions/templates/websiteFunctions/website.html:849
 msgid "open_basedir"
-msgstr ""
+msgstr "open_basedir"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:573
 #: websiteFunctions/templates/websiteFunctions/website.html:861
-#, fuzzy
-#| msgid "Create FTP Account"
 msgid "Create FTP Acct"
 msgstr "FTP アカウントの作成"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:585
 #: websiteFunctions/templates/websiteFunctions/website.html:873
-#, fuzzy
-#| msgid "Delete FTP Account"
 msgid "Delete FTP Acct"
 msgstr "FTP アカウントの削除"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:620
 #: websiteFunctions/templates/websiteFunctions/website.html:908
-#, fuzzy
-#| msgid "Save Changes"
 msgid "Apply Changes"
-msgstr "変更を保存"
+msgstr "変更を適用"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:632
 #: websiteFunctions/templates/websiteFunctions/website.html:920
-#, fuzzy
-#| msgid "Rule successfully added."
 msgid "Changes successfully saved."
-msgstr "ルールが追加されました。"
+msgstr "変更は保存されました。"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:692
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:695
 #: websiteFunctions/templates/websiteFunctions/website.html:981
 #: websiteFunctions/templates/websiteFunctions/website.html:984
 msgid "Attach Git with this website!"
-msgstr ""
+msgstr "このウェブサイトでGitをアタッチしてください！"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:696
 #: websiteFunctions/templates/websiteFunctions/website.html:985
 msgid "Git"
-msgstr ""
+msgstr "Git"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:705
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:708
 #: websiteFunctions/templates/websiteFunctions/website.html:994
 #: websiteFunctions/templates/websiteFunctions/website.html:997
-#, fuzzy
-#| msgid "Install"
 msgid "Install Prestashop"
-msgstr "インストール"
+msgstr "Prestashop をインストールする"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:709
 #: websiteFunctions/templates/websiteFunctions/website.html:998
 msgid "Prestashop"
-msgstr ""
+msgstr "Prestashop"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:3
-#, fuzzy
-#| msgid "Version Management - CyberPanel"
 msgid "Cron Management - CyberPanel"
-msgstr "バージョン管理 -  Cyber​​Panel"
+msgstr "Cron 管理 - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:12
 #: websiteFunctions/templates/websiteFunctions/listCron.html:19
-#, fuzzy
-#| msgid "Version Management"
 msgid "Cron Management"
-msgstr "バージョン管理"
+msgstr "Cron 管理"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:12
 msgid "Cron Docs"
-msgstr ""
+msgstr "Cron のドキュメント"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:13
-#, fuzzy
-#| msgid "Create, edit and delete users on this page."
 msgid "Create, edit or delete your cron jobs from this page."
-msgstr "このページでユーザーを作成、編集、削除を行います。"
+msgstr "このページから cron ジョブを作成、編集、または削除します。"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:37
-#, fuzzy
-#| msgid "Add Domains"
 msgid "Add Cron"
-msgstr "ドメインの追加"
+msgstr "Cron を追加"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:46
 #: websiteFunctions/templates/websiteFunctions/listCron.html:95
 msgid "Minute"
-msgstr ""
+msgstr "分"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:47
 #: websiteFunctions/templates/websiteFunctions/listCron.html:101
 msgid "Hour"
-msgstr ""
+msgstr "時間"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:48
 msgid "Day of Month"
-msgstr ""
+msgstr "当月の日"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:49
 #: websiteFunctions/templates/websiteFunctions/listCron.html:113
 msgid "Month"
-msgstr ""
+msgstr "月"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:50
 msgid "Day of Week"
-msgstr ""
+msgstr "曜日"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:51
 #: websiteFunctions/templates/websiteFunctions/listCron.html:126
 msgid "Command"
-msgstr ""
+msgstr "コマンド"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:52
-#, fuzzy
-#| msgid "FTP Functions"
 msgid "Action"
-msgstr "FTP 機能"
+msgstr "操作"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:79
 msgid "Pre defined"
-msgstr ""
+msgstr "定義済み"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:82
 msgid "Every minute"
-msgstr ""
+msgstr "毎分"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:83
 msgid "Every 5 minutes"
-msgstr ""
+msgstr "５分ごと"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:84
 msgid "Every 30 minutes"
-msgstr ""
+msgstr "30分ごと"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:85
 msgid "Every hour"
-msgstr ""
+msgstr "毎時"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:86
 msgid "Every day"
-msgstr ""
+msgstr "毎日"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:87
 msgid "Every week"
-msgstr ""
+msgstr "毎週"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:88
 msgid "Every month"
-msgstr ""
+msgstr "毎月"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:89
 msgid "Every year"
-msgstr ""
+msgstr "毎年"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:107
 msgid "Day of month"
-msgstr ""
+msgstr "当月の日"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:119
 msgid "Day of week"
-msgstr ""
+msgstr "曜日"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:135
-#, fuzzy
-#| msgid "Save Rewrite Rules"
 msgid "Save edits"
-msgstr "Rewrite ルールを保存"
+msgstr "編集の保存"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:142
-#, fuzzy
-#| msgid "Add Records"
 msgid "Add cron"
-msgstr "レコードを追加"
+msgstr "cron を追加"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:152
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:105
@@ -4979,22 +4598,20 @@ msgid "Cannot fetch website details. Error message:"
 msgstr "Web サイトの詳細を取得できません。エラー メッセージ:"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:156
-#, fuzzy
-#| msgid "Could not save SSL. Error message:"
 msgid "Unable to add/save Cron. Error message:"
-msgstr "SSL を保存できませんでした。エラー メッセージ:"
+msgstr "Cronを追加/保存できません。 エラーメッセージ："
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:159
 msgid "Cron job saved"
-msgstr ""
+msgstr "Cron ジョブを保存"
 
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:3
 msgid "Websites Hosted - CyberPanel"
-msgstr "ホストされているWebサイト -  Cyber​​Panel"
+msgstr "ホストされているWebサイト - Cyber​​Panel"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:3
 msgid "Modify Website - CyberPanel"
-msgstr "Web サイトの変更 -  Cyber​​Panel"
+msgstr "Web サイトの変更 - Cyber​​Panel"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:51
 msgid "Current Package:"
@@ -5013,73 +4630,67 @@ msgid "Website Details Successfully fetched"
 msgstr "Web サイトの詳細が取得されました"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:3
-#, fuzzy
-#| msgid "Version Management - CyberPanel"
 msgid "Git Management - CyberPanel"
-msgstr "バージョン管理 -  Cyber​​Panel"
+msgstr "Git の管理 - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:12
-#, fuzzy
-#| msgid "Version Management"
 msgid "Git Management"
-msgstr "バージョン管理"
+msgstr "Git の管理"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:13
 msgid "Attach git to your websites."
-msgstr ""
+msgstr "あなたのウェブサイトにgitをアタッチしてください。"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:21
 msgid "Attach Git"
-msgstr ""
+msgstr "Git アタッチ"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:29
 msgid "Providers"
-msgstr ""
+msgstr "プロバイダ"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:36
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:163
 msgid "Deployment Key"
-msgstr ""
+msgstr "展開キー"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:67
 msgid ""
 "Before attaching repo to your website, make sure to place your Development "
 "key in your GIT repository."
 msgstr ""
+"レポジトリを Web サイトにアタッチする前に、開発キーを GIT リポジトリに配置し"
+"てください。"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:79
-#, fuzzy
-#| msgid "Extension Name"
 msgid "Repository Name"
-msgstr "拡張機能名"
+msgstr "リポジトリ名"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:88
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:265
 msgid "Branch"
-msgstr ""
+msgstr "ブランチ"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:99
 msgid "Attach Now"
-msgstr ""
+msgstr "今すぐアタッチ"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:123
 msgid "GIT Successfully attached, refreshing page in 3 seconds... Visit:"
-msgstr ""
+msgstr "GIT アタッチされ、ページは3秒後に再表示されます... 訪問："
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:215
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:276
-#, fuzzy
-#| msgid "Change"
 msgid "Change Branch"
-msgstr "変更"
+msgstr "ブランチの変更"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:225
 msgid "Detach Repo"
-msgstr ""
+msgstr "リポジトリのデタッチ"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:231
 msgid "Webhook URL"
-msgstr ""
+msgstr "Webhook URL"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:232
 msgid ""
@@ -5088,22 +4699,22 @@ msgid ""
 "disable SSL check while configuring webhook. This will initiate a pull from "
 "your resposity as soon as you commit some changes."
 msgstr ""
+"この URL を Git リポジトリの Webhooks セクションに追加します。ホスト名 SSL を"
+"使用した場合は、IP をホスト名に置き換えます。それ以外の場合は、Webhook の設定"
+"中に IP を使用し、SSL チェックを無効にします。これは、あなたがいくつかの変更"
+"を行うとすぐにあなたのリポジトリからプルを開始します。"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:244
-#, fuzzy
-#| msgid "Records successfully fetched for"
 msgid "Repo successfully detached, refreshing in 3 seconds.."
-msgstr "レコードが取得されました"
+msgstr "レポが切り離され、3秒後に再表示されます.."
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:290
-#, fuzzy
-#| msgid "Backup successfully cancelled."
 msgid "Branch successfully changed."
-msgstr "バックアップはキャンセルされました。"
+msgstr "ブランチが変更されました。"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:3
 msgid "Suspend/Unsuspend Website - CyberPanel"
-msgstr "Web サイトの休止/休止解除 -  Cyber​​Panel"
+msgstr "Web サイトの休止/休止解除 - Cyber​​Panel"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:14
 msgid "This page can be used to suspend/unsuspend website."
@@ -5142,19 +4753,17 @@ msgstr "ドメインの追加"
 #: websiteFunctions/templates/websiteFunctions/website.html:282
 #: websiteFunctions/templates/websiteFunctions/website.html:285
 #: websiteFunctions/templates/websiteFunctions/website.html:286
-#, fuzzy
-#| msgid "Domains"
 msgid "Domain Alias"
-msgstr "ドメイン"
+msgstr "ドメインエイリアス"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:293
 #: websiteFunctions/templates/websiteFunctions/website.html:296
 msgid "Add new Cron Job"
-msgstr ""
+msgstr "新しい Cron ジョブを追加する"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:297
 msgid "Cron Jobs"
-msgstr ""
+msgstr "Cron ジョブ"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:323
 msgid "This path is relative to: "
@@ -5181,10 +4790,8 @@ msgid "SSL Issued:"
 msgstr "SSLの発行:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:453
-#, fuzzy
-#| msgid "Database created successfully."
 msgid "Changes applied successfully."
-msgstr "データベースが作成されました。"
+msgstr "変更は適用されました。"
 
 #~ msgid "CPU Status"
 #~ msgstr "CPU の状態"

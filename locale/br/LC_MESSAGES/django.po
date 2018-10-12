@@ -14,8 +14,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-28 11:29+0500\n"
-"PO-Revision-Date: 2017-10-24 22:23+0300\n"
+"POT-Creation-Date: 2018-10-10 13:01+0500\n"
+"PO-Revision-Date: 2018-10-09 15:48+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: bg\n"
@@ -24,53 +24,61 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 1.8.7.1\n"
 
-#: CyberCP/settings.py:170
-msgid "English"
-msgstr ""
-
 #: CyberCP/settings.py:171
-msgid "Chinese"
-msgstr ""
+msgid "English"
+msgstr "Английски"
 
 #: CyberCP/settings.py:172
-msgid "Bulgarian"
-msgstr ""
+msgid "Chinese"
+msgstr "Китайски"
 
 #: CyberCP/settings.py:173
-msgid "Portuguese"
-msgstr ""
+msgid "Bulgarian"
+msgstr "Български"
 
 #: CyberCP/settings.py:174
-msgid "Japanese"
-msgstr ""
+msgid "Portuguese"
+msgstr "Португалски"
 
 #: CyberCP/settings.py:175
-msgid "Bosnian"
-msgstr ""
+msgid "Japanese"
+msgstr "Японски"
 
 #: CyberCP/settings.py:176
-msgid "Greek"
-msgstr ""
+msgid "Bosnian"
+msgstr "Босненски"
 
 #: CyberCP/settings.py:177
-msgid "Russian"
-msgstr ""
+msgid "Greek"
+msgstr "Гръцки"
 
 #: CyberCP/settings.py:178
-msgid "Turkish"
-msgstr ""
+msgid "Russian"
+msgstr "Руски"
 
 #: CyberCP/settings.py:179
-msgid "Spanish"
-msgstr ""
+msgid "Turkish"
+msgstr "Турски"
 
 #: CyberCP/settings.py:180
-msgid "French"
-msgstr ""
+msgid "Spanish"
+msgstr "Испански"
 
 #: CyberCP/settings.py:181
+msgid "French"
+msgstr "Френски"
+
+#: CyberCP/settings.py:182
+#, fuzzy
+#| msgid "Policy"
 msgid "Polish"
-msgstr ""
+msgstr "Политика"
+
+#: CyberCP/settings.py:183
+#, fuzzy
+#| msgid "Filename"
+msgid "Vietnamese"
+msgstr "Име"
 
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
@@ -79,8 +87,6 @@ msgstr "Архивирай Страница"
 
 #: backup/templates/backup/backup.html:14
 #: backup/templates/backup/restore.html:14
-#, fuzzy
-#| msgid "Back up"
 msgid "Backup Docs"
 msgstr "Архив"
 
@@ -211,10 +217,8 @@ msgstr "Постави дестинация за Архив"
 #: backup/templates/backup/backupSchedule.html:13
 #: backup/templates/backup/remoteBackups.html:14
 #: backup/templates/backup/remoteBackups.html:21
-#, fuzzy
-#| msgid "Restore Back up"
 msgid "Remote Backups"
-msgstr "Възстанови Архив"
+msgstr "Отдалечени архиви"
 
 #: backup/templates/backup/backupDestinations.html:15
 msgid "On this page you can set up your Back up destinations. (SFTP)"
@@ -222,7 +226,7 @@ msgstr "От тази страница може да настройте дест
 
 #: backup/templates/backup/backupDestinations.html:21
 msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
-msgstr ""
+msgstr "Добави дестинация ( SSH порт трябва да бъде 22)"
 
 #: backup/templates/backup/backupDestinations.html:30
 #: backup/templates/backup/remoteBackups.html:29
@@ -253,7 +257,7 @@ msgstr "Порт"
 
 #: backup/templates/backup/backupDestinations.html:47
 msgid "Backup server SSH Port, leave empty for 22."
-msgstr ""
+msgstr "Backup server SSH порт, оставете празни за 22."
 
 #: backup/templates/backup/backupDestinations.html:55
 #: backup/templates/backup/backupSchedule.html:54
@@ -267,8 +271,6 @@ msgid "Connection to"
 msgstr "Връзка към"
 
 #: backup/templates/backup/backupDestinations.html:69
-#, fuzzy
-#| msgid "failed. Please delete and re-add."
 msgid "failed. Please delete and re-add. "
 msgstr "неуспешно. Моля премахнете и добавете отново."
 
@@ -327,7 +329,7 @@ msgstr "Дестинацията е добавена"
 #: websiteFunctions/templates/websiteFunctions/website.html:804
 #: websiteFunctions/templates/websiteFunctions/website.html:924
 msgid "Could not connect to server. Please refresh this page."
-msgstr ""
+msgstr "Връзката е неуспешна. Моля презаредете страницата."
 
 #: backup/templates/backup/backupDestinations.html:98
 msgid "IP"
@@ -340,36 +342,38 @@ msgstr "Провери връзката"
 
 #: backup/templates/backup/backupSchedule.html:3
 msgid "Schedule Back up - CyberPanel"
-msgstr ""
+msgstr "Планирано Архивиране - CyberPanel"
 
 #: backup/templates/backup/backupSchedule.html:13
 #: backup/templates/backup/backupSchedule.html:20
 #: backup/templates/backup/index.html:75 backup/templates/backup/index.html:77
 #: baseTemplate/templates/baseTemplate/index.html:433
 msgid "Schedule Back up"
-msgstr ""
+msgstr "Планирано Архивиране "
 
 #: backup/templates/backup/backupSchedule.html:14
 msgid ""
 "On this page you can schedule Back ups to localhost or remote server (If you "
 "have added one)."
 msgstr ""
+"От тази страница може да планирате архивите на локален или отдалечен сървър "
+"(ако има добавен)."
 
 #: backup/templates/backup/backupSchedule.html:29
 msgid "Select Destination"
-msgstr ""
+msgstr "избери дестинация"
 
 #: backup/templates/backup/backupSchedule.html:40
 msgid "Select Frequency"
-msgstr ""
+msgstr "Избери кога"
 
 #: backup/templates/backup/backupSchedule.html:69
 msgid "Cannot add schedule. Error message:"
-msgstr ""
+msgstr "Планирането не е добавено. Съобщение за грешка: "
 
 #: backup/templates/backup/backupSchedule.html:73
 msgid "Schedule Added"
-msgstr ""
+msgstr "Планирането е добавено"
 
 #: backup/templates/backup/backupSchedule.html:91
 msgid "Frequency"
@@ -377,7 +381,7 @@ msgstr "Честота"
 
 #: backup/templates/backup/index.html:3
 msgid "Back up Home - CyberPanel"
-msgstr ""
+msgstr "Архив - CyberPanel"
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:30
 #: baseTemplate/templates/baseTemplate/homePage.html:181
@@ -390,7 +394,7 @@ msgstr "Архив"
 
 #: backup/templates/backup/index.html:14
 msgid "Back up and restore sites."
-msgstr ""
+msgstr "Архивирай и възстанови сайтове."
 
 #: backup/templates/backup/index.html:19
 #: baseTemplate/templates/baseTemplate/homePage.html:100
@@ -434,36 +438,28 @@ msgstr "Добави/Премахни Дестинация"
 #: baseTemplate/templates/baseTemplate/index.html:434
 #: userManagment/templates/userManagment/createACL.html:365
 #: userManagment/templates/userManagment/modifyACL.html:370
-#, fuzzy
-#| msgid "Restore Back up"
 msgid "Remote Back ups"
-msgstr "Възстанови Архив"
+msgstr "Отдалечени Архиви"
 
 #: backup/templates/backup/remoteBackups.html:3
-#, fuzzy
-#| msgid "Create Nameserver - CyberPanel"
 msgid "Transfer Websites from Remote Server - CyberPanel"
-msgstr "Създай Nameserver - CyberPanel"
+msgstr "Премести страница от отдалечен сървър - CyberPanel"
 
 #: backup/templates/backup/remoteBackups.html:14
-#, fuzzy
-#| msgid "Restore Back up"
 msgid "Remote Transfer"
-msgstr "Възстанови Архив"
+msgstr "Отдалечен трансфер"
 
 #: backup/templates/backup/remoteBackups.html:15
 msgid "This feature can import website(s) from remote server"
-msgstr ""
+msgstr "Тази функция може да постави страница/и от отдалечен сървър"
 
 #: backup/templates/backup/remoteBackups.html:46
-#, fuzzy
-#| msgid "FTP Accounts"
 msgid "Fetch Accounts"
-msgstr "FTP Акаунти"
+msgstr "Извлечи акаунти"
 
 #: backup/templates/backup/remoteBackups.html:55
 msgid "Start Transfer"
-msgstr ""
+msgstr "Стартирай трансфер"
 
 #: backup/templates/backup/remoteBackups.html:59
 #: emailPremium/templates/emailPremium/emailLimits.html:75
@@ -475,38 +471,28 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/website.html:316
 #: websiteFunctions/templates/websiteFunctions/website.html:774
 #: websiteFunctions/templates/websiteFunctions/website.html:899
-#, fuzzy
-#| msgid "Cancel Backup"
 msgid "Cancel"
-msgstr "Откажи Архив"
+msgstr "Откажи"
 
 #: backup/templates/backup/remoteBackups.html:72
-#, fuzzy
-#| msgid "Could not connect. Please refresh this page."
 msgid "Could not connect, please refresh this page."
 msgstr "Не можем да се свържем, моля презаредете страницата."
 
 #: backup/templates/backup/remoteBackups.html:76
 msgid "Accounts Successfully Fetched from remote server."
-msgstr ""
+msgstr "Акаунтите са успешно извлечени от отдалечения сървър."
 
 #: backup/templates/backup/remoteBackups.html:80
-#, fuzzy
-#| msgid " is successfully created."
 msgid "Backup Process successfully started."
-msgstr "е успешно създаден."
+msgstr "Процеса по архивиранее успешно стартиран."
 
 #: backup/templates/backup/remoteBackups.html:84
-#, fuzzy
-#| msgid "Rule successfully added."
 msgid "Backup successfully cancelled."
-msgstr "Правилата са успешно добавени."
+msgstr "Архивирането е успешно спряно."
 
 #: backup/templates/backup/remoteBackups.html:96
-#, fuzzy
-#| msgid "Select Account"
 msgid "Search Accounts.."
-msgstr "Избери Акаунт"
+msgstr "Търси Акаунти"
 
 #: backup/templates/backup/remoteBackups.html:107
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:65
@@ -556,16 +542,17 @@ msgid ""
 "from CyberPanel Back up generation tool, it will detect all Back ups under "
 "<strong>/home/backup</strong>."
 msgstr ""
+"От тази страница може да възстановявате Ваши страници. Архивите трябва да "
+"бъдат генерирани от CyberPanel. Архивите автоматично са засечени от  "
+"<strong>/home/backup</strong>."
 
 #: backup/templates/backup/restore.html:30
 msgid "Select Back up"
 msgstr "Избери Архив"
 
 #: backup/templates/backup/restore.html:61
-#, fuzzy
-#| msgid "Configurations"
 msgid "Condition"
-msgstr "Конфигурация"
+msgstr "Състояние"
 
 #: backup/templates/backup/restore.html:86
 #: databases/templates/databases/deleteDatabase.html:64
@@ -584,7 +571,7 @@ msgstr "Съобщение за Грешка"
 
 #: backup/templates/backup/restore.html:90
 msgid "Site related to this Back up already exists."
-msgstr ""
+msgstr "Страницата, която е в този архив е вече налична."
 
 #: baseTemplate/templates/baseTemplate/homePage.html:3
 msgid "Home - CyberPanel"
@@ -592,7 +579,7 @@ msgstr "Начало - CyberPanel"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:13
 msgid "Use the tabs to navigate through the control panel."
-msgstr ""
+msgstr "Използвай tab за навигация в контролния панел."
 
 #: baseTemplate/templates/baseTemplate/homePage.html:23
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:37
@@ -802,10 +789,8 @@ msgstr "Преглед"
 
 #: baseTemplate/templates/baseTemplate/index.html:280
 #: baseTemplate/templates/baseTemplate/index.html:281
-#, fuzzy
-#| msgid "IP Address"
 msgid "Server IP Address"
-msgstr "IP Адрес"
+msgstr "Сървърен IP Адрес"
 
 #: baseTemplate/templates/baseTemplate/index.html:284
 #: baseTemplate/templates/baseTemplate/index.html:286
@@ -1074,10 +1059,8 @@ msgstr "Изтрий Email"
 #: baseTemplate/templates/baseTemplate/index.html:396
 #: userManagment/templates/userManagment/createACL.html:263
 #: userManagment/templates/userManagment/modifyACL.html:268
-#, fuzzy
-#| msgid "Email Log"
 msgid "Email Forwarding"
-msgstr "Email Лог"
+msgstr "Email пренасочване"
 
 #: baseTemplate/templates/baseTemplate/index.html:397
 #: databases/templates/databases/listDataBases.html:73
@@ -1094,10 +1077,8 @@ msgstr "Промени Парола"
 #: mailServer/templates/mailServer/dkimManager.html:75
 #: userManagment/templates/userManagment/createACL.html:283
 #: userManagment/templates/userManagment/modifyACL.html:288
-#, fuzzy
-#| msgid "File Manager"
 msgid "DKIM Manager"
-msgstr "Файл Мениджър"
+msgstr "DKIM Мениджър"
 
 #: baseTemplate/templates/baseTemplate/index.html:399
 msgid "Access Webmail"
@@ -1168,10 +1149,8 @@ msgstr "Hostname SSL"
 #: manageSSL/templates/manageSSL/index.html:62
 #: userManagment/templates/userManagment/createACL.html:396
 #: userManagment/templates/userManagment/modifyACL.html:401
-#, fuzzy
-#| msgid "Server Logs"
 msgid "MailServer SSL"
-msgstr "Сървърни Логове"
+msgstr "MailServer SSL"
 
 #: baseTemplate/templates/baseTemplate/index.html:457
 msgid "Server"
@@ -1203,8 +1182,6 @@ msgid "CyberPanel Main Log File"
 msgstr "Главен CyberPanel Лог"
 
 #: baseTemplate/templates/baseTemplate/index.html:485
-#, fuzzy
-#| msgid "Server Status"
 msgid "Services Status"
 msgstr "Сървър Статус"
 
@@ -1259,14 +1236,12 @@ msgstr "FTP Логове"
 
 #: baseTemplate/templates/baseTemplate/index.html:520
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:14
-#, fuzzy
-#| msgid "Security Functions"
 msgid "ModSecurity Audit Logs"
-msgstr "Функции на Защитата"
+msgstr "ModSecurity Audit логове"
 
 #: baseTemplate/templates/baseTemplate/index.html:520
 msgid "ModSec Audit Logs"
-msgstr ""
+msgstr "ModSec Audit логове"
 
 #: baseTemplate/templates/baseTemplate/index.html:534
 msgid "Firewall Home"
@@ -1288,45 +1263,37 @@ msgid "Secure SSH"
 msgstr "Сигурен SSH"
 
 #: baseTemplate/templates/baseTemplate/index.html:536
-#, fuzzy
-#| msgid "Edit PHP Configurations"
 msgid "ModSecurity Configurations"
-msgstr "Редактирай PHP Конфигурация"
+msgstr "Редактирай ModSecurity Конфигурация"
 
 #: baseTemplate/templates/baseTemplate/index.html:536
-#, fuzzy
-#| msgid "Security"
 msgid "ModSecurity Conf"
-msgstr "Сигурност"
+msgstr "ModSecurity Conf"
 
 #: baseTemplate/templates/baseTemplate/index.html:537
 #: firewall/templates/firewall/modSecurityRules.html:20
-#, fuzzy
-#| msgid "Security"
 msgid "ModSecurity Rules"
-msgstr "Сигурност"
+msgstr "ModSecurity Rules"
 
 #: baseTemplate/templates/baseTemplate/index.html:538
 msgid "ModSecurity Rules Packs"
-msgstr ""
+msgstr "ModSecurity Rules Packs"
 
 #: baseTemplate/templates/baseTemplate/index.html:539
 msgid "ConfigServer Security & Firewall (CSF)"
-msgstr ""
+msgstr "ConfigServer Security & Firewall (CSF)"
 
 #: baseTemplate/templates/baseTemplate/index.html:539
 #: firewall/templates/firewall/csf.html:21
 #: firewall/templates/firewall/csf.html:85
 #: firewall/templates/firewall/csf.html:94
 msgid "CSF"
-msgstr ""
+msgstr "CSF"
 
 #: baseTemplate/templates/baseTemplate/index.html:546
 #: baseTemplate/templates/baseTemplate/index.html:548
-#, fuzzy
-#| msgid "Mail Functions"
 msgid "Mail Settings"
-msgstr "Mail Функции"
+msgstr "Mail Настройки"
 
 #: baseTemplate/templates/baseTemplate/index.html:549
 msgid "NEW"
@@ -1335,50 +1302,59 @@ msgstr "НОВ"
 #: baseTemplate/templates/baseTemplate/index.html:554
 #: emailPremium/templates/emailPremium/policyServer.html:20
 msgid "Email Policy Server"
-msgstr ""
+msgstr "Email Policy Server"
 
 #: baseTemplate/templates/baseTemplate/index.html:555
-#, fuzzy
-#| msgid "Email Logs"
 msgid "Email Limits"
-msgstr "Email Логове"
+msgstr "Email Лимити"
 
 #: baseTemplate/templates/baseTemplate/index.html:556
-#, fuzzy
-#| msgid "Configurations"
 msgid "SpamAssassin Configurations"
-msgstr "Конфигурация"
+msgstr "SpamAssassin  Конфигурация"
 
 #: baseTemplate/templates/baseTemplate/index.html:556
 #: emailPremium/templates/emailPremium/SpamAssassin.html:20
 #: firewall/templates/firewall/spamassassin.html:20
 msgid "SpamAssassin"
-msgstr ""
+msgstr "SpamAssassin"
 
 #: baseTemplate/templates/baseTemplate/index.html:563
 #: baseTemplate/templates/baseTemplate/index.html:565
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage Services"
-msgstr "Нов SSL"
+msgstr "Manage Services"
 
 #: baseTemplate/templates/baseTemplate/index.html:570
 #: manageServices/templates/manageServices/managePowerDNS.html:22
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage PowerDNS"
-msgstr "Нов SSL"
+msgstr "Управлявай PowerDNS"
 
 #: baseTemplate/templates/baseTemplate/index.html:571
 #: manageServices/templates/manageServices/managePostfix.html:22
 msgid "Manage Postfix"
-msgstr ""
+msgstr "Управлявай Postfix"
 
 #: baseTemplate/templates/baseTemplate/index.html:572
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage FTP"
-msgstr "Нов SSL"
+msgstr "Управлявай FTP"
+
+#: baseTemplate/templates/baseTemplate/index.html:579
+#: baseTemplate/templates/baseTemplate/index.html:581
+#: pluginHolder/templates/pluginHolder/plugins.html:14
+#: pluginHolder/templates/pluginHolder/plugins.html:21
+msgid "Plugins"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:586
+#, fuzzy
+#| msgid "Install Extensions"
+msgid "Installed Plugins"
+msgstr "Инсталирай Модул"
+
+#: baseTemplate/templates/baseTemplate/index.html:586
+#, fuzzy
+#| msgid "Install"
+msgid "Installed"
+msgstr "Инсталирай"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
@@ -1467,7 +1443,7 @@ msgstr "Бази от Данни - CyberPanel"
 
 #: databases/templates/databases/listDataBases.html:14
 msgid "List Databases or change their passwords."
-msgstr ""
+msgstr "Списък на базите от данни или промени техните пароли."
 
 #: databases/templates/databases/listDataBases.html:28
 #: dns/templates/dns/addDeleteDNSRecords.html:42
@@ -1481,25 +1457,25 @@ msgstr "Избери Домейн"
 #: dns/templates/dns/addDeleteDNSRecords.html:367
 #: ftp/templates/ftp/listFTPAccounts.html:58
 msgid "Records successfully fetched for"
-msgstr ""
+msgstr "Записите са успешно извлечени за"
 
 #: databases/templates/databases/listDataBases.html:50
 msgid "Password changed for: "
-msgstr ""
+msgstr "Паролата е променена за"
 
 #: databases/templates/databases/listDataBases.html:54
 msgid "Cannot change password for "
-msgstr ""
+msgstr "Невъзмона промяна на паролата за"
 
 #: databases/templates/databases/listDataBases.html:59
 #: firewall/templates/firewall/firewall.html:176
 #: ftp/templates/ftp/listFTPAccounts.html:71
 msgid "Could Not Connect to server. Please refresh this page"
-msgstr ""
+msgstr "Действието не е изпълнение. Моля презаредете страницата."
 
 #: databases/templates/databases/listDataBases.html:89
 msgid "Database User"
-msgstr ""
+msgstr "Потребител за база от данни"
 
 #: databases/templates/databases/listDataBases.html:98
 #: ftp/templates/ftp/listFTPAccounts.html:112
@@ -1508,35 +1484,37 @@ msgstr "Промени"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:3
 msgid "Add/Modify DNS Records - CyberPanel"
-msgstr ""
+msgstr "Добави/Промени DNS записи - CyberPanel"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:13
 msgid "Add/Modify DNS Zone"
-msgstr ""
+msgstr "Добави/Промени DNS записи"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:13
 #: dns/templates/dns/createDNSZone.html:12
 #: dns/templates/dns/createNameServer.html:12
 #: dns/templates/dns/deleteDNSZone.html:12
 msgid "DNS Docs"
-msgstr ""
+msgstr "DNS Документация"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:14
 msgid ""
 "On this page you can add/modify dns records for domains whose dns zone is "
 "already created."
 msgstr ""
+"От тази страница може да добавяте или променяте dns записи за домейните "
+"чиито  dns зони са вече създадени."
 
 #: dns/templates/dns/addDeleteDNSRecords.html:19
 msgid "Add Records"
-msgstr ""
+msgstr "Добави записи"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:27
 #: dns/templates/dns/createDNSZone.html:24
 #: dns/templates/dns/createNameServer.html:24
 #: dns/templates/dns/deleteDNSZone.html:25
 msgid "PowerDNS is disabled."
-msgstr ""
+msgstr "PowerDNS е спрян"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:29
 #: dns/templates/dns/createDNSZone.html:26
@@ -1549,8 +1527,6 @@ msgstr ""
 #: mailServer/templates/mailServer/createEmailAccount.html:28
 #: mailServer/templates/mailServer/deleteEmailAccount.html:28
 #: mailServer/templates/mailServer/emailForwarding.html:28
-#, fuzzy
-#| msgid "Enable"
 msgid "Enable Now"
 msgstr "Позволи"
 
@@ -1567,6 +1543,7 @@ msgstr "Позволи"
 #: dns/templates/dns/addDeleteDNSRecords.html:328
 #: filemanager/templates/filemanager/index.html:212
 #: firewall/templates/firewall/firewall.html:136
+#: pluginHolder/templates/pluginHolder/plugins.html:28
 #: serverStatus/templates/serverStatus/litespeedStatus.html:40
 msgid "Name"
 msgstr "Име"
@@ -1583,7 +1560,7 @@ msgstr "Име"
 #: dns/templates/dns/addDeleteDNSRecords.html:298
 #: dns/templates/dns/addDeleteDNSRecords.html:329
 msgid "TTL"
-msgstr ""
+msgstr "TTL"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:88
 #: dns/templates/dns/addDeleteDNSRecords.html:111
@@ -1600,10 +1577,8 @@ msgid "Add"
 msgstr "Добави"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:105
-#, fuzzy
-#| msgid "IP Address"
 msgid "IPV6 Address"
-msgstr "IP Адрес"
+msgstr "IPV6 Адрес"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:129
 #: dns/templates/dns/addDeleteDNSRecords.html:156
@@ -1621,35 +1596,30 @@ msgstr "Приоритет"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:181
 msgid "Policy"
-msgstr ""
+msgstr "Политика"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:205
 msgid "Text"
-msgstr ""
+msgstr "Текст"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:229
-#, fuzzy
-#| msgid "Value"
 msgid "SOA Value"
-msgstr "Валута"
+msgstr "SOA стойност"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:253
-#, fuzzy
-#| msgid "First Nameserver"
 msgid "Name server"
-msgstr "Първи Nameserver"
+msgstr "Name server"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:276
-#, fuzzy
-#| msgid "Priority"
 msgid "Prioirty"
 msgstr "Приоритет"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:281
 msgid "Content"
-msgstr ""
+msgstr "Стойност"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:327
+#: pluginHolder/templates/pluginHolder/plugins.html:29
 msgid "Type"
 msgstr "Вид"
 
@@ -1686,6 +1656,8 @@ msgid ""
 "This page is used to create DNS zone, to edit dns zone you can visit Modify "
 "DNS Zone Page."
 msgstr ""
+"Тази страница се използва за създаването на DNS зони. За редакция "
+"използвайте страницата за редакция на DNS зони."
 
 #: dns/templates/dns/createDNSZone.html:18
 #: dns/templates/dns/createNameServer.html:18
@@ -1709,7 +1681,7 @@ msgstr "Създай Nameserver - CyberPanel"
 msgid ""
 "You can use this page to setup nameservers using which people on the "
 "internet can resolve websites hosted on this server."
-msgstr ""
+msgstr "От тази страница може да добавяте NameServers."
 
 #: dns/templates/dns/createNameServer.html:50
 msgid "First Nameserver"
@@ -1721,11 +1693,11 @@ msgstr "Втори Nameserver"
 
 #: dns/templates/dns/createNameServer.html:98
 msgid "Nameserver cannot be created. Error message:"
-msgstr ""
+msgstr "Nameserver  не са създадени. Съобшение за грешка:"
 
 #: dns/templates/dns/createNameServer.html:102
 msgid "The following nameservers were successfully created:"
-msgstr ""
+msgstr "Следните Nameserver са успешно създадени:"
 
 #: dns/templates/dns/deleteDNSZone.html:3
 msgid "Delete DNS Zone - CyberPanel"
@@ -1743,6 +1715,8 @@ msgid ""
 "This page can be used to delete DNS Zone. Deleting the DNS zone will remove "
 "all its related records as well."
 msgstr ""
+"От тази страница може да премахвате DNS зони. Премахването на зона ще "
+"премахне и всички свързани с нея записи."
 
 #: dns/templates/dns/deleteDNSZone.html:40
 msgid "Select Zone"
@@ -1760,7 +1734,7 @@ msgstr "Сирен ли си?"
 
 #: dns/templates/dns/deleteDNSZone.html:72
 msgid "Cannot delete zone. Error message: "
-msgstr ""
+msgstr "Зоната не е премахната. Съобщение за грешка:"
 
 #: dns/templates/dns/deleteDNSZone.html:76
 msgid "Zone for domain:"
@@ -1772,52 +1746,46 @@ msgstr "е успешно заличено."
 
 #: dns/templates/dns/index.html:3
 msgid "DNS Functions - CyberPanel"
-msgstr ""
+msgstr "DNS Функции - CyberPanel"
 
 #: dns/templates/dns/index.html:12
 msgid "DNS Functions"
-msgstr ""
+msgstr "DNS Функции"
 
 #: dns/templates/dns/index.html:13
 msgid "Create, edit and delete DNS zones on this page."
-msgstr ""
+msgstr "Създавай, редактирай или премахвай DNS зони от тази страница."
 
 #: dns/templates/dns/index.html:53 dns/templates/dns/index.html:108
 msgid "Add Delete Records"
-msgstr ""
+msgstr "Добави Премахни Записи"
 
 #: dns/templates/dns/index.html:55 dns/templates/dns/index.html:110
 msgid "Add Delete/Records"
-msgstr ""
+msgstr "Добави Премахни/Записи"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:3
 #: firewall/templates/firewall/spamassassin.html:3
-#, fuzzy
-#| msgid "Packages - CyberPanel"
 msgid "SpamAssassin - CyberPanel"
-msgstr "Пакети - CyberPanel"
+msgstr "SpamAssassin - CyberPanel"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:13
 #: firewall/templates/firewall/spamassassin.html:13
-#, fuzzy
-#| msgid "Configurations"
 msgid "SpamAssassin Configurations!"
-msgstr "Конфигурация"
+msgstr "SpamAssassin Конфигурация"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:13
 msgid "SpamAssassin Docs"
-msgstr ""
+msgstr "SpamAssassin Документация"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:14
 #: firewall/templates/firewall/spamassassin.html:14
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can configure SpamAssassin settings."
-msgstr "От тази страница може да настройте дестинацията за архивите (SFTP)"
+msgstr "От тази страница може да настройте SpamAssassin."
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:29
 msgid "SpamAssassin is not installed "
-msgstr ""
+msgstr "SpamAssassin не е инсталиран"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:31
 #: firewall/templates/firewall/csf.html:30
@@ -1825,8 +1793,6 @@ msgstr ""
 #: firewall/templates/firewall/modSecurityRules.html:72
 #: firewall/templates/firewall/modSecurityRulesPacks.html:30
 #: firewall/templates/firewall/spamassassin.html:31
-#, fuzzy
-#| msgid "Install"
 msgid "Install Now."
 msgstr "Инсталирай"
 
@@ -1834,10 +1800,8 @@ msgstr "Инсталирай"
 #: firewall/templates/firewall/csf.html:42
 #: firewall/templates/firewall/modSecurity.html:43
 #: firewall/templates/firewall/spamassassin.html:43
-#, fuzzy
-#| msgid "Cannot add destination. Error message:"
 msgid "Failed to start installation, Error message: "
-msgstr "Дестинацията не е добавена, защото:"
+msgstr "Неуспешно стартиране на инсталацията. Съобщение за грешка:"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:47
 #: emailPremium/templates/emailPremium/SpamAssassin.html:134
@@ -1865,18 +1829,18 @@ msgstr "Не можем да се свържем, моля презаредет�
 #: firewall/templates/firewall/csf.html:50
 #: firewall/templates/firewall/modSecurity.html:51
 #: firewall/templates/firewall/spamassassin.html:51
-#, fuzzy
-#| msgid "Installation failed. Error message:"
 msgid "Installation failed."
-msgstr "Инсталацията Не завърши, защото:"
+msgstr "Инсталацията не завърши успешно."
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:55
 msgid "SpamAssassin successfully installed, refreshing page in 3 seconds.."
 msgstr ""
+"SpamAssassin е успешно инсталиран. Страницата ще се презареди след 3 "
+"секунди.."
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:66
 msgid "Winter is coming, but so is SpamAssassin."
-msgstr ""
+msgstr "Зимата идва ... както и SpamAssassin."
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:114
 #: emailPremium/templates/emailPremium/policyServer.html:40
@@ -1885,39 +1849,29 @@ msgstr ""
 #: manageServices/templates/manageServices/managePostfix.html:42
 #: manageServices/templates/manageServices/managePowerDNS.html:42
 #: manageServices/templates/manageServices/managePureFtpd.html:42
-#, fuzzy
-#| msgid "Save Changes"
 msgid "Save changes."
-msgstr "Запази промените"
+msgstr "Запази промените."
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:126
-#, fuzzy
-#| msgid "Could not fetch current configuration. Error message:"
 msgid "Failed to save SpamAssassin configurations. Error message: "
-msgstr "Текущата конфигурация не е изтеглена, защото:"
+msgstr "Промените на SpamAssassin не са запазени. Съобщение за грешка :"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:130
-#, fuzzy
-#| msgid " is successfully created."
 msgid "SpamAssassin configurations successfully saved."
-msgstr "е успешно създаден."
+msgstr "SpamAssassin конфигурация е успешно променена."
 
 #: emailPremium/templates/emailPremium/emailLimits.html:13
 #: emailPremium/templates/emailPremium/emailPage.html:13
 #: emailPremium/templates/emailPremium/listDomains.html:14
 #: emailPremium/templates/emailPremium/policyServer.html:13
-#, fuzzy
-#| msgid "Email Logs"
 msgid "Emai Limits Docs"
-msgstr "Email Логове"
+msgstr "Email лимити документация"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14
 msgid "View and change email limits for a domain name."
-msgstr ""
+msgstr "Преглед и редакция на email лимити за домейн."
 
 #: emailPremium/templates/emailPremium/emailLimits.html:25
-#, fuzzy
-#| msgid "Resource Usage"
 msgid "Domain Resource Usage"
 msgstr "Използвани ресурси"
 
@@ -1926,7 +1880,7 @@ msgstr "Използвани ресурси"
 #: emailPremium/templates/emailPremium/emailPage.html:54
 #: emailPremium/templates/emailPremium/listDomains.html:59
 msgid "Limits are being Applied!"
-msgstr ""
+msgstr "Лимитите са зададени!"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:53
 #: emailPremium/templates/emailPremium/emailLimits.html:159
@@ -1942,7 +1896,7 @@ msgstr "Забрани"
 #: emailPremium/templates/emailPremium/emailPage.html:56
 #: emailPremium/templates/emailPremium/listDomains.html:61
 msgid "Limits are not being applied!"
-msgstr ""
+msgstr "Лимитите не са променени!"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:55
 #: emailPremium/templates/emailPremium/emailLimits.html:161
@@ -1959,104 +1913,82 @@ msgstr "Позволи"
 #: filemanager/templates/filemanager/index.html:708
 #: websiteFunctions/templates/websiteFunctions/listCron.html:66
 msgid "Edit"
-msgstr ""
+msgstr "Редакция"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:70
 #: emailPremium/templates/emailPremium/emailPage.html:78
-#, fuzzy
-#| msgid "Memory Soft Limit"
 msgid "Monthly Limit"
-msgstr "Memory Soft Limit"
+msgstr "Месечен лимит"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:83
 #: emailPremium/templates/emailPremium/emailPage.html:101
-#, fuzzy
-#| msgid "Change"
 msgid "Change Limits"
-msgstr "Промени"
+msgstr "Промени лимити"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:93
 #: emailPremium/templates/emailPremium/emailPage.html:111
-#, fuzzy
-#| msgid "Cannot create website. Error message:"
 msgid "Can not change limits. Error message:"
-msgstr "Страницата не е създадена, защото:"
+msgstr "Лимитите не са променени. Грешка:"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:97
-#, fuzzy
-#| msgid " is successfully created."
 msgid "Limits successfully changed, refreshing in 3 seconds."
-msgstr "е успешно създаден."
+msgstr ""
+"Лимитите са успешно променени. Страницата ще се презареди след 3 секунди."
 
 #: emailPremium/templates/emailPremium/emailLimits.html:126
 #: emailPremium/templates/emailPremium/emailPage.html:25
-#, fuzzy
-#| msgid "Resource Usage"
 msgid "Email Resource Usage"
-msgstr "Използвани ресурси"
+msgstr "Email използвани ресурси"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:133
-#, fuzzy
-#| msgid "Select Email"
 msgid "Search Emails.."
-msgstr "Избери Email"
+msgstr "Търси Email..."
 
 #: emailPremium/templates/emailPremium/emailLimits.html:164
 #: emailPremium/templates/emailPremium/listDomains.html:65
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:209
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage"
-msgstr "Нов SSL"
+msgstr "Управлявай"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:172
 #: emailPremium/templates/emailPremium/emailPage.html:179
 #: emailPremium/templates/emailPremium/listDomains.html:73
+#: pluginHolder/templates/pluginHolder/plugins.html:51
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:53
 msgid "Cannot list websites. Error message:"
-msgstr ""
+msgstr "Страниците не са извлечени. Съобщение за грешка:"
 
 #: emailPremium/templates/emailPremium/emailPage.html:14
 msgid "View and change limits for an Email Address."
-msgstr ""
+msgstr "Прегледай и промени лимити за Email адрес."
 
 #: emailPremium/templates/emailPremium/emailPage.html:60
 msgid "Logging in ON!"
-msgstr ""
+msgstr "Логването е включено!"
 
 #: emailPremium/templates/emailPremium/emailPage.html:62
 msgid "Logging is Off"
-msgstr ""
+msgstr "Логването е спряно!"
 
 #: emailPremium/templates/emailPremium/emailPage.html:88
-#, fuzzy
-#| msgid "Memory Soft Limit"
 msgid "Hourly Limit"
-msgstr "Memory Soft Limit"
+msgstr "Часови лимит"
 
 #: emailPremium/templates/emailPremium/emailPage.html:115
-#, fuzzy
-#| msgid " is successfully created."
 msgid "Limits successfully changed."
-msgstr "е успешно създаден."
+msgstr "Лимитите са успешно променени."
 
 #: emailPremium/templates/emailPremium/emailPage.html:151
-#, fuzzy
-#| msgid "Email Logs"
 msgid "Search Emails Logs.."
-msgstr "Email Логове"
+msgstr "Търси Emails логове."
 
 #: emailPremium/templates/emailPremium/emailPage.html:155
-#, fuzzy
-#| msgid "FTP Logs"
 msgid "Flush Logs"
-msgstr "FTP Логове"
+msgstr "Опресни логове"
 
 #: emailPremium/templates/emailPremium/listDomains.html:3
-#, fuzzy
-#| msgid "Home - CyberPanel"
 msgid "Domains - CyberPanel"
-msgstr "Начало - CyberPanel"
+msgstr "Домейни - CyberPanel"
 
 #: emailPremium/templates/emailPremium/listDomains.html:14
 #: websiteFunctions/templates/websiteFunctions/website.html:272
@@ -2064,49 +1996,39 @@ msgstr "Начало - CyberPanel"
 #: websiteFunctions/templates/websiteFunctions/website.html:276
 #: websiteFunctions/templates/websiteFunctions/website.html:293
 #: websiteFunctions/templates/websiteFunctions/website.html:296
-#, fuzzy
-#| msgid "Select Domain"
 msgid "List Domains"
-msgstr "Избери Домейн"
+msgstr "Списък с Домейн"
 
 #: emailPremium/templates/emailPremium/listDomains.html:15
 msgid "On this page you manage emails limits for Domains/Email Addresses"
-msgstr ""
+msgstr "От тази страница може да управлявате лимитите за Домейни/Email адреси."
 
 #: emailPremium/templates/emailPremium/listDomains.html:22
 #: packages/templates/packages/createPackage.html:35
 #: packages/templates/packages/modifyPackage.html:40
 #: websiteFunctions/templates/websiteFunctions/website.html:253
-#, fuzzy
-#| msgid "Domain Name"
 msgid "Domains"
-msgstr "Домейн Име"
+msgstr "Домейни"
 
 #: emailPremium/templates/emailPremium/listDomains.html:29
 msgid "Email Policy Server is not enabled "
-msgstr ""
+msgstr "Email Policy Server не е стартиран"
 
 #: emailPremium/templates/emailPremium/listDomains.html:32
-#, fuzzy
-#| msgid "Enable"
 msgid "Enable Now."
 msgstr "Позволи"
 
 #: emailPremium/templates/emailPremium/policyServer.html:3
-#, fuzzy
-#| msgid "Server Logs - CyberPanel"
 msgid "Email Policy Server - CyberPanel"
-msgstr "Сървърни Логове - Cyberpanel"
+msgstr "Email Policy Server - CyberPanel"
 
 #: emailPremium/templates/emailPremium/policyServer.html:13
-#, fuzzy
-#| msgid "Edit PHP Configurations"
 msgid "Email Policy Server Configurations!"
-msgstr "Редактирай PHP Конфигурация"
+msgstr "Email Policy Server Конфигурация!"
 
 #: emailPremium/templates/emailPremium/policyServer.html:14
 msgid "Turn ON Email Policy Server to use Email Limits Feature. "
-msgstr ""
+msgstr "Включете Email Policy Server за да използвате Лимитите за Emails."
 
 #: emailPremium/templates/emailPremium/policyServer.html:52
 #: firewall/templates/firewall/secureSSH.html:78
@@ -2122,91 +2044,73 @@ msgstr "Error Съобщение"
 #: manageServices/templates/manageServices/managePostfix.html:58
 #: manageServices/templates/manageServices/managePowerDNS.html:58
 #: manageServices/templates/manageServices/managePureFtpd.html:58
-#, fuzzy
-#| msgid "is successfully erased."
 msgid "Changes successfully applied."
-msgstr "е успешно заличено."
+msgstr "Промените са успешно въведени."
 
 #: filemanager/templates/filemanager/index.html:5
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "File Manager - CyberPanel"
-msgstr "SSL - CyberPanel"
+msgstr "Файл Мениджър - CyberPanel"
 
 #: filemanager/templates/filemanager/index.html:43
-#, fuzzy
-#| msgid "File Manager"
 msgid " File Manager"
 msgstr "Файл Мениджър"
 
 #: filemanager/templates/filemanager/index.html:63
 #: filemanager/templates/filemanager/index.html:205
 #: filemanager/templates/filemanager/index.html:236
-#, fuzzy
-#| msgid "Reload"
 msgid "Upload"
-msgstr "Презареди"
+msgstr "Качи"
 
 #: filemanager/templates/filemanager/index.html:66
-#, fuzzy
-#| msgid "File"
 msgid "New File"
-msgstr "Файл"
+msgstr "Нов файл"
 
 #: filemanager/templates/filemanager/index.html:69
 msgid "New Folder"
-msgstr ""
+msgstr "Нова директория"
 
 #: filemanager/templates/filemanager/index.html:75
 #: filemanager/templates/filemanager/index.html:566
 #: filemanager/templates/filemanager/index.html:702
 msgid "Copy"
-msgstr ""
+msgstr "копирай"
 
 #: filemanager/templates/filemanager/index.html:78
 #: filemanager/templates/filemanager/index.html:531
 #: filemanager/templates/filemanager/index.html:700
 msgid "Move"
-msgstr ""
+msgstr "Премести"
 
 #: filemanager/templates/filemanager/index.html:81
 #: filemanager/templates/filemanager/index.html:596
 #: filemanager/templates/filemanager/index.html:703
-#, fuzzy
-#| msgid "Username"
 msgid "Rename"
-msgstr "Потребителско Име"
+msgstr "Преименувай"
 
 #: filemanager/templates/filemanager/index.html:87
 #: filemanager/templates/filemanager/index.html:441
 #: filemanager/templates/filemanager/index.html:468
 #: filemanager/templates/filemanager/index.html:706
 msgid "Compress"
-msgstr ""
+msgstr "Компресирай"
 
 #: filemanager/templates/filemanager/index.html:90
 #: filemanager/templates/filemanager/index.html:496
 #: filemanager/templates/filemanager/index.html:707
 msgid "Extract"
-msgstr ""
+msgstr "Разархивирай"
 
 #: filemanager/templates/filemanager/index.html:93
-#, fuzzy
-#| msgid "PHP version "
 msgid "Fix Permissions"
-msgstr "PHP Версия"
+msgstr "Поправи права"
 
 #: filemanager/templates/filemanager/index.html:111
-#, fuzzy
-#| msgid "Current Package:"
 msgid "Current Path"
-msgstr "Текущ Пакет"
+msgstr "Текущ път"
 
 #: filemanager/templates/filemanager/index.html:139
-#, fuzzy
-#| msgid "Back up"
 msgid "Back"
-msgstr "Архив"
+msgstr "Назад"
 
 #: filemanager/templates/filemanager/index.html:143
 #: serverLogs/templates/serverLogs/accessLogs.html:42
@@ -2220,103 +2124,85 @@ msgid "Refresh"
 msgstr "Презареди"
 
 #: filemanager/templates/filemanager/index.html:147
-#, fuzzy
-#| msgid "Select Email"
 msgid "Select All"
-msgstr "Избери Email"
+msgstr "Избери всички"
 
 #: filemanager/templates/filemanager/index.html:151
-#, fuzzy
-#| msgid "Select Email"
 msgid "UnSelect All"
-msgstr "Избери Email"
+msgstr "Деселектирайте всички"
 
 #: filemanager/templates/filemanager/index.html:161
-#, fuzzy
-#| msgid "Size"
 msgid "Size (KB)"
-msgstr "Размер"
+msgstr "Размер (KB)"
 
 #: filemanager/templates/filemanager/index.html:162
 msgid "Last Modified"
-msgstr ""
+msgstr "Последна промяна"
 
 #: filemanager/templates/filemanager/index.html:163
-#, fuzzy
-#| msgid "PHP version "
 msgid "Permissions"
-msgstr "PHP Версия"
+msgstr "Права"
 
 #: filemanager/templates/filemanager/index.html:183
 msgid "Upload File"
-msgstr ""
+msgstr "Качи файл"
 
 #: filemanager/templates/filemanager/index.html:183
-#, fuzzy
-#| msgid "Reload"
 msgid "Upload Limits"
-msgstr "Презареди"
+msgstr "Ограничение за качване"
 
 #: filemanager/templates/filemanager/index.html:190
 msgid "Upload queue"
-msgstr ""
+msgstr "Опашна на качване"
 
 #: filemanager/templates/filemanager/index.html:191
 msgid "Queue length:"
-msgstr ""
+msgstr "Дължина на опашката: "
 
 #: filemanager/templates/filemanager/index.html:198
 msgid "Drop"
-msgstr ""
+msgstr "Постави"
 
 #: filemanager/templates/filemanager/index.html:199
 msgid "Drop Files here to upload them."
-msgstr ""
+msgstr "Постави файловете за качване тук."
 
 #: filemanager/templates/filemanager/index.html:214
 msgid "Progress"
-msgstr ""
+msgstr "Прогрес"
 
 #: filemanager/templates/filemanager/index.html:216
 #: mailServer/templates/mailServer/emailForwarding.html:113
-#, fuzzy
-#| msgid "FTP Functions"
 msgid "Actions"
-msgstr "FTP Функции"
+msgstr "Действия"
 
 #: filemanager/templates/filemanager/index.html:242
 msgid "Remove"
-msgstr ""
+msgstr "Премахни"
 
 #: filemanager/templates/filemanager/index.html:252
 msgid "Queue progress:"
-msgstr ""
+msgstr "Прогрес на опашката:"
 
 #: filemanager/templates/filemanager/index.html:261
-#, fuzzy
-#| msgid "Cannot tune. Error message:"
 msgid "can not be uploaded, Error message:"
 msgstr "Настройките не са въведени, защото:"
 
 #: filemanager/templates/filemanager/index.html:265
 msgid "Upload all"
-msgstr ""
+msgstr "Качи всички"
 
 #: filemanager/templates/filemanager/index.html:268
-#, fuzzy
-#| msgid "Cancel Backup"
 msgid "Cancel all"
-msgstr "Откажи Архив"
+msgstr "Откажи всички"
 
 #: filemanager/templates/filemanager/index.html:271
 msgid "Remove all"
-msgstr ""
+msgstr "Премахни всички"
 
 #: filemanager/templates/filemanager/index.html:307
-#, fuzzy
-#| msgid "Rule successfully added."
 msgid "File Successfully saved."
-msgstr "Правилата са успешно добавени."
+msgstr "Файловете са успешно запазени."
 
 #: filemanager/templates/filemanager/index.html:314
 #: firewall/templates/firewall/secureSSH.html:68
@@ -2328,72 +2214,56 @@ msgid "Save Changes"
 msgstr "Запази промените"
 
 #: filemanager/templates/filemanager/index.html:331
-#, fuzzy
-#| msgid "Create New User"
 msgid "Create new folder!"
-msgstr "Нов Потребител"
+msgstr "Създай нова директория!"
 
 #: filemanager/templates/filemanager/index.html:339
-#, fuzzy
-#| msgid "File Name"
 msgid "New Folder Name"
-msgstr "Първо Име"
+msgstr "Име на директория"
 
 #: filemanager/templates/filemanager/index.html:341
 msgid "Folder will be created in your current directory"
-msgstr ""
+msgstr "Директорията ще бъде създадена където се намирате в този момент"
 
 #: filemanager/templates/filemanager/index.html:343
-#, fuzzy
-#| msgid "Create User"
 msgid "Create Folder"
-msgstr "Създай Потребител"
+msgstr "Създай директория"
 
 #: filemanager/templates/filemanager/index.html:356
-#, fuzzy
-#| msgid " is successfully created."
 msgid "Folder Successfully created."
-msgstr "е успешно създаден."
+msgstr "Директорията е успешно създадена."
 
 #: filemanager/templates/filemanager/index.html:375
-#, fuzzy
-#| msgid "Create New User"
 msgid "Create new file!"
-msgstr "Нов Потребител"
+msgstr "Създай нов файл!"
 
 #: filemanager/templates/filemanager/index.html:383
-#, fuzzy
-#| msgid "File Name"
 msgid "New File Name"
-msgstr "Първо Име"
+msgstr "Име на файл"
 
 #: filemanager/templates/filemanager/index.html:385
 msgid ""
 "File will be created in your current directory, if it already exists it will "
 "not overwirte."
 msgstr ""
+"Файловете ще бъдат създадени в текущата директория. Ако те вече съществуват "
+"няма да бъдат презаписани."
 
 #: filemanager/templates/filemanager/index.html:387
-#, fuzzy
-#| msgid "Create Email"
 msgid "Create File"
-msgstr "Създай Email"
+msgstr "Създай файл"
 
 #: filemanager/templates/filemanager/index.html:400
-#, fuzzy
-#| msgid " is successfully created."
 msgid "File Successfully created."
-msgstr "е успешно създаден."
+msgstr "Файлът е успешно създаден."
 
 #: filemanager/templates/filemanager/index.html:416
-#, fuzzy
-#| msgid "Configurations"
 msgid "Confirm Deletion!"
-msgstr "Конфигурация"
+msgstr "Потвърди изтриването!"
 
 #: filemanager/templates/filemanager/index.html:425
 msgid "Confirm"
-msgstr ""
+msgstr "Потвърди"
 
 #: filemanager/templates/filemanager/index.html:426
 #: filemanager/templates/filemanager/index.html:469
@@ -2403,133 +2273,117 @@ msgstr ""
 #: filemanager/templates/filemanager/index.html:658
 #: websiteFunctions/templates/websiteFunctions/website.html:476
 msgid "Close"
-msgstr ""
+msgstr "Затвори"
 
 #: filemanager/templates/filemanager/index.html:449
 msgid "List of files/folder!"
-msgstr ""
+msgstr "Списък на файлове/директории!"
 
 #: filemanager/templates/filemanager/index.html:453
-#, fuzzy
-#| msgid "File Name"
 msgid "Compressed File Name"
-msgstr "Първо Име"
+msgstr "Име на компресирания файл"
 
 #: filemanager/templates/filemanager/index.html:455
 msgid "Enter without extension name!"
-msgstr ""
+msgstr "Въведи без разширение!"
 
 #: filemanager/templates/filemanager/index.html:459
 msgid "Compression Type"
-msgstr ""
+msgstr "Вид на компресия"
 
 #: filemanager/templates/filemanager/index.html:484
 msgid "Extracting"
-msgstr ""
+msgstr "Разархивиране"
 
 #: filemanager/templates/filemanager/index.html:492
 msgid "Extract in"
-msgstr ""
+msgstr "Разархивиране в"
 
 #: filemanager/templates/filemanager/index.html:494
 msgid "You can enter . to extract in current directory!"
-msgstr ""
+msgstr "Може да въведете . за да разархивирате в текущата директория!"
 
 #: filemanager/templates/filemanager/index.html:512
-#, fuzzy
-#| msgid "Files"
 msgid "Move Files"
-msgstr "Файлове"
+msgstr "Премести файлове"
 
 #: filemanager/templates/filemanager/index.html:520
 #: filemanager/templates/filemanager/index.html:555
 msgid "List of files/folders!"
-msgstr ""
+msgstr "Списък на файлове/директории!"
 
 #: filemanager/templates/filemanager/index.html:524
 msgid "Move to"
-msgstr ""
+msgstr "Премести в"
 
 #: filemanager/templates/filemanager/index.html:526
 msgid "Enter a path to move your files!"
-msgstr ""
+msgstr "Въведи път за да преместиш файловете!"
 
 #: filemanager/templates/filemanager/index.html:547
-#, fuzzy
-#| msgid "Files"
 msgid "Copy Files"
-msgstr "Файлове"
+msgstr "Копирай файлове"
 
 #: filemanager/templates/filemanager/index.html:559
 msgid "Copy to"
-msgstr ""
+msgstr "Копирай в"
 
 #: filemanager/templates/filemanager/index.html:561
 msgid "Enter a path to copy your files to!"
-msgstr ""
+msgstr "Въведи път, за да се копират файловете!"
 
 #: filemanager/templates/filemanager/index.html:581
 msgid "Renaming"
-msgstr ""
+msgstr "Преименуване"
 
 #: filemanager/templates/filemanager/index.html:589
-#, fuzzy
-#| msgid "File Name"
 msgid "New Name"
-msgstr "Първо Име"
+msgstr "Ново име"
 
 #: filemanager/templates/filemanager/index.html:591
 msgid "Enter new name of file!"
-msgstr ""
+msgstr "Въведи ново име за файл!"
 
 #: filemanager/templates/filemanager/index.html:611
-#, fuzzy
-#| msgid "PHP version "
 msgid "Changing permissions for"
-msgstr "PHP Версия"
+msgstr "Промени права за"
 
 #: filemanager/templates/filemanager/index.html:620
 msgid "Mode"
-msgstr ""
+msgstr "Вид"
 
 #: filemanager/templates/filemanager/index.html:621
-#, fuzzy
-#| msgid "Users"
 msgid "User"
-msgstr "Потребители"
+msgstr "Потребител"
 
 #: filemanager/templates/filemanager/index.html:622
 msgid "Group"
-msgstr ""
+msgstr "Група"
 
 #: filemanager/templates/filemanager/index.html:623
 msgid "World"
-msgstr ""
+msgstr "Всички"
 
 #: filemanager/templates/filemanager/index.html:628
 msgid "Read"
-msgstr ""
+msgstr "Четене"
 
 #: filemanager/templates/filemanager/index.html:634
 msgid "Write"
-msgstr ""
+msgstr "Запис"
 
 #: filemanager/templates/filemanager/index.html:640
 msgid "Execute"
-msgstr ""
+msgstr "Изпълнение"
 
 #: filemanager/templates/filemanager/index.html:656
 #: filemanager/templates/filemanager/index.html:704
-#, fuzzy
-#| msgid "Select PHP Version"
 msgid "Change Permissions"
-msgstr "Избери PHP Версия"
+msgstr "Промени права"
 
 #: filemanager/templates/filemanager/index.html:657
-#, fuzzy
-#| msgid "Select PHP Version"
 msgid "Change Recursively"
-msgstr "Избери PHP Версия"
+msgstr "Рекурсивна промяна"
 
 #: filemanager/templates/filemanager/index.html:701
 msgid "Download"
@@ -2537,85 +2391,79 @@ msgstr ""
 
 #: firewall/templates/firewall/csf.html:3
 msgid "CSF (ConfigServer Security and Firewall) - CyberPanel"
-msgstr ""
+msgstr "CSF (ConfigServer Security and Firewall) - CyberPanel"
 
 #: firewall/templates/firewall/csf.html:13
 msgid "CSF (ConfigServer Security and Firewall)!"
-msgstr ""
+msgstr "CSF (ConfigServer Security and Firewall)!"
 
 #: firewall/templates/firewall/csf.html:14
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid ""
 "On this page you can configure CSF (ConfigServer Security and Firewall) "
 "settings."
-msgstr "От тази страница може да настройте дестинацията за архивите (SFTP)"
+msgstr ""
+"От тази страница може да променяте настройките на CSF (ConfigServer Security "
+"and Firewall)."
 
 #: firewall/templates/firewall/csf.html:28
 msgid "CSF is not installed "
-msgstr ""
+msgstr "CSF не е инсталиран"
 
 #: firewall/templates/firewall/csf.html:54
-#, fuzzy
-#| msgid " is successfully created."
 msgid "CSF successfully installed, refreshing page in 3 seconds.."
-msgstr "е успешно създаден."
+msgstr "CSF  е успешно инсталиран. Страницата ще се презареди след 3 секунди.."
 
 #: firewall/templates/firewall/csf.html:65
 msgid "In winter we must protect each other.."
-msgstr ""
+msgstr "В зимата трябва да се защитаваме ние.."
 
 #: firewall/templates/firewall/csf.html:89
 msgid "General"
-msgstr ""
+msgstr "Общ"
 
 #: firewall/templates/firewall/csf.html:99
 msgid "LFD"
-msgstr ""
+msgstr "LFD"
 
 #: firewall/templates/firewall/csf.html:108
 msgid "Remove CSF"
-msgstr ""
+msgstr "Премахни CSF"
 
 #: firewall/templates/firewall/csf.html:111
 msgid "Completely Remove CSF"
-msgstr ""
+msgstr "Надяло премахни CSF"
 
 #: firewall/templates/firewall/csf.html:125
 msgid "Testing Mode"
-msgstr ""
+msgstr "Тестов мод"
 
 #: firewall/templates/firewall/csf.html:132
 msgid "TCP IN Ports"
-msgstr ""
+msgstr "TCP IN Портове"
 
 #: firewall/templates/firewall/csf.html:142
 msgid "TCP Out Ports"
-msgstr ""
+msgstr "TCP Out Портове"
 
 #: firewall/templates/firewall/csf.html:152
 msgid "UDP In Ports"
-msgstr ""
+msgstr "UDP In Портове"
 
 #: firewall/templates/firewall/csf.html:162
 msgid "UDP Out Ports"
-msgstr ""
+msgstr "UDP Out Портове"
 
 #: firewall/templates/firewall/csf.html:180
-#, fuzzy
-#| msgid "Allowed"
 msgid "Allow IP"
-msgstr "Позволено"
+msgstr "Позволи IP"
 
 #: firewall/templates/firewall/csf.html:190
-#, fuzzy
-#| msgid "IP Address"
 msgid "Block IP Address"
-msgstr "IP Адрес"
+msgstr "Блокирай IP Адрес"
 
 #: firewall/templates/firewall/csf.html:202
 msgid "Comming Soon."
-msgstr ""
+msgstr "Скоро."
 
 #: firewall/templates/firewall/firewall.html:3
 msgid "Firewall - CyberPanel"
@@ -2623,13 +2471,15 @@ msgstr "Защитна Стена - CyberPanel"
 
 #: firewall/templates/firewall/firewall.html:13
 msgid "Add/Delete Firewall Rules"
-msgstr ""
+msgstr "Добави/Премахни Firewall правила"
 
 #: firewall/templates/firewall/firewall.html:14
 msgid ""
 "On this page you can add/delete firewall rules. (By default all ports are "
 "blocked, except mentioned below)"
 msgstr ""
+"От тази страница може да добавяте/премахвате Firewall правила. По-"
+"подразбиране всички, освен посочените по-долу са забранени."
 
 #: firewall/templates/firewall/firewall.html:19
 msgid "Add/Delete Rules"
@@ -2674,163 +2524,128 @@ msgstr "Функции на Защитата"
 
 #: firewall/templates/firewall/index.html:13
 msgid "Manage the security of the server on this page."
-msgstr ""
+msgstr "Управлявайте сигурността на сървъра от тази страница."
 
 #: firewall/templates/firewall/modSecurity.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity - CyberPanel"
-msgstr "Защита - CyberPanel"
+msgstr "ModSecurity - CyberPanel"
 
 #: firewall/templates/firewall/modSecurity.html:13
-#, fuzzy
-#| msgid "Edit PHP Configurations"
 msgid "ModSecurity Configurations!"
-msgstr "Редактирай PHP Конфигурация"
+msgstr "ModSecurity Конфигурация!"
 
 #: firewall/templates/firewall/modSecurity.html:13
 #: firewall/templates/firewall/modSecurityRules.html:13
 #: firewall/templates/firewall/modSecurityRulesPacks.html:13
 msgid "ModSec Docs"
-msgstr ""
+msgstr "ModSec Документация"
 
 #: firewall/templates/firewall/modSecurity.html:14
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can configure ModSecurity settings."
-msgstr "От тази страница може да настройте дестинацията за архивите (SFTP)"
+msgstr "От тази страница може да настройте ModSecurity"
 
 #: firewall/templates/firewall/modSecurity.html:20
-#, fuzzy
-#| msgid "Security"
 msgid "ModSecurity"
-msgstr "Сигурност"
+msgstr "ModSecurity"
 
 #: firewall/templates/firewall/modSecurity.html:29
 #: firewall/templates/firewall/modSecurityRules.html:70
 #: firewall/templates/firewall/modSecurityRulesPacks.html:28
 #: firewall/templates/firewall/spamassassin.html:29
 msgid "ModSecurity is not installed "
-msgstr ""
+msgstr "ModSecurity не е инсталиран"
 
 #: firewall/templates/firewall/modSecurity.html:55
 #: firewall/templates/firewall/spamassassin.html:55
 msgid "ModSecurity successfully installed, refreshing page in 3 seconds.."
 msgstr ""
+"ModSecurity е успешно инсталиран. Страницата ще се презареди след 3 секунди.."
 
 #: firewall/templates/firewall/modSecurity.html:66
 #: firewall/templates/firewall/spamassassin.html:66
 msgid "Winter is coming, but so is ModSecurity."
-msgstr ""
+msgstr "Зимата идва ... както и ModSecurity."
 
 #: firewall/templates/firewall/modSecurity.html:160
 #: firewall/templates/firewall/spamassassin.html:169
-#, fuzzy
-#| msgid "Could not fetch current configuration. Error message:"
 msgid "Failed to save ModSecurity configurations. Error message: "
-msgstr "Текущата конфигурация не е изтеглена, защото:"
+msgstr "Промените не са запазени. Съобщение са грешка:"
 
 #: firewall/templates/firewall/modSecurity.html:164
 #: firewall/templates/firewall/spamassassin.html:173
-#, fuzzy
-#| msgid " is successfully created."
 msgid "ModSecurity configurations successfully saved."
-msgstr "е успешно създаден."
+msgstr "ModSecurity конфигурация е успешно обновлена."
 
 #: firewall/templates/firewall/modSecurityRules.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity Rules - CyberPanel"
-msgstr "Защита - CyberPanel"
+msgstr "ModSecurity Правила - CyberPanel"
 
 #: firewall/templates/firewall/modSecurityRules.html:13
-#, fuzzy
-#| msgid "Security"
 msgid "ModSecurity Rules!"
-msgstr "Сигурност"
+msgstr "ModSecurity Правила!"
 
 #: firewall/templates/firewall/modSecurityRules.html:14
 msgid "On this page you can add/delete ModSecurity rules."
-msgstr ""
+msgstr "От тази страница може да добавяте/премахвате ModSecurity  правила."
 
 #: firewall/templates/firewall/modSecurityRules.html:42
-#, fuzzy
-#| msgid "Save Rewrite Rules"
 msgid "Save Rules!"
-msgstr "Запази Rewrite Rules"
+msgstr "Запази правила!"
 
 #: firewall/templates/firewall/modSecurityRules.html:49
 msgid "ModSecurity Rules Saved"
-msgstr ""
+msgstr "ModSecurity правила са запазени"
 
 #: firewall/templates/firewall/modSecurityRules.html:58
-#, fuzzy
-#| msgid "Could not save rewrite rules. Error message:"
 msgid "Could not save rules, Error message: "
-msgstr "Новите  rewrite rules не са запаметени, защото:"
+msgstr "Промените не са запазени. Съобщение за грешка:"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity Rules Packs - CyberPanel"
-msgstr "Защита - CyberPanel"
+msgstr "ModSecurity Rules Packs - CyberPanel"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:13
 #: firewall/templates/firewall/modSecurityRulesPacks.html:20
-#, fuzzy
-#| msgid "Modify Package"
 msgid "ModSecurity Rules Packages!"
-msgstr "Промени Пакет"
+msgstr "ModSecurity Rules Packages!"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:14
 msgid "Install/Un-install ModSecurity rules packages."
-msgstr ""
+msgstr "Инсталирай/Премахни ModSecurity Rules Packages!"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:60
 #: firewall/templates/firewall/modSecurityRulesPacks.html:71
-#, fuzzy
-#| msgid "Configurations"
 msgid "Configure"
 msgstr "Конфигурация"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:84
 #: firewall/templates/firewall/modSecurityRulesPacks.html:96
-#, fuzzy
-#| msgid "Action successful."
 msgid "Operation successful."
 msgstr "Действието е успешно изпълнено."
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:92
-#, fuzzy
-#| msgid "Action failed. Error message:"
 msgid "Operation failed, Error message: "
 msgstr "Действието не е изпълнено, защото:"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:110
 msgid "Supplier"
-msgstr ""
+msgstr "Източник"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:111
-#, fuzzy
-#| msgid "File Name"
 msgid "Filename"
-msgstr "Първо Име"
+msgstr "Име"
 
 #: firewall/templates/firewall/secureSSH.html:3
 msgid "Secure SSH - CyberPanel"
-msgstr ""
+msgstr "Secure SSH - CyberPanel"
 
 #: firewall/templates/firewall/secureSSH.html:13
-#, fuzzy
-#| msgid "SSH Keys"
 msgid "SSH Docs"
-msgstr "SSH Ключ"
+msgstr "SSH Документация"
 
 #: firewall/templates/firewall/secureSSH.html:14
-#, fuzzy
-#| msgid "SSH Configurations Saved."
 msgid "Secure or harden SSH Configurations."
-msgstr "SSH Конфигурацията е запаметена."
+msgstr "Подсигури SSH от тази страница."
 
 #: firewall/templates/firewall/secureSSH.html:28
 #: managePHP/templates/managePHP/editPHPConfig.html:29
@@ -2854,6 +2669,8 @@ msgid ""
 "Before disabling root login, make sure you have another account with sudo "
 "priviliges on server."
 msgstr ""
+"Преди да забраните root достъпа се уверете, че имате друг потребител със "
+"sudo права."
 
 #: firewall/templates/firewall/secureSSH.html:82
 msgid "SSH Configurations Saved."
@@ -2882,19 +2699,21 @@ msgstr "SSH Ключа е премахнат"
 
 #: ftp/templates/ftp/createFTPAccount.html:3
 msgid "Create FTP Account - CyberPanel"
-msgstr ""
+msgstr "Създай FTP Акаунт - CyberPanel"
 
 #: ftp/templates/ftp/createFTPAccount.html:13
 msgid ""
 "Select the website from list, and its home directory will be set as the path "
 "to ftp account."
 msgstr ""
+"Изберете домейн от списъка и неговата home директория ще бъде поставена за "
+"FTP акаунта."
 
 #: ftp/templates/ftp/createFTPAccount.html:26
 #: ftp/templates/ftp/deleteFTPAccount.html:25
 #: ftp/templates/ftp/listFTPAccounts.html:26
 msgid "PureFTPD is disabled."
-msgstr ""
+msgstr "PureFTPD е спрян."
 
 #: ftp/templates/ftp/createFTPAccount.html:64
 msgid "FTP Password"
@@ -2902,11 +2721,11 @@ msgstr "FTP Парола"
 
 #: ftp/templates/ftp/createFTPAccount.html:71
 msgid "Path (Relative)"
-msgstr ""
+msgstr "Път (Относителен)"
 
 #: ftp/templates/ftp/createFTPAccount.html:73
 msgid "Leave empty to select default home directory."
-msgstr ""
+msgstr "Оставете празно за home директория."
 
 #: ftp/templates/ftp/createFTPAccount.html:84
 msgid "Create FTP"
@@ -2914,7 +2733,7 @@ msgstr "Създай FTP"
 
 #: ftp/templates/ftp/createFTPAccount.html:92
 msgid "Cannot create FTP account. Error message:"
-msgstr ""
+msgstr "Дейстиете не е извършено. Съобщение за грешка: "
 
 #: ftp/templates/ftp/createFTPAccount.html:96
 #: ftp/templates/ftp/createFTPAccount.html:99
@@ -2926,15 +2745,15 @@ msgstr "FTP Акаунт с Име:"
 #: ftp/templates/ftp/createFTPAccount.html:99
 #: userManagment/templates/userManagment/createUser.html:112
 msgid "is successfully created."
-msgstr ""
+msgstr "е успешно създаден."
 
 #: ftp/templates/ftp/deleteFTPAccount.html:3
 msgid "Delete FTP Account - CyberPanel"
-msgstr ""
+msgstr "Премахни FTP Акаунт - CyberPanel"
 
 #: ftp/templates/ftp/deleteFTPAccount.html:13
 msgid "Select domain and delete its related FTP accounts."
-msgstr ""
+msgstr "Избери домейн и премахни свързаните FTP акаунти."
 
 #: ftp/templates/ftp/deleteFTPAccount.html:52
 msgid "Select FTP Account"
@@ -2942,7 +2761,7 @@ msgstr "Избери FTP Акаунт"
 
 #: ftp/templates/ftp/deleteFTPAccount.html:83
 msgid "Cannot delete account. Error message:"
-msgstr ""
+msgstr "Акаунта не е премахнат. Съобщение за грешка:"
 
 #: ftp/templates/ftp/deleteFTPAccount.html:87
 msgid " is successfully deleted."
@@ -2951,32 +2770,34 @@ msgstr "е успешно изтрит"
 #: ftp/templates/ftp/deleteFTPAccount.html:91
 #: userManagment/templates/userManagment/deleteUser.html:70
 msgid "Could not connect to the server. Please refresh this page."
-msgstr ""
+msgstr "Връзката със сървъра прекъсна. Моля презаредете страницата."
 
 #: ftp/templates/ftp/index.html:3
 msgid "FTP Functions - CyberPanel"
-msgstr ""
+msgstr "FTP Функции - CyberPanel"
 
 #: ftp/templates/ftp/index.html:13
 msgid "Delete and create FTP accounts on this page."
-msgstr ""
+msgstr "Създай или премахни FTP акаунт от тази страница."
 
 #: ftp/templates/ftp/listFTPAccounts.html:3
 msgid "List FTP Accounts - CyberPanel"
-msgstr ""
+msgstr "FTP Акаунти - CyberPanel"
 
 #: ftp/templates/ftp/listFTPAccounts.html:14
 msgid "List FTP Accounts or change their passwords."
-msgstr ""
+msgstr "Преглед на FTP акаунти или промяна на паролите им."
 
 #: ftp/templates/ftp/listFTPAccounts.html:62
 msgid "Password changed for"
-msgstr ""
+msgstr "Паролата е променена за"
 
 #: ftp/templates/ftp/listFTPAccounts.html:66
 msgid ""
 "Cannot change password for <strong>{$ ftpUsername $}</strong>. Error message:"
 msgstr ""
+"Паролата за <strong>{$ ftpUsername $}</strong> не е променена. Съобщение за "
+"грешка:"
 
 #: ftp/templates/ftp/listFTPAccounts.html:101
 msgid "Directory"
@@ -2984,25 +2805,25 @@ msgstr "Директория"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:3
 msgid "Change Email Password - CyberPanel"
-msgstr ""
+msgstr "Промени Email Парола - CyberPanel"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:12
 #: mailServer/templates/mailServer/changeEmailPassword.html:19
 #: userManagment/templates/userManagment/createACL.html:273
 #: userManagment/templates/userManagment/modifyACL.html:278
 msgid "Change Email Password"
-msgstr ""
+msgstr "Промени Email Парола"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:13
 msgid "Select a website from the list, to change its password."
-msgstr ""
+msgstr "Изберете домейн от списъка за който да бъде променена паролата."
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:26
 #: mailServer/templates/mailServer/createEmailAccount.html:26
 #: mailServer/templates/mailServer/deleteEmailAccount.html:26
 #: mailServer/templates/mailServer/emailForwarding.html:26
 msgid "Postfix is disabled."
-msgstr ""
+msgstr "Postfix е спрян"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:55
 #: mailServer/templates/mailServer/deleteEmailAccount.html:55
@@ -3013,16 +2834,16 @@ msgstr "Избери Email"
 #: mailServer/templates/mailServer/changeEmailPassword.html:86
 #: mailServer/templates/mailServer/deleteEmailAccount.html:85
 msgid "Cannot delete email account. Error message:"
-msgstr ""
+msgstr "Действието не е извършено. Съобщение за грешка:"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:90
 msgid "Password successfully changed for :"
-msgstr ""
+msgstr "Паролата е успешно променена за:"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:97
 #: mailServer/templates/mailServer/deleteEmailAccount.html:96
 msgid "Currently no email accounts exist for this domain."
-msgstr ""
+msgstr "Към момента няма email акаунти за този домейн."
 
 #: mailServer/templates/mailServer/createEmailAccount.html:3
 msgid "Create Email Account - CyberPanel"
@@ -3050,98 +2871,86 @@ msgstr "Премахни Email Акаунт - CyberPanel"
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:13
 msgid "Select a website from the list, to delete an email account."
-msgstr ""
+msgstr "Изберете домейн от списъка за който да премахнете email акаунт."
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:89
 msgid "Email with id : {$ deletedID $} is successfully deleted."
 msgstr "Email с id : {$ deletedID $} е успешно премахнато."
 
 #: mailServer/templates/mailServer/dkimManager.html:3
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "DKIM Manager - CyberPanel"
-msgstr "SSL - CyberPanel"
+msgstr "DKIM Мениджър - CyberPanel"
 
 #: mailServer/templates/mailServer/dkimManager.html:13
 msgid "DKIM Docs"
-msgstr ""
+msgstr "DKIM  Документация"
 
 #: mailServer/templates/mailServer/dkimManager.html:14
-#, fuzzy
-#| msgid "This page can be used to Back up your websites"
 msgid "This page can be used to generate and view DKIM keys for Domains"
-msgstr "От тази страница може да направите архив на Вашите страници"
+msgstr ""
+"От тази страница може да генерирате и преглеждате DKIM ключове за домейните."
 
 #: mailServer/templates/mailServer/dkimManager.html:27
 msgid "OpenDKIM is not installed. "
-msgstr ""
+msgstr "OpenDKIM не е инсталиран."
 
 #: mailServer/templates/mailServer/dkimManager.html:28
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:67
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:81
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:67
-#, fuzzy
-#| msgid "Install"
 msgid "Install Now"
 msgstr "Инсталирай"
 
 #: mailServer/templates/mailServer/dkimManager.html:48
 msgid "OpenDKIM successfully installed, refreshing page in 3 seconds.."
 msgstr ""
+"OpenDKIM е успешно инсталиран. Страницата ще се презареди след 3 секунди..."
 
 #: mailServer/templates/mailServer/dkimManager.html:97
 msgid "Keys not available for this domain."
-msgstr ""
+msgstr "Ключовете не са позволени за този домейн."
 
 #: mailServer/templates/mailServer/dkimManager.html:98
 msgid "Generate Now"
-msgstr ""
+msgstr "Генерирай сега"
 
 #: mailServer/templates/mailServer/dkimManager.html:110
-#, fuzzy
-#| msgid "Domain Name"
 msgid "Domain"
-msgstr "Домейн Име"
+msgstr "Домейн"
 
 #: mailServer/templates/mailServer/dkimManager.html:111
 msgid "Private Key"
-msgstr ""
+msgstr "Личен ключ"
 
 #: mailServer/templates/mailServer/dkimManager.html:112
 msgid "Public Key"
-msgstr ""
+msgstr "Публичен ключ"
 
 #: mailServer/templates/mailServer/emailForwarding.html:3
-#, fuzzy
-#| msgid "Create Email Account - CyberPanel"
 msgid "Setup Email Forwarding - CyberPanel"
-msgstr "Създай Email акаунт - CyberPanel"
+msgstr "Email пренасочване - CyberPanel"
 
 #: mailServer/templates/mailServer/emailForwarding.html:12
 #: mailServer/templates/mailServer/emailForwarding.html:19
 msgid "Setup Email Forwarding"
-msgstr ""
+msgstr "Email пренасочване"
 
 #: mailServer/templates/mailServer/emailForwarding.html:12
 msgid "Forwarding Docs"
-msgstr ""
+msgstr "Email пренасочване Документация"
 
 #: mailServer/templates/mailServer/emailForwarding.html:13
 msgid "This page help you setup email forwarding for your emails."
-msgstr ""
+msgstr "От тази страница може да създадете Email пренасочвания."
 
 #: mailServer/templates/mailServer/emailForwarding.html:90
 #: mailServer/templates/mailServer/emailForwarding.html:111
-#, fuzzy
-#| msgid "Resource"
 msgid "Source"
-msgstr "Ресурси"
+msgstr "източник"
 
 #: mailServer/templates/mailServer/emailForwarding.html:99
-#, fuzzy
-#| msgid "Create Email"
 msgid "Forward Email"
-msgstr "Създай Email"
+msgstr "Пренасочи Email"
 
 #: mailServer/templates/mailServer/index.html:3
 msgid "Mail Functions - CyberPanel"
@@ -3153,7 +2962,7 @@ msgstr "Mail Функции"
 
 #: mailServer/templates/mailServer/index.html:13
 msgid "Manage email accounts on this page."
-msgstr ""
+msgstr "Управлявайте email акаунтите от тази страница."
 
 #: managePHP/templates/managePHP/editPHPConfig.html:3
 msgid "Edit PHP Configurations - CyberPanel"
@@ -3166,7 +2975,7 @@ msgstr "Редактирай PHP Конфигурация"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:15
 msgid "Edit PHP Configurations on this page."
-msgstr ""
+msgstr "Редактирай PHP конфигурация от тази страница."
 
 #: managePHP/templates/managePHP/editPHPConfig.html:35
 msgid "Advanced"
@@ -3212,10 +3021,8 @@ msgid "upload_max_filesize"
 msgstr "upload_max_filesize"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:119
-#, fuzzy
-#| msgid "upload_max_filesize"
 msgid "post_max_size"
-msgstr "upload_max_filesize"
+msgstr "post_max_size"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:126
 msgid "max_input_time"
@@ -3228,23 +3035,23 @@ msgstr "PHP Configs са запазени."
 
 #: managePHP/templates/managePHP/index.html:3
 msgid "Manage PHP Installations - CyberPanel"
-msgstr ""
+msgstr "Управление на PHP - CyberPanel"
 
 #: managePHP/templates/managePHP/index.html:12
 msgid "Manage PHP Installations"
-msgstr ""
+msgstr "Управление на PHP "
 
 #: managePHP/templates/managePHP/index.html:13
 msgid "Edit your PHP Configurations to suit your needs."
-msgstr ""
+msgstr "Редактирайте PHP конфигурацията според нуждите Ви."
 
 #: managePHP/templates/managePHP/installExtensions.html:3
 msgid "Install PHP Extensions - CyberPanel"
-msgstr ""
+msgstr "Инсталирай PHP модули - CyberPanel"
 
 #: managePHP/templates/managePHP/installExtensions.html:14
 msgid "Install/uninstall php extensions on this page."
-msgstr ""
+msgstr "Инсталирайте или премахнете PHP модули от тази страница."
 
 #: managePHP/templates/managePHP/installExtensions.html:19
 #: tuning/templates/tuning/phpTuning.html:19
@@ -3253,13 +3060,14 @@ msgstr "Избери PHP Версия"
 
 #: managePHP/templates/managePHP/installExtensions.html:49
 msgid "Search Extensions.."
-msgstr ""
+msgstr "Търси разширение.."
 
 #: managePHP/templates/managePHP/installExtensions.html:64
 msgid "Extension Name"
-msgstr ""
+msgstr "Име на разширение"
 
 #: managePHP/templates/managePHP/installExtensions.html:65
+#: pluginHolder/templates/pluginHolder/plugins.html:30
 msgid "Description"
 msgstr "Описание"
 
@@ -3295,7 +3103,7 @@ msgstr "Операцията не е изпълнена, защото:"
 
 #: manageSSL/templates/manageSSL/index.html:3
 msgid "SSL Functions - CyberPanel"
-msgstr ""
+msgstr "SSL Функции - CyberPanel"
 
 #: manageSSL/templates/manageSSL/index.html:13
 msgid "SSL Functions"
@@ -3303,7 +3111,7 @@ msgstr "SSL Функции"
 
 #: manageSSL/templates/manageSSL/index.html:14
 msgid "Issue Let’s Encrypt SSLs for websites and hostname."
-msgstr ""
+msgstr "Издаване на Let’s Encrypt SSLs за сайтове и hostname."
 
 #: manageSSL/templates/manageSSL/manageSSL.html:3
 msgid "Manage SSL - CyberPanel"
@@ -3313,13 +3121,15 @@ msgstr "SSL - CyberPanel"
 #: manageSSL/templates/manageSSL/sslForHostName.html:13
 #: manageSSL/templates/manageSSL/sslForMailServer.html:13
 msgid "SSL Docs"
-msgstr ""
+msgstr "SSL Документация"
 
 #: manageSSL/templates/manageSSL/manageSSL.html:14
 msgid ""
 "This page can be used to issue Let’s Encrypt SSL for existing websites on "
 "server."
 msgstr ""
+"От тази страница може да издавате Let’s Encrypt SSL сертификати за Вашите "
+"сайтове."
 
 #: manageSSL/templates/manageSSL/manageSSL.html:42
 #: manageSSL/templates/manageSSL/sslForHostName.html:42
@@ -3331,7 +3141,7 @@ msgstr "Издаване на SSL"
 #: manageSSL/templates/manageSSL/sslForHostName.html:52
 #: manageSSL/templates/manageSSL/sslForMailServer.html:52
 msgid "Cannot issue SSL. Error message:"
-msgstr ""
+msgstr "Сертификата не е издаден. Съобщение за грешка: "
 
 #: manageSSL/templates/manageSSL/manageSSL.html:56
 msgid "SSL Issued for"
@@ -3339,7 +3149,7 @@ msgstr "SSL издаден за"
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:3
 msgid "Issue SSL For Hostname - CyberPanel"
-msgstr ""
+msgstr "Издай SSL за Hostname - CyberPanel"
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:13
 #: manageSSL/templates/manageSSL/sslForHostName.html:20
@@ -3349,100 +3159,87 @@ msgstr "Издай SSL за Hostname"
 #: manageSSL/templates/manageSSL/sslForHostName.html:14
 msgid "Let’s Encrypt SSL for hostname to access CyberPanel on verified SSL."
 msgstr ""
+"Let’s Encrypt SSL за hostname за да достъпвате CyberPanel през валиден https "
+"адрес."
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:56
 #: manageSSL/templates/manageSSL/sslForHostName.html:60
 msgid "SSL Issued. You can now access CyberPanel at:"
-msgstr ""
+msgstr "Сертификата е издаден! Вече може да достъпвате CyberPanel чрез: "
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:3
-#, fuzzy
-#| msgid "Create Nameserver - CyberPanel"
 msgid "Issue SSL For MailServer - CyberPanel"
-msgstr "Създай Nameserver - CyberPanel"
+msgstr "Издай SSL за Mail сървъра - CyberPanel"
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:13
 #: manageSSL/templates/manageSSL/sslForMailServer.html:20
-#, fuzzy
-#| msgid "Issue SSL For Hostname"
 msgid "Issue SSL For MailServer"
-msgstr "Издай SSL за Hostname"
+msgstr "Издай SSL за Mail сървъра"
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:14
 msgid "Let’s Encrypt SSL for MailServer (Postfix/Dovecot)."
-msgstr ""
+msgstr "Let’s Encrypt SSL за Mail сървър (Postfix/Dovecot)."
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:56
 msgid "SSL Issued, your mail server now uses Lets Encrypt!"
 msgstr ""
+"SSL сертификата е издаден. Mail сървъра Ви вече използва  Lets Encrypt!"
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:60
-#, fuzzy
-#| msgid "Could not connect. Please refresh this page."
 msgid "Could not connect to server, please refresh this page."
-msgstr "Не можем да се свържем, моля презаредете страницата."
+msgstr "Не можем да се свържем със сървъра, моля презаредете страницата."
 
 #: manageServices/templates/manageServices/managePostfix.html:3
-#, fuzzy
-#| msgid "Server Logs - CyberPanel"
 msgid "Manage Email Server (Postfix) - CyberPanel"
-msgstr "Сървърни Логове - Cyberpanel"
+msgstr "Управление на Email сървър (Postfix) - Cyberpanel"
 
 #: manageServices/templates/manageServices/managePostfix.html:13
 msgid "Manage Email Server (Postfix)!"
-msgstr ""
+msgstr "Управление на Email сървър  (Postfix)!"
 
 #: manageServices/templates/manageServices/managePostfix.html:13
 #: manageServices/templates/manageServices/managePowerDNS.html:13
 #: manageServices/templates/manageServices/managePureFtpd.html:13
-#, fuzzy
-#| msgid "Server Status"
 msgid "Services Docs"
-msgstr "Сървър Статус"
+msgstr "Допълнителна документация"
 
 #: manageServices/templates/manageServices/managePostfix.html:14
 msgid "Enable or disable Email services. "
-msgstr ""
+msgstr "Позволи или забрани Email сървъра."
 
 #: manageServices/templates/manageServices/managePostfix.html:82
 #: manageServices/templates/manageServices/managePowerDNS.html:82
 #: manageServices/templates/manageServices/managePureFtpd.html:82
 msgid "Only administrator can manage services."
-msgstr ""
+msgstr "Само Администраторите могат да управляват сървайсес."
 
 #: manageServices/templates/manageServices/managePowerDNS.html:3
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "Manage PowerDNS - CyberPanel"
-msgstr "SSL - CyberPanel"
+msgstr "Управление на PowerDNS - CyberPanel"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:13
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage PowerDNS!"
-msgstr "Нов SSL"
+msgstr "Управление на PowerDNS"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:14
 msgid "Enable or disable DNS services. "
-msgstr ""
+msgstr "Позволи или забрани DNS сървър."
 
 #: manageServices/templates/manageServices/managePureFtpd.html:3
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "Manage FTP Server (Pure FTPD) - CyberPanel"
-msgstr "SSL - CyberPanel"
+msgstr "Управление на FTP сървър (Pure FTPD) - CyberPanel"
 
 #: manageServices/templates/manageServices/managePureFtpd.html:13
 msgid "Manage FTP Server (Pure FTPD)!"
-msgstr ""
+msgstr "Управление на FTP сървър (Pure FTPD)!"
 
 #: manageServices/templates/manageServices/managePureFtpd.html:14
 msgid "Enable or disable FTP services. "
-msgstr ""
+msgstr "Позволи или забрани FTP сървър."
 
 #: manageServices/templates/manageServices/managePureFtpd.html:22
 msgid "Manage PureFTPD"
-msgstr ""
+msgstr "Управлявай PureFTPD"
 
 #: packages/templates/packages/createPackage.html:3
 msgid "Create Package - CyberPanel"
@@ -3456,7 +3253,7 @@ msgstr "Създай Пакет - CyberPanel"
 msgid ""
 "Packages define resources for your websites, you need to add package before "
 "creating a website."
-msgstr ""
+msgstr "Пакетите дефинират ресурсите, които сайтовете могат да използват."
 
 #: packages/templates/packages/createPackage.html:19
 msgid "Package Details"
@@ -3468,8 +3265,6 @@ msgstr "Име на Пакет"
 
 #: packages/templates/packages/createPackage.html:39
 #: packages/templates/packages/modifyPackage.html:44
-#, fuzzy
-#| msgid "( 0 = Unlimited )"
 msgid "(0 = Unlimited)"
 msgstr "( 0 = Без Лимит )"
 
@@ -3543,6 +3338,18 @@ msgstr "Детайлите за пакета са успешно извлече�
 msgid "Successfully Modified"
 msgstr "Успешно Променено"
 
+#: pluginHolder/templates/pluginHolder/plugins.html:15
+#, fuzzy
+#| msgid "List Databases  - CyberPanel"
+msgid "List of installed plugins on your CyberPanel."
+msgstr "Бази от Данни - CyberPanel"
+
+#: pluginHolder/templates/pluginHolder/plugins.html:31
+#, fuzzy
+#| msgid "Latest Version"
+msgid "Version"
+msgstr "Последна Версия"
+
 #: serverLogs/templates/serverLogs/accessLogs.html:3
 msgid "Access Logs - CyberPanel"
 msgstr "Access Логове - CyberPanel"
@@ -3573,10 +3380,8 @@ msgstr "Последните 50 реда"
 #: serverLogs/templates/serverLogs/errorLogs.html:42
 #: serverLogs/templates/serverLogs/ftplogs.html:42
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:42
-#, fuzzy
-#| msgid "Server Logs"
 msgid "Clear Logs"
-msgstr "Сървърни Логове"
+msgstr "Почисти логове"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:52
 #: serverLogs/templates/serverLogs/emailLogs.html:49
@@ -3595,6 +3400,7 @@ msgstr "Последните 50 реда са извлечени"
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:52
 msgid "Could not fetch logs. Use the command line to view the log file."
 msgstr ""
+"Логовете не могат да бъдат показани. Използвайте терминала за прегледа им."
 
 #: serverLogs/templates/serverLogs/emailLogs.html:3
 #: serverLogs/templates/serverLogs/errorLogs.html:3
@@ -3629,19 +3435,15 @@ msgstr "Сървърни Логове"
 msgid ""
 "These are the logs from main server, to see logs for your website navigate "
 "to: Websites -> List Websites -> Select Website -> View Logs."
-msgstr ""
+msgstr "Това са логовете на главния сървър."
 
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity Audit Logs - CyberPanel"
-msgstr "Защита - CyberPanel"
+msgstr "ModSecurity Audit логове - CyberPanel"
 
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:15
-#, fuzzy
-#| msgid "Security Functions"
 msgid "ModSecurity Audit logs"
-msgstr "Функции на Защитата"
+msgstr "ModSecurity Audit логове"
 
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:3
 msgid "CyberPanel Main Log File - CyberPanel"
@@ -3651,7 +3453,7 @@ msgstr "Главен Лог на CyberPanel - CyberPanel"
 msgid ""
 "This log file corresponds to errors generated by CyberPanel for your domain "
 "errors log you can look into /home/domain/logs."
-msgstr ""
+msgstr "Това е лог файл относно грешки в CyberPanel."
 
 #: serverStatus/templates/serverStatus/index.html:3
 msgid "Server Status - CyberPanel"
@@ -3673,6 +3475,7 @@ msgstr "LiteSpeed Статус"
 msgid ""
 "On this page you can get information regarding your LiteSpeed processes."
 msgstr ""
+"На тази страница може да разгледате информация за OpenLiteSpeed процесите"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:32
 msgid "LiteSpeed Processes"
@@ -3699,6 +3502,8 @@ msgid ""
 "Could not fetch details, either LiteSpeed is not running or some error "
 "occurred, please see CyberPanel Main log file."
 msgstr ""
+"Детайлите не са извлечени. OpenLiteSpeed или не е стартиран или има критична "
+"грешка. Разгледайте главния Cyberpanel лог за повече информация."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:72
 msgid "Reboot Litespeed"
@@ -3714,13 +3519,11 @@ msgstr "Възникна проблем. Прегледайте главния �
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:95
 msgid "Could not connect to server."
-msgstr ""
+msgstr "Няма връзка със сървъра."
 
 #: serverStatus/templates/serverStatus/services.html:3
-#, fuzzy
-#| msgid "Server Logs - CyberPanel"
 msgid "Services - CyberPanel"
-msgstr "Сървърни Логове - Cyberpanel"
+msgstr "Services - CyberPanel"
 
 #: serverStatus/templates/serverStatus/services.html:25
 msgid "Show stats for services and actions (Start, Stop, Restart)"
@@ -3728,7 +3531,7 @@ msgstr ""
 
 #: tuning/templates/tuning/index.html:3
 msgid "Server Tuning - CyberPanel"
-msgstr ""
+msgstr "Server Tuning - CyberPanel"
 
 #: tuning/templates/tuning/index.html:12
 msgid "Server Tuning"
@@ -3739,6 +3542,8 @@ msgid ""
 "On this page you can set runing parameters for your webserver depending on "
 "your hardware."
 msgstr ""
+"От тази страница може да променяте настройките на уеб сървъра според Вашия "
+"hardware."
 
 #: tuning/templates/tuning/liteSpeedTuning.html:3
 msgid "LiteSpeed Tuning - CyberPanel"
@@ -3749,6 +3554,8 @@ msgid ""
 "You can use this page to tweak your server according to your website "
 "requirments."
 msgstr ""
+"Може да използвате тази страница за настройка на сървъра Ви според "
+"изискванията на сайта Ви."
 
 #: tuning/templates/tuning/liteSpeedTuning.html:18
 msgid "Tuning Details"
@@ -3793,14 +3600,16 @@ msgid ""
 "Cannot fetch Current Value, but you can still submit new changes, error "
 "reported from server:"
 msgstr ""
+"Действащата валута не е извлечена, но все пак може да я променяте. "
+"Съобщението за грешка: "
 
 #: tuning/templates/tuning/liteSpeedTuning.html:96
 msgid "Cannot save details, Error Message: "
-msgstr ""
+msgstr "Детайлите не са запазени. Съобщение за грешка: "
 
 #: tuning/templates/tuning/liteSpeedTuning.html:101
 msgid "Web Server Successfully tuned."
-msgstr ""
+msgstr "Уеб сървъра е успешно оптимизиран."
 
 #: tuning/templates/tuning/phpTuning.html:3
 msgid "PHP Tuning - CyberPanel"
@@ -3808,7 +3617,7 @@ msgstr "PHP Настройки - CyberPanel"
 
 #: tuning/templates/tuning/phpTuning.html:14
 msgid "Set how each version of PHP behaves in your server here."
-msgstr ""
+msgstr "Поставете как всяка PHP версия ще се държи на сървъра."
 
 #: tuning/templates/tuning/phpTuning.html:42
 msgid "Initial Request Timeout (secs)"
@@ -3832,7 +3641,7 @@ msgstr "Process Hard Limit"
 
 #: tuning/templates/tuning/phpTuning.html:87
 msgid "Persistent Connection"
-msgstr ""
+msgstr "Persistent Connection"
 
 #: tuning/templates/tuning/phpTuning.html:102
 msgid "Tune PHP"
@@ -3847,10 +3656,8 @@ msgid "Details Successfully fetched."
 msgstr "Детайлите са успешно извлечени."
 
 #: tuning/templates/tuning/phpTuning.html:124
-#, fuzzy
-#| msgid "PHP version "
 msgid "PHP for "
-msgstr "PHP Версия"
+msgstr "PHP Версия за"
 
 #: tuning/templates/tuning/phpTuning.html:124
 msgid "Successfully tuned."
@@ -3879,9 +3686,9 @@ msgstr "Избери Потребител"
 #: userManagment/templates/userManagment/deleteACL.html:28
 #: userManagment/templates/userManagment/modifyACL.html:28
 #, fuzzy
-#| msgid "Select Email"
+#| msgid "Select All"
 msgid "Select ACL"
-msgstr "Избери Email"
+msgstr "Избери всички"
 
 #: userManagment/templates/userManagment/changeUserACL.html:55
 #, fuzzy
@@ -3924,16 +3731,16 @@ msgstr "Admin"
 #: userManagment/templates/userManagment/createACL.html:60
 #: userManagment/templates/userManagment/modifyACL.html:63
 #, fuzzy
-#| msgid "Version Management"
+#| msgid "Cron Management"
 msgid "User Management"
-msgstr "Мениджър на Версия"
+msgstr "Cron Мениджър"
 
 #: userManagment/templates/userManagment/createACL.html:99
 #: userManagment/templates/userManagment/modifyACL.html:104
 #, fuzzy
-#| msgid "Version Management"
+#| msgid "Git Management"
 msgid "Website Management"
-msgstr "Мениджър на Версия"
+msgstr "Git Мениджър"
 
 #: userManagment/templates/userManagment/createACL.html:122
 #: userManagment/templates/userManagment/modifyACL.html:127
@@ -3959,9 +3766,9 @@ msgstr "Име на База от Данни"
 #: userManagment/templates/userManagment/createACL.html:199
 #: userManagment/templates/userManagment/modifyACL.html:204
 #, fuzzy
-#| msgid "Version Management"
+#| msgid "Git Management"
 msgid "DNS Management"
-msgstr "Мениджър на Версия"
+msgstr "Git Мениджър"
 
 #: userManagment/templates/userManagment/createACL.html:232
 #: userManagment/templates/userManagment/modifyACL.html:237
@@ -3973,43 +3780,43 @@ msgstr "Добави/Премахни Правила"
 #: userManagment/templates/userManagment/createACL.html:240
 #: userManagment/templates/userManagment/modifyACL.html:245
 #, fuzzy
-#| msgid "Version Management"
+#| msgid "Git Management"
 msgid "Email Management"
-msgstr "Мениджър на Версия"
+msgstr "Git Мениджър"
 
 #: userManagment/templates/userManagment/createACL.html:291
 #: userManagment/templates/userManagment/modifyACL.html:296
 #, fuzzy
-#| msgid "Version Management"
+#| msgid "Git Management"
 msgid "FTP Management"
-msgstr "Мениджър на Версия"
+msgstr "Git Мениджър"
 
 #: userManagment/templates/userManagment/createACL.html:321
 #: userManagment/templates/userManagment/modifyACL.html:326
 #, fuzzy
-#| msgid "Version Management"
+#| msgid "Git Management"
 msgid "Backup Management"
-msgstr "Мениджър на Версия"
+msgstr "Git Мениджър"
 
 #: userManagment/templates/userManagment/createACL.html:355
 #: userManagment/templates/userManagment/modifyACL.html:360
 #, fuzzy
-#| msgid "Select Back up"
+#| msgid "Schedule Back up"
 msgid "Achedule Back up"
-msgstr "Избери Архив"
+msgstr "Планирано Архивиране "
 
 #: userManagment/templates/userManagment/createACL.html:373
 #: userManagment/templates/userManagment/modifyACL.html:378
 #, fuzzy
-#| msgid "Version Management"
+#| msgid "Git Management"
 msgid "SSL Management"
-msgstr "Мениджър на Версия"
+msgstr "Git Мениджър"
 
 #: userManagment/templates/userManagment/createACL.html:405
 #, fuzzy
-#| msgid "Create Email"
+#| msgid "Create Alias"
 msgid "Create ACL"
-msgstr "Създай Email"
+msgstr "Паркирай Домейн"
 
 #: userManagment/templates/userManagment/createUser.html:3
 msgid "Create New User - CyberPanel"
@@ -4075,19 +3882,21 @@ msgstr "Акаунт с Потребителско име:"
 
 #: userManagment/templates/userManagment/createUser.html:116
 msgid "Cannot create user. Error message:"
-msgstr ""
+msgstr "Потребителя не е създаден. Съобщение за грешка:"
 
 #: userManagment/templates/userManagment/createUser.html:124
 msgid ""
 "Length of first and last name combined should be less than or equal to 20 "
 "characters"
 msgstr ""
+"Дължината на Първото и последното име комбинирано не трябва да превишава 20 "
+"символа."
 
 #: userManagment/templates/userManagment/deleteACL.html:3
 #, fuzzy
-#| msgid "Delete Package - CyberPanel"
+#| msgid "Delete User - CyberPanel"
 msgid "Delete ACL - CyberPanel"
-msgstr "Изтрий пакет - CyberPanel"
+msgstr "Премахни потребител - CyberPanel"
 
 #: userManagment/templates/userManagment/deleteACL.html:13
 #, fuzzy
@@ -4097,15 +3906,16 @@ msgstr "От тази страница може да пускате или сп�
 
 #: userManagment/templates/userManagment/deleteUser.html:3
 msgid "Delete User - CyberPanel"
-msgstr ""
+msgstr "Премахни потребител - CyberPanel"
 
 #: userManagment/templates/userManagment/deleteUser.html:14
 msgid "Websites owned by this user will automatically transfer to the root."
 msgstr ""
+"Уеб страниците на този потребител ще бъдат автоматично прехвърлени към admin."
 
 #: userManagment/templates/userManagment/deleteUser.html:61
 msgid "Cannot delete user. Error message:"
-msgstr ""
+msgstr "Потребителя не може да бъде премахнат. Съобщение за грешка: "
 
 #: userManagment/templates/userManagment/deleteUser.html:65
 msgid "User "
@@ -4113,11 +3923,11 @@ msgstr "Потребител"
 
 #: userManagment/templates/userManagment/index.html:3
 msgid "User Functions - CyberPanel"
-msgstr ""
+msgstr "Потребителски функции - CyberPanel"
 
 #: userManagment/templates/userManagment/index.html:14
 msgid "Create, edit and delete users on this page."
-msgstr ""
+msgstr "Създавай, променяй или премахвайте потребители от тази страница."
 
 #: userManagment/templates/userManagment/modifyACL.html:3
 #, fuzzy
@@ -4131,9 +3941,9 @@ msgstr ""
 
 #: userManagment/templates/userManagment/modifyACL.html:13
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can configure SpamAssassin settings."
 msgid "On this page you can modify an existing ACL."
-msgstr "От тази страница може да настройте дестинацията за архивите (SFTP)"
+msgstr "От тази страница може да настройте SpamAssassin."
 
 #: userManagment/templates/userManagment/modifyUser.html:3
 msgid "Modify User - CyberPanel"
@@ -4141,7 +3951,7 @@ msgstr "Промени Потребител - CyberPanel"
 
 #: userManagment/templates/userManagment/modifyUser.html:13
 msgid "Modify existing user settings on this page."
-msgstr ""
+msgstr "Променяйте настройките за съществуващ потребител от тази страница."
 
 #: userManagment/templates/userManagment/modifyUser.html:26
 msgid "Select Account"
@@ -4153,7 +3963,7 @@ msgstr "е успешно променен."
 
 #: userManagment/templates/userManagment/modifyUser.html:87
 msgid "Cannot modify user. Error message:"
-msgstr ""
+msgstr "Потребителя не е променен. Съобщение за грешка:"
 
 #: userManagment/templates/userManagment/modifyUser.html:100
 msgid "Details fetched."
@@ -4186,7 +3996,7 @@ msgstr "Детайли за Акаунт"
 
 #: userManagment/templates/userManagment/userProfile.html:13
 msgid "List the account details for the currently logged in user."
-msgstr ""
+msgstr "Преглед на акаунтите, които са влезнали в този момент."
 
 #: userManagment/templates/userManagment/userProfile.html:58
 #, fuzzy
@@ -4199,10 +4009,8 @@ msgid "( 0 = Unlimited )"
 msgstr "( 0 = Без Лимит )"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:3
-#, fuzzy
-#| msgid "Application Installer"
 msgid "Application Installer - CyberPanel"
-msgstr "Инсталатор на Приложения"
+msgstr "Инсталатор на Приложения - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:14
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:22
@@ -4212,8 +4020,6 @@ msgid "Application Installer"
 msgstr "Инсталатор на Приложения"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:15
-#, fuzzy
-#| msgid "Application Installer"
 msgid "One-click application install."
 msgstr "Инсталатор на Приложения"
 
@@ -4224,10 +4030,8 @@ msgstr "Инсталатор на Приложения"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:671
 #: websiteFunctions/templates/websiteFunctions/website.html:957
 #: websiteFunctions/templates/websiteFunctions/website.html:960
-#, fuzzy
-#| msgid "Wordpress with LSCache"
 msgid "Install wordpress with LSCache"
-msgstr "Wordpress с LSCache"
+msgstr "Инсталирай Wordpress с LSCache"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:35
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:672
@@ -4236,10 +4040,8 @@ msgid "Wordpress with LSCache"
 msgstr "Wordpress с LSCache"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:41
-#, fuzzy
-#| msgid "Wordpress with LSCache"
 msgid "Install Joomla with(?) LSCache"
-msgstr "Wordpress с LSCache"
+msgstr "Инсталирай Joomla(?) с LSCache"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:44
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:47
@@ -4247,16 +4049,14 @@ msgstr "Wordpress с LSCache"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:683
 #: websiteFunctions/templates/websiteFunctions/website.html:969
 #: websiteFunctions/templates/websiteFunctions/website.html:972
-#, fuzzy
-#| msgid "Wordpress with LSCache"
 msgid "Install Joomla with LSCache"
-msgstr "Wordpress с LSCache"
+msgstr "Инсталирай Joomla с LSCache"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:48
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:684
 #: websiteFunctions/templates/websiteFunctions/website.html:973
 msgid "Joomla"
-msgstr ""
+msgstr "Joomla"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:3
 msgid "Create New Website - CyberPanel"
@@ -4269,6 +4069,8 @@ msgid ""
 "On this page you can launch, list, modify and delete websites from your "
 "server."
 msgstr ""
+"От тази страница може да стартирате, преглеждате, променяте или премахвате "
+"уеб сайтове на Вашия сървър."
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:20
 msgid "Website Details"
@@ -4281,7 +4083,7 @@ msgstr "Избери Собственик"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:54
 msgid "Do not enter WWW, it will be auto created!"
-msgstr ""
+msgstr "НЕ въвеждайте www. То ще бъде автоматично създадено!"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:56
 #: websiteFunctions/templates/websiteFunctions/website.html:325
@@ -4297,10 +4099,8 @@ msgstr "Допълнителни функции"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:144
 #: websiteFunctions/templates/websiteFunctions/website.html:406
-#, fuzzy
-#| msgid " is successfully created."
 msgid "Website succesfully created."
-msgstr "е успешно създаден."
+msgstr "Сайтът е успешно създаден."
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:3
 msgid "Delete Website - CyberPanel"
@@ -4311,99 +4111,89 @@ msgid ""
 "This page can be used to delete website, once deleted it can not be "
 "recovered."
 msgstr ""
+"От тази страница може да премахвате уеб сайтове. Веднъж премахнати те няма "
+"как да бъдат възстановени."
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:61
 msgid "Cannot delete website, Error message: "
-msgstr ""
+msgstr "Страницата не е премахната. Съобщение за грешка:"
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:65
 msgid "Successfully Deleted."
 msgstr "Успешно е Изтрита."
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:3
-#, fuzzy
-#| msgid "Home - CyberPanel"
 msgid "Domain Aliases - CyberPanel"
-msgstr "Начало - CyberPanel"
+msgstr "Паркирани Домейни - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:12
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:19
-#, fuzzy
-#| msgid "Domain Name"
 msgid "Domain Aliases"
-msgstr "Домейн Име"
+msgstr "Паркирани Домейни"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:13
 msgid ""
 "With Domain Aliases you can visit example.com using example.net and view the "
 "same content."
 msgstr ""
+"С паркирания домейн Вие може да заредите example.com като посетите example."
+"net."
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:29
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:105
-#, fuzzy
-#| msgid "Create Email"
 msgid "Create Alias"
-msgstr "Създай Email"
+msgstr "Паркирай Домейн"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:36
-#, fuzzy
-#| msgid "Create Email"
 msgid "Master Domain"
-msgstr "Създай Email"
+msgstr "Главен домейн"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:37
 msgid "Alias"
-msgstr ""
+msgstr "Паркиран домейн"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:38
-#, fuzzy
-#| msgid "System Status"
 msgid "File System Path"
-msgstr "Статус"
+msgstr "Системен път"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:53
 #: websiteFunctions/templates/websiteFunctions/website.html:515
-#, fuzzy
-#| msgid "Issue SSL"
 msgid "Issue"
-msgstr "Издаване на SSL"
+msgstr "Издаден"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:63
 msgid "Domain Aliases not found."
-msgstr ""
+msgstr "Няма паркиран домейн"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:79
-#, fuzzy
-#| msgid "Select Domain"
 msgid "Alias Domain"
-msgstr "Избери Домейн"
+msgstr "Паркиран Домейн"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:93
 msgid ""
 "For SSL to work DNS of domain should point to server, otherwise self signed "
 "SSL will be issued, you can add your own SSL later."
 msgstr ""
+"За да бъде издаден SSL домейн името трябва да бъде пренасочено към сървъра "
+"Ви. В противен случай ще бъде издаден Self SSL. Винаги може да добавите Ваш "
+"SSL по-късно."
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:114
-#, fuzzy
-#| msgid "Action failed. Error message:"
 msgid "Operation failed. Error message:"
-msgstr "Действието не е изпълнено, защото:"
+msgstr "Действието не е изпълнено. Съобщение за грешка:"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:118
 msgid "Alias successfully created. Refreshing page in 3 seconds..."
 msgstr ""
+"Домейна е успешно паркиран. Страницата ще се презареди след 3 секунди..."
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:122
-#, fuzzy
-#| msgid "Action successful."
 msgid "Operation Successfull."
 msgstr "Действието е успешно изпълнено."
 
 #: websiteFunctions/templates/websiteFunctions/index.html:3
 msgid "Website Functions - CyberPanel"
-msgstr ""
+msgstr "Настройки на Страница - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/index.html:89
 #: websiteFunctions/templates/websiteFunctions/index.html:91
@@ -4413,55 +4203,41 @@ msgid "Suspend/Unsuspend Website"
 msgstr "Пусни/Спри Страница"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:3
-#, fuzzy
-#| msgid "Home - CyberPanel"
 msgid "Install Joomla - CyberPanel"
-msgstr "Начало - CyberPanel"
+msgstr "Инсталирай Joomla - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:12
-#, fuzzy
-#| msgid "Install"
 msgid "Install Joomla"
-msgstr "Инсталирай"
+msgstr "Инсталирай Joomla"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:13
 msgid "One-click Joomla Install!"
-msgstr ""
+msgstr "Инсталирай Joomla!"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:20
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:20
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:20
-#, fuzzy
-#| msgid "Installation failed. Error message:"
 msgid "Installation Details"
-msgstr "Инсталацията Не завърши, защото:"
+msgstr "Детайли:"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:28
-#, fuzzy
-#| msgid "File Name"
 msgid "Site Name"
-msgstr "Първо Име"
+msgstr "Име на сайт"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:35
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:35
-#, fuzzy
-#| msgid "Modify User"
 msgid "Login User"
-msgstr "Промени Потребител"
+msgstr "Потребителско име"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:42
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:42
-#, fuzzy
-#| msgid "Password"
 msgid "Login Password"
 msgstr "Парола"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:49
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:63
-#, fuzzy
-#| msgid "Database Name"
 msgid "Database Prefix"
-msgstr "Име на База от Данни"
+msgstr "База от данни prefix"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:56
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:70
@@ -4479,63 +4255,45 @@ msgstr "Инсталацията Не завърши, защото:"
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:95
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:109
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:95
-#, fuzzy
-#| msgid "Installation successful. To complete the setup visit:"
 msgid "Installation successful. Visit:"
-msgstr "Инсталацията завърши успешно. "
+msgstr "Инсталацията завърши успешно.  Посети: "
 
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:3
-#, fuzzy
-#| msgid "Wordpress with LSCache"
 msgid "Install PrestaShop - CyberPanel"
-msgstr "Wordpress с LSCache"
+msgstr "Инсталирай PrestaShop -CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:12
-#, fuzzy
-#| msgid "Install"
 msgid "Install PrestaShop"
-msgstr "Инсталирай"
+msgstr "Инсталирай PrestaShop"
 
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:13
-#, fuzzy
-#| msgid "Application Installer"
 msgid "One-click PrestaShop Install!"
-msgstr "Инсталатор на Приложения"
+msgstr "Инсталирай PrestaShop!"
 
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:28
-#, fuzzy
-#| msgid "File Name"
 msgid "Shop Name"
-msgstr "Първо Име"
+msgstr "Име на магазин"
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:3
-#, fuzzy
-#| msgid "Wordpress with LSCache"
 msgid "Install WordPress - CyberPanel"
 msgstr "Wordpress с LSCache"
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:12
-#, fuzzy
-#| msgid "Install"
 msgid "Install WordPress"
-msgstr "Инсталирай"
+msgstr "Инсталирай WordPress"
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:13
-#, fuzzy
-#| msgid "Wordpress with LSCache"
 msgid "Install WordPress with LSCache."
 msgstr "Wordpress с LSCache"
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:28
 msgid "Blog Title"
-msgstr ""
+msgstr "Име на Блог"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:13
 #: websiteFunctions/templates/websiteFunctions/website.html:13
-#, fuzzy
-#| msgid "Previous"
 msgid "Preview"
-msgstr "Минала"
+msgstr "Покажи"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:14
 #: websiteFunctions/templates/websiteFunctions/website.html:14
@@ -4588,6 +4346,8 @@ msgstr "Логовете са изтеглени"
 msgid ""
 "Could not fetch logs, see the logs file through command line. Error message:"
 msgstr ""
+"Лог файловете не са извлечени. Използвайте терминала за техния преглед. "
+"Съобщение за грешка: "
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:175
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:214
@@ -4618,7 +4378,7 @@ msgstr "Редактирай vHost Main Configurations"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:266
 #: websiteFunctions/templates/websiteFunctions/website.html:553
 msgid "vHost Conf"
-msgstr ""
+msgstr "vHost Conf"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:274
 #: websiteFunctions/templates/websiteFunctions/website.html:561
@@ -4627,17 +4387,13 @@ msgstr "Добави Rewrite Rules (.htaccess)"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:277
 #: websiteFunctions/templates/websiteFunctions/website.html:564
-#, fuzzy
-#| msgid "Add Rewrite Rules (.htaccess)"
 msgid "Rewrite Rules (.htaccess)"
-msgstr "Добави Rewrite Rules (.htaccess)"
+msgstr "Rewrite Rules (.htaccess)"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:278
 #: websiteFunctions/templates/websiteFunctions/website.html:565
-#, fuzzy
-#| msgid "Save Rewrite Rules"
 msgid "Rewrite Rules"
-msgstr "Запази Rewrite Rules"
+msgstr "Rewrite Rules"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:286
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:289
@@ -4655,19 +4411,15 @@ msgstr "Добави SSL"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:301
 #: websiteFunctions/templates/websiteFunctions/website.html:585
 #: websiteFunctions/templates/websiteFunctions/website.html:588
-#, fuzzy
-#| msgid "Select PHP Version"
 msgid "Change PHP Version"
-msgstr "Избери PHP Версия"
+msgstr "Промени PHP Версия"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:302
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:498
 #: websiteFunctions/templates/websiteFunctions/website.html:589
 #: websiteFunctions/templates/websiteFunctions/website.html:785
-#, fuzzy
-#| msgid "Change"
 msgid "Change PHP"
-msgstr "Промени"
+msgstr "Промени PHP"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:314
 #: websiteFunctions/templates/websiteFunctions/website.html:601
@@ -4695,10 +4447,8 @@ msgstr "Текущата конфигурация не е изтеглена, з
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:434
 #: websiteFunctions/templates/websiteFunctions/website.html:669
 #: websiteFunctions/templates/websiteFunctions/website.html:721
-#, fuzzy
-#| msgid "SSH Configurations Saved."
 msgid "Configurations saved."
-msgstr "SSH Конфигурацията е запаметена."
+msgstr "Конфигурацията е запазена."
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:420
 #: websiteFunctions/templates/websiteFunctions/website.html:707
@@ -4722,17 +4472,13 @@ msgstr "Запази Rewrite Rules"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:509
 #: websiteFunctions/templates/websiteFunctions/website.html:796
-#, fuzzy
-#| msgid "Cannot create website. Error message:"
 msgid "Failed to change PHP version. Error message:"
-msgstr "Страницата не е създадена, защото:"
+msgstr "PHP Версията не е променена. Съобщение за грешка:"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:513
 #: websiteFunctions/templates/websiteFunctions/website.html:800
-#, fuzzy
-#| msgid " is successfully created."
 msgid "PHP successfully changed for: "
-msgstr "е успешно създаден."
+msgstr "PHP е успешно сменена за:"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:538
 #: websiteFunctions/templates/websiteFunctions/website.html:826
@@ -4755,185 +4501,161 @@ msgstr "Файл Мениджър"
 #: websiteFunctions/templates/websiteFunctions/website.html:848
 #: websiteFunctions/templates/websiteFunctions/website.html:886
 msgid "open_basedir Protection"
-msgstr ""
+msgstr "open_basedir Защита"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:561
 #: websiteFunctions/templates/websiteFunctions/website.html:849
 msgid "open_basedir"
-msgstr ""
+msgstr "open_basedir"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:573
 #: websiteFunctions/templates/websiteFunctions/website.html:861
-#, fuzzy
-#| msgid "Create FTP Account"
 msgid "Create FTP Acct"
 msgstr "Създай FTP Акаунт"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:585
 #: websiteFunctions/templates/websiteFunctions/website.html:873
-#, fuzzy
-#| msgid "Delete FTP Account"
 msgid "Delete FTP Acct"
 msgstr "Изтрий FTP Акаунт"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:620
 #: websiteFunctions/templates/websiteFunctions/website.html:908
-#, fuzzy
-#| msgid "Save Changes"
 msgid "Apply Changes"
 msgstr "Запази промените"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:632
 #: websiteFunctions/templates/websiteFunctions/website.html:920
-#, fuzzy
-#| msgid "Rule successfully added."
 msgid "Changes successfully saved."
-msgstr "Правилата са успешно добавени."
+msgstr "Промените са успешно добавени."
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:692
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:695
 #: websiteFunctions/templates/websiteFunctions/website.html:981
 #: websiteFunctions/templates/websiteFunctions/website.html:984
 msgid "Attach Git with this website!"
-msgstr ""
+msgstr "Закачи Git към този уебсайт!"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:696
 #: websiteFunctions/templates/websiteFunctions/website.html:985
 msgid "Git"
-msgstr ""
+msgstr "Git"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:705
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:708
 #: websiteFunctions/templates/websiteFunctions/website.html:994
 #: websiteFunctions/templates/websiteFunctions/website.html:997
-#, fuzzy
-#| msgid "Install"
 msgid "Install Prestashop"
-msgstr "Инсталирай"
+msgstr "Инсталирай Prestashop"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:709
 #: websiteFunctions/templates/websiteFunctions/website.html:998
 msgid "Prestashop"
-msgstr ""
+msgstr "Prestashop"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:3
-#, fuzzy
-#| msgid "Version Management - CyberPanel"
 msgid "Cron Management - CyberPanel"
-msgstr "Мениджър на Версия - CyberPanel"
+msgstr "Cron Мениджър - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:12
 #: websiteFunctions/templates/websiteFunctions/listCron.html:19
-#, fuzzy
-#| msgid "Version Management"
 msgid "Cron Management"
-msgstr "Мениджър на Версия"
+msgstr "Cron Мениджър"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:12
 msgid "Cron Docs"
-msgstr ""
+msgstr "Cron документация"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:13
-#, fuzzy
-#| msgid "Create, edit and delete databases on this page."
 msgid "Create, edit or delete your cron jobs from this page."
-msgstr "Създай, редактирай базите от данни."
+msgstr "Създай, редактирай или премахвайте cron задачи от тази страница."
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:37
-#, fuzzy
-#| msgid "Add Destination"
 msgid "Add Cron"
-msgstr "Добави дестинация"
+msgstr "Добави Cron"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:46
 #: websiteFunctions/templates/websiteFunctions/listCron.html:95
 msgid "Minute"
-msgstr ""
+msgstr "Минута"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:47
 #: websiteFunctions/templates/websiteFunctions/listCron.html:101
 msgid "Hour"
-msgstr ""
+msgstr "Час"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:48
 msgid "Day of Month"
-msgstr ""
+msgstr "Ден от месеца"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:49
 #: websiteFunctions/templates/websiteFunctions/listCron.html:113
 msgid "Month"
-msgstr ""
+msgstr "Месец"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:50
 msgid "Day of Week"
-msgstr ""
+msgstr "Ден от седмица"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:51
 #: websiteFunctions/templates/websiteFunctions/listCron.html:126
 msgid "Command"
-msgstr ""
+msgstr "Команда"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:52
-#, fuzzy
-#| msgid "FTP Functions"
 msgid "Action"
-msgstr "FTP Функции"
+msgstr "Действие"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:79
 msgid "Pre defined"
-msgstr ""
+msgstr "Предварително дефинирано"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:82
 msgid "Every minute"
-msgstr ""
+msgstr "Всяка минута"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:83
 msgid "Every 5 minutes"
-msgstr ""
+msgstr "Всеки 5 минути"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:84
 msgid "Every 30 minutes"
-msgstr ""
+msgstr "Всеки 30 минути"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:85
 msgid "Every hour"
-msgstr ""
+msgstr "Всеки час"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:86
 msgid "Every day"
-msgstr ""
+msgstr "Всеки ден"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:87
 msgid "Every week"
-msgstr ""
+msgstr "Всяка седмица"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:88
 msgid "Every month"
-msgstr ""
+msgstr "Всеки месец"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:89
 msgid "Every year"
-msgstr ""
+msgstr "Всяка година"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:107
 msgid "Day of month"
-msgstr ""
+msgstr "Ден от месеца"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:119
 msgid "Day of week"
-msgstr ""
+msgstr "Ден от седмицата"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:135
-#, fuzzy
-#| msgid "Save Rewrite Rules"
 msgid "Save edits"
-msgstr "Запази Rewrite Rules"
+msgstr "Запази промените"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:142
-#, fuzzy
-#| msgid "Add Destination"
 msgid "Add cron"
-msgstr "Добави дестинация"
+msgstr "Добави крон"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:152
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:105
@@ -4941,18 +4663,16 @@ msgid "Cannot fetch website details. Error message:"
 msgstr "Информацията за страницата не са обновени, защото:"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:156
-#, fuzzy
-#| msgid "Could not save SSL. Error message:"
 msgid "Unable to add/save Cron. Error message:"
-msgstr "SSL не е запазен, защото:"
+msgstr "Cron задачата не е добавена/променена. Съобщение за грешка:"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:159
 msgid "Cron job saved"
-msgstr ""
+msgstr "Cron задачата е запазена"
 
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:3
 msgid "Websites Hosted - CyberPanel"
-msgstr ""
+msgstr "Websites Hosted - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:3
 msgid "Modify Website - CyberPanel"
@@ -4975,71 +4695,68 @@ msgid "Website Details Successfully fetched"
 msgstr "Детайлите  за страницата са изтеглени"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:3
-#, fuzzy
-#| msgid "Version Management - CyberPanel"
 msgid "Git Management - CyberPanel"
-msgstr "Мениджър на Версия - CyberPanel"
+msgstr "Git Мениджър - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:12
-#, fuzzy
-#| msgid "Version Management"
 msgid "Git Management"
-msgstr "Мениджър на Версия"
+msgstr "Git Мениджър"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:13
 msgid "Attach git to your websites."
-msgstr ""
+msgstr "Прикачи Git за тази страница."
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:21
 msgid "Attach Git"
-msgstr ""
+msgstr "Прикачи Git"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:29
 msgid "Providers"
-msgstr ""
+msgstr "Източници"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:36
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:163
 msgid "Deployment Key"
-msgstr ""
+msgstr "Deployment ключ"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:67
 msgid ""
 "Before attaching repo to your website, make sure to place your Development "
 "key in your GIT repository."
 msgstr ""
+"Преди да прикачите хранилище за страницата Ви се уверете, че сте поставили "
+"Вашия Development ключ във Вашето GIT хранилище."
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:79
 msgid "Repository Name"
-msgstr ""
+msgstr "Име на хранилището"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:88
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:265
 msgid "Branch"
-msgstr ""
+msgstr "Разклонение"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:99
 msgid "Attach Now"
-msgstr ""
+msgstr "Прикачи"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:123
 msgid "GIT Successfully attached, refreshing page in 3 seconds... Visit:"
 msgstr ""
+"GIT е успешно прикачен. Страницата ще се презареди след 3 секунди ... Посети:"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:215
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:276
-#, fuzzy
-#| msgid "Change"
 msgid "Change Branch"
-msgstr "Промени"
+msgstr "Промени разклонение"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:225
 msgid "Detach Repo"
-msgstr ""
+msgstr "Откачи хранилище"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:231
 msgid "Webhook URL"
-msgstr ""
+msgstr "Webhook URL"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:232
 msgid ""
@@ -5048,16 +4765,19 @@ msgid ""
 "disable SSL check while configuring webhook. This will initiate a pull from "
 "your resposity as soon as you commit some changes."
 msgstr ""
+"Добави този URL адрес към Webhooks секцията на Вашето Git хранилище. Ако сте "
+"използвали hostname SSL тогава заменете IP адреса с hostname. В противен "
+"случай използвайте IP и забранете SSL проверката при конфигурацията на "
+"webhook."
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:244
 msgid "Repo successfully detached, refreshing in 3 seconds.."
 msgstr ""
+"Хранилището е успешно откачено. Страницата ще се презареди след 3 секунди.."
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:290
-#, fuzzy
-#| msgid "Rule successfully added."
 msgid "Branch successfully changed."
-msgstr "Правилата са успешно добавени."
+msgstr "Разклонението е успешно променено."
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:3
 msgid "Suspend/Unsuspend Website - CyberPanel"
@@ -5094,65 +4814,51 @@ msgstr "Успешно"
 #: websiteFunctions/templates/websiteFunctions/website.html:261
 #: websiteFunctions/templates/websiteFunctions/website.html:264
 #: websiteFunctions/templates/websiteFunctions/website.html:265
-#, fuzzy
-#| msgid "Add Destination"
 msgid "Add Domains"
-msgstr "Добави дестинация"
+msgstr "Добави Домейни"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:282
 #: websiteFunctions/templates/websiteFunctions/website.html:285
 #: websiteFunctions/templates/websiteFunctions/website.html:286
-#, fuzzy
-#| msgid "Domain Name"
 msgid "Domain Alias"
-msgstr "Домейн Име"
+msgstr "Domain Alias"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:293
 #: websiteFunctions/templates/websiteFunctions/website.html:296
 msgid "Add new Cron Job"
-msgstr ""
+msgstr "Добави нова Cron Job"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:297
 msgid "Cron Jobs"
-msgstr ""
+msgstr "Cron Jobs"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:323
 msgid "This path is relative to: "
-msgstr ""
+msgstr "Този път е относим към: "
 
 #: websiteFunctions/templates/websiteFunctions/website.html:323
 msgid "Leave empty to set default."
-msgstr ""
+msgstr "Отсави празни за по-подразбиране"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:380
-#, fuzzy
-#| msgid "Create Email"
 msgid "Create Domain"
-msgstr "Създай Email"
+msgstr "Създай Домейн"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:441
-#, fuzzy
-#| msgid "Version Management"
 msgid "PHP Version Changed to:"
-msgstr "Мениджър на Версия"
+msgstr "PHP Версията е променена на:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:445
-#, fuzzy
-#| msgid "Delete"
 msgid "Deleted:"
-msgstr "Изтрий"
+msgstr "Изтрит:"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:449
-#, fuzzy
-#| msgid "SSL Issued for"
 msgid "SSL Issued:"
-msgstr "SSL издаден за"
+msgstr "SSL издаден за: "
 
 #: websiteFunctions/templates/websiteFunctions/website.html:453
-#, fuzzy
-#| msgid "Database created successfully."
 msgid "Changes applied successfully."
-msgstr "Базата от Данни е създадена успешно."
+msgstr "Промените са запаметени успешно."
 
 #~ msgid "CPU Status"
 #~ msgstr "CPU Статус"
@@ -5177,6 +4883,12 @@ msgstr "Базата от Данни е създадена успешно."
 
 #~ msgid "Only Numbers"
 #~ msgstr "Само Числа"
+
+#~ msgid "Username should be lowercase alphanumeric."
+#~ msgstr "Потребителскоро име трябва да бъде само с малки букви."
+
+#~ msgid "Must contain one number and one special character."
+#~ msgstr "Трябва да съдържа поне един номер и специален символ."
 
 #~ msgid "Cannot create website. Error message:"
 #~ msgstr "Страницата не е създадена, защото:"

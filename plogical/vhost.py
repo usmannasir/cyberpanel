@@ -80,7 +80,7 @@ class vhost:
             try:
                 os.makedirs(pathLogs)
 
-                command = "chown " + "nobody" + ":" + "nobody" + " " + pathLogs
+                command = "chown " + "lscpd" + ":" + "lscpd" + " " + pathLogs
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
@@ -424,7 +424,6 @@ rewrite  {
 
             writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
 
-            writeDataToFile.writelines("\n")
             writeDataToFile.writelines("virtualHost " + virtualHostName + " {\n")
             writeDataToFile.writelines("  vhRoot                  /home/$VH_NAME\n")
             writeDataToFile.writelines("  configFile              $SERVER_ROOT/conf/vhosts/$VH_NAME/vhost.conf\n")
@@ -488,16 +487,16 @@ rewrite  {
 
     @staticmethod
     def deleteCoreConf(virtualHostName, numberOfSites):
-
-        virtualHostPath = "/home/" + virtualHostName
-        if os.path.exists(virtualHostPath):
-            shutil.rmtree(virtualHostPath)
-
-        confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
-        if os.path.exists(confPath):
-            shutil.rmtree(confPath)
-
         try:
+
+            virtualHostPath = "/home/" + virtualHostName
+            if os.path.exists(virtualHostPath):
+                shutil.rmtree(virtualHostPath)
+
+            confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
+            if os.path.exists(confPath):
+                shutil.rmtree(confPath)
+
             data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
 
             writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
@@ -507,11 +506,9 @@ rewrite  {
 
             for items in data:
                 if numberOfSites == 1:
-                    if (items.find(virtualHostName) > -1 and items.find(
-                                "  map                     " + virtualHostName) > -1):
+                    if (items.find(' ' + virtualHostName) > -1 and items.find("  map                     " + virtualHostName) > -1):
                         continue
-                    if (items.find(' ' + virtualHostName) > -1 and (
-                            items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
+                    if (items.find(' ' + virtualHostName) > -1 and (items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
                         check = 0
                     if items.find("listener") > -1 and items.find("SSL") > -1:
                         sslCheck = 0
@@ -521,11 +518,9 @@ rewrite  {
                         check = 1
                         sslCheck = 1
                 else:
-                    if (items.find(virtualHostName) > -1 and items.find(
-                                "  map                     " + virtualHostName) > -1):
+                    if (items.find(' ' + virtualHostName) > -1 and items.find("  map                     " + virtualHostName) > -1):
                         continue
-                    if (items.find(virtualHostName) > -1 and (
-                            items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
+                    if (items.find(' ' + virtualHostName) > -1 and (items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
                         check = 0
                     if (check == 1):
                         writeDataToFile.writelines(items)
@@ -707,6 +702,7 @@ rewrite  {
             data = open(confPath, 'r').readlines()
             writeToFile = open(confPath, 'w')
             sslCheck = 0
+
 
             for items in data:
                 if (items.find("listener SSL") > -1):
@@ -989,4 +985,3 @@ rewrite  {
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "223 [IO Error with main config file [createConfigInMainDomainHostFile]]")
             return [0, "223 [IO Error with main config file [createConfigInMainDomainHostFile]]"]
-
