@@ -1054,10 +1054,12 @@ class preFlightsChecks:
     def install_postfix_davecot(self):
         try:
 
-            count = 0
+            command = 'yum remove postfix -y'
+            subprocess.call(shlex.split(command))
 
+            count = 0
             while(1):
-                command = 'yum -y --enablerepo=centosplus install postfix'
+                command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-3.2.4-1.gf.el7.x86_64.rpm'
 
                 cmd = shlex.split(command)
 
@@ -1068,6 +1070,27 @@ class preFlightsChecks:
                     preFlightsChecks.stdOut("Unable to install Postfix, trying again, try number: " + str(count))
                     if count == 3:
                         logging.InstallLog.writeToFile("Unable to install Postfix, you will not be able to send mails and rest should work fine! [install_postfix_davecot]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Postfix successfully installed!")
+                    preFlightsChecks.stdOut("Postfix successfully installed!")
+                    break
+
+            count = 0
+
+            while (1):
+                command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-mysql-3.2.4-1.gf.el7.x86_64.rpm'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to install Postfix, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Unable to install Postfix, you will not be able to send mails and rest should work fine! [install_postfix_davecot]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Postfix successfully installed!")

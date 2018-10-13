@@ -537,6 +537,7 @@ milter_default_action = accept
 
                 writeToFile = open(postfixPath, 'a')
                 writeToFile.writelines('smtpd_data_restrictions = check_policy_service unix:/var/log/policyServerSocket\n')
+                writeToFile.writelines('smtpd_policy_service_default_action = DUNNO\n')
                 writeToFile.close()
 
                 command = 'systemctl restart postfix'
@@ -548,6 +549,8 @@ milter_default_action = accept
 
                 for items in data:
                     if items.find('check_policy_service unix:/var/log/policyServerSocket') > -1:
+                        continue
+                    elif items.find('smtpd_policy_service_default_action = DUNNO') > -1:
                         continue
                     else:
                         writeToFile.writelines(items)
