@@ -1495,6 +1495,8 @@ class WebsiteManager:
             lastLine = statusData[-1]
 
             if lastLine.find('[200]') > -1:
+                command = 'sudo rm -f ' + statusFile
+                subprocess.call(shlex.split(command))
                 data_ret = {'abort': 1, 'installStatus': 1, 'installationProgress': "100",
                             'currentStatus': 'Successfully Installed.'}
                 json_data = json.dumps(data_ret)
@@ -1507,7 +1509,10 @@ class WebsiteManager:
             else:
                 progress = lastLine.split(',')
                 currentStatus = progress[0]
-                installationProgress = progress[1]
+                try:
+                    installationProgress = progress[1]
+                except:
+                    installationProgress = 0
                 data_ret = {'abort': 0, 'installStatus': 0, 'installationProgress': installationProgress,
                             'currentStatus': currentStatus}
                 json_data = json.dumps(data_ret)

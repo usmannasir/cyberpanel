@@ -52,6 +52,14 @@ class pluginManager:
         return pluginManagerGlobal.globalPlug(request, postWebsiteModification, response)
 
     @staticmethod
+    def preDomain(request):
+        return pluginManagerGlobal.globalPlug(request, preDomain)
+
+    @staticmethod
+    def postDomain(request, response):
+        return pluginManagerGlobal.globalPlug(request, postDomain, response)
+
+    @staticmethod
     def preSaveConfigsToFile(request):
         return pluginManagerGlobal.globalPlug(request, preSaveConfigsToFile)
 

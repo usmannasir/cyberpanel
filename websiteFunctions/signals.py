@@ -39,6 +39,13 @@ preWebsiteModification = Signal(providing_args=["request"])
 ## This event is fired after CyberPanel core finished suspension of website
 postWebsiteModification = Signal(providing_args=["request", "response"])
 
+
+## This event is fired before CyberPanel core load website launcher
+preDomain = Signal(providing_args=["request"])
+
+## This event is fired after CyberPanel core finished loading website launcher
+postDomain = Signal(providing_args=["request", "response"])
+
 ## This event is fired before CyberPanel core start saving changes to vhost conf
 preSaveConfigsToFile = Signal(providing_args=["request"])
 

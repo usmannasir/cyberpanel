@@ -1,0 +1,75 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Create Email List - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div ng-controller="createEmailList" class="container">
+<div id="page-title">
+   <h2>{% trans "Create Email List" %} - <span id="domainNamePage">{{ domain }}</span> </h2>
+   <p>{% trans "Create email list, to send out news letters and marketing emails." %}</p>
+</div>
+<div class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Create Email List" %} <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div class="example-box-wrapper">
+
+
+            <form   action="/" id="createPackages" class="form-horizontal bordered-row">
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "List Name" %}</label>
+                    <div class="col-sm-6">
+                        <input name="pname"  type="text" class="form-control" ng-model="listName" required>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Path" %}</label>
+                    <div class="col-sm-6">
+                        <input placeholder="Path to emails file (.txt and .csv accepted)"  type="text" class="form-control" ng-model="path" required>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="createEmailList()" class="btn btn-primary btn-lg btn-block">{% trans "Create List" %}</button>
+
+                    </div>
+                </div>
+
+                <div ng-hide="installationProgress" class="form-group">
+                    <label class="col-sm-2 control-label"></label>
+                    <div class="col-sm-7">
+                            <div class="alert alert-success text-center">
+                                        <h2>{$ currentStatus $}</h2>
+                            </div>
+                    </div>
+                </div>
+
+                <div ng-hide="installationProgress" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                        <button type="button" ng-disabled="goBackDisable"  ng-click="goBack()" class="btn btn-primary btn-lg btn-block">{% trans "Go Back" %}</button>
+                    </div>
+                </div>
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+{% endblock %}
+

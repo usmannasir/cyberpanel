@@ -1,0 +1,204 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Send Emails - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Send Emails" %}</h2>
+   <p>{% trans "On this page you can send emails to the lists you created using SMTP Hosts." %}</p>
+</div>
+<div ng-controller="sendEmailsCTRL" class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Send Emails" %} <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+
+            <form action="/" class="form-horizontal bordered-row">
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Template" %} </label>
+                    <div class="col-sm-6">
+                        <select ng-change="templateSelected()" ng-model="selectedTemplate" class="form-control">
+                            {% for items in templateNames %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div ng-hide="availableFunctions" class="form-group">
+                    <label class="col-sm-2 control-label"></label>
+                    <div class="col-sm-3">
+                         <button type="button" ng-disabled="deleteTemplateBTN" data-toggle="modal" data-target="#deleteTemplate" class="btn ra-100 btn-danger">{% trans 'Delete This Template' %}</button>
+                         <!--- Delete Template --->
+                            <div class="modal fade" id="deleteTemplate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                            <h4 class="modal-title">{% trans "You are doing to delete this template.." %} <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}"></h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>{% trans 'Are you sure?' %}</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Close' %}</button>
+                                            <button data-dismiss="modal" ng-click="deleteTemplate()" type="button" class="btn btn-primary">{% trans 'Confirm' %}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <!--- Delete Template --->
+                    </div>
+                    <div class="col-sm-3">
+                         <a target="_blank" href="{$ previewLink $}"><button type="button" class="btn ra-100 btn-blue-alt">{% trans 'Preview Template' %}</button></a>
+                    </div>
+                    <div class="col-sm-3">
+                         <button ng-disabled="sendEmailBTN" type="button" ng-click="sendEmails()" class="btn ra-100 btn-blue-alt">{% trans 'Send Emails' %}</button>
+                    </div>
+                </div>
+
+                <div ng-hide="sendEmailsView" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select List" %} </label>
+                    <div class="col-sm-6">
+                        <select ng-model="listName" class="form-control">
+                            {% for items in listNames %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div ng-hide="sendEmailsView" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select STMP Host" %} </label>
+                    <div class="col-sm-6">
+                        <select ng-model="host" class="form-control">
+                            {% for items in hostNames %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div ng-hide="sendEmailsView" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "" %}</label>
+                    <div class="col-sm-9">
+                        <div class="checkbox">
+                            <label>
+                                <input ng-model="verificationCheck" type="checkbox" value="">
+                                {% trans 'Send to un-verified email addresses.' %}
+                            </label>
+                        </div>
+                    </div>
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-9">
+                        <div class="checkbox">
+                            <label>
+                                <input ng-model="unsubscribeCheck" type="checkbox" value="">
+                                {% trans 'Include unsubscribe link.' %}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div ng-hide="sendEmailsView" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="startEmailJob()" class="btn btn-primary btn-lg btn-block">{% trans "Start Job" %}</button>
+
+                    </div>
+                </div>
+
+            <!---- Email Job Status --->
+
+                <div ng-hide="jobStatus" class="form-group">
+                    <label class="col-sm-2 control-label"></label>
+                    <div class="col-sm-7">
+                            <div class="alert alert-success text-center">
+                                        <h2>{$ currentStatus $}</h2>
+                            </div>
+                    </div>
+                </div>
+
+                <div ng-hide="jobStatus" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                        <button type="button" ng-disabled="goBackDisable"  ng-click="goBack()" class="btn btn-primary btn-lg btn-block">{% trans "Go Back" %}</button>
+                    </div>
+                </div>
+
+            <!---- Email Job Status --->
+
+
+            <!------ List of records --------------->
+
+                <div ng-hide="sendEmailsView" class="form-group">
+
+                    <div  class="col-sm-12">
+
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Job ID" %}</th>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "SMTP Host" %}</th>
+                                <th>{% trans "Total Emails" %}</th>
+                                <th>{% trans "Sent" %}</th>
+                                <th>{% trans "Failed" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="record in records | filter:searchEmails">
+                                <td ng-bind="record.id"></td>
+                                <td ng-bind="record.date"></td>
+                                <td ng-bind="record.host"></td>
+                                <td ng-bind="record.totalEmails"></td>
+                                <td ng-bind="record.sent"></td>
+                                <td ng-bind="record.failed"></td>
+                                <td >
+                                    <button type="button" ng-click="deleteJob(record.id)" class="btn ra-100 btn-purple">{% trans "Delete" %}</button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="row">
+                            <div class="col-sm-4 col-sm-offset-8">
+
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination">
+                                        <li ng-click="fetchEmails(page)" ng-repeat="page in pagination"><a href="">{$ page $}</a></li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            <!------ List of records --------------->
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

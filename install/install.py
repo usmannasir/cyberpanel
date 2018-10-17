@@ -687,8 +687,8 @@ class preFlightsChecks:
 
         count = 0
         while (1):
-            command = "wget http://cyberpanel.net/CyberPanel.1.7.2.tar.gz"
-            #command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
+            #command = "wget http://cyberpanel.net/CyberPanel.1.7.2.tar.gz"
+            command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
             res = subprocess.call(shlex.split(command))
 
             if res == 1:
@@ -707,8 +707,8 @@ class preFlightsChecks:
 
         count = 0
         while(1):
-            command = "tar zxf CyberPanel.1.7.2.tar.gz"
-            #command = "tar zxf CyberPanelTemp.tar.gz"
+            #command = "tar zxf CyberPanel.1.7.2.tar.gz"
+            command = "tar zxf CyberPanelTemp.tar.gz"
 
             res = subprocess.call(shlex.split(command))
 
@@ -2582,6 +2582,29 @@ class preFlightsChecks:
             logging.InstallLog.writeToFile(str(msg) + " [installTLDExtract]")
             return 0
 
+    def installPYDNS(self):
+        try:
+            count = 0
+            while (1):
+                command = "pip install pydns"
+
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Trying to install pydns, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Failed to install pydns! [installTLDExtract]")
+                else:
+                    logging.InstallLog.writeToFile("pydns successfully installed!  [pip]")
+                    preFlightsChecks.stdOut("pydns successfully installed!  [pip]")
+                    break
+        except OSError, msg:
+            logging.InstallLog.writeToFile(str(msg) + " [installTLDExtract]")
+            return 0
+
     def installOpenDKIM(self):
         try:
             count = 0
@@ -3003,6 +3026,7 @@ def main():
 
     checks.installCertBot()
     checks.test_Requests()
+    checks.installPYDNS()
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
     checks.setupCLI()
     checks.setup_cron()

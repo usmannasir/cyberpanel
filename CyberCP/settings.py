@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'manageServices',
     'pluginHolder',
     'emailPremium',
+    'emailMarketing',
 ]
 
 MIDDLEWARE = [

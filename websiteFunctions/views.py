@@ -211,9 +211,23 @@ def saveWebsiteChanges(request):
 def domain(request, domain):
     try:
 
+        if not request.GET._mutable:
+            request.GET._mutable = True
+        request.GET['domain'] = domain
+
+        result = pluginManager.preDomain(request)
+        if result != 200:
+            return result
+
         userID = request.session['userID']
         wm = WebsiteManager(domain)
-        return wm.loadDomainHome(request, userID)
+        coreResult = wm.loadDomainHome(request, userID)
+
+        result = pluginManager.postDomain(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
 
     except KeyError:
         return redirect(loadLoginPage)
