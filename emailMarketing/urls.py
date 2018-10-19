@@ -23,4 +23,5 @@ urlpatterns = [
     url(r'^startEmailJob$', views.startEmailJob, name='startEmailJob'),
     url(r'^deleteTemplate$', views.deleteTemplate, name='deleteTemplate'),
     url(r'^deleteJob$', views.deleteJob, name='deleteJob'),
+    url(r'^remove/(?P<listName>[-\w]+)/(?P<emailAddress>\w+@.+)$', views.remove, name='remove'),
 ]

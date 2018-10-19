@@ -662,8 +662,15 @@ class EmailMarketingManager:
             extraArgs['selectedTemplate'] = data['selectedTemplate']
             extraArgs['listName'] = data['listName']
             extraArgs['host'] = data['host']
-            extraArgs['verificationCheck'] = data['verificationCheck']
-            extraArgs['unsubscribeCheck'] = data['unsubscribeCheck']
+            try:
+                extraArgs['verificationCheck'] = data['verificationCheck']
+            except:
+                extraArgs['verificationCheck'] = False
+            try:
+                extraArgs['unsubscribeCheck'] = data['unsubscribeCheck']
+            except:
+                extraArgs['unsubscribeCheck'] = False
+
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + data['selectedTemplate'] + '_pendingJob'
 
             currentACL = ACLManager.loadedACL(userID)
@@ -731,3 +738,15 @@ class EmailMarketingManager:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+
+    def remove(self, listName, emailAddress):
+        try:
+            eList = EmailLists.objects.get(listName=listName)
+            removeEmail = EmailsInList.objects.get(owner=eList, email=emailAddress)
+            removeEmail.verificationStatus = 'REMOVED'
+            removeEmail.save()
+        except:
+            pass
+
+        return HttpResponse('Email Address Successfully removed from the list.')

@@ -43,17 +43,21 @@ class emailMarketing(multi.Thread):
                 with open(self.extraArgs['path'], 'r') as emailsList:
                     data = csv.reader(emailsList, delimiter=',')
                     for items in data:
-                        for value in items:
-                            if re.match('^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$', value) != None:
-                                try:
-                                    getEmail = EmailsInList.objects.get(owner=newList, email=value)
-                                except:
-                                    newEmail = EmailsInList(owner=newList, email=value,
-                                                            verificationStatus='NOT CHECKED',
-                                                            dateCreated=time.strftime("%I-%M-%S-%a-%b-%Y"))
-                                    newEmail.save()
-                                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], str(counter) + ' emails read.')
-                                counter = counter + 1
+                        try:
+                            for value in items:
+                                if re.match('^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$', value) != None:
+                                    try:
+                                        getEmail = EmailsInList.objects.get(owner=newList, email=value)
+                                    except:
+                                        newEmail = EmailsInList(owner=newList, email=value,
+                                                                verificationStatus='NOT CHECKED',
+                                                                dateCreated=time.strftime("%I-%M-%S-%a-%b-%Y"))
+                                        newEmail.save()
+                                    logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], str(counter) + ' emails read.')
+                                    counter = counter + 1
+                        except BaseException, msg:
+                            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+                            continue
             elif self.extraArgs['path'].endswith('.txt'):
                 with open(self.extraArgs['path'], 'r') as emailsList:
                     emails = emailsList.readline()
@@ -137,13 +141,14 @@ class emailMarketing(multi.Thread):
             domain = verificationList.owner.domain
             tempStatusPath = '/home/cyberpanel/' + domain + "/" + self.extraArgs['listName']
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) +'. [404]')
+            logging.CyberCPLogFileWriter.writeToFile('your error')
             return 0
 
     def startEmailJob(self):
         try:
             try:
                 if self.extraArgs['host'] == 'localhost':
-                    smtpServer = smtplib.SMTP(self.extraArgs['host'])
+                    smtpServer = smtplib.SMTP('127.0.0.1')
                 else:
                     verifyHost = SMTPHosts.objects.get(host=self.extraArgs['host'])
                     smtpServer = smtplib.SMTP(verifyHost.host, int(verifyHost.port))
@@ -169,6 +174,11 @@ class emailMarketing(multi.Thread):
             sent = 0
             failed = 0
 
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+
             ## Compose Message
             from email.mime.multipart import MIMEMultipart
             from email.mime.text import MIMEText
@@ -178,16 +188,33 @@ class emailMarketing(multi.Thread):
             message['Subject'] = emailMessage.subject
             message['From'] = emailMessage.fromEmail
 
-            if re.search('<html>', emailMessage.emailMessage, re.IGNORECASE):
-                html = MIMEText(emailMessage.emailMessage, 'html')
-                message.attach(html)
-            else:
-                html = MIMEText(emailMessage.emailMessage, 'plain')
-                message.attach(html)
-
             for items in allEmails:
-                if items.verificationStatus == 'Verified' or self.extraArgs['verificationCheck']:
+                if (items.verificationStatus == 'Verified' or self.extraArgs['verificationCheck']) and not items.verificationStatus == 'REMOVED':
                     try:
+
+                        if re.search('<html>', emailMessage.emailMessage, re.IGNORECASE):
+                            html = MIMEText(emailMessage.emailMessage, 'html')
+                            message.attach(html)
+
+                            if self.extraArgs['unsubscribeCheck']:
+                                removalMessage = '<br><br><a href="https://' + ipAddress + ':8090/emailMarketing/remove/' + \
+                                                 self.extraArgs[
+                                                     'listName'] + "/" + items.email + '">Unsubscribe from future emails.</a>'
+                                additionalCheck = MIMEText(removalMessage, 'html')
+                                message.attach(additionalCheck)
+                        else:
+                            html = MIMEText(emailMessage.emailMessage, 'plain')
+                            message.attach(html)
+                            if self.extraArgs['unsubscribeCheck']:
+                                finalMessage = '\n\n Unsubscribe by visiting https://' + ipAddress + ':8090/emailMarketing/remove/' + \
+                                                 self.extraArgs[
+                                                     'listName'] + "/" + items.email
+
+                                html = MIMEText(finalMessage, 'plain')
+                                message.attach(html)
+
+
+
 
                         smtpServer.sendmail(message['From'], items.email, message.as_string())
                         sent = sent + 1
@@ -198,6 +225,7 @@ class emailMarketing(multi.Thread):
                         logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                                   'Successfully sent: ' + str(
                                                                       sent) + ', Failed: ' + str(failed))
+                        logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
 
             emailJob = EmailJobs(owner=emailMessage, date=time.strftime("%I-%M-%S-%a-%b-%Y"),

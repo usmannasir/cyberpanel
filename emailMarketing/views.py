@@ -181,3 +181,11 @@ def deleteJob(request):
         return emm.deleteJob()
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def remove(request, listName, emailAddress):
+    try:
+        emm = EmailMarketingManager(request)
+        return emm.remove(listName, emailAddress)
+    except KeyError:
+        return redirect(loadLoginPage)
