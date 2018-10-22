@@ -30,6 +30,7 @@ import randomPassword as randomPassword
 import hashlib
 from mysqlUtilities import mysqlUtilities
 from plogical import hashPassword
+from emailMarketing.emACL import emACL
 
 class WebsiteManager:
     def __init__(self, domain = None, childDomain = None):
@@ -483,7 +484,9 @@ class WebsiteManager:
                 return ACLManager.loadError()
 
             Data = {}
+            marketingStatus = emACL.checkIfEMEnabled(admin.userName)
 
+            Data['marketingStatus'] = marketingStatus
             Data['ftpTotal'] = website.package.ftpAccounts
             Data['ftpUsed'] = website.users_set.all().count()
 

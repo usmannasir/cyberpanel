@@ -192,26 +192,25 @@ class emailMarketing(multi.Thread):
                 if (items.verificationStatus == 'Verified' or self.extraArgs['verificationCheck']) and not items.verificationStatus == 'REMOVED':
                     try:
 
-                        if re.search('<html>', emailMessage.emailMessage, re.IGNORECASE):
-                            html = MIMEText(emailMessage.emailMessage, 'html')
-                            message.attach(html)
+                        removalLink = "https://" + ipAddress + ":8090/emailMarketing/remove/" + self.extraArgs['listName'] + "/" + items.email
+
+                        if re.search('<html', emailMessage.emailMessage, re.IGNORECASE) and re.search('<body', emailMessage.emailMessage, re.IGNORECASE):
+                            finalMessage = emailMessage.emailMessage
 
                             if self.extraArgs['unsubscribeCheck']:
-                                removalMessage = '<br><br><a href="https://' + ipAddress + ':8090/emailMarketing/remove/' + \
-                                                 self.extraArgs[
-                                                     'listName'] + "/" + items.email + '">Unsubscribe from future emails.</a>'
-                                additionalCheck = MIMEText(removalMessage, 'html')
-                                message.attach(additionalCheck)
+                                finalMessage = finalMessage.replace('{{ unsubscribeCheck }}', removalLink)
+
+                            html = MIMEText(finalMessage, 'html')
+                            message.attach(html)
+
                         else:
-                            html = MIMEText(emailMessage.emailMessage, 'plain')
-                            message.attach(html)
-                            if self.extraArgs['unsubscribeCheck']:
-                                finalMessage = '\n\n Unsubscribe by visiting https://' + ipAddress + ':8090/emailMarketing/remove/' + \
-                                                 self.extraArgs[
-                                                     'listName'] + "/" + items.email
+                            finalMessage = emailMessage.emailMessage
 
-                                html = MIMEText(finalMessage, 'plain')
-                                message.attach(html)
+                            if self.extraArgs['unsubscribeCheck']:
+                                finalMessage = finalMessage.replace('{{ unsubscribeCheck }}', removalLink)
+
+                            html = MIMEText(finalMessage, 'plain')
+                            message.attach(html)
 
 
 

@@ -819,8 +819,7 @@
              </div>
 
 
-
-    <div class="example-box-wrapper">
+   <div class="example-box-wrapper">
         <div style="border-radius: 25px;border-color:#3498db" class="content-box">
             <h3 class="content-box-header bg-blue">
                 {% trans "Files" %}
@@ -940,6 +939,78 @@
         </div>
     </div>
 
+   {% if marketingStatus %}
+
+   <div class="example-box-wrapper">
+        <div style="border-radius: 25px;border-color:#3498db" class="content-box">
+            <h3 class="content-box-header bg-blue">
+                {% trans "Email Marketing" %}
+            </h3>
+
+            <div class="content-box-wrapper">
+                <div class="row">
+
+                    <div class="col-md-3" style="margin-bottom: 2%;">
+
+                                <a id="emailLists" target="_blank" title="{% trans 'Create Lists' %}">
+                                    <img  src="{% static 'emailMarketing/mailing.png'  %}">
+                                </a>
+                                <a id="emailListsChild" target="_blank" title="{% trans 'Create Lists' %}">
+                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Create Lists" %}</span>
+                                </a>
+
+                    </div>
+
+                    <div class="col-md-3" style="margin-bottom: 2%;">
+
+                                <a id="manageLists" target="_blank" title="{% trans 'Manage Lists' %}">
+                                    <img  src="{% static 'emailMarketing/checklist.png'  %}">
+                                </a>
+                                <a id="manageListsChild" target="_blank" title="{% trans 'Manage Lists' %}">
+                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Manage Lists" %}</span>
+                                </a>
+
+                    </div>
+
+                    <div class="col-md-3" style="margin-bottom: 2%;">
+
+                                <a id="manageSMTPHosts" target="_blank" title="{% trans 'SMTP Hosts' %}">
+                                    <img  src="{% static 'emailMarketing/post-office.png'  %}">
+                                </a>
+                                <a id="manageSMTPHostsChild" target="_blank" title="{% trans 'SMTP Hosts' %}">
+                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "SMTP Hosts" %}</span>
+                                </a>
+
+                    </div>
+
+                    <div class="col-md-3" style="margin-bottom: 2%;">
+
+                                <a id="composeEmails" target="_blank" title="{% trans 'Compose Message' %}">
+                                    <img  src="{% static 'emailMarketing/compose.png'  %}">
+                                </a>
+                                <a id="composeEmailsChild" target="_blank" title="{% trans 'Compose Message' %}">
+                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Compose" %}</span>
+                                </a>
+
+                    </div>
+
+                    <div class="col-md-3" style="margin-bottom: 2%;">
+
+                                <a id="sendEmailsPage" target="_blank" title="{% trans 'Send Emails' %}">
+                                    <img  src="{% static 'emailMarketing/paper-plane.png'  %}">
+                                </a>
+                                <a id="sendEmailsPageChild" target="_blank" title="{% trans 'Send Emails' %}">
+                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Send Emails" %}</span>
+                                </a>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+   {% endif %}
 
    <div class="example-box-wrapper">
 

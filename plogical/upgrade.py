@@ -455,6 +455,23 @@ WantedBy=multi-user.target"""
             pass
 
     @staticmethod
+    def emailMarketingMigrationsa():
+        try:
+            os.chdir('/usr/local/CyberCP')
+            try:
+                command = "python manage.py makemigrations emailMarketing"
+                subprocess.call(shlex.split(command))
+            except:
+                pass
+            try:
+                command = "python manage.py migrate emailMarketing"
+                subprocess.call(shlex.split(command))
+            except:
+                pass
+        except:
+            pass
+
+    @staticmethod
     def enableServices():
         try:
             servicePath = '/home/cyberpanel/powerdns'
@@ -530,6 +547,11 @@ WantedBy=multi-user.target"""
                 if items.find('pluginHolder') > -1:
                     pluginCheck = 0
 
+            emailMarketing = 1
+            for items in data:
+                if items.find('emailMarketing') > -1:
+                    emailMarketing = 0
+
 
             Upgrade.stdOut('Restoring settings file!')
 
@@ -541,6 +563,8 @@ WantedBy=multi-user.target"""
                     writeToFile.writelines(items)
                     if pluginCheck == 1:
                         writeToFile.writelines("    'pluginHolder',\n")
+                    if emailMarketing == 1:
+                        writeToFile.writelines("    'emailMarketing',\n")
                     if Version.currentVersion == '1.6':
                         writeToFile.writelines("    'emailPremium',\n")
                 else:
@@ -559,6 +583,16 @@ WantedBy=multi-user.target"""
             Upgrade.fileManager()
         except:
             pass
+
+
+    @staticmethod
+    def installPYDNS():
+        try:
+            command = "pip install pydns"
+            res = subprocess.call(shlex.split(command))
+        except OSError, msg:
+            Upgrade.stdOut(str(msg) + " [installPYDNS]")
+            return 0
 
     @staticmethod
     def installTLDExtract():
@@ -726,7 +760,7 @@ WantedBy=multi-user.target"""
             os._exit(0)
 
         ##
-
+        Upgrade.installPYDNS()
         Upgrade.downloadAndUpgrade(Version, versionNumbring)
 
 
@@ -737,6 +771,7 @@ WantedBy=multi-user.target"""
         ##
 
         Upgrade.mailServerMigrations()
+        Upgrade.emailMarketingMigrationsa()
 
         ##
 
