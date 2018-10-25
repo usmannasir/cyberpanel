@@ -9,14 +9,17 @@ from firewallUtilities import FirewallUtilities
 import time
 import string
 import random
-import os.path
-import re
+from os.path import *
+from stat import *
 
 # There can not be peace without first a great suffering.
 
 #distros
 centos=0
 ubuntu=1
+
+distro = centos
+
 
 class preFlightsChecks:
 
@@ -204,7 +207,7 @@ class preFlightsChecks:
         cmd = []
         count = 0
 
-        if repo == ubuntu:
+        if distro == ubuntu:
             try:
                 filename = "enable_lst_debain_repo.sh"
                 command = "wget http://rpms.litespeedtech.com/debian/" + filename
@@ -215,9 +218,9 @@ class preFlightsChecks:
                                                    " Error #" + str(res))
                     preFlightsChecks.stdOut("Unable to download Ubuntu CyberPanel installer! [installCyberPanelRepo]:"
                                             " Error #" + str(res))
-                    os._exit(os.EX_NOINPUT);
+                    os._exit(os.EX_NOINPUT)
 
-                os.chmod(filename, stat.S_IRWXU | stat.s_S_IRWXG)
+                os.chmod(filename, S_IRWXU | S_IRWXG)
 
                 command = "./" + filename
                 cmd = shlex.split(command)
@@ -228,11 +231,11 @@ class preFlightsChecks:
                                                    " Error #" + str(res))
                     preFlightsChecks.stdOut("Unable to install Ubuntu CyberPanel! [installCyberPanelRepo]:"
                                             " Error #" + str(res))
-                    os._exit(os.EX_NOINPUT);
+                    os._exit(os.EX_NOINPUT)
 
             except OSError as err:
-                logging.InstallLog.writeToFile("Exception during CyberPanel install: " + err)
-                preFlightsChecks.stdOut("Exception during CyberPanel install: " + err)
+                logging.InstallLog.writeToFile("Exception during CyberPanel install: " + str(err))
+                preFlightsChecks.stdOut("Exception during CyberPanel install: " + str(err))
                 os._exit(os.EX_OSERR)
 
             except:
@@ -324,7 +327,7 @@ class preFlightsChecks:
     def install_python_dev(self):
         count = 0
         while (1):
-            if distro == centos
+            if distro == centos:
                 command = "yum -y install python-devel"
             else:
                 command = "apt-get -y install python-dev"
@@ -349,7 +352,7 @@ class preFlightsChecks:
         while (1):
             if distro == centos:
                 command = "yum -y install gcc"
-            else
+            else:
                 command = "apt-get -y install gcc"
             res = subprocess.call(shlex.split(command))
 
@@ -573,7 +576,7 @@ class preFlightsChecks:
 
         if distro == ubuntu
             command = "pip install MySQL-python"
-            res = subprocess.call(shlex.split())
+            res = subprocess.call(shlex.split(command))
             if res != 0:
                 logging.InstallLog.writeToFile(
                     "Unable to install MySQL-python, exiting installer! [install_python_mysql_library] Error: " + str(res))
@@ -3061,17 +3064,17 @@ milter_default_action = accept
 
 def get_distro():
     distro = -1
-    distroFile = ""
-    if os.path.exists("/etc/lsb-release"):
-        distroFile = "/etc/lsb-release"
-        with open(distroFile) as f:
+    distro_file = ""
+    if exists("/etc/lsb-release"):
+        distro_file = "/etc/lsb-release"
+        with open(distro_file) as f:
             for line in f:
                 if line == "DISTRIB_ID=Ubuntu":
                     distro = ubuntu
 
-    else if (exists("/etc/os-release")):
-        distroFile = "/etc/os-release"
-        with open(distroFile) as f:
+    elif exists("/etc/os-release"):
+        distro_file = "/etc/os-release"
+        with open(distro_file) as f:
             for line in f:
                 if line == "ID=\"centos\"":
                     distro = centos
@@ -3082,15 +3085,15 @@ def get_distro():
         os._exit(os.EX_UNAVAILABLE)
 
     if distro == -1:
-        logging.InstallLog.writeToFile("Can't find distro name in " + distroFile + " - fatal error")
-        preFlightsChecks.stdOut("Can't find distro name in " + distroFile + " - fatal error")
+        logging.InstallLog.writeToFile("Can't find distro name in " + distro_file + " - fatal error")
+        preFlightsChecks.stdOut("Can't find distro name in " + distro_file + " - fatal error")
         os._exit(os.EX_UNAVAILABLE)
 
     return distro
 
 
 
-def pgm_main():
+def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('publicip', help='Please enter public IP for your VPS or dedicated server.')
@@ -3113,8 +3116,8 @@ def pgm_main():
 
     cwd = os.getcwd()
 
-
-    checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd,"/usr/local/CyberCP", get_distro())
+    distro = get_distro()
+    checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd,"/usr/local/CyberCP", distro)
 
     if distro == ubuntu:
         os.chdir("/etc/cyberpanel")
@@ -3210,5 +3213,6 @@ def pgm_main():
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
 
 
-pgm_main()
+if __name__ == "__main"_:
+    main()
 
