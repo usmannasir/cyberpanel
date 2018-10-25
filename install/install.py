@@ -1,4 +1,4 @@
-import sys
+pathimport sys
 import subprocess
 import shutil
 import installLog as logging
@@ -9,19 +9,26 @@ from firewallUtilities import FirewallUtilities
 import time
 import string
 import random
+import os.path
+import re
 
 # There can not be peace without first a great suffering.
+
+#distros
+centos=0
+ubuntu=1
 
 class preFlightsChecks:
 
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
 
-    def __init__(self,rootPath,ip,path,cwd,cyberPanelPath):
+    def __init__(self,rootPath,ip,path,cwd,cyberPanelPath,distro):
         self.ipAddr = ip
         self.path = path
         self.cwd = cwd
         self.server_root_path = rootPath
         self.cyberPanelPath = cyberPanelPath
+        self.distro = distro
 
     @staticmethod
     def stdOut(message):
@@ -31,26 +38,6 @@ class preFlightsChecks:
         print("[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + message + "\n")
         print ("[" + time.strftime(
             "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
-
-    def checkIfSeLinuxDisabled(self):
-        try:
-            command = "sestatus"
-            output = subprocess.check_output(shlex.split(command))
-
-            if output.find("disabled") > -1 or output.find("permissive") > -1:
-                logging.InstallLog.writeToFile("SELinux Check OK. [checkIfSeLinuxDisabled]")
-                preFlightsChecks.stdOut("SELinux Check OK.")
-                return 1
-            else:
-                logging.InstallLog.writeToFile("SELinux is enabled, please disable SELinux and restart the installation!")
-                preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                os._exit(0)
-
-        except BaseException,msg:
-            logging.InstallLog.writeToFile(str(msg) + "[checkIfSeLinuxDisabled]")
-            logging.InstallLog.writeToFile("SELinux Check OK. [checkIfSeLinuxDisabled]")
-            preFlightsChecks.stdOut("SELinux Check OK.")
-            return 1
 
     def checkPythonVersion(self):
         if sys.version_info[0] == 2 and sys.version_info[1] == 7:
@@ -63,84 +50,98 @@ class preFlightsChecks:
         try:
             count = 0
 
-            while (1):
-                command = "yum install sudo -y"
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+            if distro == centos:
+                while (1):
+                    command = "yum install sudo -y"
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
 
-                if res == 1:
-                    count = count + 1
-                    preFlightsChecks.stdOut("SUDO install failed, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile("We are not able to install SUDO, exiting the installer. [setup_account_cyberpanel]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("SUDO successfully installed!")
-                    preFlightsChecks.stdOut("SUDO successfully installed!")
-                    break
-
-            ##
-
-            count = 0
-
-            while (1):
-                command = "adduser cyberpanel"
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    count = count + 1
-                    preFlightsChecks.stdOut("Not able to add user cyberpanel to system, trying again, try number: " + str(count) + "\n")
-                    if count == 3:
-                        logging.InstallLog.writeToFile("We are not able add user cyberpanel to system, exiting the installer. [setup_account_cyberpanel]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("CyberPanel user added!")
-                    preFlightsChecks.stdOut("CyberPanel user added!")
-                    break
+                    if res == 1:
+                        count = count + 1
+                        preFlightsChecks.stdOut("SUDO install failed, trying again, try number: " + str(count))
+                        if count == 3:
+                            logging.InstallLog.writeToFile("We are not able to install SUDO, exiting the installer. [setup_account_cyberpanel]")
+                            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                            os._exit(0)
+                    else:
+                        logging.InstallLog.writeToFile("SUDO successfully installed!")
+                        preFlightsChecks.stdOut("SUDO successfully installed!")
+                        break
 
             ##
 
             count = 0
 
-            while (1):
-
-                command = "usermod -aG wheel cyberpanel"
+            if distro == ubuntu:
+                command = "useradd cyberpanel -g sudo"
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
+                if res != 0 and res != 9:
+                    logging.InstallLog.writeToFile("Can not create cyberpanel user, error #" + str(res))
+                    preFlightsChecks.stdOut("Can not create cyberpanel user, error #" + str(res))
+                    os._exit(0)
+                if res == 0:
+                    logging.InstallLog.writeToFile("CyberPanel user added")
+                    preFlightsChecks.stdOut("CyberPanel user added")
 
-                if res == 1:
-                    count = count + 1
-                    preFlightsChecks.stdOut("We are trying to add CyberPanel user to SUDO group, trying again, try number: " + str(count) + "\n")
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Not able to add user CyberPanel to SUDO group, exiting the installer. [setup_account_cyberpanel]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("CyberPanel user was successfully added to SUDO group!")
-                    preFlightsChecks.stdOut("CyberPanel user was successfully added to SUDO group!")
-                    break
+            else:
+                while (1):
+                    command = "adduser cyberpanel"
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
+
+                    if res == 1:
+                        count = count + 1
+                        preFlightsChecks.stdOut("Not able to add user cyberpanel to system, trying again, try number: " + str(count) + "\n")
+                        if count == 3:
+                            logging.InstallLog.writeToFile("We are not able add user cyberpanel to system, exiting the installer. [setup_account_cyberpanel]")
+                            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                            os._exit(0)
+                    else:
+                        logging.InstallLog.writeToFile("CyberPanel user added!")
+                        preFlightsChecks.stdOut("CyberPanel user added!")
+                        break
+
+                ##
+
+                count = 0
+
+                while (1):
+
+                    command = "usermod -aG wheel cyberpanel"
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
+
+                    if res == 1:
+                        count = count + 1
+                        preFlightsChecks.stdOut("We are trying to add CyberPanel user to SUDO group, trying again, try number: " + str(count) + "\n")
+                        if count == 3:
+                            logging.InstallLog.writeToFile("Not able to add user CyberPanel to SUDO group, exiting the installer. [setup_account_cyberpanel]")
+                            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                            os._exit(0)
+                    else:
+                        logging.InstallLog.writeToFile("CyberPanel user was successfully added to SUDO group!")
+                        preFlightsChecks.stdOut("CyberPanel user was successfully added to SUDO group!")
+                        break
 
 
-            ###############################
+                ###############################
 
-            path = "/etc/sudoers"
+                path = "/etc/sudoers"
 
-            data = open(path, 'r').readlines()
+                data = open(path, 'r').readlines()
 
-            writeToFile = open(path, 'w')
+                writeToFile = open(path, 'w')
 
-            for items in data:
-                if items.find("wheel	ALL=(ALL)	NOPASSWD: ALL") > -1:
-                    writeToFile.writelines("%wheel	ALL=(ALL)	NOPASSWD: ALL")
-                else:
-                    writeToFile.writelines(items)
+                for items in data:
+                    if items.find("wheel	ALL=(ALL)	NOPASSWD: ALL") > -1:
+                        writeToFile.writelines("%wheel	ALL=(ALL)	NOPASSWD: ALL")
+                    else:
+                        writeToFile.writelines(items)
 
-            writeToFile.close()
+                writeToFile.close()
 
-            ###############################
+                ###############################
 
             count = 0
 
@@ -203,23 +204,62 @@ class preFlightsChecks:
         cmd = []
         count = 0
 
-        while(1):
-            cmd.append("rpm")
-            cmd.append("-ivh")
-            cmd.append("http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm")
-            res = subprocess.call(cmd)
+        if repo == ubuntu:
+            try:
+                filename = "enable_lst_debain_repo.sh"
+                command = "wget http://rpms.litespeedtech.com/debian/" + filename
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+                if res != 0:
+                    logging.InstallLog.writeToFile("Unable to download Ubuntu CyberPanel installer! [installCyberPanelRepo]:""
+                                                   " Error #" + str(res))
+                    preFlightsChecks.stdOut("Unable to download Ubuntu CyberPanel installer! [installCyberPanelRepo]:""
+                                                   " Error #" + str(res))
+                    os._exit(os.EX_NOINPUT);
 
-            if res == 1:
-                count = count + 1
-                preFlightsChecks.stdOut("Unable to add CyberPanel official repository, trying again, try number: " + str(count) + "\n")
-                if count == 3:
-                    logging.InstallLog.writeToFile("Unable to add CyberPanel official repository, exiting installer! [installCyberPanelRepo]")
-                    preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    os._exit(0)
-            else:
-                logging.InstallLog.writeToFile("CyberPanel Repo added!")
-                preFlightsChecks.stdOut("CyberPanel Repo added!")
-                break
+                os.chmod(filename, stat.S_IRWXU | stat.s_S_IRWXG)
+
+                command = "./" + filename
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                if res != 0:
+                    logging.InstallLog.writeToFile("Unable to install Ubuntu CyberPanel! [installCyberPanelRepo]:""
+                                                   " Error #" + str(res))
+                    preFlightsChecks.stdOut("Unable to install Ubuntu CyberPanel! [installCyberPanelRepo]:""
+                                            " Error #" + str(res))
+                    os._exit(os.EX_NOINPUT);
+
+            except OSError as err:
+                logging.InstallLog.writeToFile("Exception during CyberPanel install: " + err)
+                preFlightsChecks.stdOut("Exception during CyberPanel install: " + err)
+                os._exit(os.EX_OSERR)
+
+            except:
+                logging.InstallLog.writeToFile("Exception during CyberPanel install")
+                preFlightsChecks.stdOut("Exception during CyberPanel install")
+                os._exit(os.EX_SOFTWARE)
+
+        else:
+            while(1):
+                cmd.append("rpm")
+                cmd.append("-ivh")
+                cmd.append("http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm")
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to add CyberPanel official repository, trying again, try number: " + str(count) + "\n")
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to add CyberPanel official repository, exiting installer! [installCyberPanelRepo]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        os._exit(0)
+                else:
+                    logging.InstallLog.writeToFile("CyberPanel Repo added!")
+                    preFlightsChecks.stdOut("CyberPanel Repo added!")
+                    break
+        return 0
+
 
     def enableEPELRepo(self):
         try:
@@ -258,10 +298,14 @@ class preFlightsChecks:
 
         return 1
 
+
     def install_pip(self):
         count = 0
         while (1):
-            command = "yum -y install python-pip"
+            if distro == ubuntu:
+                command = "apt-get -y install python-pip"
+            else:
+                command = "yum -y install python-pip"
             res = subprocess.call(shlex.split(command))
 
             if res == 1:
@@ -276,10 +320,14 @@ class preFlightsChecks:
                 preFlightsChecks.stdOut("PIP successfully installed!")
                 break
 
+
     def install_python_dev(self):
         count = 0
         while (1):
-            command = "yum -y install python-devel"
+            if distro == centos
+                command = "yum -y install python-devel"
+            else:
+                command = "apt-get -y install python-dev"
             res = subprocess.call(shlex.split(command))
 
             if res == 1:
@@ -294,11 +342,15 @@ class preFlightsChecks:
                 preFlightsChecks.stdOut("Python development tools successfully installed!")
                 break
 
+
     def install_gcc(self):
         count = 0
 
         while (1):
-            command = "yum -y install gcc"
+            if distro == centos:
+                command = "yum -y install gcc"
+            else
+                command = "apt-get -y install gcc"
             res = subprocess.call(shlex.split(command))
 
             if res == 1:
@@ -502,7 +554,10 @@ class preFlightsChecks:
     def install_python_mysql_library(self):
         count = 0
         while (1):
-            command = "yum -y install MySQL-python"
+            if distro == centos:
+                command = "yum -y install MySQL-python"
+            else
+                command = "apt-get -y install libmysqlclient-dev"
             res = subprocess.call(shlex.split(command))
             if res == 1:
                 count = count + 1
@@ -516,10 +571,23 @@ class preFlightsChecks:
                 preFlightsChecks.stdOut("MySQL-python successfully installed!")
                 break
 
+        if distro == ubuntu
+            command = "pip install MySQL-python"
+            res = subprocess.call(shlex.split())
+            if res != 0:
+                logging.InstallLog.writeToFile(
+                    "Unable to install MySQL-python, exiting installer! [install_python_mysql_library] Error: " + str(res))
+                preFlightsChecks.stdOut(
+                    "Unable to install MySQL-python, exiting installer! [install_python_mysql_library] Error: " + str(res))
+                os._exit(os.EX_OSERR)
+
     def install_gunicorn(self):
         count = 0
         while (1):
-            command = "easy_install gunicorn"
+            if distro == ubuntu:
+                command = "pip install gunicorn"
+            else
+                command = "easy_install gunicorn"
             res = subprocess.call(shlex.split(command))
             if res == 1:
                 count = count + 1
@@ -643,7 +711,10 @@ class preFlightsChecks:
     def install_psmisc(self):
         count = 0
         while (1):
-            command = "yum -y install psmisc"
+            if distro == centos:
+                command = "yum -y install psmisc"
+            else:
+                command = "apt-get -y install psmisc"
             res = subprocess.call(shlex.split(command))
             if res == 1:
                 count = count + 1
@@ -878,7 +949,10 @@ class preFlightsChecks:
             count = 0
 
             while (1):
-                command = 'yum -y install unzip'
+                if distro == centos:
+                    command = 'yum -y install unzip'
+                else
+                    command = 'apt-get -y install unzip'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -909,7 +983,10 @@ class preFlightsChecks:
             count = 0
             while (1):
 
-                command = 'yum -y install zip'
+                if distro == centos:
+                    command = 'yum -y install zip'
+                else
+                    command = 'apt-get -y install zip'
 
                 cmd = shlex.split(command)
 
@@ -1053,13 +1130,19 @@ class preFlightsChecks:
 
     def install_postfix_davecot(self):
         try:
+            if distro == centos:
+                command = 'yum remove postfix -y'
+            else
+                command = 'apt-get -y remove postfix'
 
-            command = 'yum remove postfix -y'
             subprocess.call(shlex.split(command))
 
             count = 0
             while(1):
-                command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-3.2.4-1.gf.el7.x86_64.rpm'
+                if distro == centos:
+                    command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-3.2.4-1.gf.el7.x86_64.rpm'
+                else
+                    command = 'apt-get -y install dovecot-imapd dovecot-pop3d'
 
                 cmd = shlex.split(command)
 
@@ -1079,7 +1162,10 @@ class preFlightsChecks:
             count = 0
 
             while (1):
-                command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-mysql-3.2.4-1.gf.el7.x86_64.rpm'
+                if distro == centos
+                    command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-mysql-3.2.4-1.gf.el7.x86_64.rpm'
+                else
+                    command = 'apt-get -y install mysql-server'
 
                 cmd = shlex.split(command)
 
@@ -1101,7 +1187,10 @@ class preFlightsChecks:
 
             while(1):
 
-                command = 'yum -y install dovecot dovecot-mysql'
+                if distro == centos
+                    command = 'yum -y install dovecot dovecot-mysql'
+                else
+                    command = 'apt-get -y install dovecot-mysql'
 
                 cmd = shlex.split(command)
 
@@ -2048,6 +2137,9 @@ class preFlightsChecks:
 
 
     def installFirewalld(self):
+        if distro == ubuntu
+            return 0 # Uses AppArmor
+
         try:
 
             preFlightsChecks.stdOut("Enabling Firewall!")
@@ -2245,7 +2337,10 @@ class preFlightsChecks:
             count = 0
             while(1):
 
-                command = 'yum install cronie -y'
+                if distro == centos:
+                    command = 'yum install cronie -y'
+                else
+                    command = 'apt-get -y install cron'
 
                 cmd = shlex.split(command)
 
@@ -2266,8 +2361,10 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-
-                command = 'systemctl enable crond'
+                if distro == centos:
+                    command = 'systemctl enable crond'
+                else
+                    command = 'systemctl enable cron'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd, stdout=file)
 
@@ -2285,7 +2382,11 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-                command = 'systemctl start crond'
+                if distro == centos:
+                    command = 'systemctl start crond'
+                else
+                    command = 'systemctl start cron'
+
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd, stdout=file)
 
@@ -2330,7 +2431,11 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-                command = 'systemctl restart crond.service'
+                if distro == centos:
+                    command = 'systemctl restart crond.service'
+                else
+                    command = 'systemctl restart cron.service'
+
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd, stdout=file)
 
@@ -2396,8 +2501,11 @@ class preFlightsChecks:
         try:
             count = 0
             while (1):
+                if distro == centos
+                    command = 'yum -y install rsync'
+                else
+                    command = 'apt-get -y install rsync'
 
-                command = 'yum -y install rsync'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -2609,8 +2717,11 @@ class preFlightsChecks:
         try:
             count = 0
             while (1):
+                if distro == centos:
+                    command = 'yum -y install opendkim'
+                else:
+                    command = 'apt-get -y install opendkim'
 
-                command = 'yum -y install opendkim'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -2948,9 +3059,38 @@ milter_default_action = accept
 
 
 
+def get_distro():
+    distro = -1
+    distroFile = ""
+    if os.path.exists("/etc/lsb-release"):
+        distroFile = "/etc/lsb-release"
+        with open(distroFile) as f:
+            for line in f:
+                if line == "DISTRIB_ID=Ubuntu":
+                    distro = ubuntu
+
+    else if (exists("/etc/os-release")):
+        distroFile = "/etc/os-release"
+        with open(distroFile) as f:
+            for line in f:
+                if line == "ID=\"centos\"":
+                    distro = centos
+
+    else:
+        logging.InstallLog.writeToFile("Can't find linux release file - fatal error")
+        preFlightsChecks.stdOut("Can't find linux release file - fatal error")
+        os._exit(os.EX_UNAVAILABLE)
+
+    if distro == -1:
+        logging.InstallLog.writeToFile("Can't find distro name in " + distroFile + " - fatal error")
+        preFlightsChecks.stdOut("Can't find distro name in " + distroFile + " - fatal error")
+        os._exit(os.EX_UNAVAILABLE)
+
+    return distro
 
 
-def main():
+
+def pgm_main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('publicip', help='Please enter public IP for your VPS or dedicated server.')
@@ -2973,25 +3113,32 @@ def main():
 
     cwd = os.getcwd()
 
-    checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd,"/usr/local/CyberCP")
+
+    checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd,"/usr/local/CyberCP", get_distro())
+
+    if distro == ubuntu:
+        os.chdir("/etc/cyberpanel")
 
     if args.mysql == None:
         mysql = 'One'
         preFlightsChecks.stdOut("Single MySQL instance version will be installed.")
     else:
         mysql = args.mysql
-        preFlightsChecks.stdOut("Dobule MySQL instance version will be installed.")
+        preFlightsChecks.stdOut("Double MySQL instance version will be installed.")
 
 
     checks.checkPythonVersion()
     checks.setup_account_cyberpanel()
-    checks.yum_update()
+    if distro == centos:
+        checks.yum_update()
     checks.installCyberPanelRepo()
-    checks.enableEPELRepo()
+    if distro == centos:
+        checks.enableEPELRepo()
     checks.install_pip()
     checks.install_python_dev()
     checks.install_gcc()
-    checks.install_python_setup_tools()
+    if distro == centos:
+        checks.install_python_setup_tools()
     checks.install_django()
     checks.install_pexpect()
     checks.install_python_mysql_library()
@@ -3063,5 +3210,5 @@ def main():
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
 
 
-if __name__ == "__main__":
-    main()
+pgm_main()
+
