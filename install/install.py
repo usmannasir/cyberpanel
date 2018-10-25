@@ -559,7 +559,7 @@ class preFlightsChecks:
         while (1):
             if distro == centos:
                 command = "yum -y install MySQL-python"
-            else
+            else:
                 command = "apt-get -y install libmysqlclient-dev"
             res = subprocess.call(shlex.split(command))
             if res == 1:
@@ -589,7 +589,7 @@ class preFlightsChecks:
         while (1):
             if distro == ubuntu:
                 command = "pip install gunicorn"
-            else
+            else:
                 command = "easy_install gunicorn"
             res = subprocess.call(shlex.split(command))
             if res == 1:
@@ -954,7 +954,7 @@ class preFlightsChecks:
             while (1):
                 if distro == centos:
                     command = 'yum -y install unzip'
-                else
+                else:
                     command = 'apt-get -y install unzip'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
@@ -988,7 +988,7 @@ class preFlightsChecks:
 
                 if distro == centos:
                     command = 'yum -y install zip'
-                else
+                else:
                     command = 'apt-get -y install zip'
 
                 cmd = shlex.split(command)
@@ -1135,7 +1135,7 @@ class preFlightsChecks:
         try:
             if distro == centos:
                 command = 'yum remove postfix -y'
-            else
+            else:
                 command = 'apt-get -y remove postfix'
 
             subprocess.call(shlex.split(command))
@@ -1144,7 +1144,7 @@ class preFlightsChecks:
             while(1):
                 if distro == centos:
                     command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-3.2.4-1.gf.el7.x86_64.rpm'
-                else
+                else:
                     command = 'apt-get -y install dovecot-imapd dovecot-pop3d'
 
                 cmd = shlex.split(command)
@@ -1165,9 +1165,9 @@ class preFlightsChecks:
             count = 0
 
             while (1):
-                if distro == centos
+                if distro == centos:
                     command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-mysql-3.2.4-1.gf.el7.x86_64.rpm'
-                else
+                else:
                     command = 'apt-get -y install mysql-server'
 
                 cmd = shlex.split(command)
@@ -1190,9 +1190,9 @@ class preFlightsChecks:
 
             while(1):
 
-                if distro == centos
+                if distro == centos:
                     command = 'yum -y install dovecot dovecot-mysql'
-                else
+                else:
                     command = 'apt-get -y install dovecot-mysql'
 
                 cmd = shlex.split(command)
@@ -1343,7 +1343,6 @@ class preFlightsChecks:
 
            os.chdir(self.cwd)
 
-
            mysql_virtual_domains = "/etc/postfix/mysql-virtual_domains.cf"
            mysql_virtual_forwardings = "/etc/postfix/mysql-virtual_forwardings.cf"
            mysql_virtual_mailboxes = "/etc/postfix/mysql-virtual_mailboxes.cf"
@@ -1352,8 +1351,6 @@ class preFlightsChecks:
            master = "/etc/postfix/master.cf"
            davecot = "/etc/dovecot/dovecot.conf"
            davecotmysql = "/etc/dovecot/dovecot-sql.conf.ext"
-
-
 
            if os.path.exists(mysql_virtual_domains):
                os.remove(mysql_virtual_domains)
@@ -2140,7 +2137,7 @@ class preFlightsChecks:
 
 
     def installFirewalld(self):
-        if distro == ubuntu
+        if distro == ubuntu:
             return 0 # Uses AppArmor
 
         try:
@@ -2342,7 +2339,7 @@ class preFlightsChecks:
 
                 if distro == centos:
                     command = 'yum install cronie -y'
-                else
+                else:
                     command = 'apt-get -y install cron'
 
                 cmd = shlex.split(command)
@@ -2366,7 +2363,7 @@ class preFlightsChecks:
             while(1):
                 if distro == centos:
                     command = 'systemctl enable crond'
-                else
+                else:
                     command = 'systemctl enable cron'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd, stdout=file)
@@ -2387,7 +2384,7 @@ class preFlightsChecks:
             while(1):
                 if distro == centos:
                     command = 'systemctl start crond'
-                else
+                else:
                     command = 'systemctl start cron'
 
                 cmd = shlex.split(command)
@@ -2436,7 +2433,7 @@ class preFlightsChecks:
             while(1):
                 if distro == centos:
                     command = 'systemctl restart crond.service'
-                else
+                else:
                     command = 'systemctl restart cron.service'
 
                 cmd = shlex.split(command)
@@ -2506,7 +2503,7 @@ class preFlightsChecks:
             while (1):
                 if distro == centos
                     command = 'yum -y install rsync'
-                else
+                else:
                     command = 'apt-get -y install rsync'
 
                 cmd = shlex.split(command)
