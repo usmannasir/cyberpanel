@@ -1,4 +1,4 @@
-pathimport sys
+import sys
 import subprocess
 import shutil
 import installLog as logging
@@ -211,10 +211,10 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
                 if res != 0:
-                    logging.InstallLog.writeToFile("Unable to download Ubuntu CyberPanel installer! [installCyberPanelRepo]:""
+                    logging.InstallLog.writeToFile("Unable to download Ubuntu CyberPanel installer! [installCyberPanelRepo]:"
                                                    " Error #" + str(res))
-                    preFlightsChecks.stdOut("Unable to download Ubuntu CyberPanel installer! [installCyberPanelRepo]:""
-                                                   " Error #" + str(res))
+                    preFlightsChecks.stdOut("Unable to download Ubuntu CyberPanel installer! [installCyberPanelRepo]:"
+                                            " Error #" + str(res))
                     os._exit(os.EX_NOINPUT);
 
                 os.chmod(filename, stat.S_IRWXU | stat.s_S_IRWXG)
@@ -224,9 +224,9 @@ class preFlightsChecks:
                 res = subprocess.call(cmd)
 
                 if res != 0:
-                    logging.InstallLog.writeToFile("Unable to install Ubuntu CyberPanel! [installCyberPanelRepo]:""
+                    logging.InstallLog.writeToFile("Unable to install Ubuntu CyberPanel! [installCyberPanelRepo]:"
                                                    " Error #" + str(res))
-                    preFlightsChecks.stdOut("Unable to install Ubuntu CyberPanel! [installCyberPanelRepo]:""
+                    preFlightsChecks.stdOut("Unable to install Ubuntu CyberPanel! [installCyberPanelRepo]:"
                                             " Error #" + str(res))
                     os._exit(os.EX_NOINPUT);
 
