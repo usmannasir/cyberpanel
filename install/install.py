@@ -868,7 +868,7 @@ class preFlightsChecks:
         try:
             os.chdir("CyberCP")
         except:
-            self.stdOut("Error changing to CyberCP directory - internal error!", 1, 1, os.USAGE)
+            self.stdOut("Error changing to CyberCP directory - internal error!", 1, 1, os.EX_USAGE)
 
         count = 0
 
@@ -1142,7 +1142,7 @@ class preFlightsChecks:
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     self.stdOut("Error ceating: '/usr/local/lscp/cyberpanel/phpmyadmin/tmp' " + str(e), 1, 1, os.EX_CANTCREAT)
-                else
+                else:
                     pass
 
             command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/phpmyadmin'
@@ -3151,7 +3151,7 @@ def main():
     except OSError as e:
         if e.errno != errno.EEXIST:
             self.stdOut("Error creating /etc/cyberpanel directory: " + str(e), 1, 1, os.EX_CANTCREAT)
-        else
+        else:
             pass
 
     machineIP = open("/etc/cyberpanel/machineIP", "w")
