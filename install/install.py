@@ -161,7 +161,7 @@ class preFlightsChecks:
                 if e.errno != errno.EEXIST:
                     self.stdOut("Error creating /etc/letsencrypt directory: " + str(e) +
                                 " Installer can continue without this [setup_account_cyberpanel] ",1)
-                else
+                else:
                     pass
 
             ##
