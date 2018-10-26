@@ -50,6 +50,7 @@ class preFlightsChecks:
             os._exit(0)
 
     def setup_account_cyberpanel(self):
+        self.stdOut("Setup Cyberpanel account")
         try:
             count = 0
 
@@ -204,6 +205,7 @@ class preFlightsChecks:
         return 1
 
     def installCyberPanelRepo(self):
+        self.stdOut("Install Cyberpanel repo")
         cmd = []
         count = 0
 
@@ -303,6 +305,7 @@ class preFlightsChecks:
 
 
     def install_pip(self):
+        self.stdOut("Install pip")
         count = 0
         while (1):
             if distro == ubuntu:
@@ -325,6 +328,7 @@ class preFlightsChecks:
 
 
     def install_python_dev(self):
+        self.stdOut("Install python development environment")
         count = 0
         while (1):
             if distro == centos:
@@ -347,6 +351,7 @@ class preFlightsChecks:
 
 
     def install_gcc(self):
+        self.stdOut("Install gcc")
         count = 0
 
         while (1):
@@ -369,6 +374,7 @@ class preFlightsChecks:
                 break
 
     def install_python_setup_tools(self):
+        self.stdOut("Install python setup tools");
         count = 0
         while (1):
             command = "yum -y install python-setuptools"
@@ -390,6 +396,7 @@ class preFlightsChecks:
                 break
 
     def install_python_requests(self):
+        self.stdOut("Install python requests")
         try:
             import requests
 
@@ -536,6 +543,7 @@ class preFlightsChecks:
                     break
 
     def install_django(self):
+        self.stdOut("Install Django")
         count = 0
         while (1):
             command = "pip install django==1.11"
@@ -555,6 +563,7 @@ class preFlightsChecks:
                 break
 
     def install_python_mysql_library(self):
+        self.stdOut("Install MySQL python library")
         count = 0
         while (1):
             if distro == centos:
@@ -574,7 +583,7 @@ class preFlightsChecks:
                 preFlightsChecks.stdOut("MySQL-python successfully installed!")
                 break
 
-        if distro == ubuntu
+        if distro == ubuntu:
             command = "pip install MySQL-python"
             res = subprocess.call(shlex.split(command))
             if res != 0:
@@ -584,7 +593,9 @@ class preFlightsChecks:
                     "Unable to install MySQL-python, exiting installer! [install_python_mysql_library] Error: " + str(res))
                 os._exit(os.EX_OSERR)
 
+
     def install_gunicorn(self):
+        self.stdOut("Install GUnicorn")
         count = 0
         while (1):
             if distro == ubuntu:
@@ -603,6 +614,7 @@ class preFlightsChecks:
                 logging.InstallLog.writeToFile("GUNICORN successfully installed!")
                 preFlightsChecks.stdOut("GUNICORN successfully installed!")
                 break
+
 
     def setup_gunicorn(self):
         try:
@@ -649,6 +661,7 @@ class preFlightsChecks:
             preFlightsChecks.stdOut("Not able to setup gunicorn, see install log.")
 
     def install_psutil(self):
+        self.stdOut("Install psutil")
 
         try:
             import psutil
@@ -712,6 +725,7 @@ class preFlightsChecks:
             logging.InstallLog.writeToFile("fix_selinux_issue problem")
 
     def install_psmisc(self):
+        self.stdOut("Install psmisc")
         count = 0
         while (1):
             if distro == centos:
@@ -732,6 +746,7 @@ class preFlightsChecks:
                 break
 
     def download_install_CyberPanel(self,mysqlPassword, mysql):
+        self.stdOut("Download and install Cyberpanel")
         try:
             ## On OpenVZ there is an issue with requests module, which needs to upgrade requests module
 
@@ -947,6 +962,7 @@ class preFlightsChecks:
 
 
     def install_unzip(self):
+        self.stdOut("Install unzip")
         try:
 
             count = 0
@@ -982,6 +998,7 @@ class preFlightsChecks:
         return 1
 
     def install_zip(self):
+        self.stdOut("Install zip")
         try:
             count = 0
             while (1):
@@ -1018,6 +1035,7 @@ class preFlightsChecks:
         return 1
 
     def download_install_phpmyadmin(self):
+        self.stdOut("Install PHP MyAdmin")
         try:
             os.chdir("/usr/local/lscp/cyberpanel/")
             count = 0
@@ -1132,6 +1150,7 @@ class preFlightsChecks:
 
 
     def install_postfix_davecot(self):
+        self.stdOut("Install dovecot")
         try:
             if distro == centos:
                 command = 'yum remove postfix -y'
@@ -1223,6 +1242,7 @@ class preFlightsChecks:
 
 
     def setup_email_Passwords(self,mysqlPassword, mysql):
+        self.stdOut("Setup email passwords")
         try:
 
            logging.InstallLog.writeToFile("Setting up authentication for Postfix and Dovecot...")
@@ -1338,6 +1358,7 @@ class preFlightsChecks:
 
 
     def setup_postfix_davecot_config(self, mysql):
+        self.stdOut("Configuring postfix and dovecot")
         try:
            logging.InstallLog.writeToFile("Configuring postfix and dovecot...")
 
@@ -2106,6 +2127,7 @@ class preFlightsChecks:
 
 
     def reStartLiteSpeed(self):
+        self.stdOut("Restarting Litespeed")
         try:
             count = 0
             while(1):
@@ -2330,6 +2352,7 @@ class preFlightsChecks:
         return 1
 
     def setup_cron(self):
+        self.stdOut("Install and setup cron")
 
         try:
             ## first install crontab
@@ -2463,6 +2486,7 @@ class preFlightsChecks:
         return 1
 
     def install_default_keys(self):
+        self.stdOut("Installing default certificates")
         try:
             count = 0
 
@@ -2498,6 +2522,7 @@ class preFlightsChecks:
         return 1
 
     def install_rsync(self):
+        self.stdOut("Installing rsync")
         try:
             count = 0
             while (1):
@@ -2531,6 +2556,7 @@ class preFlightsChecks:
         return 1
 
     def test_Requests(self):
+        self.stdOut("Testing Requests...")
         try:
             import requests
             getVersion = requests.get('https://cyberpanel.net/version.txt')
