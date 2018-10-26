@@ -3,7 +3,7 @@ import subprocess
 import os
 import pexpect
 from mysqlUtilities import mysqlUtilities
-from install import preflightsChecks
+import install
 import installLog as logging
 import shlex
 import randomPassword
@@ -467,12 +467,16 @@ class InstallCyberPanel:
 
             while(1):
 
-                command = "systemctl enable mysql"
+                if self.distro == ubuntu:
+                    command = "systemctl enable mariadb"
+                else:
+                    command = "systemctl enable mysql"
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
                     count = count + 1
-                    InstallCyberPanel.stdOut("Trying to enable MariaDB instance to start and system restart, trying again, try number: " + str(count))
+                    InstallCyberPanel.stdOut("Trying to enable MariaDB instance to start at system restart, "
+                                             "trying again, try number: " + str(count))
                     if count == 3:
                         logging.InstallLog.writeToFile("Failed to enable MariaDB instance to run at system restart, "
                                                        "you can do this later using systemctl enable mysql! [installMySQL]")
@@ -895,7 +899,7 @@ class InstallCyberPanel:
 
             while(1):
                 if self.distro == ubuntu:
-                    command = "apt-get -y install pdns-backend-mysql"
+                    command = "apt-get -y install pdns-server pdns-backend-mysql"
                 else:
                     command = 'yum -y install pdns pdns-backend-mysql'
                 cmd = shlex.split(command)
@@ -1166,11 +1170,11 @@ def Main(cwd, mysql, distro):
     InstallCyberPanel.mysql_Root_password = randomPassword.generate_pass()
 
 
-    password = open("/etc/cyberpanel/mysqlPassword","w")
+    password = open("/etc/cyberpanel/mysqlPassword", "w")
     password.writelines(InstallCyberPanel.mysql_Root_password)
     password.close()
 
-    installer = InstallCyberPanel("/usr/local/lsws/",cwd,distro)
+    installer = InstallCyberPanel("/usr/local/lsws/", cwd, distro)
 
     installer.installLiteSpeed()
     installer.changePortTo80()
@@ -1184,7 +1188,7 @@ def Main(cwd, mysql, distro):
     installer.changeMYSQLRootPasswordCyberPanel(mysql)
     installer.startMariaDB()
 
-    mysqlUtilities.createDatabaseCyberPanel("cyberpanel","cyberpanel",InstallCyberPanel.mysqlPassword, mysql)
+    mysqlUtilities.createDatabaseCyberPanel("cyberpanel", "cyberpanel", InstallCyberPanel.mysqlPassword, mysql)
 
     installer.installPureFTPD()
     installer.installPureFTPDConfigurations(mysql)

@@ -25,7 +25,7 @@ ubuntu=1
 class preFlightsChecks:
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
 
-    def __init__(self,rootPath,ip,path,cwd,cyberPanelPath,distro):
+    def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro):
         self.ipAddr = ip
         self.path = path
         self.cwd = cwd
@@ -3148,7 +3148,7 @@ def main():
         os.mkdir("/etc/cyberpanel")
     except OSError as e:
         if e.errno != errno.EEXIST:
-            self.stdOut("Error creating /etc/cyberpanel directory: " + str(e), 1, 1, os.EX_CANTCREAT)
+            preFlightsChecks.stdOut("Error creating /etc/cyberpanel directory: " + str(e), 1, 1, os.EX_CANTCREAT)
         else:
             pass
 
@@ -3159,7 +3159,7 @@ def main():
     cwd = os.getcwd()
 
     distro = get_distro()
-    checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd,"/usr/local/CyberCP", distro)
+    checks = preFlightsChecks("/usr/local/lsws/", args.publicip, "/usr/local", cwd, "/usr/local/CyberCP", distro)
 
     if distro == ubuntu:
         os.chdir("/etc/cyberpanel")
