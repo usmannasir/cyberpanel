@@ -18,7 +18,6 @@ from stat import *
 centos=0
 ubuntu=1
 
-distro = centos
 
 
 class preFlightsChecks:
@@ -50,7 +49,7 @@ class preFlightsChecks:
             os._exit(0)
 
     def setup_account_cyberpanel(self):
-        self.stdOut("Setup Cyberpanel account")
+        self.stdOut("Setup Cyberpanel account, distro: " + str(self.distro))
         try:
             count = 0
 
@@ -77,6 +76,7 @@ class preFlightsChecks:
             count = 0
 
             if distro == ubuntu:
+                self.stdOut("Add Cyberpanel user")
                 command = "useradd cyberpanel -g sudo"
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
@@ -148,7 +148,7 @@ class preFlightsChecks:
                 ###############################
 
             count = 0
-
+            self.stdOut("Create /etc/letsencrypt directory")
             while (1):
 
                 command = "mkdir /etc/letsencrypt"
@@ -2526,7 +2526,7 @@ class preFlightsChecks:
         try:
             count = 0
             while (1):
-                if distro == centos
+                if distro == centos:
                     command = 'yum -y install rsync'
                 else:
                     command = 'apt-get -y install rsync'
@@ -3086,21 +3086,18 @@ milter_default_action = accept
 
 
 def get_distro():
-    distro = -1
+    distro = centos
     distro_file = ""
     if exists("/etc/lsb-release"):
         distro_file = "/etc/lsb-release"
         with open(distro_file) as f:
             for line in f:
-                if line == "DISTRIB_ID=Ubuntu":
+                if line == "DISTRIB_ID=Ubuntu\n":
                     distro = ubuntu
 
     elif exists("/etc/os-release"):
         distro_file = "/etc/os-release"
-        with open(distro_file) as f:
-            for line in f:
-                if line == "ID=\"centos\"":
-                    distro = centos
+        distro = centos
 
     else:
         logging.InstallLog.writeToFile("Can't find linux release file - fatal error")
@@ -3131,7 +3128,10 @@ def main():
 
     ## Writing public IP
 
-    os.mkdir("/etc/cyberpanel")
+    try:
+        os.mkdir("/etc/cyberpanel")
+    except:
+        pass                      
 
     machineIP = open("/etc/cyberpanel/machineIP", "w")
     machineIP.writelines(args.publicip)
@@ -3140,6 +3140,7 @@ def main():
     cwd = os.getcwd()
 
     distro = get_distro()
+    preFlightsChecks.stdOut("Distro: " + str(distro))
     checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd,"/usr/local/CyberCP", distro)
 
     if distro == ubuntu:
@@ -3236,6 +3237,6 @@ def main():
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
 
 
-if __name__ == "__main"_:
+if __name__ == "__main__":
     main()
 

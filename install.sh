@@ -1,4 +1,13 @@
 #!/bin/bash
+if [ -a /etc/lsb-release ]; then
+   if [ ! -x ./install-ubuntu.sh ]; then
+      echo "Download install-ubuntu.sh and make it executable"
+      exit 1
+   fi
+   echo "Running Ubuntu install"
+   ./install-ubuntu.sh
+   exit $?
+fi
 yum autoremove epel-release -y
 rm -f /etc/yum.repos.d/epel.repo
 rm -f /etc/yum.repos.d/epel.repo.rpmsave

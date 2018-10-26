@@ -21,7 +21,9 @@ apt-get install curl -y
 #tar xzvf install.tar.gz
 apt-get install python -y
 apt-get install git -y
-#git clone https://github.com/rperper/cyberpanel.git 
+if [ ! -d cyberpanel ]; then
+   git clone https://github.com/rperper/cyberpanel.git 
+fi
 cd cyberpanel
 cd install
 chmod +x install.py
