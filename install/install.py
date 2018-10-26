@@ -14,7 +14,7 @@ from stat import *
 
 # There can not be peace without first a great suffering.
 
-#distros
+#self.distros
 centos=0
 ubuntu=1
 
@@ -24,7 +24,7 @@ class preFlightsChecks:
 
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
 
-    def __init__(self,rootPath,ip,path,cwd,cyberPanelPath,distro):
+    def __init__(self,rootPath,ip,path,cwd,cyberPanelPath,self.distro):
         self.ipAddr = ip
         self.path = path
         self.cwd = cwd
@@ -49,11 +49,11 @@ class preFlightsChecks:
             os._exit(0)
 
     def setup_account_cyberpanel(self):
-        self.stdOut("Setup Cyberpanel account, distro: " + str(self.distro))
+        self.stdOut("Setup Cyberpanel account")
         try:
             count = 0
 
-            if distro == centos:
+            if self.distro == centos:
                 while (1):
                     command = "yum install sudo -y"
                     cmd = shlex.split(command)
@@ -75,7 +75,7 @@ class preFlightsChecks:
 
             count = 0
 
-            if distro == ubuntu:
+            if self.distro == ubuntu:
                 self.stdOut("Add Cyberpanel user")
                 command = "useradd cyberpanel -g sudo"
                 cmd = shlex.split(command)
@@ -209,7 +209,7 @@ class preFlightsChecks:
         cmd = []
         count = 0
 
-        if distro == ubuntu:
+        if self.distro == ubuntu:
             try:
                 filename = "enable_lst_debain_repo.sh"
                 command = "wget http://rpms.litespeedtech.com/debian/" + filename
@@ -308,7 +308,7 @@ class preFlightsChecks:
         self.stdOut("Install pip")
         count = 0
         while (1):
-            if distro == ubuntu:
+            if self.distro == ubuntu:
                 command = "apt-get -y install python-pip"
             else:
                 command = "yum -y install python-pip"
@@ -331,7 +331,7 @@ class preFlightsChecks:
         self.stdOut("Install python development environment")
         count = 0
         while (1):
-            if distro == centos:
+            if self.distro == centos:
                 command = "yum -y install python-devel"
             else:
                 command = "apt-get -y install python-dev"
@@ -355,7 +355,7 @@ class preFlightsChecks:
         count = 0
 
         while (1):
-            if distro == centos:
+            if self.distro == centos:
                 command = "yum -y install gcc"
             else:
                 command = "apt-get -y install gcc"
@@ -566,7 +566,7 @@ class preFlightsChecks:
         self.stdOut("Install MySQL python library")
         count = 0
         while (1):
-            if distro == centos:
+            if self.distro == centos:
                 command = "yum -y install MySQL-python"
             else:
                 command = "apt-get -y install libmysqlclient-dev"
@@ -583,7 +583,7 @@ class preFlightsChecks:
                 preFlightsChecks.stdOut("MySQL-python successfully installed!")
                 break
 
-        if distro == ubuntu:
+        if self.distro == ubuntu:
             command = "pip install MySQL-python"
             res = subprocess.call(shlex.split(command))
             if res != 0:
@@ -598,7 +598,7 @@ class preFlightsChecks:
         self.stdOut("Install GUnicorn")
         count = 0
         while (1):
-            if distro == ubuntu:
+            if self.distro == ubuntu:
                 command = "pip install gunicorn"
             else:
                 command = "easy_install gunicorn"
@@ -728,7 +728,7 @@ class preFlightsChecks:
         self.stdOut("Install psmisc")
         count = 0
         while (1):
-            if distro == centos:
+            if self.distro == centos:
                 command = "yum -y install psmisc"
             else:
                 command = "apt-get -y install psmisc"
@@ -968,7 +968,7 @@ class preFlightsChecks:
             count = 0
 
             while (1):
-                if distro == centos:
+                if self.distro == centos:
                     command = 'yum -y install unzip'
                 else:
                     command = 'apt-get -y install unzip'
@@ -1003,7 +1003,7 @@ class preFlightsChecks:
             count = 0
             while (1):
 
-                if distro == centos:
+                if self.distro == centos:
                     command = 'yum -y install zip'
                 else:
                     command = 'apt-get -y install zip'
@@ -1152,7 +1152,7 @@ class preFlightsChecks:
     def install_postfix_davecot(self):
         self.stdOut("Install dovecot")
         try:
-            if distro == centos:
+            if self.distro == centos:
                 command = 'yum remove postfix -y'
             else:
                 command = 'apt-get -y remove postfix'
@@ -1161,7 +1161,7 @@ class preFlightsChecks:
 
             count = 0
             while(1):
-                if distro == centos:
+                if self.distro == centos:
                     command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-3.2.4-1.gf.el7.x86_64.rpm'
                 else:
                     command = 'apt-get -y install dovecot-imapd dovecot-pop3d'
@@ -1184,7 +1184,7 @@ class preFlightsChecks:
             count = 0
 
             while (1):
-                if distro == centos:
+                if self.distro == centos:
                     command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-mysql-3.2.4-1.gf.el7.x86_64.rpm'
                 else:
                     command = 'apt-get -y install mysql-server'
@@ -1209,7 +1209,7 @@ class preFlightsChecks:
 
             while(1):
 
-                if distro == centos:
+                if self.distro == centos:
                     command = 'yum -y install dovecot dovecot-mysql'
                 else:
                     command = 'apt-get -y install dovecot-mysql'
@@ -2159,7 +2159,7 @@ class preFlightsChecks:
 
 
     def installFirewalld(self):
-        if distro == ubuntu:
+        if self.distro == ubuntu:
             return 0 # Uses AppArmor
 
         try:
@@ -2360,7 +2360,7 @@ class preFlightsChecks:
             count = 0
             while(1):
 
-                if distro == centos:
+                if self.distro == centos:
                     command = 'yum install cronie -y'
                 else:
                     command = 'apt-get -y install cron'
@@ -2384,7 +2384,7 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-                if distro == centos:
+                if self.distro == centos:
                     command = 'systemctl enable crond'
                 else:
                     command = 'systemctl enable cron'
@@ -2405,7 +2405,7 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-                if distro == centos:
+                if self.distro == centos:
                     command = 'systemctl start crond'
                 else:
                     command = 'systemctl start cron'
@@ -2454,7 +2454,7 @@ class preFlightsChecks:
             count = 0
 
             while(1):
-                if distro == centos:
+                if self.distro == centos:
                     command = 'systemctl restart crond.service'
                 else:
                     command = 'systemctl restart cron.service'
@@ -2526,7 +2526,7 @@ class preFlightsChecks:
         try:
             count = 0
             while (1):
-                if distro == centos:
+                if self.distro == centos:
                     command = 'yum -y install rsync'
                 else:
                     command = 'apt-get -y install rsync'
@@ -2743,7 +2743,7 @@ class preFlightsChecks:
         try:
             count = 0
             while (1):
-                if distro == centos:
+                if self.distro == centos:
                     command = 'yum -y install opendkim'
                 else:
                     command = 'apt-get -y install opendkim'
@@ -3086,7 +3086,7 @@ milter_default_action = accept
 
 
 def get_distro():
-    distro = centos
+    distro = -1
     distro_file = ""
     if exists("/etc/lsb-release"):
         distro_file = "/etc/lsb-release"
@@ -3140,7 +3140,6 @@ def main():
     cwd = os.getcwd()
 
     distro = get_distro()
-    preFlightsChecks.stdOut("Distro: " + str(distro))
     checks = preFlightsChecks("/usr/local/lsws/",args.publicip,"/usr/local",cwd,"/usr/local/CyberCP", distro)
 
     if distro == ubuntu:
