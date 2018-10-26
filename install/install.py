@@ -25,7 +25,7 @@ class preFlightsChecks:
 
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
 
-    def __init__(self,rootPath,ip,path,cwd,cyberPanelPath,self.distro):
+    def __init__(self,rootPath,ip,path,cwd,cyberPanelPath,distro):
         self.ipAddr = ip
         self.path = path
         self.cwd = cwd
@@ -1165,7 +1165,7 @@ class preFlightsChecks:
                 if self.distro == centos:
                     command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-3.2.4-1.gf.el7.x86_64.rpm'
                 else:
-                    command = 'debconf-set-selections <<< ' '"postfix postfix/mailname string ' + str(socket.getfqdn()) + ";' \
+                    command = 'debconf-set-selections <<< "postfix postfix/mailname string ' + str(socket.getfqdn()) + '";' \
                               ' debconf-set-selections <<< "postfix postfix/main_mailer_type string \'Internet Site\'";' \
                               ' apt-get install -y postfix'
 
