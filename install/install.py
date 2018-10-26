@@ -9,6 +9,7 @@ from firewallUtilities import FirewallUtilities
 import time
 import string
 import random
+import socket
 from os.path import *
 from stat import *
 
@@ -1164,7 +1165,9 @@ class preFlightsChecks:
                 if self.distro == centos:
                     command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-3.2.4-1.gf.el7.x86_64.rpm'
                 else:
-                    command = 'apt-get -y install dovecot-imapd dovecot-pop3d'
+                    command = 'debconf-set-selections <<< ' '"postfix postfix/mailname string ' + str(socket.getfqdn()) + ";' \
+                              ' debconf-set-selections <<< "postfix postfix/main_mailer_type string \'Internet Site\'";' \
+                              ' apt-get install -y postfix'
 
                 cmd = shlex.split(command)
 
@@ -1187,7 +1190,7 @@ class preFlightsChecks:
                 if self.distro == centos:
                     command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-mysql-3.2.4-1.gf.el7.x86_64.rpm'
                 else:
-                    command = 'apt-get -y install mysql-server'
+                    command = 'apt-get -y install dovecot-imapd dovecot-pop3d postfix-mysql'
 
                 cmd = shlex.split(command)
 
@@ -1195,10 +1198,10 @@ class preFlightsChecks:
 
                 if res == 1:
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to install Postfix, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut("Unable to install Postfix agent, trying again, try number: " + str(count))
                     if count == 3:
                         logging.InstallLog.writeToFile(
-                            "Unable to install Postfix, you will not be able to send mails and rest should work fine! [install_postfix_davecot]")
+                            "Unable to install Postfix agent, you will not be able to send mails and rest should work fine! [install_postfix_davecot]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Postfix successfully installed!")
