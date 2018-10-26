@@ -10,6 +10,7 @@ import time
 import string
 import random
 import socket
+import errno
 from os.path import *
 from stat import *
 
@@ -34,13 +35,17 @@ class preFlightsChecks:
         self.distro = distro
 
     @staticmethod
-    def stdOut(message):
+    def stdOut(message, log = 0, exit = 0, code = os.EX_OK):
         print("\n\n")
         print ("[" + time.strftime(
             "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
         print("[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + message + "\n")
         print ("[" + time.strftime(
             "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
+        if log:
+            logging.InstallLog.writeToFile(message)
+        if exit:
+            sys.exit(code)
 
     def checkPythonVersion(self):
         if sys.version_info[0] == 2 and sys.version_info[1] == 7:
@@ -150,23 +155,14 @@ class preFlightsChecks:
 
             count = 0
             self.stdOut("Create /etc/letsencrypt directory")
-            while (1):
-
-                command = "mkdir /etc/letsencrypt"
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    count = count + 1
-                    preFlightsChecks.stdOut("We are trying to create Let's Encrypt directory to store SSLs, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Failed to create Let's Encrypt directory to store SSLs. Installer can continue without this.. [setup_account_cyberpanel]")
-                else:
-                    logging.InstallLog.writeToFile("Successfully created Let's Encrypt directory!")
-                    preFlightsChecks.stdOut("Successfully created Let's Encrypt directory!")
-                    break
+            try:
+                os.mkdir("/etc/letsencrypt")
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    self.stdOut("Error creating /etc/letsencrypt directory: " + str(e) +
+                                " Installer can continue without this [setup_account_cyberpanel] ",1)
+                else
+                    pass
 
             ##
 
@@ -869,7 +865,10 @@ class preFlightsChecks:
         ### Applying migrations
 
 
-        os.chdir("CyberCP")
+        try:
+            os.chdir("CyberCP")
+        except:
+            self.stdOut("Error changing to CyberCP directory - internal error!", 1, 1, os.USAGE)
 
         count = 0
 
@@ -1038,7 +1037,13 @@ class preFlightsChecks:
     def download_install_phpmyadmin(self):
         self.stdOut("Install PHP MyAdmin")
         try:
-            os.chdir("/usr/local/lscp/cyberpanel/")
+            dir = "/usr/local/lscp/cyberpanel/"
+            try:
+                os.chdir(dir)
+            except OSError as e:
+                msg = "Error changing to " + "/usr/local/lscp/cyberpanel/ :" + str(e) + " [download_install_phpmyadmin]"
+                self.stdOut(msg, 1, 1, os.EX_USAGE)
+
             count = 0
 
             while(1):
@@ -1132,7 +1137,13 @@ class preFlightsChecks:
 
             writeToFile.close()
 
-            os.mkdir('/usr/local/lscp/cyberpanel/phpmyadmin/tmp')
+            try:
+                os.mkdir('/usr/local/lscp/cyberpanel/phpmyadmin/tmp')
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    self.stdOut("Error ceating: '/usr/local/lscp/cyberpanel/phpmyadmin/tmp' " + str(e), 1, 1, os.EX_CANTCREAT)
+                else
+                    pass
 
             command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/phpmyadmin'
             subprocess.call(shlex.split(command))
@@ -2004,7 +2015,11 @@ class preFlightsChecks:
             #######
 
 
-            os.chdir("/usr/local/lscp/cyberpanel")
+            try:
+                os.chdir("/usr/local/lscp/cyberpanel")
+            except OSError as e:
+                self.stdOut("Can't change to cyberpanel directory, fatal error at this point")
+
 
             count = 1
 
@@ -3133,8 +3148,11 @@ def main():
 
     try:
         os.mkdir("/etc/cyberpanel")
-    except:
-        pass                      
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            self.stdOut("Error creating /etc/cyberpanel directory: " + str(e), 1, 1, os.EX_CANTCREAT)
+        else
+            pass
 
     machineIP = open("/etc/cyberpanel/machineIP", "w")
     machineIP.writelines(args.publicip)
