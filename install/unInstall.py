@@ -6,6 +6,7 @@ import argparse
 import os
 import shlex
 import socket
+from install import preFlightsChecks
 
 
 

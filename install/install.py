@@ -16,14 +16,13 @@ from stat import *
 
 # There can not be peace without first a great suffering.
 
-#self.distros
+#distros
 centos=0
 ubuntu=1
 
 
 
 class preFlightsChecks:
-
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
 
     def __init__(self,rootPath,ip,path,cwd,cyberPanelPath,distro):
@@ -3102,7 +3101,6 @@ milter_default_action = accept
             return 0
 
 
-
 def get_distro():
     distro = -1
     distro_file = ""
@@ -3195,7 +3193,7 @@ def main():
 
     import installCyberPanel
 
-    installCyberPanel.Main(cwd, mysql)
+    installCyberPanel.Main(cwd, mysql, distro)
     checks.fix_selinux_issue()
     checks.install_psmisc()
     checks.install_postfix_davecot()
