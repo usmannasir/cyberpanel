@@ -16,6 +16,22 @@ distro = install.get_distro()
 
 class unInstallCyberPanel:
 
+    def fixResolvConf(self):
+        if distro == centos:
+            return
+
+        if os.access('/etc/resolv.conf', os.F_OK):
+            return
+
+        try:
+            f = open('/etc/resolv.conf', 'w')
+            f.write('nameserver 8.8.8.8')
+            f.close()
+        except IOError as e:
+            print "Unable to create /etc/resolv.conf: " + str(e) + \
+                  ".  This may need to be fixed manually as 'echo \"nameserver 8.8.8.8\"> " \
+                  "/etc/resolv.conf'"
+
     def unInstallCyberPanelRepo(self):
 
         if distro == centos:
@@ -201,6 +217,7 @@ def Main():
 
     remove = unInstallCyberPanel()
 
+    remove.fix
     remove.removeLiteSpeed()
     remove.removeMysql()
     remove.removePostfixDovecot()
