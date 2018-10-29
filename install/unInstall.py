@@ -217,7 +217,7 @@ def Main():
 
     remove = unInstallCyberPanel()
 
-    remove.fix
+    remove.fixResolvConf()
     remove.removeLiteSpeed()
     remove.removeMysql()
     remove.removePostfixDovecot()
