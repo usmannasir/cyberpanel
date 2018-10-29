@@ -7,6 +7,7 @@ import install
 import installLog as logging
 import shlex
 import randomPassword
+import errno
 import time
 import sys
 
@@ -860,6 +861,23 @@ class InstallCyberPanel:
                 if res != 0:
                     InstallCyberPanel.stdOut('Unable to disable systemd.resolved, prohits install of PowerDNS, error #' +
                                              str(res), 1, 1, os.EX_OSERR)
+                try:
+                    os.rename('/etc/resolv.conf', 'etc/resolved.conf')
+                except OSError as e:
+                    if e.errno != errno.EEXIST:
+                        InstallCyberPanel.stdOut("Unable to rename /etc/resolv.conf to install PowerDNS: " +
+                                                 str(e), 1, 1, os.EX_OSERR)
+                    try:
+                        os.remove('/etc/resolv.conf')
+                    except OSError as e1:
+                        InstallCyberPanel.stdOut("Unable to remove existing /etc/resolv.conf to install PowerDNS: " +
+                                                 str(e1), 1, 1, os.EX_OSERR)
+                command = 'echo "nameserver 8.8.8.8" > /etc/resolv.conf'
+                res = subprocess.call(shlex.split(command))
+                if (res != 0):
+                    InstallCyberPanel.stdOut("Unable to create new /etc/resolv.conf to point to 'nameserver 8.8.8.8'"
+                                             "  You may need to do this manually to continue", 1, 1, os.EX_OSERR)
+
 
             if self.distro == centos:
                 while (1):
