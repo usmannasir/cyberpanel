@@ -26,13 +26,8 @@ class InstallCyberPanel:
         self.distro=distro
 
     @staticmethod
-    def stdOut(message):
-        print("\n\n")
-        print ("[" + time.strftime(
-            "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
-        print("[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + message + "\n")
-        print ("[" + time.strftime(
-            "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
+    def stdOut(message, log = 0, exit = 0, code = os.EX_OK):
+        install.preFlightsChecks.stdOut(message, log, exit, code)
 
 
     def installLiteSpeed(self):
@@ -853,6 +848,18 @@ class InstallCyberPanel:
         try:
 
             count = 0
+
+            if self.distro == ubuntu:
+                command = 'systemctl stop systemd-resolved'
+                res = subprocess.call(shlex.split(command))
+                if res != 0:
+                    InstallCyberPanel.stdOut('Unable to stop systemd.resolved, prohits install of PowerDNS, error #' +
+                                             str(res), 1, 1, os.EX_OSERR)
+                command = 'systemctl disable systemd-resolved.service'
+                res = subprocess.call(shlex.split(command))
+                if res != 0:
+                    InstallCyberPanel.stdOut('Unable to disable systemd.resolved, prohits install of PowerDNS, error #' +
+                                             str(res), 1, 1, os.EX_OSERR)
 
             if self.distro == centos:
                 while (1):
