@@ -10,6 +10,9 @@ from websiteFunctions.models import Websites
 import threading as multi
 import socket, smtplib
 import DNS
+from random import randint
+import subprocess, shlex
+
 
 class emailMarketing(multi.Thread):
     def __init__(self, function, extraArgs):
@@ -185,26 +188,42 @@ class emailMarketing(multi.Thread):
             import re
 
             message = MIMEMultipart('alternative')
-            message['Subject'] = emailMessage.subject
-            message['From'] = emailMessage.fromEmail
+            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             for items in allEmails:
+                message = MIMEMultipart('alternative')
+                message['Subject'] = emailMessage.subject
+                message['From'] = emailMessage.fromName + ' ' + emailMessage.fromEmail
+                message['reply-to'] = emailMessage.replyTo
                 if (items.verificationStatus == 'Verified' or self.extraArgs['verificationCheck']) and not items.verificationStatus == 'REMOVED':
                     try:
 
-                        removalLink = "https://" + ipAddress + ":8090/emailMarketing/remove/" + self.extraArgs['listName'] + "/" + items.email
+                        removalLink = "https:\/\/" + ipAddress + ":8090\/emailMarketing\/remove\/" + self.extraArgs[
+                            'listName'] + "\/" + items.email
+                        messageText = str(emailMessage.emailMessage)
+                        message['To'] = items.email
 
-                        if re.search('<html', emailMessage.emailMessage, re.IGNORECASE) and re.search('<body', emailMessage.emailMessage, re.IGNORECASE):
-                            finalMessage = emailMessage.emailMessage
+                        if re.search('<html', messageText, re.IGNORECASE) and re.search('<body', messageText,
+                                                                                        re.IGNORECASE):
+                            finalMessage = messageText
 
                             if self.extraArgs['unsubscribeCheck']:
-                                finalMessage = finalMessage.replace('{{ unsubscribeCheck }}', removalLink)
+                                messageFile = open(tempPath, 'w')
+                                messageFile.write(messageText)
+                                messageFile.close()
+
+                                command = "sudo sed -i 's/{{ unsubscribeCheck }}/" + removalLink + "/g' " + tempPath
+                                subprocess.call(shlex.split(command))
+
+                                messageFile = open(tempPath, 'r')
+                                finalMessage = messageFile.read()
+                                messageFile.close()
 
                             html = MIMEText(finalMessage, 'html')
                             message.attach(html)
 
                         else:
-                            finalMessage = emailMessage.emailMessage
+                            finalMessage = messageText
 
                             if self.extraArgs['unsubscribeCheck']:
                                 finalMessage = finalMessage.replace('{{ unsubscribeCheck }}', removalLink)
@@ -212,13 +231,11 @@ class emailMarketing(multi.Thread):
                             html = MIMEText(finalMessage, 'plain')
                             message.attach(html)
 
-
-
-
                         smtpServer.sendmail(message['From'], items.email, message.as_string())
                         sent = sent + 1
                         logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
-                                                                  'Successfully sent: ' + str(sent) + ' Failed: ' + str(failed))
+                                                                  'Successfully sent: ' + str(sent) + ' Failed: ' + str(
+                                                                      failed))
                     except BaseException, msg:
                         failed = failed + 1
                         logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
@@ -226,14 +243,14 @@ class emailMarketing(multi.Thread):
                                                                       sent) + ', Failed: ' + str(failed))
                         logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
+                    emailJob = EmailJobs(owner=emailMessage, date=time.strftime("%I-%M-%S-%a-%b-%Y"),
+                                         host=self.extraArgs['host'], totalEmails=totalEmails,
+                                         sent=sent, failed=failed
+                                         )
+                    emailJob.save()
 
-            emailJob = EmailJobs(owner=emailMessage, date=time.strftime("%I-%M-%S-%a-%b-%Y"),
-                                 host=self.extraArgs['host'], totalEmails=totalEmails,
-                                 sent=sent, failed=failed
-                                 )
-            emailJob.save()
-
-            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],'Email job completed. [200]')
+                    logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                              'Email job completed. [200]')
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], str(msg) +'. [404]')
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], str(msg) + '. [404]')
             return 0

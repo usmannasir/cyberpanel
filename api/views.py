@@ -6,19 +6,21 @@ from django.http import HttpResponse
 from loginSystem.models import Administrator
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical import hashPassword
-from plogical.installUtilities import installUtilities
 from packages.models import Package
 from baseTemplate.views import renderBase
 from random import randint
-from websiteFunctions.models import Websites,ChildDomains
+from websiteFunctions.models import Websites
 import os
 from baseTemplate.models import version
 import subprocess
 import shlex
-import re
 from plogical.mailUtilities import mailUtilities
 from plogical.website import WebsiteManager
+from loginSystem.models import ACL
+from plogical.acl import ACLManager
+
 # Create your views here.
+
 
 
 def verifyConn(request):
@@ -48,6 +50,46 @@ def verifyConn(request):
 def createWebsite(request):
     wm = WebsiteManager()
     return wm.createWebsiteAPI(json.loads(request.body))
+
+def getUserInfo(request):
+    try:
+        if request.method == 'POST':
+
+            data = json.loads(request.body)
+
+            adminUser = data['adminUser']
+            adminPass = data['adminPass']
+            username = data['username']
+
+            admin = Administrator.objects.get(userName=adminUser)
+
+            if hashPassword.check_password(admin.password, adminPass):
+                pass
+            else:
+                data_ret = {"status": 0,
+                            'error_message': "Could not authorize access to API"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            try:
+                user = Administrator.objects.get(userName=username)
+                data_ret = {'status': 0,
+                            'firstName': user.firstName,
+                            'lastName': user.lastName,
+                            'email': user.email,
+                            'adminStatus': user.acl.adminStatus,
+                            'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except:
+                data_ret = {'status': 0, 'error_message': "User does not exists."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+    except BaseException, msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
 
 def changeUserPassAPI(request):
     try:
@@ -514,6 +556,19 @@ def changeAdminPassword(request):
         randomFile = data['randomFile']
 
         if os.path.exists(randomFile):
+            numberOfAdministrator = Administrator.objects.count()
+            if numberOfAdministrator == 0:
+                ACLManager.createDefaultACLs()
+                acl = ACL.objects.get(name='admin')
+                email = 'usman@cyberpersons.com'
+                admin = Administrator(userName="admin", password=adminPass, type=1, email=email,
+                                      firstName="Cyber", lastName="Panel", acl=acl)
+                admin.save()
+                data_ret = {"changed": 1,
+                            'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             os.remove(randomFile)
             admin = Administrator.objects.get(userName="admin")
             admin.password = hashPassword.hash_password(adminPass)

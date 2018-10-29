@@ -159,18 +159,24 @@ class sslUtilities:
     def obtainSSLForADomain(virtualHostName,adminEmail,sslpath, aliasDomain = None):
         try:
 
-            ## Obtaining Server IP
+            if not os.path.exists('/root/.acme.sh/acme.sh'):
+                command = 'wget -O -  https://get.acme.sh | sh'
+                subprocess.call(command, shell=True)
 
             if aliasDomain == None:
 
-                existingCertPath = '/etc/letsencrypt/live/' + virtualHostName + '/README'
-                if os.path.exists(existingCertPath):
-                    return 1
+                existingCertPath = '/etc/letsencrypt/live/' + virtualHostName
+                if not os.path.exists(existingCertPath):
+                    command = 'mkdir -p ' + existingCertPath
+                    subprocess.call(shlex.split(command))
 
                 try:
                     logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName)
 
-                    command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName
+                    command = "/root/.acme.sh/acme.sh --issue -d " + virtualHostName + " -d www." + virtualHostName \
+                              + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
+
                     output = subprocess.check_output(shlex.split(command))
                     logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName)
 
@@ -181,103 +187,46 @@ class sslUtilities:
 
                     try:
                         logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName)
-                        command = "/usr/local/CyberCP/bin/certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
+                        command = "/root/.acme.sh/acme.sh --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
+                                  + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
+                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
                         output = subprocess.check_output(shlex.split(command))
                         logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName)
                     except subprocess.CalledProcessError:
                         logging.CyberCPLogFileWriter.writeToFile('Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName)
                         return 0
-
-                ##
-
-                if output.find('Congratulations!') > -1:
-
-                    return 1
-
-                elif output.find('no action taken.') > -1:
-
-                    return 1
-                elif output.find('Failed authorization procedure') > -1:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        'Failed authorization procedure for ' + virtualHostName + " while issuing Let's Encrypt SSL.")
-                    return 0
-                elif output.find('Too many SSL requests for this domain, please try to get SSL at later time.') > -1:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        'Too many SSL requests for ' + virtualHostName + " please try to get SSL at later time.")
-                    return 0
-
             else:
 
-                ipFile = "/etc/cyberpanel/machineIP"
-                f = open(ipFile)
-                ipData = f.read()
-                serverIPAddress = ipData.split('\n', 1)[0]
+                existingCertPath = '/etc/letsencrypt/live/' + virtualHostName
+                if not os.path.exists(existingCertPath):
+                    command = 'mkdir -p ' + existingCertPath
+                    subprocess.call(shlex.split(command))
 
-                ipRecords = sslUtilities.getDNSRecords(virtualHostName)
-
-                if ipRecords[0] == 1:
-
-                    if serverIPAddress == ipRecords[1] and serverIPAddress == ipRecords[2]:
-
-                        ipRecordsAlias = sslUtilities.getDNSRecords(aliasDomain)
-
-                        if serverIPAddress == ipRecordsAlias[1] and serverIPAddress == ipRecordsAlias[2]:
-
-                            command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName + " -d " + aliasDomain + " -d www." + aliasDomain
-
-                        else:
-                            if serverIPAddress == ipRecordsAlias[2]:
-                                command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName + " -d " + aliasDomain
-                            else:
-                                command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName
-
-                    else:
-                        if serverIPAddress == ipRecords[2]:
-
-                            ipRecordsAlias = sslUtilities.getDNSRecords(aliasDomain)
-
-                            if serverIPAddress == ipRecordsAlias[1] and serverIPAddress == ipRecordsAlias[2]:
-
-                                command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName  + " -d " + aliasDomain + " -d www." + aliasDomain
-
-                            else:
-                                if serverIPAddress == ipRecordsAlias[2]:
-                                    command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d " + aliasDomain
-                                else:
-                                    command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
-
-                            logging.CyberCPLogFileWriter.writeToFile(
-                                "SSL is issued without 'www' due to DNS error for domain : " + virtualHostName)
-                        else:
-
-                            ipRecordsAlias = sslUtilities.getDNSRecords(aliasDomain)
-
-                            if serverIPAddress == ipRecordsAlias[1] and serverIPAddress == ipRecordsAlias[2]:
-                                command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath  + " -d " + aliasDomain + " -d www." + aliasDomain
-                            else:
-                                if serverIPAddress == ipRecordsAlias[2]:
-                                    command = "/usr/local/CyberCP/bin/certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath  + " -d " + aliasDomain
-                                else:
-                                    return 0
-                else:
+                try:
                     logging.CyberCPLogFileWriter.writeToFile(
-                        "Failed to obtain DNS records for " + virtualHostName + ", issuing self signed certificate.")
+                        "Trying to obtain SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasDomain + " and www." + aliasDomain + ",")
+
+                    command = "/root/.acme.sh/acme.sh --issue -d " + virtualHostName + " -d www." + virtualHostName \
+                              + ' -d ' + aliasDomain + ' -d www.' + aliasDomain\
+                              + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
+
+                    output = subprocess.check_output(shlex.split(command))
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        "Successfully obtained SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasDomain + "and www." + aliasDomain + ",")
+
+
+                except subprocess.CalledProcessError:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        "Failed to obtain SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasDomain + "and www." + aliasDomain + ",")
                     return 0
 
-                output = subprocess.check_output(shlex.split(command))
+            ##
 
-                if output.find('Congratulations!') > -1:
-                    return 1
-                elif output.find('no action taken.') > -1:
-                    return 1
-                elif output.find('Failed authorization procedure') > -1:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        'Failed authorization procedure for ' + virtualHostName + " while issuing Let's Encrypt SSL.")
-                    return 0
-                elif output.find('Too many SSL requests for this domain, please try to get SSL at later time.') > -1:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        'Too many SSL requests for ' + virtualHostName + " please try to get SSL at later time.")
-                    return 0
+            if output.find('Cert success') > -1:
+                return 1
+            else:
+                return 0
 
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Failed to obtain SSL. [obtainSSLForADomain]]")

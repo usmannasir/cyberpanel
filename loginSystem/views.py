@@ -158,7 +158,7 @@ def loadLoginPage(request):
                                   firstName="Cyber",lastName="Panel", acl=acl)
             admin.save()
 
-            vers = version(currentVersion="1.7",build=2)
+            vers = version(currentVersion="1.7",build=3)
             vers.save()
 
             package = Package(admin=admin, packageName="Default", diskSpace=1000,

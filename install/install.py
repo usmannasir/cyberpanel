@@ -687,7 +687,7 @@ class preFlightsChecks:
 
         count = 0
         while (1):
-            command = "wget http://cyberpanel.net/CyberPanel.1.7.2.tar.gz"
+            command = "wget http://cyberpanel.net/CyberPanel.1.7.3.tar.gz"
             #command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
             res = subprocess.call(shlex.split(command))
 
@@ -707,7 +707,7 @@ class preFlightsChecks:
 
         count = 0
         while(1):
-            command = "tar zxf CyberPanel.1.7.2.tar.gz"
+            command = "tar zxf CyberPanel.1.7.3.tar.gz"
             #command = "tar zxf CyberPanelTemp.tar.gz"
 
             res = subprocess.call(shlex.split(command))
