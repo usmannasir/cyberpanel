@@ -82,7 +82,7 @@ class preFlightsChecks:
 
             if self.distro == ubuntu:
                 self.stdOut("Add Cyberpanel user")
-                command = "useradd cyberpanel -g sudo"
+                command = "useradd cyberpanel -U -G sudo"
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
                 if res != 0 and res != 9:
@@ -703,6 +703,9 @@ class preFlightsChecks:
                     break
 
     def fix_selinux_issue(self):
+        if (self.distro == ubuntu):
+            return
+
         try:
             cmd = []
 

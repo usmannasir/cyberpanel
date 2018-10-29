@@ -1160,13 +1160,19 @@ class InstallCyberPanel:
             except:
                 pass
 
-            command = 'adduser lscpd -M -d /usr/local/lscp'
+            if self.distro == centos:
+                command = 'adduser lscpd -M -d /usr/local/lscp'
+            else:
+                command = 'useradd lscpd -M -d /usr/local/lscp'
+
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
 
-            command = 'groupadd lscpd'
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            if self.distro == centos:
+                command = 'groupadd lscpd'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+                # Added group in useradd for Ubuntu
 
             command = 'usermod -a -G lscpd lscpd'
             cmd = shlex.split(command)
