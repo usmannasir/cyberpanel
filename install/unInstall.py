@@ -115,7 +115,7 @@ class unInstallCyberPanel:
             if distro == centos:
                 command = 'yum -y remove openlitespeed'
             else:
-                command = 'apt-get -y remove openlitespeed'
+                command = 'apt-get --purge -y remove openlitespeed'
 
             cmd = shlex.split(command)
 
