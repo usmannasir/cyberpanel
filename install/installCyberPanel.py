@@ -864,7 +864,7 @@ class InstallCyberPanel:
                 try:
                     os.rename('/etc/resolv.conf', 'etc/resolved.conf')
                 except OSError as e:
-                    if e.errno != errno.EEXIST:
+                    if e.errno != errno.EEXIST and e.errno != errno.ENOENT:
                         InstallCyberPanel.stdOut("Unable to rename /etc/resolv.conf to install PowerDNS: " +
                                                  str(e), 1, 1, os.EX_OSERR)
                     try:
