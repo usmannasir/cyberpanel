@@ -37,7 +37,7 @@ class InstallCyberPanel:
             while (1):
 
                 if self.distro == ubuntu:
-                    command = "apt-get -y openlitespeed"
+                    command = "apt-get -y install openlitespeed"
                 else:
                     command = 'yum install -y openlitespeed'
                 cmd = shlex.split(command)
