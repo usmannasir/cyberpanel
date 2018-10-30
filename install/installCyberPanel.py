@@ -741,7 +741,7 @@ class InstallCyberPanel:
             self.stdOut("Correct configuration with pure-ftpd")
             count = 0
             try:
-                ok.mkdir("/etc/pure-ftpd/conf")
+                os.mkdir("/etc/pure-ftpd/conf")
                 os.mkdir("/etc/pure-ftpd/auth")
             except OSError as e:
                 pass
