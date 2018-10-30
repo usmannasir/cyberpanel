@@ -970,7 +970,10 @@ class InstallCyberPanel:
             InstallCyberPanel.stdOut("Configuring PowerDNS..")
 
             os.chdir(self.cwd)
-            dnsPath = "/etc/pdns/pdns.conf"
+            if self.distro == centos:
+                dnsPath = "/etc/pdns/pdns.conf"
+            else:
+                dnsPath = "/etc/powerdns/pdns.conf"
 
             if os.path.exists(dnsPath):
                 os.remove(dnsPath)

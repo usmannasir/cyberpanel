@@ -1179,11 +1179,17 @@ class preFlightsChecks:
                 if self.distro == centos:
                     command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-3.2.4-1.gf.el7.x86_64.rpm'
                 else:
-                    command = 'debconf-set-selections <<< "postfix postfix/mailname string ' + str(socket.getfqdn()) + '"'
-                    subprocess.call(shlex.split(command), shell=True)
-                    command = 'debconf-set-selections <<< "postfix postfix/main_mailer_type string \'Internet Site\'"'
-                    subprocess.call(shlex.split(command), shell=True)
+                    command = 'apt-get -y debconf-utils'
+                    subprocess.call(shlex.split(command))
+                    file_name = self.cwd + '/pf.unattend.text'
+                    pf = open(file_name, 'w')
+                    pf.write('postfix postfix/mailname string ' + str(socket.getfqdn() + '\n'))
+                    pf.write('postfix postfix/main_mailer_type string "Internet Site"\n')
+                    pf.close()
+                    command = 'debconf-set-selections ' + file_name
+                    subprocess.call(shlex.split(command))
                     command = 'apt-get -y install postfix'
+                    # os.remove(file_name)
 
                 cmd = shlex.split(command)
 
