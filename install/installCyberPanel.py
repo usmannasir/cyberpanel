@@ -1212,7 +1212,7 @@ def Main(cwd, mysql, distro):
     InstallCyberPanel.mysql_Root_password = randomPassword.generate_pass()
 
     file_name = '/etc/cyberpanel/mysqlPassword'
-    if access(file_name, os.F_OK):
+    if os.access(file_name, os.F_OK):
         password = open(file_name, 'r')
         InstallCyberPanel.mysql_Root_password = password.readline()
     else:
