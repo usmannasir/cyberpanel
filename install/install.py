@@ -2349,7 +2349,7 @@ class preFlightsChecks:
                 res = subprocess.call(shlex.split(command))
                 if res == 0:
                     self.stdOut("Created ubuntu symbolic link to pcre")
-                else
+                else:
                     self.stdOut("Error creating symbolic link to pcre: " + str(res))
 
 
