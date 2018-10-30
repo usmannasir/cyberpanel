@@ -1180,9 +1180,9 @@ class preFlightsChecks:
                     command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-3.2.4-1.gf.el7.x86_64.rpm'
                 else:
                     command = 'debconf-set-selections <<< "postfix postfix/mailname string ' + str(socket.getfqdn()) + '"'
-                    subprocess.call(shlex.split(command))
+                    subprocess.call(shlex.split(command), shell=True)
                     command = 'debconf-set-selections <<< "postfix postfix/main_mailer_type string \'Internet Site\'"'
-                    subprocess.call(shlex.split(command))
+                    subprocess.call(shlex.split(command), shell=True)
                     command = 'apt-get -y install postfix'
 
                 cmd = shlex.split(command)
@@ -2343,6 +2343,16 @@ class preFlightsChecks:
 
             count = 0
 
+            # In Ubuntu, the library that lscpd looks for is libpcre.so.1, but the one it installs is libpcre.so.3...
+            if self.distro == ubuntu:
+                command = 'ln -s /lib/x86_64-linux-gnu/libpcre.so.3 /lib/x86_64-linux-gnu/libpcre.so.1'
+                res = subprocess.call(shlex.split(command))
+                if res == 0:
+                    self.stdOut("Created ubuntu symbolic link to pcre")
+                else
+                    self.stdOut("Error creating symbolic link to pcre: " + str(res))
+
+
             while(1):
 
                 command = 'systemctl start lscpd'
@@ -2929,7 +2939,10 @@ milter_default_action = accept
 
             count = 0
             while (1):
-                command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
+                if self.distro == centos:
+                    command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
+                else:
+                    command = 'apt-get -y install libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-openssl-dev'
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
