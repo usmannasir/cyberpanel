@@ -738,9 +738,18 @@ class InstallCyberPanel:
         ############## Start pureftpd ######################
 
         try:
-
+            self.stdOut("Correct configuration with pure-ftpd")
             count = 0
+            try:
+                ok.mkdir("/etc/pure-ftpd/conf")
+                os.mkdir("/etc/pure-ftpd/auth")
+            except OSError as e:
+                pass
 
+            command = 'cp /etc/pure-ftpd/pure-ftpd.conf /etc/pure-ftpd/conf/pure-ftpd.conf'
+            res = subprocess.call(shlex.split(command))
+
+            self.stdOut("Start the pure-ftp service")
             while(1):
                 cmd = []
 
