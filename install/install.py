@@ -1164,7 +1164,7 @@ class preFlightsChecks:
 
 
     def install_postfix_davecot(self):
-        self.stdOut("Install dovecot")
+        self.stdOut("Install dovecot - first remove postfix")
         try:
             if self.distro == centos:
                 command = 'yum remove postfix -y'
@@ -1173,14 +1173,17 @@ class preFlightsChecks:
 
             subprocess.call(shlex.split(command))
 
+            self.stdOut("Install dovecot - do the install")
             count = 0
             while(1):
                 if self.distro == centos:
                     command = 'yum install -y http://mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64//postfix3-3.2.4-1.gf.el7.x86_64.rpm'
                 else:
-                    command = 'debconf-set-selections <<< "postfix postfix/mailname string ' + str(socket.getfqdn()) + '";' \
-                              ' debconf-set-selections <<< "postfix postfix/main_mailer_type string \'Internet Site\'";' \
-                              ' apt-get install -y postfix'
+                    command = 'debconf-set-selections <<< "postfix postfix/mailname string ' + str(socket.getfqdn()) + '"'
+                    subprocess.call(shlex.split(command))
+                    command = 'debconf-set-selections <<< "postfix postfix/main_mailer_type string \'Internet Site\'"'
+                    subprocess.call(shlex.split(command))
+                    command = 'apt-get -y install postfix'
 
                 cmd = shlex.split(command)
 

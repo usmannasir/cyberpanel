@@ -927,7 +927,7 @@ class InstallCyberPanel:
 
             while(1):
                 if self.distro == ubuntu:
-                    command = "apt-get -y install pdns-server pdns-backend-mysql"
+                    command = "DEBIAN_FRONTEND=noninteractive apt-get -y install pdns-server pdns-backend-mysql"
                 else:
                     command = 'yum -y install pdns pdns-backend-mysql'
                 cmd = shlex.split(command)
@@ -1124,13 +1124,13 @@ class InstallCyberPanel:
 
                 if res == 1:
                     count = count + 1
-                    InstallCyberPanel.stdOut("Trying to configure LSCPD, trying again, try number: " + str(count))
+                    InstallCyberPanel.stdOut("Trying to extract LSCPD, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Failed to configure LSCPD, exiting installer! [installLSCPD]")
+                        logging.InstallLog.writeToFile("Failed to extract LSCPD, exiting installer! [installLSCPD]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                         os._exit(0)
                 else:
-                    logging.InstallLog.writeToFile("LSCPD successfully configured!")
+                    logging.InstallLog.writeToFile("LSCPD successfully extracted!")
                     InstallCyberPanel.stdOut("LSCPD successfully extracted!")
                     break
 
