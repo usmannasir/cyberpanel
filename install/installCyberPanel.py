@@ -1209,13 +1209,21 @@ class InstallCyberPanel:
 
 def Main(cwd, mysql, distro):
 
-    InstallCyberPanel.mysqlPassword = randomPassword.generate_pass()
     InstallCyberPanel.mysql_Root_password = randomPassword.generate_pass()
 
-
-    password = open("/etc/cyberpanel/mysqlPassword", "w")
-    password.writelines(InstallCyberPanel.mysql_Root_password)
+    file_name = '/etc/cyberpanel/mysqlPassword'
+    if access(file_name, os.F_OK):
+        password = open(file_name, 'r')
+        InstallCyberPanel.mysql_Root_password = password.readline()
+    else:
+        password = open(file_name, "w")
+        password.writelines(InstallCyberPanel.mysql_Root_password)
     password.close()
+
+    if distro == centos:
+        InstallCyberPanel.mysqlPassword = randomPassword.generate_pass()
+    else:
+        InstallCyberPanel.mysqlPassword = InstallCyberPanel.mysql_Root_password
 
     installer = InstallCyberPanel("/usr/local/lsws/", cwd, distro)
 
@@ -1227,8 +1235,10 @@ def Main(cwd, mysql, distro):
 
     installer.setup_mariadb_repo()
     installer.installMySQL(mysql)
-    installer.changeMYSQLRootPassword()
-    installer.changeMYSQLRootPasswordCyberPanel(mysql)
+    if distro == centos:
+        installer.changeMYSQLRootPassword()
+    if distro == centos and mysql == 'Two':
+        installer.changeMYSQLRootPasswordCyberPanel(mysql)
     installer.startMariaDB()
 
     mysqlUtilities.createDatabaseCyberPanel("cyberpanel", "cyberpanel", InstallCyberPanel.mysqlPassword, mysql)
