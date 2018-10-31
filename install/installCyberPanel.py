@@ -620,16 +620,14 @@ class InstallCyberPanel:
 
     def fixMariaDB(self):
         self.stdOut("Setup MariaDB so it can support Cyberpanel's needs")
-        try:
-            conn = mariadb.connect(user='root', passwd=self.mysql_Root_password)
-            cursor = conn.cursor()
-            cursor.execute('set global innodb_file_per_table = on;')
-            cursor.exeucte('set global innodb_file_format = Barracuda;')
-            cursor.execute('set global innodb_large_prefix = on;')
-            cursor.close()
-            conn.close()
-        except:
-            self.stdOut("Error in setting MariaDB global options", 1, 1, os.EX_OSERR)
+
+        conn = mariadb.connect(user='root', passwd=self.mysql_Root_password)
+        cursor = conn.cursor()
+        cursor.execute('set global innodb_file_per_table = on;')
+        cursor.exeucte('set global innodb_file_format = Barracuda;')
+        cursor.execute('set global innodb_large_prefix = on;')
+        cursor.close()
+        conn.close()
 
         try:
             fileName = '/etc/mysql/mariadb.conf.d/50-server.cnf'
