@@ -2922,19 +2922,38 @@ milter_default_action = accept
 
     def setupPHPAndComposer(self):
         try:
+            if self.distro == ubuntu:
+                if not os.access('/usr/local/lsws/lsphp70/bin/php'):
+                    if os.access('/usr/local/lsws/lsphp70/bin/php7.0'):
+                        os.symlink('/usr/local/lsws/lsphp70/bin/php7.0', '/usr/local/lsws/lsphp70/bin/php')
+                if not os.access('/usr/local/lsws/lsphp71/bin/php'):
+                    if os.access('/usr/local/lsws/lsphp71/bin/php7.1'):
+                        os.symlink('/usr/local/lsws/lsphp71/bin/php7.1', '/usr/local/lsws/lsphp71/bin/php')
+                if not os.access('/usr/local/lsws/lsphp72/bin/php'):
+                    if os.access('/usr/local/lsws/lsphp72/bin/php7.2'):
+                        os.symlink('/usr/local/lsws/lsphp72/bin/php7.2', '/usr/local/lsws/lsphp72/bin/php')
+
             command = "cp /usr/local/lsws/lsphp71/bin/php /usr/bin/"
             res = subprocess.call(shlex.split(command))
 
             os.chdir(self.cwd)
 
-            command = "chmod +x composer.sh"
+            if self.distro == centos:
+                command = "chmod +x composer.sh"
+            else:
+                command = "chmod +x composer-no-test.sh"
+
             res = subprocess.call(shlex.split(command))
 
-            command = "./composer.sh"
+            if self.distro == centos:
+                command = "./composer.sh"
+            else:
+                command = "./composer-no-test.sh"
+
             res = subprocess.call(shlex.split(command))
 
         except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [setupPHPAndComposer]")
+            self.stdOut('Setup PHP error: ' + str(msg) + " [setupPHPAndComposer]", 1, 1, os.EX_OSERR)
             return 0
 
     @staticmethod
@@ -3072,7 +3091,7 @@ milter_default_action = accept
                 writeToFile.close()
 
         except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [enableDisableDNS]")
+            preFlightsChecks.stdOut('Error disabling DNS: ' + str(msg) + " [enableDisableDNS]", 1, 0)
             return 0
 
     @staticmethod
@@ -3098,7 +3117,7 @@ milter_default_action = accept
                 writeToFile.close()
 
         except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [enableDisableEmail]")
+            preFlightsChecks.stdOut('Error disabling Email: ' + str(msg) + " [enableDisableEmail]", 1, 0)
             return 0
 
     @staticmethod
@@ -3124,7 +3143,7 @@ milter_default_action = accept
                 writeToFile.close()
 
         except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [enableDisableEmail]")
+            preFlightsChecks.stdOut('Error disabling FTP: ' + str(msg) + " [enableDisableFTP]", 1, 0)
             return 0
 
 
