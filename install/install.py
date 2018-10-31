@@ -2938,14 +2938,14 @@ milter_default_action = accept
             return 0
 
     @staticmethod
-    def setupVirtualEnv():
+    def setupVirtualEnv(distro):
         try:
 
             ##
 
             count = 0
             while (1):
-                if self.distro == centos:
+                if distro == centos:
                     command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
                 else:
                     command = 'apt-get -y install libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-openssl-dev'
@@ -3256,7 +3256,7 @@ def main():
     checks.configureOpenDKIM()
 
     checks.modSecPreReqs()
-    checks.setupVirtualEnv()
+    checks.setupVirtualEnv(distro)
     checks.setupPHPAndComposer()
 
     if args.postfix != None:
