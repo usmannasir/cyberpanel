@@ -1268,9 +1268,7 @@ def Main(cwd, mysql, distro):
 
     installer.setup_mariadb_repo()
     installer.installMySQL(mysql)
-    #if distro == centos:
     installer.changeMYSQLRootPassword()
-    #if distro == centos and mysql == 'Two':
     installer.changeMYSQLRootPasswordCyberPanel(mysql)
     installer.startMariaDB()
     if distro == ubuntu:

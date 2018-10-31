@@ -2948,7 +2948,8 @@ milter_default_action = accept
                 if distro == centos:
                     command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
                 else:
-                    command = 'apt-get -y install libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-openssl-dev'
+                    command = 'apt-get -y install libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev ' \
+                              'libcurl4-openssl-dev libssl-dev'
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -3004,8 +3005,8 @@ milter_default_action = accept
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                         os._exit(0)
                 else:
-                    logging.InstallLog.writeToFile("virtualenv setuped successfully!")
-                    preFlightsChecks.stdOut("virtualenv setuped successfully!")
+                    logging.InstallLog.writeToFile("virtualenv setup successfully!")
+                    preFlightsChecks.stdOut("virtualenv setup successfully!")
                     break
 
             ##
