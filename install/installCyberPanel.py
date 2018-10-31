@@ -8,6 +8,8 @@ import installLog as logging
 import shlex
 import randomPassword
 import errno
+import MySQLdb as mariadb
+import re
 import time
 import sys
 
@@ -616,6 +618,35 @@ class InstallCyberPanel:
 
         return 1
 
+    def fixMariaDB(self):
+        self.stdOut("Setup MariaDB so it can support Cyberpanel's needs")
+        try:
+            conn = mariadb.connect(user='root', passwd=mysql_Root_password)
+            cursor = conn.cursor()
+            cursor.execute('set global innodb_file_per_table = on;')
+            cursor.exeucte('set global innodb_file_format = Barracuda;')
+            cursor.execute('set global innodb_large_prefix = on;')
+            cursor.close()
+            conn.close()
+        except:
+            self.stdOut("Error in setting MariaDB global options", 1, 1, os.EX_OSERR)
+
+        try:
+            fileName = '/etc/mysql/mariadb.conf.d/50-server.cnf'
+            data = open(fileName, 'r').readlines()
+
+            writeDataToFile = open(fileName, 'w')
+            for line in data:
+                writeDataToFile.write(line.replace('utf8mb4','utf8'))
+            writeDataToFile.close()
+        except IOError as err:
+            self.stdOut("Error in setting: " + fileName + ": " + str(err), 1, 1, os.EX_OSERR)
+
+        os.system('systemctl restart mysql')
+
+        self.stdOut("MariaDB is now setup so it can support Cyberpanel's needs")
+
+
     def installPureFTPD(self):
         try:
 
@@ -937,10 +968,11 @@ class InstallCyberPanel:
             while(1):
                 if self.distro == ubuntu:
                     command = "DEBIAN_FRONTEND=noninteractive apt-get -y install pdns-server pdns-backend-mysql"
+                    res = os.system(command)
                 else:
                     command = 'yum -y install pdns pdns-backend-mysql'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, shell=True)
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd, shell=True)
 
                 if res == 1:
                     count = count + 1
@@ -1243,6 +1275,8 @@ def Main(cwd, mysql, distro):
     if distro == centos and mysql == 'Two':
         installer.changeMYSQLRootPasswordCyberPanel(mysql)
     installer.startMariaDB()
+    if distro == ubuntu:
+        installer.fixMariaDB()
 
     mysqlUtilities.createDatabaseCyberPanel("cyberpanel", "cyberpanel", InstallCyberPanel.mysqlPassword, mysql)
 
