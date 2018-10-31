@@ -624,7 +624,7 @@ class InstallCyberPanel:
         conn = mariadb.connect(user='root', passwd=self.mysql_Root_password)
         cursor = conn.cursor()
         cursor.execute('set global innodb_file_per_table = on;')
-        cursor.exeucte('set global innodb_file_format = Barracuda;')
+        cursor.execute('set global innodb_file_format = Barracuda;')
         cursor.execute('set global innodb_large_prefix = on;')
         cursor.close()
         conn.close()
