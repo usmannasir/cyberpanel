@@ -621,7 +621,7 @@ class InstallCyberPanel:
     def fixMariaDB(self):
         self.stdOut("Setup MariaDB so it can support Cyberpanel's needs")
         try:
-            conn = mariadb.connect(user='root', passwd=mysql_Root_password)
+            conn = mariadb.connect(user='root', passwd=self.mysql_Root_password)
             cursor = conn.cursor()
             cursor.execute('set global innodb_file_per_table = on;')
             cursor.exeucte('set global innodb_file_format = Barracuda;')
