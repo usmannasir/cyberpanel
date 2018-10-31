@@ -2923,14 +2923,14 @@ milter_default_action = accept
     def setupPHPAndComposer(self):
         try:
             if self.distro == ubuntu:
-                if not os.access('/usr/local/lsws/lsphp70/bin/php'):
-                    if os.access('/usr/local/lsws/lsphp70/bin/php7.0'):
+                if not os.access('/usr/local/lsws/lsphp70/bin/php', os.R_OK):
+                    if os.access('/usr/local/lsws/lsphp70/bin/php7.0', os.R_OK):
                         os.symlink('/usr/local/lsws/lsphp70/bin/php7.0', '/usr/local/lsws/lsphp70/bin/php')
-                if not os.access('/usr/local/lsws/lsphp71/bin/php'):
-                    if os.access('/usr/local/lsws/lsphp71/bin/php7.1'):
+                if not os.access('/usr/local/lsws/lsphp71/bin/php', os.R_OK):
+                    if os.access('/usr/local/lsws/lsphp71/bin/php7.1', os.R_OK):
                         os.symlink('/usr/local/lsws/lsphp71/bin/php7.1', '/usr/local/lsws/lsphp71/bin/php')
-                if not os.access('/usr/local/lsws/lsphp72/bin/php'):
-                    if os.access('/usr/local/lsws/lsphp72/bin/php7.2'):
+                if not os.access('/usr/local/lsws/lsphp72/bin/php', os.R_OK):
+                    if os.access('/usr/local/lsws/lsphp72/bin/php7.2', os.R_OK):
                         os.symlink('/usr/local/lsws/lsphp72/bin/php7.2', '/usr/local/lsws/lsphp72/bin/php')
 
             command = "cp /usr/local/lsws/lsphp71/bin/php /usr/bin/"
