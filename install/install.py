@@ -82,7 +82,7 @@ class preFlightsChecks:
 
             if self.distro == ubuntu:
                 self.stdOut("Add Cyberpanel user")
-                command = "useradd cyberpanel -U -G sudo"
+                command = "useradd cyberpanel -m -U -G sudo"
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
                 if res != 0 and res != 9:
