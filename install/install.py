@@ -320,7 +320,7 @@ class preFlightsChecks:
         count = 0
         while (1):
             if self.distro == ubuntu:
-                command = "apt-get -y install python-pip"
+                command = "apt-get -y install python-pip libcurl4-gnutls-dev"
             else:
                 command = "yum -y install python-pip"
             res = subprocess.call(shlex.split(command))
