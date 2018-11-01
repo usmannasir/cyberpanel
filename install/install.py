@@ -2986,7 +2986,7 @@ milter_default_action = accept
                               'libmariadbclient-dev libcurl4-openssl-dev libssl-dev nghttp2 libnghttp2-dev idn2 ' \
                               'libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev ' \
                               'libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev ' \
-                              'python-gpg python-gpgme'
+                              'python-gpg python-gpgme libcurl3'
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -3056,12 +3056,12 @@ milter_default_action = accept
             ##
 
             install_file = '/usr/local/CyberCP/requirments.txt'
-            if distro == ubuntu and get_Ubuntu_release() < 18.04:
-                install_file_new = '/usr/local/CyberCP/requirements.txt'
-                preFlightsChecks.stdOut("Install updated " + install_file_new, 1)
-                command = "sed 's/==[0-9.]*//g' " + install_file + " | sed 's/Django/Django<2/g' > " + install_file_new
-                os.system(command)
-                install_file = install_file_new
+            #if distro == ubuntu and get_Ubuntu_release() < 18.04:
+            #    install_file_new = '/usr/local/CyberCP/requirements.txt'
+            #    preFlightsChecks.stdOut("Install updated " + install_file_new, 1)
+            #    command = "sed 's/==[0-9.]*//g' " + install_file + " | sed 's/Django/Django<2/g' > " + install_file_new
+            #    os.system(command)
+            #    install_file = install_file_new
 
             count = 0
             while (1):
