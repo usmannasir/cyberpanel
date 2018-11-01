@@ -320,7 +320,7 @@ class preFlightsChecks:
         count = 0
         while (1):
             if self.distro == ubuntu:
-                command = "apt-get -y install python-pip libcurl4-openssl-dev"
+                command = "apt-get -y install python-pip"
             else:
                 command = "yum -y install python-pip"
             res = subprocess.call(shlex.split(command))
@@ -2983,10 +2983,10 @@ milter_default_action = accept
                     command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
                 else:
                     command = 'apt-get -y install libattr1 libattr1-dev liblzma-dev libgpgme-dev ' \
-                              'libmariadbclient-dev libcurl4-openssl-dev libssl-dev nghttp2 libnghttp2-dev idn2 ' \
+                              'libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 ' \
                               'libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev ' \
                               'libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev ' \
-                              'python-gpg python-gpgme libcurl3'
+                              'python-gpg python-gpgme'
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
