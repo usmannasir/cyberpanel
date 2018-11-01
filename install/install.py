@@ -2443,7 +2443,7 @@ class preFlightsChecks:
                 else:
                     command = 'systemctl enable cron'
                 cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=file)
+                res = subprocess.call(cmd, stdout=fd)
 
                 if res == 1:
                     count = count + 1
@@ -2465,7 +2465,7 @@ class preFlightsChecks:
                     command = 'systemctl start cron'
 
                 cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=file)
+                res = subprocess.call(cmd, stdout=fd)
 
                 if res == 1:
                     count = count + 1
@@ -2488,7 +2488,7 @@ class preFlightsChecks:
 
             command = 'chmod +x /usr/local/CyberCP/plogical/findBWUsage.py'
             cmd = shlex.split(command)
-            res = subprocess.call(cmd, stdout=file)
+            res = subprocess.call(cmd, stdout=fd)
 
             if res == 1:
                 logging.InstallLog.writeToFile("1427 [setup_cron]")
@@ -2498,7 +2498,7 @@ class preFlightsChecks:
             command = 'chmod +x /usr/local/CyberCP/postfixSenderPolicy/client.py'
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd, stdout=file)
+            res = subprocess.call(cmd, stdout=fd)
 
             if res == 1:
                 logging.InstallLog.writeToFile("1428 [setup_cron]")
@@ -2514,7 +2514,7 @@ class preFlightsChecks:
                     command = 'systemctl restart cron.service'
 
                 cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=file)
+                res = subprocess.call(cmd, stdout=fd)
 
                 if res == 1:
                     count = count + 1
