@@ -81,6 +81,21 @@ class preFlightsChecks:
             count = 0
 
             if self.distro == ubuntu:
+                self.stdOut("Fix sudoers")
+                try:
+                    fileName = '/etc/sudoers'
+                    data = open(fileName, 'r').readlines()
+
+                    writeDataToFile = open(fileName, 'w')
+                    for line in data:
+                        if line[:5] == '%sudo':
+                            writeDataToFile.write('%sudo ALL=ALL NOPASSWD:ALL\n')
+                        else:
+                            writeDataToFile.write(line)
+                    writeDataToFile.close()
+                except IOError as err:
+                    self.stdOut("Error in fixing sudoers file: " + str(err), 1, 1, os.EX_OSERR)
+
                 self.stdOut("Add Cyberpanel user")
                 command = "useradd cyberpanel -m -U -G sudo"
                 cmd = shlex.split(command)
@@ -370,7 +385,7 @@ class preFlightsChecks:
                 break
 
     def install_python_setup_tools(self):
-        self.stdOut("Install python setup tools");
+        self.stdOut("Install python setup tools")
         count = 0
         while (1):
             command = "yum -y install python-setuptools"
@@ -2661,7 +2676,8 @@ class preFlightsChecks:
         print("                Visit: https://" + self.ipAddr + ":8090                ")
         print("                Username: admin                                    ")
         print("                Password: 1234567                                  ")
-
+        print("                Database password in /etc/mysqlPassword            ")
+        print("                                                                   ")
         print("###################################################################")
 
     def installCertBot(self):
@@ -3299,7 +3315,7 @@ def main():
         checks.enableDisableFTP('On')
 
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
-
+    checks.installation_successfull()
 
 if __name__ == "__main__":
     main()
