@@ -34,7 +34,7 @@ class preFlightsChecks:
         self.distro = distro
 
     @staticmethod
-    def stdOut(message, log = 0, exit = 0, code = os.EX_OK):
+    def stdOut(message, log = 0, do_exit = 0, code = os.EX_OK):
         print("\n\n")
         print ("[" + time.strftime(
             "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
@@ -43,7 +43,7 @@ class preFlightsChecks:
             "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
         if log:
             logging.InstallLog.writeToFile(message)
-        if exit:
+        if do_exit:
             sys.exit(code)
 
     def checkPythonVersion(self):
@@ -1054,9 +1054,9 @@ class preFlightsChecks:
     def download_install_phpmyadmin(self):
         self.stdOut("Install PHP MyAdmin")
         try:
-            dir = "/usr/local/lscp/cyberpanel/"
+            directory = "/usr/local/lscp/cyberpanel/"
             try:
-                os.chdir(dir)
+                os.chdir(directory)
             except OSError as e:
                 msg = "Error changing to " + "/usr/local/lscp/cyberpanel/ :" + str(e) + " [download_install_phpmyadmin]"
                 self.stdOut(msg, 1, 1, os.EX_USAGE)
@@ -2410,7 +2410,7 @@ class preFlightsChecks:
 
         try:
             ## first install crontab
-            file = open("installLogs.txt", 'a')
+            fd = open("installLogs.txt", 'a')
             count = 0
             while(1):
 
@@ -2421,7 +2421,7 @@ class preFlightsChecks:
 
                 cmd = shlex.split(command)
 
-                res = subprocess.call(cmd, stdout=file)
+                res = subprocess.call(cmd, stdout=fd)
 
                 if res == 1:
                     count = count + 1
@@ -2527,8 +2527,7 @@ class preFlightsChecks:
                     preFlightsChecks.stdOut("Crond successfully restarted!")
                     break
 
-            file.close()
-
+            fd.close()
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [setup_cron]")
@@ -2986,7 +2985,8 @@ milter_default_action = accept
                     command = 'apt-get -y install libattr1 libattr1-dev liblzma-dev libgpgme-dev ' \
                               'libmariadbclient-dev libcurl4-openssl-dev libssl-dev nghttp2 libnghttp2-dev idn2 ' \
                               'libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev ' \
-                              'libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev'
+                              'libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev ' \
+                              'python-gpg python-gpgme'
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -3055,22 +3055,30 @@ milter_default_action = accept
 
             ##
 
+            install_file = '/usr/local/CyberCP/requirments.txt'
+            if distro == ubuntu and get_Ubuntu_release() < 18.04:
+                install_file_new = '/usr/local/CyberCP/requirements.txt'
+                preFlightsChecks.stdOut("Install updated " + install_file_new, 1)
+                command = "sed 's/==[0-9.]*//g' " + install_file + " | sed 's/Django/Django<2/g' > " + install_file_new
+                os.system(command)
+                install_file = install_file_new
+
             count = 0
             while (1):
-                command = "pip install --ignore-installed -r /usr/local/CyberCP/requirments.txt"
+                command = "pip install --ignore-installed -r " + install_file
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
                     count = count + 1
                     preFlightsChecks.stdOut(
-                        "Trying to install project dependant modules, trying again, try number: " + str(count))
+                        "Trying to install Python project dependant modules, trying again, try number: " + str(count))
                     if count == 3:
                         logging.InstallLog.writeToFile(
-                            "Failed to install project dependant modules! [setupVirtualEnv]")
+                            "Failed to install Python project dependant modules! [setupVirtualEnv]")
                         break
                 else:
-                    logging.InstallLog.writeToFile("Project dependant modules installed successfully!")
-                    preFlightsChecks.stdOut("Project dependant modules installed successfully!!")
+                    logging.InstallLog.writeToFile("Python project dependant modules installed successfully!")
+                    preFlightsChecks.stdOut("Python project dependant modules installed successfully!!")
                     break
 
             command = "systemctl restart gunicorn.socket"
@@ -3190,6 +3198,26 @@ def get_distro():
 
     return distro
 
+
+def get_Ubuntu_release():
+    release = -1
+    if exists("/etc/lsb-release"):
+        distro_file = "/etc/lsb-release"
+        with open(distro_file) as f:
+            for line in f:
+                if line[:16] == "DISTRIB_RELEASE=":
+                    release = float(line[16:])
+
+        if release == -1:
+            preFlightsChecks.stdOut("Can't find distro release name in " + distro_file + " - fatal error", 1, 1,
+                                    os.EX_UNAVAILABLE)
+
+    else:
+        logging.InstallLog.writeToFile("Can't find linux release file - fatal error")
+        preFlightsChecks.stdOut("Can't find linux release file - fatal error")
+        os._exit(os.EX_UNAVAILABLE)
+
+    return release
 
 
 def main():
