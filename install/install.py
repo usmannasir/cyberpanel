@@ -320,7 +320,7 @@ class preFlightsChecks:
         count = 0
         while (1):
             if self.distro == ubuntu:
-                command = "apt-get -y install python-pip"
+                command = "apt-get -y install python-pip libcurl4-openssl-dev"
             else:
                 command = "yum -y install python-pip"
             res = subprocess.call(shlex.split(command))
@@ -2983,9 +2983,9 @@ milter_default_action = accept
                 if distro == centos:
                     command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
                 else:
-                    command = 'apt-get -y install libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev ' \
-                              'libcurl4-openssl-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev librtmp-dev ' \
-                              'libpsl-dev nettle-dev libgnutls28-dev libldap2-dev'
+                    command = 'apt-get -y install libattr1 libattr1-dev liblzma-dev libgpgme-dev ' \
+                              'libmariadbclient-dev libcurl4-openssl-dev libssl-dev nghttp2 libnghttp2-dev idn2 ' \
+                              'libidn2-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev'
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -3262,13 +3262,11 @@ def main():
     checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
     checks.setup_postfix_davecot_config(mysql)
 
-
     checks.install_unzip()
     checks.install_zip()
     checks.install_rsync()
 
     checks.downoad_and_install_raindloop()
-
 
     checks.download_install_phpmyadmin()
 

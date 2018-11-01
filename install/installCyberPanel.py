@@ -232,11 +232,13 @@ class InstallCyberPanel:
             while (1):
 
                 if self.distro == ubuntu:
-                    command = 'apt-get -y install lsphp*'
+                    command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp*'
+                    res = os.system(command)
+
                 else:
                     command = 'yum -y groupinstall lsphp-all'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
 
                 if res == 1:
                     count = count + 1
