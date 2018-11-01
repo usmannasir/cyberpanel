@@ -2676,7 +2676,7 @@ class preFlightsChecks:
         print("                Visit: https://" + self.ipAddr + ":8090                ")
         print("                Username: admin                                    ")
         print("                Password: 1234567                                  ")
-        print("                Database password in /etc/mysqlPassword            ")
+        print("                Database password in /etc/cyberpanel/mysqlPassword ")
         print("                                                                   ")
         print("###################################################################")
 
