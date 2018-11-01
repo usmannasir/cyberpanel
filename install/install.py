@@ -89,7 +89,7 @@ class preFlightsChecks:
                     writeDataToFile = open(fileName, 'w')
                     for line in data:
                         if line[:5] == '%sudo':
-                            writeDataToFile.write('%sudo ALL=ALL NOPASSWD:ALL\n')
+                            writeDataToFile.write('%sudo ALL=(ALL:ALL) NOPASSWD: ALL\n')
                         else:
                             writeDataToFile.write(line)
                     writeDataToFile.close()
