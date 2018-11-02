@@ -320,7 +320,7 @@ class preFlightsChecks:
         count = 0
         while (1):
             if self.distro == ubuntu:
-                command = "apt-get -y install python-pip libcurl4-gnutls-dev libgnutls-dev libgcrypt20-dev"
+                command = "apt-get -y install python-pip"
             else:
                 command = "yum -y install python-pip"
             res = subprocess.call(shlex.split(command))
@@ -2972,36 +2972,69 @@ milter_default_action = accept
             return 0
 
     @staticmethod
+    def installOne(package):
+        res = subprocess.call(shlex.split('apt-get -y install ' + package))
+        if res != 0:
+            preFlightsChecks.stdOut("Error #" + str(res) + ' installing:' + package + '.  This may not be an issue ' \
+                                    'but may affect installation of something later', 1)
+        return res #Though probably not used
+
+
+    @staticmethod
     def setupVirtualEnv(distro):
         try:
 
             ##
 
             count = 0
-            while (1):
-                if distro == centos:
+            if distro == ubuntu:
+                # You can't install all at once!  So install one at a time.
+                preFlightsChecks.stdOut("Installing python prerequisites", 1)
+                preFlightsChecks.installOne('libcurl4-gnutls-dev')
+                preFlightsChecks.installOne('libgnutls-dev')
+                preFlightsChecks.installOne('libgcrypt20-dev')
+                preFlightsChecks.installOne('libattr1')
+                preFlightsChecks.installOne('libattr1-dev')
+                preFlightsChecks.installOne('liblzma-dev')
+                preFlightsChecks.installOne('libgpgme-dev')
+                preFlightsChecks.installOne('libmariadbclient-dev')
+                preFlightsChecks.installOne('libcurl4-gnutls-dev')
+                preFlightsChecks.installOne('libssl-dev')
+                preFlightsChecks.installOne('nghttp2')
+                preFlightsChecks.installOne('libnghttp2-dev')
+                preFlightsChecks.installOne('idn2')
+                preFlightsChecks.installOne('libidn2-dev')
+                preFlightsChecks.installOne('libidn2-0-dev')
+                preFlightsChecks.installOne('librtmp-dev')
+                preFlightsChecks.installOne('libpsl-dev')
+                preFlightsChecks.installOne('nettle-dev')
+                preFlightsChecks.installOne('libgnutls28-dev')
+                preFlightsChecks.installOne('libldap2-dev')
+                preFlightsChecks.installOne('libgssapi-krb5-2')
+                preFlightsChecks.installOne('libk5crypto3')
+                preFlightsChecks.installOne('libkrb5-dev')
+                preFlightsChecks.installOne('libcomerr2')
+                preFlightsChecks.installOne('libldap2-dev')
+                preFlightsChecks.installOne('python-gpg')
+                preFlightsChecks.installOne('python-gpgme')
+            else:
+                while (1):
                     command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
-                else:
-                    command = 'apt-get -y install libattr1 libattr1-dev liblzma-dev libgpgme-dev ' \
-                              'libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 ' \
-                              'libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev ' \
-                              'libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev ' \
-                              'python-gpg python-gpgme'
-                res = subprocess.call(shlex.split(command))
+                    res = subprocess.call(shlex.split(command))
 
-                if res == 1:
-                    count = count + 1
-                    preFlightsChecks.stdOut(
-                        "Trying to install project dependant modules, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Failed to install project dependant modules! [setupVirtualEnv]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("Project dependant modules installed successfully!")
-                    preFlightsChecks.stdOut("Project dependant modules installed successfully!!")
-                    break
+                    if res == 1:
+                        count = count + 1
+                        preFlightsChecks.stdOut(
+                            "Trying to install project dependant modules, trying again, try number: " + str(count))
+                        if count == 3:
+                            logging.InstallLog.writeToFile(
+                                "Failed to install project dependant modules! [setupVirtualEnv]")
+                            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                            os._exit(0)
+                    else:
+                        logging.InstallLog.writeToFile("Project dependant modules installed successfully!")
+                        preFlightsChecks.stdOut("Project dependant modules installed successfully!!")
+                        break
 
             ##
 
