@@ -972,7 +972,7 @@ class InstallCyberPanel:
                 else:
                     command = 'yum -y install pdns pdns-backend-mysql'
                     cmd = shlex.split(command)
-                    res = subprocess.call(cmd, shell=True)
+                    res = subprocess.call(cmd)
 
                 if res == 1:
                     count = count + 1
