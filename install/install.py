@@ -3095,7 +3095,7 @@ milter_default_action = accept
                 fd_new = open(install_file_new,'w')
                 lines = fd.readlines()
                 for line in lines:
-                    if line[:6] != 'pycurl':
+                    if line[:6] != 'pycurl' and line[:7] != 'pygpgme':
                         fd_new.write(line)
                 fd.close()
                 fd_new.close()
