@@ -232,7 +232,7 @@ class InstallCyberPanel:
             while (1):
 
                 if self.distro == ubuntu:
-                    command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp*'
+                    command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp7*'
                     res = os.system(command)
 
                 else:
