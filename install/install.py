@@ -3089,12 +3089,18 @@ milter_default_action = accept
             ##
 
             install_file = '/usr/local/CyberCP/requirments.txt'
-            #if distro == ubuntu and get_Ubuntu_release() < 18.04:
-            #    install_file_new = '/usr/local/CyberCP/requirements.txt'
-            #    preFlightsChecks.stdOut("Install updated " + install_file_new, 1)
-            #    command = "sed 's/==[0-9.]*//g' " + install_file + " | sed 's/Django/Django<2/g' > " + install_file_new
-            #    os.system(command)
-            #    install_file = install_file_new
+            if distro == ubuntu and get_Ubuntu_release() < 18.04:
+                install_file_new = '/usr/local/CyberCP/requirements.txt'
+                fd = open(install_file,'r')
+                fd_new = open(install_file_new,'w')
+                lines = fd.readlines()
+                for line in lines:
+                    if line[:6] != 'pycurl':
+                        fd_new.write(line)
+                fd.close()
+                fd_new.close()
+                preFlightsChecks.stdOut("Install updated " + install_file_new, 1)
+                install_file = install_file_new
 
             count = 0
             while (1):
