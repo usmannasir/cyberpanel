@@ -3,11 +3,19 @@ import subprocess
 import os
 import pexpect
 from mysqlUtilities import mysqlUtilities
+import install
 import installLog as logging
 import shlex
 import randomPassword
+import errno
+import MySQLdb as mariadb
+import re
 import time
 import sys
+
+#distros
+centos=0
+ubuntu=1
 
 
 class InstallCyberPanel:
@@ -15,18 +23,14 @@ class InstallCyberPanel:
     mysql_Root_password = ""
     mysqlPassword = ""
 
-    def __init__(self,rootPath,cwd):
+    def __init__(self,rootPath,cwd,distro):
         self.server_root_path = rootPath
         self.cwd = cwd
+        self.distro=distro
 
     @staticmethod
-    def stdOut(message):
-        print("\n\n")
-        print ("[" + time.strftime(
-            "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
-        print("[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + message + "\n")
-        print ("[" + time.strftime(
-            "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
+    def stdOut(message, log = 0, exit = 0, code = os.EX_OK):
+        install.preFlightsChecks.stdOut(message, log, exit, code)
 
 
     def installLiteSpeed(self):
@@ -34,7 +38,10 @@ class InstallCyberPanel:
             count = 0
             while (1):
 
-                command = 'yum install -y openlitespeed'
+                if self.distro == ubuntu:
+                    command = "apt-get -y install openlitespeed"
+                else:
+                    command = 'yum install -y openlitespeed'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -224,9 +231,14 @@ class InstallCyberPanel:
 
             while (1):
 
-                command = 'yum -y groupinstall lsphp-all'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+                if self.distro == ubuntu:
+                    command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp7*'
+                    res = os.system(command)
+
+                else:
+                    command = 'yum -y groupinstall lsphp-all'
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
 
                 if res == 1:
                     count = count + 1
@@ -240,42 +252,43 @@ class InstallCyberPanel:
                     InstallCyberPanel.stdOut("LiteSpeed PHPs successfully installed!")
 
                     ## only php 71
-                    count = 0
-                    while(1):
-                        command = 'yum install lsphp71 lsphp71-json lsphp71-xmlrpc lsphp71-xml lsphp71-tidy lsphp71-soap lsphp71-snmp lsphp71-recode lsphp71-pspell lsphp71-process lsphp71-pgsql lsphp71-pear lsphp71-pdo lsphp71-opcache lsphp71-odbc lsphp71-mysqlnd lsphp71-mcrypt lsphp71-mbstring lsphp71-ldap lsphp71-intl lsphp71-imap lsphp71-gmp lsphp71-gd lsphp71-enchant lsphp71-dba  lsphp71-common  lsphp71-bcmath -y'
-                        cmd = shlex.split(command)
-                        res = subprocess.call(cmd)
-                        if res == 1:
-                            count = count + 1
-                            InstallCyberPanel.stdOut("Trying to install LiteSpeed PHP 7.1, trying again, try number: " + str(count))
-                            if count == 3:
-                                logging.InstallLog.writeToFile("Failed to install LiteSpeed PHP 7.1, exiting installer! [installAllPHPVersions]")
-                                InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                                os._exit(0)
-                        else:
-                            logging.InstallLog.writeToFile("LiteSpeed PHP 7.1 successfully installed!")
-                            InstallCyberPanel.stdOut("LiteSpeed PHP 7.1 successfully installed!")
-                            break
+                    if self.distro == centos:
+                        count = 0
+                        while(1):
+                            command = 'yum install lsphp71 lsphp71-json lsphp71-xmlrpc lsphp71-xml lsphp71-tidy lsphp71-soap lsphp71-snmp lsphp71-recode lsphp71-pspell lsphp71-process lsphp71-pgsql lsphp71-pear lsphp71-pdo lsphp71-opcache lsphp71-odbc lsphp71-mysqlnd lsphp71-mcrypt lsphp71-mbstring lsphp71-ldap lsphp71-intl lsphp71-imap lsphp71-gmp lsphp71-gd lsphp71-enchant lsphp71-dba  lsphp71-common  lsphp71-bcmath -y'
+                            cmd = shlex.split(command)
+                            res = subprocess.call(cmd)
+                            if res == 1:
+                                count = count + 1
+                                InstallCyberPanel.stdOut("Trying to install LiteSpeed PHP 7.1, trying again, try number: " + str(count))
+                                if count == 3:
+                                    logging.InstallLog.writeToFile("Failed to install LiteSpeed PHP 7.1, exiting installer! [installAllPHPVersions]")
+                                    InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                                    os._exit(0)
+                            else:
+                                logging.InstallLog.writeToFile("LiteSpeed PHP 7.1 successfully installed!")
+                                InstallCyberPanel.stdOut("LiteSpeed PHP 7.1 successfully installed!")
+                                break
 
-                    ## only php 72
-                    count = 0
-                    while (1):
-                        command = 'yum install -y lsphp72 lsphp72-json lsphp72-xmlrpc lsphp72-xml lsphp72-tidy lsphp72-soap lsphp72-snmp lsphp72-recode lsphp72-pspell lsphp72-process lsphp72-pgsql lsphp72-pear lsphp72-pdo lsphp72-opcache lsphp72-odbc lsphp72-mysqlnd lsphp72-mcrypt lsphp72-mbstring lsphp72-ldap lsphp72-intl lsphp72-imap lsphp72-gmp lsphp72-gd lsphp72-enchant lsphp72-dba  lsphp72-common  lsphp72-bcmath'
-                        cmd = shlex.split(command)
-                        res = subprocess.call(cmd)
-                        if res == 1:
-                            count = count + 1
-                            InstallCyberPanel.stdOut(
-                                    "Trying to install LiteSpeed PHP 7.1, trying again, try number: " + str(count))
-                            if count == 3:
-                                logging.InstallLog.writeToFile(
-                                        "Failed to install LiteSpeed PHP 7.1, exiting installer! [installAllPHPVersions]")
-                                InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                                os._exit(0)
-                        else:
-                            logging.InstallLog.writeToFile("LiteSpeed PHP 7.1 successfully installed!")
-                            InstallCyberPanel.stdOut("LiteSpeed PHP 7.1 successfully installed!")
-                            break
+                        ## only php 72
+                        count = 0
+                        while (1):
+                            command = 'yum install -y lsphp72 lsphp72-json lsphp72-xmlrpc lsphp72-xml lsphp72-tidy lsphp72-soap lsphp72-snmp lsphp72-recode lsphp72-pspell lsphp72-process lsphp72-pgsql lsphp72-pear lsphp72-pdo lsphp72-opcache lsphp72-odbc lsphp72-mysqlnd lsphp72-mcrypt lsphp72-mbstring lsphp72-ldap lsphp72-intl lsphp72-imap lsphp72-gmp lsphp72-gd lsphp72-enchant lsphp72-dba  lsphp72-common  lsphp72-bcmath'
+                            cmd = shlex.split(command)
+                            res = subprocess.call(cmd)
+                            if res == 1:
+                                count = count + 1
+                                InstallCyberPanel.stdOut(
+                                        "Trying to install LiteSpeed PHP 7.1, trying again, try number: " + str(count))
+                                if count == 3:
+                                    logging.InstallLog.writeToFile(
+                                            "Failed to install LiteSpeed PHP 7.1, exiting installer! [installAllPHPVersions]")
+                                    InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                                    os._exit(0)
+                            else:
+                                logging.InstallLog.writeToFile("LiteSpeed PHP 7.1 successfully installed!")
+                                InstallCyberPanel.stdOut("LiteSpeed PHP 7.1 successfully installed!")
+                                break
 
 
                     ## break for outer loop
@@ -292,8 +305,14 @@ class InstallCyberPanel:
 
 
     def setup_mariadb_repo(self):
-        try:
+        if self.distro == ubuntu:
+            # Only needed if the repo is broken or we need the latest version.
+            #command = "apt-get -y install software-properties-common"
+            #command = "apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74CD1D8"
+            #command = "add-apt-repository 'deb [arch=amd64] http://mirror.zol.co.zw/mariadb/repo/10.3/ubuntu bionic main'"
+            return
 
+        try:
             logging.InstallLog.writeToFile("Setting up MariaDB Repo..")
             InstallCyberPanel.stdOut("Setting up MariaDB Repo..")
 
@@ -318,8 +337,10 @@ class InstallCyberPanel:
             count = 0
 
             while (1):
-
-                command = 'yum -y install mariadb-server'
+                if self.distro == ubuntu:
+                    command = "apt-get -y install mariadb-server"
+                else:
+                    command = 'yum -y install mariadb-server'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -446,14 +467,19 @@ class InstallCyberPanel:
 
             while(1):
 
-                command = "systemctl enable mysql"
+                if self.distro == ubuntu:
+                    command = "systemctl enable mariadb"
+                else:
+                    command = "systemctl enable mysql"
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
                     count = count + 1
-                    InstallCyberPanel.stdOut("Trying to enable MariaDB instance to start and system restart, trying again, try number: " + str(count))
+                    InstallCyberPanel.stdOut("Trying to enable MariaDB instance to start at system restart, "
+                                             "trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Failed to enable MariaDB instance to run at system restart, you can do this later using systemctl enable mysql! [installMySQL]")
+                        logging.InstallLog.writeToFile("Failed to enable MariaDB instance to run at system restart, "
+                                                       "you can do this later using systemctl enable mysql! [installMySQL]")
                         break
                 else:
                     logging.InstallLog.writeToFile("MariaDB instance successfully enabled at system restart!")
@@ -594,12 +620,42 @@ class InstallCyberPanel:
 
         return 1
 
+    def fixMariaDB(self):
+        self.stdOut("Setup MariaDB so it can support Cyberpanel's needs")
+
+        conn = mariadb.connect(user='root', passwd=self.mysql_Root_password)
+        cursor = conn.cursor()
+        cursor.execute('set global innodb_file_per_table = on;')
+        cursor.execute('set global innodb_file_format = Barracuda;')
+        cursor.execute('set global innodb_large_prefix = on;')
+        cursor.close()
+        conn.close()
+
+        try:
+            fileName = '/etc/mysql/mariadb.conf.d/50-server.cnf'
+            data = open(fileName, 'r').readlines()
+
+            writeDataToFile = open(fileName, 'w')
+            for line in data:
+                writeDataToFile.write(line.replace('utf8mb4','utf8'))
+            writeDataToFile.close()
+        except IOError as err:
+            self.stdOut("Error in setting: " + fileName + ": " + str(err), 1, 1, os.EX_OSERR)
+
+        os.system('systemctl restart mysql')
+
+        self.stdOut("MariaDB is now setup so it can support Cyberpanel's needs")
+
+
     def installPureFTPD(self):
         try:
 
             count = 0
             while (1):
-                command = "yum install -y pure-ftpd"
+                if self.distro == ubuntu:
+                    command = 'apt-get -y install pure-ftpd'
+                else:
+                    command = "yum install -y pure-ftpd"
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -713,9 +769,18 @@ class InstallCyberPanel:
         ############## Start pureftpd ######################
 
         try:
-
+            self.stdOut("Correct configuration with pure-ftpd")
             count = 0
+            try:
+                os.mkdir("/etc/pure-ftpd/conf")
+                os.mkdir("/etc/pure-ftpd/auth")
+            except OSError as e:
+                pass
 
+            command = 'cp /etc/pure-ftpd/pure-ftpd.conf /etc/pure-ftpd/conf/pure-ftpd.conf'
+            res = subprocess.call(shlex.split(command))
+
+            self.stdOut("Start the pure-ftp service")
             while(1):
                 cmd = []
 
@@ -729,7 +794,8 @@ class InstallCyberPanel:
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to start PureFTPD instance, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Failed to start PureFTPD instance, you can do this manually later using systemctl start pure-ftpd [startPureFTPD]")
+                        logging.InstallLog.writeToFile("Failed to start PureFTPD instance, you can do this manually "
+                                                       "later using systemctl start pure-ftpd [startPureFTPD]")
                         break
                 else:
                     logging.InstallLog.writeToFile("PureFTPD instance successfully started!")
@@ -762,7 +828,9 @@ class InstallCyberPanel:
             count = 0
 
             while(1):
-                command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
+                command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj ' \
+                          '"/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" ' \
+                          '-keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -822,51 +890,89 @@ class InstallCyberPanel:
 
             count = 0
 
-            while (1):
-                command = 'yum -y install epel-release yum-plugin-priorities'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+            if self.distro == ubuntu:
+                command = 'systemctl stop systemd-resolved'
+                res = subprocess.call(shlex.split(command))
+                if res != 0:
+                    InstallCyberPanel.stdOut('Unable to stop systemd.resolved, prohits install of PowerDNS, error #' +
+                                             str(res), 1, 1, os.EX_OSERR)
+                command = 'systemctl disable systemd-resolved.service'
+                res = subprocess.call(shlex.split(command))
+                if res != 0:
+                    InstallCyberPanel.stdOut('Unable to disable systemd.resolved, prohits install of PowerDNS, error #' +
+                                             str(res), 1, 1, os.EX_OSERR)
+                try:
+                    os.rename('/etc/resolv.conf', 'etc/resolved.conf')
+                except OSError as e:
+                    if e.errno != errno.EEXIST and e.errno != errno.ENOENT:
+                        InstallCyberPanel.stdOut("Unable to rename /etc/resolv.conf to install PowerDNS: " +
+                                                 str(e), 1, 1, os.EX_OSERR)
+                    try:
+                        os.remove('/etc/resolv.conf')
+                    except OSError as e1:
+                        InstallCyberPanel.stdOut("Unable to remove existing /etc/resolv.conf to install PowerDNS: " +
+                                                 str(e1), 1, 1, os.EX_OSERR)
+                try:
+                    f = open('/etc/resolv.conf', 'w')
+                    f.write('nameserver 8.8.8.8')
+                    f.close()
+                except IOError as e:
+                    InstallCyberPanel.stdOut("Unable to create /etc/resolv.conf: " + str(e) +
+                                             ".  This may need to be fixed manually as 'echo \"nameserver 8.8.8.8\"> "
+                                             "/etc/resolv.conf'", 1, 1, os.EX_OSERR)
 
-                if res == 1:
-                    count = count + 1
-                    InstallCyberPanel.stdOut("Trying to install PowerDNS Repositories, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Failed to install PowerDNS Repositories, exiting installer! [installPowerDNS]")
-                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("PowerDNS Repositories successfully installed!")
-                    InstallCyberPanel.stdOut("PowerDNS Repositories successfully installed!")
-                    break
 
-            count = 0
+            if self.distro == centos:
+                while (1):
+                    command = 'yum -y install epel-release yum-plugin-priorities'
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
 
-            while(1):
+                    if res == 1:
+                        count = count + 1
+                        InstallCyberPanel.stdOut("Trying to install PowerDNS Repositories, trying again, try number: " + str(count))
+                        if count == 3:
+                            logging.InstallLog.writeToFile("Failed to install PowerDNS Repositories, exiting installer! [installPowerDNS]")
+                            InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                            os._exit(0)
+                    else:
+                        logging.InstallLog.writeToFile("PowerDNS Repositories successfully installed!")
+                        InstallCyberPanel.stdOut("PowerDNS Repositories successfully installed!")
+                        break
 
-                command = 'curl -o /etc/yum.repos.d/powerdns-auth-master.repo https://repo.powerdns.com/repo-files/centos-auth-master.repo'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+                count = 0
 
-                if res == 1:
-                    count = count + 1
-                    InstallCyberPanel.stdOut(
-                        "Trying to install PowerDNS Repositories, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Failed to install PowerDNS Repositories, exiting installer! [installPowerDNS]")
-                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("PowerDNS Repositories successfully installed!")
-                    InstallCyberPanel.stdOut("PowerDNS Repositories successfully installed!")
-                    break
+                while(1):
+
+                    command = 'curl -o /etc/yum.repos.d/powerdns-auth-master.repo ' \
+                              'https://repo.powerdns.com/repo-files/centos-auth-master.repo'
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
+
+                    if res == 1:
+                        count = count + 1
+                        InstallCyberPanel.stdOut(
+                            "Trying to install PowerDNS Repositories, trying again, try number: " + str(count))
+                        if count == 3:
+                            logging.InstallLog.writeToFile(
+                                "Failed to install PowerDNS Repositories, exiting installer! [installPowerDNS]")
+                            InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                            os._exit(0)
+                    else:
+                        logging.InstallLog.writeToFile("PowerDNS Repositories successfully installed!")
+                        InstallCyberPanel.stdOut("PowerDNS Repositories successfully installed!")
+                        break
 
             count = 1
 
             while(1):
-                command = 'yum -y install pdns pdns-backend-mysql'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+                if self.distro == ubuntu:
+                    command = "DEBIAN_FRONTEND=noninteractive apt-get -y install pdns-server pdns-backend-mysql"
+                    res = os.system(command)
+                else:
+                    command = 'yum -y install pdns pdns-backend-mysql'
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
 
                 if res == 1:
                     count = count + 1
@@ -896,7 +1002,10 @@ class InstallCyberPanel:
             InstallCyberPanel.stdOut("Configuring PowerDNS..")
 
             os.chdir(self.cwd)
-            dnsPath = "/etc/pdns/pdns.conf"
+            if self.distro == centos:
+                dnsPath = "/etc/pdns/pdns.conf"
+            else:
+                dnsPath = "/etc/powerdns/pdns.conf"
 
             if os.path.exists(dnsPath):
                 os.remove(dnsPath)
@@ -956,7 +1065,9 @@ class InstallCyberPanel:
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to enable PowerDNS to start and system restart, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Failed to enable PowerDNS to run at system restart, you can manually do this later using systemctl enable pdns! [startPowerDNS]")
+                        logging.InstallLog.writeToFile("Failed to enable PowerDNS to run at system restart, you can "
+                                                       "manually do this later using systemctl enable pdns! "
+                                                       "[startPowerDNS]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                         break
                 else:
@@ -1004,7 +1115,10 @@ class InstallCyberPanel:
             count = 0
 
             while(1):
-                command = 'yum -y install gcc gcc-c++ make autoconf glibc rcs'
+                if self.distro == ubuntu:
+                    command = "apt-get -y install gcc g++ make autoconf rcs"
+                else:
+                    command = 'yum -y install gcc gcc-c++ make autoconf glibc rcs'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -1023,7 +1137,12 @@ class InstallCyberPanel:
             count = 0
 
             while(1):
-                command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel which curl'
+                if self.distro == ubuntu:
+                    command = "apt-get -y install libpcre3 libpcre3-dev openssl libexpat1 libexpat1-dev libgeoip-dev" \
+                              " zlib1g zlib1g-dev libudns-dev whichman curl"
+                else:
+                    command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel' \
+                              ' which curl'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -1049,20 +1168,22 @@ class InstallCyberPanel:
 
                 if res == 1:
                     count = count + 1
-                    InstallCyberPanel.stdOut("Trying to configure LSCPD, trying again, try number: " + str(count))
+                    InstallCyberPanel.stdOut("Trying to extract LSCPD, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Failed to configure LSCPD, exiting installer! [installLSCPD]")
+                        logging.InstallLog.writeToFile("Failed to extract LSCPD, exiting installer! [installLSCPD]")
                         InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                         os._exit(0)
                 else:
-                    logging.InstallLog.writeToFile("LSCPD successfully configured!")
+                    logging.InstallLog.writeToFile("LSCPD successfully extracted!")
                     InstallCyberPanel.stdOut("LSCPD successfully extracted!")
                     break
 
             count = 0
             while(1):
 
-                command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /usr/local/lscp/key.pem -out /usr/local/lscp/cert.pem'
+                command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj ' \
+                          '"/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /usr/local/lscp/key.pem ' \
+                          '-out /usr/local/lscp/cert.pem'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -1083,13 +1204,19 @@ class InstallCyberPanel:
             except:
                 pass
 
-            command = 'adduser lscpd -M -d /usr/local/lscp'
+            if self.distro == centos:
+                command = 'adduser lscpd -M -d /usr/local/lscp'
+            else:
+                command = 'useradd lscpd -M -d /usr/local/lscp'
+
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
 
-            command = 'groupadd lscpd'
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            if self.distro == centos:
+                command = 'groupadd lscpd'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+                # Added group in useradd for Ubuntu
 
             command = 'usermod -a -G lscpd lscpd'
             cmd = shlex.split(command)
@@ -1115,17 +1242,25 @@ class InstallCyberPanel:
 
 
 
-def Main(cwd, mysql):
+def Main(cwd, mysql, distro):
 
-    InstallCyberPanel.mysqlPassword = randomPassword.generate_pass()
     InstallCyberPanel.mysql_Root_password = randomPassword.generate_pass()
 
-
-    password = open("/etc/cyberpanel/mysqlPassword","w")
-    password.writelines(InstallCyberPanel.mysql_Root_password)
+    file_name = '/etc/cyberpanel/mysqlPassword'
+    if os.access(file_name, os.F_OK):
+        password = open(file_name, 'r')
+        InstallCyberPanel.mysql_Root_password = password.readline()
+    else:
+        password = open(file_name, "w")
+        password.writelines(InstallCyberPanel.mysql_Root_password)
     password.close()
 
-    installer = InstallCyberPanel("/usr/local/lsws/",cwd)
+    if distro == centos:
+        InstallCyberPanel.mysqlPassword = randomPassword.generate_pass()
+    else:
+        InstallCyberPanel.mysqlPassword = InstallCyberPanel.mysql_Root_password
+
+    installer = InstallCyberPanel("/usr/local/lsws/", cwd, distro)
 
     installer.installLiteSpeed()
     installer.changePortTo80()
@@ -1133,15 +1268,15 @@ def Main(cwd, mysql):
     installer.installAllPHPVersions()
     installer.fix_ols_configs()
 
-
     installer.setup_mariadb_repo()
     installer.installMySQL(mysql)
     installer.changeMYSQLRootPassword()
     installer.changeMYSQLRootPasswordCyberPanel(mysql)
     installer.startMariaDB()
+    if distro == ubuntu:
+        installer.fixMariaDB()
 
-    mysqlUtilities.createDatabaseCyberPanel("cyberpanel","cyberpanel",InstallCyberPanel.mysqlPassword, mysql)
-
+    mysqlUtilities.createDatabaseCyberPanel("cyberpanel", "cyberpanel", InstallCyberPanel.mysqlPassword, mysql)
 
     installer.installPureFTPD()
     installer.installPureFTPDConfigurations(mysql)

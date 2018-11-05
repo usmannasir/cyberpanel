@@ -6,19 +6,41 @@ import argparse
 import os
 import shlex
 import socket
+import install
 
 
+#distros
+centos=0
+ubuntu=1
+distro = install.get_distro()
 
 class unInstallCyberPanel:
 
-    def unInstallCyberPanelRepo(self):
+    def fixResolvConf(self):
+        if distro == centos:
+            return
+
+        if os.access('/etc/resolv.conf', os.F_OK):
+            return
 
         try:
-            copyPath = "/etc/yum.repos.d/cyberpanel.repo"
-            os.remove(copyPath)
+            f = open('/etc/resolv.conf', 'w')
+            f.write('nameserver 8.8.8.8')
+            f.close()
+        except IOError as e:
+            print "Unable to create /etc/resolv.conf: " + str(e) + \
+                  ".  This may need to be fixed manually as 'echo \"nameserver 8.8.8.8\"> " \
+                  "/etc/resolv.conf'"
 
-        except OSError,msg:
-            logging.InstallLog.writeToFile(str(msg)+ " [unInstallCyberPanelRepo]")
+    def unInstallCyberPanelRepo(self):
+
+        if distro == centos:
+            try:
+                copyPath = "/etc/yum.repos.d/cyberpanel.repo"
+                os.remove(copyPath)
+
+            except OSError,msg:
+                logging.InstallLog.writeToFile(str(msg)+ " [unInstallCyberPanelRepo]")
 
     def removeGunicorn(self):
         try:
@@ -40,7 +62,10 @@ class unInstallCyberPanel:
     def removePostfixDovecot(self):
         try:
 
-            command = 'yum -y remove postfix'
+            if distro == centos:
+                command = 'yum -y remove postfix'
+            else:
+                command = 'apt-get -y remove postfix'
 
             cmd = shlex.split(command)
 
@@ -62,7 +87,10 @@ class unInstallCyberPanel:
     def removeMysql(self):
         try:
 
-            command = 'yum -y remove mariadb mariadb-server'
+            if distro == centos:
+                command = 'yum -y remove mariadb mariadb-server'
+            else:
+                command = 'apt-get -y remove mariadb-server'
 
             cmd = shlex.split(command)
 
@@ -84,13 +112,16 @@ class unInstallCyberPanel:
     def removeLiteSpeed(self):
         try:
 
-           command = 'yum -y remove openlitespeed'
+            if distro == centos:
+                command = 'yum -y remove openlitespeed'
+            else:
+                command = 'apt-get --purge -y remove openlitespeed'
 
-           cmd = shlex.split(command)
+            cmd = shlex.split(command)
 
-           res = subprocess.call(cmd)
+            res = subprocess.call(cmd)
 
-           shutil.rmtree("/usr/local/lsws")
+            shutil.rmtree("/usr/local/lsws")
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [removeLiteSpeed]")
@@ -118,13 +149,16 @@ class unInstallCyberPanel:
     def removePureFTPD(self):
         try:
 
-           command = 'yum -y remove pure-ftpd'
+            if distro == centos:
+                command = 'yum -y remove pure-ftpd'
+            else:
+                command = 'apt-get -y remove pure-ftpd'
 
-           cmd = shlex.split(command)
+            cmd = shlex.split(command)
 
-           res = subprocess.call(cmd)
+            res = subprocess.call(cmd)
 
-           shutil.rmtree("/etc/pure-ftpd")
+            shutil.rmtree("/etc/pure-ftpd")
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [removePureFTPD]")
@@ -136,14 +170,16 @@ class unInstallCyberPanel:
 
     def removePowerDNS(self):
         try:
+            if distro == centos:
+                command = 'yum -y remove pdns'
+            else:
+                command = 'apt-get -y remove pdns-server'
 
-           command = 'yum -y remove pdns'
+            cmd = shlex.split(command)
 
-           cmd = shlex.split(command)
+            res = subprocess.call(cmd)
 
-           res = subprocess.call(cmd)
-
-           shutil.rmtree("/etc/pdns")
+            shutil.rmtree("/etc/pdns")
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [removePowerDNS]")
@@ -156,13 +192,16 @@ class unInstallCyberPanel:
     def removePHP(self):
         try:
 
-           command = 'yum -y remove lsphp*'
+            if distro == centos:
+                command = 'yum -y remove lsphp*'
+            else:
+                command = 'apt-get -y remove lsphp*'
 
-           cmd = shlex.split(command)
+            cmd = shlex.split(command)
 
-           res = subprocess.call(cmd)
+            res = subprocess.call(cmd)
 
-           shutil.rmtree("/etc/pdns")
+            shutil.rmtree("/etc/pdns")
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [removePHP]")
@@ -178,6 +217,7 @@ def Main():
 
     remove = unInstallCyberPanel()
 
+    remove.fixResolvConf()
     remove.removeLiteSpeed()
     remove.removeMysql()
     remove.removePostfixDovecot()
