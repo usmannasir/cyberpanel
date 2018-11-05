@@ -41,7 +41,7 @@ app.filter('getwebsitename', function() {
 
         if(domain !== undefined) {
 
-            domain = domain.replace("-", "");
+            domain = domain.replace(/-/g, '');
 
             var domainName = domain.split(".");
 

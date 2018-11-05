@@ -3,9 +3,6 @@
  */
 
 
-
-
-
 /* Java script code to create database */
 app.controller('createDatabase', function($scope,$http) {
 
@@ -38,8 +35,7 @@ app.controller('createDatabase', function($scope,$http) {
 
                 // getting website username
 
-                webUserName = databaseWebsite.replace("-", "");
-
+                webUserName = databaseWebsite.replace(/-/g, '');
                 webUserName = webUserName.split(".")[0];
 
                 if(webUserName.length > 5){
@@ -54,7 +50,7 @@ app.controller('createDatabase', function($scope,$http) {
                     databaseWebsite:databaseWebsite,
                     dbName:dbName,
                     dbUsername:dbUsername,
-                    dbPassword:dbPassword,
+                    dbPassword:dbPassword
                 };
 
                 var config = {
@@ -279,7 +275,6 @@ app.controller('deleteDatabase', function($scope,$http) {
 });
 
 /* Java script code to delete database ends here */
-
 
 
 /* Java script code to list  databases */

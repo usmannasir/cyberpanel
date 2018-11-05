@@ -14,7 +14,7 @@ fileManager.controller('fileManagerCtrl', function($scope,$http,FileUploader, $w
     var editor = ace.edit("htmlEditorContent");
     var aceEditorMode = '';
 
-    var domainName = window.location.pathname.split("/")[2];
+    var domainName = $("#domainNameInitial").text();
     var domainRandomSeed = "";
 
     var homePathBack = "/home/"+domainName;

@@ -25,7 +25,7 @@ def loadFileManagerHome(request,domain):
             currentACL = ACLManager.loadedACL(userID)
 
             if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
-                return render(request, 'filemanager/index.html')
+                return render(request, 'filemanager/index.html', {'domainName': domain})
             else:
                 return ACLManager.loadError()
         else:

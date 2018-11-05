@@ -348,6 +348,20 @@ class DNS:
                     record.save()
                 return
 
+            if type == 'TXT':
+                if Records.objects.filter(name=name, type=type, content=value).count() == 0:
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=name,
+                                     type=type,
+                                     content=value,
+                                     ttl=ttl,
+                                     prio=priority,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+                return
+
             if type == 'MX':
                 record = Records(domainOwner=zone,
                                  domain_id=zone.id,
@@ -359,6 +373,7 @@ class DNS:
                                  disabled=0,
                                  auth=1)
                 record.save()
+                return
 
 
             if Records.objects.filter(name=name, type=type).count() == 0:
