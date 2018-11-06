@@ -1457,9 +1457,9 @@ class preFlightsChecks:
 
            ###############Getting SSL
 
-           count = 0
+            count = 0
 
-           while(1):
+            while(1):
                 command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/postfix/key.pem -out /etc/postfix/cert.pem'
 
                 cmd = shlex.split(command)
@@ -1476,7 +1476,7 @@ class preFlightsChecks:
                     logging.InstallLog.writeToFile("SSL for Postfix generated!")
                     preFlightsChecks.stdOut("SSL for Postfix generated!")
                     break
-           ##
+            ##
 
             count = 0
 
@@ -1535,516 +1535,516 @@ class preFlightsChecks:
                 shutil.copy("email-configs-one/dovecot-sql.conf.ext", davecotmysql)
 
 
-           ######################################## Permissions
+            ######################################## Permissions
 
-           count = 0
+            count = 0
 
-           while(1):
+            while(1):
 
-               command = 'chmod o= /etc/postfix/mysql-virtual_domains.cf'
+                command = 'chmod o= /etc/postfix/mysql-virtual_domains.cf'
 
-               cmd = shlex.split(command)
+                cmd = shlex.split(command)
 
-               res = subprocess.call(cmd)
+                res = subprocess.call(cmd)
 
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_domains.cf, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to change permissions for mysql-virtual_domains.cf. [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("Permissions changed for mysql-virtual_domains.cf!")
-                   preFlightsChecks.stdOut("Permissions changed for mysql-virtual_domains.cf!")
-                   break
-
-           ##
-
-           count = 0
-
-           while(1):
-
-               command = 'chmod o= /etc/postfix/mysql-virtual_forwardings.cf'
-
-               cmd = shlex.split(command)
-
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_forwardings.cf, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to change permissions for mysql-virtual_forwardings.cf! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("Permissions changed for mysql-virtual_forwardings.cf!")
-                   preFlightsChecks.stdOut("Permissions changed for mysql-virtual_forwardings.cf!")
-                   break
-
-
-           ##
-
-           count = 0
-
-           while(1):
-
-               command = 'chmod o= /etc/postfix/mysql-virtual_mailboxes.cf'
-               cmd = shlex.split(command)
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_mailboxes.cf, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to change permissions for mysql-virtual_mailboxes.cf! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("Permissions changed for mysql-virtual_mailboxes.cf!")
-                   preFlightsChecks.stdOut("Permissions changed for mysql-virtual_mailboxes.cf!")
-                   break
-
-           ##
-
-           count = 0
-
-           while(1):
-
-               command = 'chmod o= /etc/postfix/mysql-virtual_email2email.cf'
-               cmd = shlex.split(command)
-
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_email2email.cf, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to change permissions for mysql-virtual_email2email.cf! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("Permissions changed for mysql-virtual_email2email.cf!")
-                   preFlightsChecks.stdOut("Permissions changed for mysql-virtual_email2email.cf!")
-                   break
-
-           ##
-
-           count = 0
-
-           while(1):
-
-               command = 'chmod o= '+main
-               cmd = shlex.split(command)
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to change permissions for /etc/postfix/main.cf, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to change permissions for /etc/postfix/main.cf! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("Permissions changed for /etc/postfix/main.cf!")
-                   preFlightsChecks.stdOut("Permissions changed for /etc/postfix/main.cf!")
-                   break
-
-           ##
-
-           count = 0
-
-           while(1):
-
-               command = 'chmod o= '+master
-
-               cmd = shlex.split(command)
-
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to change permissions for /etc/postfix/master.cf, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to change permissions for /etc/postfix/master.cf! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("Permissions changed for /etc/postfix/master.cf!")
-                   preFlightsChecks.stdOut("Permissions changed for /etc/postfix/master.cf!")
-                   break
-
-
-           #######################################
-
-           count = 0
-
-           while(1):
-               command = 'chgrp postfix /etc/postfix/mysql-virtual_domains.cf'
-
-               cmd = shlex.split(command)
-
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to change group for mysql-virtual_domains.cf, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to change group for mysql-virtual_domains.cf! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("Group changed for mysql-virtual_domains.cf!")
-                   preFlightsChecks.stdOut("Group changed for mysql-virtual_domains.cf!")
-                   break
-
-           ##
-
-           count = 0
-
-           while(1):
-               command = 'chgrp postfix /etc/postfix/mysql-virtual_forwardings.cf'
-               cmd = shlex.split(command)
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to change group for mysql-virtual_forwardings.cf, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to change group for mysql-virtual_forwardings.cf! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("Group changed for mysql-virtual_forwardings.cf!")
-                   preFlightsChecks.stdOut("Group changed for mysql-virtual_forwardings.cf!")
-                   break
-
-           ##
-
-           count = 0
-
-           while(1):
-               command = 'chgrp postfix /etc/postfix/mysql-virtual_mailboxes.cf'
-               cmd = shlex.split(command)
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to change group for mysql-virtual_mailboxes.cf, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to change group for mysql-virtual_mailboxes.cf! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("Group changed for mysql-virtual_mailboxes.cf!")
-                   preFlightsChecks.stdOut("Group changed for mysql-virtual_mailboxes.cf!")
-                   break
-
-           ##
-
-           count = 0
-
-           while(1):
-
-               command = 'chgrp postfix /etc/postfix/mysql-virtual_email2email.cf'
-               cmd = shlex.split(command)
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to change group for mysql-virtual_email2email.cf, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to change group for mysql-virtual_email2email.cf! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("Group changed for mysql-virtual_email2email.cf!")
-                   preFlightsChecks.stdOut("Group changed for mysql-virtual_email2email.cf!")
-                   break
-
-           ##
-
-           count = 0
-           while(1):
-               command = 'chgrp postfix '+main
-               cmd = shlex.split(command)
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to change group for /etc/postfix/main.cf, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to change group for /etc/postfix/main.cf! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("Group changed for /etc/postfix/main.cf!")
-                   preFlightsChecks.stdOut("Group changed for /etc/postfix/main.cf!")
-                   break
-
-           ##
-
-           count = 0
-
-           while(1):
-
-               command = 'chgrp postfix ' + master
-
-               cmd = shlex.split(command)
-
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to change group for /etc/postfix/master.cf, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to change group for /etc/postfix/master.cf! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("Group changed for /etc/postfix/master.cf!")
-                   preFlightsChecks.stdOut("Group changed for /etc/postfix/master.cf!")
-                   break
-
-
-           ######################################## users and groups
-
-           count = 0
-
-           while(1):
-
-               command = 'groupadd -g 5000 vmail'
-
-               cmd = shlex.split(command)
-
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to add system group vmail, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to add system group vmail! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("System group vmail created successfully!")
-                   preFlightsChecks.stdOut("System group vmail created successfully!")
-                   break
-
-           ##
-
-           count = 0
-
-           while(1):
-
-               command = 'useradd -g vmail -u 5000 vmail -d /home/vmail -m'
-
-               cmd = shlex.split(command)
-
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to add system user vmail, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to add system user vmail! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("System user vmail created successfully!")
-                   preFlightsChecks.stdOut("System user vmail created successfully!")
-                   break
-
-
-           ######################################## Further configurations
-
-           #hostname = socket.gethostname()
-
-           ################################### Restart postix
-
-           count = 0
-
-           while(1):
-
-               command = 'systemctl enable postfix.service'
-
-               cmd = shlex.split(command)
-
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Trying to add Postfix to system startup, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Failed to enable Postfix to run at system restart you can manually do this using systemctl enable postfix.service! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("postfix.service successfully enabled!")
-                   preFlightsChecks.stdOut("postfix.service successfully enabled!")
-                   break
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_domains.cf, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to change permissions for mysql-virtual_domains.cf. [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Permissions changed for mysql-virtual_domains.cf!")
+                    preFlightsChecks.stdOut("Permissions changed for mysql-virtual_domains.cf!")
+                    break
 
             ##
 
-           count = 0
+            count = 0
 
-           while(1):
+            while(1):
 
-               command = 'systemctl start  postfix.service'
+                command = 'chmod o= /etc/postfix/mysql-virtual_forwardings.cf'
 
-               cmd = shlex.split(command)
+                cmd = shlex.split(command)
 
-               res = subprocess.call(cmd)
+                res = subprocess.call(cmd)
 
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Trying to start Postfix, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to start Postfix, you can not send email until you manually start Postfix using systemctl start postfix.service! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("postfix.service started successfully!")
-                   preFlightsChecks.stdOut("postfix.service started successfully!")
-                   break
-
-           ######################################## Permissions
-
-           count = 0
-
-           while(1):
-
-               command = 'chgrp dovecot /etc/dovecot/dovecot-sql.conf.ext'
-
-               cmd = shlex.split(command)
-
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to change group for /etc/dovecot/dovecot-sql.conf.ext, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to change group for /etc/dovecot/dovecot-sql.conf.ext! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("Group changed for /etc/dovecot/dovecot-sql.conf.ext!")
-                   preFlightsChecks.stdOut("Group changed for /etc/dovecot/dovecot-sql.conf.ext!")
-                   break
-           ##
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_forwardings.cf, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to change permissions for mysql-virtual_forwardings.cf! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Permissions changed for mysql-virtual_forwardings.cf!")
+                    preFlightsChecks.stdOut("Permissions changed for mysql-virtual_forwardings.cf!")
+                    break
 
 
-           count = 0
+            ##
 
-           while(1):
+            count = 0
 
-               command = 'chmod o= /etc/dovecot/dovecot-sql.conf.ext'
+            while(1):
 
-               cmd = shlex.split(command)
+                command = 'chmod o= /etc/postfix/mysql-virtual_mailboxes.cf'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
 
-               res = subprocess.call(cmd)
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_mailboxes.cf, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to change permissions for mysql-virtual_mailboxes.cf! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Permissions changed for mysql-virtual_mailboxes.cf!")
+                    preFlightsChecks.stdOut("Permissions changed for mysql-virtual_mailboxes.cf!")
+                    break
 
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to change permissions for /etc/dovecot/dovecot-sql.conf.ext, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to change permissions for /etc/dovecot/dovecot-sql.conf.ext! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("Permissions changed for /etc/dovecot/dovecot-sql.conf.ext!")
-                   preFlightsChecks.stdOut("Permissions changed for /etc/dovecot/dovecot-sql.conf.ext!")
-                   break
+            ##
 
-           ################################### Restart davecot
+            count = 0
 
-           count = 0
+            while(1):
 
+                command = 'chmod o= /etc/postfix/mysql-virtual_email2email.cf'
+                cmd = shlex.split(command)
 
-           while(1):
+                res = subprocess.call(cmd)
 
-               command = 'systemctl enable dovecot.service'
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_email2email.cf, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to change permissions for mysql-virtual_email2email.cf! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Permissions changed for mysql-virtual_email2email.cf!")
+                    preFlightsChecks.stdOut("Permissions changed for mysql-virtual_email2email.cf!")
+                    break
 
-               cmd = shlex.split(command)
+            ##
 
-               res = subprocess.call(cmd)
+            count = 0
 
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to enable dovecot.service, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to enable dovecot.service! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("dovecot.service successfully enabled!")
-                   preFlightsChecks.stdOut("dovecot.service successfully enabled!")
-                   break
+            while(1):
 
+                command = 'chmod o= '+main
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
 
-           ##
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to change permissions for /etc/postfix/main.cf, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to change permissions for /etc/postfix/main.cf! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Permissions changed for /etc/postfix/main.cf!")
+                    preFlightsChecks.stdOut("Permissions changed for /etc/postfix/main.cf!")
+                    break
 
+            ##
 
-           count = 0
+            count = 0
 
+            while(1):
 
-           while(1):
-               command = 'systemctl start dovecot.service'
-               cmd = shlex.split(command)
-               res = subprocess.call(cmd)
+                command = 'chmod o= '+master
 
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to start dovecot.service, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to start dovecot.service! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("dovecot.service successfully started!")
-                   preFlightsChecks.stdOut("dovecot.service successfully started!")
-                   break
+                cmd = shlex.split(command)
 
-           ##
+                res = subprocess.call(cmd)
 
-           count = 0
-
-           while(1):
-
-               command = 'systemctl restart  postfix.service'
-
-               cmd = shlex.split(command)
-
-               res = subprocess.call(cmd)
-
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to restart postfix.service, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to restart postfix.service! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("dovecot.service successfully restarted!")
-                   preFlightsChecks.stdOut("postfix.service successfully restarted!")
-                   break
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to change permissions for /etc/postfix/master.cf, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to change permissions for /etc/postfix/master.cf! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Permissions changed for /etc/postfix/master.cf!")
+                    preFlightsChecks.stdOut("Permissions changed for /etc/postfix/master.cf!")
+                    break
 
 
-           ## chaging permissions for main.cf
+            #######################################
 
-           count = 0
+            count = 0
 
-           while(1):
+            while(1):
+                command = 'chgrp postfix /etc/postfix/mysql-virtual_domains.cf'
 
-               command = "chmod 755 "+main
-               cmd = shlex.split(command)
-               res = subprocess.call(cmd)
+                cmd = shlex.split(command)
 
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to change permissions for /etc/postfix/main.cf, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to change permissions for /etc/postfix/main.cf! [setup_postfix_davecot_config]")
-                       break
-               else:
-                   logging.InstallLog.writeToFile("Permissions changed for /etc/postfix/main.cf!")
-                   preFlightsChecks.stdOut("Permissions changed for /etc/postfix/main.cf!")
-                   break
+                res = subprocess.call(cmd)
 
-           if self.distro == ubuntu:
-               command = "mkdir -p /etc/pki/dovecot/private/"
-               cmd = shlex.split(command)
-               res = subprocess.call(cmd)
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to change group for mysql-virtual_domains.cf, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to change group for mysql-virtual_domains.cf! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Group changed for mysql-virtual_domains.cf!")
+                    preFlightsChecks.stdOut("Group changed for mysql-virtual_domains.cf!")
+                    break
 
-               command = "mkdir -p /etc/opendkim/keys/"
-               cmd = shlex.split(command)
-               res = subprocess.call(cmd)
+            ##
 
-               command = "sed -i 's/auth_mechanisms = plain/#auth_mechanisms = plain/g' /etc/dovecot/conf.d/10-auth.conf"
-               subprocess.call(shlex.split(command))
+            count = 0
+
+            while(1):
+                command = 'chgrp postfix /etc/postfix/mysql-virtual_forwardings.cf'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to change group for mysql-virtual_forwardings.cf, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to change group for mysql-virtual_forwardings.cf! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Group changed for mysql-virtual_forwardings.cf!")
+                    preFlightsChecks.stdOut("Group changed for mysql-virtual_forwardings.cf!")
+                    break
+
+            ##
+
+            count = 0
+
+            while(1):
+                command = 'chgrp postfix /etc/postfix/mysql-virtual_mailboxes.cf'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to change group for mysql-virtual_mailboxes.cf, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to change group for mysql-virtual_mailboxes.cf! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Group changed for mysql-virtual_mailboxes.cf!")
+                    preFlightsChecks.stdOut("Group changed for mysql-virtual_mailboxes.cf!")
+                    break
+
+            ##
+
+            count = 0
+
+            while(1):
+
+                command = 'chgrp postfix /etc/postfix/mysql-virtual_email2email.cf'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to change group for mysql-virtual_email2email.cf, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to change group for mysql-virtual_email2email.cf! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Group changed for mysql-virtual_email2email.cf!")
+                    preFlightsChecks.stdOut("Group changed for mysql-virtual_email2email.cf!")
+                    break
+
+            ##
+
+            count = 0
+            while(1):
+                command = 'chgrp postfix '+main
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to change group for /etc/postfix/main.cf, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to change group for /etc/postfix/main.cf! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Group changed for /etc/postfix/main.cf!")
+                    preFlightsChecks.stdOut("Group changed for /etc/postfix/main.cf!")
+                    break
+
+            ##
+
+            count = 0
+
+            while(1):
+
+                command = 'chgrp postfix ' + master
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to change group for /etc/postfix/master.cf, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to change group for /etc/postfix/master.cf! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Group changed for /etc/postfix/master.cf!")
+                    preFlightsChecks.stdOut("Group changed for /etc/postfix/master.cf!")
+                    break
 
 
-           logging.InstallLog.writeToFile("Postfix and Dovecot configured")
+            ######################################## users and groups
+
+            count = 0
+
+            while(1):
+
+                command = 'groupadd -g 5000 vmail'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to add system group vmail, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to add system group vmail! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("System group vmail created successfully!")
+                    preFlightsChecks.stdOut("System group vmail created successfully!")
+                    break
+
+            ##
+
+            count = 0
+
+            while(1):
+
+                command = 'useradd -g vmail -u 5000 vmail -d /home/vmail -m'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to add system user vmail, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to add system user vmail! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("System user vmail created successfully!")
+                    preFlightsChecks.stdOut("System user vmail created successfully!")
+                    break
+
+
+            ######################################## Further configurations
+
+            #hostname = socket.gethostname()
+
+            ################################### Restart postix
+
+            count = 0
+
+            while(1):
+
+                command = 'systemctl enable postfix.service'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Trying to add Postfix to system startup, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Failed to enable Postfix to run at system restart you can manually do this using systemctl enable postfix.service! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("postfix.service successfully enabled!")
+                    preFlightsChecks.stdOut("postfix.service successfully enabled!")
+                    break
+
+            ##
+
+            count = 0
+
+            while(1):
+
+                command = 'systemctl start  postfix.service'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Trying to start Postfix, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to start Postfix, you can not send email until you manually start Postfix using systemctl start postfix.service! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("postfix.service started successfully!")
+                    preFlightsChecks.stdOut("postfix.service started successfully!")
+                    break
+
+            ######################################## Permissions
+
+            count = 0
+
+            while(1):
+
+                command = 'chgrp dovecot /etc/dovecot/dovecot-sql.conf.ext'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to change group for /etc/dovecot/dovecot-sql.conf.ext, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to change group for /etc/dovecot/dovecot-sql.conf.ext! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Group changed for /etc/dovecot/dovecot-sql.conf.ext!")
+                    preFlightsChecks.stdOut("Group changed for /etc/dovecot/dovecot-sql.conf.ext!")
+                    break
+            ##
+
+
+            count = 0
+
+            while(1):
+
+                command = 'chmod o= /etc/dovecot/dovecot-sql.conf.ext'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to change permissions for /etc/dovecot/dovecot-sql.conf.ext, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to change permissions for /etc/dovecot/dovecot-sql.conf.ext! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Permissions changed for /etc/dovecot/dovecot-sql.conf.ext!")
+                    preFlightsChecks.stdOut("Permissions changed for /etc/dovecot/dovecot-sql.conf.ext!")
+                    break
+
+            ################################### Restart davecot
+
+            count = 0
+
+
+            while(1):
+
+                command = 'systemctl enable dovecot.service'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to enable dovecot.service, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to enable dovecot.service! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("dovecot.service successfully enabled!")
+                    preFlightsChecks.stdOut("dovecot.service successfully enabled!")
+                    break
+
+
+            ##
+
+
+            count = 0
+
+
+            while(1):
+                command = 'systemctl start dovecot.service'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to start dovecot.service, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to start dovecot.service! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("dovecot.service successfully started!")
+                    preFlightsChecks.stdOut("dovecot.service successfully started!")
+                    break
+
+            ##
+
+            count = 0
+
+            while(1):
+
+                command = 'systemctl restart  postfix.service'
+
+                cmd = shlex.split(command)
+
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to restart postfix.service, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to restart postfix.service! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("dovecot.service successfully restarted!")
+                    preFlightsChecks.stdOut("postfix.service successfully restarted!")
+                    break
+
+
+            ## chaging permissions for main.cf
+
+            count = 0
+
+            while(1):
+
+                command = "chmod 755 "+main
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to change permissions for /etc/postfix/main.cf, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to change permissions for /etc/postfix/main.cf! [setup_postfix_davecot_config]")
+                        break
+                else:
+                    logging.InstallLog.writeToFile("Permissions changed for /etc/postfix/main.cf!")
+                    preFlightsChecks.stdOut("Permissions changed for /etc/postfix/main.cf!")
+                    break
+
+            if self.distro == ubuntu:
+                command = "mkdir -p /etc/pki/dovecot/private/"
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                command = "mkdir -p /etc/opendkim/keys/"
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
+                command = "sed -i 's/auth_mechanisms = plain/#auth_mechanisms = plain/g' /etc/dovecot/conf.d/10-auth.conf"
+                subprocess.call(shlex.split(command))
+
+
+            logging.InstallLog.writeToFile("Postfix and Dovecot configured")
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [setup_postfix_davecot_config]")
@@ -2054,6 +2054,7 @@ class preFlightsChecks:
             return 0
 
         return 1
+
 
     def downoad_and_install_raindloop(self):
         try:
