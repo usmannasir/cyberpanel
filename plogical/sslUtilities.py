@@ -158,8 +158,12 @@ class sslUtilities:
     @staticmethod
     def obtainSSLForADomain(virtualHostName,adminEmail,sslpath, aliasDomain = None):
         try:
+            acmePath = '/root/.acme.sh/acme.sh'
 
-            if not os.path.exists('/root/.acme.sh/acme.sh'):
+            if os.path.exists('/etc/lsb-release'):
+                acmePath = '/home/cyberpanel/.acme.sh/acme.sh'
+
+            if not os.path.exists(acmePath):
                 command = 'wget -O -  https://get.acme.sh | sh'
                 subprocess.call(command, shell=True)
 
@@ -173,7 +177,7 @@ class sslUtilities:
                 try:
                     logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName)
 
-                    command = "/root/.acme.sh/acme.sh --issue -d " + virtualHostName + " -d www." + virtualHostName \
+                    command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                               + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
 
@@ -187,7 +191,7 @@ class sslUtilities:
 
                     try:
                         logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName)
-                        command = "/root/.acme.sh/acme.sh --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
+                        command = acmePath + " --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
                                   + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                                   + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
                         output = subprocess.check_output(shlex.split(command))
@@ -206,7 +210,7 @@ class sslUtilities:
                     logging.CyberCPLogFileWriter.writeToFile(
                         "Trying to obtain SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasDomain + " and www." + aliasDomain + ",")
 
-                    command = "/root/.acme.sh/acme.sh --issue -d " + virtualHostName + " -d www." + virtualHostName \
+                    command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
                               + ' -d ' + aliasDomain + ' -d www.' + aliasDomain\
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                               + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'

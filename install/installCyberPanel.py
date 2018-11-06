@@ -3,7 +3,6 @@ import subprocess
 import os
 import pexpect
 from mysqlUtilities import mysqlUtilities
-import install
 import installLog as logging
 import shlex
 import randomPassword
@@ -1264,7 +1263,6 @@ def Main(cwd, mysql, distro):
         installer.fixMariaDB()
 
     mysqlUtilities.createDatabaseCyberPanel("cyberpanel","cyberpanel",InstallCyberPanel.mysqlPassword, mysql)
-
 
     installer.installPureFTPD()
     installer.installPureFTPDConfigurations(mysql)

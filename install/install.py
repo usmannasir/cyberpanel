@@ -9,7 +9,7 @@ from firewallUtilities import FirewallUtilities
 import time
 import string
 import random
-import errno
+import socket
 from os.path import *
 from stat import *
 
@@ -192,7 +192,7 @@ class preFlightsChecks:
 
             while (1):
 
-                command = "mkdir /etc/letsencrypt"
+                command = "mkdir -p /etc/letsencrypt/live/"
 
                 cmd = shlex.split(command)
 
@@ -616,6 +616,18 @@ class preFlightsChecks:
                 logging.InstallLog.writeToFile("MySQL-python successfully installed!")
                 preFlightsChecks.stdOut("MySQL-python successfully installed!")
                 break
+
+        if self.distro == ubuntu:
+            command = "pip install MySQL-python"
+            res = subprocess.call(shlex.split(command))
+            if res != 0:
+                logging.InstallLog.writeToFile(
+                    "Unable to install MySQL-python, exiting installer! [install_python_mysql_library] Error: " + str(
+                        res))
+                preFlightsChecks.stdOut(
+                    "Unable to install MySQL-python, exiting installer! [install_python_mysql_library] Error: " + str(
+                        res))
+                os._exit(os.EX_OSERR)
 
     def install_gunicorn(self):
         self.stdOut("Install GUnicorn")
@@ -1268,7 +1280,6 @@ class preFlightsChecks:
 
         return 1
 
-
     def setup_email_Passwords(self,mysqlPassword, mysql):
         try:
 
@@ -1382,7 +1393,6 @@ class preFlightsChecks:
             return 0
 
         return 1
-
 
     def setup_postfix_davecot_config(self, mysql):
         try:
@@ -1979,9 +1989,7 @@ class preFlightsChecks:
            while(1):
 
                command = "chmod 755 "+main
-
                cmd = shlex.split(command)
-
                res = subprocess.call(cmd)
 
                if res == 1:
@@ -1995,6 +2003,19 @@ class preFlightsChecks:
                    preFlightsChecks.stdOut("Permissions changed for /etc/postfix/main.cf!")
                    break
 
+           if self.distro == ubuntu:
+               command = "mkdir -p /etc/pki/dovecot/private/"
+               cmd = shlex.split(command)
+               res = subprocess.call(cmd)
+
+               command = "mkdir -p /etc/opendkim/keys/"
+               cmd = shlex.split(command)
+               res = subprocess.call(cmd)
+
+               command = "sed -i 's/auth_mechanisms = plain/#auth_mechanisms = plain/g' /etc/dovecot/conf.d/10-auth.conf"
+               subprocess.call(shlex.split(command))
+
+
            logging.InstallLog.writeToFile("Postfix and Dovecot configured")
 
         except OSError, msg:
@@ -2005,7 +2026,6 @@ class preFlightsChecks:
             return 0
 
         return 1
-
 
     def downoad_and_install_raindloop(self):
         try:
@@ -2188,9 +2208,6 @@ class preFlightsChecks:
 
     def installFirewalld(self):
         try:
-            if self.distro == ubuntu:
-                return 0  # Uses AppArmor
-
             preFlightsChecks.stdOut("Enabling Firewall!")
 
             count = 0
@@ -2342,6 +2359,17 @@ class preFlightsChecks:
                     logging.InstallLog.writeToFile("LSCPD Successfully enabled at system startup!")
                     preFlightsChecks.stdOut("LSCPD Successfully enabled at system startup!")
                     break
+            ##
+            count = 0
+
+            # In Ubuntu, the library that lscpd looks for is libpcre.so.1, but the one it installs is libpcre.so.3...
+            if self.distro == ubuntu:
+                command = 'ln -s /lib/x86_64-linux-gnu/libpcre.so.3 /lib/x86_64-linux-gnu/libpcre.so.1'
+                res = subprocess.call(shlex.split(command))
+                if res == 0:
+                    self.stdOut("Created ubuntu symbolic link to pcre")
+                else:
+                    self.stdOut("Error creating symbolic link to pcre: " + str(res))
 
             ##
 
@@ -2785,6 +2813,13 @@ class preFlightsChecks:
                     logging.InstallLog.writeToFile("Succcessfully installed opendkim!")
                     preFlightsChecks.stdOut("Succcessfully installed opendkim!")
                     break
+
+                if self.distro == ubuntu:
+                    command = 'apt install opendkim-tools'
+                    subprocess.call(shlex.split(command))
+
+                    command = 'mkdir -p /etc/opendkim/keys/'
+                    subprocess.call(shlex.split(command))
 
 
         except OSError, msg:
@@ -3287,7 +3322,7 @@ def main():
 
     import installCyberPanel
 
-    installCyberPanel.Main(cwd, mysql)
+    installCyberPanel.Main(cwd, mysql, distro)
     checks.fix_selinux_issue()
     checks.install_psmisc()
     checks.install_postfix_davecot()
@@ -3325,7 +3360,7 @@ def main():
     checks.configureOpenDKIM()
 
     checks.modSecPreReqs()
-    checks.setupVirtualEnv()
+    checks.setupVirtualEnv(distro)
     checks.setupPHPAndComposer()
 
     if args.postfix != None:
@@ -3347,6 +3382,7 @@ def main():
         checks.enableDisableFTP('On')
 
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
+    checks.installation_successfull()
 
 
 if __name__ == "__main__":
