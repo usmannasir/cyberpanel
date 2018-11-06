@@ -1395,14 +1395,14 @@ class preFlightsChecks:
         return 1
 
 
-    def centos_lib_dir_to_ubuntu(self, filename):
+    def centos_lib_dir_to_ubuntu(self, filename, old, new):
         try:
             fd = open(filename, 'r')
             lines = fd.readlines()
             fd.close()
             fd = open(filename, 'w')
-            centos_prefix = '/usr/libexec/'
-            ubuntu_prefix = '/usr/lib/'
+            centos_prefix = old
+            ubuntu_prefix = new
             for line in lines:
                 index = line.find(centos_prefix)
                 if index != -1:
@@ -1505,11 +1505,13 @@ class preFlightsChecks:
             if self.distro == ubuntu:
                 preFlightsChecks.stdOut("Cleanup postfix/dovecot config files", 1)
                 if mysql == 'Two':
-                    self.centos_lib_dir_to_ubuntu("email-configs/master.cf")
-                    self.centos_lib_dir_to_ubuntu("email-configs/main.cf")
+                    self.centos_lib_dir_to_ubuntu("email-configs/master.cf", "/usr/libexec/", "/usr/lib/")
+                    self.centos_lib_dir_to_ubuntu("email-configs/main.cf", "/usr/libexec/postfix",
+                                                  "/usr/lib/postfix/sbin")
                 else:
-                    self.centos_lib_dir_to_ubuntu("email-configs-one/master.cf")
-                    self.centos_lib_dir_to_ubuntu("email-configs-one/main.cf")
+                    self.centos_lib_dir_to_ubuntu("email-configs-one/master.cf", "/usr/libexec/", "/usr/lib/")
+                    self.centos_lib_dir_to_ubuntu("email-configs-one/main.cf", "/usr/libexec/postfix",
+                                                  "/usr/lib/postfix/sbin")
 
 
 
