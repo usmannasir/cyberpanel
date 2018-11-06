@@ -1399,7 +1399,7 @@ class preFlightsChecks:
         try:
             fd = open(filename, 'r')
             lines = fd.readlines()
-            close(fd)
+            fd.close()
             fd = open(filename, 'w')
             centos_prefix = '/usr/libexec/'
             ubuntu_prefix = '/usr/lib/'
