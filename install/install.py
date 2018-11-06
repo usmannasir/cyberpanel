@@ -1394,47 +1394,64 @@ class preFlightsChecks:
 
         return 1
 
+
+    def centos_lib_dir_to_ubuntu(self, filename):
+        try:
+            fd = open(filename, 'r')
+            lines = fd.readlines()
+            close(fd)
+            fd = open(filename, 'w')
+            centos_prefix = '/usr/libexec/'
+            ubuntu_prefix = '/usr/lib/'
+            for line in lines:
+                index = line.find(centos_prefix)
+                if index != -1:
+                    line = line[:index] + ubuntu_prefix + line[index + len(centos_prefix):]
+                fd.write(line)
+            fd.close()
+        except IOError as err:
+            self.stdOut("Error converting: " + filename + " from centos defaults to ubuntu defaults: " + str(err), 1,
+                        1, EX_OSERR)
+
+
     def setup_postfix_davecot_config(self, mysql):
         try:
-           logging.InstallLog.writeToFile("Configuring postfix and dovecot...")
+            logging.InstallLog.writeToFile("Configuring postfix and dovecot...")
 
-           os.chdir(self.cwd)
+            os.chdir(self.cwd)
 
+            mysql_virtual_domains = "/etc/postfix/mysql-virtual_domains.cf"
+            mysql_virtual_forwardings = "/etc/postfix/mysql-virtual_forwardings.cf"
+            mysql_virtual_mailboxes = "/etc/postfix/mysql-virtual_mailboxes.cf"
+            mysql_virtual_email2email = "/etc/postfix/mysql-virtual_email2email.cf"
+            main = "/etc/postfix/main.cf"
+            master = "/etc/postfix/master.cf"
+            davecot = "/etc/dovecot/dovecot.conf"
+            davecotmysql = "/etc/dovecot/dovecot-sql.conf.ext"
 
-           mysql_virtual_domains = "/etc/postfix/mysql-virtual_domains.cf"
-           mysql_virtual_forwardings = "/etc/postfix/mysql-virtual_forwardings.cf"
-           mysql_virtual_mailboxes = "/etc/postfix/mysql-virtual_mailboxes.cf"
-           mysql_virtual_email2email = "/etc/postfix/mysql-virtual_email2email.cf"
-           main = "/etc/postfix/main.cf"
-           master = "/etc/postfix/master.cf"
-           davecot = "/etc/dovecot/dovecot.conf"
-           davecotmysql = "/etc/dovecot/dovecot-sql.conf.ext"
+            if os.path.exists(mysql_virtual_domains):
+                os.remove(mysql_virtual_domains)
 
+            if os.path.exists(mysql_virtual_forwardings):
+                os.remove(mysql_virtual_forwardings)
 
+            if os.path.exists(mysql_virtual_mailboxes):
+                os.remove(mysql_virtual_mailboxes)
 
-           if os.path.exists(mysql_virtual_domains):
-               os.remove(mysql_virtual_domains)
+            if os.path.exists(mysql_virtual_email2email):
+                os.remove(mysql_virtual_email2email)
 
-           if os.path.exists(mysql_virtual_forwardings):
-               os.remove(mysql_virtual_forwardings)
+            if os.path.exists(main):
+                os.remove(main)
 
-           if os.path.exists(mysql_virtual_mailboxes):
-               os.remove(mysql_virtual_mailboxes)
+            if os.path.exists(master):
+                os.remove(master)
 
-           if os.path.exists(mysql_virtual_email2email):
-               os.remove(mysql_virtual_email2email)
+            if os.path.exists(davecot):
+                os.remove(davecot)
 
-           if os.path.exists(main):
-               os.remove(main)
-
-           if os.path.exists(master):
-               os.remove(master)
-
-           if os.path.exists(davecot):
-               os.remove(davecot)
-
-           if os.path.exists(davecotmysql):
-               os.remove(davecotmysql)
+            if os.path.exists(davecotmysql):
+                os.remove(davecotmysql)
 
 
 
@@ -1443,68 +1460,79 @@ class preFlightsChecks:
            count = 0
 
            while(1):
-               command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/postfix/key.pem -out /etc/postfix/cert.pem'
+                command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/postfix/key.pem -out /etc/postfix/cert.pem'
 
-               cmd = shlex.split(command)
+                cmd = shlex.split(command)
 
-               res = subprocess.call(cmd)
+                res = subprocess.call(cmd)
 
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to generate SSL for Postfix, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to generate SSL for Postfix, you will not be able to send emails and rest should work fine! [setup_postfix_davecot_config]")
-                       return
-               else:
-                   logging.InstallLog.writeToFile("SSL for Postfix generated!")
-                   preFlightsChecks.stdOut("SSL for Postfix generated!")
-                   break
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to generate SSL for Postfix, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to generate SSL for Postfix, you will not be able to send emails and rest should work fine! [setup_postfix_davecot_config]")
+                        return
+                else:
+                    logging.InstallLog.writeToFile("SSL for Postfix generated!")
+                    preFlightsChecks.stdOut("SSL for Postfix generated!")
+                    break
            ##
 
-           count = 0
+            count = 0
 
-           while(1):
+            while(1):
 
-               command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/dovecot/key.pem -out /etc/dovecot/cert.pem'
+                command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/dovecot/key.pem -out /etc/dovecot/cert.pem'
 
-               cmd = shlex.split(command)
+                cmd = shlex.split(command)
 
-               res = subprocess.call(cmd)
+                res = subprocess.call(cmd)
 
-               if res == 1:
-                   count = count + 1
-                   preFlightsChecks.stdOut("Unable to generate ssl for Dovecot, trying again, try number: " + str(count))
-                   if count == 3:
-                       logging.InstallLog.writeToFile("Unable to generate SSL for Dovecot, you will not be able to send emails and rest should work fine! [setup_postfix_davecot_config]")
-                       return
-               else:
-                   logging.InstallLog.writeToFile("SSL generated for Dovecot!")
-                   preFlightsChecks.stdOut("SSL generated for Dovecot!")
-                   break
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut("Unable to generate ssl for Dovecot, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile("Unable to generate SSL for Dovecot, you will not be able to send emails and rest should work fine! [setup_postfix_davecot_config]")
+                        return
+                else:
+                    logging.InstallLog.writeToFile("SSL generated for Dovecot!")
+                    preFlightsChecks.stdOut("SSL generated for Dovecot!")
+                    break
 
 
 
-           ########### Copy config files
+            # Cleanup config files for ubuntu
+            if self.distro == ubuntu:
+                preFlightsChecks.stdOut("Cleanup postfix/dovecot config files", 1)
+                if mysql == 'Two':
+                    self.centos_lib_dir_to_ubuntu("email-configs/master.cf")
+                    self.centos_lib_dir_to_ubuntu("email-configs/main.cf")
+                else:
+                    self.centos_lib_dir_to_ubuntu("email-configs-one/master.cf")
+                    self.centos_lib_dir_to_ubuntu("email-configs-one/main.cf")
 
-           if mysql == 'Two':
-               shutil.copy("email-configs/mysql-virtual_domains.cf","/etc/postfix/mysql-virtual_domains.cf")
-               shutil.copy("email-configs/mysql-virtual_forwardings.cf", "/etc/postfix/mysql-virtual_forwardings.cf")
-               shutil.copy("email-configs/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
-               shutil.copy("email-configs/mysql-virtual_email2email.cf", "/etc/postfix/mysql-virtual_email2email.cf")
-               shutil.copy("email-configs/main.cf", main)
-               shutil.copy("email-configs/master.cf",master)
-               shutil.copy("email-configs/dovecot.conf",davecot)
-               shutil.copy("email-configs/dovecot-sql.conf.ext",davecotmysql)
-           else:
-               shutil.copy("email-configs-one/mysql-virtual_domains.cf", "/etc/postfix/mysql-virtual_domains.cf")
-               shutil.copy("email-configs-one/mysql-virtual_forwardings.cf", "/etc/postfix/mysql-virtual_forwardings.cf")
-               shutil.copy("email-configs-one/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
-               shutil.copy("email-configs-one/mysql-virtual_email2email.cf", "/etc/postfix/mysql-virtual_email2email.cf")
-               shutil.copy("email-configs-one/main.cf", main)
-               shutil.copy("email-configs-one/master.cf", master)
-               shutil.copy("email-configs-one/dovecot.conf", davecot)
-               shutil.copy("email-configs-one/dovecot-sql.conf.ext", davecotmysql)
 
+
+            ########### Copy config files
+
+            if mysql == 'Two':
+                shutil.copy("email-configs/mysql-virtual_domains.cf","/etc/postfix/mysql-virtual_domains.cf")
+                shutil.copy("email-configs/mysql-virtual_forwardings.cf", "/etc/postfix/mysql-virtual_forwardings.cf")
+                shutil.copy("email-configs/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
+                shutil.copy("email-configs/mysql-virtual_email2email.cf", "/etc/postfix/mysql-virtual_email2email.cf")
+                shutil.copy("email-configs/main.cf", main)
+                shutil.copy("email-configs/master.cf",master)
+                shutil.copy("email-configs/dovecot.conf",davecot)
+                shutil.copy("email-configs/dovecot-sql.conf.ext",davecotmysql)
+            else:
+                shutil.copy("email-configs-one/mysql-virtual_domains.cf", "/etc/postfix/mysql-virtual_domains.cf")
+                shutil.copy("email-configs-one/mysql-virtual_forwardings.cf", "/etc/postfix/mysql-virtual_forwardings.cf")
+                shutil.copy("email-configs-one/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
+                shutil.copy("email-configs-one/mysql-virtual_email2email.cf", "/etc/postfix/mysql-virtual_email2email.cf")
+                shutil.copy("email-configs-one/main.cf", main)
+                shutil.copy("email-configs-one/master.cf", master)
+                shutil.copy("email-configs-one/dovecot.conf", davecot)
+                shutil.copy("email-configs-one/dovecot-sql.conf.ext", davecotmysql)
 
 
            ######################################## Permissions
