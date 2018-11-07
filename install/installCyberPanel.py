@@ -873,8 +873,8 @@ class InstallCyberPanel:
             os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
             writeDataToFile.close()
 
-            os.lchmod(ftpdPath + '/pureftpd-ldap.conf', stat.S_IRUSR | stat.S_IWUSR)
-            os.lchmod(ftpdPath + '/pureftpd-pgsql.conf', stat.S_IRUSR | stat.S_IWUSR)
+            os.chmod(ftpdPath + '/pureftpd-ldap.conf', stat.S_IRUSR | stat.S_IWUSR)
+            os.chmod(ftpdPath + '/pureftpd-pgsql.conf', stat.S_IRUSR | stat.S_IWUSR)
 
             logging.InstallLog.writeToFile("PureFTPD configured!")
             InstallCyberPanel.stdOut("PureFTPD configured!")
