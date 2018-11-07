@@ -390,12 +390,14 @@ class MailServerManager:
                 path = "/etc/opendkim/keys/" + domainName + "/default.txt"
                 command = "sudo cat " + path
                 output = subprocess.check_output(shlex.split(command))
+                leftIndex = output.index('(') + 2
+                rightIndex = output.rindex(')') - 1
 
                 path = "/etc/opendkim/keys/" + domainName + "/default.private"
                 command = "sudo cat " + path
                 privateKey = subprocess.check_output(shlex.split(command))
 
-                data_ret = {'fetchStatus': 1, 'keysAvailable': 1, 'publicKey': output[53:269],
+                data_ret = {'fetchStatus': 1, 'keysAvailable': 1, 'publicKey': output[leftIndex:rightIndex],
                             'privateKey': privateKey, 'dkimSuccessMessage': 'Keys successfully fetched!',
                             'error_message': "None"}
                 json_data = json.dumps(data_ret)
@@ -434,12 +436,14 @@ class MailServerManager:
                 path = "/etc/opendkim/keys/" + domainName + "/default.txt"
                 command = "sudo cat " + path
                 output = subprocess.check_output(shlex.split(command))
+                leftIndex = output.index('(') + 2
+                rightIndex = output.rindex(')') - 1
 
                 record = dnsRecords(domainOwner=zone,
                                     domain_id=zone.id,
                                     name="default._domainkey." + domainName,
                                     type="TXT",
-                                    content="v=DKIM1; k=rsa; p=" + output[53:269],
+                                    content=output[leftIndex:rightIndex],
                                     ttl=3600,
                                     prio=0,
                                     disabled=0,

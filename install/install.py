@@ -2867,6 +2867,9 @@ class preFlightsChecks:
                 command = 'mkdir -p /etc/opendkim/keys/'
                 subprocess.call(shlex.split(command))
 
+                command = "sed -i 's/Socket                 local:/var/run/opendkim/opendkim.sock/Socket  inet:8891@localhost/g' /etc/opendkim.conf"
+                subprocess.call(shlex.split(command))
+
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [installOpenDKIM]")

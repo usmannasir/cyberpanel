@@ -308,12 +308,14 @@ class DNS:
             path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
             command = "sudo cat " + path
             output = subprocess.check_output(shlex.split(command))
+            leftIndex = output.index('(') + 2
+            rightIndex = output.rindex(')') - 1
 
             record = Records(domainOwner=zone,
                              domain_id=zone.id,
                              name="default._domainkey." + topLevelDomain,
                              type="TXT",
-                             content="v=DKIM1; k=rsa; p=" + output[53:269],
+                             content=output[leftIndex:rightIndex],
                              ttl=3600,
                              prio=0,
                              disabled=0,
