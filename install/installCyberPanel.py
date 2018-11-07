@@ -849,6 +849,13 @@ class InstallCyberPanel:
                 else:
                     shutil.copytree("pure-ftpd-one", ftpdPath)
 
+            if self.distro == ubuntu:
+                try:
+                    os.mkdir('/etc/pure-ftpd/conf')
+                    os.mkdir('/etc/pure-ftpd/auth')
+                except OSError as err:
+                    self.stdOut("Error creating extra pure-ftpd directories: " + str(err), ".  Should be ok", 1)
+
             data = open(ftpdPath+"/pureftpd-mysql.conf","r").readlines()
 
             writeDataToFile = open(ftpdPath+"/pureftpd-mysql.conf","w")
