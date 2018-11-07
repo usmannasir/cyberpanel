@@ -646,20 +646,13 @@ class InstallCyberPanel:
         self.stdOut("MariaDB is now setup so it can support Cyberpanel's needs")
 
 
-    @staticmethod
-    def pureFTPDServiceName(self, distro):
-        if distro == ubuntu:
-            return 'pure-ftpd-mysql'
-        return 'pure-ftpd'
-
-
     def installPureFTPD(self):
         try:
 
             count = 0
             while (1):
                 if self.distro == ubuntu:
-                    command = 'apt-get -y install ' + InstallCyberPanel.pureFTPDServiceName(self.distro)
+                    command = 'apt-get -y install ' + install.preFlightsChecks.pureFTPDServiceName(self.distro)
                 else:
                     command = "yum install -y pure-ftpd"
 
@@ -684,7 +677,7 @@ class InstallCyberPanel:
 
             while(1):
 
-                command = "systemctl enable " + InstallCyberPanel.pureFTPDServiceName(self.distro)
+                command = "systemctl enable " + install.preFlightsChecks.pureFTPDServiceName(self.distro)
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -785,7 +778,7 @@ class InstallCyberPanel:
 
                 cmd.append("systemctl")
                 cmd.append("start")
-                cmd.append(InstallCyberPanel.pureFTPDServiceName(self.distro))
+                cmd.append(install.preFlightsChecks.pureFTPDServiceName(self.distro))
 
                 res = subprocess.call(cmd)
 

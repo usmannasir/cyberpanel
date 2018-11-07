@@ -12,7 +12,6 @@ import random
 import socket
 from os.path import *
 from stat import *
-import installCyberPanel
 
 # There can not be peace without first a great suffering.
 
@@ -46,6 +45,14 @@ class preFlightsChecks:
             logging.InstallLog.writeToFile(message)
         if do_exit:
             sys.exit(code)
+
+
+    @staticmethod
+    def pureFTPDServiceName(self, distro):
+        if distro == ubuntu:
+            return 'pure-ftpd-mysql'
+        return 'pure-ftpd'
+
 
     def checkIfSeLinuxDisabled(self):
         try:
@@ -3237,10 +3244,10 @@ milter_default_action = accept
 
             if state == 'Off':
 
-                command = 'sudo systemctl stop ' + installCyberPanel.InstallCyberPanel.pureFTPDServiceName(distro)
+                command = 'sudo systemctl stop ' + preFlightsChecks.pureFTPDServiceName(distro)
                 subprocess.call(shlex.split(command))
 
-                command = 'sudo systemctl disable ' + installCyberPanel.InstallCyberPanel.pureFTPDServiceName(distro)
+                command = 'sudo systemctl disable ' + preFlightsChecks.pureFTPDServiceName(distro)
                 subprocess.call(shlex.split(command))
 
                 try:
@@ -3358,6 +3365,8 @@ def main():
     checks.install_gunicorn()
     checks.install_psutil()
     checks.setup_gunicorn()
+
+    import installCyberPanel
 
     installCyberPanel.Main(cwd, mysql, distro)
     checks.fix_selinux_issue()
