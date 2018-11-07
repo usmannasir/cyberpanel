@@ -651,7 +651,7 @@ class InstallCyberPanel:
             count = 0
             while (1):
                 if self.distro == ubuntu:
-                    command = 'apt-get -y install pure-ftpd'
+                    command = 'apt-get -y install pure-ftpd-mysql'
                 else:
                     command = "yum install -y pure-ftpd"
 
