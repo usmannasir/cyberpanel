@@ -2038,11 +2038,18 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
+                command = "mkdir -p /etc/pki/dovecot/certs/"
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+
                 command = "mkdir -p /etc/opendkim/keys/"
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
                 command = "sed -i 's/auth_mechanisms = plain/#auth_mechanisms = plain/g' /etc/dovecot/conf.d/10-auth.conf"
+                subprocess.call(shlex.split(command))
+
+                command = "systemctl restart dovecot"
                 subprocess.call(shlex.split(command))
 
 
@@ -2845,12 +2852,12 @@ class preFlightsChecks:
                     preFlightsChecks.stdOut("Succcessfully installed opendkim!")
                     break
 
-                if self.distro == ubuntu:
-                    command = 'apt install opendkim-tools'
-                    subprocess.call(shlex.split(command))
+            if self.distro == ubuntu:
+                command = 'apt install opendkim-tools'
+                subprocess.call(shlex.split(command))
 
-                    command = 'mkdir -p /etc/opendkim/keys/'
-                    subprocess.call(shlex.split(command))
+                command = 'mkdir -p /etc/opendkim/keys/'
+                subprocess.call(shlex.split(command))
 
 
         except OSError, msg:
