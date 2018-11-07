@@ -48,7 +48,7 @@ class preFlightsChecks:
 
 
     @staticmethod
-    def pureFTPDServiceName(self, distro):
+    def pureFTPDServiceName(distro):
         if distro == ubuntu:
             return 'pure-ftpd-mysql'
         return 'pure-ftpd'
