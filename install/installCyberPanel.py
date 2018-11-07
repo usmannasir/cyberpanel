@@ -648,7 +648,7 @@ class InstallCyberPanel:
 
     @staticmethod
     def pureFTPDServiceName(self, distro):
-        if distro == 'ubuntu'
+        if distro == ubuntu
             return 'pure-ftpd-mysql'
         return 'pure-ftpd'
 
