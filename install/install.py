@@ -12,6 +12,7 @@ import random
 import socket
 from os.path import *
 from stat import *
+import stat
 
 # There can not be peace without first a great suffering.
 
@@ -901,6 +902,8 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
+        os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
+
         writeDataToFile.close()
 
         logging.InstallLog.writeToFile("settings.py updated!")
@@ -1291,107 +1294,117 @@ class preFlightsChecks:
     def setup_email_Passwords(self,mysqlPassword, mysql):
         try:
 
-           logging.InstallLog.writeToFile("Setting up authentication for Postfix and Dovecot...")
+            logging.InstallLog.writeToFile("Setting up authentication for Postfix and Dovecot...")
 
-           os.chdir(self.cwd)
+            os.chdir(self.cwd)
 
-           if mysql == 'Two':
-               mysql_virtual_domains = "email-configs/mysql-virtual_domains.cf"
-               mysql_virtual_forwardings = "email-configs/mysql-virtual_forwardings.cf"
-               mysql_virtual_mailboxes = "email-configs/mysql-virtual_mailboxes.cf"
-               mysql_virtual_email2email = "email-configs/mysql-virtual_email2email.cf"
-               davecotmysql = "email-configs/dovecot-sql.conf.ext"
-           else:
-               mysql_virtual_domains = "email-configs-one/mysql-virtual_domains.cf"
-               mysql_virtual_forwardings = "email-configs-one/mysql-virtual_forwardings.cf"
-               mysql_virtual_mailboxes = "email-configs-one/mysql-virtual_mailboxes.cf"
-               mysql_virtual_email2email = "email-configs-one/mysql-virtual_email2email.cf"
-               davecotmysql = "email-configs-one/dovecot-sql.conf.ext"
-
-           ### update password:
-
-           data = open(davecotmysql, "r").readlines()
-
-           writeDataToFile = open(davecotmysql, "w")
-
-           if mysql == 'Two':
-               dataWritten = "connect = host=127.0.0.1 dbname=cyberpanel user=cyberpanel password="+mysqlPassword+" port=3307\n"
-           else:
-               dataWritten = "connect = host=localhost dbname=cyberpanel user=cyberpanel password=" + mysqlPassword + " port=3306\n"
-
-           for items in data:
-               if items.find("connect") > -1:
-                   writeDataToFile.writelines(dataWritten)
-               else:
-                   writeDataToFile.writelines(items)
-
-           writeDataToFile.close()
+            if mysql == 'Two':
+                mysql_virtual_domains = "email-configs/mysql-virtual_domains.cf"
+                mysql_virtual_forwardings = "email-configs/mysql-virtual_forwardings.cf"
+                mysql_virtual_mailboxes = "email-configs/mysql-virtual_mailboxes.cf"
+                mysql_virtual_email2email = "email-configs/mysql-virtual_email2email.cf"
+                davecotmysql = "email-configs/dovecot-sql.conf.ext"
+            else:
+                mysql_virtual_domains = "email-configs-one/mysql-virtual_domains.cf"
+                mysql_virtual_forwardings = "email-configs-one/mysql-virtual_forwardings.cf"
+                mysql_virtual_mailboxes = "email-configs-one/mysql-virtual_mailboxes.cf"
+                mysql_virtual_email2email = "email-configs-one/mysql-virtual_email2email.cf"
+                davecotmysql = "email-configs-one/dovecot-sql.conf.ext"
 
            ### update password:
 
-           data = open(mysql_virtual_domains, "r").readlines()
+            data = open(davecotmysql, "r").readlines()
 
-           writeDataToFile = open(mysql_virtual_domains, "w")
+            writeDataToFile = open(davecotmysql, "w")
 
-           dataWritten = "password = " + mysqlPassword + "\n"
+            if mysql == 'Two':
+                dataWritten = "connect = host=127.0.0.1 dbname=cyberpanel user=cyberpanel password="+mysqlPassword+" port=3307\n"
+            else:
+                dataWritten = "connect = host=localhost dbname=cyberpanel user=cyberpanel password=" + mysqlPassword + " port=3306\n"
 
-           for items in data:
-               if items.find("password") > -1:
-                   writeDataToFile.writelines(dataWritten)
-               else:
-                   writeDataToFile.writelines(items)
+            for items in data:
+                if items.find("connect") > -1:
+                    writeDataToFile.writelines(dataWritten)
+                else:
+                    writeDataToFile.writelines(items)
 
-           writeDataToFile.close()
+            os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
 
-           ### update password:
+            writeDataToFile.close()
 
-           data = open(mysql_virtual_forwardings, "r").readlines()
+            ### update password:
 
-           writeDataToFile = open(mysql_virtual_forwardings, "w")
+            data = open(mysql_virtual_domains, "r").readlines()
 
-           dataWritten = "password = " + mysqlPassword + "\n"
+            writeDataToFile = open(mysql_virtual_domains, "w")
 
-           for items in data:
-               if items.find("password") > -1:
-                   writeDataToFile.writelines(dataWritten)
-               else:
-                   writeDataToFile.writelines(items)
+            dataWritten = "password = " + mysqlPassword + "\n"
 
-           writeDataToFile.close()
+            for items in data:
+                if items.find("password") > -1:
+                    writeDataToFile.writelines(dataWritten)
+                else:
+                    writeDataToFile.writelines(items)
 
-           ### update password:
+            os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
 
-           data = open(mysql_virtual_mailboxes, "r").readlines()
+            writeDataToFile.close()
 
-           writeDataToFile = open(mysql_virtual_mailboxes, "w")
+            ### update password:
 
-           dataWritten = "password = " + mysqlPassword + "\n"
+            data = open(mysql_virtual_forwardings, "r").readlines()
 
-           for items in data:
-               if items.find("password") > -1:
-                   writeDataToFile.writelines(dataWritten)
-               else:
-                   writeDataToFile.writelines(items)
+            writeDataToFile = open(mysql_virtual_forwardings, "w")
 
-           writeDataToFile.close()
+            dataWritten = "password = " + mysqlPassword + "\n"
 
-           ### update password:
+            for items in data:
+                if items.find("password") > -1:
+                    writeDataToFile.writelines(dataWritten)
+                else:
+                    writeDataToFile.writelines(items)
 
-           data = open(mysql_virtual_email2email, "r").readlines()
+            os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
 
-           writeDataToFile = open(mysql_virtual_email2email, "w")
+            writeDataToFile.close()
 
-           dataWritten = "password = " + mysqlPassword + "\n"
+            ### update password:
 
-           for items in data:
-               if items.find("password") > -1:
-                   writeDataToFile.writelines(dataWritten)
-               else:
-                   writeDataToFile.writelines(items)
+            data = open(mysql_virtual_mailboxes, "r").readlines()
 
-           writeDataToFile.close()
+            writeDataToFile = open(mysql_virtual_mailboxes, "w")
 
-           logging.InstallLog.writeToFile("Authentication for Postfix and Dovecot set.")
+            dataWritten = "password = " + mysqlPassword + "\n"
+
+            for items in data:
+                if items.find("password") > -1:
+                    writeDataToFile.writelines(dataWritten)
+                else:
+                    writeDataToFile.writelines(items)
+
+            os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
+
+            writeDataToFile.close()
+
+            ### update password:
+
+            data = open(mysql_virtual_email2email, "r").readlines()
+
+            writeDataToFile = open(mysql_virtual_email2email, "w")
+
+            dataWritten = "password = " + mysqlPassword + "\n"
+
+            for items in data:
+                if items.find("password") > -1:
+                    writeDataToFile.writelines(dataWritten)
+                else:
+                    writeDataToFile.writelines(items)
+
+            os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
+
+            writeDataToFile.close()
+
+            logging.InstallLog.writeToFile("Authentication for Postfix and Dovecot set.")
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [setup_email_Passwords]")

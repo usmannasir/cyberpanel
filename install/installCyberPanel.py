@@ -9,6 +9,7 @@ import randomPassword
 import errno
 import MySQLdb as mariadb
 import install
+import stat
 
 #distros
 centos=0
@@ -869,6 +870,7 @@ class InstallCyberPanel:
                 else:
                     writeDataToFile.writelines(items)
 
+            os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
             writeDataToFile.close()
 
             logging.InstallLog.writeToFile("PureFTPD configured!")
@@ -1027,6 +1029,8 @@ class InstallCyberPanel:
                     writeDataToFile.writelines(dataWritten)
                 else:
                     writeDataToFile.writelines(items)
+
+            os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1246,6 +1250,8 @@ def Main(cwd, mysql, distro):
     else:
         password = open(file_name, "w")
         password.writelines(InstallCyberPanel.mysql_Root_password)
+
+    os.fchmod(password, stat.S_IRUSR | stat.S_IWUSR)
 
     password.close()
 
