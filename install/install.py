@@ -902,7 +902,7 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-        os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
+        os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
         writeDataToFile.close()
 
@@ -1328,7 +1328,7 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
+            os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1346,7 +1346,7 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
+            os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1364,7 +1364,7 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
+            os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1382,7 +1382,7 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
+            os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1400,7 +1400,7 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
+            os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 

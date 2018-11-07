@@ -870,7 +870,7 @@ class InstallCyberPanel:
                 else:
                     writeDataToFile.writelines(items)
 
-            os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
+            os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
             writeDataToFile.close()
 
             logging.InstallLog.writeToFile("PureFTPD configured!")
@@ -1030,7 +1030,7 @@ class InstallCyberPanel:
                 else:
                     writeDataToFile.writelines(items)
 
-            os.fchmod(writeDataToFile, stat.S_IRUSR | stat.S_IWUSR)
+            os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1251,7 +1251,7 @@ def Main(cwd, mysql, distro):
         password = open(file_name, "w")
         password.writelines(InstallCyberPanel.mysql_Root_password)
 
-    os.fchmod(password, stat.S_IRUSR | stat.S_IWUSR)
+    os.fchmod(password.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
     password.close()
 
