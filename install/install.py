@@ -12,6 +12,7 @@ import random
 import socket
 from os.path import *
 from stat import *
+import installCyberPanel
 
 # There can not be peace without first a great suffering.
 
@@ -1411,7 +1412,7 @@ class preFlightsChecks:
             fd.close()
         except IOError as err:
             self.stdOut("Error converting: " + filename + " from centos defaults to ubuntu defaults: " + str(err), 1,
-                        1, EX_OSERR)
+                        1, os.EX_OSERR)
 
 
     def setup_postfix_davecot_config(self, mysql):
@@ -3230,16 +3231,16 @@ milter_default_action = accept
             return 0
 
     @staticmethod
-    def enableDisableFTP(state):
+    def enableDisableFTP(state, distro):
         try:
             servicePath = '/home/cyberpanel/pureftpd'
 
             if state == 'Off':
 
-                command = 'sudo systemctl stop pure-ftpd'
+                command = 'sudo systemctl stop ' + installCyberPanel.InstallCyberPanel.pureFTPDServiceName(distro)
                 subprocess.call(shlex.split(command))
 
-                command = 'sudo systemctl disable pure-ftpd'
+                command = 'sudo systemctl disable ' + installCyberPanel.InstallCyberPanel.pureFTPDServiceName(distro)
                 subprocess.call(shlex.split(command))
 
                 try:
@@ -3358,8 +3359,6 @@ def main():
     checks.install_psutil()
     checks.setup_gunicorn()
 
-    import installCyberPanel
-
     installCyberPanel.Main(cwd, mysql, distro)
     checks.fix_selinux_issue()
     checks.install_psmisc()
@@ -3414,10 +3413,10 @@ def main():
         checks.enableDisableDNS('On')
 
     if args.ftp != None:
-        checks.enableDisableFTP(args.ftp)
+        checks.enableDisableFTP(args.ftp, distro)
     else:
         preFlightsChecks.stdOut("Pure-FTPD will be installed and enabled.")
-        checks.enableDisableFTP('On')
+        checks.enableDisableFTP('On', distro)
 
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
     checks.installation_successfull()
