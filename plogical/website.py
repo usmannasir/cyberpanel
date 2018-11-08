@@ -1244,6 +1244,7 @@ class WebsiteManager:
                 return HttpResponse(final_json)
 
             # Confirming that directory is read/writable
+            
             o = subprocess.call(['sudo', 'chown', 'cyberpanel:cyberpanel', tempPath])
             if o is not 0:
                 data_ret = {'addNewCron': 0, 'error_message': 'Error Changing Permissions'}

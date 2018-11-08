@@ -31,8 +31,11 @@ class vhost:
         try:
 
             FNULL = open(os.devnull, 'w')
+            if os.path.exists("/etc/lsb-release"):
+                command = 'adduser --no-create-home --home ' + path + ' --disabled-login --gecos "" ' + virtualHostUser
+            else:
+                command = "adduser " + virtualHostUser + " -M -d " + path
 
-            command = "adduser " + virtualHostUser + " -M -d " + path
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 

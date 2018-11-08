@@ -775,13 +775,11 @@ class InstallCyberPanel:
             count = 0
 
             while(1):
-                cmd = []
-
-                cmd.append("systemctl")
-                cmd.append("start")
-                cmd.append(install.preFlightsChecks.pureFTPDServiceName(self.distro))
-
-                res = subprocess.call(cmd)
+                if self.distro == ubuntu:
+                    command = 'systemctl start pure-ftpd-mysql'
+                else:
+                    command = 'systemctl start pure-ftpd'
+                res = subprocess.call(shlex.split(command))
 
                 if res == 1:
                     count = count + 1
@@ -854,6 +852,7 @@ class InstallCyberPanel:
                 try:
                     os.mkdir('/etc/pure-ftpd/conf')
                     os.mkdir('/etc/pure-ftpd/auth')
+                    os.mkdir('/etc/pure-ftpd/db')
                 except OSError as err:
                     self.stdOut("Error creating extra pure-ftpd directories: " + str(err), ".  Should be ok", 1)
 
@@ -862,8 +861,6 @@ class InstallCyberPanel:
             writeDataToFile = open(ftpdPath+"/pureftpd-mysql.conf","w")
 
             dataWritten = "MYSQLPassword "+InstallCyberPanel.mysqlPassword+'\n'
-
-
             for items in data:
                 if items.find("MYSQLPassword")>-1:
                     writeDataToFile.writelines(dataWritten)
@@ -875,6 +872,22 @@ class InstallCyberPanel:
 
             os.chmod(ftpdPath + '/pureftpd-ldap.conf', stat.S_IRUSR | stat.S_IWUSR)
             os.chmod(ftpdPath + '/pureftpd-pgsql.conf', stat.S_IRUSR | stat.S_IWUSR)
+
+            if self.distro == ubuntu:
+                command = 'apt install pure-ftpd-mysql -y'
+                subprocess.call(shlex.split(command))
+
+                if os.path.exists('/etc/pure-ftpd/db/mysql.conf'):
+                    os.remove('/etc/pure-ftpd/db/mysql.conf')
+                    shutil.copy(ftpdPath+"/pureftpd-mysql.conf", '/etc/pure-ftpd/db/mysql.conf')
+                else:
+                    shutil.copy(ftpdPath + "/pureftpd-mysql.conf", '/etc/pure-ftpd/db/mysql.conf')
+
+                command = 'echo 1 > /etc/pure-ftpd/conf/TLS'
+                subprocess.call(command, shell=True)
+
+                command = 'systemctl restart pure-ftpd-mysql.service'
+                subprocess.call(shlex.split(command))
 
             logging.InstallLog.writeToFile("PureFTPD configured!")
             InstallCyberPanel.stdOut("PureFTPD configured!")
@@ -1253,8 +1266,6 @@ def Main(cwd, mysql, distro):
     else:
         password = open(file_name, "w")
         password.writelines(InstallCyberPanel.mysql_Root_password)
-
-    os.fchmod(password.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
     password.close()
 

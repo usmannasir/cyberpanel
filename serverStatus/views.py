@@ -12,6 +12,7 @@ import psutil
 import shlex
 import socket
 from plogical.acl import ACLManager
+import os
 # Create your views here.
 
 def serverStatusHome(request):
@@ -271,6 +272,11 @@ def servicesAction(request):
                     return HttpResponse(final_json)
 
                 else:
+                    if service == 'pure-ftpd':
+                        if os.path.exists("/etc/lsb-release"):
+                            service = 'pure-ftpd-mysql'
+                        else:
+                            service = 'pure-ftpd'
 
                     command = 'sudo systemctl %s %s' % (action, service)
                     cmd = shlex.split(command)

@@ -193,18 +193,22 @@ def saveStatus(request):
                             pass
 
                 elif service == 'pureftpd':
+                    if os.path.exists("/etc/lsb-release"):
+                        serviceName = 'pure-ftpd-mysql'
+                    else:
+                        serviceName = 'pure-ftpd'
 
                     servicePath = '/home/cyberpanel/pureftpd'
                     if status == True:
                         writeToFile = open(servicePath, 'w+')
                         writeToFile.close()
-                        command = 'sudo systemctl start pure-ftpd'
+                        command = 'sudo systemctl start ' + serviceName
                         subprocess.call(shlex.split(command))
                     else:
-                        command = 'sudo systemctl stop pure-ftpd'
+                        command = 'sudo systemctl stop ' + serviceName
                         subprocess.call(shlex.split(command))
 
-                        command = 'sudo systemctl disable pure-ftpd'
+                        command = 'sudo systemctl disable ' + serviceName
                         subprocess.call(shlex.split(command))
 
                         try:

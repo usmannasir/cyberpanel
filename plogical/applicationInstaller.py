@@ -61,12 +61,15 @@ class ApplicationInstaller(multi.Thread):
 
     def installGit(self):
         try:
+            if os.path.exists("/etc/lsb-release"):
+                command = 'apt -y install git'
+                subprocess.call(shlex.split(command))
+            else:
+                command = 'sudo yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
+                subprocess.call(shlex.split(command))
 
-            command = 'sudo yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
-            subprocess.call(shlex.split(command))
-
-            command = 'sudo yum install git -y'
-            subprocess.call(shlex.split(command))
+                command = 'sudo yum install git -y'
+                subprocess.call(shlex.split(command))
 
         except BaseException, msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.installGit]')
