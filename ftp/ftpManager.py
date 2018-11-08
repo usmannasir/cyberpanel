@@ -66,6 +66,11 @@ class FTPManager:
             path = data['path']
             domainName = data['ftpDomain']
 
+            try:
+                api = data['api']
+            except:
+                api = '0'
+
             admin = Administrator.objects.get(id=userID)
 
             if len(path) > 0:
@@ -76,21 +81,21 @@ class FTPManager:
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/ftpUtilities.py"
 
             execPath = execPath + " submitFTPCreation --domainName " + domainName + " --userName " + userName \
-                       + " --password " + password + " --path " + path + " --owner " + admin.userName
+                       + " --password " + password + " --path " + path + " --owner " + admin.userName  + ' --api ' + api
 
             output = subprocess.check_output(shlex.split(execPath))
 
             if output.find("1,None") > -1:
-                data_ret = {'creatFTPStatus': 1, 'error_message': 'None'}
+                data_ret = {'status': 1, 'creatFTPStatus': 1, 'error_message': 'None'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
-                data_ret = {'creatFTPStatus': 0, 'error_message': output}
+                data_ret = {'status': 0, 'creatFTPStatus': 0, 'error_message': output}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'creatFTPStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'creatFTPStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -162,11 +167,11 @@ class FTPManager:
 
             FTPUtilities.submitFTPDeletion(ftpUserName)
 
-            final_json = json.dumps({'deleteStatus': 1, 'error_message': "None"})
+            final_json = json.dumps({'status': 1, 'deleteStatus': 1, 'error_message': "None"})
             return HttpResponse(final_json)
 
         except BaseException, msg:
-            data_ret = {'deleteStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -220,13 +225,12 @@ class FTPManager:
                     json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
-            final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
         except BaseException, msg:
-            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
-
             return HttpResponse(final_json)
 
     def changePassword(self):
@@ -243,10 +247,10 @@ class FTPManager:
 
             FTPUtilities.changeFTPPassword(userName, password)
 
-            data_ret = {'changePasswordStatus': 1, 'error_message': "None"}
+            data_ret = {'status': 1, 'changePasswordStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
         except BaseException, msg:
-            data_ret = {'changePasswordStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'changePasswordStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)

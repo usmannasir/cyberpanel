@@ -77,18 +77,17 @@ class MailServerManager:
             output = subprocess.check_output(shlex.split(execPath))
 
             if output.find("1,None") > -1:
-
-                data_ret = {'createEmailStatus': 1, 'error_message': "None"}
+                data_ret = {'status': 1, 'createEmailStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
             else:
-                data_ret = {'createEmailStatus': 0, 'error_message': output}
+                data_ret = {'status': 0, 'createEmailStatus': 0, 'error_message': output}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'createEmailStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'createEmailStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -126,22 +125,23 @@ class MailServerManager:
             try:
                 domain = Domains.objects.get(domain=domain)
             except:
-                final_dic = {'fetchStatus': 0, 'error_message': "No email accounts exists!"}
+                final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': "No email accounts exists!"}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
             emails = domain.eusers_set.all()
 
             if emails.count() == 0:
-                final_dic = {'fetchStatus': 0, 'error_message': "No email accounts exists!"}
+                final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': "No email accounts exists!"}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
             json_data = "["
             checker = 0
-
+            count = 1
             for items in emails:
-                dic = {'email': items.email}
+                dic = {'id': count, 'email': items.email}
+                count = count + 1
 
                 if checker == 0:
                     json_data = json_data + json.dumps(dic)
@@ -150,13 +150,13 @@ class MailServerManager:
                     json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
-            final_dic = {'fetchStatus': 1, 'error_message': "None", "data": json_data}
+            final_dic = {'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data}
             final_json = json.dumps(final_dic)
 
             return HttpResponse(final_json)
 
         except BaseException, msg:
-            data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -173,12 +173,12 @@ class MailServerManager:
             email = data['email']
 
             mailUtilities.deleteEmailAccount(email)
-            data_ret = {'deleteEmailStatus': 1, 'error_message': "None"}
+            data_ret = {'status': 1, 'deleteEmailStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'deleteEmailStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'deleteEmailStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -232,14 +232,14 @@ class MailServerManager:
                     json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
-            final_dic = {'fetchStatus': 1, 'error_message': "None", "data": json_data}
+            final_dic = {'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data}
             final_json = json.dumps(final_dic)
 
             return HttpResponse(final_json)
 
 
         except BaseException, msg:
-            data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -257,13 +257,13 @@ class MailServerManager:
             forwarding = Forwardings.objects.get(destination=destination, source=source)
             forwarding.delete()
 
-            data_ret = {'deleteForwardingStatus': 1, 'error_message': "None",
+            data_ret = {'status': 1, 'deleteForwardingStatus': 1, 'error_message': "None",
                         'successMessage': 'Successfully deleted!'}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'deleteForwardingStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'deleteForwardingStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -279,7 +279,7 @@ class MailServerManager:
             destination = data['destination']
 
             if Forwardings.objects.filter(source=source, destination=destination).count() > 0:
-                data_ret = {'createStatus': 0,
+                data_ret = {'status': 0, 'createStatus': 0,
                             'error_message': "You have already forwared to this destination."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -291,12 +291,12 @@ class MailServerManager:
             forwarding = Forwardings(source=source, destination=destination)
             forwarding.save()
 
-            data_ret = {'createStatus': 1, 'error_message': "None", 'successMessage': 'Successfully Created!'}
+            data_ret = {'status': 1, 'createStatus': 1, 'error_message': "None", 'successMessage': 'Successfully Created!'}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'createStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'createStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -340,12 +340,12 @@ class MailServerManager:
             emailAcct = EUsers(emailOwner=dom, email=email, password=password)
             emailAcct.save()
 
-            data_ret = {'passChangeStatus': 1, 'error_message': "None"}
+            data_ret = {'status': 1, 'passChangeStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'passChangeStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'passChangeStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -397,19 +397,19 @@ class MailServerManager:
                 command = "sudo cat " + path
                 privateKey = subprocess.check_output(shlex.split(command))
 
-                data_ret = {'fetchStatus': 1, 'keysAvailable': 1, 'publicKey': output[leftIndex:rightIndex],
+                data_ret = {'status': 1, 'fetchStatus': 1, 'keysAvailable': 1, 'publicKey': output[leftIndex:rightIndex],
                             'privateKey': privateKey, 'dkimSuccessMessage': 'Keys successfully fetched!',
                             'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
             except BaseException, msg:
-                data_ret = {'fetchStatus': 1, 'keysAvailable': 0, 'error_message': str(msg)}
+                data_ret = {'status': 1, 'fetchStatus': 1, 'keysAvailable': 0, 'error_message': str(msg)}
                 json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -450,17 +450,17 @@ class MailServerManager:
                                     auth=1)
                 record.save()
 
-                data_ret = {'generateStatus': 1, 'error_message': "None"}
+                data_ret = {'status': 1, 'generateStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
             else:
-                data_ret = {'generateStatus': 0, 'error_message': output}
+                data_ret = {'status': 0, 'generateStatus': 0, 'error_message': output}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'generateStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'generateStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

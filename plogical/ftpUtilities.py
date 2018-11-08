@@ -246,7 +246,7 @@ class FTPUtilities:
             return 0, str(msg)
 
     @staticmethod
-    def submitFTPCreation(domainName, userName, password, path, owner):
+    def submitFTPCreation(domainName, userName, password, path, owner, api = None):
         try:
 
             ## need to get gid and uid
@@ -290,7 +290,9 @@ class FTPUtilities:
 
             admin = Administrator.objects.get(userName=owner)
 
-            userName = admin.userName + "_" + userName
+            if api == '0':
+                userName = admin.userName + "_" + userName
+
 
             if website.package.ftpAccounts == 0:
                 user = Users(domain=website, user=userName, password=hash.hexdigest(), uid=uid, gid=gid,
@@ -302,7 +304,6 @@ class FTPUtilities:
                              date=datetime.now())
 
                 user.save()
-
             elif website.users_set.all().count() < website.package.ftpAccounts:
                 user = Users(domain=website, user=userName, password=hash.hexdigest(), uid=uid, gid=gid,
                              dir=path, quotasize=website.package.diskSpace,
@@ -366,16 +367,16 @@ def main():
     parser.add_argument('--password', help='Password for FTP Account')
     parser.add_argument('--owner', help='FTP Account owner.')
     parser.add_argument('--path', help='Path to ftp directory!')
+    parser.add_argument('--api', help='API Check!')
 
 
     args = parser.parse_args()
 
     if args.function == "submitFTPCreation":
-        FTPUtilities.submitFTPCreation(args.domainName,args.userName, args.password, args.path, args.owner)
+        FTPUtilities.submitFTPCreation(args.domainName,args.userName, args.password, args.path, args.owner, args.api)
 
 
 
 
 if __name__ == "__main__":
     main()
-

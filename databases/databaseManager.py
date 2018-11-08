@@ -35,7 +35,7 @@ class DatabaseManager:
         except BaseException, msg:
             return HttpResponse(str(msg))
 
-    def submitDBCreation(self, userID = None, data = None):
+    def submitDBCreation(self, userID = None, data = None, rAPI = None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -48,21 +48,22 @@ class DatabaseManager:
             dbPassword = data['dbPassword']
             webUsername = data['webUserName']
 
-            dbName = webUsername + "_" + dbName
-            dbUsername = webUsername + "_" + dbUsername
+            if rAPI == None:
+                dbName = webUsername + "_" + dbName
+                dbUsername = webUsername + "_" + dbUsername
 
             result = mysqlUtilities.submitDBCreation(dbName, dbUsername, dbPassword, databaseWebsite)
 
             if result[0] == 1:
-                data_ret = {'createDBStatus': 1, 'error_message': "None"}
+                data_ret = {'status': 1, 'createDBStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
-                data_ret = {'createDBStatus': 0, 'error_message': result[1]}
+                data_ret = {'status': 0, 'createDBStatus': 0, 'error_message': result[1]}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
         except BaseException, msg:
-            data_ret = {'createDBStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'createDBStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -108,12 +109,12 @@ class DatabaseManager:
 
             json_data = json_data + ']'
 
-            final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
 
             return HttpResponse(final_json)
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            final_json = json.dumps({'fetchStatus': 0, 'error_message': str(msg)})
+            final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': str(msg)})
             return HttpResponse(final_json)
 
     def submitDatabaseDeletion(self, userID = None, data = None):
@@ -128,16 +129,16 @@ class DatabaseManager:
             result = mysqlUtilities.submitDBDeletion(dbName)
 
             if result[0] == 1:
-                data_ret = {'deleteStatus': 1, 'error_message': "None"}
+                data_ret = {'status': 1, 'deleteStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
-                data_ret = {'deleteStatus': 0, 'error_message': result[1]}
+                data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': result[1]}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'deleteStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -176,15 +177,15 @@ class DatabaseManager:
             res = subprocess.call(cmd)
 
             if res == 1:
-                data_ret = {'changePasswordStatus': 0, 'error_message': "Please see CyberPanel main log file."}
+                data_ret = {'status': 0, 'changePasswordStatus': 0,'error_message': "Please see CyberPanel main log file."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            data_ret = {'changePasswordStatus': 1, 'error_message': "None"}
+            data_ret = {'status': 1, 'changePasswordStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'changePasswordStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'changePasswordStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)

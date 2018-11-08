@@ -94,20 +94,7 @@ class WebsiteManager:
     def listWebsites(self, request = None, userID = None, data = None):
         try:
             currentACL = ACLManager.loadedACL(userID)
-            websites = ACLManager.findAllSites(currentACL, userID)
-
-            pages = float(len(websites)) / float(10)
-            pagination = []
-
-            if pages <= 1.0:
-                pages = 1
-                pagination.append('<li><a href="\#"></a></li>')
-            else:
-                pages = ceil(pages)
-                finalPages = int(pages) + 1
-
-                for i in range(1, finalPages):
-                    pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
+            pagination = self.websitePagination(currentACL, userID)
 
             return render(request, 'websiteFunctions/listWebsites.html', {"pagination": pagination})
         except BaseException, msg:
@@ -173,13 +160,13 @@ class WebsiteManager:
             subprocess.Popen(shlex.split(execPath))
             time.sleep(2)
 
-            data_ret = {'createWebSiteStatus': 1, 'error_message': "None", 'tempStatusPath': tempStatusPath}
+            data_ret = {'status': 1, 'createWebSiteStatus': 1, 'error_message': "None", 'tempStatusPath': tempStatusPath}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
 
         except BaseException, msg:
-            data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -221,12 +208,12 @@ class WebsiteManager:
             subprocess.Popen(shlex.split(execPath))
             time.sleep(2)
 
-            data_ret = {'createWebSiteStatus': 1, 'error_message': "None", 'tempStatusPath': tempStatusPath}
+            data_ret = {'status': 1, 'createWebSiteStatus': 1, 'error_message': "None", 'tempStatusPath': tempStatusPath}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0,'createWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -245,11 +232,11 @@ class WebsiteManager:
             cdManager = ChildDomainManager(masterDomain)
             json_data = cdManager.findChildDomainsJson()
 
-            final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
         except BaseException, msg:
-            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -258,11 +245,12 @@ class WebsiteManager:
             currentACL = ACLManager.loadedACL(userID)
             pageNumber = int(data['page'])
             json_data = self.findWebsitesJson(currentACL, userID, pageNumber)
-            final_dic = {'listWebSiteStatus': 1, 'error_message': "None", "data": json_data}
+            pagination = self.websitePagination(currentACL, userID)
+            final_dic = {'status': 1, 'listWebSiteStatus': 1, 'error_message': "None", "data": json_data, 'pagination': pagination}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
         except BaseException, msg:
-            dic = {'listWebSiteStatus': 0, 'error_message': str(msg)}
+            dic = {'status': 1, 'listWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
@@ -281,12 +269,12 @@ class WebsiteManager:
             execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName
             subprocess.check_output(shlex.split(execPath))
 
-            data_ret = {'websiteDeleteStatus': 1, 'error_message': "None"}
+            data_ret = {'status': 1, 'websiteDeleteStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'websiteDeleteStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'websiteDeleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -306,12 +294,12 @@ class WebsiteManager:
             execPath = execPath + " deleteDomain --virtualHostName " + websiteName
             subprocess.check_output(shlex.split(execPath))
 
-            data_ret = {'websiteDeleteStatus': 1, 'error_message': "None"}
+            data_ret = {'status': 1, 'websiteDeleteStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'websiteDeleteStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'websiteDeleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -407,14 +395,66 @@ class WebsiteManager:
             currentPack = modifyWeb.package.packageName
             owner = modifyWeb.admin.userName
 
-            data_ret = {'modifyStatus': 1, 'error_message': "None", "adminEmail": email,
+            data_ret = {'status': 1, 'modifyStatus': 1, 'error_message': "None", "adminEmail": email,
                         "packages": json_data, "current_pack": currentPack, "adminNames": admin_data,
                         'currentAdmin': owner}
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
 
         except BaseException, msg:
-            dic = {'modifyStatus': 0, 'error_message': str(msg)}
+            dic = {'status': 0, 'modifyStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
+
+    def fetchWebsiteDataJSON(self, userID = None, data = None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            if ACLManager.currentContextPermission(currentACL, 'createWebsite') == 0:
+                return ACLManager.loadErrorJson('createWebSiteStatus', 0)
+
+            packs = ACLManager.loadPackages(userID, currentACL)
+            admins = ACLManager.loadAllUsers(userID)
+
+            ## Get packs name
+
+            json_data = "["
+            checker = 0
+
+            for items in packs:
+                dic = {"pack": items}
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+            json_data = json_data + ']'
+
+            ### Get admin names
+
+            admin_data = "["
+            checker = 0
+
+            for items in admins:
+                dic = {"adminNames": items}
+
+                if checker == 0:
+                    admin_data = admin_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    admin_data = admin_data + ',' + json.dumps(dic)
+
+            admin_data = admin_data + ']'
+
+            data_ret = {'status': 1, 'error_message': "None",
+                        "packages": json_data, "adminNames": admin_data}
+            final_json = json.dumps(data_ret)
+            return HttpResponse(final_json)
+
+        except BaseException, msg:
+            dic = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
@@ -442,7 +482,7 @@ class WebsiteManager:
             if output.find("1,None") > -1:
                 pass
             else:
-                data_ret = {'saveStatus': 0, 'error_message': output}
+                data_ret = {'status': 0, 'saveStatus': 0, 'error_message': output}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -460,12 +500,12 @@ class WebsiteManager:
 
             modifyWeb.save()
 
-            data_ret = {'saveStatus': 1, 'error_message': "None"}
+            data_ret = {'status': 1, 'saveStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -484,6 +524,7 @@ class WebsiteManager:
                 return ACLManager.loadError()
 
             Data = {}
+
             marketingStatus = emACL.checkIfEMEnabled(admin.userName)
 
             Data['marketingStatus'] = marketingStatus
@@ -917,11 +958,11 @@ class WebsiteManager:
         if output.find("1,None") > -1:
             pass
         else:
-            data_ret = {'changePHP': 0, 'error_message': output}
+            data_ret = {'status': 1, 'changePHP': 0, 'error_message': output}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        data_ret = {'changePHP': 1, 'error_message': "None"}
+        data_ret = {'status': 1, 'changePHP': 1, 'error_message': "None"}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -1244,7 +1285,6 @@ class WebsiteManager:
                 return HttpResponse(final_json)
 
             # Confirming that directory is read/writable
-            
             o = subprocess.call(['sudo', 'chown', 'cyberpanel:cyberpanel', tempPath])
             if o is not 0:
                 data_ret = {'addNewCron': 0, 'error_message': 'Error Changing Permissions'}
@@ -1417,16 +1457,16 @@ class WebsiteManager:
             if output.find("1,None") > -1:
                 pass
             else:
-                data_ret = {'changeOpenBasedir': 0, 'error_message': output}
+                data_ret = {'status': 0, 'changeOpenBasedir': 0, 'error_message': output}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            data_ret = {'changeOpenBasedir': 1, 'error_message': "None"}
+            data_ret = {'status': 1, 'changeOpenBasedir': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'changeOpenBasedir': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0,'changeOpenBasedir': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1986,10 +2026,20 @@ class WebsiteManager:
 
         return json_data
 
+    def websitePagination(self, currentACL, userID):
+        websites = ACLManager.findAllSites(currentACL, userID)
 
+        pages = float(len(websites)) / float(10)
+        pagination = []
 
+        if pages <= 1.0:
+            pages = 1
+            pagination.append('<li><a href="\#"></a></li>')
+        else:
+            pages = ceil(pages)
+            finalPages = int(pages) + 1
 
+            for i in range(1, finalPages):
+                pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
 
-
-
-
+        return pagination

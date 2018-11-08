@@ -310,11 +310,11 @@ class DNSManager:
                     continue
 
             json_data = json_data + ']'
-            final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
         except BaseException, msg:
-            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -474,12 +474,12 @@ class DNSManager:
                 recordContentCAA = data['recordContentCAA']  ## IP or ponting value
                 DNS.createDNSRecord(zone, value, recordType, recordContentCAA, 0, ttl)
 
-            final_dic = {'add_status': 1, 'error_message': "None"}
+            final_dic = {'status': 1, 'add_status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
         except BaseException, msg:
-            final_dic = {'add_status': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'add_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -495,12 +495,12 @@ class DNSManager:
             delRecord = Records.objects.get(id=id)
             delRecord.delete()
 
-            final_dic = {'delete_status': 1, 'error_message': "None"}
+            final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
         except BaseException, msg:
-            final_dic = {'delete_status': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'delete_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 

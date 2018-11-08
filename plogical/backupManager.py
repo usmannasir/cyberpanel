@@ -13,7 +13,7 @@ from websiteFunctions.models import Websites, Backups, dest, backupSchedules
 from virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
-from django.shortcuts import HttpResponse, render, redirect
+from django.shortcuts import HttpResponse, render
 from loginSystem.models import Administrator
 from mailUtilities import mailUtilities
 from random import randint
@@ -110,10 +110,10 @@ class BackupManager:
                     json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
-            final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
         except BaseException, msg:
-            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -148,12 +148,12 @@ class BackupManager:
 
             time.sleep(2)
 
-            final_json = json.dumps({'metaStatus': 1, 'error_message': "None", 'tempStorage': tempStoragePath})
+            final_json = json.dumps({'status': 1, 'metaStatus': 1, 'error_message': "None", 'tempStorage': tempStoragePath})
             return HttpResponse(final_json)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            final_dic = {'metaStatus': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'metaStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -272,10 +272,10 @@ class BackupManager:
 
             backup.delete()
 
-            final_json = json.dumps({'deleteStatus': 1, 'error_message': "None", "status": 0})
+            final_json = json.dumps({'status': 1, 'deleteStatus': 1, 'error_message': "None"})
             return HttpResponse(final_json)
         except BaseException, msg:
-            final_dic = {'deleteStatus': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
 
             return HttpResponse(final_json)
@@ -1301,11 +1301,3 @@ class BackupManager:
             data = {'cancelStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data)
             return HttpResponse(json_data)
-
-
-
-
-
-
-
-

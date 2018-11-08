@@ -18,7 +18,6 @@ from plogical.mailUtilities import mailUtilities
 from plogical.website import WebsiteManager
 from loginSystem.models import ACL
 from plogical.acl import ACLManager
-
 # Create your views here.
 
 
@@ -568,9 +567,8 @@ def changeAdminPassword(request):
                             'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-
             os.remove(randomFile)
-            admin = Administrator.objects.get(userName="admin")
+            admin = Administrator.objects.get(pk="admin")
             admin.password = hashPassword.hash_password(adminPass)
             admin.save()
             data_ret = {"changed": 1,
@@ -589,9 +587,7 @@ def changeAdminPassword(request):
 
     except BaseException, msg:
         data_ret = {"changed": 0,
-                    'error_message': "Failed to authorize access to change password!"}
+                    'error_message': str(msg)}
 
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
-
-

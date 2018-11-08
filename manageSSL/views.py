@@ -11,6 +11,7 @@ import json
 import shlex
 import subprocess
 from plogical.acl import ACLManager
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 # Create your views here.
 
 
@@ -58,14 +59,14 @@ def issueSSL(request):
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
 
+
                 adminEmail = ""
                 path = ""
 
                 try:
                     website = ChildDomains.objects.get(domain=virtualHost)
                     adminEmail = website.master.adminEmail
-                    path = data['path']
-
+                    path = website.path
                 except:
                     website = Websites.objects.get(domain=virtualHost)
                     adminEmail = website.adminEmail
@@ -74,16 +75,13 @@ def issueSSL(request):
                 ## ssl issue
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-
                 execPath = execPath + " issueSSL --virtualHostName " + virtualHost + " --administratorEmail " + adminEmail + " --path " + path
-
                 output = subprocess.check_output(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     pass
-
                 else:
-                    data_ret = {"SSL": 0,
+                    data_ret = {'status': 0 ,"SSL": 0,
                                 'error_message': output}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
@@ -93,18 +91,18 @@ def issueSSL(request):
                 website.ssl = 1
                 website.save()
 
-                data_ret = {"SSL": 1,
+                data_ret = {'status': 1, "SSL": 1,
                             'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
         except BaseException,msg:
-            data_ret = {"SSL": 0,
+            data_ret = {'status': 0, "SSL": 0,
                         'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
     except KeyError:
-        data_ret = {"SSL": 0,
+        data_ret = {'status': 0, "SSL": 0,
                     'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

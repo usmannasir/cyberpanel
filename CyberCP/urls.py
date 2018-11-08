@@ -39,4 +39,5 @@ urlpatterns = [
     url(r'^manageservices/',include('manageServices.urls')),
     url(r'^plugins/',include('pluginHolder.urls')),
     url(r'^emailMarketing/', include('emailMarketing.urls')),
+    url(r'^cloudAPI/', include('cloudAPI.urls')),
 ]
