@@ -10,6 +10,11 @@ import argparse
 import shutil
 import plogical.CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
+from websiteFunctions.models import Websites, ChildDomains, aliasDomains
+from plogical.virtualHostUtilities import virtualHostUtilities
+from plogical.sslUtilities import sslUtilities
+from plogical.vhost import vhost
+
 
 
 class ServerStatusUtil:
@@ -21,7 +26,7 @@ class ServerStatusUtil:
         try:
             res = subprocess.call(shlex.split(command), stdout=statusFile, stderr=statusFile)
             if res == 1:
-                raise 0
+                return 0
             else:
                 return 1
         except BaseException, msg:
@@ -138,6 +143,94 @@ class ServerStatusUtil:
             shutil.rmtree('/usr/local/usr')
 
     @staticmethod
+    def createWebsite(website):
+        try:
+            virtualHostName = website.domain
+
+            confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
+            FNULL = open(os.devnull, 'w')
+            if not os.path.exists(confPath):
+                command = 'mkdir -p ' + confPath
+                ServerStatusUtil.executioner(command, FNULL)
+
+            completePathToConfigFile = confPath + "/vhost.conf"
+
+            if vhost.perHostVirtualConf(completePathToConfigFile, website.adminEmail , website.externalApp, website.phpSelection,
+                                        virtualHostName, 1) == 1:
+                pass
+            else:
+                return 0
+
+            retValues = vhost.createConfigInMainVirtualHostFile(virtualHostName)
+            if retValues[0] == 0:
+                return 0
+
+            if os.path.exists('/etc/letsencrypt/live/' + virtualHostName):
+                sslUtilities.installSSLForDomain(virtualHostUtilities, website.adminEmail)
+
+            vhostPath = vhost.Server_root + "/conf/vhosts"
+            FNULL = open(os.devnull, 'w')
+            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+        return 0
+
+    @staticmethod
+    def createDomain(website):
+        try:
+            virtualHostName = website.domain
+
+            confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
+            completePathToConfigFile = confPath + "/vhost.conf"
+
+            confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
+            FNULL = open(os.devnull, 'w')
+            if not os.path.exists(confPath):
+                command = 'mkdir -p ' + confPath
+                ServerStatusUtil.executioner(command, FNULL)
+
+            if vhost.perHostDomainConf(website.path, website.master.domain, virtualHostName, completePathToConfigFile, website.master.adminEmail, website.master.externalApp,
+                                        website.phpSelection, 1) == 1:
+                pass
+            else:
+                return 0
+
+            retValues = vhost.createConfigInMainDomainHostFile(virtualHostName, website.master.domain)
+
+            if retValues[0] == 0:
+                return 0
+
+            if os.path.exists('/etc/letsencrypt/live/' + virtualHostName):
+                sslUtilities.installSSLForDomain(virtualHostUtilities, website.adminEmail)
+
+            vhostPath = vhost.Server_root + "/conf/vhosts"
+            FNULL = open(os.devnull, 'w')
+            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+        return 0
+
+    @staticmethod
+    def rebuildvConf():
+        try:
+            allWebsites = Websites.objects.all()
+            for website in allWebsites:
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                          "Building vhost conf for:" + website.domain + ".\n")
+                ServerStatusUtil.createWebsite(website)
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                          "vhost conf successfully built for:" + website.domain + ".\n")
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return 0
+
+    @staticmethod
     def switchTOLSWS(licenseKey):
         try:
             statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
@@ -188,6 +281,15 @@ class ServerStatusUtil:
                 logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to set up File Manager. [404]")
                 ServerStatusUtil.recover()
                 return 0
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "Rebuilding vhost conf..\n")
+
+            ServerStatusUtil.rebuildvConf()
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "vhost conf successfully built.\n")
+
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,"Successfully switched to LITESPEED ENTERPRISE WEB SERVER. [200]\n")
 

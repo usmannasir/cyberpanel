@@ -95,7 +95,7 @@ class ProcessUtilities:
     def decideServer():
         entPath = '/usr/local/lsws/bin/lshttpd'
 
-        if os.readlink(entPath) == '/usr/local/lsws/bin/lshttpd/openlitespeed':
+        if os.path.exists('/usr/local/lsws/bin/openlitespeed'):
             return ProcessUtilities.OLS
         else:
             return ProcessUtilities.ent

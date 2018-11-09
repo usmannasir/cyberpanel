@@ -98,6 +98,14 @@ class virtualHostUtilities:
             if retValues[0] == 0:
                 raise BaseException(retValues[1])
 
+            selectedPackage = Package.objects.get(packageName=packageName)
+
+            website = Websites(admin=admin, package=selectedPackage, domain=virtualHostName,
+                               adminEmail=administratorEmail,
+                               phpSelection=phpVersion, ssl=ssl, externalApp=virtualHostUser)
+
+            website.save()
+
 
             if ssl == 1:
                 sslPath = "/home/" + virtualHostName + "/public_html"
@@ -123,14 +131,6 @@ class virtualHostUtilities:
 
             if dkimCheck == 1:
                 DNS.createDKIMRecords(virtualHostName)
-
-            selectedPackage = Package.objects.get(packageName=packageName)
-
-            website = Websites(admin=admin, package=selectedPackage, domain=virtualHostName,
-                               adminEmail=administratorEmail,
-                               phpSelection=phpVersion, ssl=ssl, externalApp=virtualHostUser)
-
-            website.save()
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Website successfully created. [200]')
 
@@ -844,6 +844,9 @@ class virtualHostUtilities:
 
             ## Now restart litespeed after initial configurations are done
 
+            website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion, ssl=ssl)
+            website.save()
+
             if ssl == 1:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating SSL..,50')
                 installUtilities.installUtilities.reStartLiteSpeed()
@@ -862,10 +865,6 @@ class virtualHostUtilities:
 
             if dkimCheck == 1:
                 DNS.createDKIMRecords(virtualHostName)
-
-
-            website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion, ssl=ssl)
-            website.save()
 
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Domain successfully created. [200]')

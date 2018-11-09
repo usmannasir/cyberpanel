@@ -225,16 +225,15 @@ class InstallCyberPanel:
     def installAllPHPVersions(self):
         try:
             count = 0
+
             while (1):
 
                 if self.distro == ubuntu:
                     command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
                               'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
                               'lsphp7?-ldap lsphp7?-mysql lsphp7?-opcache lsphp7?-pspell lsphp7?-recode ' \
-                              'lsphp7?-sqlite3 lsphp7?-tidy >> /var/log/installPHPs 2>&1'
+                              'lsphp7?-sqlite3 lsphp7?-tidy'
                     res = os.system(command)
-                    if res != 0:
-                        res = 1 # Force a retry
                 else:
                     command = 'yum -y groupinstall lsphp-all'
                     cmd = shlex.split(command)

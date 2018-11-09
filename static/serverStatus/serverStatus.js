@@ -73,7 +73,6 @@ app.controller('litespeedStatus', function ($scope, $http) {
 
     };
 
-
     $scope.stopLitespeed = function () {
 
 
@@ -129,6 +128,127 @@ app.controller('litespeedStatus', function ($scope, $http) {
             $scope.serverStatusCouldNotConnect = false;
             $scope.disableReboot = false;
             $scope.disableStop = false;
+        }
+
+
+    };
+
+    /// License Manager
+
+    $scope.cpLoading = true;
+    $scope.fetchedData = true;
+    $scope.changeSerialBox = true;
+
+    $scope.hideLicenseStatus = function () {
+        $scope.fetchedData = true;
+    };
+
+    $scope.licenseStatus = function () {
+
+        $scope.cpLoading = false;
+        $scope.changeSerialBox = true;
+
+        var url = "/serverstatus/licenseStatus";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                $scope.cpLoading = true;
+                $scope.fetchedData = false;
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Status successfully fetched',
+                    type: 'success'
+                });
+                $scope.lsSerial = response.data.lsSerial;
+                $scope.lsexpiration = response.data.lsexpiration;
+            }
+            else {
+                $scope.cpLoading = true;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.erroMessage,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cpLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+        }
+
+
+    };
+    $scope.showSerialBox = function () {
+        $scope.fetchedData = true;
+        $scope.changeSerialBox = false;
+    };
+    $scope.changeLicense = function () {
+
+        $scope.cpLoading = false;
+
+        var url = "/serverstatus/changeLicense";
+
+        var data = {newKey: $scope.newKey};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                $scope.cpLoading = true;
+                new PNotify({
+                    title: 'Success!',
+                    text: 'License successfully Updated',
+                    type: 'success'
+                });
+            }
+            else {
+                $scope.cpLoading = true;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.erroMessage,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cpLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
         }
 
 

@@ -1013,9 +1013,9 @@ class preFlightsChecks:
             while (1):
 
                 if self.distro == centos:
-                    command = 'yum -y install zip'
+                    command = 'yum -y install unzip'
                 else:
-                    command = 'apt-get -y install zip'
+                    command = 'apt-get -y install unzip'
 
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
