@@ -1,0 +1,213 @@
+#!/usr/local/CyberCP/bin/python2
+import os,sys
+sys.path.append('/usr/local/CyberCP')
+import django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+django.setup()
+import subprocess
+import shlex
+import argparse
+import shutil
+import plogical.CyberCPLogFileWriter as logging
+from plogical.processUtilities import ProcessUtilities
+
+
+class ServerStatusUtil:
+    lswsInstallStatusPath = '/home/cyberpanel/switchLSWSStatus'
+    serverRootPath = '/usr/local/lsws/'
+
+    @staticmethod
+    def executioner(command, statusFile):
+        try:
+            res = subprocess.call(shlex.split(command), stdout=statusFile, stderr=statusFile)
+            if res == 1:
+                raise 0
+            else:
+                return 1
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return 0
+
+    @staticmethod
+    def installLiteSpeed(licenseKey, statusFile):
+        try:
+
+            cwd = os.getcwd()
+            try:
+
+                command = 'groupadd nobody'
+                ServerStatusUtil.executioner(command, statusFile)
+
+            except:
+                pass
+
+            try:
+                command = 'usermod -a -G nobody nobody'
+                ServerStatusUtil.executioner(command, statusFile)
+            except:
+                pass
+            try:
+                command = 'systemctl stop lsws'
+                ServerStatusUtil.executioner(command, statusFile)
+            except:
+                pass
+
+            command = 'wget https://www.litespeedtech.com/packages/5.0/lsws-5.3-ent-x86_64-linux.tar.gz'
+            if ServerStatusUtil.executioner(command, statusFile) == 0:
+                return 0
+
+            command = 'tar zxf lsws-5.3-ent-x86_64-linux.tar.gz'
+            if ServerStatusUtil.executioner(command, statusFile) == 0:
+                return 0
+
+            writeSerial = open('lsws-5.3/serial.no', 'w')
+            writeSerial.writelines(licenseKey)
+            writeSerial.close()
+
+            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/install.sh', 'lsws-5.3/')
+            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/functions.sh', 'lsws-5.3/')
+
+            os.chdir('lsws-5.3')
+
+            command = 'chmod +x install.sh'
+            if ServerStatusUtil.executioner(command, statusFile) == 0:
+                return 0
+
+            command = 'chmod +x functions.sh'
+            if ServerStatusUtil.executioner(command, statusFile) == 0:
+                return 0
+
+            command = './install.sh'
+            if ServerStatusUtil.executioner(command, statusFile) == 0:
+                return 0
+
+            os.chdir(cwd)
+            confPath = '/usr/local/lsws/conf/'
+            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/httpd_config.xml', confPath)
+            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/modsec.conf', confPath)
+            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/httpd.conf', confPath)
+
+            try:
+                command = 'chown -R lsadm:lsadm ' + confPath
+                subprocess.call(shlex.split(command))
+            except:
+                pass
+
+            return 1
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return 0
+
+    @staticmethod
+    def setupFileManager(statusFile):
+        try:
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Setting up Filemanager files..\n")
+
+            fileManagerPath = ServerStatusUtil.serverRootPath+"FileManager"
+            if os.path.exists(fileManagerPath):
+                shutil.rmtree(fileManagerPath)
+            shutil.copytree("/usr/local/CyberCP/serverStatus/litespeed/FileManager",fileManagerPath)
+
+            ## remove unnecessary files
+
+            command = 'chmod -R 777 ' + fileManagerPath
+            if ServerStatusUtil.executioner(command, statusFile) == 0:
+                return 0
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,"Filemanager files are set!\n")
+
+            return 1
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return 0
+
+    @staticmethod
+    def recover():
+        FNULL = open(os.devnull, 'w')
+
+        if os.path.exists('/usr/local/lsws'):
+            shutil.rmtree('/usr/local/lsws')
+
+        command = 'tar -zxvf /usr/local/olsBackup.tar.gz -C /usr/local/'
+        ServerStatusUtil.executioner(command, FNULL)
+
+        command = 'mv /usr/local/usr/local/lsws /usr/local'
+        ServerStatusUtil.executioner(command, FNULL)
+
+        if os.path.exists('/usr/local/usr'):
+            shutil.rmtree('/usr/local/usr')
+
+    @staticmethod
+    def switchTOLSWS(licenseKey):
+        try:
+            statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+            FNULL = open(os.devnull, 'w')
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,"Starting conversion process..\n")
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "Removing OpenLiteSpeed..\n")
+
+            ## Try to stop current LiteSpeed Process
+
+            ProcessUtilities.killLiteSpeed()
+
+            if os.path.exists('/usr/local/lsws'):
+                command = 'tar -zcvf /usr/local/olsBackup.tar.gz /usr/local/lsws'
+                if ServerStatusUtil.executioner(command, FNULL) == 0:
+                    logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to create backup of current LSWS. [404]")
+                    ServerStatusUtil.recover()
+                    return 0
+
+                dirs = os.listdir('/usr/local/lsws')
+                for dir in dirs:
+                    if dir.find('lsphp') > -1:
+                        continue
+                    finalDir = '/usr/local/lsws/' + dir
+                    try:
+                        shutil.rmtree(finalDir)
+                    except:
+                        pass
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "OpenLiteSpeed removed.\n")
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "Installing LiteSpeed Enterprise Web Server ..\n")
+
+
+            if ServerStatusUtil.installLiteSpeed(licenseKey, statusFile) == 0:
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to install LiteSpeed. [404]")
+                ServerStatusUtil.recover()
+                return 0
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "LiteSpeed Enterprise Web Server installed.\n")
+
+
+            if ServerStatusUtil.setupFileManager(statusFile) == 0:
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to set up File Manager. [404]")
+                ServerStatusUtil.recover()
+                return 0
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,"Successfully switched to LITESPEED ENTERPRISE WEB SERVER. [200]\n")
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            ServerStatusUtil.recover()
+
+
+
+def main():
+
+    parser = argparse.ArgumentParser(description='Server Status Util.')
+    parser.add_argument('function', help='Specific a function to call!')
+    parser.add_argument('--licenseKey', help='LITESPEED ENTERPRISE WEB SERVER License Key')
+
+    args = parser.parse_args()
+
+    if args.function == "switchTOLSWS":
+        ServerStatusUtil.switchTOLSWS(args.licenseKey)
+
+
+if __name__ == "__main__":
+    main()

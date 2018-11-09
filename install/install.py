@@ -296,24 +296,26 @@ class preFlightsChecks:
                 preFlightsChecks.stdOut("Exception during CyberPanel install")
                 os._exit(os.EX_SOFTWARE)
 
-            else:
-                while(1):
-                    cmd.append("rpm")
-                    cmd.append("-ivh")
-                    cmd.append("http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm")
-                    res = subprocess.call(cmd)
+        else:
+            while (1):
+                cmd.append("rpm")
+                cmd.append("-ivh")
+                cmd.append("http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm")
+                res = subprocess.call(cmd)
 
-                    if res == 1:
-                        count = count + 1
-                        preFlightsChecks.stdOut("Unable to add CyberPanel official repository, trying again, try number: " + str(count) + "\n")
-                        if count == 3:
-                            logging.InstallLog.writeToFile("Unable to add CyberPanel official repository, exiting installer! [installCyberPanelRepo]")
-                            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                            os._exit(0)
-                    else:
-                        logging.InstallLog.writeToFile("CyberPanel Repo added!")
-                        preFlightsChecks.stdOut("CyberPanel Repo added!")
-                        break
+                if res == 1:
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Unable to add CyberPanel official repository, trying again, try number: " + str(count) + "\n")
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Unable to add CyberPanel official repository, exiting installer! [installCyberPanelRepo]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        os._exit(0)
+                else:
+                    logging.InstallLog.writeToFile("CyberPanel Repo added!")
+                    preFlightsChecks.stdOut("CyberPanel Repo added!")
+                    break
 
     def enableEPELRepo(self):
         try:

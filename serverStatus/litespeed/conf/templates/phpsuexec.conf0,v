@@ -1,0 +1,125 @@
+head	1.1;
+access;
+symbols;
+locks
+	root:1.1; strict;
+comment	@# @;
+
+
+1.1
+date	2017.08.17.05.47.23;	author root;	state Exp;
+branches;
+next	;
+
+
+desc
+@/usr/local/CyberCP/conf/templates/phpsuexec.conf0
+@
+
+
+1.1
+log
+@Update
+@
+text
+@allowSymbolLink 1
+chrootMode 0
+enableScript 1
+restrained 1
+setUIDMode 2
+vhRoot $SERVER_ROOT/$VH_NAME/
+configFile $SERVER_ROOT/conf/vhosts/$VH_NAME/vhconf.conf
+
+virtualHostConfig {
+  enableGzip 1
+  docRoot $VH_ROOT/public_html/
+  
+  htAccess {
+    accessFileName .htaccess
+    allowOverride 31
+  }
+
+  rewrite {
+    enable 0
+    logLevel 0
+  }
+  
+  awstats {
+    updateMode 0
+    workingDir $VH_ROOT/awstats
+    awstatsURI /awstats/
+    siteDomain localhost
+    siteAliases 127.0.0.1 localhost
+    updateInterval 86400
+    updateOffset 0
+    securedConn 0
+  }
+
+  extProcessor $VH_NAME_lsphp{
+    path $SERVER_ROOT/fcgi-bin/lsphp
+    backlog 10
+    instances 5
+    runOnStartUp 0
+    respBuffer 0
+    autoStart 1
+    extMaxIdleTime 60
+    priority 0
+    memSoftLimit 100M
+    memHardLimit 150M
+    procSoftLimit 100
+    procHardLimit 200
+    type lsapi
+    address uds://tmp/lshttpd/$VH_NAME_lsphp.sock
+    maxConns 5
+    initTimeout 60
+    retryTimeout 0
+    persistConn 1
+    pcKeepAliveTimeout 30
+  }
+  
+  index {
+    useServer 0
+    autoIndex 0
+    autoIndexURI /_autoindex/default.php
+    indexFiles index.html
+  }
+
+  accessLog $SERVER_ROOT/logs/$VH_NAME.access.log{
+    keepDays 30
+    rollingSize 100M
+    compressArchive 1
+    useServer 0
+    logHeaders 3
+  }
+  
+  errorlog {
+    useServer 1
+  }
+
+  hotlinkCtrl {
+    enableHotlinkCtrl 0
+    suffixes gif, jpeg, jpg
+    allowDirectAccess 1
+    onlySelf 1
+  }
+
+  accessControl {
+    allow *
+  }
+  
+  scriptHandler {
+    add lsapi:$VH_NAME_lsphp php
+  }
+   
+  expires {
+    enableExpires 1
+  }
+  
+  context /cgi-bin/{
+    type cgi
+    location $VH_ROOT/cgi-bin/
+    accessControl 
+    rewrite 
+  }
+}
+@

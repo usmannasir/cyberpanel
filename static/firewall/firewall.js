@@ -3,10 +3,6 @@
  */
 
 
-
-
-
-
 /* Java script code to ADD Firewall Rules */
 
 app.controller('firewallController', function($scope,$http) {
@@ -547,8 +543,6 @@ app.controller('firewallController', function($scope,$http) {
 });
 
 /* Java script code to ADD Firewall Rules */
-
-
 
 /* Java script code to Secure SSH */
 

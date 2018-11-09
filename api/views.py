@@ -567,8 +567,9 @@ def changeAdminPassword(request):
                             'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
+
             os.remove(randomFile)
-            admin = Administrator.objects.get(pk="admin")
+            admin = Administrator.objects.get(userName="admin")
             admin.password = hashPassword.hash_password(adminPass)
             admin.save()
             data_ret = {"changed": 1,

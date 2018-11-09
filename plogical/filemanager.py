@@ -1,11 +1,6 @@
-import os.path
-import shutil
 import CyberCPLogFileWriter as logging
-import subprocess
 import argparse
-import shlex
 from random import randint
-
 
 class filemanager:
 
@@ -25,7 +20,7 @@ class filemanager:
 
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + "  [createEmailAccount]")
+                str(msg) + "  [createTemporaryFile]")
             print "0," + str(msg)
 
 

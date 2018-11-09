@@ -13,16 +13,15 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
 from plogical.installUtilities import installUtilities
-from django.shortcuts import HttpResponse, render, redirect
-from loginSystem.models import Administrator
+from django.shortcuts import HttpResponse, render
 from random import randint
 import time
-from loginSystem.views import loadLoginPage
 from plogical.firewallUtilities import FirewallUtilities
 from firewall.models import FirewallRules
 import thread
 from plogical.modSec import modSec
 from plogical.csf import CSF
+from plogical.processUtilities import ProcessUtilities
 
 class FirewallManager:
 
@@ -604,18 +603,24 @@ class FirewallManager:
             else:
                 return ACLManager.loadError()
 
-            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                OLS = 1
+                confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
-            command = "sudo cat " + confPath
-            httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+                command = "sudo cat " + confPath
+                httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
 
-            modSecInstalled = 0
+                modSecInstalled = 0
 
-            for items in httpdConfig:
-                if items.find('module mod_security') > -1:
-                    modSecInstalled = 1
-                    break
-            return render(request, 'firewall/modSecurity.html', {'modSecInstalled': modSecInstalled})
+                for items in httpdConfig:
+                    if items.find('module mod_security') > -1:
+                        modSecInstalled = 1
+                        break
+            else:
+                OLS = 0
+                modSecInstalled = 1
+
+            return render(request, 'firewall/modSecurity.html', {'modSecInstalled': modSecInstalled, 'OLS': OLS})
         except BaseException, msg:
             return HttpResponse(str(msg))
 
@@ -702,29 +707,89 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('fetchStatus', 0)
 
-            modsecurity = 0
-            SecAuditEngine = 0
-            SecRuleEngine = 0
-            SecDebugLogLevel = "9"
-            SecAuditLogRelevantStatus = '^(?:5|4(?!04))'
-            SecAuditLogParts = 'ABIJDEFHZ'
-            SecAuditLogType = 'Serial'
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
 
-            confPath = os.path.join(virtualHostUtilities.Server_root, 'conf/httpd_config.conf')
-            modSecPath = os.path.join(virtualHostUtilities.Server_root, 'modules', 'mod_security.so')
+                modsecurity = 0
+                SecAuditEngine = 0
+                SecRuleEngine = 0
+                SecDebugLogLevel = "9"
+                SecAuditLogRelevantStatus = '^(?:5|4(?!04))'
+                SecAuditLogParts = 'ABIJDEFHZ'
+                SecAuditLogType = 'Serial'
 
-            if os.path.exists(modSecPath):
+                confPath = os.path.join(virtualHostUtilities.Server_root, 'conf/httpd_config.conf')
+                modSecPath = os.path.join(virtualHostUtilities.Server_root, 'modules', 'mod_security.so')
+
+                if os.path.exists(modSecPath):
+                    command = "sudo cat " + confPath
+                    data = subprocess.check_output(shlex.split(command)).splitlines()
+
+                    for items in data:
+
+                        if items.find('modsecurity ') > -1:
+                            if items.find('on') > -1 or items.find('On') > -1:
+                                modsecurity = 1
+                                continue
+                        if items.find('SecAuditEngine ') > -1:
+                            if items.find('on') > -1 or items.find('On') > -1:
+                                SecAuditEngine = 1
+                                continue
+
+                        if items.find('SecRuleEngine ') > -1:
+                            if items.find('on') > -1 or items.find('On') > -1:
+                                SecRuleEngine = 1
+                                continue
+
+                        if items.find('SecDebugLogLevel') > -1:
+                            result = items.split(' ')
+                            if result[0] == 'SecDebugLogLevel':
+                                SecDebugLogLevel = result[1]
+                                continue
+                        if items.find('SecAuditLogRelevantStatus') > -1:
+                            result = items.split(' ')
+                            if result[0] == 'SecAuditLogRelevantStatus':
+                                SecAuditLogRelevantStatus = result[1]
+                                continue
+                        if items.find('SecAuditLogParts') > -1:
+                            result = items.split(' ')
+                            if result[0] == 'SecAuditLogParts':
+                                SecAuditLogParts = result[1]
+                                continue
+                        if items.find('SecAuditLogType') > -1:
+                            result = items.split(' ')
+                            if result[0] == 'SecAuditLogType':
+                                SecAuditLogType = result[1]
+                                continue
+
+                    final_dic = {'fetchStatus': 1,
+                                 'installed': 1,
+                                 'SecRuleEngine': SecRuleEngine,
+                                 'modsecurity': modsecurity,
+                                 'SecAuditEngine': SecAuditEngine,
+                                 'SecDebugLogLevel': SecDebugLogLevel,
+                                 'SecAuditLogParts': SecAuditLogParts,
+                                 'SecAuditLogRelevantStatus': SecAuditLogRelevantStatus,
+                                 'SecAuditLogType': SecAuditLogType,
+                                 }
+
+                else:
+                    final_dic = {'fetchStatus': 1,
+                                 'installed': 0}
+            else:
+                SecAuditEngine = 0
+                SecRuleEngine = 0
+                SecDebugLogLevel = "9"
+                SecAuditLogRelevantStatus = '^(?:5|4(?!04))'
+                SecAuditLogParts = 'ABIJDEFHZ'
+                SecAuditLogType = 'Serial'
+
+                confPath = os.path.join(virtualHostUtilities.Server_root, 'conf/modsec.conf')
 
                 command = "sudo cat " + confPath
 
                 data = subprocess.check_output(shlex.split(command)).splitlines()
 
                 for items in data:
-
-                    if items.find('modsecurity ') > -1:
-                        if items.find('on') > -1 or items.find('On') > -1:
-                            modsecurity = 1
-                            continue
                     if items.find('SecAuditEngine ') > -1:
                         if items.find('on') > -1 or items.find('On') > -1:
                             SecAuditEngine = 1
@@ -759,17 +824,12 @@ class FirewallManager:
                 final_dic = {'fetchStatus': 1,
                              'installed': 1,
                              'SecRuleEngine': SecRuleEngine,
-                             'modsecurity': modsecurity,
                              'SecAuditEngine': SecAuditEngine,
                              'SecDebugLogLevel': SecDebugLogLevel,
                              'SecAuditLogParts': SecAuditLogParts,
                              'SecAuditLogRelevantStatus': SecAuditLogRelevantStatus,
                              'SecAuditLogType': SecAuditLogType,
                              }
-
-            else:
-                final_dic = {'fetchStatus': 1,
-                             'installed': 0}
 
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -788,68 +848,126 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('saveStatus', 0)
 
-            modsecurity = data['modsecurity_status']
-            SecAuditEngine = data['SecAuditEngine']
-            SecRuleEngine = data['SecRuleEngine']
-            SecDebugLogLevel = data['SecDebugLogLevel']
-            SecAuditLogParts = data['SecAuditLogParts']
-            SecAuditLogRelevantStatus = data['SecAuditLogRelevantStatus']
-            SecAuditLogType = data['SecAuditLogType']
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
 
-            if modsecurity == True:
-                modsecurity = "modsecurity  on"
+                modsecurity = data['modsecurity_status']
+                SecAuditEngine = data['SecAuditEngine']
+                SecRuleEngine = data['SecRuleEngine']
+                SecDebugLogLevel = data['SecDebugLogLevel']
+                SecAuditLogParts = data['SecAuditLogParts']
+                SecAuditLogRelevantStatus = data['SecAuditLogRelevantStatus']
+                SecAuditLogType = data['SecAuditLogType']
+
+                if modsecurity == True:
+                    modsecurity = "modsecurity  on"
+                else:
+                    modsecurity = "modsecurity  off"
+
+                if SecAuditEngine == True:
+                    SecAuditEngine = "SecAuditEngine on"
+                else:
+                    SecAuditEngine = "SecAuditEngine off"
+
+                if SecRuleEngine == True:
+                    SecRuleEngine = "SecRuleEngine On"
+                else:
+                    SecRuleEngine = "SecRuleEngine off"
+
+                SecDebugLogLevel = "SecDebugLogLevel " + str(SecDebugLogLevel)
+                SecAuditLogParts = "SecAuditLogParts " + str(SecAuditLogParts)
+                SecAuditLogRelevantStatus = "SecAuditLogRelevantStatus " + SecAuditLogRelevantStatus
+                SecAuditLogType = "SecAuditLogType " + SecAuditLogType
+
+                ## writing data temporary to file
+
+
+                tempConfigPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+                confPath = open(tempConfigPath, "w")
+
+                confPath.writelines(modsecurity + "\n")
+                confPath.writelines(SecAuditEngine + "\n")
+                confPath.writelines(SecRuleEngine + "\n")
+                confPath.writelines(SecDebugLogLevel + "\n")
+                confPath.writelines(SecAuditLogParts + "\n")
+                confPath.writelines(SecAuditLogRelevantStatus + "\n")
+                confPath.writelines(SecAuditLogType + "\n")
+
+                confPath.close()
+
+                ## save configuration data
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+
+                execPath = execPath + " saveModSecConfigs --tempConfigPath " + tempConfigPath
+
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    installUtilities.reStartLiteSpeed()
+                    data_ret = {'saveStatus': 1, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'saveStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
             else:
-                modsecurity = "modsecurity  off"
+                SecAuditEngine = data['SecAuditEngine']
+                SecRuleEngine = data['SecRuleEngine']
+                SecDebugLogLevel = data['SecDebugLogLevel']
+                SecAuditLogParts = data['SecAuditLogParts']
+                SecAuditLogRelevantStatus = data['SecAuditLogRelevantStatus']
+                SecAuditLogType = data['SecAuditLogType']
 
-            if SecAuditEngine == True:
-                SecAuditEngine = "SecAuditEngine on"
-            else:
-                SecAuditEngine = "SecAuditEngine off"
+                if SecAuditEngine == True:
+                    SecAuditEngine = "SecAuditEngine on"
+                else:
+                    SecAuditEngine = "SecAuditEngine off"
 
-            if SecRuleEngine == True:
-                SecRuleEngine = "SecRuleEngine On"
-            else:
-                SecRuleEngine = "SecRuleEngine off"
+                if SecRuleEngine == True:
+                    SecRuleEngine = "SecRuleEngine On"
+                else:
+                    SecRuleEngine = "SecRuleEngine off"
 
-            SecDebugLogLevel = "SecDebugLogLevel " + str(SecDebugLogLevel)
-            SecAuditLogParts = "SecAuditLogParts " + str(SecAuditLogParts)
-            SecAuditLogRelevantStatus = "SecAuditLogRelevantStatus " + SecAuditLogRelevantStatus
-            SecAuditLogType = "SecAuditLogType " + SecAuditLogType
+                SecDebugLogLevel = "SecDebugLogLevel " + str(SecDebugLogLevel)
+                SecAuditLogParts = "SecAuditLogParts " + str(SecAuditLogParts)
+                SecAuditLogRelevantStatus = "SecAuditLogRelevantStatus " + SecAuditLogRelevantStatus
+                SecAuditLogType = "SecAuditLogType " + SecAuditLogType
 
-            ## writing data temporary to file
+                ## writing data temporary to file
 
 
-            tempConfigPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+                tempConfigPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-            confPath = open(tempConfigPath, "w")
+                confPath = open(tempConfigPath, "w")
 
-            confPath.writelines(modsecurity + "\n")
-            confPath.writelines(SecAuditEngine + "\n")
-            confPath.writelines(SecRuleEngine + "\n")
-            confPath.writelines(SecDebugLogLevel + "\n")
-            confPath.writelines(SecAuditLogParts + "\n")
-            confPath.writelines(SecAuditLogRelevantStatus + "\n")
-            confPath.writelines(SecAuditLogType + "\n")
+                confPath.writelines(SecAuditEngine + "\n")
+                confPath.writelines(SecRuleEngine + "\n")
+                confPath.writelines(SecDebugLogLevel + "\n")
+                confPath.writelines(SecAuditLogParts + "\n")
+                confPath.writelines(SecAuditLogRelevantStatus + "\n")
+                confPath.writelines(SecAuditLogType + "\n")
 
-            confPath.close()
+                confPath.close()
 
-            ## save configuration data
+                ## save configuration data
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
 
-            execPath = execPath + " saveModSecConfigs --tempConfigPath " + tempConfigPath
+                execPath = execPath + " saveModSecConfigs --tempConfigPath " + tempConfigPath
 
-            output = subprocess.check_output(shlex.split(execPath))
+                output = subprocess.check_output(shlex.split(execPath))
 
-            if output.find("1,None") > -1:
-                installUtilities.reStartLiteSpeed()
-                data_ret = {'saveStatus': 1, 'error_message': "None"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            else:
-                data_ret = {'saveStatus': 0, 'error_message': output}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+                if output.find("1,None") > -1:
+                    installUtilities.reStartLiteSpeed()
+                    data_ret = {'saveStatus': 1, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'saveStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
 
         except BaseException, msg:
             data_ret = {'saveStatus': 0, 'error_message': str(msg)}
@@ -866,17 +984,20 @@ class FirewallManager:
             else:
                 return ACLManager.loadError()
 
-            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
-            command = "sudo cat " + confPath
-            httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+                command = "sudo cat " + confPath
+                httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
 
-            modSecInstalled = 0
+                modSecInstalled = 0
 
-            for items in httpdConfig:
-                if items.find('module mod_security') > -1:
-                    modSecInstalled = 1
-                    break
+                for items in httpdConfig:
+                    if items.find('module mod_security') > -1:
+                        modSecInstalled = 1
+                        break
+            else:
+                modSecInstalled = 1
 
             return render(request, 'firewall/modSecurityRules.html', {'modSecInstalled': modSecInstalled})
 
@@ -892,31 +1013,44 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('modSecInstalled', 0)
 
-            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
 
-            command = "sudo cat " + confPath
-            httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+                confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
-            modSecInstalled = 0
+                command = "sudo cat " + confPath
+                httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
 
-            for items in httpdConfig:
-                if items.find('module mod_security') > -1:
-                    modSecInstalled = 1
-                    break
+                modSecInstalled = 0
 
-            rulesPath = os.path.join(virtualHostUtilities.Server_root + "/conf/modsec/rules.conf")
+                for items in httpdConfig:
+                    if items.find('module mod_security') > -1:
+                        modSecInstalled = 1
+                        break
 
-            if modSecInstalled:
+                rulesPath = os.path.join(virtualHostUtilities.Server_root + "/conf/modsec/rules.conf")
+
+                if modSecInstalled:
+                    command = "sudo cat " + rulesPath
+                    currentModSecRules = subprocess.check_output(shlex.split(command))
+
+                    final_dic = {'modSecInstalled': 1,
+                                 'currentModSecRules': currentModSecRules}
+
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+                else:
+                    final_dic = {'modSecInstalled': 0}
+
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+            else:
+                rulesPath = os.path.join(virtualHostUtilities.Server_root + "/conf/rules.conf")
+
                 command = "sudo cat " + rulesPath
                 currentModSecRules = subprocess.check_output(shlex.split(command))
 
                 final_dic = {'modSecInstalled': 1,
                              'currentModSecRules': currentModSecRules}
-
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-            else:
-                final_dic = {'modSecInstalled': 0}
 
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
@@ -941,17 +1075,13 @@ class FirewallManager:
             ## writing data temporary to file
 
             rulesPath = open(modSec.tempRulesFile, "w")
-
             rulesPath.write(newModSecRules)
-
             rulesPath.close()
 
             ## save configuration data
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
-
             execPath = execPath + " saveModSecRules"
-
             output = subprocess.check_output(shlex.split(execPath))
 
             if output.find("1,None") > -1:
@@ -979,17 +1109,21 @@ class FirewallManager:
             else:
                 return ACLManager.loadError()
 
-            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
 
-            command = "sudo cat " + confPath
-            httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+                confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
-            modSecInstalled = 0
+                command = "sudo cat " + confPath
+                httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
 
-            for items in httpdConfig:
-                if items.find('module mod_security') > -1:
-                    modSecInstalled = 1
-                    break
+                modSecInstalled = 0
+
+                for items in httpdConfig:
+                    if items.find('module mod_security') > -1:
+                        modSecInstalled = 1
+                        break
+            else:
+                modSecInstalled = 1
 
             return render(request, 'firewall/modSecurityRulesPacks.html', {'modSecInstalled': modSecInstalled})
 
@@ -1006,47 +1140,70 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('modSecInstalled', 0)
 
-            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
-            command = "sudo cat " + confPath
-            httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
-
-            modSecInstalled = 0
-
-            for items in httpdConfig:
-                if items.find('module mod_security') > -1:
-                    modSecInstalled = 1
-                    break
-
-            comodoInstalled = 0
-            owaspInstalled = 0
-
-            if modSecInstalled:
                 command = "sudo cat " + confPath
                 httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
 
+                modSecInstalled = 0
+
                 for items in httpdConfig:
-
-                    if items.find('modsec/comodo') > -1:
-                        comodoInstalled = 1
-                    elif items.find('modsec/owasp') > -1:
-                        owaspInstalled = 1
-
-                    if owaspInstalled == 1 and comodoInstalled == 1:
+                    if items.find('module mod_security') > -1:
+                        modSecInstalled = 1
                         break
+
+                comodoInstalled = 0
+                owaspInstalled = 0
+
+                if modSecInstalled:
+                    command = "sudo cat " + confPath
+                    httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+
+                    for items in httpdConfig:
+
+                        if items.find('modsec/comodo') > -1:
+                            comodoInstalled = 1
+                        elif items.find('modsec/owasp') > -1:
+                            owaspInstalled = 1
+
+                        if owaspInstalled == 1 and comodoInstalled == 1:
+                            break
+
+                    final_dic = {
+                        'modSecInstalled': 1,
+                        'owaspInstalled': owaspInstalled,
+                        'comodoInstalled': comodoInstalled
+                    }
+
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+                else:
+                    final_dic = {'modSecInstalled': 0}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+            else:
+                comodoInstalled = 0
+                owaspInstalled = 0
+
+                try:
+                    command = 'sudo cat /usr/local/lsws/conf/comodo_litespeed/rules.conf.main'
+                    res = subprocess.call(shlex.split(command))
+
+                    if res == 0:
+                        comodoInstalled = 1
+                except subprocess.CalledProcessError:
+                    pass
 
                 final_dic = {
                     'modSecInstalled': 1,
                     'owaspInstalled': owaspInstalled,
                     'comodoInstalled': comodoInstalled
                 }
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
 
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-            else:
-                final_dic = {'modSecInstalled': 0}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
         except BaseException, msg:
             final_dic = {'modSecInstalled': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -1064,21 +1221,40 @@ class FirewallManager:
 
             packName = data['packName']
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
 
-            execPath = execPath + " " + packName
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = execPath + " " + packName
 
-            output = subprocess.check_output(shlex.split(execPath))
+                output = subprocess.check_output(shlex.split(execPath))
 
-            if output.find("1,None") > -1:
-                installUtilities.reStartLiteSpeed()
-                data_ret = {'installStatus': 1, 'error_message': "None"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+                if output.find("1,None") > -1:
+                    installUtilities.reStartLiteSpeed()
+                    data_ret = {'installStatus': 1, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'installStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
             else:
-                data_ret = {'installStatus': 0, 'error_message': output}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+                if packName == 'disableOWASP' or packName == 'installOWASP':
+                    final_json = json.dumps({'installStatus': 0, 'error_message': "OWASP will be available later.", })
+                    return HttpResponse(final_json)
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = execPath + " " + packName
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find("1,None") > -1:
+                    installUtilities.reStartLiteSpeed()
+                    data_ret = {'installStatus': 1, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'installStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
 
         except BaseException, msg:
             data_ret = {'installStatus': 0, 'error_message': str(msg)}
@@ -1096,26 +1272,70 @@ class FirewallManager:
 
             packName = data['packName']
 
-            confPath = os.path.join(virtualHostUtilities.Server_root, 'conf/httpd_config.conf')
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                confPath = os.path.join(virtualHostUtilities.Server_root, 'conf/httpd_config.conf')
 
-            command = "sudo cat " + confPath
-            httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+                command = "sudo cat " + confPath
+                httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
 
-            json_data = "["
-            checker = 0
-            counter = 0
+                json_data = "["
+                checker = 0
+                counter = 0
 
-            for items in httpdConfig:
+                for items in httpdConfig:
 
-                if items.find('modsec/' + packName) > -1:
-                    counter = counter + 1
-                    if items[0] == '#':
-                        status = False
+                    if items.find('modsec/' + packName) > -1:
+                        counter = counter + 1
+                        if items[0] == '#':
+                            status = False
+                        else:
+                            status = True
+
+                        fileName = items.lstrip('#')
+                        fileName = fileName.split('/')[-1]
+
+                        dic = {
+                            'id': counter,
+                            'fileName': fileName,
+                            'packName': packName,
+                            'status': status,
+
+                        }
+
+                        if checker == 0:
+                            json_data = json_data + json.dumps(dic)
+                            checker = 1
+                        else:
+                            json_data = json_data + ',' + json.dumps(dic)
+
+                json_data = json_data + ']'
+                final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+                return HttpResponse(final_json)
+            else:
+                if packName == 'owasp':
+                    final_json = json.dumps({'fetchStatus': 0, 'error_message': "OWASP will be available later.", })
+                    return HttpResponse(final_json)
+
+                comodoPath = '/usr/local/lsws/conf/comodo_litespeed'
+                command = 'sudo chown -R cyberpanel:cyberpanel /usr/local/lsws/conf'
+                subprocess.call(shlex.split(command))
+
+                json_data = "["
+
+                counter = 0
+                checker = 0
+                for fileName in os.listdir(comodoPath):
+
+                    if fileName == 'categories.conf':
+                        continue
+
+                    if fileName.endswith('dis'):
+                        status = 0
+                        fileName = fileName.rstrip('.dis')
+                    elif fileName.endswith('conf'):
+                        status = 1
                     else:
-                        status = True
-
-                    fileName = items.lstrip('#')
-                    fileName = fileName.split('/')[-1]
+                        continue
 
                     dic = {
                         'id': counter,
@@ -1125,15 +1345,20 @@ class FirewallManager:
 
                     }
 
+                    counter = counter + 1
+
                     if checker == 0:
                         json_data = json_data + json.dumps(dic)
                         checker = 1
                     else:
                         json_data = json_data + ',' + json.dumps(dic)
 
-            json_data = json_data + ']'
-            final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
-            return HttpResponse(final_json)
+                command = 'sudo chown -R lsadm:lsadm /usr/local/lsws/conf'
+                subprocess.call(shlex.split(command))
+
+                json_data = json_data + ']'
+                final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+                return HttpResponse(final_json)
 
         except BaseException, msg:
             final_dic = {'fetchStatus': 0, 'error_message': str(msg)}

@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
-from plogical.processUtilities import ProcessUtilities
 import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 import json
@@ -13,6 +12,10 @@ import shlex
 import socket
 from plogical.acl import ACLManager
 import os
+from plogical.virtualHostUtilities import virtualHostUtilities
+import time
+import serverStatusUtil
+from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
 def serverStatusHome(request):
@@ -26,7 +29,6 @@ def litespeedStatus(request):
 
     try:
         userID = request.session['userID']
-
         currentACL = ACLManager.loadedACL(userID)
 
         if currentACL['admin'] == 1:
@@ -36,6 +38,9 @@ def litespeedStatus(request):
 
         processList = ProcessUtilities.getLitespeedProcessNumber()
 
+        OLS = 0
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            OLS = 1
         try:
 
             versionInformation = subprocess.check_output(["/usr/local/lsws/bin/lshttpd", "-v"]).split("\n")
@@ -54,16 +59,16 @@ def litespeedStatus(request):
 
         except subprocess.CalledProcessError,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
-            return render(request,"serverStatus/litespeedStatus.html",{"processList":processList,"liteSpeedVersionStatus":"For some reaons not able to load version details, see CyberCP main log file."})
+            return render(request,"serverStatus/litespeedStatus.html",{"processList":processList,"liteSpeedVersionStatus":"For some reaons not able to load version details, see CyberCP main log file.", 'OLS': OLS})
 
 
         if(processList!=0):
             dataForHtml = {"processList": processList, "lsversion": lsversion, "modules": modules,
-                           "loadedModules": loadedModules}
+                           "loadedModules": loadedModules, 'OLS':OLS}
             return render(request,"serverStatus/litespeedStatus.html",dataForHtml)
         else:
             dataForHtml = {"lsversion": lsversion, "modules": modules,
-                           "loadedModules": loadedModules}
+                           "loadedModules": loadedModules, 'OLS': OLS}
             return render(request, "serverStatus/litespeedStatus.html",dataForHtml)
 
     except KeyError,msg:
@@ -152,8 +157,14 @@ def services(request):
             pass
         else:
             return ACLManager.loadError()
+        data = {}
 
-        return render(request, 'serverStatus/services.html')
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            data['serverName'] = 'OpenLiteSpeed'
+        else:
+            data['serverName'] = 'LiteSpeed Ent'
+
+        return render(request, 'serverStatus/services.html', data)
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -300,5 +311,136 @@ def servicesAction(request):
             return HttpResponse(final_json)
     except KeyError, msg:
         final_dic = {'serviceAction': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def switchTOLSWS(request):
+    try:
+        userID = request.session['userID']
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('status', 0)
+
+        data = json.loads(request.body)
+
+        execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/serverStatus/serverStatusUtil.py"
+        execPath = execPath + " switchTOLSWS --licenseKey " + data['licenseKey']
+
+        subprocess.Popen(shlex.split(execPath))
+        time.sleep(2)
+
+        data_ret = {'status': 1, 'error_message': "None", }
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+    except BaseException, msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def switchTOLSWSStatus(request):
+    try:
+
+        command = 'sudo cat ' + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
+        output = subprocess.check_output(shlex.split(command))
+
+        if output.find('[404]') > -1:
+            data_ret = {'abort': 1, 'requestStatus': output, 'installed': 0}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        elif output.find('[200]') > -1:
+            data_ret = {'abort': 1, 'requestStatus': output, 'installed': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        else:
+            data_ret = {'abort': 0, 'requestStatus': output, 'installed': 0}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except BaseException, msg:
+        data_ret = {'abort': 1, 'requestStatus': str(msg), 'installed': 0}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def licenseStatus(request):
+    try:
+        userID = request.session['userID']
+
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            command = 'sudo cat /usr/local/lsws/conf/serial.no'
+            serial = subprocess.check_output(shlex.split(command))
+
+
+            command = 'sudo /usr/local/lsws/bin/lshttpd -V'
+            expiration = subprocess.check_output(shlex.split(command))
+
+            final_dic = {'status': 1, "erroMessage": 0, 'lsSerial': serial, 'lsexpiration': expiration}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException, msg:
+            final_dic = {'status': 0, 'erroMessage': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError, msg:
+        final_dic = {'status': 0, 'erroMessage': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def changeLicense(request):
+    try:
+        userID = request.session['userID']
+
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            data = json.loads(request.body)
+            newKey = data['newKey']
+
+            command = 'sudo chown -R cyberpanel:cyberpanel /usr/local/lsws/conf'
+            subprocess.call(shlex.split(command))
+
+            serialPath = '/usr/local/lsws/conf/serial.no'
+            serialFile = open(serialPath, 'w')
+            serialFile.write(newKey)
+            serialFile.close()
+
+            command = 'sudo chown -R lsadm:lsadm /usr/local/lsws/conf'
+            subprocess.call(shlex.split(command))
+
+
+            command = 'sudo /usr/local/lsws/bin/lshttpd -r'
+            subprocess.call(shlex.split(command))
+
+            command = 'sudo /usr/local/lsws/bin/lswsctrl restart'
+            subprocess.call(shlex.split(command))
+
+
+            final_dic = {'status': 1, "erroMessage": 'None'}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException, msg:
+            final_dic = {'status': 0, 'erroMessage': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError, msg:
+        final_dic = {'status': 0, 'erroMessage': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)

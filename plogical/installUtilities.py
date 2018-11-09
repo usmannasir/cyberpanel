@@ -4,8 +4,8 @@ import CyberCPLogFileWriter as logging
 import shutil
 import pexpect
 import os
-import thread
 import shlex
+from processUtilities import ProcessUtilities
 
 class installUtilities:
 
@@ -136,15 +136,15 @@ class installUtilities:
     @staticmethod
     def reStartLiteSpeed():
         try:
-
             FNULL = open(os.devnull, 'w')
 
-            command = "sudo systemctl restart lsws"
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                command = "sudo systemctl restart lsws"
+            else:
+                command = "sudo /usr/local/lsws/bin/lswsctrl restart"
 
             cmd = shlex.split(command)
-
-            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
         except OSError, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")
@@ -159,12 +159,12 @@ class installUtilities:
     def reStartOpenLiteSpeed(restart,orestart):
         try:
 
-            FNULL = open(os.devnull, 'w')
-
-            command = "sudo systemctl restart lsws"
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                command = "sudo systemctl restart lsws"
+            else:
+                command = "sudo /usr/local/lsws/bin/lswsctrl restart"
 
             cmd = shlex.split(command)
-
             res = subprocess.call(cmd)
 
             if res == 1:
@@ -176,7 +176,6 @@ class installUtilities:
                 print("###############################################")
                 print("          Litespeed Re-Started                 ")
                 print("###############################################")
-
 
         except OSError, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartOpenLiteSpeed]")
@@ -279,8 +278,6 @@ class installUtilities:
 
         return 1
 
-
-
     @staticmethod
     def installMainWebServer():
         if installUtilities.enableEPELRepo() == 1:
@@ -370,7 +367,6 @@ class installUtilities:
 
         return 1
 
-
     @staticmethod
     def startMariaDB():
 
@@ -405,7 +401,6 @@ class installUtilities:
             return 0
 
         return 1
-
 
     @staticmethod
     def installMySQL(password):

@@ -150,7 +150,6 @@ class WebsiteManager:
             ## Create Configurations
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-
             execPath = execPath + " createVirtualHost --virtualHostName " + domain + \
                        " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + \
                        "' --virtualHostUser " + externalApp + " --ssl " + str(data['ssl']) + " --dkimCheck " \

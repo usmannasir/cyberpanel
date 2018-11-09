@@ -234,7 +234,6 @@ class InstallCyberPanel:
                               'lsphp7?-ldap lsphp7?-mysql lsphp7?-opcache lsphp7?-pspell lsphp7?-recode ' \
                               'lsphp7?-sqlite3 lsphp7?-tidy'
                     res = os.system(command)
-
                 else:
                     command = 'yum -y groupinstall lsphp-all'
                     cmd = shlex.split(command)

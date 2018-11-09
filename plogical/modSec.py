@@ -7,6 +7,7 @@ import os
 import tarfile
 import shutil
 from mailUtilities import mailUtilities
+from processUtilities import ProcessUtilities
 
 class modSec:
     installLogPath = "/home/cyberpanel/modSecInstallLog"
@@ -111,42 +112,74 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             data = open(tempConfigPath).readlines()
             os.remove(tempConfigPath)
 
-            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
 
-            confData = open(confFile).readlines()
+                confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+                confData = open(confFile).readlines()
+                conf = open(confFile, 'w')
 
-            conf = open(confFile, 'w')
+                for items in confData:
 
-            for items in confData:
+                    if items.find('modsecurity ') > -1:
+                        conf.writelines(data[0])
+                        continue
+                    elif items.find('SecAuditEngine ') > -1:
+                        conf.writelines(data[1])
+                        continue
+                    elif items.find('SecRuleEngine ') > -1:
+                        conf.writelines(data[2])
+                        continue
+                    elif items.find('SecDebugLogLevel') > -1:
+                        conf.writelines(data[3])
+                        continue
+                    elif items.find('SecAuditLogRelevantStatus ') > -1:
+                        conf.writelines(data[5])
+                        continue
+                    elif items.find('SecAuditLogParts ') > -1:
+                        conf.writelines(data[4])
+                        continue
+                    elif items.find('SecAuditLogType ') > -1:
+                        conf.writelines(data[6])
+                        continue
+                    else:
+                        conf.writelines(items)
 
-                if items.find('modsecurity ') > -1:
-                    conf.writelines(data[0])
-                    continue
-                elif items.find('SecAuditEngine ') > -1:
-                    conf.writelines(data[1])
-                    continue
-                elif items.find('SecRuleEngine ') > -1:
-                    conf.writelines(data[2])
-                    continue
-                elif items.find('SecDebugLogLevel') > -1:
-                    conf.writelines(data[3])
-                    continue
-                elif items.find('SecAuditLogRelevantStatus ') > -1:
-                    conf.writelines(data[5])
-                    continue
-                elif items.find('SecAuditLogParts ') > -1:
-                    conf.writelines(data[4])
-                    continue
-                elif items.find('SecAuditLogType ') > -1:
-                    conf.writelines(data[6])
-                    continue
-                else:
-                    conf.writelines(items)
+                conf.close()
 
-            conf.close()
+                print "1,None"
+                return
+            else:
+                confFile = os.path.join(virtualHostUtilities.Server_root, "conf/modsec.conf")
+                confData = open(confFile).readlines()
+                conf = open(confFile, 'w')
 
-            print "1,None"
-            return
+                for items in confData:
+
+                    if items.find('SecAuditEngine ') > -1:
+                        conf.writelines(data[0])
+                        continue
+                    elif items.find('SecRuleEngine ') > -1:
+                        conf.writelines(data[1])
+                        continue
+                    elif items.find('SecDebugLogLevel') > -1:
+                        conf.writelines(data[2])
+                        continue
+                    elif items.find('SecAuditLogRelevantStatus ') > -1:
+                        conf.writelines(data[4])
+                        continue
+                    elif items.find('SecAuditLogParts ') > -1:
+                        conf.writelines(data[3])
+                        continue
+                    elif items.find('SecAuditLogType ') > -1:
+                        conf.writelines(data[5])
+                        continue
+                    else:
+                        conf.writelines(items)
+
+                conf.close()
+
+                print "1,None"
+                return
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
@@ -160,7 +193,10 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             data = rulesFile.read()
             rulesFile.close()
 
-            rulesFilePath = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/rules.conf")
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                rulesFilePath = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/rules.conf")
+            else:
+                rulesFilePath = os.path.join(virtualHostUtilities.Server_root, "conf/rules.conf")
 
             rulesFile = open(rulesFilePath,'w')
             rulesFile.write(data)
@@ -180,26 +216,47 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
     @staticmethod
     def setupComodoRules():
         try:
-            pathTOOWASPFolder = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/comodo")
-            extractLocation = os.path.join(virtualHostUtilities.Server_root, "conf/modsec")
 
-            if os.path.exists(pathTOOWASPFolder):
-                shutil.rmtree(pathTOOWASPFolder)
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                pathTOOWASPFolder = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/comodo")
+                extractLocation = os.path.join(virtualHostUtilities.Server_root, "conf/modsec")
 
-            if os.path.exists('comodo.tar.gz'):
-                os.remove('comodo.tar.gz')
+                if os.path.exists(pathTOOWASPFolder):
+                    shutil.rmtree(pathTOOWASPFolder)
 
-            command = "wget https://" + modSec.mirrorPath + "/modsec/comodo.tar.gz"
-            result = subprocess.call(shlex.split(command))
+                if os.path.exists('comodo.tar.gz'):
+                    os.remove('comodo.tar.gz')
 
-            if result == 1:
-                return 0
+                command = "wget https://" + modSec.mirrorPath + "/modsec/comodo.tar.gz"
+                result = subprocess.call(shlex.split(command))
 
-            tar = tarfile.open('comodo.tar.gz')
-            tar.extractall(extractLocation)
-            tar.close()
+                if result == 1:
+                    return 0
 
-            return 1
+                tar = tarfile.open('comodo.tar.gz')
+                tar.extractall(extractLocation)
+                tar.close()
+
+                return 1
+            else:
+                if os.path.exists('/usr/local/lsws/conf/comodo_litespeed'):
+                    shutil.rmtree('/usr/local/lsws/conf/comodo_litespeed')
+
+                extractLocation = os.path.join(virtualHostUtilities.Server_root, "conf")
+
+                if os.path.exists('cpanel_litespeed_vendor'):
+                    os.remove('cpanel_litespeed_vendor')
+
+                command = "wget https://waf.comodo.com/api/cpanel_litespeed_vendor"
+                result = subprocess.call(shlex.split(command))
+
+                if result == 1:
+                    return 0
+
+                command = "unzip cpanel_litespeed_vendor -d " + extractLocation
+                subprocess.call(shlex.split(command))
+
+                return 1
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
@@ -209,60 +266,85 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
     @staticmethod
     def installComodo():
         try:
-            if modSec.setupComodoRules() == 0:
-                print '0, Unable to download Comodo Rules.'
+
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                if modSec.setupComodoRules() == 0:
+                    print '0, Unable to download Comodo Rules.'
+                    return
+
+                owaspRulesConf = """modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/modsecurity.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/00_Init_Initialization.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/01_Init_AppsInitialization.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/02_Global_Generic.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/03_Global_Agents.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/04_Global_Domains.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/05_Global_Backdoor.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/06_XSS_XSS.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/07_Global_Other.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/08_Bruteforce_Bruteforce.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/09_HTTP_HTTP.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/10_HTTP_HTTPDoS.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/11_HTTP_Protocol.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/12_HTTP_Request.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/13_Outgoing_FilterGen.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/14_Outgoing_FilterASP.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/15_Outgoing_FilterPHP.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/16_Outgoing_FilterSQL.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/17_Outgoing_FilterOther.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/18_Outgoing_FilterInFrame.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/19_Outgoing_FiltersEnd.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/20_PHP_PHPGen.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/21_SQL_SQLi.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/22_Apps_Joomla.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/23_Apps_JComponent.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/24_Apps_WordPress.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/25_Apps_WPPlugin.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/26_Apps_WHMCS.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/27_Apps_Drupal.conf
+    modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/28_Apps_OtherApps.conf
+    """
+
+                confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+
+                confData = open(confFile).readlines()
+
+                conf = open(confFile, 'w')
+
+                for items in confData:
+                    if items.find('/usr/local/lsws/conf/modsec/rules.conf') > -1:
+                        conf.writelines(items)
+                        conf.write(owaspRulesConf)
+                        continue
+                    else:
+                        conf.writelines(items)
+
+                conf.close()
+
+                print "1,None"
                 return
+            else:
+                if os.path.exists('/usr/local/lsws/conf/comodo_litespeed'):
+                    shutil.rmtree('/usr/local/lsws/conf/comodo_litespeed')
 
-            owaspRulesConf = """modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/modsecurity.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/00_Init_Initialization.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/01_Init_AppsInitialization.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/02_Global_Generic.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/03_Global_Agents.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/04_Global_Domains.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/05_Global_Backdoor.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/06_XSS_XSS.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/07_Global_Other.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/08_Bruteforce_Bruteforce.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/09_HTTP_HTTP.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/10_HTTP_HTTPDoS.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/11_HTTP_Protocol.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/12_HTTP_Request.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/13_Outgoing_FilterGen.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/14_Outgoing_FilterASP.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/15_Outgoing_FilterPHP.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/16_Outgoing_FilterSQL.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/17_Outgoing_FilterOther.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/18_Outgoing_FilterInFrame.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/19_Outgoing_FiltersEnd.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/20_PHP_PHPGen.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/21_SQL_SQLi.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/22_Apps_Joomla.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/23_Apps_JComponent.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/24_Apps_WordPress.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/25_Apps_WPPlugin.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/26_Apps_WHMCS.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/27_Apps_Drupal.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/28_Apps_OtherApps.conf
-"""
+                extractLocation = os.path.join(virtualHostUtilities.Server_root, "conf")
 
-            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+                if os.path.exists('cpanel_litespeed_vendor'):
+                    os.remove('cpanel_litespeed_vendor')
 
-            confData = open(confFile).readlines()
+                command = "wget https://waf.comodo.com/api/cpanel_litespeed_vendor"
+                result = subprocess.call(shlex.split(command))
 
-            conf = open(confFile, 'w')
+                if result == 1:
+                    return 0
 
-            for items in confData:
-                if items.find('/usr/local/lsws/conf/modsec/rules.conf') > -1:
-                    conf.writelines(items)
-                    conf.write(owaspRulesConf)
-                    continue
-                else:
-                    conf.writelines(items)
+                command = "unzip cpanel_litespeed_vendor -d " + extractLocation
+                result = subprocess.call(shlex.split(command))
 
-            conf.close()
+                command = 'sudo chown -R lsadm:lsadm /usr/local/lsws/conf'
+                subprocess.call(shlex.split(command))
 
-            print "1,None"
-            return
+                print "1,None"
+                return
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
@@ -273,19 +355,28 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/28_Apps_OtherApps.conf
     def disableComodo():
         try:
 
-            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
-            confData = open(confFile).readlines()
-            conf = open(confFile, 'w')
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+                confData = open(confFile).readlines()
+                conf = open(confFile, 'w')
 
-            for items in confData:
-                if items.find('modsec/comodo') > -1:
-                    continue
-                else:
-                    conf.writelines(items)
+                for items in confData:
+                    if items.find('modsec/comodo') > -1:
+                        continue
+                    else:
+                        conf.writelines(items)
 
-            conf.close()
+                conf.close()
 
-            print "1,None"
+                print "1,None"
+
+            else:
+                try:
+                    shutil.rmtree('/usr/local/lsws/conf/comodo_litespeed')
+                except BaseException, msg:
+                    logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [disableComodo]')
+                print "1,None"
+
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(

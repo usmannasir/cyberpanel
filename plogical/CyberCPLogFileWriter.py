@@ -41,7 +41,7 @@ class CyberCPLogFileWriter:
     @staticmethod
     def statusWriter(tempStatusPath, mesg):
         try:
-            statusFile = open(tempStatusPath, 'w')
+            statusFile = open(tempStatusPath, 'a')
             statusFile.writelines(mesg)
             statusFile.close()
         except BaseException, msg:
