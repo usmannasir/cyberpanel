@@ -82,6 +82,12 @@ class ProcessUtilities:
 
     @staticmethod
     def killLiteSpeed():
+        try:
+            command = 'sudo systemctl stop lsws'
+            ProcessUtilities.executioner(command)
+        except:
+            pass
+
         pids = ProcessUtilities.getLitespeedProcessNumber()
         if pids !=0:
             for items in pids:

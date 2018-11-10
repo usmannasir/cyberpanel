@@ -10,11 +10,12 @@
 #: baseTemplate/templates/baseTemplate/index.html:241
 #: baseTemplate/templates/baseTemplate/index.html:247
 #: baseTemplate/templates/baseTemplate/index.html:253
+#: emailMarketing/templates/emailMarketing/sendEmails.html:93
 msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-10-10 13:01+0500\n"
+"POT-Creation-Date: 2018-11-10 14:17+0500\n"
 "PO-Revision-Date: 2017-11-12 17:56+0200\n"
 "Last-Translator: aleks <alex.webcolor@gmail.com>\n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
@@ -26,57 +27,57 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: CyberCP/settings.py:171
+#: CyberCP/settings.py:172
 msgid "English"
 msgstr "Английский"
 
-#: CyberCP/settings.py:172
+#: CyberCP/settings.py:173
 msgid "Chinese"
 msgstr "Китайский"
 
-#: CyberCP/settings.py:173
+#: CyberCP/settings.py:174
 msgid "Bulgarian"
 msgstr "Болгарский"
 
-#: CyberCP/settings.py:174
+#: CyberCP/settings.py:175
 msgid "Portuguese"
 msgstr "Португальский"
 
-#: CyberCP/settings.py:175
+#: CyberCP/settings.py:176
 msgid "Japanese"
 msgstr "Японский"
 
-#: CyberCP/settings.py:176
+#: CyberCP/settings.py:177
 msgid "Bosnian"
 msgstr "Боснийский"
 
-#: CyberCP/settings.py:177
+#: CyberCP/settings.py:178
 msgid "Greek"
 msgstr ""
 
-#: CyberCP/settings.py:178
+#: CyberCP/settings.py:179
 msgid "Russian"
 msgstr "Русский"
 
-#: CyberCP/settings.py:179
+#: CyberCP/settings.py:180
 msgid "Turkish"
 msgstr ""
 
-#: CyberCP/settings.py:180
+#: CyberCP/settings.py:181
 msgid "Spanish"
 msgstr ""
 
-#: CyberCP/settings.py:181
+#: CyberCP/settings.py:182
 msgid "French"
 msgstr ""
 
-#: CyberCP/settings.py:182
+#: CyberCP/settings.py:183
 #, fuzzy
 #| msgid "Policy"
 msgid "Polish"
 msgstr "Политика"
 
-#: CyberCP/settings.py:183
+#: CyberCP/settings.py:184
 #, fuzzy
 #| msgid "File Name"
 msgid "Vietnamese"
@@ -141,6 +142,7 @@ msgstr "Имя файла"
 #: backup/templates/backup/backup.html:106
 #: backup/templates/backup/restore.html:63
 #: baseTemplate/templates/baseTemplate/index.html:257
+#: emailMarketing/templates/emailMarketing/emailMarketing.html:45
 #: filemanager/templates/filemanager/index.html:215
 #: firewall/templates/firewall/firewall.html:36
 #: firewall/templates/firewall/modSecurityRulesPacks.html:112
@@ -168,6 +170,9 @@ msgstr "Отменить резервное копирование"
 #: backup/templates/backup/backupSchedule.html:89
 #: databases/templates/databases/listDataBases.html:87
 #: dns/templates/dns/addDeleteDNSRecords.html:326
+#: emailMarketing/templates/emailMarketing/emailMarketing.html:43
+#: emailMarketing/templates/emailMarketing/manageLists.html:141
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:74
 #: firewall/templates/firewall/firewall.html:135
 #: firewall/templates/firewall/modSecurityRulesPacks.html:109
 #: ftp/templates/ftp/listFTPAccounts.html:99
@@ -181,6 +186,7 @@ msgid "File"
 msgstr "Файл"
 
 #: backup/templates/backup/backup.html:104
+#: emailMarketing/templates/emailMarketing/sendEmails.html:152
 msgid "Date"
 msgstr "Дата"
 
@@ -194,6 +200,10 @@ msgstr "Размер"
 #: backup/templates/backup/backupDestinations.html:100
 #: backup/templates/backup/backupSchedule.html:92
 #: dns/templates/dns/addDeleteDNSRecords.html:332
+#: emailMarketing/templates/emailMarketing/manageLists.html:156
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:92
+#: emailMarketing/templates/emailMarketing/sendEmails.html:170
+#: emailMarketing/templates/emailMarketing/website.html:516
 #: filemanager/templates/filemanager/index.html:72
 #: filemanager/templates/filemanager/index.html:705
 #: firewall/templates/firewall/firewall.html:140
@@ -248,6 +258,7 @@ msgstr "IP Адрес"
 #: backup/templates/backup/remoteBackups.html:37
 #: databases/templates/databases/createDatabase.html:58
 #: databases/templates/databases/listDataBases.html:90
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:50
 #: ftp/templates/ftp/listFTPAccounts.html:103
 #: mailServer/templates/mailServer/changeEmailPassword.html:65
 #: mailServer/templates/mailServer/createEmailAccount.html:64
@@ -258,6 +269,8 @@ msgid "Password"
 msgstr "Пароль"
 
 #: backup/templates/backup/backupDestinations.html:45
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:36
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:77
 #: firewall/templates/firewall/firewall.html:139
 msgid "Port"
 msgstr "Порт"
@@ -304,6 +317,14 @@ msgstr "Добавлено место назначения."
 #: dns/templates/dns/createDNSZone.html:71
 #: dns/templates/dns/createNameServer.html:111
 #: dns/templates/dns/deleteDNSZone.html:80
+#: emailMarketing/templates/emailMarketing/website.html:159
+#: emailMarketing/templates/emailMarketing/website.html:412
+#: emailMarketing/templates/emailMarketing/website.html:463
+#: emailMarketing/templates/emailMarketing/website.html:611
+#: emailMarketing/templates/emailMarketing/website.html:665
+#: emailMarketing/templates/emailMarketing/website.html:717
+#: emailMarketing/templates/emailMarketing/website.html:804
+#: emailMarketing/templates/emailMarketing/website.html:923
 #: emailPremium/templates/emailPremium/emailLimits.html:101
 #: emailPremium/templates/emailPremium/emailPage.html:119
 #: mailServer/templates/mailServer/changeEmailPassword.html:93
@@ -336,7 +357,7 @@ msgstr "Добавлено место назначения."
 #: websiteFunctions/templates/websiteFunctions/website.html:665
 #: websiteFunctions/templates/websiteFunctions/website.html:717
 #: websiteFunctions/templates/websiteFunctions/website.html:804
-#: websiteFunctions/templates/websiteFunctions/website.html:924
+#: websiteFunctions/templates/websiteFunctions/website.html:923
 msgid "Could not connect to server. Please refresh this page."
 msgstr "Не удалось подключиться к серверу. Пожалуйста обновите эту страницу."
 
@@ -475,6 +496,9 @@ msgid "Start Transfer"
 msgstr "Старт Переноса"
 
 #: backup/templates/backup/remoteBackups.html:59
+#: emailMarketing/templates/emailMarketing/website.html:316
+#: emailMarketing/templates/emailMarketing/website.html:774
+#: emailMarketing/templates/emailMarketing/website.html:898
 #: emailPremium/templates/emailPremium/emailLimits.html:75
 #: emailPremium/templates/emailPremium/emailPage.html:83
 #: emailPremium/templates/emailPremium/emailPage.html:93
@@ -483,7 +507,7 @@ msgstr "Старт Переноса"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:611
 #: websiteFunctions/templates/websiteFunctions/website.html:316
 #: websiteFunctions/templates/websiteFunctions/website.html:774
-#: websiteFunctions/templates/websiteFunctions/website.html:899
+#: websiteFunctions/templates/websiteFunctions/website.html:898
 msgid "Cancel"
 msgstr "Отмена"
 
@@ -573,6 +597,8 @@ msgstr "Конфигурации"
 #: backup/templates/backup/restore.html:86
 #: databases/templates/databases/deleteDatabase.html:64
 #: databases/templates/databases/listDataBases.html:54
+#: emailMarketing/templates/emailMarketing/website.html:402
+#: emailMarketing/templates/emailMarketing/website.html:915
 #: firewall/templates/firewall/firewall.html:166
 #: managePHP/templates/managePHP/editPHPConfig.html:221
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:140
@@ -581,7 +607,7 @@ msgstr "Конфигурации"
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:240
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:286
 #: websiteFunctions/templates/websiteFunctions/website.html:402
-#: websiteFunctions/templates/websiteFunctions/website.html:916
+#: websiteFunctions/templates/websiteFunctions/website.html:915
 msgid "Error message:"
 msgstr "Сообщение об ошибке:"
 
@@ -598,6 +624,7 @@ msgid "Use the tabs to navigate through the control panel."
 msgstr "Используйте вкладки панели управления для навигации"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:23
+#: emailMarketing/templates/emailMarketing/website.html:37
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:37
 #: websiteFunctions/templates/websiteFunctions/website.html:37
 msgid "Usage"
@@ -664,6 +691,7 @@ msgstr "Функции базы данных"
 #: baseTemplate/templates/baseTemplate/index.html:352
 #: baseTemplate/templates/baseTemplate/index.html:353
 #: baseTemplate/templates/baseTemplate/index.html:354
+#: emailMarketing/templates/emailMarketing/website.html:48
 #: packages/templates/packages/createPackage.html:67
 #: packages/templates/packages/modifyPackage.html:73
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:48
@@ -691,6 +719,7 @@ msgstr "FTP функции"
 #: baseTemplate/templates/baseTemplate/index.html:245
 #: baseTemplate/templates/baseTemplate/index.html:407
 #: baseTemplate/templates/baseTemplate/index.html:409
+#: emailMarketing/templates/emailMarketing/website.html:43
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:43
 #: websiteFunctions/templates/websiteFunctions/website.html:43
 msgid "FTP"
@@ -728,6 +757,7 @@ msgstr "Конфигурации PHP"
 #: baseTemplate/templates/baseTemplate/homePage.html:243
 #: baseTemplate/templates/baseTemplate/homePage.html:246
 #: baseTemplate/templates/baseTemplate/index.html:511
+#: emailMarketing/templates/emailMarketing/website.html:116
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:116
 #: websiteFunctions/templates/websiteFunctions/website.html:116
 msgid "Logs"
@@ -741,6 +771,8 @@ msgid "Security"
 msgstr "Безопасность"
 
 #: baseTemplate/templates/baseTemplate/index.html:117
+#: emailMarketing/templates/emailMarketing/website.html:55
+#: emailMarketing/templates/emailMarketing/website.html:76
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:55
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:76
 #: websiteFunctions/templates/websiteFunctions/website.html:55
@@ -1107,6 +1139,8 @@ msgid "Access Webmail"
 msgstr "Доступ к Веб-почте"
 
 #: baseTemplate/templates/baseTemplate/index.html:414
+#: emailMarketing/templates/emailMarketing/website.html:856
+#: emailMarketing/templates/emailMarketing/website.html:859
 #: ftp/templates/ftp/createFTPAccount.html:12
 #: ftp/templates/ftp/createFTPAccount.html:19 ftp/templates/ftp/index.html:25
 #: ftp/templates/ftp/index.html:27
@@ -1114,12 +1148,14 @@ msgstr "Доступ к Веб-почте"
 #: userManagment/templates/userManagment/modifyACL.html:301
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:569
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:572
-#: websiteFunctions/templates/websiteFunctions/website.html:857
-#: websiteFunctions/templates/websiteFunctions/website.html:860
+#: websiteFunctions/templates/websiteFunctions/website.html:856
+#: websiteFunctions/templates/websiteFunctions/website.html:859
 msgid "Create FTP Account"
 msgstr "Создание учетной записи FTP"
 
 #: baseTemplate/templates/baseTemplate/index.html:415
+#: emailMarketing/templates/emailMarketing/website.html:868
+#: emailMarketing/templates/emailMarketing/website.html:871
 #: ftp/templates/ftp/deleteFTPAccount.html:12
 #: ftp/templates/ftp/deleteFTPAccount.html:18
 #: ftp/templates/ftp/deleteFTPAccount.html:64 ftp/templates/ftp/index.html:37
@@ -1128,8 +1164,8 @@ msgstr "Создание учетной записи FTP"
 #: userManagment/templates/userManagment/modifyACL.html:310
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:581
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:584
-#: websiteFunctions/templates/websiteFunctions/website.html:869
-#: websiteFunctions/templates/websiteFunctions/website.html:872
+#: websiteFunctions/templates/websiteFunctions/website.html:868
+#: websiteFunctions/templates/websiteFunctions/website.html:871
 msgid "Delete FTP Account"
 msgstr "Удаление учетной записи FTP"
 
@@ -1189,6 +1225,7 @@ msgstr "Настройка LiteSpeed "
 #: baseTemplate/templates/baseTemplate/index.html:468
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13
+#: tuning/templates/tuning/phpTuning.html:149
 msgid "PHP Tuning"
 msgstr "Настройка PHP"
 
@@ -1233,6 +1270,7 @@ msgid "Access Log"
 msgstr "Лог-журнал доступа"
 
 #: baseTemplate/templates/baseTemplate/index.html:517
+#: emailMarketing/templates/emailMarketing/website.html:138
 #: serverLogs/templates/serverLogs/errorLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:37
 #: serverLogs/templates/serverLogs/index.html:39
@@ -1358,45 +1396,55 @@ msgstr "Конфигурации"
 msgid "SpamAssassin"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:563
-#: baseTemplate/templates/baseTemplate/index.html:565
+#: baseTemplate/templates/baseTemplate/index.html:557
+#: emailMarketing/templates/emailMarketing/emailMarketing.html:14
+#: emailMarketing/templates/emailMarketing/emailMarketing.html:22
+#: emailMarketing/templates/emailMarketing/website.html:947
+#: websiteFunctions/templates/websiteFunctions/website.html:947
+#, fuzzy
+#| msgid "Email Log"
+msgid "Email Marketing"
+msgstr "Лог эл.почты"
+
+#: baseTemplate/templates/baseTemplate/index.html:564
+#: baseTemplate/templates/baseTemplate/index.html:566
 #, fuzzy
 #| msgid "Manage SSL"
 msgid "Manage Services"
 msgstr "Управление SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:570
+#: baseTemplate/templates/baseTemplate/index.html:571
 #: manageServices/templates/manageServices/managePowerDNS.html:22
 #, fuzzy
 #| msgid "Manage SSL"
 msgid "Manage PowerDNS"
 msgstr "Управление SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:571
+#: baseTemplate/templates/baseTemplate/index.html:572
 #: manageServices/templates/manageServices/managePostfix.html:22
 msgid "Manage Postfix"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:572
+#: baseTemplate/templates/baseTemplate/index.html:573
 #, fuzzy
 #| msgid "Manage SSL"
 msgid "Manage FTP"
 msgstr "Управление SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:579
-#: baseTemplate/templates/baseTemplate/index.html:581
+#: baseTemplate/templates/baseTemplate/index.html:580
+#: baseTemplate/templates/baseTemplate/index.html:582
 #: pluginHolder/templates/pluginHolder/plugins.html:14
 #: pluginHolder/templates/pluginHolder/plugins.html:21
 msgid "Plugins"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:586
+#: baseTemplate/templates/baseTemplate/index.html:587
 #, fuzzy
 #| msgid "Install Extensions"
 msgid "Installed Plugins"
 msgstr "Установка расширений"
 
-#: baseTemplate/templates/baseTemplate/index.html:586
+#: baseTemplate/templates/baseTemplate/index.html:587
 #, fuzzy
 #| msgid "Install"
 msgid "Installed"
@@ -1495,7 +1543,7 @@ msgstr "Просмотреть список баз данных или изме�
 #: dns/templates/dns/addDeleteDNSRecords.html:42
 #: ftp/templates/ftp/deleteFTPAccount.html:39
 #: ftp/templates/ftp/listFTPAccounts.html:40
-#: tuning/templates/tuning/phpTuning.html:28
+#: tuning/templates/tuning/phpTuning.html:30
 msgid "Select Domain"
 msgstr "Выберите домен"
 
@@ -1592,7 +1640,8 @@ msgstr "Включить"
 #: filemanager/templates/filemanager/index.html:212
 #: firewall/templates/firewall/firewall.html:136
 #: pluginHolder/templates/pluginHolder/plugins.html:28
-#: serverStatus/templates/serverStatus/litespeedStatus.html:40
+#: serverStatus/templates/serverStatus/litespeedStatus.html:39
+#: serverStatus/templates/serverStatus/litespeedStatus.html:226
 msgid "Name"
 msgstr "Имя"
 
@@ -1634,6 +1683,7 @@ msgstr "IP Адрес"
 #: dns/templates/dns/addDeleteDNSRecords.html:156
 #: dns/templates/dns/createDNSZone.html:38
 #: dns/templates/dns/createNameServer.html:38
+#: emailMarketing/templates/emailMarketing/website.html:311
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:52
 #: websiteFunctions/templates/websiteFunctions/website.html:311
 msgid "Domain Name"
@@ -1782,6 +1832,8 @@ msgid "Select Zone"
 msgstr "Выберите зону"
 
 #: dns/templates/dns/deleteDNSZone.html:62
+#: emailMarketing/templates/emailMarketing/manageLists.html:51
+#: emailMarketing/templates/emailMarketing/sendEmails.html:51
 #: ftp/templates/ftp/deleteFTPAccount.html:73
 #: mailServer/templates/mailServer/deleteEmailAccount.html:77
 #: packages/templates/packages/deletePackage.html:49
@@ -1823,6 +1875,995 @@ msgstr "Добавить Удалить записи"
 msgid "Add Delete/Records"
 msgstr "Добавить/Удалить записи"
 
+#: emailMarketing/templates/emailMarketing/composeMessages.html:3
+#, fuzzy
+#| msgid "Change Email Password - CyberPanel"
+msgid "Compose Email Message - CyberPanel"
+msgstr "Изменить пароль электронной почты - CyberPanel"
+
+#: emailMarketing/templates/emailMarketing/composeMessages.html:13
+#: emailMarketing/templates/emailMarketing/composeMessages.html:19
+msgid "Compose Email Message"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/composeMessages.html:14
+#, fuzzy
+#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgid "On this page you can compose email message to be sent out later."
+msgstr ""
+"На этой странице можно настроить место назначения резервного копирования. "
+"(SFTP)"
+
+#: emailMarketing/templates/emailMarketing/composeMessages.html:29
+#, fuzzy
+#| msgid "File Name"
+msgid "Template Name"
+msgstr "Имя файла"
+
+#: emailMarketing/templates/emailMarketing/composeMessages.html:36
+msgid "Email Subject"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/composeMessages.html:43
+#, fuzzy
+#| msgid "First Name"
+msgid "From Name"
+msgstr "Имя"
+
+#: emailMarketing/templates/emailMarketing/composeMessages.html:50
+#, fuzzy
+#| msgid "Create Email"
+msgid "From Email"
+msgstr "Создание электронной почты"
+
+#: emailMarketing/templates/emailMarketing/composeMessages.html:57
+#, fuzzy
+#| msgid "Delete Email"
+msgid "Reply Email"
+msgstr "Удаление почты"
+
+#: emailMarketing/templates/emailMarketing/composeMessages.html:73
+#, fuzzy
+#| msgid "Save Rewrite Rules"
+msgid "Save Template"
+msgstr "Сохранить правила перезаписи"
+
+#: emailMarketing/templates/emailMarketing/createEmailList.html:3
+#, fuzzy
+#| msgid "Create Email Account - CyberPanel"
+msgid "Create Email List - CyberPanel"
+msgstr "Создание учетной записи электронной почты - CyberPanel"
+
+#: emailMarketing/templates/emailMarketing/createEmailList.html:13
+#: emailMarketing/templates/emailMarketing/createEmailList.html:19
+#, fuzzy
+#| msgid "Create Email"
+msgid "Create Email List"
+msgstr "Создание электронной почты"
+
+#: emailMarketing/templates/emailMarketing/createEmailList.html:14
+msgid "Create email list, to send out news letters and marketing emails."
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/createEmailList.html:26
+#, fuzzy
+#| msgid "Last Name"
+msgid "List Name"
+msgstr "Фамилия"
+
+#: emailMarketing/templates/emailMarketing/createEmailList.html:33
+#: emailMarketing/templates/emailMarketing/manageLists.html:74
+#: emailMarketing/templates/emailMarketing/website.html:321
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:56
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:70
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:56
+#: websiteFunctions/templates/websiteFunctions/website.html:321
+msgid "Path"
+msgstr "Путь"
+
+#: emailMarketing/templates/emailMarketing/createEmailList.html:42
+#, fuzzy
+#| msgid "Create Email"
+msgid "Create List"
+msgstr "Создание электронной почты"
+
+#: emailMarketing/templates/emailMarketing/createEmailList.html:59
+#: emailMarketing/templates/emailMarketing/manageLists.html:100
+#: emailMarketing/templates/emailMarketing/sendEmails.html:135
+#: emailMarketing/templates/emailMarketing/website.html:422
+#: managePHP/templates/managePHP/installExtensions.html:94
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:160
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:111
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:125
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:111
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:139
+#: websiteFunctions/templates/websiteFunctions/website.html:422
+msgid "Go Back"
+msgstr "Назад"
+
+#: emailMarketing/templates/emailMarketing/emailMarketing.html:3
+#, fuzzy
+#| msgid "Create Email Account - CyberPanel"
+msgid "Email Marketing - CyberPanel"
+msgstr "Создание учетной записи электронной почты - CyberPanel"
+
+#: emailMarketing/templates/emailMarketing/emailMarketing.html:15
+msgid "Select users to Enable/Disable Email Marketing feature!"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/emailMarketing.html:29
+#: emailPremium/templates/emailPremium/listDomains.html:29
+msgid "Email Policy Server is not enabled "
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/emailMarketing.html:32
+#: emailPremium/templates/emailPremium/listDomains.html:32
+#, fuzzy
+#| msgid "Enable"
+msgid "Enable Now."
+msgstr "Включить"
+
+#: emailMarketing/templates/emailMarketing/emailMarketing.html:44
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:43
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:78
+#: userManagment/templates/userManagment/createUser.html:81
+#: userManagment/templates/userManagment/userProfile.html:42
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:71
+msgid "Username"
+msgstr "Имя пользователя"
+
+#: emailMarketing/templates/emailMarketing/emailMarketing.html:54
+msgid "Email Marketing Enabled."
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/emailMarketing.html:55
+#: emailPremium/templates/emailPremium/emailLimits.html:53
+#: emailPremium/templates/emailPremium/emailLimits.html:159
+#: emailPremium/templates/emailPremium/emailPage.html:55
+#: emailPremium/templates/emailPremium/emailPage.html:61
+#: emailPremium/templates/emailPremium/listDomains.html:60
+#: tuning/templates/tuning/phpTuning.html:94
+#: tuning/templates/tuning/phpTuning.html:233
+msgid "Disable"
+msgstr "Отлючить"
+
+#: emailMarketing/templates/emailMarketing/emailMarketing.html:56
+msgid "Email Marketing Disabled."
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/emailMarketing.html:57
+#: emailPremium/templates/emailPremium/emailLimits.html:55
+#: emailPremium/templates/emailPremium/emailLimits.html:161
+#: emailPremium/templates/emailPremium/emailPage.html:57
+#: emailPremium/templates/emailPremium/emailPage.html:63
+#: emailPremium/templates/emailPremium/listDomains.html:62
+#: tuning/templates/tuning/phpTuning.html:93
+#: tuning/templates/tuning/phpTuning.html:232
+msgid "Enable"
+msgstr "Включить"
+
+#: emailMarketing/templates/emailMarketing/manageLists.html:3
+#, fuzzy
+#| msgid "Change Email Password - CyberPanel"
+msgid "Manage Email Lists - CyberPanel"
+msgstr "Изменить пароль электронной почты - CyberPanel"
+
+#: emailMarketing/templates/emailMarketing/manageLists.html:13
+#: emailMarketing/templates/emailMarketing/manageLists.html:19
+#, fuzzy
+#| msgid "Change Email Password"
+msgid "Manage Email Lists"
+msgstr "Изменить пароль электронной почты"
+
+#: emailMarketing/templates/emailMarketing/manageLists.html:14
+msgid ""
+"On this page you can manage your email lists (Delete, Verify, Add More "
+"Emails)."
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/manageLists.html:28
+#: emailMarketing/templates/emailMarketing/sendEmails.html:71
+#, fuzzy
+#| msgid "Select Email"
+msgid "Select List"
+msgstr "Выберите адрес электронной почты"
+
+#: emailMarketing/templates/emailMarketing/manageLists.html:41
+#, fuzzy
+#| msgid "Delete Website"
+msgid "Delete This List"
+msgstr "Удалить Веб-сайт"
+
+#: emailMarketing/templates/emailMarketing/manageLists.html:48
+msgid "You are doing to delete this list.."
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/manageLists.html:54
+#: emailMarketing/templates/emailMarketing/sendEmails.html:54
+#: emailMarketing/templates/emailMarketing/website.html:476
+#: filemanager/templates/filemanager/index.html:426
+#: filemanager/templates/filemanager/index.html:469
+#: filemanager/templates/filemanager/index.html:532
+#: filemanager/templates/filemanager/index.html:567
+#: filemanager/templates/filemanager/index.html:597
+#: filemanager/templates/filemanager/index.html:658
+#: websiteFunctions/templates/websiteFunctions/website.html:476
+msgid "Close"
+msgstr "Закрыть"
+
+#: emailMarketing/templates/emailMarketing/manageLists.html:55
+#: emailMarketing/templates/emailMarketing/sendEmails.html:55
+#: filemanager/templates/filemanager/index.html:425
+msgid "Confirm"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/manageLists.html:63
+msgid "Verify This List"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/manageLists.html:66
+#, fuzzy
+#| msgid "Add Domains"
+msgid "Add More Emails"
+msgstr "Добавление доменов"
+
+#: emailMarketing/templates/emailMarketing/manageLists.html:83
+#, fuzzy
+#| msgid "Create Email"
+msgid "Load Emails"
+msgstr "Создание электронной почты"
+
+#: emailMarketing/templates/emailMarketing/manageLists.html:142
+#, fuzzy
+#| msgid "Email"
+msgid "email"
+msgstr "Эл. почта"
+
+#: emailMarketing/templates/emailMarketing/manageLists.html:143
+#, fuzzy
+#| msgid "Server Status"
+msgid "Verification Status"
+msgstr "Состояние сервера"
+
+#: emailMarketing/templates/emailMarketing/manageLists.html:144
+msgid "Date Created"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/manageLists.html:145
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:79
+#: emailMarketing/templates/emailMarketing/sendEmails.html:157
+#: filemanager/templates/filemanager/index.html:216
+#: mailServer/templates/mailServer/emailForwarding.html:113
+#, fuzzy
+#| msgid "FTP Functions"
+msgid "Actions"
+msgstr "FTP функции"
+
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:3
+#, fuzzy
+#| msgid "Manage SSL - CyberPanel"
+msgid "Manage SMTP Hosts - CyberPanel"
+msgstr "Управление SSL - CyberPanel"
+
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:13
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:19
+#, fuzzy
+#| msgid "Manage SSL"
+msgid "Manage SMTP Hosts"
+msgstr "Управление SSL"
+
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:14
+#, fuzzy
+#| msgid ""
+#| "On this page you can manage versions and or upgrade to latest version of "
+#| "CyberPanel"
+msgid ""
+"On this page you can manage STMP Host. (SMTP hosts are used to send emails)"
+msgstr ""
+"На этой странице можно управлять версиями и/или обновить до последней версии "
+"CyberPanel"
+
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:29
+#: emailMarketing/templates/emailMarketing/sendEmails.html:153
+msgid "SMTP Host"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:59
+#, fuzzy
+#| msgid "Save Rewrite Rules"
+msgid "Save Host"
+msgstr "Сохранить правила перезаписи"
+
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:75
+#, fuzzy
+#| msgid "Select Owner"
+msgid "Owner"
+msgstr "Выберите владельца"
+
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:76
+msgid "Host"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:91
+msgid "Verify Host"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/sendEmails.html:3
+#, fuzzy
+#| msgid "Home - CyberPanel"
+msgid "Send Emails - CyberPanel"
+msgstr "Главная - CyberPanel"
+
+#: emailMarketing/templates/emailMarketing/sendEmails.html:13
+#: emailMarketing/templates/emailMarketing/sendEmails.html:19
+#: emailMarketing/templates/emailMarketing/sendEmails.html:66
+#: emailMarketing/templates/emailMarketing/website.html:999
+#: emailMarketing/templates/emailMarketing/website.html:1002
+#: emailMarketing/templates/emailMarketing/website.html:1003
+#: websiteFunctions/templates/websiteFunctions/website.html:999
+#: websiteFunctions/templates/websiteFunctions/website.html:1002
+#: websiteFunctions/templates/websiteFunctions/website.html:1003
+#, fuzzy
+#| msgid "Emails"
+msgid "Send Emails"
+msgstr "Эл.почта"
+
+#: emailMarketing/templates/emailMarketing/sendEmails.html:14
+msgid ""
+"On this page you can send emails to the lists you created using SMTP Hosts."
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/sendEmails.html:28
+#, fuzzy
+#| msgid "Select Website"
+msgid "Select Template"
+msgstr "Выберите веб-сайт"
+
+#: emailMarketing/templates/emailMarketing/sendEmails.html:41
+msgid "Delete This Template"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/sendEmails.html:48
+msgid "You are doing to delete this template.."
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/sendEmails.html:63
+#, fuzzy
+#| msgid "Previous"
+msgid "Preview Template"
+msgstr "Предыдущая"
+
+#: emailMarketing/templates/emailMarketing/sendEmails.html:82
+#, fuzzy
+#| msgid "Select FTP Account"
+msgid "Select STMP Host"
+msgstr "Выберите учетную запись FTP"
+
+#: emailMarketing/templates/emailMarketing/sendEmails.html:98
+msgid "Send to un-verified email addresses."
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/sendEmails.html:107
+msgid "Include unsubscribe link."
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/sendEmails.html:116
+#, fuzzy
+#| msgid "Start"
+msgid "Start Job"
+msgstr "Начать"
+
+#: emailMarketing/templates/emailMarketing/sendEmails.html:151
+msgid "Job ID"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/sendEmails.html:154
+#, fuzzy
+#| msgid "Emails"
+msgid "Total Emails"
+msgstr "Эл.почта"
+
+#: emailMarketing/templates/emailMarketing/sendEmails.html:155
+msgid "Sent"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/sendEmails.html:156
+msgid "Failed"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/website.html:13
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:13
+#: websiteFunctions/templates/websiteFunctions/website.html:13
+#, fuzzy
+#| msgid "Previous"
+msgid "Preview"
+msgstr "Предыдущая"
+
+#: emailMarketing/templates/emailMarketing/website.html:14
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:14
+#: websiteFunctions/templates/websiteFunctions/website.html:14
+msgid "All functions related to a particular site."
+msgstr "Все функции, относящиеся к определенному сайту."
+
+#: emailMarketing/templates/emailMarketing/website.html:25
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:25
+#: websiteFunctions/templates/websiteFunctions/website.html:25
+msgid "Resource Usage"
+msgstr "Использование ресурсов"
+
+#: emailMarketing/templates/emailMarketing/website.html:36
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:36
+#: websiteFunctions/templates/websiteFunctions/website.html:36
+msgid "Resource"
+msgstr "Ресурс"
+
+#: emailMarketing/templates/emailMarketing/website.html:38
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:38
+#: websiteFunctions/templates/websiteFunctions/website.html:38
+msgid "Allowed"
+msgstr "Разрешено"
+
+#: emailMarketing/templates/emailMarketing/website.html:60
+#: emailMarketing/templates/emailMarketing/website.html:87
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:60
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:87
+#: websiteFunctions/templates/websiteFunctions/website.html:60
+#: websiteFunctions/templates/websiteFunctions/website.html:87
+msgid "Bandwidth Usage"
+msgstr "Использование пропускной способности"
+
+#: emailMarketing/templates/emailMarketing/website.html:123
+#: emailMarketing/templates/emailMarketing/website.html:126
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:123
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:126
+#: websiteFunctions/templates/websiteFunctions/website.html:123
+#: websiteFunctions/templates/websiteFunctions/website.html:126
+msgid "Load Access Logs"
+msgstr "Загрузить лог-журналы доступа"
+
+#: emailMarketing/templates/emailMarketing/website.html:127
+#: serverLogs/templates/serverLogs/accessLogs.html:17
+#: serverLogs/templates/serverLogs/index.html:25
+#: serverLogs/templates/serverLogs/index.html:27
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:127
+#: websiteFunctions/templates/websiteFunctions/website.html:127
+msgid "Access Logs"
+msgstr "Лог-журналы доступа"
+
+#: emailMarketing/templates/emailMarketing/website.html:134
+#: emailMarketing/templates/emailMarketing/website.html:137
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:134
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:137
+#: websiteFunctions/templates/websiteFunctions/website.html:134
+#: websiteFunctions/templates/websiteFunctions/website.html:137
+msgid "Load Error Logs"
+msgstr " Загрузить лог-журналы ошибок"
+
+#: emailMarketing/templates/emailMarketing/website.html:149
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:149
+#: websiteFunctions/templates/websiteFunctions/website.html:149
+msgid "Logs Fetched"
+msgstr "Логи получены"
+
+#: emailMarketing/templates/emailMarketing/website.html:154
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:154
+#: websiteFunctions/templates/websiteFunctions/website.html:154
+msgid ""
+"Could not fetch logs, see the logs file through command line. Error message:"
+msgstr ""
+"Невозможно получить лог-журнал, просмотрите логи через терминал. Сообщение "
+"об ошибке."
+
+#: emailMarketing/templates/emailMarketing/website.html:175
+#: emailMarketing/templates/emailMarketing/website.html:214
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:175
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:214
+#: websiteFunctions/templates/websiteFunctions/website.html:175
+#: websiteFunctions/templates/websiteFunctions/website.html:214
+msgid "Next"
+msgstr "Следующий"
+
+#: emailMarketing/templates/emailMarketing/website.html:176
+#: emailMarketing/templates/emailMarketing/website.html:215
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:176
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:215
+#: websiteFunctions/templates/websiteFunctions/website.html:176
+#: websiteFunctions/templates/websiteFunctions/website.html:215
+msgid "Previous"
+msgstr "Предыдущая"
+
+#: emailMarketing/templates/emailMarketing/website.html:253
+#: emailPremium/templates/emailPremium/listDomains.html:22
+#: packages/templates/packages/createPackage.html:35
+#: packages/templates/packages/modifyPackage.html:40
+#: websiteFunctions/templates/websiteFunctions/website.html:253
+msgid "Domains"
+msgstr "Домены"
+
+#: emailMarketing/templates/emailMarketing/website.html:261
+#: emailMarketing/templates/emailMarketing/website.html:264
+#: emailMarketing/templates/emailMarketing/website.html:265
+#: websiteFunctions/templates/websiteFunctions/website.html:261
+#: websiteFunctions/templates/websiteFunctions/website.html:264
+#: websiteFunctions/templates/websiteFunctions/website.html:265
+msgid "Add Domains"
+msgstr "Добавление доменов"
+
+#: emailMarketing/templates/emailMarketing/website.html:272
+#: emailMarketing/templates/emailMarketing/website.html:275
+#: emailMarketing/templates/emailMarketing/website.html:276
+#: emailMarketing/templates/emailMarketing/website.html:293
+#: emailMarketing/templates/emailMarketing/website.html:296
+#: emailPremium/templates/emailPremium/listDomains.html:14
+#: websiteFunctions/templates/websiteFunctions/website.html:272
+#: websiteFunctions/templates/websiteFunctions/website.html:275
+#: websiteFunctions/templates/websiteFunctions/website.html:276
+#: websiteFunctions/templates/websiteFunctions/website.html:293
+#: websiteFunctions/templates/websiteFunctions/website.html:296
+msgid "List Domains"
+msgstr "Список доменов"
+
+#: emailMarketing/templates/emailMarketing/website.html:282
+#: emailMarketing/templates/emailMarketing/website.html:285
+#: emailMarketing/templates/emailMarketing/website.html:286
+#: websiteFunctions/templates/websiteFunctions/website.html:282
+#: websiteFunctions/templates/websiteFunctions/website.html:285
+#: websiteFunctions/templates/websiteFunctions/website.html:286
+#, fuzzy
+#| msgid "Domains"
+msgid "Domain Alias"
+msgstr "Домены"
+
+#: emailMarketing/templates/emailMarketing/website.html:293
+#: emailMarketing/templates/emailMarketing/website.html:296
+#: websiteFunctions/templates/websiteFunctions/website.html:293
+#: websiteFunctions/templates/websiteFunctions/website.html:296
+msgid "Add new Cron Job"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/website.html:297
+#: websiteFunctions/templates/websiteFunctions/website.html:297
+msgid "Cron Jobs"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/website.html:323
+#: websiteFunctions/templates/websiteFunctions/website.html:323
+msgid "This path is relative to: "
+msgstr "Этот путь является относительным:"
+
+#: emailMarketing/templates/emailMarketing/website.html:323
+#: websiteFunctions/templates/websiteFunctions/website.html:323
+msgid "Leave empty to set default."
+msgstr "Оставьте пустым, чтобы задать по умолчанию."
+
+#: emailMarketing/templates/emailMarketing/website.html:325
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:56
+#: websiteFunctions/templates/websiteFunctions/website.html:325
+msgid "Invalid Domain (Note: You don't need to add 'http' or 'https')"
+msgstr ""
+"Недопустимый домен (Примечание: вам не нужно добавлять «http» или «https»)"
+
+#: emailMarketing/templates/emailMarketing/website.html:330
+#: emailMarketing/templates/emailMarketing/website.html:760
+#: managePHP/templates/managePHP/editPHPConfig.html:48
+#: managePHP/templates/managePHP/editPHPConfig.html:182
+#: managePHP/templates/managePHP/installExtensions.html:28
+#: tuning/templates/tuning/phpTuning.html:166
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:68
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:473
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:74
+#: websiteFunctions/templates/websiteFunctions/website.html:330
+#: websiteFunctions/templates/websiteFunctions/website.html:760
+msgid "Select PHP"
+msgstr "Выберите PHP"
+
+#: emailMarketing/templates/emailMarketing/website.html:347
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:85
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:86
+#: websiteFunctions/templates/websiteFunctions/website.html:347
+msgid "Additional Features"
+msgstr "Дополнительные параметры"
+
+#: emailMarketing/templates/emailMarketing/website.html:380
+#: websiteFunctions/templates/websiteFunctions/website.html:380
+msgid "Create Domain"
+msgstr "Создать домен"
+
+#: emailMarketing/templates/emailMarketing/website.html:406
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:144
+#: websiteFunctions/templates/websiteFunctions/website.html:406
+#, fuzzy
+#| msgid "is successfully created."
+msgid "Website succesfully created."
+msgstr "успешно создан."
+
+#: emailMarketing/templates/emailMarketing/website.html:441
+#: websiteFunctions/templates/websiteFunctions/website.html:441
+msgid "PHP Version Changed to:"
+msgstr "PHP версии изменено на:"
+
+#: emailMarketing/templates/emailMarketing/website.html:445
+#: websiteFunctions/templates/websiteFunctions/website.html:445
+msgid "Deleted:"
+msgstr "Удалено:"
+
+#: emailMarketing/templates/emailMarketing/website.html:449
+#: websiteFunctions/templates/websiteFunctions/website.html:449
+msgid "SSL Issued:"
+msgstr "SSL выпущен:"
+
+#: emailMarketing/templates/emailMarketing/website.html:453
+#: websiteFunctions/templates/websiteFunctions/website.html:453
+#, fuzzy
+#| msgid "Database created successfully."
+msgid "Changes applied successfully."
+msgstr "База данных создана успешно."
+
+#: emailMarketing/templates/emailMarketing/website.html:515
+#: websiteFunctions/templates/websiteFunctions/domainAlias.html:53
+#: websiteFunctions/templates/websiteFunctions/website.html:515
+msgid "Issue"
+msgstr "Выпуск"
+
+#: emailMarketing/templates/emailMarketing/website.html:540
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:253
+#: websiteFunctions/templates/websiteFunctions/website.html:540
+msgid "Configurations"
+msgstr "Конфигурации"
+
+#: emailMarketing/templates/emailMarketing/website.html:549
+#: emailMarketing/templates/emailMarketing/website.html:552
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:262
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:265
+#: websiteFunctions/templates/websiteFunctions/website.html:549
+#: websiteFunctions/templates/websiteFunctions/website.html:552
+msgid "Edit vHost Main Configurations"
+msgstr "Редактирование основных конфигураций vHost "
+
+#: emailMarketing/templates/emailMarketing/website.html:553
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:266
+#: websiteFunctions/templates/websiteFunctions/website.html:553
+msgid "vHost Conf"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/website.html:561
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:274
+#: websiteFunctions/templates/websiteFunctions/website.html:561
+msgid "Add Rewrite Rules (.htaccess)"
+msgstr "Добавление правила перезаписи (.htaccess)"
+
+#: emailMarketing/templates/emailMarketing/website.html:564
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:277
+#: websiteFunctions/templates/websiteFunctions/website.html:564
+#, fuzzy
+#| msgid "Add Rewrite Rules (.htaccess)"
+msgid "Rewrite Rules (.htaccess)"
+msgstr "Добавление правила перезаписи (.htaccess)"
+
+#: emailMarketing/templates/emailMarketing/website.html:565
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:278
+#: websiteFunctions/templates/websiteFunctions/website.html:565
+#, fuzzy
+#| msgid "Save Rewrite Rules"
+msgid "Rewrite Rules"
+msgstr "Сохранить правила перезаписи"
+
+#: emailMarketing/templates/emailMarketing/website.html:573
+#: emailMarketing/templates/emailMarketing/website.html:576
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:286
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:289
+#: websiteFunctions/templates/websiteFunctions/website.html:573
+#: websiteFunctions/templates/websiteFunctions/website.html:576
+msgid "Add Your Own SSL"
+msgstr "Добавить свой собственный SSL"
+
+#: emailMarketing/templates/emailMarketing/website.html:577
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:290
+#: websiteFunctions/templates/websiteFunctions/website.html:577
+msgid "Add SSL"
+msgstr "Добавьте SSL"
+
+#: emailMarketing/templates/emailMarketing/website.html:585
+#: emailMarketing/templates/emailMarketing/website.html:588
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:298
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:301
+#: websiteFunctions/templates/websiteFunctions/website.html:585
+#: websiteFunctions/templates/websiteFunctions/website.html:588
+#, fuzzy
+#| msgid "Select PHP Version"
+msgid "Change PHP Version"
+msgstr "Выберите версию PHP"
+
+#: emailMarketing/templates/emailMarketing/website.html:589
+#: emailMarketing/templates/emailMarketing/website.html:785
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:302
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:498
+#: websiteFunctions/templates/websiteFunctions/website.html:589
+#: websiteFunctions/templates/websiteFunctions/website.html:785
+#, fuzzy
+#| msgid "Change"
+msgid "Change PHP"
+msgstr "Изменить"
+
+#: emailMarketing/templates/emailMarketing/website.html:601
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:314
+#: websiteFunctions/templates/websiteFunctions/website.html:601
+msgid "SSL Saved"
+msgstr "SSL сохранен"
+
+#: emailMarketing/templates/emailMarketing/website.html:606
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:319
+#: websiteFunctions/templates/websiteFunctions/website.html:606
+msgid "Could not save SSL. Error message:"
+msgstr "Не удалось сохранить SSL. Сообщение об ошибке:"
+
+#: emailMarketing/templates/emailMarketing/website.html:630
+#: emailMarketing/templates/emailMarketing/website.html:689
+#: firewall/templates/firewall/secureSSH.html:158
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:343
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:402
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:55
+#: websiteFunctions/templates/websiteFunctions/website.html:630
+#: websiteFunctions/templates/websiteFunctions/website.html:689
+msgid "Save"
+msgstr "Сохранить"
+
+#: emailMarketing/templates/emailMarketing/website.html:655
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:368
+#: websiteFunctions/templates/websiteFunctions/website.html:655
+msgid "Current configuration in the file fetched."
+msgstr "Текущая конфигурация в файле загружена"
+
+#: emailMarketing/templates/emailMarketing/website.html:660
+#: emailMarketing/templates/emailMarketing/website.html:673
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:373
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:386
+#: websiteFunctions/templates/websiteFunctions/website.html:660
+#: websiteFunctions/templates/websiteFunctions/website.html:673
+msgid "Could not fetch current configuration. Error message:"
+msgstr "Не удалось получить текущую конфигурацию. Сообщение об ошибке:"
+
+#: emailMarketing/templates/emailMarketing/website.html:669
+#: emailMarketing/templates/emailMarketing/website.html:721
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:382
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:434
+#: websiteFunctions/templates/websiteFunctions/website.html:669
+#: websiteFunctions/templates/websiteFunctions/website.html:721
+#, fuzzy
+#| msgid "SSH Configurations Saved."
+msgid "Configurations saved."
+msgstr "SSH конфигурации сохранены."
+
+#: emailMarketing/templates/emailMarketing/website.html:707
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:420
+#: websiteFunctions/templates/websiteFunctions/website.html:707
+msgid "Current rewrite rules in the file fetched."
+msgstr "Текущие правила перезаписи в извлеченном файле."
+
+#: emailMarketing/templates/emailMarketing/website.html:712
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:425
+#: websiteFunctions/templates/websiteFunctions/website.html:712
+msgid "Could not fetch current rewrite rules. Error message:"
+msgstr "Не удалось получить текущие правила перезаписи. Сообщение об ошибке:"
+
+#: emailMarketing/templates/emailMarketing/website.html:725
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:438
+#: websiteFunctions/templates/websiteFunctions/website.html:725
+msgid "Could not save rewrite rules. Error message:"
+msgstr "Не удалось сохранить правила перезаписи. Сообщение об ошибке:"
+
+#: emailMarketing/templates/emailMarketing/website.html:741
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:454
+#: websiteFunctions/templates/websiteFunctions/website.html:741
+msgid "Save Rewrite Rules"
+msgstr "Сохранить правила перезаписи"
+
+#: emailMarketing/templates/emailMarketing/website.html:796
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:509
+#: websiteFunctions/templates/websiteFunctions/website.html:796
+#, fuzzy
+#| msgid "Cannot create website. Error message:"
+msgid "Failed to change PHP version. Error message:"
+msgstr "Не удается создать веб-сайт. Сообщение об ошибке:"
+
+#: emailMarketing/templates/emailMarketing/website.html:800
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:513
+#: websiteFunctions/templates/websiteFunctions/website.html:800
+#, fuzzy
+#| msgid "Password successfully changed for :"
+msgid "PHP successfully changed for: "
+msgstr "Пароль успешно изменен для:"
+
+#: emailMarketing/templates/emailMarketing/website.html:825
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:538
+#: websiteFunctions/templates/websiteFunctions/website.html:825
+msgid "Files"
+msgstr "Файлы"
+
+#: emailMarketing/templates/emailMarketing/website.html:833
+#: emailMarketing/templates/emailMarketing/website.html:836
+#: emailMarketing/templates/emailMarketing/website.html:837
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:546
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:549
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:550
+#: websiteFunctions/templates/websiteFunctions/website.html:833
+#: websiteFunctions/templates/websiteFunctions/website.html:836
+#: websiteFunctions/templates/websiteFunctions/website.html:837
+msgid "File Manager"
+msgstr "Диспетчер Файлов"
+
+#: emailMarketing/templates/emailMarketing/website.html:844
+#: emailMarketing/templates/emailMarketing/website.html:847
+#: emailMarketing/templates/emailMarketing/website.html:885
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:557
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:560
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:598
+#: websiteFunctions/templates/websiteFunctions/website.html:844
+#: websiteFunctions/templates/websiteFunctions/website.html:847
+#: websiteFunctions/templates/websiteFunctions/website.html:885
+msgid "open_basedir Protection"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/website.html:848
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:561
+#: websiteFunctions/templates/websiteFunctions/website.html:848
+msgid "open_basedir"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/website.html:860
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:573
+#: websiteFunctions/templates/websiteFunctions/website.html:860
+#, fuzzy
+#| msgid "Create FTP Account"
+msgid "Create FTP Acct"
+msgstr "Создание учетной записи FTP"
+
+#: emailMarketing/templates/emailMarketing/website.html:872
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:585
+#: websiteFunctions/templates/websiteFunctions/website.html:872
+#, fuzzy
+#| msgid "Delete FTP Account"
+msgid "Delete FTP Acct"
+msgstr "Удаление учетной записи FTP"
+
+#: emailMarketing/templates/emailMarketing/website.html:907
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:620
+#: websiteFunctions/templates/websiteFunctions/website.html:907
+#, fuzzy
+#| msgid "Save Changes"
+msgid "Apply Changes"
+msgstr "Сохранить изменения"
+
+#: emailMarketing/templates/emailMarketing/website.html:919
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:632
+#: websiteFunctions/templates/websiteFunctions/website.html:919
+#, fuzzy
+#| msgid "Rule successfully added."
+msgid "Changes successfully saved."
+msgstr "Правило  успешно добавлено."
+
+#: emailMarketing/templates/emailMarketing/website.html:955
+#: emailMarketing/templates/emailMarketing/website.html:958
+#: emailMarketing/templates/emailMarketing/website.html:959
+#: websiteFunctions/templates/websiteFunctions/website.html:955
+#: websiteFunctions/templates/websiteFunctions/website.html:958
+#: websiteFunctions/templates/websiteFunctions/website.html:959
+#, fuzzy
+#| msgid "Create Email"
+msgid "Create Lists"
+msgstr "Создание электронной почты"
+
+#: emailMarketing/templates/emailMarketing/website.html:966
+#: emailMarketing/templates/emailMarketing/website.html:969
+#: emailMarketing/templates/emailMarketing/website.html:970
+#: websiteFunctions/templates/websiteFunctions/website.html:966
+#: websiteFunctions/templates/websiteFunctions/website.html:969
+#: websiteFunctions/templates/websiteFunctions/website.html:970
+#, fuzzy
+#| msgid "Manage SSL"
+msgid "Manage Lists"
+msgstr "Управление SSL"
+
+#: emailMarketing/templates/emailMarketing/website.html:977
+#: emailMarketing/templates/emailMarketing/website.html:980
+#: emailMarketing/templates/emailMarketing/website.html:981
+#: websiteFunctions/templates/websiteFunctions/website.html:977
+#: websiteFunctions/templates/websiteFunctions/website.html:980
+#: websiteFunctions/templates/websiteFunctions/website.html:981
+msgid "SMTP Hosts"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/website.html:988
+#: emailMarketing/templates/emailMarketing/website.html:991
+#: websiteFunctions/templates/websiteFunctions/website.html:988
+#: websiteFunctions/templates/websiteFunctions/website.html:991
+msgid "Compose Message"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/website.html:992
+#: websiteFunctions/templates/websiteFunctions/website.html:992
+msgid "Compose"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/website.html:1019
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:14
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:22
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:659
+#: websiteFunctions/templates/websiteFunctions/website.html:1019
+msgid "Application Installer"
+msgstr "Установщик приложения"
+
+#: emailMarketing/templates/emailMarketing/website.html:1028
+#: emailMarketing/templates/emailMarketing/website.html:1031
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:28
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:31
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:34
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:668
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:671
+#: websiteFunctions/templates/websiteFunctions/website.html:1028
+#: websiteFunctions/templates/websiteFunctions/website.html:1031
+msgid "Install wordpress with LSCache"
+msgstr "Установить wordpress с LSCache"
+
+#: emailMarketing/templates/emailMarketing/website.html:1032
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:35
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:672
+#: websiteFunctions/templates/websiteFunctions/website.html:1032
+msgid "Wordpress with LSCache"
+msgstr "WordPress с LSCache"
+
+#: emailMarketing/templates/emailMarketing/website.html:1040
+#: emailMarketing/templates/emailMarketing/website.html:1043
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:44
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:47
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:680
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:683
+#: websiteFunctions/templates/websiteFunctions/website.html:1040
+#: websiteFunctions/templates/websiteFunctions/website.html:1043
+#, fuzzy
+#| msgid "Install wordpress with LSCache"
+msgid "Install Joomla with LSCache"
+msgstr "Установить wordpress с LSCache"
+
+#: emailMarketing/templates/emailMarketing/website.html:1044
+#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:48
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:684
+#: websiteFunctions/templates/websiteFunctions/website.html:1044
+msgid "Joomla"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/website.html:1052
+#: emailMarketing/templates/emailMarketing/website.html:1055
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:692
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:695
+#: websiteFunctions/templates/websiteFunctions/website.html:1052
+#: websiteFunctions/templates/websiteFunctions/website.html:1055
+msgid "Attach Git with this website!"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/website.html:1056
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:696
+#: websiteFunctions/templates/websiteFunctions/website.html:1056
+msgid "Git"
+msgstr ""
+
+#: emailMarketing/templates/emailMarketing/website.html:1065
+#: emailMarketing/templates/emailMarketing/website.html:1068
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:705
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:708
+#: websiteFunctions/templates/websiteFunctions/website.html:1065
+#: websiteFunctions/templates/websiteFunctions/website.html:1068
+#, fuzzy
+#| msgid "Install"
+msgid "Install Prestashop"
+msgstr "Установить"
+
+#: emailMarketing/templates/emailMarketing/website.html:1069
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:709
+#: websiteFunctions/templates/websiteFunctions/website.html:1069
+msgid "Prestashop"
+msgstr ""
+
 #: emailPremium/templates/emailPremium/SpamAssassin.html:3
 #: firewall/templates/firewall/spamassassin.html:3
 #, fuzzy
@@ -1856,7 +2897,8 @@ msgstr ""
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:31
 #: firewall/templates/firewall/csf.html:30
-#: firewall/templates/firewall/modSecurity.html:31
+#: firewall/templates/firewall/modSecurity.html:37
+#: firewall/templates/firewall/modSecurity.html:234
 #: firewall/templates/firewall/modSecurityRules.html:72
 #: firewall/templates/firewall/modSecurityRulesPacks.html:30
 #: firewall/templates/firewall/spamassassin.html:31
@@ -1867,7 +2909,8 @@ msgstr "Установить"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:43
 #: firewall/templates/firewall/csf.html:42
-#: firewall/templates/firewall/modSecurity.html:43
+#: firewall/templates/firewall/modSecurity.html:50
+#: firewall/templates/firewall/modSecurity.html:247
 #: firewall/templates/firewall/spamassassin.html:43
 #, fuzzy
 #| msgid "Cannot add destination. Error message:"
@@ -1878,8 +2921,10 @@ msgstr "Не удается добавить место назначения. С
 #: emailPremium/templates/emailPremium/SpamAssassin.html:134
 #: emailPremium/templates/emailPremium/policyServer.html:60
 #: firewall/templates/firewall/csf.html:46
-#: firewall/templates/firewall/modSecurity.html:47
-#: firewall/templates/firewall/modSecurity.html:168
+#: firewall/templates/firewall/modSecurity.html:56
+#: firewall/templates/firewall/modSecurity.html:186
+#: firewall/templates/firewall/modSecurity.html:252
+#: firewall/templates/firewall/modSecurity.html:374
 #: firewall/templates/firewall/modSecurityRules.html:53
 #: firewall/templates/firewall/modSecurityRulesPacks.html:88
 #: firewall/templates/firewall/secureSSH.html:87
@@ -1898,7 +2943,8 @@ msgstr "Не удалось подключиться. Пожалуйста об�
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:51
 #: firewall/templates/firewall/csf.html:50
-#: firewall/templates/firewall/modSecurity.html:51
+#: firewall/templates/firewall/modSecurity.html:60
+#: firewall/templates/firewall/modSecurity.html:256
 #: firewall/templates/firewall/spamassassin.html:51
 #, fuzzy
 #| msgid "Installation failed. Error message:"
@@ -1915,7 +2961,8 @@ msgstr ""
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:114
 #: emailPremium/templates/emailPremium/policyServer.html:40
-#: firewall/templates/firewall/modSecurity.html:148
+#: firewall/templates/firewall/modSecurity.html:166
+#: firewall/templates/firewall/modSecurity.html:354
 #: firewall/templates/firewall/spamassassin.html:157
 #: manageServices/templates/manageServices/managePostfix.html:42
 #: manageServices/templates/manageServices/managePowerDNS.html:42
@@ -1963,30 +3010,12 @@ msgstr "Использование ресурсов"
 msgid "Limits are being Applied!"
 msgstr ""
 
-#: emailPremium/templates/emailPremium/emailLimits.html:53
-#: emailPremium/templates/emailPremium/emailLimits.html:159
-#: emailPremium/templates/emailPremium/emailPage.html:55
-#: emailPremium/templates/emailPremium/emailPage.html:61
-#: emailPremium/templates/emailPremium/listDomains.html:60
-#: tuning/templates/tuning/phpTuning.html:91
-msgid "Disable"
-msgstr "Отлючить"
-
 #: emailPremium/templates/emailPremium/emailLimits.html:54
 #: emailPremium/templates/emailPremium/emailLimits.html:160
 #: emailPremium/templates/emailPremium/emailPage.html:56
 #: emailPremium/templates/emailPremium/listDomains.html:61
 msgid "Limits are not being applied!"
 msgstr ""
-
-#: emailPremium/templates/emailPremium/emailLimits.html:55
-#: emailPremium/templates/emailPremium/emailLimits.html:161
-#: emailPremium/templates/emailPremium/emailPage.html:57
-#: emailPremium/templates/emailPremium/emailPage.html:63
-#: emailPremium/templates/emailPremium/listDomains.html:62
-#: tuning/templates/tuning/phpTuning.html:90
-msgid "Enable"
-msgstr "Включить"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:58
 #: emailPremium/templates/emailPremium/emailPage.html:66
@@ -2094,35 +3123,9 @@ msgstr "Лог-журнал FTP"
 msgid "Domains - CyberPanel"
 msgstr "Главная - CyberPanel"
 
-#: emailPremium/templates/emailPremium/listDomains.html:14
-#: websiteFunctions/templates/websiteFunctions/website.html:272
-#: websiteFunctions/templates/websiteFunctions/website.html:275
-#: websiteFunctions/templates/websiteFunctions/website.html:276
-#: websiteFunctions/templates/websiteFunctions/website.html:293
-#: websiteFunctions/templates/websiteFunctions/website.html:296
-msgid "List Domains"
-msgstr "Список доменов"
-
 #: emailPremium/templates/emailPremium/listDomains.html:15
 msgid "On this page you manage emails limits for Domains/Email Addresses"
 msgstr ""
-
-#: emailPremium/templates/emailPremium/listDomains.html:22
-#: packages/templates/packages/createPackage.html:35
-#: packages/templates/packages/modifyPackage.html:40
-#: websiteFunctions/templates/websiteFunctions/website.html:253
-msgid "Domains"
-msgstr "Домены"
-
-#: emailPremium/templates/emailPremium/listDomains.html:29
-msgid "Email Policy Server is not enabled "
-msgstr ""
-
-#: emailPremium/templates/emailPremium/listDomains.html:32
-#, fuzzy
-#| msgid "Enable"
-msgid "Enable Now."
-msgstr "Включить"
 
 #: emailPremium/templates/emailPremium/policyServer.html:3
 #, fuzzy
@@ -2309,13 +3312,6 @@ msgstr ""
 msgid "Progress"
 msgstr ""
 
-#: filemanager/templates/filemanager/index.html:216
-#: mailServer/templates/mailServer/emailForwarding.html:113
-#, fuzzy
-#| msgid "FTP Functions"
-msgid "Actions"
-msgstr "FTP функции"
-
 #: filemanager/templates/filemanager/index.html:242
 msgid "Remove"
 msgstr ""
@@ -2422,20 +3418,6 @@ msgstr "успешно создан."
 #| msgid "Configurations"
 msgid "Confirm Deletion!"
 msgstr "Конфигурации"
-
-#: filemanager/templates/filemanager/index.html:425
-msgid "Confirm"
-msgstr ""
-
-#: filemanager/templates/filemanager/index.html:426
-#: filemanager/templates/filemanager/index.html:469
-#: filemanager/templates/filemanager/index.html:532
-#: filemanager/templates/filemanager/index.html:567
-#: filemanager/templates/filemanager/index.html:597
-#: filemanager/templates/filemanager/index.html:658
-#: websiteFunctions/templates/websiteFunctions/website.html:476
-msgid "Close"
-msgstr "Закрыть"
 
 #: filemanager/templates/filemanager/index.html:449
 msgid "List of files/folder!"
@@ -2690,7 +3672,8 @@ msgid "Action failed. Error message:"
 msgstr "Не удалось выполнить действие. Сообщение об ошибке:"
 
 #: firewall/templates/firewall/firewall.html:67
-#: serverStatus/templates/serverStatus/litespeedStatus.html:85
+#: serverStatus/templates/serverStatus/litespeedStatus.html:86
+#: serverStatus/templates/serverStatus/litespeedStatus.html:273
 msgid "Action successful."
 msgstr "Успешное действие "
 
@@ -2720,19 +3703,22 @@ msgstr "Управление безопасностью сервера на эт
 msgid "ModSecurity - CyberPanel"
 msgstr "Безопасность - CyberPanel"
 
-#: firewall/templates/firewall/modSecurity.html:13
+#: firewall/templates/firewall/modSecurity.html:14
+#: firewall/templates/firewall/modSecurity.html:211
 #, fuzzy
 #| msgid "Edit PHP Configurations"
 msgid "ModSecurity Configurations!"
 msgstr "Редактирование конфигурации PHP"
 
-#: firewall/templates/firewall/modSecurity.html:13
+#: firewall/templates/firewall/modSecurity.html:18
+#: firewall/templates/firewall/modSecurity.html:215
 #: firewall/templates/firewall/modSecurityRules.html:13
 #: firewall/templates/firewall/modSecurityRulesPacks.html:13
 msgid "ModSec Docs"
 msgstr ""
 
-#: firewall/templates/firewall/modSecurity.html:14
+#: firewall/templates/firewall/modSecurity.html:20
+#: firewall/templates/firewall/modSecurity.html:217
 #, fuzzy
 #| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can configure ModSecurity settings."
@@ -2740,37 +3726,43 @@ msgstr ""
 "На этой странице можно настроить место назначения резервного копирования. "
 "(SFTP)"
 
-#: firewall/templates/firewall/modSecurity.html:20
+#: firewall/templates/firewall/modSecurity.html:26
+#: firewall/templates/firewall/modSecurity.html:223
 #, fuzzy
 #| msgid "Security"
 msgid "ModSecurity"
 msgstr "Безопасность"
 
-#: firewall/templates/firewall/modSecurity.html:29
+#: firewall/templates/firewall/modSecurity.html:35
+#: firewall/templates/firewall/modSecurity.html:232
 #: firewall/templates/firewall/modSecurityRules.html:70
 #: firewall/templates/firewall/modSecurityRulesPacks.html:28
 #: firewall/templates/firewall/spamassassin.html:29
 msgid "ModSecurity is not installed "
 msgstr ""
 
-#: firewall/templates/firewall/modSecurity.html:55
+#: firewall/templates/firewall/modSecurity.html:64
+#: firewall/templates/firewall/modSecurity.html:260
 #: firewall/templates/firewall/spamassassin.html:55
 msgid "ModSecurity successfully installed, refreshing page in 3 seconds.."
 msgstr ""
 
-#: firewall/templates/firewall/modSecurity.html:66
+#: firewall/templates/firewall/modSecurity.html:76
+#: firewall/templates/firewall/modSecurity.html:272
 #: firewall/templates/firewall/spamassassin.html:66
 msgid "Winter is coming, but so is ModSecurity."
 msgstr ""
 
-#: firewall/templates/firewall/modSecurity.html:160
+#: firewall/templates/firewall/modSecurity.html:177
+#: firewall/templates/firewall/modSecurity.html:365
 #: firewall/templates/firewall/spamassassin.html:169
 #, fuzzy
 #| msgid "Could not fetch current configuration. Error message:"
 msgid "Failed to save ModSecurity configurations. Error message: "
 msgstr "Не удалось получить текущую конфигурацию. Сообщение об ошибке:"
 
-#: firewall/templates/firewall/modSecurity.html:164
+#: firewall/templates/firewall/modSecurity.html:182
+#: firewall/templates/firewall/modSecurity.html:370
 #: firewall/templates/firewall/spamassassin.html:173
 #, fuzzy
 #| msgid "Backup Process successfully started."
@@ -2913,15 +3905,6 @@ msgstr "Ключ"
 #: firewall/templates/firewall/secureSSH.html:150
 msgid "Add Key"
 msgstr "Добавить ключ"
-
-#: firewall/templates/firewall/secureSSH.html:158
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:343
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:402
-#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:55
-#: websiteFunctions/templates/websiteFunctions/website.html:630
-#: websiteFunctions/templates/websiteFunctions/website.html:689
-msgid "Save"
-msgstr "Сохранить"
 
 #: firewall/templates/firewall/secureSSH.html:167
 msgid "SSH Key Deleted"
@@ -3234,17 +4217,6 @@ msgstr "Редактирование конфигурации PHP на этой 
 msgid "Advanced"
 msgstr "Расширенные настройки"
 
-#: managePHP/templates/managePHP/editPHPConfig.html:48
-#: managePHP/templates/managePHP/editPHPConfig.html:182
-#: managePHP/templates/managePHP/installExtensions.html:28
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:68
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:473
-#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:74
-#: websiteFunctions/templates/websiteFunctions/website.html:330
-#: websiteFunctions/templates/websiteFunctions/website.html:760
-msgid "Select PHP"
-msgstr "Выберите PHP"
-
 #: managePHP/templates/managePHP/editPHPConfig.html:67
 msgid "display_errors"
 msgstr " Директива display_errors"
@@ -3310,6 +4282,7 @@ msgstr "Установка/удаление расширений php на это
 
 #: managePHP/templates/managePHP/installExtensions.html:19
 #: tuning/templates/tuning/phpTuning.html:19
+#: tuning/templates/tuning/phpTuning.html:155
 msgid "Select PHP Version"
 msgstr "Выберите версию PHP"
 
@@ -3336,18 +4309,9 @@ msgstr "Установить"
 msgid "Uninstall"
 msgstr "Деинсталлировать"
 
-#: managePHP/templates/managePHP/installExtensions.html:94
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:160
-#: websiteFunctions/templates/websiteFunctions/installJoomla.html:111
-#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:125
-#: websiteFunctions/templates/websiteFunctions/installWordPress.html:111
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:139
-#: websiteFunctions/templates/websiteFunctions/website.html:422
-msgid "Go Back"
-msgstr "Назад"
-
 #: managePHP/templates/managePHP/installExtensions.html:105
-#: tuning/templates/tuning/phpTuning.html:111
+#: tuning/templates/tuning/phpTuning.html:115
+#: tuning/templates/tuning/phpTuning.html:254
 #: userManagment/templates/userManagment/modifyUser.html:96
 msgid "Cannot fetch details. Error message:"
 msgstr "Не удалось получить детали. Сообщение об ошибке:"
@@ -3628,14 +4592,6 @@ msgstr "Последняя версия"
 msgid "Access Logs - CyberPanel"
 msgstr "Лог-журналы доступа - CyberPanel"
 
-#: serverLogs/templates/serverLogs/accessLogs.html:17
-#: serverLogs/templates/serverLogs/index.html:25
-#: serverLogs/templates/serverLogs/index.html:27
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:127
-#: websiteFunctions/templates/websiteFunctions/website.html:127
-msgid "Access Logs"
-msgstr "Лог-журналы доступа"
-
 #: serverLogs/templates/serverLogs/accessLogs.html:18
 msgid "Access Logs for main web server."
 msgstr "Лог-журналы доступа для основного веб-сервера."
@@ -3754,36 +4710,44 @@ msgstr "Просмотр состояние LiteSpeed ​​и файлов ло
 msgid "LiteSpeed Status - CyberPanel"
 msgstr "Состояние LiteSpeed ​​- CyberPanel"
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:16
+#: serverStatus/templates/serverStatus/litespeedStatus.html:15
+#: serverStatus/templates/serverStatus/litespeedStatus.html:204
 msgid "LiteSpeed Status:"
 msgstr "Состояние LiteSpeed:"
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:17
+#: serverStatus/templates/serverStatus/litespeedStatus.html:16
+#: serverStatus/templates/serverStatus/litespeedStatus.html:205
 msgid ""
 "On this page you can get information regarding your LiteSpeed processes."
 msgstr "На этой странице вы можете получить информацию о процессах LiteSpeed."
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:32
+#: serverStatus/templates/serverStatus/litespeedStatus.html:31
+#: serverStatus/templates/serverStatus/litespeedStatus.html:218
 msgid "LiteSpeed Processes"
 msgstr "Процессы LiteSpeed"
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:39
+#: serverStatus/templates/serverStatus/litespeedStatus.html:38
+#: serverStatus/templates/serverStatus/litespeedStatus.html:225
 msgid "Process ID"
 msgstr "Идентификатор процесса"
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:51
+#: serverStatus/templates/serverStatus/litespeedStatus.html:50
+#: serverStatus/templates/serverStatus/litespeedStatus.html:237
 msgid "Main Process"
 msgstr "Основной процесс"
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:54
+#: serverStatus/templates/serverStatus/litespeedStatus.html:53
+#: serverStatus/templates/serverStatus/litespeedStatus.html:240
 msgid "lscgid Process"
 msgstr "Процесс lscgid"
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:57
+#: serverStatus/templates/serverStatus/litespeedStatus.html:56
+#: serverStatus/templates/serverStatus/litespeedStatus.html:243
 msgid "Worker Process"
 msgstr "Worker Process"
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:67
+#: serverStatus/templates/serverStatus/litespeedStatus.html:66
+#: serverStatus/templates/serverStatus/litespeedStatus.html:253
 msgid ""
 "Could not fetch details, either LiteSpeed is not running or some error "
 "occurred, please see CyberPanel Main log file."
@@ -3792,20 +4756,74 @@ msgstr ""
 "либо ошибка, см. Главный файл лог-журнала CyberPanel."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:72
+#: serverStatus/templates/serverStatus/litespeedStatus.html:259
 msgid "Reboot Litespeed"
 msgstr "Перезагрузка Litespeed"
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:77
+#: serverStatus/templates/serverStatus/litespeedStatus.html:78
+#: serverStatus/templates/serverStatus/litespeedStatus.html:265
 msgid "Stop LiteSpeed"
 msgstr "Остановить LiteSpeed"
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:90
+#: serverStatus/templates/serverStatus/litespeedStatus.html:91
+#: serverStatus/templates/serverStatus/litespeedStatus.html:278
 msgid "Error Occurred. See CyberPanel main log file."
 msgstr "Произошла ошибка. См. Основной файл лог-журнала CyberPanel."
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:95
+#: serverStatus/templates/serverStatus/litespeedStatus.html:96
+#: serverStatus/templates/serverStatus/litespeedStatus.html:283
 msgid "Could not connect to server."
 msgstr "Невозможно подключиться к серверу"
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:140
+msgid "Switch to LiteSpeed Enterprise Web Server"
+msgstr ""
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:151
+msgid "License Key"
+msgstr ""
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:162
+msgid "Switch"
+msgstr ""
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:178
+msgid "With great wisdom comes great responsibility."
+msgstr ""
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:297
+#, fuzzy
+#| msgid "File Manager"
+msgid "License Manager"
+msgstr "Диспетчер Файлов"
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:304
+#: serverStatus/templates/serverStatus/litespeedStatus.html:307
+#: serverStatus/templates/serverStatus/litespeedStatus.html:308
+#, fuzzy
+#| msgid "Server Status"
+msgid "License Status"
+msgstr "Состояние сервера"
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:314
+#: serverStatus/templates/serverStatus/litespeedStatus.html:317
+#: serverStatus/templates/serverStatus/litespeedStatus.html:318
+#, fuzzy
+#| msgid "Change"
+msgid "Change License"
+msgstr "Изменить"
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:346
+#, fuzzy
+#| msgid "File"
+msgid "New key"
+msgstr "Файл"
+
+#: serverStatus/templates/serverStatus/litespeedStatus.html:357
+#, fuzzy
+#| msgid "Change"
+msgid "Change Key"
+msgstr "Изменить"
 
 #: serverStatus/templates/serverStatus/services.html:3
 #, fuzzy
@@ -3850,7 +4868,8 @@ msgid "Tuning Details"
 msgstr "Детали настройки"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:28
-#: tuning/templates/tuning/phpTuning.html:49
+#: tuning/templates/tuning/phpTuning.html:52
+#: tuning/templates/tuning/phpTuning.html:191
 msgid "Max Connections"
 msgstr "Максимальное количество соединений"
 
@@ -3875,7 +4894,8 @@ msgid "Enable GZIP Compression"
 msgstr "Включить сжатие Gzip"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:74
-#: tuning/templates/tuning/phpTuning.html:94
+#: tuning/templates/tuning/phpTuning.html:97
+#: tuning/templates/tuning/phpTuning.html:236
 msgid "Currently:"
 msgstr "В данный момент"
 
@@ -3904,52 +4924,64 @@ msgid "PHP Tuning - CyberPanel"
 msgstr "Настройка PHP - CyberPanel"
 
 #: tuning/templates/tuning/phpTuning.html:14
+#: tuning/templates/tuning/phpTuning.html:150
 msgid "Set how each version of PHP behaves in your server here."
 msgstr "Установите поведение различых версий PHP на вашем сервере"
 
-#: tuning/templates/tuning/phpTuning.html:42
+#: tuning/templates/tuning/phpTuning.html:45
+#: tuning/templates/tuning/phpTuning.html:184
 msgid "Initial Request Timeout (secs)"
 msgstr "Исходный тайм-аут запроса (сек.)"
 
-#: tuning/templates/tuning/phpTuning.html:57
+#: tuning/templates/tuning/phpTuning.html:60
+#: tuning/templates/tuning/phpTuning.html:199
 msgid "Memory Soft Limit"
 msgstr "Мягкий лимит памяти"
 
-#: tuning/templates/tuning/phpTuning.html:64
+#: tuning/templates/tuning/phpTuning.html:67
+#: tuning/templates/tuning/phpTuning.html:206
 msgid "Memory Hard Limit"
 msgstr "Жесткий лимит памяти"
 
-#: tuning/templates/tuning/phpTuning.html:72
+#: tuning/templates/tuning/phpTuning.html:75
+#: tuning/templates/tuning/phpTuning.html:214
 msgid "Process Soft Limit"
 msgstr "Мягкий лимит процесса"
 
-#: tuning/templates/tuning/phpTuning.html:79
+#: tuning/templates/tuning/phpTuning.html:82
+#: tuning/templates/tuning/phpTuning.html:221
 msgid "Process Hard Limit"
 msgstr "Жесткий лимит процесса"
 
-#: tuning/templates/tuning/phpTuning.html:87
+#: tuning/templates/tuning/phpTuning.html:90
+#: tuning/templates/tuning/phpTuning.html:229
 msgid "Persistent Connection"
 msgstr "Постоянное соединение"
 
-#: tuning/templates/tuning/phpTuning.html:102
+#: tuning/templates/tuning/phpTuning.html:106
+#: tuning/templates/tuning/phpTuning.html:245
 msgid "Tune PHP"
 msgstr "Настроить PHP"
 
-#: tuning/templates/tuning/phpTuning.html:115
+#: tuning/templates/tuning/phpTuning.html:119
+#: tuning/templates/tuning/phpTuning.html:258
 msgid "Cannot tune. Error message:"
 msgstr "Невозможно настроить. Сообщение об ошибке:"
 
-#: tuning/templates/tuning/phpTuning.html:120
+#: tuning/templates/tuning/phpTuning.html:124
+#: tuning/templates/tuning/phpTuning.html:263
 msgid "Details Successfully fetched."
 msgstr "Детали успешно доставлены."
 
-#: tuning/templates/tuning/phpTuning.html:124
+#: tuning/templates/tuning/phpTuning.html:128
+#: tuning/templates/tuning/phpTuning.html:267
 #, fuzzy
 #| msgid "PHP version "
 msgid "PHP for "
 msgstr "Версия PHP"
 
-#: tuning/templates/tuning/phpTuning.html:124
+#: tuning/templates/tuning/phpTuning.html:129
+#: tuning/templates/tuning/phpTuning.html:268
 msgid "Successfully tuned."
 msgstr "Успешно настроен"
 
@@ -4156,12 +5188,6 @@ msgstr "Некорректный Email"
 msgid "Websites Limit"
 msgstr "Предельное количество веб-сайтов"
 
-#: userManagment/templates/userManagment/createUser.html:81
-#: userManagment/templates/userManagment/userProfile.html:42
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:71
-msgid "Username"
-msgstr "Имя пользователя"
-
 #: userManagment/templates/userManagment/createUser.html:101
 #: userManagment/templates/userManagment/index.html:40
 #: userManagment/templates/userManagment/index.html:42
@@ -4311,57 +5337,17 @@ msgstr "(0 = неограниченно)"
 msgid "Application Installer - CyberPanel"
 msgstr "Установщик приложения"
 
-#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:14
-#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:22
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:659
-#: websiteFunctions/templates/websiteFunctions/website.html:948
-msgid "Application Installer"
-msgstr "Установщик приложения"
-
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:15
 #, fuzzy
 #| msgid "Application Installer"
 msgid "One-click application install."
 msgstr "Установщик приложения"
 
-#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:28
-#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:31
-#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:34
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:668
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:671
-#: websiteFunctions/templates/websiteFunctions/website.html:957
-#: websiteFunctions/templates/websiteFunctions/website.html:960
-msgid "Install wordpress with LSCache"
-msgstr "Установить wordpress с LSCache"
-
-#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:35
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:672
-#: websiteFunctions/templates/websiteFunctions/website.html:961
-msgid "Wordpress with LSCache"
-msgstr "WordPress с LSCache"
-
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:41
 #, fuzzy
 #| msgid "Install wordpress with LSCache"
 msgid "Install Joomla with(?) LSCache"
 msgstr "Установить wordpress с LSCache"
-
-#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:44
-#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:47
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:680
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:683
-#: websiteFunctions/templates/websiteFunctions/website.html:969
-#: websiteFunctions/templates/websiteFunctions/website.html:972
-#, fuzzy
-#| msgid "Install wordpress with LSCache"
-msgid "Install Joomla with LSCache"
-msgstr "Установить wordpress с LSCache"
-
-#: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:48
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:684
-#: websiteFunctions/templates/websiteFunctions/website.html:973
-msgid "Joomla"
-msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:3
 msgid "Create New Website - CyberPanel"
@@ -4389,25 +5375,6 @@ msgstr "Выберите владельца"
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:54
 msgid "Do not enter WWW, it will be auto created!"
 msgstr ""
-
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:56
-#: websiteFunctions/templates/websiteFunctions/website.html:325
-msgid "Invalid Domain (Note: You don't need to add 'http' or 'https')"
-msgstr ""
-"Недопустимый домен (Примечание: вам не нужно добавлять «http» или «https»)"
-
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:85
-#: websiteFunctions/templates/websiteFunctions/domainAlias.html:86
-#: websiteFunctions/templates/websiteFunctions/website.html:347
-msgid "Additional Features"
-msgstr "Дополнительные параметры"
-
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:144
-#: websiteFunctions/templates/websiteFunctions/website.html:406
-#, fuzzy
-#| msgid "is successfully created."
-msgid "Website succesfully created."
-msgstr "успешно создан."
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:3
 msgid "Delete Website - CyberPanel"
@@ -4470,11 +5437,6 @@ msgstr ""
 #| msgid "System Status"
 msgid "File System Path"
 msgstr "Состояние системы"
-
-#: websiteFunctions/templates/websiteFunctions/domainAlias.html:53
-#: websiteFunctions/templates/websiteFunctions/website.html:515
-msgid "Issue"
-msgstr "Выпуск"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:63
 msgid "Domain Aliases not found."
@@ -4573,13 +5535,6 @@ msgstr "Пароль"
 msgid "Database Prefix"
 msgstr "Имя базы данных"
 
-#: websiteFunctions/templates/websiteFunctions/installJoomla.html:56
-#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:70
-#: websiteFunctions/templates/websiteFunctions/installWordPress.html:56
-#: websiteFunctions/templates/websiteFunctions/website.html:321
-msgid "Path"
-msgstr "Путь"
-
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:91
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:105
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:91
@@ -4638,294 +5593,6 @@ msgstr "Установить wordpress с LSCache"
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:28
 msgid "Blog Title"
-msgstr ""
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:13
-#: websiteFunctions/templates/websiteFunctions/website.html:13
-#, fuzzy
-#| msgid "Previous"
-msgid "Preview"
-msgstr "Предыдущая"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:14
-#: websiteFunctions/templates/websiteFunctions/website.html:14
-msgid "All functions related to a particular site."
-msgstr "Все функции, относящиеся к определенному сайту."
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:25
-#: websiteFunctions/templates/websiteFunctions/website.html:25
-msgid "Resource Usage"
-msgstr "Использование ресурсов"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:36
-#: websiteFunctions/templates/websiteFunctions/website.html:36
-msgid "Resource"
-msgstr "Ресурс"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:38
-#: websiteFunctions/templates/websiteFunctions/website.html:38
-msgid "Allowed"
-msgstr "Разрешено"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:60
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:87
-#: websiteFunctions/templates/websiteFunctions/website.html:60
-#: websiteFunctions/templates/websiteFunctions/website.html:87
-msgid "Bandwidth Usage"
-msgstr "Использование пропускной способности"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:123
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:126
-#: websiteFunctions/templates/websiteFunctions/website.html:123
-#: websiteFunctions/templates/websiteFunctions/website.html:126
-msgid "Load Access Logs"
-msgstr "Загрузить лог-журналы доступа"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:134
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:137
-#: websiteFunctions/templates/websiteFunctions/website.html:134
-#: websiteFunctions/templates/websiteFunctions/website.html:137
-msgid "Load Error Logs"
-msgstr " Загрузить лог-журналы ошибок"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:149
-#: websiteFunctions/templates/websiteFunctions/website.html:149
-msgid "Logs Fetched"
-msgstr "Логи получены"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:154
-#: websiteFunctions/templates/websiteFunctions/website.html:154
-msgid ""
-"Could not fetch logs, see the logs file through command line. Error message:"
-msgstr ""
-"Невозможно получить лог-журнал, просмотрите логи через терминал. Сообщение "
-"об ошибке."
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:175
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:214
-#: websiteFunctions/templates/websiteFunctions/website.html:175
-#: websiteFunctions/templates/websiteFunctions/website.html:214
-msgid "Next"
-msgstr "Следующий"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:176
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:215
-#: websiteFunctions/templates/websiteFunctions/website.html:176
-#: websiteFunctions/templates/websiteFunctions/website.html:215
-msgid "Previous"
-msgstr "Предыдущая"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:253
-#: websiteFunctions/templates/websiteFunctions/website.html:540
-msgid "Configurations"
-msgstr "Конфигурации"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:262
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:265
-#: websiteFunctions/templates/websiteFunctions/website.html:549
-#: websiteFunctions/templates/websiteFunctions/website.html:552
-msgid "Edit vHost Main Configurations"
-msgstr "Редактирование основных конфигураций vHost "
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:266
-#: websiteFunctions/templates/websiteFunctions/website.html:553
-msgid "vHost Conf"
-msgstr ""
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:274
-#: websiteFunctions/templates/websiteFunctions/website.html:561
-msgid "Add Rewrite Rules (.htaccess)"
-msgstr "Добавление правила перезаписи (.htaccess)"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:277
-#: websiteFunctions/templates/websiteFunctions/website.html:564
-#, fuzzy
-#| msgid "Add Rewrite Rules (.htaccess)"
-msgid "Rewrite Rules (.htaccess)"
-msgstr "Добавление правила перезаписи (.htaccess)"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:278
-#: websiteFunctions/templates/websiteFunctions/website.html:565
-#, fuzzy
-#| msgid "Save Rewrite Rules"
-msgid "Rewrite Rules"
-msgstr "Сохранить правила перезаписи"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:286
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:289
-#: websiteFunctions/templates/websiteFunctions/website.html:573
-#: websiteFunctions/templates/websiteFunctions/website.html:576
-msgid "Add Your Own SSL"
-msgstr "Добавить свой собственный SSL"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:290
-#: websiteFunctions/templates/websiteFunctions/website.html:577
-msgid "Add SSL"
-msgstr "Добавьте SSL"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:298
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:301
-#: websiteFunctions/templates/websiteFunctions/website.html:585
-#: websiteFunctions/templates/websiteFunctions/website.html:588
-#, fuzzy
-#| msgid "Select PHP Version"
-msgid "Change PHP Version"
-msgstr "Выберите версию PHP"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:302
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:498
-#: websiteFunctions/templates/websiteFunctions/website.html:589
-#: websiteFunctions/templates/websiteFunctions/website.html:785
-#, fuzzy
-#| msgid "Change"
-msgid "Change PHP"
-msgstr "Изменить"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:314
-#: websiteFunctions/templates/websiteFunctions/website.html:601
-msgid "SSL Saved"
-msgstr "SSL сохранен"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:319
-#: websiteFunctions/templates/websiteFunctions/website.html:606
-msgid "Could not save SSL. Error message:"
-msgstr "Не удалось сохранить SSL. Сообщение об ошибке:"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:368
-#: websiteFunctions/templates/websiteFunctions/website.html:655
-msgid "Current configuration in the file fetched."
-msgstr "Текущая конфигурация в файле загружена"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:373
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:386
-#: websiteFunctions/templates/websiteFunctions/website.html:660
-#: websiteFunctions/templates/websiteFunctions/website.html:673
-msgid "Could not fetch current configuration. Error message:"
-msgstr "Не удалось получить текущую конфигурацию. Сообщение об ошибке:"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:382
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:434
-#: websiteFunctions/templates/websiteFunctions/website.html:669
-#: websiteFunctions/templates/websiteFunctions/website.html:721
-#, fuzzy
-#| msgid "SSH Configurations Saved."
-msgid "Configurations saved."
-msgstr "SSH конфигурации сохранены."
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:420
-#: websiteFunctions/templates/websiteFunctions/website.html:707
-msgid "Current rewrite rules in the file fetched."
-msgstr "Текущие правила перезаписи в извлеченном файле."
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:425
-#: websiteFunctions/templates/websiteFunctions/website.html:712
-msgid "Could not fetch current rewrite rules. Error message:"
-msgstr "Не удалось получить текущие правила перезаписи. Сообщение об ошибке:"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:438
-#: websiteFunctions/templates/websiteFunctions/website.html:725
-msgid "Could not save rewrite rules. Error message:"
-msgstr "Не удалось сохранить правила перезаписи. Сообщение об ошибке:"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:454
-#: websiteFunctions/templates/websiteFunctions/website.html:741
-msgid "Save Rewrite Rules"
-msgstr "Сохранить правила перезаписи"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:509
-#: websiteFunctions/templates/websiteFunctions/website.html:796
-#, fuzzy
-#| msgid "Cannot create website. Error message:"
-msgid "Failed to change PHP version. Error message:"
-msgstr "Не удается создать веб-сайт. Сообщение об ошибке:"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:513
-#: websiteFunctions/templates/websiteFunctions/website.html:800
-#, fuzzy
-#| msgid "Password successfully changed for :"
-msgid "PHP successfully changed for: "
-msgstr "Пароль успешно изменен для:"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:538
-#: websiteFunctions/templates/websiteFunctions/website.html:826
-msgid "Files"
-msgstr "Файлы"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:546
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:549
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:550
-#: websiteFunctions/templates/websiteFunctions/website.html:834
-#: websiteFunctions/templates/websiteFunctions/website.html:837
-#: websiteFunctions/templates/websiteFunctions/website.html:838
-msgid "File Manager"
-msgstr "Диспетчер Файлов"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:557
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:560
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:598
-#: websiteFunctions/templates/websiteFunctions/website.html:845
-#: websiteFunctions/templates/websiteFunctions/website.html:848
-#: websiteFunctions/templates/websiteFunctions/website.html:886
-msgid "open_basedir Protection"
-msgstr ""
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:561
-#: websiteFunctions/templates/websiteFunctions/website.html:849
-msgid "open_basedir"
-msgstr ""
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:573
-#: websiteFunctions/templates/websiteFunctions/website.html:861
-#, fuzzy
-#| msgid "Create FTP Account"
-msgid "Create FTP Acct"
-msgstr "Создание учетной записи FTP"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:585
-#: websiteFunctions/templates/websiteFunctions/website.html:873
-#, fuzzy
-#| msgid "Delete FTP Account"
-msgid "Delete FTP Acct"
-msgstr "Удаление учетной записи FTP"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:620
-#: websiteFunctions/templates/websiteFunctions/website.html:908
-#, fuzzy
-#| msgid "Save Changes"
-msgid "Apply Changes"
-msgstr "Сохранить изменения"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:632
-#: websiteFunctions/templates/websiteFunctions/website.html:920
-#, fuzzy
-#| msgid "Rule successfully added."
-msgid "Changes successfully saved."
-msgstr "Правило  успешно добавлено."
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:692
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:695
-#: websiteFunctions/templates/websiteFunctions/website.html:981
-#: websiteFunctions/templates/websiteFunctions/website.html:984
-msgid "Attach Git with this website!"
-msgstr ""
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:696
-#: websiteFunctions/templates/websiteFunctions/website.html:985
-msgid "Git"
-msgstr ""
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:705
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:708
-#: websiteFunctions/templates/websiteFunctions/website.html:994
-#: websiteFunctions/templates/websiteFunctions/website.html:997
-#, fuzzy
-#| msgid "Install"
-msgid "Install Prestashop"
-msgstr "Установить"
-
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:709
-#: websiteFunctions/templates/websiteFunctions/website.html:998
-msgid "Prestashop"
 msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:3
@@ -5208,59 +5875,6 @@ msgstr "Веб-сайт"
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:73
 msgid "Successfully "
 msgstr "Успешно"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:261
-#: websiteFunctions/templates/websiteFunctions/website.html:264
-#: websiteFunctions/templates/websiteFunctions/website.html:265
-msgid "Add Domains"
-msgstr "Добавление доменов"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:282
-#: websiteFunctions/templates/websiteFunctions/website.html:285
-#: websiteFunctions/templates/websiteFunctions/website.html:286
-#, fuzzy
-#| msgid "Domains"
-msgid "Domain Alias"
-msgstr "Домены"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:293
-#: websiteFunctions/templates/websiteFunctions/website.html:296
-msgid "Add new Cron Job"
-msgstr ""
-
-#: websiteFunctions/templates/websiteFunctions/website.html:297
-msgid "Cron Jobs"
-msgstr ""
-
-#: websiteFunctions/templates/websiteFunctions/website.html:323
-msgid "This path is relative to: "
-msgstr "Этот путь является относительным:"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:323
-msgid "Leave empty to set default."
-msgstr "Оставьте пустым, чтобы задать по умолчанию."
-
-#: websiteFunctions/templates/websiteFunctions/website.html:380
-msgid "Create Domain"
-msgstr "Создать домен"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:441
-msgid "PHP Version Changed to:"
-msgstr "PHP версии изменено на:"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:445
-msgid "Deleted:"
-msgstr "Удалено:"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:449
-msgid "SSL Issued:"
-msgstr "SSL выпущен:"
-
-#: websiteFunctions/templates/websiteFunctions/website.html:453
-#, fuzzy
-#| msgid "Database created successfully."
-msgid "Changes applied successfully."
-msgstr "База данных создана успешно."
 
 #~ msgid "CPU Status"
 #~ msgstr "Состояние ЦП"

@@ -39,9 +39,12 @@ class CyberCPLogFileWriter:
             return "File was empty"
 
     @staticmethod
-    def statusWriter(tempStatusPath, mesg):
+    def statusWriter(tempStatusPath, mesg, append = None):
         try:
-            statusFile = open(tempStatusPath, 'a')
+            if append == None:
+                statusFile = open(tempStatusPath, 'w')
+            else:
+                statusFile = open(tempStatusPath, 'a')
             statusFile.writelines(mesg)
             statusFile.close()
         except BaseException, msg:

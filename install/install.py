@@ -1436,7 +1436,6 @@ class preFlightsChecks:
             self.stdOut("Error converting: " + filename + " from centos defaults to ubuntu defaults: " + str(err), 1,
                         1, os.EX_OSERR)
 
-
     def setup_postfix_davecot_config(self, mysql):
         try:
             logging.InstallLog.writeToFile("Configuring postfix and dovecot...")
@@ -3307,7 +3306,6 @@ def get_distro():
 
     return distro
 
-
 def get_Ubuntu_release():
     release = -1
     if exists("/etc/lsb-release"):
@@ -3328,7 +3326,6 @@ def get_Ubuntu_release():
 
     return release
 
-
 def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -3337,6 +3334,8 @@ def main():
     parser.add_argument('--postfix', help='Enable or disable Email Service.')
     parser.add_argument('--powerdns', help='Enable or disable DNS Service.')
     parser.add_argument('--ftp', help='Enable or disable ftp Service.')
+    parser.add_argument('--ent', help='Install LS Ent or OpenLiteSpeed')
+    parser.add_argument('--serial', help='Install LS Ent or OpenLiteSpeed')
     args = parser.parse_args()
 
     logging.InstallLog.writeToFile("Starting CyberPanel installation..")
@@ -3365,6 +3364,20 @@ def main():
         mysql = args.mysql
         preFlightsChecks.stdOut("Dobule MySQL instance version will be installed.")
 
+    if args.ent == None:
+        ent = 0
+    else:
+        if args.ent == 'ols':
+            ent = 0
+        else:
+            ent = 1
+            if args.serial != None:
+                serial = args.serial
+                preFlightsChecks.stdOut("LiteSpeed Enterprise Serial detected: " + serial)
+            else:
+                preFlightsChecks.stdOut("Installation failed, please specify LiteSpeed Enterprise key using --serial")
+                os._exit(0)
+
     checks.checkPythonVersion()
     checks.setup_account_cyberpanel()
     if distro == centos:
@@ -3385,8 +3398,11 @@ def main():
     checks.setup_gunicorn()
 
     import installCyberPanel
+    if ent == 0:
+        installCyberPanel.Main(cwd, mysql, distro, ent)
+    else:
+        installCyberPanel.Main(cwd, mysql, distro, ent, serial)
 
-    installCyberPanel.Main(cwd, mysql, distro)
     checks.fix_selinux_issue()
     checks.install_psmisc()
     checks.install_postfix_davecot()
@@ -3399,8 +3415,6 @@ def main():
     checks.install_rsync()
 
     checks.downoad_and_install_raindloop()
-
-
     checks.download_install_phpmyadmin()
 
     checks.installFirewalld()

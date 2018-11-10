@@ -59,6 +59,37 @@ class ApplicationInstaller(multi.Thread):
         except BaseException, msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.installWPCLI]')
 
+    def dataLossCheck(self, finalPath, tempStatusPath):
+
+        dirFiles = os.listdir(finalPath)
+
+        if len(dirFiles) == 1:
+            if dirFiles[0] == ".well-known" or dirFiles[0] == 'index.html':
+                return 1
+            else:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(
+                    "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
+                statusFile.close()
+                return 0
+        elif len(dirFiles) == 2:
+            if ".well-known" in dirFiles and "index.html" in dirFiles:
+                return 1
+            else:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(
+                    "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
+                statusFile.close()
+                return 0
+        elif len(dirFiles) == 0:
+            return 1
+        else:
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines(
+                "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
+            statusFile.close()
+            return 0
+
     def installGit(self):
         try:
             if os.path.exists("/etc/lsb-release"):
@@ -208,25 +239,8 @@ class ApplicationInstaller(multi.Thread):
 
             ## checking for directories/files
 
-            dirFiles = os.listdir(finalPath)
-
-            if len(dirFiles) == 1:
-                if dirFiles[0] == ".well-known":
-                    pass
-                else:
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines("Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
-                    statusFile.close()
-                    return 0
-            elif len(dirFiles) == 0:
-                pass
-            else:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(
-                    "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
-                statusFile.close()
+            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
                 return 0
-
 
             ####
 
@@ -396,23 +410,7 @@ class ApplicationInstaller(multi.Thread):
 
             ## checking for directories/files
 
-            dirFiles = os.listdir(finalPath)
-
-            if len(dirFiles) == 1:
-                if dirFiles[0] == ".well-known":
-                    pass
-                else:
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines("Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
-                    statusFile.close()
-                    return 0
-            elif len(dirFiles) == 0:
-                pass
-            else:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(
-                    "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
-                statusFile.close()
+            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
                 return 0
 
             ####
@@ -564,23 +562,7 @@ class ApplicationInstaller(multi.Thread):
 
             ## checking for directories/files
 
-            dirFiles = os.listdir(finalPath)
-
-            if len(dirFiles) == 1:
-                if dirFiles[0] == ".well-known":
-                    pass
-                else:
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines("Target directory should be empty before attaching GIT, otherwise data loss could occur." + " [404]")
-                    statusFile.close()
-                    return 0
-            elif len(dirFiles) == 0:
-                pass
-            else:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(
-                    "Target directory should be empty before attaching GIT, otherwise data loss could occur." + " [404]")
-                statusFile.close()
+            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
                 return 0
 
             ####
@@ -737,23 +719,7 @@ class ApplicationInstaller(multi.Thread):
 
             ## checking for directories/files
 
-            dirFiles = os.listdir(finalPath)
-
-            if len(dirFiles) == 1:
-                if dirFiles[0] == ".well-known":
-                    pass
-                else:
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines("Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
-                    statusFile.close()
-                    return 0
-            elif len(dirFiles) == 0:
-                pass
-            else:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(
-                    "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
-                statusFile.close()
+            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
                 return 0
 
             ## Get Joomla

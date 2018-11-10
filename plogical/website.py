@@ -965,8 +965,9 @@ class WebsiteManager:
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-    def getWebsiteCron(self, userID = None, data = None):
+    def getWebsiteCron(self, userID=None, data=None):
         try:
+
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
             self.domain = data['domain']
@@ -975,7 +976,6 @@ class WebsiteManager:
                 pass
             else:
                 return ACLManager.loadErrorJson('getWebsiteCron', 0)
-
 
             website = Websites.objects.get(domain=self.domain)
 
@@ -999,8 +999,8 @@ class WebsiteManager:
             crons = []
 
             try:
-                f = subprocess.check_output(["sudo", "cat", cronPath])
-                print f
+                # f = subprocess.check_output(["sudo", "cat", cronPath])
+                f = subprocess.check_output(["sudo", "crontab", "-u", website.externalApp, "-l"])
             except subprocess.CalledProcessError as error:
                 dic = {'getWebsiteCron': 0, 'error_message': 'Unable to access Cron file'}
                 json_data = json.dumps(dic)
@@ -1009,8 +1009,6 @@ class WebsiteManager:
             for line in f.split("\n"):
                 if line:
                     split = line.split(" ", 5)
-                    print line
-                    print split
                     if len(split) == 6:
                         counter += 1
                         crons.append({"line": counter,
@@ -1021,8 +1019,6 @@ class WebsiteManager:
                                       "weekday": split[4],
                                       "command": split[5]})
 
-            print json.dumps(crons)
-
             data_ret = {'getWebsiteCron': 1, "user": website.externalApp, "crons": crons}
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
@@ -1032,7 +1028,7 @@ class WebsiteManager:
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
-    def getCronbyLine(self, userID = None, data = None):
+    def getCronbyLine(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -1045,7 +1041,6 @@ class WebsiteManager:
                 pass
             else:
                 return ACLManager.loadErrorJson('getWebsiteCron', 0)
-
 
             if Websites.objects.filter(domain=self.domain).exists():
                 pass
@@ -1061,7 +1056,8 @@ class WebsiteManager:
             crons = []
 
             try:
-                f = subprocess.check_output(["sudo", "cat", cronPath])
+                # f = subprocess.check_output(["sudo", "cat", cronPath])
+                f = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
                 print f
             except subprocess.CalledProcessError as error:
                 dic = {'getWebsiteCron': 0, 'error_message': 'Unable to access Cron file'}
@@ -1101,7 +1097,7 @@ class WebsiteManager:
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
-    def saveCronChanges(self, userID = None, data = None):
+    def saveCronChanges(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -1124,16 +1120,19 @@ class WebsiteManager:
 
             website = Websites.objects.get(domain=self.domain)
 
-            cronPath = "/var/spool/cron/" + website.externalApp
             tempPath = "/home/cyberpanel/" + website.externalApp + str(randint(10000, 99999)) + ".cron.tmp"
 
             finalCron = "%s %s %s %s %s %s" % (minute, hour, monthday, month, weekday, command)
 
-            o = subprocess.call(['sudo', 'cp', cronPath, tempPath])
-            if o is not 0:
-                data_ret = {'addNewCron': 0, 'error_message': 'Unable to copy to temporary files'}
+            output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
+
+            if "no crontab for" in output:
+                data_ret = {'addNewCron': 0, 'error_message': 'crontab file does not exists for user'}
                 final_json = json.dumps(data_ret)
                 return HttpResponse(final_json)
+
+            with open(tempPath, "w+") as file:
+                file.write(output)
 
             # Confirming that directory is read/writable
             o = subprocess.call(['sudo', 'chown', 'cyberpanel:cyberpanel', tempPath])
@@ -1170,7 +1169,7 @@ class WebsiteManager:
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
-    def remCronbyLine(self, userID = None, data = None):
+    def remCronbyLine(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
@@ -1186,23 +1185,17 @@ class WebsiteManager:
             line -= 1
             website = Websites.objects.get(domain=self.domain)
 
-            cronPath = "/var/spool/cron/" + website.externalApp
-            cmd = 'sudo test -e ' + cronPath + ' && echo Exists'
-            output = os.popen(cmd).read()
+            output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
 
-            if "Exists" not in output:
-                data_ret = {'remCronbyLine': 0, 'error_message': 'No Cron exists for this user'}
+            if "no crontab for" in output:
+                data_ret = {'addNewCron': 0, 'error_message': 'No Cron exists for this user'}
                 final_json = json.dumps(data_ret)
                 return HttpResponse(final_json)
 
-            cronPath = "/var/spool/cron/" + website.externalApp
             tempPath = "/home/cyberpanel/" + website.externalApp + str(randint(10000, 99999)) + ".cron.tmp"
 
-            o = subprocess.call(['sudo', 'cp', cronPath, tempPath])
-            if o is not 0:
-                data_ret = {'addNewCron': 0, 'error_message': 'Unable to copy to temporary files'}
-                final_json = json.dumps(data_ret)
-                return HttpResponse(final_json)
+            with open(tempPath, "w+") as file:
+                file.write(output)
 
             # Confirming that directory is read/writable
             o = subprocess.call(['sudo', 'chown', 'cyberpanel:cyberpanel', tempPath])
@@ -1239,7 +1232,7 @@ class WebsiteManager:
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
-    def addNewCron(self, userID = None, data = None):
+    def addNewCron(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -1260,38 +1253,25 @@ class WebsiteManager:
 
             website = Websites.objects.get(domain=self.domain)
 
-            cronPath = "/var/spool/cron/" + website.externalApp
-            cmd = 'sudo test -e ' + cronPath + ' && echo Exists'
-            output = os.popen(cmd).read()
+            output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
 
-            if "Exists" not in output:
+            if "no crontab for" in output:
                 echo = subprocess.Popen(('echo'), stdout=subprocess.PIPE)
                 output = subprocess.call(('sudo', 'crontab', '-u', website.externalApp, '-'), stdin=echo.stdout)
                 echo.wait()
                 echo.stdout.close()
-                # Confirmation
-                o = subprocess.call(["sudo", "cp", "/dev/null", cronPath])
 
-            cronPath = "/var/spool/cron/" + website.externalApp
+            if "no crontab for" in output:
+                data_ret = {'addNewCron': 0, 'error_message': 'Unable to initialise crontab file for user'}
+                final_json = json.dumps(data_ret)
+                return HttpResponse(final_json)
+
             tempPath = "/home/cyberpanel/" + website.externalApp + str(randint(10000, 99999)) + ".cron.tmp"
 
             finalCron = "%s %s %s %s %s %s" % (minute, hour, monthday, month, weekday, command)
 
-            o = subprocess.call(['sudo', 'cp', cronPath, tempPath])
-            if o is not 0:
-                data_ret = {'addNewCron': 0, 'error_message': 'Unable to copy to temporary files'}
-                final_json = json.dumps(data_ret)
-                return HttpResponse(final_json)
-
-            # Confirming that directory is read/writable
-            o = subprocess.call(['sudo', 'chown', 'cyberpanel:cyberpanel', tempPath])
-            if o is not 0:
-                data_ret = {'addNewCron': 0, 'error_message': 'Error Changing Permissions'}
-                final_json = json.dumps(data_ret)
-                return HttpResponse(final_json)
-
             with open(tempPath, "a") as file:
-                file.write(finalCron + "\n")
+                file.write(output + finalCron + "\n")
 
             output = subprocess.call(["sudo", "/usr/bin/crontab", "-u", website.externalApp, tempPath])
 

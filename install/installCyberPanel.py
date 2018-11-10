@@ -20,48 +20,102 @@ class InstallCyberPanel:
     mysql_Root_password = ""
     mysqlPassword = ""
 
-    def __init__(self, rootPath, cwd, distro):
+    def __init__(self, rootPath, cwd, distro, ent, serial = None):
         self.server_root_path = rootPath
         self.cwd = cwd
         self.distro = distro
+        self.ent = ent
+        self.serial = serial
 
     @staticmethod
     def stdOut(message, log=0, exit=0, code=os.EX_OK):
         install.preFlightsChecks.stdOut(message, log, exit, code)
 
-
     def installLiteSpeed(self):
-        try:
-            count = 0
-            while (1):
+        if self.ent == 0:
+            try:
+                count = 0
+                while (1):
 
-                if self.distro == ubuntu:
-                    command = "apt-get -y install openlitespeed"
-                else:
-                    command = 'yum install -y openlitespeed'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+                    if self.distro == ubuntu:
+                        command = "apt-get -y install openlitespeed"
+                    else:
+                        command = 'yum install -y openlitespeed'
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
 
-                if res == 1:
-                    count = count + 1
-                    InstallCyberPanel.stdOut("Trying to install OpenLiteSpeed, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Failed to install OpenLiteSpeed, exiting installer! [installLiteSpeed]")
-                        InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                    if res == 1:
+                        count = count + 1
+                        InstallCyberPanel.stdOut("Trying to install OpenLiteSpeed, trying again, try number: " + str(count))
+                        if count == 3:
+                            logging.InstallLog.writeToFile("Failed to install OpenLiteSpeed, exiting installer! [installLiteSpeed]")
+                            InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                            os._exit(0)
+                    else:
+                        logging.InstallLog.writeToFile("OpenLiteSpeed successfully installed!")
+                        InstallCyberPanel.stdOut("OpenLiteSpeed successfully installed!")
+                        break
+            except OSError, msg:
+                logging.InstallLog.writeToFile(str(msg) + " [installLiteSpeed]")
+                return 0
+            except ValueError, msg:
+                logging.InstallLog.writeToFile(str(msg) + " [installLiteSpeed]")
+                return 0
+
+            return 1
+        else:
+            try:
+                count = 0
+                while (1):
+
+                    command = 'wget https://www.litespeedtech.com/packages/5.0/lsws-5.3-ent-x86_64-linux.tar.gz'
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
+
+                    command = 'tar zxf lsws-5.3-ent-x86_64-linux.tar.gz'
+                    subprocess.call(shlex.split(command))
+
+                    writeSerial = open('lsws-5.3/serial.no', 'w')
+                    writeSerial.writelines(self.serial)
+                    writeSerial.close()
+
+                    shutil.copy('litespeed/install.sh', 'lsws-5.3/')
+                    shutil.copy('litespeed/functions.sh', 'lsws-5.3/')
+
+                    os.chdir('lsws-5.3')
+
+                    command = 'chmod +x install.sh'
+                    subprocess.call(shlex.split(command))
+
+                    command = 'chmod +x functions.sh'
+                    subprocess.call(shlex.split(command))
+
+                    command = './install.sh'
+                    res = subprocess.call(shlex.split(command))
+
+                    if res == 1:
+                        logging.InstallLog.writeToFile(
+                            "Failed to install LiteSpeed Enterprise! [installLiteSpeed]")
+                        InstallCyberPanel.stdOut("Failed to install LiteSpeed Enterprise!")
                         os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("OpenLiteSpeed successfully installed!")
-                    InstallCyberPanel.stdOut("OpenLiteSpeed successfully installed!")
+
+                    os.chdir(self.cwd)
+                    confPath = '/usr/local/lsws/conf/'
+                    shutil.copy('litespeed/httpd_config.xml', confPath)
+                    shutil.copy('litespeed/modsec.conf', confPath)
+                    shutil.copy('litespeed/httpd.conf', confPath)
+
+                    command = 'chown -R lsadm:lsadm ' + confPath
+                    subprocess.call(shlex.split(command))
                     break
+            except OSError, msg:
+                logging.InstallLog.writeToFile(str(msg) + " [installLiteSpeed]")
+                return 0
+            except ValueError, msg:
+                logging.InstallLog.writeToFile(str(msg) + " [installLiteSpeed]")
+                return 0
 
-        except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [installLiteSpeed]")
-            return 0
-        except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [installLiteSpeed]")
-            return 0
-
-        return 1
+            return 1
 
     def reStartLiteSpeed(self):
 
@@ -163,7 +217,6 @@ class InstallCyberPanel:
 
         return self.reStartLiteSpeed()
 
-
     def changePortTo80(self):
         try:
             InstallCyberPanel.stdOut("Changing default port to 80..")
@@ -191,36 +244,63 @@ class InstallCyberPanel:
         return self.reStartLiteSpeed()
 
     def setupFileManager(self):
-        try:
-            logging.InstallLog.writeToFile("Setting up Filemanager files..")
-            InstallCyberPanel.stdOut("Setting up Filemanager files..")
+        if self.ent == 0:
+            try:
+                logging.InstallLog.writeToFile("Setting up Filemanager files..")
+                InstallCyberPanel.stdOut("Setting up Filemanager files..")
 
-            os.chdir(self.cwd)
+                os.chdir(self.cwd)
 
-            fileManagerPath = self.server_root_path+"Example/html/FileManager"
-            shutil.copytree("FileManager",fileManagerPath)
+                fileManagerPath = self.server_root_path+"Example/html/FileManager"
+                shutil.copytree("FileManager",fileManagerPath)
 
-            ## remove unnecessary files
+                ## remove unnecessary files
 
-            fileManagerPath = self.server_root_path + "Example/html/"
+                fileManagerPath = self.server_root_path + "Example/html/"
 
-            shutil.rmtree(fileManagerPath+"protected")
-            shutil.rmtree(fileManagerPath+"blocked")
-            os.remove(fileManagerPath+"phpinfo.php")
-            os.remove(fileManagerPath + "upload.html")
-            os.remove(fileManagerPath + "upload.php")
+                shutil.rmtree(fileManagerPath+"protected")
+                shutil.rmtree(fileManagerPath+"blocked")
+                os.remove(fileManagerPath+"phpinfo.php")
+                os.remove(fileManagerPath + "upload.html")
+                os.remove(fileManagerPath + "upload.php")
 
-            logging.InstallLog.writeToFile("Filemanager files are set!")
-            InstallCyberPanel.stdOut("Filemanager files are set!")
+                logging.InstallLog.writeToFile("Filemanager files are set!")
+                InstallCyberPanel.stdOut("Filemanager files are set!")
 
-        except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [setupFileManager]")
-            return 0
-        except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [setupFileManager]")
-            return 0
+            except OSError, msg:
+                logging.InstallLog.writeToFile(str(msg) + " [setupFileManager]")
+                return 0
+            except ValueError, msg:
+                logging.InstallLog.writeToFile(str(msg) + " [setupFileManager]")
+                return 0
 
-        return 1
+            return 1
+        else:
+            try:
+                logging.InstallLog.writeToFile("Setting up Filemanager files..")
+                InstallCyberPanel.stdOut("Setting up Filemanager files..")
+
+                os.chdir(self.cwd)
+
+                fileManagerPath = self.server_root_path + "/FileManager"
+                shutil.copytree("FileManager", fileManagerPath)
+
+                ## remove unnecessary files
+
+                command = 'chmod -R 777 ' + fileManagerPath
+                subprocess.call(shlex.split(command))
+
+                logging.InstallLog.writeToFile("Filemanager files are set!")
+                InstallCyberPanel.stdOut("Filemanager files are set!")
+
+            except OSError, msg:
+                logging.InstallLog.writeToFile(str(msg) + " [setupFileManager]")
+                return 0
+            except ValueError, msg:
+                logging.InstallLog.writeToFile(str(msg) + " [setupFileManager]")
+                return 0
+
+            return 1
 
     def installAllPHPVersions(self):
         try:
@@ -304,7 +384,6 @@ class InstallCyberPanel:
             return 0
 
         return 1
-
 
     def setup_mariadb_repo(self):
         try:
@@ -647,7 +726,6 @@ class InstallCyberPanel:
         os.system('systemctl restart mysql')
 
         self.stdOut("MariaDB is now setup so it can support Cyberpanel's needs")
-
 
     def installPureFTPD(self):
         try:
@@ -1256,7 +1334,7 @@ class InstallCyberPanel:
 
 
 
-def Main(cwd, mysql, distro):
+def Main(cwd, mysql, distro, ent):
 
     InstallCyberPanel.mysqlPassword = randomPassword.generate_pass()
     InstallCyberPanel.mysql_Root_password = randomPassword.generate_pass()
@@ -1276,13 +1354,15 @@ def Main(cwd, mysql, distro):
     else:
         InstallCyberPanel.mysqlPassword = InstallCyberPanel.mysql_Root_password
 
-    installer = InstallCyberPanel("/usr/local/lsws/",cwd, distro)
+    installer = InstallCyberPanel("/usr/local/lsws/",cwd, distro, ent)
 
     installer.installLiteSpeed()
-    installer.changePortTo80()
+    if ent == 0:
+        installer.changePortTo80()
     installer.setupFileManager()
     installer.installAllPHPVersions()
-    installer.fix_ols_configs()
+    if ent == 0:
+        installer.fix_ols_configs()
 
 
     installer.setup_mariadb_repo()

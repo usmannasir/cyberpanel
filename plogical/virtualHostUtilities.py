@@ -25,7 +25,7 @@ from dnsUtilities import DNS
 from vhost import vhost
 from applicationInstaller import ApplicationInstaller
 from acl import ACLManager
-
+from processUtilities import ProcessUtilities
 
 ## If you want justice, you have come to the wrong place.
 
@@ -429,22 +429,25 @@ class virtualHostUtilities:
             destPrivKey = "/usr/local/lscp/key.pem"
             destCert = "/usr/local/lscp/cert.pem"
 
+            pathToStoreSSLFullChain = '/etc/letsencrypt/live/' + virtualHost + '/fullchain.pem'
+            pathToStoreSSLPrivKey = '/etc/letsencrypt/live/' + virtualHost + '/privkey.pem'
+
             ## removing old certs for lscpd
             if os.path.exists(destPrivKey):
                 os.remove(destPrivKey)
             if os.path.exists(destCert):
                 os.remove(destCert)
 
+
+
             adminEmail = "email@" + virtualHost
 
-            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
+            if not os.path.exists(pathToStoreSSLFullChain):
+                retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
-            if retValues[0] == 0:
-                print "0," + str(retValues[1])
-                return 0, retValues[1]
-
-            pathToStoreSSLFullChain = '/etc/letsencrypt/live/' + virtualHost + '/fullchain.pem'
-            pathToStoreSSLPrivKey = '/etc/letsencrypt/live/' + virtualHost + '/privkey.pem'
+                if retValues[0] == 0:
+                    print "0," + str(retValues[1])
+                    return 0, retValues[1]
 
             shutil.copy(pathToStoreSSLPrivKey, destPrivKey)
             shutil.copy(pathToStoreSSLFullChain, destCert)
@@ -469,12 +472,13 @@ class virtualHostUtilities:
             srcFullChain = '/etc/letsencrypt/live/' + virtualHost + '/fullchain.pem'
             srcPrivKey = '/etc/letsencrypt/live/' + virtualHost + '/privkey.pem'
 
-            adminEmail = "email@" + virtualHost
-            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
+            if not os.path.exists(srcFullChain):
+                adminEmail = "email@" + virtualHost
+                retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
-            if retValues[0] == 0:
-                print "0," + str(retValues[1])
-                return 0, retValues[1]
+                if retValues[0] == 0:
+                    print "0," + str(retValues[1])
+                    return 0, retValues[1]
 
             ## MailServer specific functions
 
@@ -567,34 +571,54 @@ class virtualHostUtilities:
                 print "0, This domain already exists as vHost or Alias."
                 return
 
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+                data = open(confPath, 'r').readlines()
+                writeToFile = open(confPath, 'w')
+                listenerTrueCheck = 0
 
-            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
-            data = open(confPath, 'r').readlines()
-            writeToFile = open(confPath, 'w')
-            listenerTrueCheck = 0
+                for items in data:
+                    if items.find("listener") > -1 and items.find("Default") > -1:
+                        listenerTrueCheck = 1
+                    if items.find(' ' + masterDomain) > -1 and items.find('map') > -1 and listenerTrueCheck == 1:
+                        data = filter(None, items.split(" "))
+                        if data[1] == masterDomain:
+                            writeToFile.writelines(items.rstrip('\n') + ", " + aliasDomain + "\n")
+                            listenerTrueCheck = 0
+                    else:
+                        writeToFile.writelines(items)
 
-            for items in data:
-                if items.find("listener") > -1 and items.find("Default") > -1:
-                    listenerTrueCheck = 1
-                if items.find(' ' + masterDomain) > -1 and items.find('map') > -1 and listenerTrueCheck == 1:
-                    data = filter(None, items.split(" "))
-                    if data[1] == masterDomain:
-                        writeToFile.writelines(items.rstrip('\n') + ", " + aliasDomain + "\n")
-                        listenerTrueCheck = 0
-                else:
-                    writeToFile.writelines(items)
+                writeToFile.close()
+            else:
+                completePathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + masterDomain + '/vhost.conf'
+                data = open(completePathToConf, 'r').readlines()
 
-            writeToFile.close()
+                writeToFile = open(completePathToConf, 'w')
+
+                for items in data:
+                    if items.find('ServerAlias') > -1:
+                        items = items.strip('\n')
+                        writeToFile.writelines(items + " " + aliasDomain + "\n")
+                    else:
+                        writeToFile.writelines(items)
+
+                writeToFile.close()
 
             installUtilities.installUtilities.reStartLiteSpeed()
 
             if ssl == 1:
                 retValues = sslUtilities.issueSSLForDomain(masterDomain, administratorEmail, sslPath, aliasDomain)
-                if retValues[0] == 0:
-                    print "0," + str(retValues[1])
-                    return
+                if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                    if retValues[0] == 0:
+                        print "0," + str(retValues[1])
+                        return
+                    else:
+                        vhost.createAliasSSLMap(confPath, masterDomain, aliasDomain)
                 else:
-                    vhost.createAliasSSLMap(confPath, masterDomain, aliasDomain)
+                    retValues = sslUtilities.issueSSLForDomain(masterDomain, administratorEmail, sslPath, aliasDomain)
+                    if retValues[0] == 0:
+                        print "0," + str(retValues[1])
+                        return
 
             website = Websites.objects.get(domain=masterDomain)
 
@@ -611,18 +635,21 @@ class virtualHostUtilities:
     def issueAliasSSL(masterDomain, aliasDomain, sslPath, administratorEmail):
         try:
 
-            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
-
             retValues = sslUtilities.issueSSLForDomain(masterDomain, administratorEmail, sslPath, aliasDomain)
 
-            if retValues[0] == 0:
-                print "0," + str(retValues[1])
-                return
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+                if retValues[0] == 0:
+                    print "0," + str(retValues[1])
+                    return
+                else:
+                    vhost.createAliasSSLMap(confPath, masterDomain, aliasDomain)
             else:
-                vhost.createAliasSSLMap(confPath, masterDomain, aliasDomain)
+                if retValues[0] == 0:
+                    print "0," + str(retValues[1])
+                    return
 
             print "1,None"
-
 
         except BaseException, msg:
 
@@ -631,104 +658,178 @@ class virtualHostUtilities:
 
     @staticmethod
     def deleteAlias(masterDomain, aliasDomain):
-        try:
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            try:
 
-            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+                confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
-            data = open(confPath, 'r').readlines()
-            writeToFile = open(confPath, 'w')
-            aliases = []
+                data = open(confPath, 'r').readlines()
+                writeToFile = open(confPath, 'w')
+                aliases = []
 
-            for items in data:
-                if items.find(masterDomain) > -1 and items.find('map') > -1:
-                    data = filter(None, items.split(" "))
-                    if data[1] == masterDomain:
-                        length = len(data)
-                        for i in range(3, length):
-                            currentAlias = data[i].rstrip(',').strip('\n')
-                            if currentAlias != aliasDomain:
-                                aliases.append(currentAlias)
+                for items in data:
+                    if items.find(masterDomain) > -1 and items.find('map') > -1:
+                        data = filter(None, items.split(" "))
+                        if data[1] == masterDomain:
+                            length = len(data)
+                            for i in range(3, length):
+                                currentAlias = data[i].rstrip(',').strip('\n')
+                                if currentAlias != aliasDomain:
+                                    aliases.append(currentAlias)
 
-                        aliasString = ""
+                            aliasString = ""
 
-                        for alias in aliases:
-                            aliasString = ", " + alias
+                            for alias in aliases:
+                                aliasString = ", " + alias
 
-                        writeToFile.writelines(
-                            '  map                     ' + masterDomain + " " + masterDomain + aliasString + "\n")
-                        aliases = []
-                        aliasString = ""
+                            writeToFile.writelines(
+                                '  map                     ' + masterDomain + " " + masterDomain + aliasString + "\n")
+                            aliases = []
+                            aliasString = ""
+                        else:
+                            writeToFile.writelines(items)
+
                     else:
                         writeToFile.writelines(items)
 
-                else:
-                    writeToFile.writelines(items)
+                writeToFile.close()
+                installUtilities.installUtilities.reStartLiteSpeed()
 
-            writeToFile.close()
-            installUtilities.installUtilities.reStartLiteSpeed()
+                delAlias = aliasDomains.objects.get(aliasDomain=aliasDomain)
+                delAlias.delete()
 
-            delAlias = aliasDomains.objects.get(aliasDomain=aliasDomain)
-            delAlias.delete()
+                print "1,None"
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [deleteAlias]")
+                print "0," + str(msg)
+        else:
+            try:
 
-            print "1,None"
+                completePathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + masterDomain + '/vhost.conf'
+                data = open(completePathToConf, 'r').readlines()
 
+                writeToFile = open(completePathToConf, 'w')
 
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [deleteAlias]")
-            print "0," + str(msg)
+                for items in data:
+                    if items.find('ServerAlias') > -1:
+                        writeToFile.writelines(items.replace(' ' + aliasDomain, ''))
+                    else:
+                        writeToFile.writelines(items)
+
+                writeToFile.close()
+                installUtilities.installUtilities.reStartLiteSpeed()
+
+                alias = aliasDomains.objects.get(aliasDomain=aliasDomain)
+                alias.delete()
+
+                print "1,None"
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [deleteAlias]")
+                print "0," + str(msg)
 
     @staticmethod
     def changeOpenBasedir(domainName, openBasedirValue):
-        try:
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            try:
+                confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domainName
+                completePathToConfigFile = confPath + "/vhost.conf"
 
-            confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domainName
-            completePathToConfigFile = confPath + "/vhost.conf"
-
-            data = open(completePathToConfigFile, 'r').readlines()
+                data = open(completePathToConfigFile, 'r').readlines()
 
 
-            if openBasedirValue == 'Disable':
-                writeToFile = open(completePathToConfigFile, 'w')
-                for items in data:
-                    if items.find('php_admin_value') > -1:
-                        continue
-                    writeToFile.writelines(items)
-                writeToFile.close()
-            else:
-
-                ## Check if phpini already active
-
-                fileManagerCheck = 0
-
-                writeToFile = open(completePathToConfigFile, 'w')
-                for items in data:
-
-                    if items.find('context /.filemanager') > -1:
-                        writeToFile.writelines(items)
-                        fileManagerCheck = 1
-                        continue
-
-                    if items.find('phpIniOverride') > -1:
-                        writeToFile.writelines(items)
-                        if fileManagerCheck == 1:
-                            writeToFile.writelines('php_admin_value open_basedir "/tmp:/usr/local/lsws/Example/html/FileManager:$VH_ROOT"\n')
-                            fileManagerCheck = 0
+                if openBasedirValue == 'Disable':
+                    writeToFile = open(completePathToConfigFile, 'w')
+                    for items in data:
+                        if items.find('php_admin_value') > -1:
                             continue
+                        writeToFile.writelines(items)
+                    writeToFile.close()
+                else:
+
+                    ## Check if phpini already active
+
+                    fileManagerCheck = 0
+
+                    writeToFile = open(completePathToConfigFile, 'w')
+                    for items in data:
+
+                        if items.find('context /.filemanager') > -1:
+                            writeToFile.writelines(items)
+                            fileManagerCheck = 1
+                            continue
+
+                        if items.find('phpIniOverride') > -1:
+                            writeToFile.writelines(items)
+                            if fileManagerCheck == 1:
+                                writeToFile.writelines('php_admin_value open_basedir "/tmp:/usr/local/lsws/Example/html/FileManager:$VH_ROOT"\n')
+                                fileManagerCheck = 0
+                                continue
+                            else:
+                                writeToFile.writelines('php_admin_value open_basedir "/tmp:$VH_ROOT"\n')
+                                continue
+
+                        writeToFile.writelines(items)
+
+                    writeToFile.close()
+
+                installUtilities.installUtilities.reStartLiteSpeed()
+                print "1,None"
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [changeOpenBasedir]")
+                print "0," + str(msg)
+        else:
+            try:
+                confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domainName
+                completePathToConfigFile = confPath + "/vhost.conf"
+
+                data = open(completePathToConfigFile, 'r').readlines()
+
+                if openBasedirValue == 'Disable':
+                    writeToFile = open(completePathToConfigFile, 'w')
+                    for items in data:
+                        if items.find('open_basedir') > -1:
+                            continue
+                        writeToFile.writelines(items)
+                    writeToFile.close()
+                else:
+
+                    ## Check if phpini already active
+                    path = ''
+
+                    try:
+                        childDomain = ChildDomains.objects.get(domain=domainName)
+                        path = childDomain.path
+                    except:
+                        path = '/home/' + domainName + '/public_html'
+
+                    activate = 0
+                    writeToFile = open(completePathToConfigFile, 'w')
+                    for items in data:
+                        if items.find('CustomLog ') > -1:
+                            activate = 1
+                            writeToFile.writelines(items)
+                            continue
+
+                        if activate == 1:
+                            activate = 0
+                            if items.find('open_basedir') > -1:
+                                writeToFile.writelines(items)
+                                continue
+                            else:
+                                writeToFile.writelines(
+                                    '        php_admin_value open_basedir /usr/local/lsws/FileManager:/tmp:' + path + '\n')
+                                writeToFile.writelines(items)
+                                continue
                         else:
-                            writeToFile.writelines('php_admin_value open_basedir "/tmp:$VH_ROOT"\n')
-                            continue
+                            writeToFile.writelines(items)
 
-                    writeToFile.writelines(items)
+                    writeToFile.close()
 
-                writeToFile.close()
-
-            installUtilities.installUtilities.reStartLiteSpeed()
-            print "1,None"
-
-
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [changeOpenBasedir]")
-            print "0," + str(msg)
+                installUtilities.installUtilities.reStartLiteSpeed()
+                print "1,None"
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [changeOpenBasedir]")
+                print "0," + str(msg)
 
     @staticmethod
     def saveSSL(virtualHost, keyPath, certPath):

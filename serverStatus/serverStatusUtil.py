@@ -166,7 +166,7 @@ class ServerStatusUtil:
                 return 0
 
             if os.path.exists('/etc/letsencrypt/live/' + virtualHostName):
-                sslUtilities.installSSLForDomain(virtualHostUtilities, website.adminEmail)
+                sslUtilities.installSSLForDomain(virtualHostName, website.adminEmail)
 
             vhostPath = vhost.Server_root + "/conf/vhosts"
             FNULL = open(os.devnull, 'w')
@@ -222,10 +222,24 @@ class ServerStatusUtil:
             allWebsites = Websites.objects.all()
             for website in allWebsites:
                 logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                          "Building vhost conf for:" + website.domain + ".\n")
-                ServerStatusUtil.createWebsite(website)
+                                                          "Building vhost conf for: " + website.domain + ".\n", 1)
+                if ServerStatusUtil.createWebsite(website) == 0:
+                    return 0
+
+                childs = website.childdomains_set.all()
+                for child in childs:
+                    if ServerStatusUtil.createDomain(child) == 0:
+                        return 0
+
+                aliases = website.aliasdomains_set.all()
+
+                for alias in aliases:
+                    aliasDomain = alias.aliasDomain
+                    alias.delete()
+                    virtualHostUtilities.createAlias(website.domain, aliasDomain, 0, '/home', website.adminEmail, website.admin)
+
                 logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                          "vhost conf successfully built for:" + website.domain + ".\n")
+                                                          "vhost conf successfully built for: " + website.domain + ".\n", 1)
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0
@@ -238,7 +252,7 @@ class ServerStatusUtil:
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,"Starting conversion process..\n")
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "Removing OpenLiteSpeed..\n")
+                                                      "Removing OpenLiteSpeed..\n", 1)
 
             ## Try to stop current LiteSpeed Process
 
@@ -247,7 +261,7 @@ class ServerStatusUtil:
             if os.path.exists('/usr/local/lsws'):
                 command = 'tar -zcvf /usr/local/olsBackup.tar.gz /usr/local/lsws'
                 if ServerStatusUtil.executioner(command, FNULL) == 0:
-                    logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to create backup of current LSWS. [404]")
+                    logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to create backup of current LSWS. [404]", 1)
                     ServerStatusUtil.recover()
                     return 0
 
@@ -262,42 +276,40 @@ class ServerStatusUtil:
                         pass
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "OpenLiteSpeed removed.\n")
+                                                      "OpenLiteSpeed removed.\n", 1)
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "Installing LiteSpeed Enterprise Web Server ..\n")
+                                                      "Installing LiteSpeed Enterprise Web Server ..\n", 1)
 
 
             if ServerStatusUtil.installLiteSpeed(licenseKey, statusFile) == 0:
-                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to install LiteSpeed. [404]")
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to install LiteSpeed. [404]", 1)
                 ServerStatusUtil.recover()
                 return 0
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "LiteSpeed Enterprise Web Server installed.\n")
+                                                      "LiteSpeed Enterprise Web Server installed.\n", 1)
 
 
             if ServerStatusUtil.setupFileManager(statusFile) == 0:
-                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to set up File Manager. [404]")
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to set up File Manager. [404]", 1)
                 ServerStatusUtil.recover()
                 return 0
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "Rebuilding vhost conf..\n")
+                                                      "Rebuilding vhost conf..\n", 1)
 
             ServerStatusUtil.rebuildvConf()
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "vhost conf successfully built.\n")
+                                                      "vhost conf successfully built.\n", 1)
 
 
-            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,"Successfully switched to LITESPEED ENTERPRISE WEB SERVER. [200]\n")
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,"Successfully switched to LITESPEED ENTERPRISE WEB SERVER. [200]\n", 1)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             ServerStatusUtil.recover()
-
-
 
 def main():
 
