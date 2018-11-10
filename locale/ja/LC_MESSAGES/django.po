@@ -3,19 +3,12 @@
 # This file is distributed under the same license as the CyberPanel package.
 # FIRST AUTHOR <unasir@litespeedtech.com>, 2017.
 #
-#: baseTemplate/templates/baseTemplate/index.html:177
-#: baseTemplate/templates/baseTemplate/index.html:223
-#: baseTemplate/templates/baseTemplate/index.html:229
-#: baseTemplate/templates/baseTemplate/index.html:235
-#: baseTemplate/templates/baseTemplate/index.html:241
-#: baseTemplate/templates/baseTemplate/index.html:247
-#: baseTemplate/templates/baseTemplate/index.html:253
 msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-10-10 13:01+0500\n"
-"PO-Revision-Date: 2018-09-21 15:46+0900\n"
+"PO-Revision-Date: 2018-10-14 17:49+0900\n"
 "Last-Translator: @ kazuo210 <kazu.nito@gmail.com>\n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
 "Language: ja\n"
@@ -23,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 2.1.1\n"
+"X-Generator: Poedit 2.0.6\n"
 
 #: CyberCP/settings.py:171
 msgid "English"
@@ -70,16 +63,12 @@ msgid "French"
 msgstr "フランス語"
 
 #: CyberCP/settings.py:182
-#, fuzzy
-#| msgid "Policy"
 msgid "Polish"
-msgstr "ポリシ"
+msgstr "ポーランド語"
 
 #: CyberCP/settings.py:183
-#, fuzzy
-#| msgid "Filename"
 msgid "Vietnamese"
-msgstr "ファイル名"
+msgstr "ベトナム語"
 
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
@@ -1332,19 +1321,15 @@ msgstr "FTP の管理"
 #: pluginHolder/templates/pluginHolder/plugins.html:14
 #: pluginHolder/templates/pluginHolder/plugins.html:21
 msgid "Plugins"
-msgstr ""
+msgstr "プラグイン"
 
 #: baseTemplate/templates/baseTemplate/index.html:586
-#, fuzzy
-#| msgid "Install Extensions"
 msgid "Installed Plugins"
-msgstr "拡張機能のインストール"
+msgstr "インストールされたプラグイン"
 
 #: baseTemplate/templates/baseTemplate/index.html:586
-#, fuzzy
-#| msgid "Install"
 msgid "Installed"
-msgstr "インストール"
+msgstr "インストールされました"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
@@ -3329,16 +3314,12 @@ msgid "Successfully Modified"
 msgstr "更新されました"
 
 #: pluginHolder/templates/pluginHolder/plugins.html:15
-#, fuzzy
-#| msgid "List Databases  - CyberPanel"
 msgid "List of installed plugins on your CyberPanel."
-msgstr "データベースの一覧 - Cyber​​Panel"
+msgstr "CyberPanelにインストールされているプラグインの一覧です。"
 
 #: pluginHolder/templates/pluginHolder/plugins.html:31
-#, fuzzy
-#| msgid "Latest Version"
 msgid "Version"
-msgstr "最新バージョン"
+msgstr "バージョン"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:3
 msgid "Access Logs - CyberPanel"
