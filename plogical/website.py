@@ -31,6 +31,7 @@ import hashlib
 from mysqlUtilities import mysqlUtilities
 from plogical import hashPassword
 from emailMarketing.emACL import emACL
+from processUtilities import ProcessUtilities
 
 class WebsiteManager:
     def __init__(self, domain = None, childDomain = None):
@@ -1253,18 +1254,23 @@ class WebsiteManager:
 
             website = Websites.objects.get(domain=self.domain)
 
+            try:
+                subprocess.call(('sudo', 'crontab', '-u', website.externalApp, '-'))
+            except:
+                pass
+
             output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
 
             if "no crontab for" in output:
-                echo = subprocess.Popen(('echo'), stdout=subprocess.PIPE)
-                output = subprocess.call(('sudo', 'crontab', '-u', website.externalApp, '-'), stdin=echo.stdout)
+                echo = subprocess.Popen((['cat', '/dev/null']), stdout=subprocess.PIPE)
+                subprocess.call(('sudo', 'crontab', '-u', website.externalApp, '-'), stdin=echo.stdout)
                 echo.wait()
                 echo.stdout.close()
-
-            if "no crontab for" in output:
-                data_ret = {'addNewCron': 0, 'error_message': 'Unable to initialise crontab file for user'}
-                final_json = json.dumps(data_ret)
-                return HttpResponse(final_json)
+                output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
+                if "no crontab for" in output:
+                    data_ret = {'addNewCron': 0, 'error_message': 'Unable to initialise crontab file for user'}
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
 
             tempPath = "/home/cyberpanel/" + website.externalApp + str(randint(10000, 99999)) + ".cron.tmp"
 
@@ -1732,7 +1738,10 @@ class WebsiteManager:
                 return render(request, 'websiteFunctions/setupGit.html',
                               {'domainName': self.domain, 'installed': 1, 'webhookURL': webhookURL})
             else:
-                command = 'sudo cat /root/.ssh/cyberpanel.pub'
+                command = "sudo ssh-keygen -f /root/.ssh/" + self.domain + " -t rsa -N ''"
+                ProcessUtilities.executioner(command)
+
+                command = 'sudo cat /root/.ssh/' + self.domain + '.pub'
                 deploymentKey = subprocess.check_output(shlex.split(command)).strip('\n')
 
             return render(request, 'websiteFunctions/setupGit.html',

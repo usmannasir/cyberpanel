@@ -904,7 +904,8 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-        os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+        if self.distro == ubuntu:
+            os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
         writeDataToFile.close()
 
@@ -1330,7 +1331,8 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+            if self.distro == ubuntu:
+                os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1348,7 +1350,8 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+            if self.distro == ubuntu:
+                os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1365,8 +1368,8 @@ class preFlightsChecks:
                     writeDataToFile.writelines(dataWritten)
                 else:
                     writeDataToFile.writelines(items)
-
-            os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+            if self.distro == ubuntu:
+                os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1384,7 +1387,8 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+            if self.distro == ubuntu:
+                os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1401,8 +1405,8 @@ class preFlightsChecks:
                     writeDataToFile.writelines(dataWritten)
                 else:
                     writeDataToFile.writelines(items)
-
-            os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+            if self.distro == ubuntu:
+                os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1474,7 +1478,6 @@ class preFlightsChecks:
 
             if os.path.exists(davecotmysql):
                 os.remove(davecotmysql)
-
 
 
            ###############Getting SSL
@@ -1655,7 +1658,7 @@ class preFlightsChecks:
 
             while(1):
 
-                command = 'chmod o= '+main
+                command = 'chmod o= ' + main
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -1676,7 +1679,7 @@ class preFlightsChecks:
 
             while(1):
 
-                command = 'chmod o= '+master
+                command = 'chmod o= ' + master
 
                 cmd = shlex.split(command)
 
@@ -1781,7 +1784,7 @@ class preFlightsChecks:
 
             count = 0
             while(1):
-                command = 'chgrp postfix '+main
+                command = 'chgrp postfix ' + main
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
@@ -2040,7 +2043,7 @@ class preFlightsChecks:
 
             while(1):
 
-                command = "chmod 755 "+main
+                command = "chmod 755 " + main
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 

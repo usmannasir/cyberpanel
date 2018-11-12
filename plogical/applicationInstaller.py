@@ -562,6 +562,8 @@ class ApplicationInstaller(multi.Thread):
 
             ## checking for directories/files
 
+            logging.writeToFile(finalPath)
+
             if self.dataLossCheck(finalPath, tempStatusPath) == 0:
                 return 0
 
@@ -573,8 +575,7 @@ class ApplicationInstaller(multi.Thread):
 
             try:
 
-                command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" git clone ' \
-                          '--depth 1 --no-single-branch git@' + defaultProvider +'.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
+                command = 'sudo git clone https://' + defaultProvider +'.com/' + username + '/' + reponame + ' -b ' + branch + ' ' + finalPath
                 subprocess.check_output(shlex.split(command))
             except subprocess.CalledProcessError, msg:
                 statusFile = open(tempStatusPath, 'w')
@@ -605,9 +606,7 @@ class ApplicationInstaller(multi.Thread):
 
 
         except BaseException, msg:
-
             os.remove('/home/cyberpanel/' + domainName + '.git')
-
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
@@ -630,13 +629,13 @@ class ApplicationInstaller(multi.Thread):
                 logging.writeToFile('Git is not setup for this website.')
                 return 0
 
-            command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" git -C ' + finalPath + '  pull'
+            command = 'sudo git --git-dir=' + finalPath + '.git --work-tree=' + finalPath +'  pull'
             subprocess.check_output(shlex.split(command))
+
+            ##
 
             website = Websites.objects.get(domain=domain)
             externalApp = website.externalApp
-
-            ##
 
             command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
             cmd = shlex.split(command)

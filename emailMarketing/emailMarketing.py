@@ -187,7 +187,6 @@ class emailMarketing(multi.Thread):
             from email.mime.text import MIMEText
             import re
 
-            message = MIMEMultipart('alternative')
             tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             for items in allEmails:

@@ -2,7 +2,6 @@ from CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import os
-from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 class ProcessUtilities:
     litespeedProcess = "litespeed"
@@ -74,7 +73,7 @@ class ProcessUtilities:
         try:
             res = subprocess.call(shlex.split(command))
             if res == 1:
-                raise 0
+                return 0
             else:
                 return 1
         except BaseException, msg:
@@ -114,19 +113,6 @@ class ProcessUtilities:
             return ProcessUtilities.ubuntu
         else:
             return ProcessUtilities.centos
-
-    @staticmethod
-    def executioner(command, statusFile):
-        try:
-            res = subprocess.call(shlex.split(command), stdout=statusFile, stderr=statusFile)
-            if res == 1:
-                raise 0
-            else:
-                return 1
-
-        except BaseException, msg:
-            logging.writeToFile(str(msg))
-            return 0
 
 
 

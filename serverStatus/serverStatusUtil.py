@@ -176,7 +176,7 @@ class ServerStatusUtil:
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
-        return 0
+            return 0
 
     @staticmethod
     def createDomain(website):
@@ -192,8 +192,7 @@ class ServerStatusUtil:
                 command = 'mkdir -p ' + confPath
                 ServerStatusUtil.executioner(command, FNULL)
 
-            if vhost.perHostDomainConf(website.path, website.master.domain, virtualHostName, completePathToConfigFile, website.master.adminEmail, website.master.externalApp,
-                                        website.phpSelection, 1) == 1:
+            if vhost.perHostDomainConf(website.path, website.master.domain, virtualHostName, completePathToConfigFile, website.master.adminEmail, website.phpSelection, website.master.externalApp, 1) == 1:
                 pass
             else:
                 return 0
@@ -227,16 +226,28 @@ class ServerStatusUtil:
                     return 0
 
                 childs = website.childdomains_set.all()
+
                 for child in childs:
-                    if ServerStatusUtil.createDomain(child) == 0:
-                        return 0
+                    try:
+                        if ServerStatusUtil.createDomain(child) == 0:
+                            logging.CyberCPLogFileWriter.writeToFile(
+                                'Error while creating child domain: ' + child.domain)
+                    except BaseException, msg:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            'Error while creating child domain: ' + child.domain + ' . Exact message: ' + str(
+                                msg))
 
                 aliases = website.aliasdomains_set.all()
 
                 for alias in aliases:
-                    aliasDomain = alias.aliasDomain
-                    alias.delete()
-                    virtualHostUtilities.createAlias(website.domain, aliasDomain, 0, '/home', website.adminEmail, website.admin)
+                    try:
+                        aliasDomain = alias.aliasDomain
+                        alias.delete()
+                        virtualHostUtilities.createAlias(website.domain, aliasDomain, 0, '/home', website.adminEmail, website.admin)
+                    except BaseException, msg:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            'Error while creating alais domain: ' + aliasDomain + ' . Exact message: ' + str(
+                                msg))
 
                 logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                           "vhost conf successfully built for: " + website.domain + ".\n", 1)
@@ -303,6 +314,9 @@ class ServerStatusUtil:
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "vhost conf successfully built.\n", 1)
+
+            ProcessUtilities.stopLitespeed()
+            ProcessUtilities.restartLitespeed()
 
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,"Successfully switched to LITESPEED ENTERPRISE WEB SERVER. [200]\n", 1)

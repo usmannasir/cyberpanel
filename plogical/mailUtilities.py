@@ -12,6 +12,7 @@ import shlex
 from mailServer.models import Domains,EUsers
 from emailPremium.models import DomainLimits, EmailLimits
 from websiteFunctions.models import Websites
+from processUtilities import ProcessUtilities
 
 
 class mailUtilities:
@@ -372,7 +373,10 @@ milter_default_action = accept
 
             mailUtilities.checkHome()
 
-            command = 'sudo yum install spamassassin -y'
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                command = 'sudo yum install spamassassin -y'
+            else:
+                command = 'sudo apt-get install spamassassin spamc -y'
 
             cmd = shlex.split(command)
 

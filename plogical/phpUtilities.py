@@ -6,6 +6,7 @@ import installUtilities
 import argparse
 import os
 from mailUtilities import mailUtilities
+from processUtilities import ProcessUtilities
 
 class phpUtilities:
 
@@ -17,7 +18,10 @@ class phpUtilities:
 
             mailUtilities.checkHome()
 
-            command = 'sudo yum install '+extension +' -y'
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                command = 'sudo yum install ' + extension + ' -y'
+            else:
+                command = 'sudo apt-get install ' + extension + ' -y'
 
             cmd = shlex.split(command)
 
@@ -45,7 +49,10 @@ class phpUtilities:
 
             mailUtilities.checkHome()
 
-            command = 'sudo rpm --nodeps -e  ' + extension + ' -v'
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                command = 'sudo rpm --nodeps -e  ' + extension + ' -v'
+            else:
+                command = 'sudo apt-get remove -y  ' + extension
 
             cmd = shlex.split(command)
 

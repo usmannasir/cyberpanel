@@ -13,13 +13,13 @@ import os
 from plogical.installUtilities import installUtilities
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import re
-from loginSystem.models import Administrator
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
 from random import randint
 from xml.etree import ElementTree
 from plogical.acl import ACLManager
+from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
 
@@ -1880,11 +1880,20 @@ def getRequestStatus(request):
                 size = data['size']
                 extensionName = data['extensionName']
 
+                checkCommand = ''
+
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                    checkCommand = 'yum list installed'
+                    checkCommand = shlex.split(checkCommand)
+                else:
+                    checkCommand = 'dpkg --list'
+                    checkCommand = shlex.split(checkCommand)
+
                 requestStatus = unicode(open(phpUtilities.installLogPath, "r").read())
                 requestStatusSize = len(requestStatus)
 
                 if requestStatus.find("PHP Extension Installed") > -1:
-                    if subprocess.check_output(["yum", "list", "installed"]).find(extensionName) > -1:
+                    if subprocess.check_output(checkCommand).find(extensionName) > -1:
                         ext = installedPackages.objects.get(extensionName=extensionName)
                         ext.status = 1
                         ext.save()
@@ -1901,7 +1910,7 @@ def getRequestStatus(request):
                     return HttpResponse(final_json)
                 elif requestStatus.find("Can not be installed") > -1:
 
-                    if subprocess.check_output(["yum", "list", "installed"]).find(extensionName) > -1:
+                    if subprocess.check_output(checkCommand).find(extensionName) > -1:
                         ext = installedPackages.objects.get(extensionName=extensionName)
                         ext.status = 1
                         ext.save()
@@ -1918,7 +1927,7 @@ def getRequestStatus(request):
                     return HttpResponse(final_json)
                 elif requestStatus.find("Can not un-install Extension") > -1:
 
-                    if subprocess.check_output(["yum", "list", "installed"]).find(extensionName) > -1:
+                    if subprocess.check_output(checkCommand).find(extensionName) > -1:
                         ext = installedPackages.objects.get(extensionName=extensionName)
                         ext.status = 1
                         ext.save()
@@ -1935,7 +1944,7 @@ def getRequestStatus(request):
                     return HttpResponse(final_json)
                 elif requestStatus.find("PHP Extension Removed") > -1:
 
-                    if subprocess.check_output(["yum", "list", "installed"]).find(extensionName) > -1:
+                    if subprocess.check_output(checkCommand).find(extensionName) > -1:
                         ext = installedPackages.objects.get(extensionName=extensionName)
                         ext.status = 1
                         ext.save()

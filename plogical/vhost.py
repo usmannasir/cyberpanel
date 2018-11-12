@@ -328,7 +328,7 @@ class vhost:
                 accessControlEnds = "  }\n"
 
                 rewriteInherit = """  rewrite  {
-        inherit               0
+        inherit               1
     
       }
       """
