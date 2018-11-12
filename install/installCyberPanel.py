@@ -947,13 +947,13 @@ class InstallCyberPanel:
                 else:
                     writeDataToFile.writelines(items)
 
-            if self.distro == ubuntu:
-                os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+            #if self.distro == ubuntu:
+            #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
             writeDataToFile.close()
 
-            if self.distro == ubuntu:
-                os.chmod(ftpdPath + '/pureftpd-ldap.conf', stat.S_IRUSR | stat.S_IWUSR)
-                os.chmod(ftpdPath + '/pureftpd-pgsql.conf', stat.S_IRUSR | stat.S_IWUSR)
+            #if self.distro == ubuntu:
+            #    os.chmod(ftpdPath + '/pureftpd-ldap.conf', stat.S_IRUSR | stat.S_IWUSR)
+            #    os.chmod(ftpdPath + '/pureftpd-pgsql.conf', stat.S_IRUSR | stat.S_IWUSR)
 
             if self.distro == ubuntu:
                 command = 'apt install pure-ftpd-mysql -y'
@@ -1127,8 +1127,8 @@ class InstallCyberPanel:
                     writeDataToFile.writelines(dataWritten)
                 else:
                     writeDataToFile.writelines(items)
-            if self.distro == ubuntu:
-                os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+            #if self.distro == ubuntu:
+            #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 

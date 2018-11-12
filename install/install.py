@@ -1,4 +1,5 @@
 import sys
+import sys
 import subprocess
 import shutil
 import installLog as logging
@@ -1331,8 +1332,8 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            if self.distro == ubuntu:
-                os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+            #if self.distro == ubuntu:
+            #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1350,8 +1351,8 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            if self.distro == ubuntu:
-                os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+            #if self.distro == ubuntu:
+            #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1368,8 +1369,8 @@ class preFlightsChecks:
                     writeDataToFile.writelines(dataWritten)
                 else:
                     writeDataToFile.writelines(items)
-            if self.distro == ubuntu:
-                os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+            #if self.distro == ubuntu:
+            #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1387,8 +1388,8 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            if self.distro == ubuntu:
-                os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+            #if self.distro == ubuntu:
+            #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1405,8 +1406,8 @@ class preFlightsChecks:
                     writeDataToFile.writelines(dataWritten)
                 else:
                     writeDataToFile.writelines(items)
-            if self.distro == ubuntu:
-                os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+            #if self.distro == ubuntu:
+            #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
