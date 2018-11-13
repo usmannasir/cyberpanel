@@ -1,5 +1,4 @@
 import sys
-import sys
 import subprocess
 import shutil
 import installLog as logging
