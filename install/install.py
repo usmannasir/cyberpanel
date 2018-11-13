@@ -2903,7 +2903,7 @@ class preFlightsChecks:
 
             if self.distro == ubuntu:
                 command = 'apt install opendkim-tools'
-                subprocess.call(shlex.split(command)):
+                subprocess.call(shlex.split(command))
 
                 command = 'mkdir -p /etc/opendkim/keys/'
                 subprocess.call(shlex.split(command))
