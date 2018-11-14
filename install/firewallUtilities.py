@@ -6,6 +6,7 @@ import argparse
 import os
 import shlex
 import socket
+import install
 
 
 
@@ -14,7 +15,7 @@ class FirewallUtilities:
     @staticmethod
     def addRule(proto,port):
         try:
-            command = 'sudo firewall-cmd --permanent --zone-public --add-port=' + port + '/' + proto
+            command = 'sudo firewall-cmd --permanent --zone=public --add-port=' + port + '/' + proto
 
             #if port == "21":
             #    command = "sudo firewall-cmd --add-service=ftp --permanent"
@@ -39,6 +40,10 @@ class FirewallUtilities:
             cmd = shlex.split(command)
 
             res = subprocess.call(cmd)
+
+            if install.preFlightsChecks.resFailed(install.get_distro(), res):
+                install.preFlightsChecks.stdOut("Failed to install rule: " + command + " Error #" + str(res), 1)
+                return 0
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [addRule]")
