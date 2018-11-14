@@ -189,44 +189,44 @@ class preFlightsChecks:
                         preFlightsChecks.stdOut("CyberPanel user added!")
                         break
 
-            ##
+                ##
 
-            count = 0
+                count = 0
 
-            while (1):
+                while (1):
 
-                command = "usermod -aG wheel cyberpanel"
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+                    command = "usermod -aG wheel cyberpanel"
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
 
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut("We are trying to add CyberPanel user to SUDO group, trying again, try number: " + str(count) + "\n")
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Not able to add user CyberPanel to SUDO group, exiting the installer. [setup_account_cyberpanel]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("CyberPanel user was successfully added to SUDO group!")
-                    preFlightsChecks.stdOut("CyberPanel user was successfully added to SUDO group!")
-                    break
+                    if preFlightsChecks.resFailed(self.distro, res):
+                        count = count + 1
+                        preFlightsChecks.stdOut("We are trying to add CyberPanel user to SUDO group, trying again, try number: " + str(count) + "\n")
+                        if count == 3:
+                            logging.InstallLog.writeToFile("Not able to add user CyberPanel to SUDO group, exiting the installer. [setup_account_cyberpanel]")
+                            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                            os._exit(0)
+                    else:
+                        logging.InstallLog.writeToFile("CyberPanel user was successfully added to SUDO group!")
+                        preFlightsChecks.stdOut("CyberPanel user was successfully added to SUDO group!")
+                        break
 
 
-            ###############################
+                ###############################
 
-            path = "/etc/sudoers"
+                path = "/etc/sudoers"
 
-            data = open(path, 'r').readlines()
+                data = open(path, 'r').readlines()
 
-            writeToFile = open(path, 'w')
+                writeToFile = open(path, 'w')
 
-            for items in data:
-                if items.find("wheel	ALL=(ALL)	NOPASSWD: ALL") > -1:
-                    writeToFile.writelines("%wheel	ALL=(ALL)	NOPASSWD: ALL")
-                else:
-                    writeToFile.writelines(items)
+                for items in data:
+                    if items.find("wheel	ALL=(ALL)	NOPASSWD: ALL") > -1:
+                        writeToFile.writelines("%wheel	ALL=(ALL)	NOPASSWD: ALL")
+                    else:
+                        writeToFile.writelines(items)
 
-            writeToFile.close()
+                writeToFile.close()
 
             ###############################
 
