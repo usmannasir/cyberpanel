@@ -9,7 +9,7 @@ import randomPassword
 import errno
 import MySQLdb as mariadb
 import install
-import stat
+#import stat
 
 #distros
 centos=0
@@ -44,7 +44,7 @@ class InstallCyberPanel:
                     cmd = shlex.split(command)
                     res = subprocess.call(cmd)
 
-                    if res == 1:
+                    if install.preFlightsChecks.resFailed(self.distro, res):
                         count = count + 1
                         InstallCyberPanel.stdOut("Trying to install OpenLiteSpeed, trying again, try number: " + str(count))
                         if count == 3:
@@ -93,7 +93,7 @@ class InstallCyberPanel:
                     command = './install.sh'
                     res = subprocess.call(shlex.split(command))
 
-                    if res == 1:
+                    if install.preFlightsChecks.resFailed(self.distro, res):
                         logging.InstallLog.writeToFile(
                             "Failed to install LiteSpeed Enterprise! [installLiteSpeed]")
                         InstallCyberPanel.stdOut("Failed to install LiteSpeed Enterprise!")
@@ -129,7 +129,7 @@ class InstallCyberPanel:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to restart OpenLiteSpeed, trying again, try number: " + str(count))
                     if count == 3:
@@ -307,18 +307,23 @@ class InstallCyberPanel:
             count = 0
 
             while (1):
+                failed = False
                 if self.distro == ubuntu:
                     command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
                               'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
                               'lsphp7?-ldap lsphp7?-mysql lsphp7?-opcache lsphp7?-pspell lsphp7?-recode ' \
                               'lsphp7?-sqlite3 lsphp7?-tidy'
                     res = os.system(command)
+                    if res != 0:
+                        failed = True
                 else:
                     command = 'yum -y install lsphp*'
                     cmd = shlex.split(command)
                     res = subprocess.call(cmd)
+                    if install.preFlightsChecks.resFailed(self.distro, res):
+                        failed = True
 
-                if res == 1:
+                if failed:
                     count = count + 1
                     InstallCyberPanel.stdOut(
                         "Trying to install LiteSpeed PHPs, trying again, try number: " + str(count))
@@ -385,7 +390,7 @@ class InstallCyberPanel:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to install MariaDB, trying again, try number: " + str(count))
                     if count == 3:
@@ -429,7 +434,7 @@ class InstallCyberPanel:
 
                     res = subprocess.call(shlex.split(command))
 
-                    if res == 1:
+                    if install.preFlightsChecks.resFailed(self.distro, res):
                         count = count + 1
                         InstallCyberPanel.stdOut(
                             "Trying to create data directories for second MariaDB instance, trying again, try number: " + str(
@@ -452,7 +457,7 @@ class InstallCyberPanel:
                     command = "systemctl start mysqld@1"
                     res = subprocess.call(shlex.split(command))
 
-                    if res == 1:
+                    if install.preFlightsChecks.resFailed(self.distro, res):
                         count = count + 1
                         InstallCyberPanel.stdOut(
                             "Trying to start first MariaDB instance, trying again, try number: " + str(count))
@@ -472,7 +477,7 @@ class InstallCyberPanel:
                     command = "systemctl enable mysqld@1"
                     res = subprocess.call(shlex.split(command))
 
-                    if res == 1:
+                    if install.preFlightsChecks.resFailed(self.distro, res):
                         count = count + 1
                         InstallCyberPanel.stdOut(
                             "Trying to enable first MariaDB instance to start and system restart, trying again, try number: " + str(
@@ -514,7 +519,7 @@ class InstallCyberPanel:
                     command = "systemctl enable mysql"
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to enable MariaDB instance to start and system restart, trying again, try number: " + str(count))
                     if count == 3:
@@ -637,7 +642,7 @@ class InstallCyberPanel:
                 command = "systemctl start mysql"
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to start MariaDB instance, trying again, try number: " + str(count))
                     if count == 3:
@@ -697,7 +702,7 @@ class InstallCyberPanel:
 
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to install PureFTPD, trying again, try number: " + str(count))
                     if count == 3:
@@ -719,7 +724,7 @@ class InstallCyberPanel:
                 command = "systemctl enable " + install.preFlightsChecks.pureFTPDServiceName(self.distro)
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to enable PureFTPD to start and system restart, trying again, try number: " + str(count))
                     if count == 3:
@@ -747,7 +752,7 @@ class InstallCyberPanel:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to create group for FTP, trying again, try number: " + str(count))
                     if count == 3:
@@ -781,7 +786,7 @@ class InstallCyberPanel:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to create user for FTP, trying again, try number: " + str(count))
                     if count == 3:
@@ -819,7 +824,7 @@ class InstallCyberPanel:
                     command = 'systemctl start pure-ftpd'
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to start PureFTPD instance, trying again, try number: " + str(count))
                     if count == 3:
@@ -859,7 +864,7 @@ class InstallCyberPanel:
                 command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to create SSL for PureFTPD, trying again, try number: " + str(count))
                     if count == 3:
@@ -981,7 +986,7 @@ class InstallCyberPanel:
                     cmd = shlex.split(command)
                     res = subprocess.call(cmd)
 
-                    if res == 1:
+                    if install.preFlightsChecks.resFailed(self.distro, res):
                         count = count + 1
                         InstallCyberPanel.stdOut(
                             "Trying to install PowerDNS Repositories, trying again, try number: " + str(count))
@@ -1004,7 +1009,7 @@ class InstallCyberPanel:
                     cmd = shlex.split(command)
                     res = subprocess.call(cmd)
 
-                    if res == 1:
+                    if install.preFlightsChecks.resFailed(self.distro, res):
                         count = count + 1
                         InstallCyberPanel.stdOut(
                             "Trying to install PowerDNS Repositories, trying again, try number: " + str(count))
@@ -1029,7 +1034,7 @@ class InstallCyberPanel:
                     cmd = shlex.split(command)
                     res = subprocess.call(cmd)
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to install PowerDNS, trying again, try number: " + str(count))
                     if count == 3:
@@ -1118,7 +1123,7 @@ class InstallCyberPanel:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to enable PowerDNS to start and system restart, trying again, try number: " + str(count))
                     if count == 3:
@@ -1137,7 +1142,7 @@ class InstallCyberPanel:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to start PowerDNS instance, trying again, try number: " + str(count))
                     if count == 3:
@@ -1178,7 +1183,7 @@ class InstallCyberPanel:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to install LSCPD prerequisites, trying again, try number: " + str(count))
                     if count == 3:
@@ -1202,7 +1207,7 @@ class InstallCyberPanel:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to install LSCPD prerequisites, trying again, try number: " + str(count))
                     if count == 3:
@@ -1222,7 +1227,7 @@ class InstallCyberPanel:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to configure LSCPD, trying again, try number: " + str(count))
                     if count == 3:
@@ -1241,7 +1246,7 @@ class InstallCyberPanel:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     InstallCyberPanel.stdOut("Trying to create SSL for LSCPD, trying again, try number: " + str(count))
                     if count == 3:

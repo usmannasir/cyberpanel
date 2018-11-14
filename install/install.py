@@ -55,6 +55,39 @@ class preFlightsChecks:
         return 'pure-ftpd'
 
 
+    @staticmethod
+    def resFailed(distro, res):
+        if distro == ubuntu and res != 0:
+            return True
+        elif distro == centos and res == 1:
+            return True
+        return False
+    
+
+    @staticmethod
+    def call(command, distro, bracket, message, log = 0, do_exit = 0, code = os.EX_OK):
+        preFlightsChecks.stdOut(message + " " + bracket, log)
+        count = 0
+        while True:
+            res = subprocess.call(shlex.split(command))
+
+            if preFlightsChecks.resFailed(distro, res):
+                count = count + 1
+                preFlightsChecks.stdOut(message + " failed, trying again, try number: " + str(count))
+                if count == 3:
+                    fatal_message = ''
+                    if do_exit:
+                        fatal_message = '.  Fatal error, see /var/log/installLogs.txt for full details'
+
+                    preFlightsChecks.stdOut("We are not able to " + message + ' return code: ' + str(res) +
+                                            fatal_message + " " + bracket, 1, do_exit, code)
+                    return False
+            else:
+                preFlightsChecks.stdOut(message + ' successful', log)
+                break
+        return True
+
+
     def checkIfSeLinuxDisabled(self):
         try:
             command = "sestatus"
@@ -92,7 +125,7 @@ class preFlightsChecks:
                     cmd = shlex.split(command)
                     res = subprocess.call(cmd)
 
-                    if res == 1:
+                    if preFlightsChecks.resFailed(self.distro, res):
                         count = count + 1
                         preFlightsChecks.stdOut("SUDO install failed, trying again, try number: " + str(count))
                         if count == 3:
@@ -142,7 +175,7 @@ class preFlightsChecks:
                     cmd = shlex.split(command)
                     res = subprocess.call(cmd)
 
-                    if res == 1:
+                    if preFlightsChecks.resFailed(self.distro, res):
                         count = count + 1
                         preFlightsChecks.stdOut(
                             "Not able to add user cyberpanel to system, trying again, try number: " + str(count) + "\n")
@@ -166,7 +199,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("We are trying to add CyberPanel user to SUDO group, trying again, try number: " + str(count) + "\n")
                     if count == 3:
@@ -207,7 +240,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("We are trying to create Let's Encrypt directory to store SSLs, trying again, try number: " + str(count))
                     if count == 3:
@@ -233,7 +266,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("YUM UPDATE FAILED, trying again, try number: " + str(count) + "\n")
                     if count == 3:
@@ -303,7 +336,7 @@ class preFlightsChecks:
                 cmd.append("http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm")
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Unable to add CyberPanel official repository, trying again, try number: " + str(count) + "\n")
@@ -329,7 +362,7 @@ class preFlightsChecks:
                 cmd.append("epel-release")
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to add EPEL repository, trying again, try number: " + str(count) + "\n")
                     if count == 3:
@@ -364,7 +397,7 @@ class preFlightsChecks:
                 command = "yum -y install python-pip"
             res = subprocess.call(shlex.split(command))
 
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 preFlightsChecks.stdOut("Unable to install PIP, trying again, try number: " + str(count))
                 if count == 3:
@@ -386,7 +419,7 @@ class preFlightsChecks:
                 command = "apt-get -y install python-dev"
             res = subprocess.call(shlex.split(command))
 
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 preFlightsChecks.stdOut("We are trying to install python development tools, trying again, try number: " + str(count))
                 if count == 3:
@@ -409,7 +442,7 @@ class preFlightsChecks:
                 command = "apt-get -y install gcc"
             res = subprocess.call(shlex.split(command))
 
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 preFlightsChecks.stdOut("Unable to install GCC, trying again, try number: " + str(count))
                 if count == 3:
@@ -427,7 +460,7 @@ class preFlightsChecks:
             command = "yum -y install python-setuptools"
             res = subprocess.call(shlex.split(command))
 
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 print("[" + time.strftime(
                     "%I-%M-%S-%a-%b-%Y") + "] " + "Unable to install Python setup tools, trying again, try number: " + str(
@@ -464,7 +497,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Unable to install urllib3 module, trying again, try number: " + str(count))
@@ -485,7 +518,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Unable to install requests module, trying again, try number: " + str(count))
@@ -508,7 +541,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Unable to install urllib3 module, trying again, try number: " + str(count))
@@ -529,7 +562,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Unable to install requests module, trying again, try number: " + str(count))
@@ -557,7 +590,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to install pexpect, trying again, try number: " + str(count))
                     if count == 3:
@@ -576,7 +609,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to install pexpect, trying again, try number: " + str(count))
                     if count == 3:
@@ -595,7 +628,7 @@ class preFlightsChecks:
 
             res = subprocess.call(shlex.split(command))
 
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 preFlightsChecks.stdOut("Unable to install DJANGO, trying again, try number: " + str(count))
                 if count == 3:
@@ -616,7 +649,7 @@ class preFlightsChecks:
             else:
                 command = "apt-get -y install libmysqlclient-dev"
             res = subprocess.call(shlex.split(command))
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 preFlightsChecks.stdOut("Unable to install MySQL-python, trying again, try number: " + str(count))
                 if count == 3:
@@ -649,7 +682,7 @@ class preFlightsChecks:
             else:
                 command = "easy_install gunicorn"
             res = subprocess.call(shlex.split(command))
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 preFlightsChecks.stdOut("Unable to install GUNICORN, trying again, try number: " + str(count))
                 if count == 3:
@@ -689,7 +722,7 @@ class preFlightsChecks:
                 command = "systemctl enable gunicorn.socket"
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to enable Gunicorn at system startup, try number: " + str(count))
                     if count == 3:
@@ -720,7 +753,7 @@ class preFlightsChecks:
                 command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/psutil-5.4.3.tar.gz"
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to install psutil, trying again, try number: " + str(count))
                     if count == 3:
@@ -738,7 +771,7 @@ class preFlightsChecks:
                 command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/psutil-5.4.3.tar.gz"
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to install psutil, trying again, try number: " + str(count))
                     if count == 3:
@@ -761,7 +794,7 @@ class preFlightsChecks:
 
             res = subprocess.call(cmd)
 
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 logging.InstallLog.writeToFile("fix_selinux_issue problem")
             else:
                 pass
@@ -777,7 +810,7 @@ class preFlightsChecks:
             else:
                 command = "apt-get -y install psmisc"
             res = subprocess.call(shlex.split(command))
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 preFlightsChecks.stdOut("Unable to install psmisc, trying again, try number: " + str(count))
                 if count == 3:
@@ -799,7 +832,7 @@ class preFlightsChecks:
                     command = "pip install --upgrade requests"
                     res = subprocess.call(shlex.split(command))
 
-                    if res == 1:
+                    if preFlightsChecks.resFailed(self.distro, res):
                         count = count + 1
                         preFlightsChecks.stdOut("Unable to upgrade requests, trying again, try number: " + str(count))
                         if count == 3:
@@ -823,7 +856,7 @@ class preFlightsChecks:
             #command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
             res = subprocess.call(shlex.split(command))
 
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 preFlightsChecks.stdOut("Unable to download CyberPanel, trying again, try number: " + str(count))
                 if count == 3:
@@ -844,7 +877,7 @@ class preFlightsChecks:
 
             res = subprocess.call(shlex.split(command))
 
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 preFlightsChecks.stdOut("Unable to extract CyberPanel, trying again, try number: " + str(count))
                 if count == 3:
@@ -922,7 +955,7 @@ class preFlightsChecks:
             command = "python manage.py makemigrations"
             res = subprocess.call(shlex.split(command))
 
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 preFlightsChecks.stdOut("Unable to prepare migrations file, trying again, try number: " + str(count) + "\n")
                 if count == 3:
@@ -943,7 +976,7 @@ class preFlightsChecks:
 
             res = subprocess.call(shlex.split(command))
 
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 preFlightsChecks.stdOut("Unable to execute the migrations file, trying again, try number: " + str(count))
                 if count == 3:
@@ -960,7 +993,7 @@ class preFlightsChecks:
         cmd = shlex.split(command)
         res = subprocess.call(cmd)
 
-        if res == 1:
+        if preFlightsChecks.resFailed(self.distro, res):
             logging.InstallLog.writeToFile("Could not move static content!")
             preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
             os._exit(0)
@@ -977,7 +1010,7 @@ class preFlightsChecks:
             command = "chmod -R 744 /usr/local/CyberCP"
             res = subprocess.call(shlex.split(command))
 
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 preFlightsChecks.stdOut("Changing permissions for '/usr/local/CyberCP' failed, trying again, try number: " + str(count))
                 if count == 3:
@@ -995,7 +1028,7 @@ class preFlightsChecks:
             command = "chown -R cyberpanel:cyberpanel /usr/local/CyberCP"
             res = subprocess.call(shlex.split(command))
 
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 preFlightsChecks.stdOut("Unable to change owner for '/usr/local/CyberCP', trying again, try number: " + str(count))
                 if count == 3:
@@ -1019,7 +1052,7 @@ class preFlightsChecks:
 
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to install unzip, trying again, try number: " + str(count))
                     if count == 3:
@@ -1055,7 +1088,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to install zip, trying again, try number: " + str(count))
                     if count == 3:
@@ -1087,7 +1120,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to download PYPMYAdmin, trying again, try number: " + str(count))
                     if count == 3:
@@ -1108,7 +1141,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     print("[" + time.strftime(
                         "%I-%M-%S-%a-%b-%Y") + "] " + "Unable to unzip PHPMYAdmin, trying again, try number: " + str(
@@ -1137,7 +1170,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     print("[" + time.strftime(
                         "%I-%M-%S-%a-%b-%Y") + "] " + "Unable to install PHPMYAdmin, trying again, try number: " + str(
@@ -1222,7 +1255,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to install Postfix, trying again, try number: " + str(count))
                     if count == 3:
@@ -1246,7 +1279,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to install Postfix agent, trying again, try number: " + str(count))
                     if count == 3:
@@ -1271,7 +1304,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Unable to install Dovecot and Dovecot-MySQL, trying again, try number: " + str(count))
@@ -1492,7 +1525,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to generate SSL for Postfix, trying again, try number: " + str(count))
                     if count == 3:
@@ -1514,7 +1547,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to generate ssl for Dovecot, trying again, try number: " + str(count))
                     if count == 3:
@@ -1575,7 +1608,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_domains.cf, trying again, try number: " + str(count))
                     if count == 3:
@@ -1598,7 +1631,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_forwardings.cf, trying again, try number: " + str(count))
                     if count == 3:
@@ -1620,7 +1653,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_mailboxes.cf, trying again, try number: " + str(count))
                     if count == 3:
@@ -1642,7 +1675,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_email2email.cf, trying again, try number: " + str(count))
                     if count == 3:
@@ -1663,7 +1696,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change permissions for /etc/postfix/main.cf, trying again, try number: " + str(count))
                     if count == 3:
@@ -1686,7 +1719,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change permissions for /etc/postfix/master.cf, trying again, try number: " + str(count))
                     if count == 3:
@@ -1709,7 +1742,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change group for mysql-virtual_domains.cf, trying again, try number: " + str(count))
                     if count == 3:
@@ -1729,7 +1762,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change group for mysql-virtual_forwardings.cf, trying again, try number: " + str(count))
                     if count == 3:
@@ -1749,7 +1782,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change group for mysql-virtual_mailboxes.cf, trying again, try number: " + str(count))
                     if count == 3:
@@ -1770,7 +1803,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change group for mysql-virtual_email2email.cf, trying again, try number: " + str(count))
                     if count == 3:
@@ -1789,7 +1822,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change group for /etc/postfix/main.cf, trying again, try number: " + str(count))
                     if count == 3:
@@ -1812,7 +1845,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change group for /etc/postfix/master.cf, trying again, try number: " + str(count))
                     if count == 3:
@@ -1836,7 +1869,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to add system group vmail, trying again, try number: " + str(count))
                     if count == 3:
@@ -1859,7 +1892,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to add system user vmail, trying again, try number: " + str(count))
                     if count == 3:
@@ -1887,7 +1920,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to add Postfix to system startup, trying again, try number: " + str(count))
                     if count == 3:
@@ -1910,7 +1943,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to start Postfix, trying again, try number: " + str(count))
                     if count == 3:
@@ -1933,7 +1966,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change group for /etc/dovecot/dovecot-sql.conf.ext, trying again, try number: " + str(count))
                     if count == 3:
@@ -1956,7 +1989,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change permissions for /etc/dovecot/dovecot-sql.conf.ext, trying again, try number: " + str(count))
                     if count == 3:
@@ -1980,7 +2013,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to enable dovecot.service, trying again, try number: " + str(count))
                     if count == 3:
@@ -2003,7 +2036,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to start dovecot.service, trying again, try number: " + str(count))
                     if count == 3:
@@ -2026,7 +2059,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to restart postfix.service, trying again, try number: " + str(count))
                     if count == 3:
@@ -2048,7 +2081,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change permissions for /etc/postfix/main.cf, trying again, try number: " + str(count))
                     if count == 3:
@@ -2116,7 +2149,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to change owner for /usr/local/lscp/cyberpanel/, trying again, try number: " + str(count))
                     if count == 3:
@@ -2140,7 +2173,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to download Rainloop, trying again, try number: " + str(count))
                     if count == 3:
@@ -2162,7 +2195,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to unzip rainloop, trying again, try number: " + str(count))
                     if count == 3:
@@ -2186,7 +2219,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to change permissions for Rainloop, trying again, try number: " + str(count))
                     if count == 3:
@@ -2208,7 +2241,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to change permissions for Rainloop, trying again, try number: " + str(count))
                     if count == 3:
@@ -2228,7 +2261,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to change owner for Rainloop, trying again, try number: " + str(count))
                     if count == 3:
@@ -2265,7 +2298,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to restart OpenLiteSpeed, trying again, try number: " + str(count))
                     if count == 3:
@@ -2285,18 +2318,37 @@ class preFlightsChecks:
         return 1
 
 
+    def removeUfw(self):
+        try:
+            preFlightsChecks.stdOut("Checking to see if ufw firewall is installed (will be removed)", 1)
+            status = subprocess.check_output(shlex.split('ufw status'), stderr=subprocess.STDOUT)
+            preFlightsChecks.stdOut("ufw current status: " + status + "...will be removed")
+        except subprocess.CalledProcessError as err:
+            preFlightsChecks.stdOut("Expected access to ufw not available, do not need to remove it", 1)
+            return True
+
+        preFlightsChecks.call('apt-get -y remove ufw', self.distro, '[remove_ufw]', 'Remove ufw firewall ' +
+                              '(using firewalld)', 1, 1, os.EX_OSERR)
+        return True
+
     def installFirewalld(self):
+        if self.distro == ubuntu:
+            self.removeUfw()
+
         try:
             preFlightsChecks.stdOut("Enabling Firewall!")
 
             count = 0
 
             while(1):
-                command = 'yum -y install firewalld'
+                if self.distro == ubuntu:
+                    command = 'apt-get -y install firewalld'
+                else:
+                    command = 'yum -y install firewalld'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to install FirewallD, trying again, try number: " + str(count))
                     if count == 3:
@@ -2308,14 +2360,15 @@ class preFlightsChecks:
                     break
 
             ######
-            command = 'systemctl restart dbus'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            if self.distro == centos:
+                #Not available in ubuntu
+                command = 'systemctl restart dbus'
+                cmd = shlex.split(command)
+                subprocess.call(cmd)
 
             command = 'systemctl restart systemd-logind'
             cmd = shlex.split(command)
             subprocess.call(cmd)
-
 
             count = 0
 
@@ -2324,7 +2377,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to start FirewallD, trying again, try number: " + str(count))
                     if count == 3:
@@ -2346,7 +2399,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to enable FirewallD at system startup, trying again, try number: " + str(count))
                     if count == 3:
@@ -2407,7 +2460,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to change permissions for /usr/local/lscp/bin/lscpdctrl, trying again, try number: " + str(count))
                     if count == 3:
@@ -2428,7 +2481,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to enable LSCPD on system startup, trying again, try number: " + str(count))
                     if count == 3:
@@ -2460,7 +2513,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to start LSCPD, trying again, try number: " + str(count))
                     if count == 3:
@@ -2501,7 +2554,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(cmd, stdout=file)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to install cronie, trying again, try number: " + str(count))
                     if count == 3:
@@ -2525,7 +2578,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd, stdout=file)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to enable cronie on system startup, trying again, try number: " + str(count))
                     if count == 3:
@@ -2546,7 +2599,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd, stdout=file)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to start crond, trying again, try number: " + str(count))
                     if count == 3:
@@ -2569,7 +2622,7 @@ class preFlightsChecks:
             cmd = shlex.split(command)
             res = subprocess.call(cmd, stdout=file)
 
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 logging.InstallLog.writeToFile("1427 [setup_cron]")
             else:
                 pass
@@ -2579,7 +2632,7 @@ class preFlightsChecks:
 
             res = subprocess.call(cmd, stdout=file)
 
-            if res == 1:
+            if preFlightsChecks.resFailed(self.distro, res):
                 logging.InstallLog.writeToFile("1428 [setup_cron]")
             else:
                 pass
@@ -2594,7 +2647,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd, stdout=file)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to restart crond, trying again, try number: " + str(count))
                     if count == 3:
@@ -2632,7 +2685,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to setup default SSH keys, trying again, try number: " + str(count))
                     if count == 3:
@@ -2665,7 +2718,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to install rsync, trying again, try number: " + str(count))
                     if count == 3:
@@ -2706,7 +2759,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Unable to install urllib3 module, trying again, try number: " + str(count))
@@ -2727,7 +2780,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Unable to install requests module, trying again, try number: " + str(count))
@@ -2770,7 +2823,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Trying to install pyOpenSSL, trying again, try number: " + str(count))
@@ -2790,7 +2843,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Trying to install CertBot, trying again, try number: " + str(count))
@@ -2831,7 +2884,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Trying to install tldextract, trying again, try number: " + str(count))
@@ -2854,7 +2907,7 @@ class preFlightsChecks:
 
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Trying to install pydns, trying again, try number: " + str(count))
@@ -2882,7 +2935,7 @@ class preFlightsChecks:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to install opendkim, trying again, try number: " + str(count))
                     if count == 3:
@@ -2991,7 +3044,7 @@ milter_default_action = accept
 
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Trying to install dnspython, trying again, try number: " + str(count))
@@ -3013,7 +3066,7 @@ milter_default_action = accept
                 command = "ln -s /usr/local/CyberCP/cli/cyberPanel.py /usr/bin/cyberpanel"
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Trying to setup CLI, trying again, try number: " + str(count))
@@ -3121,7 +3174,7 @@ milter_default_action = accept
                     command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
                     res = subprocess.call(shlex.split(command))
 
-                    if res == 1:
+                    if preFlightsChecks.resFailed(distro, res):
                         count = count + 1
                         preFlightsChecks.stdOut(
                             "Trying to install project dependant modules, trying again, try number: " + str(count))
@@ -3143,7 +3196,7 @@ milter_default_action = accept
                 command = "pip install virtualenv"
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Trying to install virtualenv, trying again, try number: " + str(count))
@@ -3164,7 +3217,7 @@ milter_default_action = accept
                 command = "virtualenv --system-site-packages /usr/local/CyberCP"
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Trying to setup virtualenv, trying again, try number: " + str(count))
@@ -3206,7 +3259,7 @@ milter_default_action = accept
                 command = "pip install --ignore-installed -r " + install_file
                 res = subprocess.call(shlex.split(command))
 
-                if res == 1:
+                if preFlightsChecks.resFailed(distro, res):
                     count = count + 1
                     preFlightsChecks.stdOut(
                         "Trying to install Python project dependant modules, trying again, try number: " + str(count))
