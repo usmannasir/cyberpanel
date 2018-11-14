@@ -18,6 +18,7 @@ from plogical.mailUtilities import mailUtilities
 from plogical.website import WebsiteManager
 from loginSystem.models import ACL
 from plogical.acl import ACLManager
+from firewall.models import FirewallRules
 # Create your views here.
 
 
@@ -560,9 +561,57 @@ def changeAdminPassword(request):
                 ACLManager.createDefaultACLs()
                 acl = ACL.objects.get(name='admin')
                 email = 'usman@cyberpersons.com'
-                admin = Administrator(userName="admin", password=adminPass, type=1, email=email,
+                admin = Administrator(userName="admin", password=hashPassword.hash_password(adminPass), type=1, email=email,
                                       firstName="Cyber", lastName="Panel", acl=acl)
                 admin.save()
+
+                vers = version(currentVersion="1.7", build=3)
+                vers.save()
+
+                package = Package(admin=admin, packageName="Default", diskSpace=1000,
+                                  bandwidth=1000, ftpAccounts=1000, dataBases=1000,
+                                  emailAccounts=1000, allowedDomains=20)
+                package.save()
+
+                newFWRule = FirewallRules(name="panel", proto="tcp", port="8090")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="http", proto="tcp", port="80")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="https", proto="tcp", port="443")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="ftp", proto="tcp", port="21")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="smtp", proto="tcp", port="25")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="smtps", proto="tcp", port="587")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="ssmtp", proto="tcp", port="465")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="pop3", proto="tcp", port="110")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="imap", proto="tcp", port="143")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="simap", proto="tcp", port="993")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="dns", proto="udp", port="53")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="dnstcp", proto="tcp", port="53")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="ftptls", proto="tcp", port="40110-40210")
+                newFWRule.save()
+
                 data_ret = {"changed": 1,
                             'error_message': "None"}
                 json_data = json.dumps(data_ret)
