@@ -1080,328 +1080,30 @@ def installExtensions(request):
 
             ### ################ #################
 
-            php70 = PHP.objects.get(phpVers="php70")
+            phpVersion = PHP.objects.get(phpVers="php70")
 
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-bcmath",
-                                             description="A module for PHP applications for using the bcmath library",
-                                             status=1)
+            phpPath = ''
 
-            phpExtension.save()
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php70.xml')
+            else:
+                phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp70.xml')
 
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-common",
-                                             description="Common files for PHP",
-                                             status=1)
+            php = ElementTree.parse(phpPath)
 
-            phpExtension.save()
+            phpExtensions = php.findall('extension')
 
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-dba",
-                                             description="A database abstraction layer module for PHP applications",
-                                             status=1)
+            for extension in phpExtensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
 
-            phpExtension.save()
+                phpExtension = installedPackages(phpVers=phpVersion,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
 
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-enchant",
-                                             description="Human Language and Character Encoding Support",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-gd",
-                                             description="A module for PHP applications for using the gd graphics library",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-gmp",
-                                             description="A module for PHP applications for using the GNU MP library",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-imap",
-                                             description="A module for PHP applications that use IMAP",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-intl",
-                                             description="Internationalization extension for PHP application",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-json",
-                                             description="LSPHP70 Json PHP Extension",
-                                             status=1)
-
-            phpExtension.save()
-
-
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-ldap",
-                                             description="A module for PHP applications that use LDAP",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-mbstring",
-                                             description="A module for PHP applications which need multi-byte string handling",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-mcrypt",
-                                             description="Standard PHP module provides mcrypt library support",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-mysqlnd",
-                                             description="A module for PHP applications that use MySQL databases",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-odbc",
-                                             description="A module for PHP applications that use ODBC databases",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-pdo",
-                                             description="A database access abstraction module for PHP applications",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-pear",
-                                             description="PHP Extension and Application Repository framework",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-pgsql",
-                                             description="A PostgreSQL database module for PHP",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-process",
-                                             description="Modules for PHP script using system process interfaces",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-pspell",
-                                             description="A module for PHP applications for using pspell interfaces",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-recode",
-                                             description="A module for PHP applications for using the recode library",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-snmp",
-                                             description="A module for PHP applications that query SNMP-managed devices",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-soap",
-                                             description="A module for PHP applications that use the SOAP protocol",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-tidy",
-                                             description="Standard PHP module provides tidy library support",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-xml",
-                                             description="A module for PHP applications which use XML",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-xmlrpc",
-                                             description="A module for PHP applications which use the XML-RPC protocol",
-                                             status=1)
-
-            phpExtension.save()
-
-            ## non-active packages
-
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-debuginfo",
-                                             description="Debug information for package lsphp70",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-dbg",
-                                             description="The interactive PHP debugger",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-mysql56-debuginfo",
-                                             description="Debug information for package lsphp70-mysql56",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-lsphp53-devel",
-                                             description="Files needed for building PHP extensions",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-mysql56",
-                                             description="PHP scripting language for creating dynamic web sites",
-                                             status=0)
-
-            phpExtension.save()
-
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-opcache",
-                                             description="The Zend OPcache",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-sqlite",
-                                             description="Extension for the SQLite V2 Embeddable SQL Database Engine",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-xcache",
-                                             description="PHP accelerator, optimizer, encoder and dynamic content cacher",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-xcache-admin",
-                                             description="XCache Administration",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-pecl-apcu",
-                                             description="APC User Cache",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-pecl-apcu-devel",
-                                             description="APCu developer files (header)",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-pecl-apcu-panel",
-                                             description="APCu control panel",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-pecl-igbinary",
-                                             description="Replacement for the standard PHP serializer",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-pecl-igbinary-debuginfo",
-                                             description="Debug information for package lsphp70-pecl-igbinary",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-pecl-igbinary-devel",
-                                             description="Igbinary developer files (header)",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-pecl-memcache",
-                                             description="Extension to work with the Memcached caching daemon",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-pecl-memcached",
-                                             description="Extension to work with the Memcached caching daemon",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-pecl-msgpack",
-                                             description="API for communicating with MessagePack serialization",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-pecl-redis",
-                                             description="Extension for communicating with the Redis key-value store",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php70,
-                                             extensionName="lsphp70-zip",
-                                             description="ZIP archive management extension for PHP",
-                                             status=0)
-
-            phpExtension.save()
+                phpExtension.save()
 
             ### ################ #################
 
@@ -1409,339 +1111,48 @@ def installExtensions(request):
 
             ### ################ #################
 
-            php71 = PHP.objects.get(phpVers="php71")
+            phpVersion = PHP.objects.get(phpVers="php71")
 
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-bcmath",
-                                             description="A module for PHP applications for using the bcmath library",
-                                             status=1)
+            phpPath = ''
 
-            phpExtension.save()
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php71.xml')
+            else:
+                phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp71.xml')
 
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-common",
-                                             description="Common files for PHP",
-                                             status=1)
+            php = ElementTree.parse(phpPath)
 
-            phpExtension.save()
+            phpExtensions = php.findall('extension')
 
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-dba",
-                                             description="A database abstraction layer module for PHP applications",
-                                             status=1)
+            for extension in phpExtensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
 
-            phpExtension.save()
+                phpExtension = installedPackages(phpVers=phpVersion,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
 
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-enchant",
-                                             description="Human Language and Character Encoding Support",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-gd",
-                                             description="A module for PHP applications for using the gd graphics library",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-gmp",
-                                             description="A module for PHP applications for using the GNU MP library",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-imap",
-                                             description="A module for PHP applications that use IMAP",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-intl",
-                                             description="Internationalization extension for PHP application",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-json",
-                                             description="LSPHP71 Json PHP Extension",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-ldap",
-                                             description="A module for PHP applications that use LDAP",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-mbstring",
-                                             description="A module for PHP applications which need multi-byte string handling",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-mcrypt",
-                                             description="Standard PHP module provides mcrypt library support",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-mysqlnd",
-                                             description="A module for PHP applications that use MySQL databases",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-odbc",
-                                             description="A module for PHP applications that use ODBC databases",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-pdo",
-                                             description="A database access abstraction module for PHP applications",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-pear",
-                                             description="PHP Extension and Application Repository framework",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-pgsql",
-                                             description="A PostgreSQL database module for PHP",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-process",
-                                             description="Modules for PHP script using system process interfaces",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-pspell",
-                                             description="A module for PHP applications for using pspell interfaces",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-recode",
-                                             description="A module for PHP applications for using the recode library",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-snmp",
-                                             description="A module for PHP applications that query SNMP-managed devices",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-soap",
-                                             description="A module for PHP applications that use the SOAP protocol",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-tidy",
-                                             description="Standard PHP module provides tidy library support",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-xml",
-                                             description="A module for PHP applications which use XML",
-                                             status=1)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-xmlrpc",
-                                             description="A module for PHP applications which use the XML-RPC protocol",
-                                             status=1)
-
-            phpExtension.save()
-
-            ## non-active packages
-
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-debuginfo",
-                                             description="Debug information for package lsphp71",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-dbg",
-                                             description="The interactive PHP debugger",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-mysql56-debuginfo",
-                                             description="Debug information for package lsphp71-mysql56",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-lsphp53-devel",
-                                             description="Files needed for building PHP extensions",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-mysql56",
-                                             description="PHP scripting language for creating dynamic web sites",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-opcache",
-                                             description="The Zend OPcache",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-sqlite",
-                                             description="Extension for the SQLite V2 Embeddable SQL Database Engine",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-xcache",
-                                             description="PHP accelerator, optimizer, encoder and dynamic content cacher",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-xcache-admin",
-                                             description="XCache Administration",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-pecl-apcu",
-                                             description="APC User Cache",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-pecl-apcu-devel",
-                                             description="APCu developer files (header)",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-pecl-apcu-panel",
-                                             description="APCu control panel",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-pecl-igbinary",
-                                             description="Replacement for the standard PHP serializer",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-pecl-igbinary-debuginfo",
-                                             description="Debug information for package lsphp71-pecl-igbinary",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-pecl-igbinary-devel",
-                                             description="Igbinary developer files (header)",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-pecl-memcache",
-                                             description="Extension to work with the Memcached caching daemon",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-pecl-memcached",
-                                             description="Extension to work with the Memcached caching daemon",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-pecl-msgpack",
-                                             description="API for communicating with MessagePack serialization",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-pecl-redis",
-                                             description="Extension for communicating with the Redis key-value store",
-                                             status=0)
-
-            phpExtension.save()
-
-            phpExtension = installedPackages(phpVers=php71,
-                                             extensionName="lsphp71-zip",
-                                             description="ZIP archive management extension for PHP",
-                                             status=0)
-
-            phpExtension.save()
+                phpExtension.save()
 
         if PHP.objects.count() == 6:
 
             newPHP72 = PHP(phpVers="php72")
             newPHP72.save()
 
-            extensionDetailsPath = os.path.join('/usr','local','CyberCP','managePHP','php72.xml')
+            php72Path = ''
 
-            php72 = ElementTree.parse(extensionDetailsPath)
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                php72Path = os.path.join('/usr','local','CyberCP','managePHP','php72.xml')
+            else:
+                php72Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp72.xml')
+
+            php72 = ElementTree.parse(php72Path)
 
             php72Extensions = php72.findall('extension')
 
             for extension in php72Extensions:
-
                 extensionName = extension.find('extensionName').text
                 extensionDescription = extension.find('extensionDescription').text
                 status = int(extension.find('status').text)

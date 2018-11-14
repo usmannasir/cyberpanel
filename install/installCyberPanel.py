@@ -949,6 +949,7 @@ class InstallCyberPanel:
 
             #if self.distro == ubuntu:
             #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+
             writeDataToFile.close()
 
             #if self.distro == ubuntu:
@@ -1127,6 +1128,7 @@ class InstallCyberPanel:
                     writeDataToFile.writelines(dataWritten)
                 else:
                     writeDataToFile.writelines(items)
+
             #if self.distro == ubuntu:
             #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 

@@ -1368,6 +1368,7 @@ class preFlightsChecks:
                     writeDataToFile.writelines(dataWritten)
                 else:
                     writeDataToFile.writelines(items)
+
             #if self.distro == ubuntu:
             #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
@@ -1405,6 +1406,7 @@ class preFlightsChecks:
                     writeDataToFile.writelines(dataWritten)
                 else:
                     writeDataToFile.writelines(items)
+
             #if self.distro == ubuntu:
             #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
@@ -1903,7 +1905,7 @@ class preFlightsChecks:
 
             while(1):
 
-                command = 'systemctl start postfix.service'
+                command = 'systemctl start  postfix.service'
 
                 cmd = shlex.split(command)
 
@@ -2379,31 +2381,7 @@ class preFlightsChecks:
 
             os.chdir(self.cwd)
 
-            if self.distro == ubuntu:
-                fd = open('/etc/systemd/system/lscpd.service','w')
-                fd.write('[Unit]\n')
-                fd.write('Description = LSCPD Daemon\n')
-                fd.write('After=network.target remote-fs.target nss-lookup.target\n')
-                fd.write('\n')
-                fd.write('[Service]\n')
-                fd.write('Type=forking\n')
-                fd.write('ExecStart = /usr/local/lscp/bin/lscpdctrl start\n')
-                fd.write('ExecStop = /usr/local/lscp/bin/lscpdctrl stop\n')
-                fd.write('#ExecReload = /usr/local/lscp/bin/lscpdctrl restart\n')
-                fd.write('\n')
-                fd.write('KillMode=none\n')
-                fd.write('PrivateTmp=false\n')
-                fd.write('\n')
-                fd.write('# Do not want to be limited in any way\n')
-                fd.write('CPUAccounting=false\n')
-                fd.write('TasksAccounting=false\n')
-                fd.write('MemoryAccounting=false\n')
-                fd.write('\n')
-                fd.write('[Install]\n')
-                fd.write('WantedBy=default.target\n')
-                fd.close()
-            else:
-                shutil.copy("lscpd/lscpd.service","/etc/systemd/system/lscpd.service")
+            shutil.copy("lscpd/lscpd.service","/etc/systemd/system/lscpd.service")
             shutil.copy("lscpd/lscpdctrl","/usr/local/lscp/bin/lscpdctrl")
 
             ##
@@ -2431,6 +2409,7 @@ class preFlightsChecks:
             count = 1
 
             while(1):
+
                 command = 'systemctl enable lscpd.service'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
@@ -2907,6 +2886,8 @@ class preFlightsChecks:
                 command = 'mkdir -p /etc/opendkim/keys/'
                 subprocess.call(shlex.split(command))
 
+                command = "sed -i 's/Socket                 local:/var/run/opendkim/opendkim.sock/Socket  inet:8891@localhost/g' /etc/opendkim.conf"
+                subprocess.call(shlex.split(command))
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [installOpenDKIM]")
             return 0
@@ -2934,8 +2915,6 @@ InternalHosts	refile:/etc/opendkim/TrustedHosts
 
             writeToFile = open(openDKIMConfigurePath,'a')
             writeToFile.write(configData)
-            if self.distro == ubuntu:
-                writeToFile.write('Socket  inet:8891@127.0.0.1\n')
             writeToFile.close()
 
 
@@ -2953,17 +2932,6 @@ milter_default_action = accept
             writeToFile.write(configData)
             writeToFile.close()
 
-            if self.distro == ubuntu:
-                writeToFile = open('/etc/default/opendkim','r')
-                lines = writeToFile.readlines()
-                writeToFile.close()
-                writeToFile = open('/etc/default/opendkim','w')
-                for line in lines:
-                    if line[:6] == "SOCKET":
-                        line = '#' + line
-                    writeToFile.write(line)
-                writeToFile.write('SOCKET="inet:8891@127.0.0.1"\n')
-                writeToFile.close()
 
             #### Restarting Postfix and OpenDKIM
 
@@ -3313,6 +3281,14 @@ milter_default_action = accept
             logging.InstallLog.writeToFile(str(msg) + " [enableDisableEmail]")
             return 0
 
+    @staticmethod
+    def setUpFirstAccount():
+        try:
+            command = 'python /usr/local/CyberCP/plogical/adminPass.py --password 1234567'
+            subprocess.call(shlex.split(command))
+        except:
+            pass
+
 def get_distro():
     distro = -1
     distro_file = ""
@@ -3491,7 +3467,7 @@ def main():
     else:
         preFlightsChecks.stdOut("Pure-FTPD will be installed and enabled.")
         checks.enableDisableFTP('On', distro)
-
+    checks.setUpFirstAccount()
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
     checks.installation_successfull()
 

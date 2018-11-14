@@ -203,7 +203,7 @@ class ServerStatusUtil:
                 return 0
 
             if os.path.exists('/etc/letsencrypt/live/' + virtualHostName):
-                sslUtilities.installSSLForDomain(virtualHostUtilities, website.adminEmail)
+                sslUtilities.installSSLForDomain(virtualHostName, website.master.adminEmail)
 
             vhostPath = vhost.Server_root + "/conf/vhosts"
             FNULL = open(os.devnull, 'w')

@@ -27,6 +27,17 @@ class Upgrade:
             "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
 
     @staticmethod
+    def executioner(command):
+        try:
+            res = subprocess.call(shlex.split(command))
+            if res == 0:
+                return 1
+            else:
+                return 0
+        except:
+            return 0
+
+    @staticmethod
     def downloadLink():
         try:
             url = "https://cyberpanel.net/version.txt"
@@ -42,7 +53,7 @@ class Upgrade:
     @staticmethod
     def setupVirtualEnv():
         try:
-            Upgrade.stdOut('Setting up virtual enviroment for CyberPanel.')
+            Upgrade.stdOut('Setting up virtual environment for CyberPanel.')
             ##
             count = 0
             while (1):
@@ -112,27 +123,21 @@ class Upgrade:
 
                 if res == 1:
                     count = count + 1
-                    Upgrade.stdOut(
-                        "Trying to install project dependant modules, trying again, try number: " + str(count))
+                    Upgrade.stdOut("Trying to install project dependant modules, trying again, try number: " + str(count))
                     if count == 3:
-                        Upgrade.stdOut(
-                            "Failed to install project dependant modules! [setupVirtualEnv]")
+                        Upgrade.stdOut("Failed to install project dependant modules! [setupVirtualEnv]")
+                        os._exit(0)
                         break
                 else:
                     Upgrade.stdOut("Project dependant modules installed successfully!!")
                     break
 
-            try:
-                command = "systemctl stop gunicorn.socket"
-                subprocess.call(shlex.split(command))
-            except:
-                pass
 
-            try:
-                command = "virtualenv --system-site-packages /usr/local/CyberCP"
-                subprocess.call(shlex.split(command))
-            except:
-                pass
+            command = "systemctl stop gunicorn.socket"
+            Upgrade.executioner(command)
+
+            command = "virtualenv --system-site-packages /usr/local/CyberCP"
+            Upgrade.executioner(command)
 
             Upgrade.stdOut('Virtual enviroment for CyberPanel successfully installed.')
 
@@ -143,24 +148,9 @@ class Upgrade:
     @staticmethod
     def upgradeOpenLiteSpeed():
         try:
-            ##
-            count = 0
-            while (1):
-                command = "yum upgrade -y openlitespeed"
-                res = subprocess.call(shlex.split(command))
-
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut(
-                        "Trying to upgrade OpenLiteSpeed, trying again, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut("Failed to upgrade OpenLiteSpeed! [upgradeOpenLiteSpeed]")
-                else:
-                    Upgrade.stdOut("OpenLiteSpeed successfully upgraded!")
-                    break
-
-            ##
-
+            command = "yum upgrade -y openlitespeed"
+            if Upgrade.executioner(command) == 1:
+                Upgrade.stdOut('OpenLiteSpeed Upgraded.')
         except OSError, msg:
             Upgrade.stdOut(str(msg) + " [upgradeOpenLiteSpeed]")
             os._exit(0)
@@ -214,37 +204,43 @@ WantedBy=multi-user.target"""
     def fileManager():
         ## Copy File manager files
 
-        count = 1
-        while (1):
-            command = "rm -rf /usr/local/lsws/Example/html/FileManager"
-            res = subprocess.call(shlex.split(command))
 
-            if res == 1:
-                count = count + 1
-                Upgrade.stdOut(
-                    "Trying to remove old File manager files, try number: " + str(count))
-                if count == 3:
-                    Upgrade.stdOut("Failed to remove old File manager files! [upgrade]")
-                    os._exit(0)
-            else:
-                Upgrade.stdOut("Old File Manager files successfully removed!")
-                break
+        command = "rm -rf /usr/local/lsws/Example/html/FileManager"
+        Upgrade.executioner(command)
 
-        count = 1
-        while (1):
-            command = "mv /usr/local/CyberCP/install/FileManager /usr/local/lsws/Example/html"
-            res = subprocess.call(shlex.split(command))
+        if os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+            count = 1
+            while (1):
+                command = "mv /usr/local/CyberCP/install/FileManager /usr/local/lsws/Example/html"
+                res = subprocess.call(shlex.split(command))
 
-            if res == 1:
-                count = count + 1
-                Upgrade.stdOut(
-                    "Trying to upgrade File manager, try number: " + str(count))
-                if count == 3:
-                    Upgrade.stdOut("Failed to upgrade File manager! [upgrade]")
-                    os._exit(0)
-            else:
-                Upgrade.stdOut("File manager successfully upgraded!")
-                break
+                if res == 1:
+                    count = count + 1
+                    Upgrade.stdOut(
+                        "Trying to upgrade File manager, try number: " + str(count))
+                    if count == 3:
+                        Upgrade.stdOut("Failed to upgrade File manager! [upgrade]")
+                        os._exit(0)
+                else:
+                    Upgrade.stdOut("File manager successfully upgraded!")
+                    break
+
+        else:
+            count = 1
+            while (1):
+                command = "mv /usr/local/CyberCP/install/FileManager /usr/local/lsws"
+                res = subprocess.call(shlex.split(command))
+
+                if res == 1:
+                    count = count + 1
+                    Upgrade.stdOut(
+                        "Trying to upgrade File manager, try number: " + str(count))
+                    if count == 3:
+                        Upgrade.stdOut("Failed to upgrade File manager! [upgrade]")
+                        os._exit(0)
+                else:
+                    Upgrade.stdOut("File manager successfully upgraded!")
+                    break
 
         try:
             command = "chmod -R 777 /usr/local/lsws/Example/html/FileManager"
@@ -255,25 +251,15 @@ WantedBy=multi-user.target"""
     @staticmethod
     def setupCLI():
         try:
-            try:
-                command = "ln -s /usr/local/CyberCP/cli/cyberPanel.py /usr/bin/cyberpanel"
-                subprocess.call(shlex.split(command))
-            except:
-                pass
 
-            try:
-                command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
-                subprocess.call(shlex.split(command))
-            except:
-                pass
+            command = "ln -s /usr/local/CyberCP/cli/cyberPanel.py /usr/bin/cyberpanel"
+            Upgrade.executioner(command)
+
+            command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
+            Upgrade.executioner(command)
+
 
         except OSError, msg:
-            try:
-                command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
-                subprocess.call(shlex.split(command))
-            except:
-                pass
-
             Upgrade.stdOut(str(msg) + " [setupCLI]")
             return 0
 
@@ -458,16 +444,31 @@ WantedBy=multi-user.target"""
     def emailMarketingMigrationsa():
         try:
             os.chdir('/usr/local/CyberCP')
-            try:
-                command = "python manage.py makemigrations emailMarketing"
-                subprocess.call(shlex.split(command))
-            except:
-                pass
-            try:
-                command = "python manage.py migrate emailMarketing"
-                subprocess.call(shlex.split(command))
-            except:
-                pass
+
+            command = "python manage.py makemigrations emailMarketing"
+            Upgrade.executioner(command)
+
+            data = open('/usr/local/CyberCP/emailMarketing/migrations/0001_initial.py', 'r').readline()
+            writeToFile = open('/usr/local/CyberCP/emailMarketing/migrations/0001_initial.py', 'w')
+            skipCheck = 0
+
+            for items in data:
+                if items.find('dependencies') > -1:
+                    skipCheck = 1
+
+                if items.find(']') > -1 and skipCheck == 1:
+                    skipCheck = 0
+                    continue
+
+                if skipCheck == 0:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+
+
+
+            command = "python manage.py migrate emailMarketing"
+            Upgrade.executioner(command)
         except:
             pass
 
@@ -540,6 +541,7 @@ WantedBy=multi-user.target"""
                     break
 
             ## Copy settings file
+
             data = open("/usr/local/settings.py", 'r').readlines()
 
             pluginCheck = 1
@@ -551,6 +553,11 @@ WantedBy=multi-user.target"""
             for items in data:
                 if items.find('emailMarketing') > -1:
                     emailMarketing = 0
+
+            emailPremium = 1
+            for items in data:
+                if items.find('emailPremium') > -1:
+                    emailPremium = 0
 
 
             Upgrade.stdOut('Restoring settings file!')
@@ -565,7 +572,7 @@ WantedBy=multi-user.target"""
                         writeToFile.writelines("    'pluginHolder',\n")
                     if emailMarketing == 1:
                         writeToFile.writelines("    'emailMarketing',\n")
-                    if Version.currentVersion == '1.6':
+                    if emailPremium == 1:
                         writeToFile.writelines("    'emailPremium',\n")
                 else:
                     writeToFile.writelines(items)
@@ -583,7 +590,6 @@ WantedBy=multi-user.target"""
             Upgrade.fileManager()
         except:
             pass
-
 
     @staticmethod
     def installPYDNS():
@@ -736,16 +742,11 @@ WantedBy=multi-user.target"""
 
         Version = version.objects.get(pk=1)
 
-        try:
-            command = "systemctl stop gunicorn.socket"
-            subprocess.call(shlex.split(command))
-        except:
-            pass
-        try:
-            command = "systemctl stop lscpd"
-            subprocess.call(shlex.split(command))
-        except:
-            pass
+        command = "systemctl stop gunicorn.socket"
+        Upgrade.executioner(command)
+
+        command = "systemctl stop lscpd"
+        Upgrade.executioner(command)
 
         ##
 
@@ -775,19 +776,19 @@ WantedBy=multi-user.target"""
 
         ##
 
-
         Upgrade.setupVirtualEnv()
         Upgrade.updateGunicornConf()
 
         ##
-
 
         Upgrade.applyLoginSystemMigrations()
         Upgrade.enableServices()
 
         ## Upgrade OpenLiteSpeed
 
-        Upgrade.upgradeOpenLiteSpeed()
+        if os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+            Upgrade.upgradeOpenLiteSpeed()
+
         Upgrade.setupCLI()
         Upgrade.installLSCPD()
         time.sleep(3)
