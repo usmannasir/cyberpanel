@@ -1006,7 +1006,6 @@ class preFlightsChecks:
                 preFlightsChecks.stdOut("Owner for '/usr/local/CyberCP' successfully changed!")
                 break
 
-
     def install_unzip(self):
         self.stdOut("Install zip")
         try:
@@ -2076,6 +2075,21 @@ class preFlightsChecks:
                 command = "sed -i 's/auth_mechanisms = plain/#auth_mechanisms = plain/g' /etc/dovecot/conf.d/10-auth.conf"
                 subprocess.call(shlex.split(command))
 
+                ## Ubuntu 18.10 ssl_dh for dovecot 2.3.2.1
+
+                if get_Ubuntu_release() == 18.10:
+                    dovecotConf = '/etc/dovecot/dovecot.conf'
+
+                    data = open(dovecotConf, 'r').readlines()
+                    writeToFile = open(dovecotConf, 'w')
+                    for items in data:
+                        if items.find('ssl_key = <key.pem') > -1:
+                            writeToFile.writelines(items)
+                            writeToFile.writelines('ssl_dh = </usr/share/dovecot/dh.pem\n')
+                        else:
+                            writeToFile.writelines(items)
+                    writeToFile.close()
+
                 command = "systemctl restart dovecot"
                 subprocess.call(shlex.split(command))
 
@@ -2880,14 +2894,18 @@ class preFlightsChecks:
                     break
 
             if self.distro == ubuntu:
-                command = 'apt install opendkim-tools'
-                subprocess.call(shlex.split(command))
+                try:
+                    command = 'apt install opendkim-tools'
+                    subprocess.call(shlex.split(command))
+                except:
+                    pass
 
-                command = 'mkdir -p /etc/opendkim/keys/'
-                subprocess.call(shlex.split(command))
+                try:
+                    command = 'mkdir -p /etc/opendkim/keys/'
+                    subprocess.call(shlex.split(command))
+                except:
+                    pass
 
-                command = "sed -i 's/Socket                 local:/var/run/opendkim/opendkim.sock/Socket  inet:8891@localhost/g' /etc/opendkim.conf"
-                subprocess.call(shlex.split(command))
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [installOpenDKIM]")
             return 0
@@ -2931,6 +2949,16 @@ milter_default_action = accept
             writeToFile = open(postfixFilePath,'a')
             writeToFile.write(configData)
             writeToFile.close()
+
+            if self.distro == ubuntu:
+                data = open(openDKIMConfigurePath, 'r').readlines()
+                writeToFile = open(openDKIMConfigurePath, 'w')
+                for items in data:
+                    if items.find('Socket') > -1 and items.find('local:') and items[0] != '#':
+                        writeToFile.writelines('Socket  inet:8891@localhost\n')
+                    else:
+                        writeToFile.writelines(items)
+                writeToFile.close()
 
 
             #### Restarting Postfix and OpenDKIM

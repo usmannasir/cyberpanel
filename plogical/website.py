@@ -987,7 +987,11 @@ class WebsiteManager:
                 json_data = json.dumps(dic)
                 return HttpResponse(json_data)
 
-            cronPath = "/var/spool/cron/" + website.externalApp
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                cronPath = "/var/spool/cron/" + website.externalApp
+            else:
+                cronPath = "/var/spool/cron/crontabs/" + website.externalApp
+
             cmd = 'sudo test -e ' + cronPath + ' && echo Exists'
             output = os.popen(cmd).read()
 
@@ -996,7 +1000,6 @@ class WebsiteManager:
                 final_json = json.dumps(data_ret)
                 return HttpResponse(final_json)
 
-            cronPath = "/var/spool/cron/" + website.externalApp
             crons = []
 
             try:

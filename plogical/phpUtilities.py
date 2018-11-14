@@ -25,21 +25,21 @@ class phpUtilities:
 
             cmd = shlex.split(command)
 
-            with open(phpUtilities.installLogPath, 'w') as f:
-                res = subprocess.call(cmd, stdout=f)
+            try:
+                with open(phpUtilities.installLogPath, 'w') as f:
+                    subprocess.call(cmd, stdout=f)
 
-            if res == 1:
+                writeToFile = open(phpUtilities.installLogPath, 'a')
+                writeToFile.writelines("PHP Extension Installed.\n")
+                writeToFile.close()
+
+                return 1
+            except:
                 writeToFile = open(phpUtilities.installLogPath, 'a')
                 writeToFile.writelines("Can not be installed.\n")
                 writeToFile.close()
                 logging.CyberCPLogFileWriter.writeToFile("[Could not Install]")
                 return 0
-            else:
-                writeToFile = open(phpUtilities.installLogPath, 'a')
-                writeToFile.writelines("PHP Extension Installed.\n")
-                writeToFile.close()
-
-            return 1
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installPHPExtension]")
 
@@ -56,21 +56,22 @@ class phpUtilities:
 
             cmd = shlex.split(command)
 
-            with open(phpUtilities.installLogPath, 'w') as f:
-                res = subprocess.call(cmd, stdout=f)
+            try:
 
-            if res == 1:
+                with open(phpUtilities.installLogPath, 'w') as f:
+                    subprocess.call(cmd, stdout=f)
+
+                writeToFile = open(phpUtilities.installLogPath, 'a')
+                writeToFile.writelines("PHP Extension Removed.\n")
+                writeToFile.close()
+                return 1
+            except:
                 writeToFile = open(phpUtilities.installLogPath, 'a')
                 writeToFile.writelines("Can not un-install Extension.\n")
                 writeToFile.close()
                 logging.CyberCPLogFileWriter.writeToFile("[Could not Install]")
                 return 0
-            else:
-                writeToFile = open(phpUtilities.installLogPath, 'a')
-                writeToFile.writelines("PHP Extension Removed.\n")
-                writeToFile.close()
 
-            return 1
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[unInstallPHPExtension]")
 

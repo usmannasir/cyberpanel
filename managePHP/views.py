@@ -1355,14 +1355,9 @@ def getRequestStatus(request):
                     return HttpResponse(final_json)
                 elif requestStatus.find("PHP Extension Removed") > -1:
 
-                    if subprocess.check_output(checkCommand).find(extensionName) > -1:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 1
-                        ext.save()
-                    else:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 0
-                        ext.save()
+                    ext = installedPackages.objects.get(extensionName=extensionName)
+                    ext.status = 0
+                    ext.save()
 
                     installUtilities.reStartLiteSpeed()
                     final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
