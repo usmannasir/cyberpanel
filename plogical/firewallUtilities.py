@@ -81,11 +81,6 @@ class FirewallUtilities:
 
         command = 'sudo firewall-cmd --reload'
 
-        ruleFamily = 'rule family="ipv6"'
-        sourceAddress = ''
-
-        command = "sudo firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
-
         if not FirewallUtilities.doComamnd(command):
             return 0
 
