@@ -6,7 +6,7 @@ import argparse
 import os
 import shlex
 import socket
-import install
+import install as inst
 
 
 
@@ -41,8 +41,8 @@ class FirewallUtilities:
 
             res = subprocess.call(cmd)
 
-            if install.preFlightsChecks.resFailed(install.get_distro(), res):
-                install.preFlightsChecks.stdOut("Failed to install rule: " + command + " Error #" + str(res), 1)
+            if inst.preFlightsChecks.resFailed(inst.get_distro(), res):
+                inst.preFlightsChecks.stdOut("Failed to install rule: " + command + " Error #" + str(res), 1)
                 return 0
 
         except OSError, msg:
