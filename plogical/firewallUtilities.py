@@ -14,15 +14,12 @@ class FirewallUtilities:
     @staticmethod
     def addRule(proto,port,ipAddress):
         try:
-            if ipAddress != '':
-                ruleFamily = 'rule family="ipv4"'
-                sourceAddress = 'source address="' + ipAddress + '"'
-                ruleProtocol = 'port protocol="' + proto + '"'
-                rulePort = 'port="' + port + '"'
+            ruleFamily = 'rule family="ipv4"'
+            sourceAddress = 'source address="' + ipAddress + '"'
+            ruleProtocol = 'port protocol="' + proto + '"'
+            rulePort = 'port="' + port + '"'
 
-                command = "sudo firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
-            else:
-                command = "sudo firewall-cmd --permanent --zone=public --add-port=" + port + '/' + proto
+            command = "sudo firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
             cmd = shlex.split(command)
 
@@ -46,15 +43,12 @@ class FirewallUtilities:
     @staticmethod
     def deleteRule(proto, port, ipAddress):
         try:
-            if ipAddress != '':
-                ruleFamily = 'rule family="ipv4"'
-                sourceAddress = 'source address="' + ipAddress + '"'
-                ruleProtocol = 'port protocol="' + proto + '"'
-                rulePort = 'port="' + port + '"'
+            ruleFamily = 'rule family="ipv4"'
+            sourceAddress = 'source address="' + ipAddress + '"'
+            ruleProtocol = 'port protocol="' + proto + '"'
+            rulePort = 'port="' + port + '"'
 
-                command = "sudo firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
-            else:
-                command = 'sudo firewall-cmd --permanent --zone-public --remove-port=' + port + '/' + proto
+            command = "sudo firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
             cmd = shlex.split(command)
 
