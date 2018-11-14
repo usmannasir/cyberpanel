@@ -6,9 +6,6 @@ import argparse
 import os
 import shlex
 import socket
-import install as inst
-
-
 
 class FirewallUtilities:
 
@@ -40,6 +37,8 @@ class FirewallUtilities:
             cmd = shlex.split(command)
 
             res = subprocess.call(cmd)
+
+            import install as inst
 
             if inst.preFlightsChecks.resFailed(inst.get_distro(), res):
                 inst.preFlightsChecks.stdOut("Failed to install rule: " + command + " Error #" + str(res), 1)
