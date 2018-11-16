@@ -1,33 +1,35 @@
-import sys
 import subprocess
-import shutil
 import CyberCPLogFileWriter as logging
-import argparse
-import os
 import shlex
-import socket
+from processUtilities import ProcessUtilities
 
 
 
 class FirewallUtilities:
 
     @staticmethod
+    def resFailed(res):
+        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu and res != 0:
+            return True
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos and res == 1:
+            return True
+        return False
+
+    @staticmethod
     def doCommand(command):
-        import install as inst
         try:
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
-            if inst.preFlightsChecks.resFailed(inst.get_distro(), res):
-                inst.preFlightsChecks.stdOut("Failed to apply rule: " + command + " Error #" + str(res), 1)
+            if FirewallUtilities.resFailed(res):
+                logging.CyberCPLogFileWriter.writeToFile("Failed to apply rule: " + command + " Error #" + str(res))
                 return 0
 
         except OSError, msg:
-            inst.preFlightsChecks.stdOut("Failed to apply rule: " + command + " Error: " + str(msg), 1)
+            logging.CyberCPLogFileWriter.writeToFile("Failed to apply rule: " + command + " Error: " + str(msg))
             return 0
         except ValueError, msg:
-            inst.preFlightsChecks.stdOut("Failed to apply rule: " + command + " Error: " + str(msg), 1)
+            logging.CyberCPLogFileWriter.writeToFile("Failed to apply rule: " + command + " Error: " + str(msg), 1)
             return 0
-
         return 1
 
 
@@ -41,7 +43,7 @@ class FirewallUtilities:
 
         command = "sudo firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
-        if not FirewallUtilities.doComamnd(command):
+        if not FirewallUtilities.doCommand(command):
             return 0
 
         ruleFamily = 'rule family="ipv6"'
@@ -49,12 +51,12 @@ class FirewallUtilities:
 
         command = "sudo firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
-        if not FirewallUtilities.doComamnd(command):
+        if not FirewallUtilities.doCommand(command):
             return 0
 
         command = 'sudo firewall-cmd --reload'
 
-        if not FirewallUtilities.doComamnd(command):
+        if not FirewallUtilities.doCommand(command):
             return 0
 
         return 1
@@ -68,7 +70,7 @@ class FirewallUtilities:
 
         command = "sudo firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
-        if not FirewallUtilities.doComamnd(command):
+        if not FirewallUtilities.doCommand(command):
             return 0
 
         ruleFamily = 'rule family="ipv6"'
@@ -76,12 +78,12 @@ class FirewallUtilities:
 
         command = "sudo firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
-        if not FirewallUtilities.doComamnd(command):
+        if not FirewallUtilities.doCommand(command):
             return 0
 
         command = 'sudo firewall-cmd --reload'
 
-        if not FirewallUtilities.doComamnd(command):
+        if not FirewallUtilities.doCommand(command):
             return 0
 
         return 1

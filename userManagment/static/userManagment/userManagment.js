@@ -1268,9 +1268,6 @@ app.controller('modifyACLCtrl', function($scope,$http) {
 
     };
 
-
-
-
 });
 /* Java script code to create acl ends here */
 

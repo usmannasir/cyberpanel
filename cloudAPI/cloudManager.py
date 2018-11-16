@@ -13,6 +13,8 @@ from mailServer.mailserverManager import MailServerManager
 from ftp.ftpManager import FTPManager
 from manageSSL.views import issueSSL
 from plogical.backupManager import BackupManager
+import userManagment.views as um
+from packages.packagesManager import PackagesManager
 
 class CloudManager:
 
@@ -723,6 +725,323 @@ class CloudManager:
             if hashPassword.check_password(admin.password, adminPass):
                 bm = BackupManager()
                 return bm.deleteBackup(admin.pk, self.data)
+            else:
+                return self.ajaxPre(0, 'Invalid login information.')
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchACLs(self):
+        try:
+            adminUser = self.data['userName']
+            adminPass = self.data['serverPassword']
+
+            admin = Administrator.objects.get(userName=adminUser)
+
+            if hashPassword.check_password(admin.password, adminPass):
+
+                userID = admin.pk
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    aclNames = ACLManager.unFileteredACLs()
+                elif currentACL['changeUserACL'] == 1:
+                    aclNames = ACLManager.unFileteredACLs()
+                elif currentACL['createNewUser'] == 1:
+                    aclNames = ['user']
+                else:
+                    return ACLManager.loadError()
+
+                json_data = "["
+                checker = 0
+
+                for items in aclNames:
+                    dic = {'acl': items}
+
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
+
+                json_data = json_data + ']'
+                final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
+                return HttpResponse(final_json)
+            else:
+                return self.ajaxPre(0, 'Invalid login information.')
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def submitUserCreation(self, request):
+        try:
+            adminUser = self.data['serverUserName']
+            adminPass = self.data['serverPassword']
+
+            admin = Administrator.objects.get(userName=adminUser)
+            request.session['userID'] = admin.pk
+
+            if hashPassword.check_password(admin.password, adminPass):
+                return um.submitUserCreation(request)
+            else:
+                return self.ajaxPre(0, 'Invalid login information.')
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchUsers(self):
+        try:
+            adminUser = self.data['serverUserName']
+            adminPass = self.data['serverPassword']
+
+            admin = Administrator.objects.get(userName=adminUser)
+
+            if hashPassword.check_password(admin.password, adminPass):
+
+                userID = admin.pk
+                allUsers = ACLManager.loadUserObjects(userID)
+
+                json_data = "["
+                checker = 0
+
+                for user in allUsers:
+                    dic = {
+                        "id": user.id,
+                        "userName": user.userName,
+                        "firstName": user.firstName,
+                        "lastName": user.lastName,
+                        "email": user.email,
+                        "acl": user.acl.name,
+                        "websitesLimit": user.initWebsitesLimit
+                    }
+
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
+
+                json_data = json_data + ']'
+                final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
+                return HttpResponse(final_json)
+            else:
+                return self.ajaxPre(0, 'Invalid login information.')
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def submitUserDeletion(self, request):
+        try:
+            adminUser = self.data['serverUserName']
+            adminPass = self.data['serverPassword']
+
+            admin = Administrator.objects.get(userName=adminUser)
+            request.session['userID'] = admin.pk
+
+            if hashPassword.check_password(admin.password, adminPass):
+                return um.submitUserDeletion(request)
+            else:
+                return self.ajaxPre(0, 'Invalid login information.')
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def saveModificationsUser(self, request):
+        try:
+            adminUser = self.data['serverUserName']
+            adminPass = self.data['serverPassword']
+
+            admin = Administrator.objects.get(userName=adminUser)
+            request.session['userID'] = admin.pk
+
+            if hashPassword.check_password(admin.password, adminPass):
+                return um.saveModifications(request)
+            else:
+                return self.ajaxPre(0, 'Invalid login information.')
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def userWithResellerPriv(self):
+        try:
+            adminUser = self.data['serverUserName']
+            adminPass = self.data['serverPassword']
+
+            admin = Administrator.objects.get(userName=adminUser)
+
+            if hashPassword.check_password(admin.password, adminPass):
+
+                userID = admin.pk
+                allUsers = ACLManager.userWithResellerPriv(userID)
+
+                json_data = "["
+                checker = 0
+
+                for user in allUsers:
+                    dic = {
+                        "userName": user,
+                    }
+
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
+
+                json_data = json_data + ']'
+                final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
+                return HttpResponse(final_json)
+            else:
+                return self.ajaxPre(0, 'Invalid login information.')
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def saveResellerChanges(self, request):
+        try:
+            adminUser = self.data['serverUserName']
+            adminPass = self.data['serverPassword']
+
+            admin = Administrator.objects.get(userName=adminUser)
+            request.session['userID'] = admin.pk
+
+            if hashPassword.check_password(admin.password, adminPass):
+                return um.saveResellerChanges(request)
+            else:
+                return self.ajaxPre(0, 'Invalid login information.')
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def changeACLFunc(self, request):
+        try:
+            adminUser = self.data['serverUserName']
+            adminPass = self.data['serverPassword']
+
+            admin = Administrator.objects.get(userName=adminUser)
+            request.session['userID'] = admin.pk
+
+            if hashPassword.check_password(admin.password, adminPass):
+                return um.changeACLFunc(request)
+            else:
+                return self.ajaxPre(0, 'Invalid login information.')
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def createACLFunc(self, request):
+        try:
+            adminUser = self.data['serverUserName']
+            adminPass = self.data['serverPassword']
+
+            admin = Administrator.objects.get(userName=adminUser)
+            request.session['userID'] = admin.pk
+
+            if hashPassword.check_password(admin.password, adminPass):
+                return um.createACLFunc(request)
+            else:
+                return self.ajaxPre(0, 'Invalid login information.')
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def findAllACLs(self, request):
+        try:
+            adminUser = self.data['serverUserName']
+            adminPass = self.data['serverPassword']
+
+            admin = Administrator.objects.get(userName=adminUser)
+
+            if hashPassword.check_password(admin.password, adminPass):
+
+                userID = admin.pk
+                currentACL = ACLManager.loadedACL(userID)
+
+                if currentACL['admin'] == 1:
+                    aclNames = ACLManager.findAllACLs()
+                else:
+                    return ACLManager.loadErrorJson()
+
+                json_data = "["
+                checker = 0
+
+                for items in aclNames:
+                    dic = {'acl': items}
+
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
+
+                json_data = json_data + ']'
+                final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
+                return HttpResponse(final_json)
+            else:
+                return self.ajaxPre(0, 'Invalid login information.')
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def deleteACLFunc(self, request):
+        try:
+            adminUser = self.data['serverUserName']
+            adminPass = self.data['serverPassword']
+
+            admin = Administrator.objects.get(userName=adminUser)
+            request.session['userID'] = admin.pk
+
+            if hashPassword.check_password(admin.password, adminPass):
+                return um.deleteACLFunc(request)
+            else:
+                return self.ajaxPre(0, 'Invalid login information.')
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchACLDetails(self, request):
+        try:
+            adminUser = self.data['serverUserName']
+            adminPass = self.data['serverPassword']
+
+            admin = Administrator.objects.get(userName=adminUser)
+            request.session['userID'] = admin.pk
+
+            if hashPassword.check_password(admin.password, adminPass):
+                return um.fetchACLDetails(request)
+            else:
+                return self.ajaxPre(0, 'Invalid login information.')
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def submitACLModifications(self, request):
+        try:
+            adminUser = self.data['serverUserName']
+            adminPass = self.data['serverPassword']
+
+            admin = Administrator.objects.get(userName=adminUser)
+            request.session['userID'] = admin.pk
+
+            if hashPassword.check_password(admin.password, adminPass):
+                return um.submitACLModifications(request)
+            else:
+                return self.ajaxPre(0, 'Invalid login information.')
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def submitPackage(self, request):
+        try:
+            adminUser = self.data['serverUserName']
+            adminPass = self.data['serverPassword']
+
+            admin = Administrator.objects.get(userName=adminUser)
+            request.session['userID'] = admin.pk
+
+            if hashPassword.check_password(admin.password, adminPass):
+                pm = PackagesManager(request)
+                return pm.submitPackage()
             else:
                 return self.ajaxPre(0, 'Invalid login information.')
 

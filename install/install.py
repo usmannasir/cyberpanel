@@ -16,16 +16,16 @@ import stat
 
 # There can not be peace without first a great suffering.
 
-#distros
+# distros
 
-centos=0
-ubuntu=1
+centos = 0
+ubuntu = 1
+
 
 class preFlightsChecks:
-
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
 
-    def __init__(self,rootPath,ip,path,cwd,cyberPanelPath, distro):
+    def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro):
         self.ipAddr = ip
         self.path = path
         self.cwd = cwd
@@ -34,7 +34,7 @@ class preFlightsChecks:
         self.distro = distro
 
     @staticmethod
-    def stdOut(message, log = 0, do_exit = 0, code = os.EX_OK):
+    def stdOut(message, log=0, do_exit=0, code=os.EX_OK):
         print("\n\n")
         print ("[" + time.strftime(
             "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
@@ -47,13 +47,11 @@ class preFlightsChecks:
         if do_exit:
             sys.exit(code)
 
-
     @staticmethod
     def pureFTPDServiceName(distro):
         if distro == ubuntu:
             return 'pure-ftpd'
         return 'pure-ftpd'
-
 
     @staticmethod
     def resFailed(distro, res):
@@ -62,10 +60,9 @@ class preFlightsChecks:
         elif distro == centos and res == 1:
             return True
         return False
-    
 
     @staticmethod
-    def call(command, distro, bracket, message, log = 0, do_exit = 0, code = os.EX_OK):
+    def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK):
         preFlightsChecks.stdOut(message + " " + bracket, log)
         count = 0
         while True:
@@ -87,7 +84,6 @@ class preFlightsChecks:
                 break
         return True
 
-
     def checkIfSeLinuxDisabled(self):
         try:
             command = "sestatus"
@@ -98,11 +94,12 @@ class preFlightsChecks:
                 preFlightsChecks.stdOut("SELinux Check OK.")
                 return 1
             else:
-                logging.InstallLog.writeToFile("SELinux is enabled, please disable SELinux and restart the installation!")
+                logging.InstallLog.writeToFile(
+                    "SELinux is enabled, please disable SELinux and restart the installation!")
                 preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                 os._exit(0)
 
-        except BaseException,msg:
+        except BaseException, msg:
             logging.InstallLog.writeToFile(str(msg) + "[checkIfSeLinuxDisabled]")
             logging.InstallLog.writeToFile("SELinux Check OK. [checkIfSeLinuxDisabled]")
             preFlightsChecks.stdOut("SELinux Check OK.")
@@ -129,7 +126,8 @@ class preFlightsChecks:
                         count = count + 1
                         preFlightsChecks.stdOut("SUDO install failed, trying again, try number: " + str(count))
                         if count == 3:
-                            logging.InstallLog.writeToFile("We are not able to install SUDO, exiting the installer. [setup_account_cyberpanel]")
+                            logging.InstallLog.writeToFile(
+                                "We are not able to install SUDO, exiting the installer. [setup_account_cyberpanel]")
                             preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                             os._exit(0)
                     else:
@@ -189,44 +187,46 @@ class preFlightsChecks:
                         preFlightsChecks.stdOut("CyberPanel user added!")
                         break
 
-                ##
+            ##
 
-                count = 0
+            count = 0
 
-                while (1):
+            while (1):
 
-                    command = "usermod -aG wheel cyberpanel"
-                    cmd = shlex.split(command)
-                    res = subprocess.call(cmd)
+                command = "usermod -aG wheel cyberpanel"
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
 
-                    if preFlightsChecks.resFailed(self.distro, res):
-                        count = count + 1
-                        preFlightsChecks.stdOut("We are trying to add CyberPanel user to SUDO group, trying again, try number: " + str(count) + "\n")
-                        if count == 3:
-                            logging.InstallLog.writeToFile("Not able to add user CyberPanel to SUDO group, exiting the installer. [setup_account_cyberpanel]")
-                            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                            os._exit(0)
-                    else:
-                        logging.InstallLog.writeToFile("CyberPanel user was successfully added to SUDO group!")
-                        preFlightsChecks.stdOut("CyberPanel user was successfully added to SUDO group!")
-                        break
+                if preFlightsChecks.resFailed(self.distro, res):
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "We are trying to add CyberPanel user to SUDO group, trying again, try number: " + str(
+                            count) + "\n")
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Not able to add user CyberPanel to SUDO group, exiting the installer. [setup_account_cyberpanel]")
+                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                        os._exit(0)
+                else:
+                    logging.InstallLog.writeToFile("CyberPanel user was successfully added to SUDO group!")
+                    preFlightsChecks.stdOut("CyberPanel user was successfully added to SUDO group!")
+                    break
 
+            ###############################
 
-                ###############################
+            path = "/etc/sudoers"
 
-                path = "/etc/sudoers"
+            data = open(path, 'r').readlines()
 
-                data = open(path, 'r').readlines()
+            writeToFile = open(path, 'w')
 
-                writeToFile = open(path, 'w')
+            for items in data:
+                if items.find("wheel	ALL=(ALL)	NOPASSWD: ALL") > -1:
+                    writeToFile.writelines("%wheel	ALL=(ALL)	NOPASSWD: ALL")
+                else:
+                    writeToFile.writelines(items)
 
-                for items in data:
-                    if items.find("wheel	ALL=(ALL)	NOPASSWD: ALL") > -1:
-                        writeToFile.writelines("%wheel	ALL=(ALL)	NOPASSWD: ALL")
-                    else:
-                        writeToFile.writelines(items)
-
-                writeToFile.close()
+            writeToFile.close()
 
             ###############################
 
@@ -242,15 +242,18 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("We are trying to create Let's Encrypt directory to store SSLs, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "We are trying to create Let's Encrypt directory to store SSLs, trying again, try number: " + str(
+                            count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Failed to create Let's Encrypt directory to store SSLs. Installer can continue without this.. [setup_account_cyberpanel]")
+                        logging.InstallLog.writeToFile(
+                            "Failed to create Let's Encrypt directory to store SSLs. Installer can continue without this.. [setup_account_cyberpanel]")
                 else:
                     logging.InstallLog.writeToFile("Successfully created Let's Encrypt directory!")
                     preFlightsChecks.stdOut("Successfully created Let's Encrypt directory!")
                     break
 
-            ##
+                    ##
 
         except:
             logging.InstallLog.writeToFile("[116] setup_account_cyberpanel")
@@ -270,7 +273,8 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("YUM UPDATE FAILED, trying again, try number: " + str(count) + "\n")
                     if count == 3:
-                        logging.InstallLog.writeToFile("YUM update failed to run, we are being optimistic that installer will still be able to complete installation. [yum_update]")
+                        logging.InstallLog.writeToFile(
+                            "YUM update failed to run, we are being optimistic that installer will still be able to complete installation. [yum_update]")
                         break
                 else:
                     logging.InstallLog.writeToFile("YUM UPDATE ran successfully.")
@@ -364,9 +368,11 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to add EPEL repository, trying again, try number: " + str(count) + "\n")
+                    preFlightsChecks.stdOut(
+                        "Unable to add EPEL repository, trying again, try number: " + str(count) + "\n")
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to add EPEL repository, exiting installer! [enableEPELRepo]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to add EPEL repository, exiting installer! [enableEPELRepo]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                         os._exit(0)
                 else:
@@ -374,12 +380,12 @@ class preFlightsChecks:
                     preFlightsChecks.stdOut("EPEL Repo added!")
                     break
 
-        except OSError,msg:
+        except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [enableEPELRepo]")
             preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
             os._exit(0)
             return 0
-        except ValueError,msg:
+        except ValueError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [enableEPELRepo]")
             preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
             os._exit(0)
@@ -421,9 +427,11 @@ class preFlightsChecks:
 
             if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
-                preFlightsChecks.stdOut("We are trying to install python development tools, trying again, try number: " + str(count))
+                preFlightsChecks.stdOut(
+                    "We are trying to install python development tools, trying again, try number: " + str(count))
                 if count == 3:
-                    logging.InstallLog.writeToFile("Unable to install python development tools, exiting installer! [install_python_dev]")
+                    logging.InstallLog.writeToFile(
+                        "Unable to install python development tools, exiting installer! [install_python_dev]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                     os._exit(0)
             else:
@@ -487,13 +495,12 @@ class preFlightsChecks:
             command = "pip uninstall --yes requests"
             res = subprocess.call(shlex.split(command))
 
-
             ## Install specific versions
 
             count = 0
             while (1):
 
-                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/urllib3-1.22.tar.gz"
+                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/urllib3-1.22.tar.gz"
 
                 res = subprocess.call(shlex.split(command))
 
@@ -514,7 +521,7 @@ class preFlightsChecks:
             count = 0
             while (1):
 
-                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/requests-2.18.4.tar.gz"
+                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/requests-2.18.4.tar.gz"
 
                 res = subprocess.call(shlex.split(command))
 
@@ -537,7 +544,7 @@ class preFlightsChecks:
             count = 0
             while (1):
 
-                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/urllib3-1.22.tar.gz"
+                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/urllib3-1.22.tar.gz"
 
                 res = subprocess.call(shlex.split(command))
 
@@ -558,7 +565,7 @@ class preFlightsChecks:
             count = 0
             while (1):
 
-                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/requests-2.18.4.tar.gz"
+                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/requests-2.18.4.tar.gz"
 
                 res = subprocess.call(shlex.split(command))
 
@@ -586,7 +593,7 @@ class preFlightsChecks:
             count = 0
 
             while (1):
-                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/pexpect-4.4.0.tar.gz"
+                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/pexpect-4.4.0.tar.gz"
 
                 res = subprocess.call(shlex.split(command))
 
@@ -594,7 +601,8 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to install pexpect, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to install pexpect, exiting installer! [install_pexpect]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to install pexpect, exiting installer! [install_pexpect]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                         os._exit(0)
                 else:
@@ -605,7 +613,7 @@ class preFlightsChecks:
         except:
             count = 0
             while (1):
-                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/pexpect-4.4.0.tar.gz"
+                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/pexpect-4.4.0.tar.gz"
 
                 res = subprocess.call(shlex.split(command))
 
@@ -613,7 +621,8 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to install pexpect, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to install pexpect, exiting installer! [install_pexpect]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to install pexpect, exiting installer! [install_pexpect]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                         os._exit(0)
                 else:
@@ -653,7 +662,8 @@ class preFlightsChecks:
                 count = count + 1
                 preFlightsChecks.stdOut("Unable to install MySQL-python, trying again, try number: " + str(count))
                 if count == 3:
-                    logging.InstallLog.writeToFile("Unable to install MySQL-python, exiting installer! [install_python_mysql_library]")
+                    logging.InstallLog.writeToFile(
+                        "Unable to install MySQL-python, exiting installer! [install_python_mysql_library]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                     os._exit(0)
             else:
@@ -707,9 +717,8 @@ class preFlightsChecks:
             socket = "/etc/systemd/system/gunicorn.socket"
             conf = "/etc/tmpfiles.d/gunicorn.conf"
 
-
-            shutil.copy("gun-configs/gunicorn.service",service)
-            shutil.copy("gun-configs/gunicorn.socket",socket)
+            shutil.copy("gun-configs/gunicorn.service", service)
+            shutil.copy("gun-configs/gunicorn.socket", socket)
             shutil.copy("gun-configs/gunicorn.conf", conf)
 
             logging.InstallLog.writeToFile("Gunicorn Configured!")
@@ -718,7 +727,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
                 command = "systemctl enable gunicorn.socket"
                 res = subprocess.call(shlex.split(command))
 
@@ -726,7 +735,8 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to enable Gunicorn at system startup, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Gunicorn will not start after system restart, you can manually enable using systemctl enable gunicorn.socket! [setup_gunicorn]")
+                        logging.InstallLog.writeToFile(
+                            "Gunicorn will not start after system restart, you can manually enable using systemctl enable gunicorn.socket! [setup_gunicorn]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                         break
                 else:
@@ -750,7 +760,7 @@ class preFlightsChecks:
 
             count = 0
             while (1):
-                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/psutil-5.4.3.tar.gz"
+                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/psutil-5.4.3.tar.gz"
                 res = subprocess.call(shlex.split(command))
 
                 if preFlightsChecks.resFailed(self.distro, res):
@@ -768,7 +778,7 @@ class preFlightsChecks:
         except:
             count = 0
             while (1):
-                command = "pip install http://"+preFlightsChecks.cyberPanelMirror+"/psutil-5.4.3.tar.gz"
+                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/psutil-5.4.3.tar.gz"
                 res = subprocess.call(shlex.split(command))
 
                 if preFlightsChecks.resFailed(self.distro, res):
@@ -822,13 +832,13 @@ class preFlightsChecks:
                 preFlightsChecks.stdOut("psmisc successfully installed!")
                 break
 
-    def download_install_CyberPanel(self,mysqlPassword, mysql):
+    def download_install_CyberPanel(self, mysqlPassword, mysql):
         try:
             ## On OpenVZ there is an issue with requests module, which needs to upgrade requests module
 
-            if subprocess.check_output('systemd-detect-virt').find("openvz")>-1:
+            if subprocess.check_output('systemd-detect-virt').find("openvz") > -1:
                 count = 0
-                while(1):
+                while (1):
                     command = "pip install --upgrade requests"
                     res = subprocess.call(shlex.split(command))
 
@@ -836,7 +846,8 @@ class preFlightsChecks:
                         count = count + 1
                         preFlightsChecks.stdOut("Unable to upgrade requests, trying again, try number: " + str(count))
                         if count == 3:
-                            logging.InstallLog.writeToFile("Unable to install upgrade requests, exiting installer! [download_install_CyberPanel]")
+                            logging.InstallLog.writeToFile(
+                                "Unable to install upgrade requests, exiting installer! [download_install_CyberPanel]")
                             preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                             os._exit(0)
                     else:
@@ -853,14 +864,15 @@ class preFlightsChecks:
         count = 0
         while (1):
             command = "wget http://cyberpanel.net/CyberPanel.1.7.4.tar.gz"
-            #command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
+            # command = "wget http://cyberpanel.net/CyberPanelTemp.tar.gz"
             res = subprocess.call(shlex.split(command))
 
             if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 preFlightsChecks.stdOut("Unable to download CyberPanel, trying again, try number: " + str(count))
                 if count == 3:
-                    logging.InstallLog.writeToFile("Unable to download CyberPanel, exiting installer! [download_install_CyberPanel]")
+                    logging.InstallLog.writeToFile(
+                        "Unable to download CyberPanel, exiting installer! [download_install_CyberPanel]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                     os._exit(0)
             else:
@@ -871,9 +883,9 @@ class preFlightsChecks:
         ##
 
         count = 0
-        while(1):
+        while (1):
             command = "tar zxf CyberPanel.1.7.4.tar.gz"
-            #command = "tar zxf CyberPanelTemp.tar.gz"
+            # command = "tar zxf CyberPanelTemp.tar.gz"
 
             res = subprocess.call(shlex.split(command))
 
@@ -881,15 +893,14 @@ class preFlightsChecks:
                 count = count + 1
                 preFlightsChecks.stdOut("Unable to extract CyberPanel, trying again, try number: " + str(count))
                 if count == 3:
-                    logging.InstallLog.writeToFile("Unable to extract CyberPanel. You can try to install on fresh OS again, exiting installer! [download_install_CyberPanel]")
+                    logging.InstallLog.writeToFile(
+                        "Unable to extract CyberPanel. You can try to install on fresh OS again, exiting installer! [download_install_CyberPanel]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                     os._exit(0)
             else:
                 logging.InstallLog.writeToFile("Successfully extracted CyberPanel!")
                 preFlightsChecks.stdOut("Successfully extracted CyberPanel!")
                 break
-
-
 
         ### update password:
 
@@ -903,7 +914,7 @@ class preFlightsChecks:
 
         logging.InstallLog.writeToFile("Updating settings.py!")
 
-        path = self.cyberPanelPath+"/CyberCP/settings.py"
+        path = self.cyberPanelPath + "/CyberCP/settings.py"
 
         data = open(path, "r").readlines()
 
@@ -951,15 +962,17 @@ class preFlightsChecks:
 
         count = 0
 
-        while(1):
+        while (1):
             command = "python manage.py makemigrations"
             res = subprocess.call(shlex.split(command))
 
             if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
-                preFlightsChecks.stdOut("Unable to prepare migrations file, trying again, try number: " + str(count) + "\n")
+                preFlightsChecks.stdOut(
+                    "Unable to prepare migrations file, trying again, try number: " + str(count) + "\n")
                 if count == 3:
-                    logging.InstallLog.writeToFile("Unable to prepare migrations file. You can try to install on fresh OS again, exiting installer! [download_install_CyberPanel]")
+                    logging.InstallLog.writeToFile(
+                        "Unable to prepare migrations file. You can try to install on fresh OS again, exiting installer! [download_install_CyberPanel]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                     os._exit(0)
             else:
@@ -971,16 +984,18 @@ class preFlightsChecks:
 
         count = 0
 
-        while(1):
+        while (1):
             command = "python manage.py migrate"
 
             res = subprocess.call(shlex.split(command))
 
             if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
-                preFlightsChecks.stdOut("Unable to execute the migrations file, trying again, try number: " + str(count))
+                preFlightsChecks.stdOut(
+                    "Unable to execute the migrations file, trying again, try number: " + str(count))
                 if count == 3:
-                    logging.InstallLog.writeToFile("Unable to execute the migrations file, exiting installer! [download_install_CyberPanel]")
+                    logging.InstallLog.writeToFile(
+                        "Unable to execute the migrations file, exiting installer! [download_install_CyberPanel]")
                     preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                     os._exit(0)
             else:
@@ -1001,20 +1016,21 @@ class preFlightsChecks:
             logging.InstallLog.writeToFile("Static content moved!")
             preFlightsChecks.stdOut("Static content moved!")
 
-
         ## fix permissions
 
         count = 0
 
-        while(1):
+        while (1):
             command = "chmod -R 744 /usr/local/CyberCP"
             res = subprocess.call(shlex.split(command))
 
             if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
-                preFlightsChecks.stdOut("Changing permissions for '/usr/local/CyberCP' failed, trying again, try number: " + str(count))
+                preFlightsChecks.stdOut(
+                    "Changing permissions for '/usr/local/CyberCP' failed, trying again, try number: " + str(count))
                 if count == 3:
-                    logging.InstallLog.writeToFile("Unable to change permissions for '/usr/local/CyberCP', we are being optimistic that it is still going to work :) [download_install_CyberPanel]")
+                    logging.InstallLog.writeToFile(
+                        "Unable to change permissions for '/usr/local/CyberCP', we are being optimistic that it is still going to work :) [download_install_CyberPanel]")
                     break
             else:
                 logging.InstallLog.writeToFile("Permissions successfully changed for '/usr/local/CyberCP'")
@@ -1024,15 +1040,17 @@ class preFlightsChecks:
         ## change owner
 
         count = 0
-        while(1):
+        while (1):
             command = "chown -R cyberpanel:cyberpanel /usr/local/CyberCP"
             res = subprocess.call(shlex.split(command))
 
             if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
-                preFlightsChecks.stdOut("Unable to change owner for '/usr/local/CyberCP', trying again, try number: " + str(count))
+                preFlightsChecks.stdOut(
+                    "Unable to change owner for '/usr/local/CyberCP', trying again, try number: " + str(count))
                 if count == 3:
-                    logging.InstallLog.writeToFile("Unable to change owner for '/usr/local/CyberCP', we are being optimistic that it is still going to work :) [download_install_CyberPanel]")
+                    logging.InstallLog.writeToFile(
+                        "Unable to change owner for '/usr/local/CyberCP', we are being optimistic that it is still going to work :) [download_install_CyberPanel]")
                     break
             else:
                 logging.InstallLog.writeToFile("Owner for '/usr/local/CyberCP' successfully changed!")
@@ -1115,7 +1133,7 @@ class preFlightsChecks:
             os.chdir("/usr/local/lscp/cyberpanel/")
             count = 0
 
-            while(1):
+            while (1):
                 command = 'wget https://files.phpmyadmin.net/phpMyAdmin/4.8.2/phpMyAdmin-4.8.2-all-languages.zip'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
@@ -1124,7 +1142,8 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to download PYPMYAdmin, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to download PYPMYAdmin, exiting installer! [download_install_phpmyadmin]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to download PYPMYAdmin, exiting installer! [download_install_phpmyadmin]")
                         preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                         os._exit(0)
                 else:
@@ -1136,7 +1155,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
                 command = 'unzip phpMyAdmin-4.8.2-all-languages.zip'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
@@ -1163,7 +1182,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
                 command = 'mv phpMyAdmin-4.8.2-all-languages phpmyadmin'
 
                 cmd = shlex.split(command)
@@ -1195,10 +1214,10 @@ class preFlightsChecks:
 
             writeToFile = open('phpmyadmin/config.inc.php', 'w')
 
-
             for items in data:
                 if items.find('blowfish_secret') > -1:
-                    writeToFile.writelines("$cfg['blowfish_secret'] = '" + rString + "'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */\n")
+                    writeToFile.writelines(
+                        "$cfg['blowfish_secret'] = '" + rString + "'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */\n")
                 else:
                     writeToFile.writelines(items)
 
@@ -1219,7 +1238,6 @@ class preFlightsChecks:
             return 0
 
         return 1
-
 
     ###################################################### Email setup
 
@@ -1326,7 +1344,7 @@ class preFlightsChecks:
 
         return 1
 
-    def setup_email_Passwords(self,mysqlPassword, mysql):
+    def setup_email_Passwords(self, mysqlPassword, mysql):
         try:
 
             logging.InstallLog.writeToFile("Setting up authentication for Postfix and Dovecot...")
@@ -1346,14 +1364,14 @@ class preFlightsChecks:
                 mysql_virtual_email2email = "email-configs-one/mysql-virtual_email2email.cf"
                 davecotmysql = "email-configs-one/dovecot-sql.conf.ext"
 
-           ### update password:
+                ### update password:
 
             data = open(davecotmysql, "r").readlines()
 
             writeDataToFile = open(davecotmysql, "w")
 
             if mysql == 'Two':
-                dataWritten = "connect = host=127.0.0.1 dbname=cyberpanel user=cyberpanel password="+mysqlPassword+" port=3307\n"
+                dataWritten = "connect = host=127.0.0.1 dbname=cyberpanel user=cyberpanel password=" + mysqlPassword + " port=3307\n"
             else:
                 dataWritten = "connect = host=localhost dbname=cyberpanel user=cyberpanel password=" + mysqlPassword + " port=3306\n"
 
@@ -1363,7 +1381,7 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            #if self.distro == ubuntu:
+            # if self.distro == ubuntu:
             #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
@@ -1382,7 +1400,7 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            #if self.distro == ubuntu:
+            # if self.distro == ubuntu:
             #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
@@ -1401,7 +1419,7 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            #if self.distro == ubuntu:
+            # if self.distro == ubuntu:
             #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
@@ -1420,7 +1438,7 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            #if self.distro == ubuntu:
+            # if self.distro == ubuntu:
             #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
@@ -1439,7 +1457,7 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-            #if self.distro == ubuntu:
+            # if self.distro == ubuntu:
             #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
@@ -1454,7 +1472,6 @@ class preFlightsChecks:
             return 0
 
         return 1
-
 
     def centos_lib_dir_to_ubuntu(self, filename, old, new):
         try:
@@ -1514,11 +1531,11 @@ class preFlightsChecks:
                 os.remove(davecotmysql)
 
 
-           ###############Getting SSL
+                ###############Getting SSL
 
             count = 0
 
-            while(1):
+            while (1):
                 command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/postfix/key.pem -out /etc/postfix/cert.pem'
 
                 cmd = shlex.split(command)
@@ -1527,9 +1544,11 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to generate SSL for Postfix, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to generate SSL for Postfix, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to generate SSL for Postfix, you will not be able to send emails and rest should work fine! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to generate SSL for Postfix, you will not be able to send emails and rest should work fine! [setup_postfix_davecot_config]")
                         return
                 else:
                     logging.InstallLog.writeToFile("SSL for Postfix generated!")
@@ -1539,7 +1558,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/dovecot/key.pem -out /etc/dovecot/cert.pem'
 
@@ -1549,16 +1568,16 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to generate ssl for Dovecot, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to generate ssl for Dovecot, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to generate SSL for Dovecot, you will not be able to send emails and rest should work fine! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to generate SSL for Dovecot, you will not be able to send emails and rest should work fine! [setup_postfix_davecot_config]")
                         return
                 else:
                     logging.InstallLog.writeToFile("SSL generated for Dovecot!")
                     preFlightsChecks.stdOut("SSL generated for Dovecot!")
                     break
-
-
 
             # Cleanup config files for ubuntu
             if self.distro == ubuntu:
@@ -1572,35 +1591,34 @@ class preFlightsChecks:
                     self.centos_lib_dir_to_ubuntu("email-configs-one/main.cf", "/usr/libexec/postfix",
                                                   "/usr/lib/postfix/sbin")
 
-
-
             ########### Copy config files
 
             if mysql == 'Two':
-                shutil.copy("email-configs/mysql-virtual_domains.cf","/etc/postfix/mysql-virtual_domains.cf")
+                shutil.copy("email-configs/mysql-virtual_domains.cf", "/etc/postfix/mysql-virtual_domains.cf")
                 shutil.copy("email-configs/mysql-virtual_forwardings.cf", "/etc/postfix/mysql-virtual_forwardings.cf")
                 shutil.copy("email-configs/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
                 shutil.copy("email-configs/mysql-virtual_email2email.cf", "/etc/postfix/mysql-virtual_email2email.cf")
                 shutil.copy("email-configs/main.cf", main)
-                shutil.copy("email-configs/master.cf",master)
-                shutil.copy("email-configs/dovecot.conf",davecot)
-                shutil.copy("email-configs/dovecot-sql.conf.ext",davecotmysql)
+                shutil.copy("email-configs/master.cf", master)
+                shutil.copy("email-configs/dovecot.conf", davecot)
+                shutil.copy("email-configs/dovecot-sql.conf.ext", davecotmysql)
             else:
                 shutil.copy("email-configs-one/mysql-virtual_domains.cf", "/etc/postfix/mysql-virtual_domains.cf")
-                shutil.copy("email-configs-one/mysql-virtual_forwardings.cf", "/etc/postfix/mysql-virtual_forwardings.cf")
+                shutil.copy("email-configs-one/mysql-virtual_forwardings.cf",
+                            "/etc/postfix/mysql-virtual_forwardings.cf")
                 shutil.copy("email-configs-one/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
-                shutil.copy("email-configs-one/mysql-virtual_email2email.cf", "/etc/postfix/mysql-virtual_email2email.cf")
+                shutil.copy("email-configs-one/mysql-virtual_email2email.cf",
+                            "/etc/postfix/mysql-virtual_email2email.cf")
                 shutil.copy("email-configs-one/main.cf", main)
                 shutil.copy("email-configs-one/master.cf", master)
                 shutil.copy("email-configs-one/dovecot.conf", davecot)
                 shutil.copy("email-configs-one/dovecot-sql.conf.ext", davecotmysql)
 
-
             ######################################## Permissions
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'chmod o= /etc/postfix/mysql-virtual_domains.cf'
 
@@ -1610,9 +1628,12 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_domains.cf, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change permissions for mysql-virtual_domains.cf, trying again, try number: " + str(
+                            count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change permissions for mysql-virtual_domains.cf. [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change permissions for mysql-virtual_domains.cf. [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Permissions changed for mysql-virtual_domains.cf!")
@@ -1623,7 +1644,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'chmod o= /etc/postfix/mysql-virtual_forwardings.cf'
 
@@ -1633,21 +1654,23 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_forwardings.cf, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change permissions for mysql-virtual_forwardings.cf, trying again, try number: " + str(
+                            count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change permissions for mysql-virtual_forwardings.cf! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change permissions for mysql-virtual_forwardings.cf! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Permissions changed for mysql-virtual_forwardings.cf!")
                     preFlightsChecks.stdOut("Permissions changed for mysql-virtual_forwardings.cf!")
                     break
 
-
             ##
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'chmod o= /etc/postfix/mysql-virtual_mailboxes.cf'
                 cmd = shlex.split(command)
@@ -1655,9 +1678,12 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_mailboxes.cf, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change permissions for mysql-virtual_mailboxes.cf, trying again, try number: " + str(
+                            count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change permissions for mysql-virtual_mailboxes.cf! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change permissions for mysql-virtual_mailboxes.cf! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Permissions changed for mysql-virtual_mailboxes.cf!")
@@ -1668,7 +1694,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'chmod o= /etc/postfix/mysql-virtual_email2email.cf'
                 cmd = shlex.split(command)
@@ -1677,9 +1703,12 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change permissions for mysql-virtual_email2email.cf, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change permissions for mysql-virtual_email2email.cf, trying again, try number: " + str(
+                            count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change permissions for mysql-virtual_email2email.cf! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change permissions for mysql-virtual_email2email.cf! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Permissions changed for mysql-virtual_email2email.cf!")
@@ -1690,7 +1719,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'chmod o= ' + main
                 cmd = shlex.split(command)
@@ -1698,9 +1727,12 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change permissions for /etc/postfix/main.cf, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change permissions for /etc/postfix/main.cf, trying again, try number: " + str(
+                            count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change permissions for /etc/postfix/main.cf! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change permissions for /etc/postfix/main.cf! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Permissions changed for /etc/postfix/main.cf!")
@@ -1711,7 +1743,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'chmod o= ' + master
 
@@ -1721,21 +1753,23 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change permissions for /etc/postfix/master.cf, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change permissions for /etc/postfix/master.cf, trying again, try number: " + str(
+                            count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change permissions for /etc/postfix/master.cf! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change permissions for /etc/postfix/master.cf! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Permissions changed for /etc/postfix/master.cf!")
                     preFlightsChecks.stdOut("Permissions changed for /etc/postfix/master.cf!")
                     break
 
-
             #######################################
 
             count = 0
 
-            while(1):
+            while (1):
                 command = 'chgrp postfix /etc/postfix/mysql-virtual_domains.cf'
 
                 cmd = shlex.split(command)
@@ -1744,9 +1778,11 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change group for mysql-virtual_domains.cf, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change group for mysql-virtual_domains.cf, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change group for mysql-virtual_domains.cf! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change group for mysql-virtual_domains.cf! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Group changed for mysql-virtual_domains.cf!")
@@ -1757,16 +1793,19 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
                 command = 'chgrp postfix /etc/postfix/mysql-virtual_forwardings.cf'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change group for mysql-virtual_forwardings.cf, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change group for mysql-virtual_forwardings.cf, trying again, try number: " + str(
+                            count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change group for mysql-virtual_forwardings.cf! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change group for mysql-virtual_forwardings.cf! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Group changed for mysql-virtual_forwardings.cf!")
@@ -1777,16 +1816,19 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
                 command = 'chgrp postfix /etc/postfix/mysql-virtual_mailboxes.cf'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change group for mysql-virtual_mailboxes.cf, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change group for mysql-virtual_mailboxes.cf, trying again, try number: " + str(
+                            count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change group for mysql-virtual_mailboxes.cf! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change group for mysql-virtual_mailboxes.cf! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Group changed for mysql-virtual_mailboxes.cf!")
@@ -1797,7 +1839,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'chgrp postfix /etc/postfix/mysql-virtual_email2email.cf'
                 cmd = shlex.split(command)
@@ -1805,9 +1847,12 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change group for mysql-virtual_email2email.cf, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change group for mysql-virtual_email2email.cf, trying again, try number: " + str(
+                            count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change group for mysql-virtual_email2email.cf! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change group for mysql-virtual_email2email.cf! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Group changed for mysql-virtual_email2email.cf!")
@@ -1817,16 +1862,18 @@ class preFlightsChecks:
             ##
 
             count = 0
-            while(1):
+            while (1):
                 command = 'chgrp postfix ' + main
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change group for /etc/postfix/main.cf, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change group for /etc/postfix/main.cf, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change group for /etc/postfix/main.cf! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change group for /etc/postfix/main.cf! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Group changed for /etc/postfix/main.cf!")
@@ -1837,7 +1884,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'chgrp postfix ' + master
 
@@ -1847,21 +1894,22 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change group for /etc/postfix/master.cf, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change group for /etc/postfix/master.cf, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change group for /etc/postfix/master.cf! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change group for /etc/postfix/master.cf! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Group changed for /etc/postfix/master.cf!")
                     preFlightsChecks.stdOut("Group changed for /etc/postfix/master.cf!")
                     break
 
-
             ######################################## users and groups
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'groupadd -g 5000 vmail'
 
@@ -1873,7 +1921,8 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to add system group vmail, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to add system group vmail! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to add system group vmail! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("System group vmail created successfully!")
@@ -1884,7 +1933,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'useradd -g vmail -u 5000 vmail -d /home/vmail -m'
 
@@ -1896,23 +1945,23 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to add system user vmail, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to add system user vmail! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to add system user vmail! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("System user vmail created successfully!")
                     preFlightsChecks.stdOut("System user vmail created successfully!")
                     break
 
-
             ######################################## Further configurations
 
-            #hostname = socket.gethostname()
+            # hostname = socket.gethostname()
 
             ################################### Restart postix
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'systemctl enable postfix.service'
 
@@ -1922,9 +1971,11 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Trying to add Postfix to system startup, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Trying to add Postfix to system startup, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Failed to enable Postfix to run at system restart you can manually do this using systemctl enable postfix.service! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Failed to enable Postfix to run at system restart you can manually do this using systemctl enable postfix.service! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("postfix.service successfully enabled!")
@@ -1935,7 +1986,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'systemctl start  postfix.service'
 
@@ -1947,7 +1998,8 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to start Postfix, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to start Postfix, you can not send email until you manually start Postfix using systemctl start postfix.service! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to start Postfix, you can not send email until you manually start Postfix using systemctl start postfix.service! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("postfix.service started successfully!")
@@ -1958,7 +2010,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'chgrp dovecot /etc/dovecot/dovecot-sql.conf.ext'
 
@@ -1968,9 +2020,12 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change group for /etc/dovecot/dovecot-sql.conf.ext, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change group for /etc/dovecot/dovecot-sql.conf.ext, trying again, try number: " + str(
+                            count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change group for /etc/dovecot/dovecot-sql.conf.ext! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change group for /etc/dovecot/dovecot-sql.conf.ext! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Group changed for /etc/dovecot/dovecot-sql.conf.ext!")
@@ -1981,7 +2036,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'chmod o= /etc/dovecot/dovecot-sql.conf.ext'
 
@@ -1991,9 +2046,12 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change permissions for /etc/dovecot/dovecot-sql.conf.ext, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change permissions for /etc/dovecot/dovecot-sql.conf.ext, trying again, try number: " + str(
+                            count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change permissions for /etc/dovecot/dovecot-sql.conf.ext! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change permissions for /etc/dovecot/dovecot-sql.conf.ext! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Permissions changed for /etc/dovecot/dovecot-sql.conf.ext!")
@@ -2004,8 +2062,7 @@ class preFlightsChecks:
 
             count = 0
 
-
-            while(1):
+            while (1):
 
                 command = 'systemctl enable dovecot.service'
 
@@ -2017,21 +2074,20 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to enable dovecot.service, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to enable dovecot.service! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to enable dovecot.service! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("dovecot.service successfully enabled!")
                     preFlightsChecks.stdOut("dovecot.service successfully enabled!")
                     break
 
-
             ##
 
 
             count = 0
 
-
-            while(1):
+            while (1):
                 command = 'systemctl start dovecot.service'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
@@ -2040,7 +2096,8 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to start dovecot.service, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to start dovecot.service! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to start dovecot.service! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("dovecot.service successfully started!")
@@ -2051,7 +2108,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'systemctl restart  postfix.service'
 
@@ -2061,21 +2118,22 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to restart postfix.service, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to restart postfix.service, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to restart postfix.service! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to restart postfix.service! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("dovecot.service successfully restarted!")
                     preFlightsChecks.stdOut("postfix.service successfully restarted!")
                     break
 
-
             ## chaging permissions for main.cf
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = "chmod 755 " + main
                 cmd = shlex.split(command)
@@ -2083,9 +2141,12 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change permissions for /etc/postfix/main.cf, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change permissions for /etc/postfix/main.cf, trying again, try number: " + str(
+                            count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change permissions for /etc/postfix/main.cf! [setup_postfix_davecot_config]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change permissions for /etc/postfix/main.cf! [setup_postfix_davecot_config]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Permissions changed for /etc/postfix/main.cf!")
@@ -2126,7 +2187,6 @@ class preFlightsChecks:
                 command = "systemctl restart dovecot"
                 subprocess.call(shlex.split(command))
 
-
             logging.InstallLog.writeToFile("Postfix and Dovecot configured")
 
         except OSError, msg:
@@ -2138,22 +2198,24 @@ class preFlightsChecks:
 
         return 1
 
-
     def downoad_and_install_raindloop(self):
         try:
             ###########
             count = 0
 
-            while(1):
+            while (1):
                 command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Trying to change owner for /usr/local/lscp/cyberpanel/, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Trying to change owner for /usr/local/lscp/cyberpanel/, trying again, try number: " + str(
+                            count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Failed to change owner for /usr/local/lscp/cyberpanel/, but installer can continue! [downoad_and_install_raindloop]")
+                        logging.InstallLog.writeToFile(
+                            "Failed to change owner for /usr/local/lscp/cyberpanel/, but installer can continue! [downoad_and_install_raindloop]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Owner changed for /usr/local/lscp/cyberpanel/!")
@@ -2166,7 +2228,7 @@ class preFlightsChecks:
 
             count = 1
 
-            while(1):
+            while (1):
                 command = 'wget https://www.rainloop.net/repository/webmail/rainloop-community-latest.zip'
 
                 cmd = shlex.split(command)
@@ -2177,7 +2239,8 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to download Rainloop, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to download Rainloop, installation can continue but you will not be able to send emails! [downoad_and_install_raindloop]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to download Rainloop, installation can continue but you will not be able to send emails! [downoad_and_install_raindloop]")
                         return
                 else:
                     logging.InstallLog.writeToFile("Rainloop Downloaded!")
@@ -2188,7 +2251,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
                 command = 'unzip rainloop-community-latest.zip -d /usr/local/lscp/cyberpanel/rainloop'
 
                 cmd = shlex.split(command)
@@ -2199,7 +2262,8 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to unzip rainloop, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("We could not unzip Rainloop, so you will not be able to send emails! [downoad_and_install_raindloop]")
+                        logging.InstallLog.writeToFile(
+                            "We could not unzip Rainloop, so you will not be able to send emails! [downoad_and_install_raindloop]")
                         return
                 else:
                     logging.InstallLog.writeToFile("Rainloop successfully unzipped!")
@@ -2214,16 +2278,18 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
                 command = 'find . -type d -exec chmod 755 {} \;'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Trying to change permissions for Rainloop, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Trying to change permissions for Rainloop, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Failed to change permissions for Rainloop, so you will not be able to send emails!! [downoad_and_install_raindloop]")
+                        logging.InstallLog.writeToFile(
+                            "Failed to change permissions for Rainloop, so you will not be able to send emails!! [downoad_and_install_raindloop]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Rainloop permissions changed!")
@@ -2235,7 +2301,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'find . -type f -exec chmod 644 {} \;'
                 cmd = shlex.split(command)
@@ -2243,9 +2309,11 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Trying to change permissions for Rainloop, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Trying to change permissions for Rainloop, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Failed to change permissions for Rainloop, so you will not be able to send emails!! [downoad_and_install_raindloop]")
+                        logging.InstallLog.writeToFile(
+                            "Failed to change permissions for Rainloop, so you will not be able to send emails!! [downoad_and_install_raindloop]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Rainloop permissions changed!")
@@ -2255,7 +2323,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'chown -R lscpd:lscpd .'
                 cmd = shlex.split(command)
@@ -2263,9 +2331,11 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Trying to change owner for Rainloop, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Trying to change owner for Rainloop, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Failed to change owner for Rainloop, so you will not be able to send emails!! [downoad_and_install_raindloop]")
+                        logging.InstallLog.writeToFile(
+                            "Failed to change owner for Rainloop, so you will not be able to send emails!! [downoad_and_install_raindloop]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Rainloop owner changed!")
@@ -2290,10 +2360,10 @@ class preFlightsChecks:
     def reStartLiteSpeed(self):
         try:
             count = 0
-            while(1):
+            while (1):
                 cmd = []
 
-                cmd.append(self.server_root_path+"bin/lswsctrl")
+                cmd.append(self.server_root_path + "bin/lswsctrl")
                 cmd.append("restart")
 
                 res = subprocess.call(cmd)
@@ -2317,7 +2387,6 @@ class preFlightsChecks:
             return 0
         return 1
 
-
     def removeUfw(self):
         try:
             preFlightsChecks.stdOut("Checking to see if ufw firewall is installed (will be removed)", 1)
@@ -2340,7 +2409,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
                 if self.distro == ubuntu:
                     command = 'apt-get -y install firewalld'
                 else:
@@ -2352,7 +2421,8 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to install FirewallD, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to install FirewallD, funtions related to Firewall will not work! [installFirewalld]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to install FirewallD, funtions related to Firewall will not work! [installFirewalld]")
                         break
                 else:
                     logging.InstallLog.writeToFile("FirewallD successfully installed!")
@@ -2361,7 +2431,7 @@ class preFlightsChecks:
 
             ######
             if self.distro == centos:
-                #Not available in ubuntu
+                # Not available in ubuntu
                 command = 'systemctl restart dbus'
                 cmd = shlex.split(command)
                 subprocess.call(cmd)
@@ -2372,7 +2442,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
                 command = 'systemctl start firewalld'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
@@ -2381,19 +2451,19 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Unable to start FirewallD, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to start FirewallD, you can manually start it later using systemctl start firewalld! [installFirewalld]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to start FirewallD, you can manually start it later using systemctl start firewalld! [installFirewalld]")
                         break
                 else:
                     logging.InstallLog.writeToFile("FirewallD successfully started!")
                     preFlightsChecks.stdOut("FirewallD successfully started!")
                     break
 
-
             ##########
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'systemctl enable firewalld'
                 cmd = shlex.split(command)
@@ -2401,17 +2471,18 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Trying to enable FirewallD at system startup, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Trying to enable FirewallD at system startup, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("FirewallD may not start after restart, you need to manually run systemctl enable firewalld ! [installFirewalld]")
+                        logging.InstallLog.writeToFile(
+                            "FirewallD may not start after restart, you need to manually run systemctl enable firewalld ! [installFirewalld]")
                         break
                 else:
                     logging.InstallLog.writeToFile("FirewallD successfully enabled on system startup!")
                     preFlightsChecks.stdOut("FirewallD successfully enabled on system startup!")
                     break
 
-
-            FirewallUtilities.addRule("tcp","8090")
+            FirewallUtilities.addRule("tcp", "8090")
             FirewallUtilities.addRule("tcp", "80")
             FirewallUtilities.addRule("tcp", "443")
             FirewallUtilities.addRule("tcp", "21")
@@ -2448,26 +2519,30 @@ class preFlightsChecks:
 
             os.chdir(self.cwd)
 
-            shutil.copy("lscpd/lscpd.service","/etc/systemd/system/lscpd.service")
-            shutil.copy("lscpd/lscpdctrl","/usr/local/lscp/bin/lscpdctrl")
+            shutil.copy("lscpd/lscpd.service", "/etc/systemd/system/lscpd.service")
+            shutil.copy("lscpd/lscpdctrl", "/usr/local/lscp/bin/lscpdctrl")
 
             ##
 
             count = 0
 
-            while(1):
+            while (1):
                 command = 'chmod +x /usr/local/lscp/bin/lscpdctrl'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Unable to change permissions for /usr/local/lscp/bin/lscpdctrl, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Unable to change permissions for /usr/local/lscp/bin/lscpdctrl, trying again, try number: " + str(
+                            count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change permissions for /usr/local/lscp/bin/lscpdctrl [setupLSCPDDaemon]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change permissions for /usr/local/lscp/bin/lscpdctrl [setupLSCPDDaemon]")
                         break
                 else:
-                    logging.InstallLog.writeToFile("Successfully changed permissions for /usr/local/lscp/bin/lscpdctrl!")
+                    logging.InstallLog.writeToFile(
+                        "Successfully changed permissions for /usr/local/lscp/bin/lscpdctrl!")
                     preFlightsChecks.stdOut("Successfully changed permissions for /usr/local/lscp/bin/lscpdctrl!")
                     break
 
@@ -2475,7 +2550,7 @@ class preFlightsChecks:
 
             count = 1
 
-            while(1):
+            while (1):
 
                 command = 'systemctl enable lscpd.service'
                 cmd = shlex.split(command)
@@ -2483,9 +2558,11 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Trying to enable LSCPD on system startup, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Trying to enable LSCPD on system startup, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to change permissions for /usr/local/lscp/bin/lscpdctrl, you can do it manually using  systemctl enable lscpd.service [setupLSCPDDaemon]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to change permissions for /usr/local/lscp/bin/lscpdctrl, you can do it manually using  systemctl enable lscpd.service [setupLSCPDDaemon]")
                         break
                 else:
                     logging.InstallLog.writeToFile("LSCPD Successfully enabled at system startup!")
@@ -2507,7 +2584,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
 
                 command = 'systemctl start lscpd'
                 cmd = shlex.split(command)
@@ -2544,7 +2621,7 @@ class preFlightsChecks:
             ## first install crontab
             file = open("installLogs.txt", 'a')
             count = 0
-            while(1):
+            while (1):
                 if self.distro == centos:
                     command = 'yum install cronie -y'
                 else:
@@ -2558,17 +2635,17 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to install cronie, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to install cronie, cron jobs will not work. [setup_cron]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to install cronie, cron jobs will not work. [setup_cron]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Cronie successfully installed!")
                     preFlightsChecks.stdOut("Cronie successfully installed!")
                     break
 
-
             count = 0
 
-            while(1):
+            while (1):
 
                 if self.distro == centos:
                     command = 'systemctl enable crond'
@@ -2580,9 +2657,11 @@ class preFlightsChecks:
 
                 if preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
-                    preFlightsChecks.stdOut("Trying to enable cronie on system startup, trying again, try number: " + str(count))
+                    preFlightsChecks.stdOut(
+                        "Trying to enable cronie on system startup, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("We are not able to enable cron jobs at system startup, you can manually run systemctl enable crond. [setup_cron]")
+                        logging.InstallLog.writeToFile(
+                            "We are not able to enable cron jobs at system startup, you can manually run systemctl enable crond. [setup_cron]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Cronie successfully enabled at system startup!")
@@ -2591,7 +2670,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
                 if self.distro == centos:
                     command = 'systemctl start crond'
                 else:
@@ -2603,7 +2682,8 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to start crond, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("We are not able to start crond, you can manually run systemctl start crond. [setup_cron]")
+                        logging.InstallLog.writeToFile(
+                            "We are not able to start crond, you can manually run systemctl start crond. [setup_cron]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Crond successfully started!")
@@ -2639,7 +2719,7 @@ class preFlightsChecks:
 
             count = 0
 
-            while(1):
+            while (1):
                 if self.distro == centos:
                     command = 'systemctl restart crond.service'
                 else:
@@ -2651,7 +2731,8 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to restart crond, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("We are not able to restart crond, you can manually run systemctl restart crond. [setup_cron]")
+                        logging.InstallLog.writeToFile(
+                            "We are not able to restart crond, you can manually run systemctl restart crond. [setup_cron]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Crond successfully restarted!")
@@ -2722,7 +2803,8 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to install rsync, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to install rsync, some of backup functions will not work. [install_rsync]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to install rsync, some of backup functions will not work. [install_rsync]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Succcessfully installed rsync!")
@@ -2744,7 +2826,7 @@ class preFlightsChecks:
             import requests
             getVersion = requests.get('https://cyberpanel.net/version.txt')
             latest = getVersion.json()
-        except BaseException,msg:
+        except BaseException, msg:
 
             command = "pip uninstall --yes urllib3"
             subprocess.call(shlex.split(command))
@@ -2869,7 +2951,7 @@ class preFlightsChecks:
     def modSecPreReqs(self):
         try:
 
-            pathToRemoveGarbageFile = os.path.join(self.server_root_path,"modules/mod_security.so")
+            pathToRemoveGarbageFile = os.path.join(self.server_root_path, "modules/mod_security.so")
             os.remove(pathToRemoveGarbageFile)
 
         except OSError, msg:
@@ -2939,7 +3021,8 @@ class preFlightsChecks:
                     count = count + 1
                     preFlightsChecks.stdOut("Trying to install opendkim, trying again, try number: " + str(count))
                     if count == 3:
-                        logging.InstallLog.writeToFile("Unable to install opendkim, your mail may not end up in inbox. [installOpenDKIM]")
+                        logging.InstallLog.writeToFile(
+                            "Unable to install opendkim, your mail may not end up in inbox. [installOpenDKIM]")
                         break
                 else:
                     logging.InstallLog.writeToFile("Succcessfully installed opendkim!")
@@ -2984,10 +3067,9 @@ ExternalIgnoreList	refile:/etc/opendkim/TrustedHosts
 InternalHosts	refile:/etc/opendkim/TrustedHosts
 """
 
-            writeToFile = open(openDKIMConfigurePath,'a')
+            writeToFile = open(openDKIMConfigurePath, 'a')
             writeToFile.write(configData)
             writeToFile.close()
-
 
             ## Configure postfix specific settings
 
@@ -2999,7 +3081,7 @@ non_smtpd_milters = $smtpd_milters
 milter_default_action = accept
 """
 
-            writeToFile = open(postfixFilePath,'a')
+            writeToFile = open(postfixFilePath, 'a')
             writeToFile.write(configData)
             writeToFile.close()
 
@@ -3012,7 +3094,6 @@ milter_default_action = accept
                     else:
                         writeToFile.writelines(items)
                 writeToFile.close()
-
 
             #### Restarting Postfix and OpenDKIM
 
@@ -3370,6 +3451,7 @@ milter_default_action = accept
         except:
             pass
 
+
 def get_distro():
     distro = -1
     distro_file = ""
@@ -3396,6 +3478,7 @@ def get_distro():
 
     return distro
 
+
 def get_Ubuntu_release():
     release = -1
     if exists("/etc/lsb-release"):
@@ -3416,8 +3499,8 @@ def get_Ubuntu_release():
 
     return release
 
-def main():
 
+def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('publicip', help='Please enter public IP for your VPS or dedicated server.')
     parser.add_argument('--mysql', help='Specify number of MySQL instances to be used.')
@@ -3499,7 +3582,6 @@ def main():
     checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
     checks.setup_postfix_davecot_config(mysql)
 
-
     checks.install_unzip()
     checks.install_zip()
     checks.install_rsync()
@@ -3520,7 +3602,7 @@ def main():
     checks.setupCLI()
     checks.setup_cron()
     checks.installTLDExtract()
-    #checks.installdnsPython()
+    # checks.installdnsPython()
 
     ## Install and Configure OpenDKIM.
 

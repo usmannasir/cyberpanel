@@ -69,6 +69,10 @@ class PackagesManager:
             ftpAccounts = int(data['ftpAccounts'])
             emails = int(data['emails'])
             allowedDomains = int(data['allowedDomains'])
+            try:
+                api = data['api']
+            except:
+                api = '0'
 
             if packageSpace < 0 or packageBandwidth < 0 or packageDatabases < 0 or ftpAccounts < 0 or emails < 0 or allowedDomains < 0:
                 data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
@@ -77,7 +81,8 @@ class PackagesManager:
 
             admin = Administrator.objects.get(pk=userID)
 
-            packageName = admin.userName + "_" + packageName
+            if api == '0':
+                packageName = admin.userName + "_" + packageName
 
             package = Package(admin=admin, packageName=packageName, diskSpace=packageSpace,
                               bandwidth=packageBandwidth, ftpAccounts=ftpAccounts, dataBases=packageDatabases,
@@ -85,12 +90,12 @@ class PackagesManager:
 
             package.save()
 
-            data_ret = {'saveStatus': 1, 'error_message': "None"}
+            data_ret = {'status': 1, 'saveStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

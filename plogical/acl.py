@@ -231,6 +231,24 @@ class ACLManager:
         return adminNames
 
     @staticmethod
+    def loadUserObjects(userID):
+        admin = Administrator.objects.get(pk=userID)
+        adminObjects = []
+
+        finalResponse = ACLManager.loadedACL(userID)
+
+        if finalResponse['admin'] == 1:
+            return Administrator.objects.all()
+        else:
+            admins = Administrator.objects.filter(owner=admin.pk)
+            for items in admins:
+                adminObjects.append(items)
+
+                adminObjects.append(admin)
+
+        return adminObjects
+
+    @staticmethod
     def loadDeletionUsers(userID, finalResponse):
         admin = Administrator.objects.get(pk=userID)
         adminNames = []

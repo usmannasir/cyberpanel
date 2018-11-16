@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from loginSystem.views import loadLoginPage
 from loginSystem.models import Administrator, ACL
@@ -10,22 +10,22 @@ from plogical import hashPassword
 from plogical import CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
 
+
 # Create your views here.
 
 def loadUserHome(request):
     try:
         val = request.session['userID']
         try:
-
             admin = Administrator.objects.get(pk=val)
-
-            return render(request, 'userManagment/index.html',{"type":admin.type})
+            return render(request, 'userManagment/index.html', {"type": admin.type})
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
 
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def viewProfile(request):
     try:
@@ -42,9 +42,10 @@ def viewProfile(request):
         AdminData['email'] = admin.email
         AdminData['accountACL'] = admin.acl.name
 
-        return render(request, 'userManagment/userProfile.html',AdminData)
+        return render(request, 'userManagment/userProfile.html', AdminData)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def createUser(request):
     try:
@@ -53,7 +54,7 @@ def createUser(request):
 
         if currentACL['admin'] == 1:
             aclNames = ACLManager.unFileteredACLs()
-            return render(request, 'userManagment/createUser.html', {'aclNames' : aclNames})
+            return render(request, 'userManagment/createUser.html', {'aclNames': aclNames})
         elif currentACL['changeUserACL'] == 1:
             aclNames = ACLManager.unFileteredACLs()
             return render(request, 'userManagment/createUser.html', {'aclNames': aclNames})
@@ -63,9 +64,10 @@ def createUser(request):
         else:
             return ACLManager.loadError()
 
-    except BaseException,msg:
+    except BaseException, msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         return redirect(loadLoginPage)
+
 
 def submitUserCreation(request):
     try:
@@ -94,7 +96,7 @@ def submitUserCreation(request):
             currentAdmin = Administrator.objects.get(pk=userID)
 
             if ACLManager.websitesLimitCheck(currentAdmin, websitesLimit) == 0:
-                data_ret = {'createStatus': 0,
+                data_ret = {'status': 0, 'createStatus': 0,
                             'error_message': "You've reached maximum websites limit as a reseller."}
 
                 final_json = json.dumps(data_ret)
@@ -141,34 +143,36 @@ def submitUserCreation(request):
                                          )
                 newAdmin.save()
             else:
-                data_ret = {'createStatus': 0,
+                data_ret = {'status': 0, 'createStatus': 0,
                             'error_message': "You are not authorized to access this resource."}
 
                 final_json = json.dumps(data_ret)
                 return HttpResponse(final_json)
 
-            data_ret = {'createStatus': 1,
+            data_ret = {'status': 1, 'createStatus': 1,
                         'error_message': "None"}
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
 
         except BaseException, msg:
-            data_ret = {'createStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'createStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
     except KeyError:
-        data_ret = {'createStatus': 0, 'error_message': "Not logged in as admin",}
+        data_ret = {'status': 0, 'createStatus': 0, 'error_message': "Not logged in as admin", }
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def modifyUsers(request):
     try:
         userID = request.session['userID']
         adminNames = ACLManager.loadAllUsers(userID)
-        return render(request, 'userManagment/modifyUser.html',{"acctNames":adminNames})
+        return render(request, 'userManagment/modifyUser.html', {"acctNames": adminNames})
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def fetchUserDetails(request):
     try:
@@ -186,16 +190,18 @@ def fetchUserDetails(request):
 
                 websitesLimit = user.initWebsitesLimit
 
-                userDetails = {"firstName":firstName,
-                               "lastName": lastName,
-                               "email": email,
-                               "acl": user.acl.name,
-                               "websitesLimit": websitesLimit}
+                userDetails = {
+                    "id": user.id,
+                    "firstName": firstName,
+                    "lastName": lastName,
+                    "email": email,
+                    "acl": user.acl.name,
+                    "websitesLimit": websitesLimit
+                }
 
-                data_ret = {'fetchStatus': 1, 'error_message': 'None',"userDetails":userDetails}
+                data_ret = {'fetchStatus': 1, 'error_message': 'None', "userDetails": userDetails}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-
 
         except BaseException, msg:
             data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
@@ -203,9 +209,10 @@ def fetchUserDetails(request):
             return HttpResponse(json_data)
 
     except KeyError:
-        data_ret = {'fetchStatus': 0, 'error_message': "Not logged in as admin",}
+        data_ret = {'fetchStatus': 0, 'error_message': "Not logged in as admin", }
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def saveModifications(request):
     try:
@@ -231,19 +238,20 @@ def saveModifications(request):
 
                 user.save()
 
-                data_ret = {'saveStatus': 1, 'error_message': 'None'}
+                data_ret = {'status': 1, 'saveStatus': 1, 'error_message': 'None'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
     except KeyError:
-        data_ret = {'saveStatus': 0, 'error_message': "Not logged in as admin",}
+        data_ret = {'status': 0, 'saveStatus': 0, 'error_message': "Not logged in as admin", }
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def deleteUser(request):
     try:
@@ -264,6 +272,7 @@ def deleteUser(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def submitUserDeletion(request):
     try:
         userID = request.session['userID']
@@ -275,29 +284,33 @@ def submitUserDeletion(request):
 
                 currentACL = ACLManager.loadedACL(userID)
 
+                if accountUsername == 'admin':
+                    data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': 'You can not delete the super user.'}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
                 if currentACL['admin'] == 1:
                     user = Administrator.objects.get(userName=accountUsername)
                     user.delete()
 
-                    data_ret = {'deleteStatus': 1, 'error_message': 'None'}
+                    data_ret = {'status': 1, 'deleteStatus': 1, 'error_message': 'None'}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
                 else:
-                    data_ret = {'deleteStatus': 1, 'error_message': 'Not enough privileges'}
+                    data_ret = {'status': 0, 'deleteStatus': 1, 'error_message': 'Not enough privileges'}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
-
-
         except BaseException, msg:
-            data_ret = {'deleteStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
     except KeyError:
-        data_ret = {'deleteStatus': 0, 'error_message': "Not logged in as admin",}
+        data_ret = {'deleteStatus': 0, 'error_message': "Not logged in as admin", }
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def createNewACL(request):
     try:
@@ -311,6 +324,7 @@ def createNewACL(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def createACLFunc(request):
     try:
         val = request.session['userID']
@@ -323,84 +337,83 @@ def createACLFunc(request):
             ## Version Management
 
             newACL = ACL(name=data['aclName'],
-                         adminStatus = int(data['makeAdmin']),
+                         adminStatus=int(data['makeAdmin']),
 
-                        versionManagement=int(data['versionManagement']),
+                         versionManagement=int(data['versionManagement']),
 
-                        ## User Management
-                        createNewUser = int(data['createNewUser']),
-                        resellerCenter = int(data['resellerCenter']),
-                        deleteUser = int(data['deleteUser']),
-                        changeUserACL= int(data['changeUserACL']),
+                         ## User Management
+                         createNewUser=int(data['createNewUser']),
+                         resellerCenter=int(data['resellerCenter']),
+                         deleteUser=int(data['deleteUser']),
+                         changeUserACL=int(data['changeUserACL']),
 
-                        ## Website Management
+                         ## Website Management
 
-                        createWebsite = int(data['createWebsite']),
-                        modifyWebsite = int(data['modifyWebsite']),
-                        suspendWebsite = int(data['suspendWebsite']),
-                        deleteWebsite = int(data['deleteWebsite']),
+                         createWebsite=int(data['createWebsite']),
+                         modifyWebsite=int(data['modifyWebsite']),
+                         suspendWebsite=int(data['suspendWebsite']),
+                         deleteWebsite=int(data['deleteWebsite']),
 
-                        ## Package Management
+                         ## Package Management
 
-                        createPackage = int(data['createPackage']),
-                        deletePackage = int(data['deletePackage']),
-                        modifyPackage = int(data['modifyPackage']),
+                         createPackage=int(data['createPackage']),
+                         deletePackage=int(data['deletePackage']),
+                         modifyPackage=int(data['modifyPackage']),
 
-                        ## Database Management
+                         ## Database Management
 
-                        createDatabase = int(data['createDatabase']),
-                        deleteDatabase = int(data['deleteDatabase']),
-                        listDatabases = int(data['listDatabases']),
+                         createDatabase=int(data['createDatabase']),
+                         deleteDatabase=int(data['deleteDatabase']),
+                         listDatabases=int(data['listDatabases']),
 
-                        ## DNS Management
+                         ## DNS Management
 
-                        createNameServer = int(data['createNameServer']),
-                        createDNSZone = int(data['createDNSZone']),
-                        deleteZone = int(data['deleteZone']),
-                        addDeleteRecords = int(data['addDeleteRecords']),
+                         createNameServer=int(data['createNameServer']),
+                         createDNSZone=int(data['createDNSZone']),
+                         deleteZone=int(data['deleteZone']),
+                         addDeleteRecords=int(data['addDeleteRecords']),
 
-                        ## Email Management
+                         ## Email Management
 
-                        createEmail = int(data['createEmail']),
-                        deleteEmail = int(data['deleteEmail']),
-                        emailForwarding = int(data['emailForwarding']),
-                        changeEmailPassword = int(data['changeEmailPassword']),
-                        dkimManager = int(data['dkimManager']),
+                         createEmail=int(data['createEmail']),
+                         deleteEmail=int(data['deleteEmail']),
+                         emailForwarding=int(data['emailForwarding']),
+                         changeEmailPassword=int(data['changeEmailPassword']),
+                         dkimManager=int(data['dkimManager']),
 
-                        ## FTP Management
+                         ## FTP Management
 
-                        createFTPAccount = int(data['createFTPAccount']),
-                        deleteFTPAccount = int(data['deleteFTPAccount']),
-                        listFTPAccounts = int(data['listFTPAccounts']),
+                         createFTPAccount=int(data['createFTPAccount']),
+                         deleteFTPAccount=int(data['deleteFTPAccount']),
+                         listFTPAccounts=int(data['listFTPAccounts']),
 
-                        ## Backup Management
+                         ## Backup Management
 
-                        createBackup = int(data['createBackup']),
-                        restoreBackup = int(data['restoreBackup']),
-                        addDeleteDestinations = int(data['addDeleteDestinations']),
-                        scheDuleBackups = int(data['scheDuleBackups']),
-                        remoteBackups = int(data['remoteBackups']),
+                         createBackup=int(data['createBackup']),
+                         restoreBackup=int(data['restoreBackup']),
+                         addDeleteDestinations=int(data['addDeleteDestinations']),
+                         scheDuleBackups=int(data['scheDuleBackups']),
+                         remoteBackups=int(data['remoteBackups']),
 
-                        ## SSL Management
+                         ## SSL Management
 
-                        manageSSL = int(data['manageSSL']),
-                        hostnameSSL = int(data['hostnameSSL']),
-                        mailServerSSL = int(data['mailServerSSL']),
-                        )
+                         manageSSL=int(data['manageSSL']),
+                         hostnameSSL=int(data['hostnameSSL']),
+                         mailServerSSL=int(data['mailServerSSL']),
+                         )
             newACL.save()
 
-
-
-            finalResponse = { 'status': 1}
+            finalResponse = {'status': 1}
         else:
             return ACLManager.loadErrorJson()
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
     except BaseException, msg:
-        finalResponse = {'status':0, 'errorMessage': str(msg)}
+        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
+
 
 def deleteACL(request):
     try:
@@ -409,7 +422,7 @@ def deleteACL(request):
 
         if currentACL['admin'] == 1:
             aclNames = ACLManager.findAllACLs()
-            return render(request, 'userManagment/deleteACL.html', {'aclNames' : aclNames})
+            return render(request, 'userManagment/deleteACL.html', {'aclNames': aclNames})
         else:
             return ACLManager.loadError()
     except KeyError:
@@ -429,16 +442,17 @@ def deleteACLFunc(request):
                 acl.delete()
                 finalResponse = {'status': 1}
             else:
-                finalResponse = {'status': 0, 'errorMesssage' : 'This ACL is currently in used by existing users.'}
+                finalResponse = {'status': 0, 'errorMesssage': 'This ACL is currently in used by existing users.', 'error_message': 'This ACL is currently in used by existing users.'}
         else:
             return ACLManager.loadErrorJson()
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
     except BaseException, msg:
-        finalResponse = {'status':0, 'errorMessage': str(msg)}
+        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
+
 
 def modifyACL(request):
     try:
@@ -447,11 +461,12 @@ def modifyACL(request):
 
         if currentACL['admin'] == 1:
             aclNames = ACLManager.findAllACLs()
-            return render(request, 'userManagment/modifyACL.html', {'aclNames' : aclNames})
+            return render(request, 'userManagment/modifyACL.html', {'aclNames': aclNames})
         else:
             return ACLManager.loadError()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def fetchACLDetails(request):
     try:
@@ -517,7 +532,6 @@ def fetchACLDetails(request):
             finalResponse['deleteFTPAccount'] = acl.deleteFTPAccount
             finalResponse['listFTPAccounts'] = acl.listFTPAccounts
 
-
             ## Backup Management
 
             finalResponse['createBackup'] = acl.createBackup
@@ -525,7 +539,6 @@ def fetchACLDetails(request):
             finalResponse['addDeleteDestinations'] = acl.addDeleteDestinations
             finalResponse['scheDuleBackups'] = acl.scheDuleBackups
             finalResponse['remoteBackups'] = acl.remoteBackups
-
 
             ## SSL Management
 
@@ -543,6 +556,7 @@ def fetchACLDetails(request):
         finalResponse = {'status': 0, 'errorMessage': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
+
 
 def submitACLModifications(request):
     try:
@@ -635,17 +649,17 @@ def submitACLModifications(request):
                     items.type = 3
                     items.save()
 
-
-            finalResponse = { 'status': 1}
+            finalResponse = {'status': 1}
         else:
             finalResponse = ACLManager.loadErrorJson()
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
     except BaseException, msg:
-        finalResponse = {'status':0, 'errorMessage': str(msg)}
+        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
+
 
 def changeUserACL(request):
     try:
@@ -655,7 +669,7 @@ def changeUserACL(request):
         if currentACL['admin'] == 1:
             aclNames = ACLManager.unFileteredACLs()
             userNames = ACLManager.findAllUsers()
-            return render(request, 'userManagment/changeUserACL.html', {'aclNames' : aclNames, 'usersList': userNames})
+            return render(request, 'userManagment/changeUserACL.html', {'aclNames': aclNames, 'usersList': userNames})
         elif currentACL['changeUserACL'] == 1:
             aclNames = ACLManager.unFileteredACLs()
             userNames = ACLManager.findAllUsers()
@@ -668,14 +682,22 @@ def changeUserACL(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def changeACLFunc(request):
     try:
         val = request.session['userID']
+        data = json.loads(request.body)
+
+        if data['selectedUser'] == 'admin':
+            finalResponse = {'status': 0,
+                             'errorMessage': "Super user can not be modified.",
+                             'error_message': "Super user can not be modified."}
+            json_data = json.dumps(finalResponse)
+            return HttpResponse(json_data)
 
         currentACL = ACLManager.loadedACL(val)
 
         if currentACL['admin'] == 1:
-            data = json.loads(request.body)
             selectedACL = ACL.objects.get(name=data['selectedACL'])
             selectedUser = Administrator.objects.get(userName=data['selectedUser'])
 
@@ -684,7 +706,6 @@ def changeACLFunc(request):
 
             finalResponse = {'status': 1}
         elif currentACL['changeUserACL'] == 1:
-            data = json.loads(request.body)
             selectedACL = ACL.objects.get(name=data['selectedACL'])
             selectedUser = Administrator.objects.get(userName=data['selectedUser'])
 
@@ -698,9 +719,10 @@ def changeACLFunc(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
     except BaseException, msg:
-        finalResponse = {'status':0, 'errorMessage': str(msg)}
+        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
+
 
 def resellerCenter(request):
     try:
@@ -710,11 +732,13 @@ def resellerCenter(request):
         if currentACL['admin'] == 1:
             userNames = ACLManager.loadDeletionUsers(userID, currentACL)
             resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
-            return render(request, 'userManagment/resellerCenter.html', {'userToBeModified': userNames, 'resellerPrivUsers': resellerPrivUsers})
+            return render(request, 'userManagment/resellerCenter.html',
+                          {'userToBeModified': userNames, 'resellerPrivUsers': resellerPrivUsers})
         elif currentACL['resellerCenter'] == 1:
             userNames = ACLManager.loadDeletionUsers(userID, currentACL)
             resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
-            return render(request, 'userManagment/resellerCenter.html',{'userToBeModified': userNames, 'resellerPrivUsers': resellerPrivUsers})
+            return render(request, 'userManagment/resellerCenter.html',
+                          {'userToBeModified': userNames, 'resellerPrivUsers': resellerPrivUsers})
         else:
             return ACLManager.loadError()
 
@@ -722,17 +746,26 @@ def resellerCenter(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def saveResellerChanges(request):
     try:
         val = request.session['userID']
         data = json.loads(request.body)
+
+        if data['userToBeModified'] == 'admin':
+            finalResponse = {'status': 0,
+                             'errorMessage': "Super user can not be modified.",
+                             'error_message': "Super user can not be modified."}
+            json_data = json.dumps(finalResponse)
+            return HttpResponse(json_data)
 
         userToBeModified = Administrator.objects.get(userName=data['userToBeModified'])
         newOwner = Administrator.objects.get(userName=data['newOwner'])
 
         if ACLManager.websitesLimitCheck(newOwner, data['websitesLimit'], userToBeModified) == 0:
             finalResponse = {'status': 0,
-                        'errorMessage': "You've reached maximum websites limit as a reseller."}
+                             'errorMessage': "You've reached maximum websites limit as a reseller.",
+                             'error_message': "You've reached maximum websites limit as a reseller."}
             json_data = json.dumps(finalResponse)
             return HttpResponse(json_data)
 
@@ -744,6 +777,6 @@ def saveResellerChanges(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
     except BaseException, msg:
-        finalResponse = {'status':0, 'errorMessage': str(msg)}
+        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)

@@ -89,6 +89,34 @@ def router(request):
             return cm.getCurrentBackups()
         elif controller == 'deleteBackup':
             return cm.deleteBackup()
+        elif controller == 'fetchACLs':
+            return cm.fetchACLs()
+        elif controller == 'submitUserCreation':
+            return cm.submitUserCreation(request)
+        elif controller == 'fetchUsers':
+            return cm.fetchUsers()
+        elif controller == 'submitUserDeletion':
+            return cm.submitUserDeletion(request)
+        elif controller == 'saveModificationsUser':
+            return cm.saveModificationsUser(request)
+        elif controller == 'userWithResellerPriv':
+            return cm.userWithResellerPriv()
+        elif controller == 'saveResellerChanges':
+            return cm.saveResellerChanges(request)
+        elif controller == 'changeACLFunc':
+            return cm.changeACLFunc(request)
+        elif controller == 'createACLFunc':
+            return cm.createACLFunc(request)
+        elif controller == 'findAllACLs':
+            return cm.findAllACLs(request)
+        elif controller == 'deleteACLFunc':
+            return cm.deleteACLFunc(request)
+        elif controller == 'fetchACLDetails':
+            return cm.fetchACLDetails(request)
+        elif controller == 'submitACLModifications':
+            return cm.submitACLModifications(request)
+        elif controller == 'submitPackage':
+            return cm.submitPackage(request)
 
     except BaseException, msg:
         cm = CloudManager(None)
