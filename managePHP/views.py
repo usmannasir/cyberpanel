@@ -1427,7 +1427,14 @@ def getCurrentPHPConfig(request):
                 elif phpVers == "PHP 7.2":
                     phpVers = "php72"
 
-                path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
+                if ProcessUtilities.decideServer() == ProcessUtilities.centos:
+                    path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
+                else:
+                    initial = phpVers[3]
+                    final = phpVers[4]
+
+                    completeName = str(initial) + '.' + str(final)
+                    path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
 
                 allow_url_fopen = "0"
                 display_errors = "0"
@@ -1605,7 +1612,14 @@ def getCurrentAdvancedPHPConfig(request):
                 elif phpVers == "PHP 7.2":
                     phpVers = "php72"
 
-                path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
+                if ProcessUtilities.decideServer() == ProcessUtilities.centos:
+                    path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
+                else:
+                    initial = phpVers[3]
+                    final = phpVers[4]
+
+                    completeName = str(initial) + '.' + str(final)
+                    path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
 
                 configData = open(path, "r").read()
 
@@ -1651,7 +1665,14 @@ def savePHPConfigAdvance(request):
                 elif phpVers == "PHP 7.2":
                     phpVers = "php72"
 
-                path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
+                if ProcessUtilities.decideServer() == ProcessUtilities.centos:
+                    path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
+                else:
+                    initial = phpVers[3]
+                    final = phpVers[4]
+
+                    completeName = str(initial) + '.' + str(final)
+                    path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
 
                 tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 

@@ -94,7 +94,14 @@ class phpUtilities:
     def savePHPConfigBasic(phpVers,allow_url_fopen,display_errors,file_uploads,allow_url_include,memory_limit,max_execution_time,upload_max_filesize,max_input_time,post_max_size):
         try:
 
-            path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
+            if ProcessUtilities.decideServer() == ProcessUtilities.centos:
+                path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
+            else:
+                initial = phpVers[3]
+                final = phpVers[4]
+
+                completeName = str(initial) + '.' + str(final)
+                path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
 
             data = open(path, 'r').readlines()
 
