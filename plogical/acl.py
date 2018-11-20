@@ -330,6 +330,15 @@ class ACLManager:
         return packNames
 
     @staticmethod
+    def loadPackageObjects(userID, finalResponse):
+        admin = Administrator.objects.get(pk=userID)
+
+        if finalResponse['admin'] == 1:
+            return Package.objects.all()
+        else:
+            return admin.package_set.all()
+
+    @staticmethod
     def findAllSites(currentACL, userID):
         websiteNames = []
 

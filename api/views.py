@@ -560,9 +560,12 @@ def changeAdminPassword(request):
             if numberOfAdministrator == 0:
                 ACLManager.createDefaultACLs()
                 acl = ACL.objects.get(name='admin')
+
+                token = hashPassword.generateToken('admin', '1234567')
+
                 email = 'usman@cyberpersons.com'
                 admin = Administrator(userName="admin", password=hashPassword.hash_password(adminPass), type=1, email=email,
-                                      firstName="Cyber", lastName="Panel", acl=acl)
+                                      firstName="Cyber", lastName="Panel", acl=acl, token=token)
                 admin.save()
 
                 vers = version(currentVersion="1.7", build=3)

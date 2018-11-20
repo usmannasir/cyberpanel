@@ -1427,7 +1427,7 @@ def getCurrentPHPConfig(request):
                 elif phpVers == "PHP 7.2":
                     phpVers = "php72"
 
-                if ProcessUtilities.decideServer() == ProcessUtilities.centos:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                     path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
                 else:
                     initial = phpVers[3]
@@ -1612,7 +1612,7 @@ def getCurrentAdvancedPHPConfig(request):
                 elif phpVers == "PHP 7.2":
                     phpVers = "php72"
 
-                if ProcessUtilities.decideServer() == ProcessUtilities.centos:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                     path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
                 else:
                     initial = phpVers[3]
@@ -1665,7 +1665,7 @@ def savePHPConfigAdvance(request):
                 elif phpVers == "PHP 7.2":
                     phpVers = "php72"
 
-                if ProcessUtilities.decideServer() == ProcessUtilities.centos:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                     path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
                 else:
                     initial = phpVers[3]

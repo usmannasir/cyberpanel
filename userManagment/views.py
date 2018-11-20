@@ -92,8 +92,10 @@ def submitUserCreation(request):
             else:
                 type = 3
 
+            token = hashPassword.generateToken(userName, password)
             password = hashPassword.hash_password(password)
             currentAdmin = Administrator.objects.get(pk=userID)
+
 
             if ACLManager.websitesLimitCheck(currentAdmin, websitesLimit) == 0:
                 data_ret = {'status': 0, 'createStatus': 0,
@@ -112,7 +114,8 @@ def submitUserCreation(request):
                                          password=password,
                                          initWebsitesLimit=websitesLimit,
                                          owner=currentAdmin.pk,
-                                         acl=selectedACL
+                                         acl=selectedACL,
+                                         token=token
                                          )
                 newAdmin.save()
 
@@ -126,7 +129,8 @@ def submitUserCreation(request):
                                          password=password,
                                          initWebsitesLimit=websitesLimit,
                                          owner=currentAdmin.pk,
-                                         acl=selectedACL
+                                         acl=selectedACL,
+                                         token=token
                                          )
                 newAdmin.save()
             elif currentACL['createNewUser'] == 1:
@@ -139,7 +143,8 @@ def submitUserCreation(request):
                                          password=password,
                                          initWebsitesLimit=websitesLimit,
                                          owner=currentAdmin.pk,
-                                         acl=selectedACL
+                                         acl=selectedACL,
+                                         token=token
                                          )
                 newAdmin.save()
             else:
@@ -228,12 +233,14 @@ def saveModifications(request):
                 admin = Administrator.objects.get(pk=val)
                 user = Administrator.objects.get(userName=accountUsername)
 
+                token = hashPassword.generateToken(accountUsername, data['password'])
                 password = hashPassword.hash_password(data['password'])
 
                 user.firstName = firstName
                 user.lastName = lastName
                 user.email = email
                 user.password = password
+                user.token = token
                 user.type = 0
 
                 user.save()

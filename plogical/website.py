@@ -666,7 +666,7 @@ class WebsiteManager:
 
         if output.find("1,None") > -1:
             final_json = json.dumps(
-                {'logstatus': 0, 'error_message': "Not able to fetch logs, see CyberPanel main log file!"})
+                {'status': 0,'logstatus': 0, 'error_message': "Not able to fetch logs, see CyberPanel main log file!"})
             return HttpResponse(final_json)
 
         ## get log ends here.
@@ -700,7 +700,7 @@ class WebsiteManager:
                     json_data = json_data + ',' + json.dumps(dic)
 
         json_data = json_data + ']'
-        final_json = json.dumps({'logstatus': 1, 'error_message': "None", "data": json_data})
+        final_json = json.dumps({'status': 1, 'logstatus': 1, 'error_message': "None", "data": json_data})
         return HttpResponse(final_json)
 
     def fetchErrorLogs(self, userID = None, data = None):
@@ -728,12 +728,12 @@ class WebsiteManager:
 
         if output.find("1,None") > -1:
             final_json = json.dumps(
-                {'logstatus': 0, 'error_message': "Not able to fetch logs, see CyberPanel main log file!"})
+                {'status': 0, 'logstatus': 0, 'error_message': "Not able to fetch logs, see CyberPanel main log file!"})
             return HttpResponse(final_json)
 
         ## get log ends here.
 
-        final_json = json.dumps({'logstatus': 1, 'error_message': "None", "data": output})
+        final_json = json.dumps({'status': 1, 'logstatus': 1, 'error_message': "None", "data": output})
         return HttpResponse(final_json)
 
     def getDataFromConfigFile(self, userID = None, data = None):
@@ -753,12 +753,12 @@ class WebsiteManager:
         configData = subprocess.check_output(shlex.split(command))
 
         if len(configData) == 0:
-            status = {"configstatus": 0, "error_message": "Configuration file is currently empty!"}
+            status = {'status': 0, "configstatus": 0, "error_message": "Configuration file is currently empty!"}
 
             final_json = json.dumps(status)
             return HttpResponse(final_json)
 
-        status = {"configstatus": 1, "configData": configData}
+        status = {'status': 1, "configstatus": 1, "configData": configData}
         final_json = json.dumps(status)
         return HttpResponse(final_json)
 
@@ -1258,9 +1258,14 @@ class WebsiteManager:
             website = Websites.objects.get(domain=self.domain)
 
             try:
-                subprocess.call(('sudo', 'crontab', '-u', website.externalApp, '-'))
+                output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
             except:
-                pass
+                try:
+                    subprocess.call(('sudo', 'crontab', '-u', website.externalApp, '-'))
+                except:
+                    data_ret = {'addNewCron': 0, 'error_message': 'Unable to initialise crontab file for user'}
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
 
             output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
 
@@ -1507,14 +1512,14 @@ class WebsiteManager:
 
             time.sleep(2)
 
-            data_ret = {'installStatus': 1, 'error_message': 'None',
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
                         'tempStatusPath': extraArgs['tempStatusPath']}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
 
         except BaseException, msg:
-            data_ret = {'installStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1614,7 +1619,7 @@ class WebsiteManager:
 
             if Databases.objects.filter(dbName=dbName).exists() or Databases.objects.filter(
                     dbUser=dbUser).exists():
-                data_ret = {'installStatus': 0,
+                data_ret = {'status': 0, 'installStatus': 0,
                             'error_message': "0,This database or user is already taken."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -1624,7 +1629,7 @@ class WebsiteManager:
             if result == 1:
                 pass
             else:
-                data_ret = {'installStatus': 0,
+                data_ret = {'status': 0, 'installStatus': 0,
                             'error_message': "0,Not able to create database."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -1640,7 +1645,7 @@ class WebsiteManager:
                 if website.master.package.dataBases > website.master.databases_set.all().count():
                     pass
                 else:
-                    data_ret = {'installStatus': 0,
+                    data_ret = {'status': 0, 'installStatus': 0,
                                 'error_message': "0,Maximum database limit reached for this website."}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
@@ -1661,7 +1666,7 @@ class WebsiteManager:
                 if website.package.dataBases > website.databases_set.all().count():
                     pass
                 else:
-                    data_ret = {'installStatus': 0,
+                    data_ret = {'status': 0, 'installStatus': 0,
                                 'error_message': "0,Maximum database limit reached for this website."}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
@@ -1676,7 +1681,7 @@ class WebsiteManager:
                 db.save()
 
             if finalPath.find("..") > -1:
-                data_ret = {'installStatus': 0,
+                data_ret = {'status': 0, 'installStatus': 0,
                             'error_message': "Specified path must be inside virtual host home!"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -1704,16 +1709,15 @@ class WebsiteManager:
 
             output = subprocess.Popen(shlex.split(execPath))
 
-            data_ret = {"installStatus": 1, 'tempStatusPath': tempStatusPath}
+            data_ret = {'status': 1, "installStatus": 1, 'tempStatusPath': tempStatusPath}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-
 
 
             ## Installation ends
 
         except BaseException, msg:
-            data_ret = {'installStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1925,7 +1929,7 @@ class WebsiteManager:
 
             time.sleep(2)
 
-            data_ret = {'installStatus': 1, 'error_message': 'None',
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
                         'tempStatusPath': extraArgs['tempStatusPath']}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1933,7 +1937,7 @@ class WebsiteManager:
             ## Installation ends
 
         except BaseException, msg:
-            data_ret = {'installStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

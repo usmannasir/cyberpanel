@@ -80,6 +80,7 @@ class Administrator(models.Model):
    email = models.CharField(max_length=50)
    type = models.IntegerField()
    owner = models.IntegerField(default=1)
+   token = models.CharField(max_length=500, default='None')
 
    initWebsitesLimit = models.IntegerField(default=0)
    acl = models.ForeignKey(ACL, default=1)

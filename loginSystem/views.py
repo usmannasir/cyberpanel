@@ -30,7 +30,6 @@ def verifyLogin(request):
             if request.method == "POST":
                 data = json.loads(request.body)
 
-
                 username = data['username']
                 password = data['password']
 
@@ -153,9 +152,11 @@ def loadLoginPage(request):
 
             acl = ACL.objects.get(name='admin')
 
+            token = hashPassword.generateToken('admin', '1234567')
+
             email = 'usman@cyberpersons.com'
             admin = Administrator(userName="admin", password=password, type=1,email=email,
-                                  firstName="Cyber",lastName="Panel", acl=acl)
+                                  firstName="Cyber",lastName="Panel", acl=acl, token=token)
             admin.save()
 
             vers = version(currentVersion="1.7",build=3)

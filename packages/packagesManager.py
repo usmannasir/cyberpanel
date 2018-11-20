@@ -113,13 +113,13 @@ class PackagesManager:
             delPackage = Package.objects.get(packageName=packageName)
             delPackage.delete()
 
-            data_ret = {'deleteStatus': 1, 'error_message': "None"}
+            data_ret = {'status': 1, 'deleteStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
 
         except BaseException, msg:
-            data_ret = {'deleteStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -196,11 +196,11 @@ class PackagesManager:
             modifyPack.allowedDomains = data['allowedDomains']
             modifyPack.save()
 
-            data_ret = {'saveStatus': 1, 'error_message': "None"}
+            data_ret = {'status': 1, 'saveStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException, msg:
-            data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)

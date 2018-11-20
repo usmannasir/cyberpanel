@@ -3,16 +3,29 @@ from __future__ import unicode_literals
 
 from cloudManager import CloudManager
 import json
+from loginSystem.models import Administrator
 
 def router(request):
     try:
         data = json.loads(request.body)
         controller = data['controller']
 
-        cm = CloudManager(data)
+        serverUserName = data['serverUserName']
+        admin = Administrator.objects.get(userName=serverUserName)
+
+        cm = CloudManager(data, admin)
+
+        if controller == 'statusFunc':
+            pass
+        else:
+            if cm.verifyLogin(request)[0] == 1:
+                pass
+            else:
+                return cm.verifyLogin(request)[1]
+
 
         if controller == 'verifyLogin':
-            return cm.verifyLogin()
+            return cm.verifyLogin(request)[1]
         elif controller == 'fetchWebsites':
             return cm.fetchWebsites()
         elif controller == 'fetchWebsiteDataJSON':
@@ -117,6 +130,20 @@ def router(request):
             return cm.submitACLModifications(request)
         elif controller == 'submitPackage':
             return cm.submitPackage(request)
+        elif controller == 'fetchPackages':
+            return cm.fetchPackages(request)
+        elif controller == 'submitPackageDelete':
+            return cm.submitPackageDelete(request)
+        elif controller == 'submitPackageModify':
+            return cm.submitPackageModify(request)
+        elif controller == 'getDataFromLogFile':
+            return cm.getDataFromLogFile(request)
+        elif controller == 'fetchErrorLogs':
+            return cm.fetchErrorLogs(request)
+        elif controller == 'submitApplicationInstall':
+            return cm.submitApplicationInstall(request)
+        elif controller == 'obtainServer':
+            return cm.obtainServer(request)
 
     except BaseException, msg:
         cm = CloudManager(None)
