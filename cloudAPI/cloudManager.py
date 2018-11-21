@@ -15,6 +15,8 @@ from plogical.backupManager import BackupManager
 import userManagment.views as um
 from packages.packagesManager import PackagesManager
 from plogical.processUtilities import ProcessUtilities
+from firewall.firewallManager import FirewallManager
+from serverLogs.views import getLogsFromFile
 
 class CloudManager:
     def __init__(self, data=None, admin = None):
@@ -672,5 +674,61 @@ class CloudManager:
             data_ret = {'status': 1, 'serverStatus': ProcessUtilities.decideServer()}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def getSSHConfigs(self):
+        try:
+            fm = FirewallManager()
+            return fm.getSSHConfigs(self.admin.pk, self.data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def saveSSHConfigs(self):
+        try:
+            fm = FirewallManager()
+            return fm.saveSSHConfigs(self.admin.pk, self.data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def deleteSSHKey(self):
+        try:
+            fm = FirewallManager()
+            return fm.deleteSSHKey(self.admin.pk, self.data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def addSSHKey(self):
+        try:
+            fm = FirewallManager()
+            return fm.addSSHKey(self.admin.pk, self.data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def getCurrentRules(self):
+        try:
+            fm = FirewallManager()
+            return fm.getCurrentRules(self.admin.pk)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def addRule(self):
+        try:
+            fm = FirewallManager()
+            return fm.addRule(self.admin.pk, self.data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def deleteRule(self):
+        try:
+            fm = FirewallManager()
+            return fm.deleteRule(self.admin.pk, self.data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def getLogsFromFile(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            return getLogsFromFile(request)
         except BaseException, msg:
             return self.ajaxPre(0, str(msg))

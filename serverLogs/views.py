@@ -134,20 +134,25 @@ def getLogsFromFile(request):
             fileName = "/var/log/messages"
         elif type == "modSec":
             fileName = "/usr/local/lsws/logs/auditmodsec.log"
+        elif type == "cyberpanel":
+            fileName = "/home/cyberpanel/error-logs.txt"
 
-        command = "sudo tail -50 " + fileName
-
-        fewLinesOfLogFile = subprocess.check_output(shlex.split(command))
-
-        status = {"logstatus": 1, "logsdata": fewLinesOfLogFile}
-        final_json = json.dumps(status)
-        return HttpResponse(final_json)
-
+        try:
+            command = "sudo tail -50 " + fileName
+            fewLinesOfLogFile = subprocess.check_output(shlex.split(command))
+            status = {"status": 1, "logstatus": 1, "logsdata": fewLinesOfLogFile}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
+        except:
+            status = {"status": 1, "logstatus": 1, "logsdata": 'Emtpy File.'}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
 
     except KeyError, msg:
-        status = {"logstatus":0,"error":"Could not fetch data from log file, please see CyberCP main log file through command line."}
+        status = {"status": 0, "logstatus":0,"error":"Could not fetch data from log file, please see CyberCP main log file through command line."}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[getLogsFromFile]")
-        return HttpResponse("Not Logged in as admin")
+        final_json = json.dumps(status)
+        return HttpResponse(final_json)
 
 def clearLogFile(request):
     try:

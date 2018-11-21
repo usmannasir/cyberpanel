@@ -23,7 +23,6 @@ def router(request):
             else:
                 return cm.verifyLogin(request)[1]
 
-
         if controller == 'verifyLogin':
             return cm.verifyLogin(request)[1]
         elif controller == 'fetchWebsites':
@@ -144,6 +143,22 @@ def router(request):
             return cm.submitApplicationInstall(request)
         elif controller == 'obtainServer':
             return cm.obtainServer(request)
+        elif controller == 'getSSHConfigs':
+            return cm.getSSHConfigs()
+        elif controller == 'saveSSHConfigs':
+            return cm.saveSSHConfigs()
+        elif controller == 'deleteSSHKey':
+            return cm.deleteSSHKey()
+        elif controller == 'addSSHKey':
+            return cm.addSSHKey()
+        elif controller == 'getCurrentRules':
+            return cm.getCurrentRules()
+        elif controller == 'addRule':
+            return cm.addRule()
+        elif controller == 'deleteRule':
+            return cm.deleteRule()
+        elif controller == 'getLogsFromFile':
+            return cm.getLogsFromFile(request)
 
     except BaseException, msg:
         cm = CloudManager(None)

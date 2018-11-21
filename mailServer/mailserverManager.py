@@ -21,6 +21,8 @@ from dns.models import Records as dnsRecords
 from mailServer.models import Forwardings
 from plogical.acl import ACLManager
 import os
+from plogical.dnsUtilities import DNS
+from loginSystem.models import Administrator
 
 class MailServerManager:
 
@@ -428,9 +430,16 @@ class MailServerManager:
             execPath = execPath + " generateKeys --domain " + domainName
             output = subprocess.check_output(shlex.split(execPath))
 
-            if output.find("1,None") > -1:
+            admin = Administrator.objects.get(pk=userID)
+            DNS.dnsTemplate(domainName, admin)
 
-                zone = dnsDomains.objects.get(name=domainName)
+            if output.find("1,None") > -1:
+                import tldextract
+
+                extractDomain = tldextract.extract(domainName)
+                topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
+
+                zone = dnsDomains.objects.get(name=topLevelDomain)
                 zone.save()
 
                 path = "/etc/opendkim/keys/" + domainName + "/default.txt"
@@ -438,6 +447,8 @@ class MailServerManager:
                 output = subprocess.check_output(shlex.split(command))
                 leftIndex = output.index('(') + 2
                 rightIndex = output.rindex(')') - 1
+
+                DNS.createDKIMRecords(domainName)
 
                 record = dnsRecords(domainOwner=zone,
                                     domain_id=zone.id,

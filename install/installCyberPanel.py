@@ -67,6 +67,21 @@ class InstallCyberPanel:
             try:
                 count = 0
                 while (1):
+                    try:
+
+                        command = 'groupadd nobody'
+                        cmd = shlex.split(command)
+                        subprocess.call(cmd)
+
+                    except:
+                        pass
+
+                    try:
+                        command = 'usermod -a -G nobody nobody'
+                        cmd = shlex.split(command)
+                        subprocess.call(cmd)
+                    except:
+                        pass
 
                     command = 'wget https://www.litespeedtech.com/packages/5.0/lsws-5.3-ent-x86_64-linux.tar.gz'
                     cmd = shlex.split(command)
@@ -1301,7 +1316,7 @@ class InstallCyberPanel:
 
 
 
-def Main(cwd, mysql, distro, ent):
+def Main(cwd, mysql, distro, ent, serial = None):
 
     InstallCyberPanel.mysqlPassword = randomPassword.generate_pass()
     InstallCyberPanel.mysql_Root_password = randomPassword.generate_pass()
@@ -1321,7 +1336,7 @@ def Main(cwd, mysql, distro, ent):
     else:
         InstallCyberPanel.mysqlPassword = InstallCyberPanel.mysql_Root_password
 
-    installer = InstallCyberPanel("/usr/local/lsws/",cwd, distro, ent)
+    installer = InstallCyberPanel("/usr/local/lsws/",cwd, distro, ent, serial)
 
     installer.installLiteSpeed()
     if ent == 0:

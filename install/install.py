@@ -2390,14 +2390,16 @@ class preFlightsChecks:
     def removeUfw(self):
         try:
             preFlightsChecks.stdOut("Checking to see if ufw firewall is installed (will be removed)", 1)
-            status = subprocess.check_output(shlex.split('ufw status'), stderr=subprocess.STDOUT)
+            status = subprocess.check_output(shlex.split('ufw status'))
             preFlightsChecks.stdOut("ufw current status: " + status + "...will be removed")
-        except subprocess.CalledProcessError as err:
+        except BaseException, msg:
             preFlightsChecks.stdOut("Expected access to ufw not available, do not need to remove it", 1)
             return True
-
-        preFlightsChecks.call('apt-get -y remove ufw', self.distro, '[remove_ufw]', 'Remove ufw firewall ' +
-                              '(using firewalld)', 1, 1, os.EX_OSERR)
+        try:
+            preFlightsChecks.call('apt-get -y remove ufw', self.distro, '[remove_ufw]', 'Remove ufw firewall ' +
+                                  '(using firewalld)', 1, 0, os.EX_OSERR)
+        except:
+            pass
         return True
 
     def installFirewalld(self):
@@ -3514,9 +3516,29 @@ def main():
     logging.InstallLog.writeToFile("Starting CyberPanel installation..")
     preFlightsChecks.stdOut("Starting CyberPanel installation..")
 
+    if args.ent == None:
+        ent = 0
+        preFlightsChecks.stdOut("OpenLiteSpeed web server will be installed.")
+    else:
+        if args.ent == 'ols':
+            ent = 0
+            preFlightsChecks.stdOut("OpenLiteSpeed web server will be installed.")
+        else:
+            preFlightsChecks.stdOut("LiteSpeed Enterprise web server will be installed.")
+            ent = 1
+            if args.serial != None:
+                serial = args.serial
+                preFlightsChecks.stdOut("LiteSpeed Enterprise Serial detected: " + serial)
+            else:
+                preFlightsChecks.stdOut("Installation failed, please specify LiteSpeed Enterprise key using --serial")
+                os._exit(0)
+
     ## Writing public IP
 
-    os.mkdir("/etc/cyberpanel")
+    try:
+        os.mkdir("/etc/cyberpanel")
+    except:
+        pass
 
     machineIP = open("/etc/cyberpanel/machineIP", "w")
     machineIP.writelines(args.publicip)
@@ -3536,20 +3558,6 @@ def main():
     else:
         mysql = args.mysql
         preFlightsChecks.stdOut("Dobule MySQL instance version will be installed.")
-
-    if args.ent == None:
-        ent = 0
-    else:
-        if args.ent == 'ols':
-            ent = 0
-        else:
-            ent = 1
-            if args.serial != None:
-                serial = args.serial
-                preFlightsChecks.stdOut("LiteSpeed Enterprise Serial detected: " + serial)
-            else:
-                preFlightsChecks.stdOut("Installation failed, please specify LiteSpeed Enterprise key using --serial")
-                os._exit(0)
 
     checks.checkPythonVersion()
     checks.setup_account_cyberpanel()

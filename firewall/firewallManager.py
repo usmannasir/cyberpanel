@@ -69,7 +69,8 @@ class FirewallManager:
             checker = 0
 
             for items in rules:
-                dic = {'id': items.id,
+                dic = {
+                       'id': items.id,
                        'name': items.name,
                        'proto': items.proto,
                        'port': items.port,
@@ -83,11 +84,11 @@ class FirewallManager:
                     json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
-            final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
         except BaseException, msg:
-            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -111,12 +112,12 @@ class FirewallManager:
             newFWRule = FirewallRules(name=ruleName, proto=ruleProtocol, port=rulePort, ipAddress=ruleIP)
             newFWRule.save()
 
-            final_dic = {'add_status': 1, 'error_message': "None"}
+            final_dic = {'status': 1, 'add_status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
         except BaseException, msg:
-            final_dic = {'add_status': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'add_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -141,12 +142,12 @@ class FirewallManager:
             delRule = FirewallRules.objects.get(id=ruleID)
             delRule.delete()
 
-            final_dic = {'delete_status': 1, 'error_message': "None"}
+            final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
         except BaseException, msg:
-            final_dic = {'delete_status': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'delete_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -325,7 +326,7 @@ class FirewallManager:
 
                 res = subprocess.call(cmd)
 
-                final_dic = {'permitRootLogin': permitRootLogin, 'sshPort': sshPort}
+                final_dic = {'status': 1, 'permitRootLogin': permitRootLogin, 'sshPort': sshPort}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
             else:
@@ -406,7 +407,7 @@ class FirewallManager:
 
                 try:
                     updateFW = FirewallRules.objects.get(name="SSHCustom")
-                    FirewallUtilities.deleteRule("tcp", updateFW.port)
+                    FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0")
                     updateFW.port = sshPort
                     updateFW.save()
                 except:
@@ -467,12 +468,12 @@ class FirewallManager:
 
                 ##
 
-                final_dic = {'saveStatus': 1}
+                final_dic = {'status': 1, 'saveStatus': 1}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
         except BaseException, msg:
-            final_dic = {'saveStatus': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0 ,'saveStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -522,12 +523,12 @@ class FirewallManager:
 
             ##
 
-            final_dic = {'delete_status': 1}
+            final_dic = {'status': 1, 'delete_status': 1}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
         except BaseException, msg:
-            final_dic = {'delete_status': 0, 'error_mssage': str(msg)}
+            final_dic = {'status': 0, 'delete_status': 0, 'error_mssage': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -584,13 +585,12 @@ class FirewallManager:
 
             ##
 
-
-            final_dic = {'add_status': 1}
+            final_dic = {'status': 1, 'add_status': 1}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
         except BaseException, msg:
-            final_dic = {'add_status': 0, 'error_mssage': str(msg)}
+            final_dic = {'status': 0, 'add_status': 0, 'error_mssage': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 

@@ -146,8 +146,8 @@ class mailUtilities:
 
             import tldextract
 
-            extractDomain = tldextract.extract(virtualHostName)
-            virtualHostName = extractDomain.domain + '.' + extractDomain.suffix
+            #extractDomain = tldextract.extract(virtualHostName)
+            #virtualHostName = extractDomain.domain + '.' + extractDomain.suffix
 
             if os.path.exists("/etc/opendkim/keys/" + virtualHostName):
                 return 1, "None"
