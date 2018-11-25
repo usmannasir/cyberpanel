@@ -332,7 +332,7 @@ class InstallCyberPanel:
                     if res != 0:
                         failed = True
                 else:
-                    command = 'yum -y install lsphp*'
+                    command = 'yum -y groupinstall lsphp-all'
                     cmd = shlex.split(command)
                     res = subprocess.call(cmd)
                     if install.preFlightsChecks.resFailed(self.distro, res):
@@ -350,6 +350,48 @@ class InstallCyberPanel:
                 else:
                     logging.InstallLog.writeToFile("LiteSpeed PHPs successfully installed!")
                     InstallCyberPanel.stdOut("LiteSpeed PHPs successfully installed!")
+
+                    ## only php 71
+                    if self.distro == centos:
+                        count = 0
+                        while (1):
+                            command = 'yum install lsphp71 lsphp71-json lsphp71-xmlrpc lsphp71-xml lsphp71-tidy lsphp71-soap lsphp71-snmp lsphp71-recode lsphp71-pspell lsphp71-process lsphp71-pgsql lsphp71-pear lsphp71-pdo lsphp71-opcache lsphp71-odbc lsphp71-mysqlnd lsphp71-mcrypt lsphp71-mbstring lsphp71-ldap lsphp71-intl lsphp71-imap lsphp71-gmp lsphp71-gd lsphp71-enchant lsphp71-dba  lsphp71-common  lsphp71-bcmath -y'
+                            cmd = shlex.split(command)
+                            res = subprocess.call(cmd)
+                            if res == 1:
+                                count = count + 1
+                                InstallCyberPanel.stdOut(
+                                    "Trying to install LiteSpeed PHP 7.1, trying again, try number: " + str(count))
+                                if count == 3:
+                                    logging.InstallLog.writeToFile(
+                                        "Failed to install LiteSpeed PHP 7.1, exiting installer! [installAllPHPVersions]")
+                                    InstallCyberPanel.stdOut("Installation failed, consult: /var/log/installLogs.txt")
+                                    os._exit(0)
+                            else:
+                                logging.InstallLog.writeToFile("LiteSpeed PHP 7.1 successfully installed!")
+                                InstallCyberPanel.stdOut("LiteSpeed PHP 7.1 successfully installed!")
+                                break
+
+                        ## only php 72
+                        count = 0
+                        while (1):
+                            command = 'yum install -y lsphp72 lsphp72-json lsphp72-xmlrpc lsphp72-xml lsphp72-tidy lsphp72-soap lsphp72-snmp lsphp72-recode lsphp72-pspell lsphp72-process lsphp72-pgsql lsphp72-pear lsphp72-pdo lsphp72-opcache lsphp72-odbc lsphp72-mysqlnd lsphp72-mcrypt lsphp72-mbstring lsphp72-ldap lsphp72-intl lsphp72-imap lsphp72-gmp lsphp72-gd lsphp72-enchant lsphp72-dba  lsphp72-common  lsphp72-bcmath'
+                            cmd = shlex.split(command)
+                            res = subprocess.call(cmd)
+                            if res == 1:
+                                count = count + 1
+                                InstallCyberPanel.stdOut(
+                                    "Trying to install LiteSpeed PHP 7.1, trying again, try number: " + str(count))
+                                if count == 3:
+                                    logging.InstallLog.writeToFile(
+                                        "Failed to install LiteSpeed PHP 7.1, exiting installer! [installAllPHPVersions]")
+                                    InstallCyberPanel.stdOut(
+                                        "Installation failed, consult: /var/log/installLogs.txt")
+                                    os._exit(0)
+                            else:
+                                logging.InstallLog.writeToFile("LiteSpeed PHP 7.1 successfully installed!")
+                                InstallCyberPanel.stdOut("LiteSpeed PHP 7.1 successfully installed!")
+                                break
 
                     ## break for outer loop
                     break

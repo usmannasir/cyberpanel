@@ -10,7 +10,7 @@ from databases.databaseManager import DatabaseManager
 from dns.dnsManager import DNSManager
 from mailServer.mailserverManager import MailServerManager
 from ftp.ftpManager import FTPManager
-from manageSSL.views import issueSSL
+from manageSSL.views import issueSSL, obtainHostNameSSL, obtainMailServerSSL
 from plogical.backupManager import BackupManager
 import userManagment.views as um
 from packages.packagesManager import PackagesManager
@@ -730,5 +730,15 @@ class CloudManager:
         try:
             request.session['userID'] = self.admin.pk
             return getLogsFromFile(request)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def serverSSL(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            if self.data['type'] == 'hostname':
+                return obtainHostNameSSL(request)
+            else:
+                return obtainMailServerSSL(request)
         except BaseException, msg:
             return self.ajaxPre(0, str(msg))

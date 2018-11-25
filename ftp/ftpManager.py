@@ -63,7 +63,7 @@ class FTPManager:
             data = json.loads(self.request.body)
             userName = data['ftpUserName']
             password = data['ftpPassword']
-            path = data['path']
+
             domainName = data['ftpDomain']
 
             try:
@@ -73,9 +73,13 @@ class FTPManager:
 
             admin = Administrator.objects.get(id=userID)
 
-            if len(path) > 0:
-                pass
-            else:
+            try:
+                path = data['path']
+                if len(path) > 0:
+                    pass
+                else:
+                    path = 'None'
+            except:
                 path = 'None'
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/ftpUtilities.py"

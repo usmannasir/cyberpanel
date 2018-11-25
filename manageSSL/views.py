@@ -154,12 +154,12 @@ def obtainHostNameSSL(request):
                 output = subprocess.check_output(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
-                    data_ret = {"SSL": 1,
+                    data_ret = {"status": 1, "SSL": 1,
                                 'error_message': "None"}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
                 else:
-                    data_ret = {"SSL": 0,
+                    data_ret = {"status": 0, "SSL": 0,
                                 'error_message': output}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
@@ -167,12 +167,12 @@ def obtainHostNameSSL(request):
                     ## ssl issue ends
 
         except BaseException,msg:
-            data_ret = {"SSL": 0,
+            data_ret = {"status": 0, "SSL": 0,
                         'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
     except KeyError:
-        data_ret = {"SSL": 0,
+        data_ret = {"status": 0, "SSL": 0,
                     'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -224,12 +224,12 @@ def obtainMailServerSSL(request):
                 output = subprocess.check_output(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
-                    data_ret = {"SSL": 1,
+                    data_ret = {"status": 1, "SSL": 1,
                                 'error_message': "None"}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
                 else:
-                    data_ret = {"SSL": 0,
+                    data_ret = {"status": 0, "SSL": 0,
                                 'error_message': output}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
@@ -238,12 +238,12 @@ def obtainMailServerSSL(request):
 
 
         except BaseException,msg:
-            data_ret = {"SSL": 0,
+            data_ret = {"status": 0, "SSL": 0,
                         'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
     except KeyError,msg:
-        data_ret = {"SSL": 0,
+        data_ret = {"status": 0, "SSL": 0,
                     'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

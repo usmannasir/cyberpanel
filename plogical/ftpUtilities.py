@@ -126,7 +126,6 @@ class FTPUtilities:
             path = path.lstrip("/")
 
             if path != 'None':
-
                 path = "/home/" + domainName + "/public_html/" + path
 
                 ## Security Check

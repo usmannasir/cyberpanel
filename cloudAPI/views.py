@@ -159,6 +159,10 @@ def router(request):
             return cm.deleteRule()
         elif controller == 'getLogsFromFile':
             return cm.getLogsFromFile(request)
+        elif controller == 'serverSSL':
+            return cm.serverSSL(request)
+        else:
+            return cm.ajaxPre(0, 'This function is not available in your version of CyberPanel.')
 
     except BaseException, msg:
         cm = CloudManager(None)

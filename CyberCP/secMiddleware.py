@@ -10,7 +10,7 @@ class secMiddleware:
     def __call__(self, request):
         if request.method == 'POST':
             try:
-                logging.writeToFile(request.body)
+                #logging.writeToFile(request.body)
                 data = json.loads(request.body)
                 for key, value in data.iteritems():
                     if type(value) == str or type(value) == unicode:

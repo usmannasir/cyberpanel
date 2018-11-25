@@ -146,16 +146,6 @@ class Upgrade:
             os._exit(0)
 
     @staticmethod
-    def upgradeOpenLiteSpeed():
-        try:
-            command = "yum upgrade -y openlitespeed"
-            if Upgrade.executioner(command) == 1:
-                Upgrade.stdOut('OpenLiteSpeed Upgraded.')
-        except OSError, msg:
-            Upgrade.stdOut(str(msg) + " [upgradeOpenLiteSpeed]")
-            os._exit(0)
-
-    @staticmethod
     def updateGunicornConf():
         try:
             path = '/etc/systemd/system/gunicorn.service'
@@ -203,7 +193,6 @@ WantedBy=multi-user.target"""
     @staticmethod
     def fileManager():
         ## Copy File manager files
-
 
         command = "rm -rf /usr/local/lsws/Example/html/FileManager"
         Upgrade.executioner(command)
@@ -316,6 +305,12 @@ WantedBy=multi-user.target"""
             try:
                 command = "echo 'CREATE TABLE `loginSystem_acl` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `name` varchar(50) NOT NULL UNIQUE, `adminStatus` integer NOT NULL DEFAULT 0, `versionManagement` integer NOT NULL DEFAULT 0, `createNewUser` integer NOT NULL DEFAULT 0, `deleteUser` integer NOT NULL DEFAULT 0, `resellerCenter` integer NOT NULL DEFAULT 0, `changeUserACL` integer NOT NULL DEFAULT 0, `createWebsite` integer NOT NULL DEFAULT 0, `modifyWebsite` integer NOT NULL DEFAULT 0, `suspendWebsite` integer NOT NULL DEFAULT 0, `deleteWebsite` integer NOT NULL DEFAULT 0, `createPackage` integer NOT NULL DEFAULT 0, `deletePackage` integer NOT NULL DEFAULT 0, `modifyPackage` integer NOT NULL DEFAULT 0, `createDatabase` integer NOT NULL DEFAULT 0, `deleteDatabase` integer NOT NULL DEFAULT 0, `listDatabases` integer NOT NULL DEFAULT 0, `createNameServer` integer NOT NULL DEFAULT 0, `createDNSZone` integer NOT NULL DEFAULT 0, `deleteZone` integer NOT NULL DEFAULT 0, `addDeleteRecords` integer NOT NULL DEFAULT 0, `createEmail` integer NOT NULL DEFAULT 0, `deleteEmail` integer NOT NULL DEFAULT 0, `emailForwarding` integer NOT NULL DEFAULT 0, `changeEmailPassword` integer NOT NULL DEFAULT 0, `dkimManager` integer NOT NULL DEFAULT 0, `createFTPAccount` integer NOT NULL DEFAULT 0, `deleteFTPAccount` integer NOT NULL DEFAULT 0, `listFTPAccounts` integer NOT NULL DEFAULT 0, `createBackup` integer NOT NULL DEFAULT 0, `restoreBackup` integer NOT NULL DEFAULT 0, `addDeleteDestinations` integer NOT NULL DEFAULT 0, `scheDuleBackups` integer NOT NULL DEFAULT 0, `remoteBackups` integer NOT NULL DEFAULT 0, `manageSSL` integer NOT NULL DEFAULT 0, `hostnameSSL` integer NOT NULL DEFAULT 0, `mailServerSSL` integer NOT NULL DEFAULT 0);' | python manage.py dbshell"
                 subprocess.check_output(command, shell=True)
+            except:
+                pass
+
+            try:
+                command = "echo 'ALTER TABLE loginSystem_administrator ADD token varchar(500);' | python manage.py dbshell"
+                subprocess.call(command, shell=True)
             except:
                 pass
 
@@ -448,25 +443,6 @@ WantedBy=multi-user.target"""
             command = "python manage.py makemigrations emailMarketing"
             Upgrade.executioner(command)
 
-            data = open('/usr/local/CyberCP/emailMarketing/migrations/0001_initial.py', 'r').readline()
-            writeToFile = open('/usr/local/CyberCP/emailMarketing/migrations/0001_initial.py', 'w')
-            skipCheck = 0
-
-            for items in data:
-                if items.find('dependencies') > -1:
-                    skipCheck = 1
-
-                if items.find(']') > -1 and skipCheck == 1:
-                    skipCheck = 0
-                    continue
-
-                if skipCheck == 0:
-                    writeToFile.writelines(items)
-
-            writeToFile.close()
-
-
-
             command = "python manage.py migrate emailMarketing"
             Upgrade.executioner(command)
         except:
@@ -498,6 +474,7 @@ WantedBy=multi-user.target"""
             count = 0
             while (1):
                 command = "wget https://cyberpanel.net/CyberPanel." + versionNumbring
+                #command = "wget https://cyberpanel.net/CyberPanel.1.7.4.tar.gz"
                 res = subprocess.call(shlex.split(command))
 
                 if res == 1:
@@ -526,6 +503,7 @@ WantedBy=multi-user.target"""
 
             count = 1
             while (1):
+                #command = "tar zxf CyberPanel.1.7.4.tar.gz"
                 command = "tar zxf CyberPanel." + versionNumbring
                 res = subprocess.call(shlex.split(command))
 
@@ -584,10 +562,6 @@ WantedBy=multi-user.target"""
             ## Move static files
 
             Upgrade.staticContent()
-
-            ## Upgrade File Manager
-
-            Upgrade.fileManager()
         except:
             pass
 
@@ -734,6 +708,35 @@ WantedBy=multi-user.target"""
         return 1
 
     @staticmethod
+    def fixPermissions():
+        try:
+
+            Upgrade.stdOut("Fixing permissions..")
+
+            command = 'chown -R cyberpanel:cyberpanel /usr/local/CyberCP'
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+
+            command = 'chown -R cyberpanel:cyberpanel /usr/local/lscp'
+            cmd = shlex.split(command)
+            res = subprocess.call(cmd)
+
+            command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel'
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
+
+            Upgrade.stdOut("Permissions updated.")
+
+        except OSError, msg:
+            Upgrade.stdOut(str(msg) + " [fixPermissions]")
+            return 0
+        except ValueError, msg:
+            Upgrade.stdOut(str(msg) + " [fixPermissions]")
+            return 0
+
+        return 1
+
+    @staticmethod
     def upgrade():
 
         os.chdir("/usr/local")
@@ -763,12 +766,8 @@ WantedBy=multi-user.target"""
         ##
         Upgrade.installPYDNS()
         Upgrade.downloadAndUpgrade(Version, versionNumbring)
-
-
         ##
-
         Upgrade.installTLDExtract()
-
         ##
 
         Upgrade.mailServerMigrations()
@@ -784,13 +783,9 @@ WantedBy=multi-user.target"""
         Upgrade.applyLoginSystemMigrations()
         Upgrade.enableServices()
 
-        ## Upgrade OpenLiteSpeed
-
-        if os.path.exists('/usr/local/lsws/bin/openlitespeed'):
-            Upgrade.upgradeOpenLiteSpeed()
-
         Upgrade.setupCLI()
         Upgrade.installLSCPD()
+        Upgrade.fixPermissions()
         time.sleep(3)
 
         ## Upgrade version
@@ -804,7 +799,5 @@ WantedBy=multi-user.target"""
             pass
 
         Upgrade.stdOut("Upgrade Completed.")
-
-
 
 Upgrade.upgrade()

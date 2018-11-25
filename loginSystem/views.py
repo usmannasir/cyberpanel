@@ -143,13 +143,10 @@ def loadLoginPage(request):
     except KeyError:
 
         numberOfAdministrator = Administrator.objects.count()
-
         password = hashPassword.hash_password('1234567')
 
         if numberOfAdministrator == 0:
-
             ACLManager.createDefaultACLs()
-
             acl = ACL.objects.get(name='admin')
 
             token = hashPassword.generateToken('admin', '1234567')
@@ -159,7 +156,7 @@ def loadLoginPage(request):
                                   firstName="Cyber",lastName="Panel", acl=acl, token=token)
             admin.save()
 
-            vers = version(currentVersion="1.7",build=3)
+            vers = version(currentVersion="1.7", build=4)
             vers.save()
 
             package = Package(admin=admin, packageName="Default", diskSpace=1000,

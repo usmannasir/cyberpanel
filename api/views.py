@@ -560,7 +560,6 @@ def changeAdminPassword(request):
             if numberOfAdministrator == 0:
                 ACLManager.createDefaultACLs()
                 acl = ACL.objects.get(name='admin')
-
                 token = hashPassword.generateToken('admin', '1234567')
 
                 email = 'usman@cyberpersons.com'
@@ -568,7 +567,7 @@ def changeAdminPassword(request):
                                       firstName="Cyber", lastName="Panel", acl=acl, token=token)
                 admin.save()
 
-                vers = version(currentVersion="1.7", build=3)
+                vers = version(currentVersion="1.7", build=4)
                 vers.save()
 
                 package = Package(admin=admin, packageName="Default", diskSpace=1000,
@@ -619,7 +618,6 @@ def changeAdminPassword(request):
                             'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-
             os.remove(randomFile)
             admin = Administrator.objects.get(userName="admin")
             admin.password = hashPassword.hash_password(adminPass)
@@ -635,9 +633,6 @@ def changeAdminPassword(request):
 
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-
-
-
     except BaseException, msg:
         data_ret = {"changed": 0,
                     'error_message': str(msg)}

@@ -313,14 +313,16 @@ milter_default_action = accept
     def checkHome():
         try:
             try:
+                FNULL = open(os.devnull, 'w')
+
                 command = "sudo mkdir " + mailUtilities.cyberPanelHome
-                subprocess.call(shlex.split(command))
+                subprocess.call(shlex.split(command), stdout=FNULL)
 
                 command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
-                subprocess.call(shlex.split(command))
+                subprocess.call(shlex.split(command), stdout=FNULL)
             except:
                 command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
-                subprocess.call(shlex.split(command))
+                subprocess.call(shlex.split(command), stdout=FNULL)
 
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [checkHome]")
