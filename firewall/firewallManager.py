@@ -350,12 +350,17 @@ class FirewallManager:
                     if items.find("ssh-rsa") > -1:
                         keydata = items.split(" ")
 
-                        key = "ssh-rsa " + keydata[1][:50] + "  ..  " + keydata[2]
-
                         try:
-                            userName = keydata[2][:keydata[2].index("@")]
+                            key = "ssh-rsa " + keydata[1][:50] + "  ..  " + keydata[2]
+                            try:
+                                userName = keydata[2][:keydata[2].index("@")]
+                            except:
+                                userName = keydata[2]
                         except:
-                            userName = keydata[2]
+                            key = "ssh-rsa " + keydata[1][:50]
+                            userName = ''
+
+
 
                         dic = {'userName': userName,
                                'key': key,
@@ -545,7 +550,7 @@ class FirewallManager:
 
             # temp change of permissions
 
-            command = 'sudo chown -R  cyberpanel:cyberpanel /root'
+            command = 'sudo chown -R cyberpanel:cyberpanel /root'
 
             cmd = shlex.split(command)
 
@@ -569,11 +574,22 @@ class FirewallManager:
                 sshFile.writelines("#Created by CyberPanel\n")
                 sshFile.close()
 
-            writeToFile = open(pathToSSH, 'a')
-            writeToFile.writelines("\n")
-            writeToFile.writelines(key)
-            writeToFile.writelines("\n")
-            writeToFile.close()
+            presenseCheck = 0
+            try:
+                data = open(pathToSSH, "r").readlines()
+                for items in data:
+                    if items.find(key) > -1:
+                        presenseCheck = 1
+            except:
+                pass
+
+            if presenseCheck == 0:
+                writeToFile = open(pathToSSH, 'a')
+                writeToFile.writelines("#Added by CyberPanel\n")
+                writeToFile.writelines("\n")
+                writeToFile.writelines(key)
+                writeToFile.writelines("\n")
+                writeToFile.close()
 
             # change back permissions
 

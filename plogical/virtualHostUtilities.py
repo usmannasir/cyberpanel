@@ -1102,8 +1102,6 @@ def main():
     parser.add_argument('--openBasedirValue', help='open_base dir protection value!')
     parser.add_argument('--tempStatusPath', help='Temporary Status file path.')
 
-
-
     args = parser.parse_args()
 
     if args.function == "createVirtualHost":

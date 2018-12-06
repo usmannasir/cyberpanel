@@ -57,7 +57,7 @@ class preFlightsChecks:
     def resFailed(distro, res):
         if distro == ubuntu and res != 0:
             return True
-        elif distro == centos and res == 1:
+        elif distro == centos and res != 0:
             return True
         return False
 
@@ -76,7 +76,7 @@ class preFlightsChecks:
                     if do_exit:
                         fatal_message = '.  Fatal error, see /var/log/installLogs.txt for full details'
 
-                    preFlightsChecks.stdOut("We are not able to " + message + ' return code: ' + str(res) +
+                    preFlightsChecks.stdOut("[ERROR] We are not able to " + message + ' return code: ' + str(res) +
                                             fatal_message + " " + bracket, 1, do_exit, code)
                     return False
             else:

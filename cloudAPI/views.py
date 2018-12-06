@@ -161,6 +161,22 @@ def router(request):
             return cm.getLogsFromFile(request)
         elif controller == 'serverSSL':
             return cm.serverSSL(request)
+        elif controller == 'setupNode':
+            return cm.setupManager(request)
+        elif controller == 'fetchManagerTokens':
+            return cm.fetchManagerTokens(request)
+        elif controller == 'addWorker':
+            return cm.addWorker(request)
+        elif controller == 'fetchSSHKey':
+            return cm.fetchSSHKey(request)
+        elif controller == 'putSSHkeyFunc':
+            return cm.putSSHkeyFunc(request)
+        elif controller == 'leaveSwarm':
+            return cm.leaveSwarm(request)
+        elif controller == 'setUpDataNode':
+            return cm.setUpDataNode(request)
+        elif controller == 'submitEditCluster':
+            return cm.submitEditCluster(request)
         else:
             return cm.ajaxPre(0, 'This function is not available in your version of CyberPanel.')
 

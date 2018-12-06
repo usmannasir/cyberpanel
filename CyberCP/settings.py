@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'emailPremium',
     'emailMarketing',
     'cloudAPI',
+    'highAvailability'
 ]
 
 MIDDLEWARE = [

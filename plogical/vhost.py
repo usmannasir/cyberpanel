@@ -54,13 +54,23 @@ class vhost:
     @staticmethod
     def createDirectories(path, virtualHostUser, pathHTML, pathLogs, confPath, completePathToConfigFile):
         try:
-
             FNULL = open(os.devnull, 'w')
+
+            try:
+                command = 'chmod 711 /home'
+                cmd = shlex.split(command)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            except:
+                pass
 
             try:
                 os.makedirs(path)
 
                 command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + path
+                cmd = shlex.split(command)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+                command = "chmod 711 " + path
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
@@ -606,7 +616,6 @@ class vhost:
                 return 0
             return 1
 
-
     @staticmethod
     def deleteCoreConf(virtualHostName, numberOfSites):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
@@ -777,7 +786,6 @@ class vhost:
                     str(msg) + " [IO Error with per host config file [changePHP]]")
                 print 0, str(msg)
                 return [0, str(msg) + " [IO Error with per host config file [changePHP]]"]
-
 
     @staticmethod
     def addRewriteRules(virtualHostName, fileName=None):

@@ -5,8 +5,6 @@ from django.db import models
 from mailServer.models import Domains, EUsers
 # Create your models here.
 
-
-
 class DomainLimits(models.Model):
     domain = models.ForeignKey(Domains, on_delete=models.CASCADE)
     limitStatus = models.IntegerField(default=0)

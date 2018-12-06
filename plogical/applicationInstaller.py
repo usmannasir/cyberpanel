@@ -436,7 +436,8 @@ class ApplicationInstaller(multi.Thread):
 
             if home == '0':
                 path = self.extraArgs['path']
-                finalURL = domainName + '/' + path
+                #finalURL = domainName + '/' + path
+                finalURL = domainName
             else:
                 finalURL = domainName
 

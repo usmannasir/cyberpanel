@@ -145,7 +145,12 @@ class WebsiteManager:
             phpSelection = data['phpSelection']
             packageName = data['package']
             websiteOwner = data['websiteOwner']
-            externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:7]
+            try:
+                HA = data['HA']
+                externalApp = 'nobody'
+            except:
+                externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:7]
+
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             ## Create Configurations

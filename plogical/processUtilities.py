@@ -72,10 +72,10 @@ class ProcessUtilities:
     def executioner(command):
         try:
             res = subprocess.call(shlex.split(command))
-            if res == 1:
-                return 0
-            else:
+            if res == 0:
                 return 1
+            else:
+                return 0
         except BaseException, msg:
             return 0
 

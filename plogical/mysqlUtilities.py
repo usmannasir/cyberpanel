@@ -8,90 +8,62 @@ import subprocess
 import shlex
 from websiteFunctions.models import Websites
 from databases.models import Databases
+import MySQLdb as mysql
 
 
 class mysqlUtilities:
 
-
     @staticmethod
-    def createDatabase(dbname,dbuser,dbpassword):
-
+    def setupConnection():
         try:
-
             passFile = "/etc/cyberpanel/mysqlPassword"
 
             f = open(passFile)
             data = f.read()
             password = data.split('\n', 1)[0]
 
-            createDB = "CREATE DATABASE "+dbname
+            conn = mysql.connect(user='root', passwd=password)
+            cursor = conn.cursor()
+            return conn, cursor
 
-            command = 'sudo mysql -u root -p' + password + ' -e "' + createDB + '"'
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return 0, 0
 
-            if res == 1:
-                logging.CyberCPLogFileWriter.writeToFile("Can not create Database: " +dbname)
+
+    @staticmethod
+    def createDatabase(dbname,dbuser,dbpassword):
+        try:
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
                 return 0
 
-            createUser = "CREATE USER '" +dbuser+ "'@'localhost' IDENTIFIED BY '"+dbpassword+"'"
-
-            command = 'sudo mysql -u root -p' + password + ' -e "' + createUser + '"'
-
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
-
-            if res == 1:
-                logging.CyberCPLogFileWriter.writeToFile("Can not create Database User: " + dbuser)
-                ## reverting the db creation which was created earlier
-                mysqlUtilities.deleteDatabase(dbname,dbuser)
-                return 0
-            else:
-                dropDB = "GRANT ALL PRIVILEGES ON " +dbname+ ".* TO '" +dbuser+ "'@'localhost'"
-                command = 'sudo mysql -u root -p' + password + ' -e "' + dropDB + '"'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    mysqlUtilities.deleteDatabase(dbname, dbuser)
-                    logging.CyberCPLogFileWriter.writeToFile("Can not grant privileges to user: " + dbuser)
-                    return 0
+            cursor.execute("CREATE DATABASE " + dbname)
+            cursor.execute("CREATE USER '" +dbuser+ "'@'localhost' IDENTIFIED BY '"+dbpassword+"'")
+            cursor.execute("GRANT ALL PRIVILEGES ON " +dbname+ ".* TO '" +dbuser+ "'@'localhost'")
+            connection.close()
 
             return 1
 
         except BaseException, msg:
+            mysqlUtilities.deleteDatabase(dbname, dbuser)
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabase]")
             return 0
 
     @staticmethod
     def deleteDatabase(dbname, dbuser):
-
         try:
 
-            passFile = "/etc/cyberpanel/mysqlPassword"
+            connection, cursor = mysqlUtilities.setupConnection()
 
-            f = open(passFile)
-            data = f.read()
-            password = data.split('\n', 1)[0]
-
-            dropDB = "DROP DATABASE " + dbname
-            command = 'sudo mysql -u root -p' + password + ' -e "' + dropDB + '"'
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
-
-
-            if res == 1:
-                logging.CyberCPLogFileWriter.writeToFile("Can not delete Database: " + dbname)
+            if connection == 0:
                 return 0
-            else:
-                dropUser = "DROP USER '"+dbuser+"'@'localhost'"
-                command = 'sudo mysql -u root -p' + password + ' -e "' + dropUser + '"'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
 
-                if res == 1:
-                    logging.CyberCPLogFileWriter.writeToFile("Can not delete Database User: " + dbuser)
-                    return 0
+            cursor.execute("DROP DATABASE " + dbname)
+            cursor.execute("DROP USER '"+dbuser+"'@'localhost'")
+            connection.close()
 
             return 1
 
@@ -121,7 +93,7 @@ class mysqlUtilities:
 
             return 1
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabase]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabaseBackup]")
             return 0
 
     @staticmethod
@@ -146,20 +118,19 @@ class mysqlUtilities:
                 logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " +databaseName +"! [restoreDatabaseBackup]")
                 return 0
 
-            passwordCMD = "use mysql;SET PASSWORD FOR '"+databaseName+"'@'localhost' = '"+dbPassword+"';FLUSH PRIVILEGES;"
+            connection, cursor = mysqlUtilities.setupConnection()
 
-            command = 'sudo mysql -u root -p'+password+' -e "'+passwordCMD+'"'
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
-
-            if res == 1:
-                logging.CyberCPLogFileWriter.writeToFile("Could not change password for MYSQL user: " + databaseName + "! [restoreDatabaseBackup]")
+            if connection == 0:
                 return 0
+
+            passwordCMD = "use mysql;SET PASSWORD FOR '" + databaseName + "'@'localhost' = '" + dbPassword + "';FLUSH PRIVILEGES;"
+
+            cursor.execute(passwordCMD)
+            connection.close()
 
             return 1
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[restoreDatabaseBackup]")
-
 
     @staticmethod
     def submitDBCreation(dbName, dbUsername, dbPassword, databaseWebsite):

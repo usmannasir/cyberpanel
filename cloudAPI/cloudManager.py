@@ -17,6 +17,11 @@ from packages.packagesManager import PackagesManager
 from plogical.processUtilities import ProcessUtilities
 from firewall.firewallManager import FirewallManager
 from serverLogs.views import getLogsFromFile
+from random import randint
+from highAvailability.haManager import HAManager
+from plogical.httpProc import httpProc
+from api.views import fetchSSHkey
+import os
 
 class CloudManager:
     def __init__(self, data=None, admin = None):
@@ -740,5 +745,88 @@ class CloudManager:
                 return obtainHostNameSSL(request)
             else:
                 return obtainMailServerSSL(request)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def setupManager(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+            self.data['tempStatusPath'] = tempStatusPath
+
+            ham = HAManager(request, self.data, 'setupNode')
+            ham.start()
+
+            data = {}
+            data['tempStatusPath'] = tempStatusPath
+
+            proc = httpProc(request, None)
+            return proc.ajax(1, None, data)
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchManagerTokens(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            ham = HAManager(request, self.data, 'fetchManagerTokens')
+            return ham.fetchManagerTokens()
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def addWorker(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            ham = HAManager(request, self.data, 'fetchManagerTokens')
+            return ham.addWorker()
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchSSHKey(self, request):
+        try:
+            pubKey = os.path.join("/root", ".ssh", 'cyberpanel.pub')
+            execPath = "sudo cat " + pubKey
+            data = subprocess.check_output(shlex.split(execPath))
+
+            data_ret = {
+                'status': 1,
+                'error_message': "None",
+                'pubKey': data
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def putSSHkeyFunc(self, request):
+        try:
+            fm = FirewallManager(request)
+            return fm.addSSHKey(self.admin.pk, self.data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def leaveSwarm(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            ham = HAManager(request, self.data, 'leaveSwarm')
+            return ham.leaveSwarm()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def setUpDataNode(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            ham = HAManager(request, self.data, 'setUpDataNode')
+            return ham.setUpDataNode()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def submitEditCluster(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            ham = HAManager(request, self.data, 'submitEditCluster')
+            return ham.submitEditCluster()
         except BaseException, msg:
             return self.ajaxPre(0, str(msg))

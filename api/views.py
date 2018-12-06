@@ -262,6 +262,7 @@ def fetchSSHkey(request):
                 data = subprocess.check_output(shlex.split(execPath))
 
                 data_ret = {
+                            'status': 1,
                             'pubKeyStatus': 1,
                             'error_message': "None",
                             'pubKey':data
@@ -270,6 +271,7 @@ def fetchSSHkey(request):
                 return HttpResponse(json_data)
             else:
                 data_ret = {
+                            'status' : 0,
                             'pubKeyStatus': 0,
                             'error_message': "Could not authorize access to API."
                             }
@@ -277,7 +279,7 @@ def fetchSSHkey(request):
                 return HttpResponse(json_data)
 
     except BaseException, msg:
-        data = {'pubKeyStatus': 0,'error_message': str(msg)}
+        data = {'status' : 0, 'pubKeyStatus': 0,'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
