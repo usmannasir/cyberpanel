@@ -8,7 +8,7 @@ import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 from dns.models import Domains,Records
-
+from processUtilities import ProcessUtilities
 
 class DNS:
 
@@ -153,7 +153,6 @@ class DNS:
                                      disabled=0,
                                      auth=1)
                     record.save()
-
             else:
                 if Domains.objects.filter(name=topLevelDomain).count() == 0:
                     zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
@@ -290,6 +289,10 @@ class DNS:
 
                 DNS.createDNSRecord(zone, cNameValue, "CNAME", actualSubDomain, 0, 3600)
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                command = 'sudo systemctl restart pdns'
+                ProcessUtilities.executioner(command)
+
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 "We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
@@ -322,6 +325,10 @@ class DNS:
                              auth=1)
             record.save()
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                command = 'sudo systemctl restart pdns'
+                ProcessUtilities.executioner(command)
+
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 "We had errors while creating DKIM record for: " + domain + ". Error message: " + str(msg))
@@ -348,6 +355,11 @@ class DNS:
                                      disabled=0,
                                      auth=1)
                     record.save()
+
+                    if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                        command = 'sudo systemctl restart pdns'
+                        ProcessUtilities.executioner(command)
+
                 return
 
             if type == 'TXT':
@@ -362,6 +374,10 @@ class DNS:
                                      disabled=0,
                                      auth=1)
                     record.save()
+
+                    if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                        command = 'sudo systemctl restart pdns'
+                        ProcessUtilities.executioner(command)
                 return
 
             if type == 'MX':
@@ -375,6 +391,10 @@ class DNS:
                                  disabled=0,
                                  auth=1)
                 record.save()
+
+                if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                    command = 'sudo systemctl restart pdns'
+                    ProcessUtilities.executioner(command)
                 return
 
 
@@ -389,6 +409,9 @@ class DNS:
                                  disabled=0,
                                  auth=1)
                 record.save()
+                if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                    command = 'sudo systemctl restart pdns'
+                    ProcessUtilities.executioner(command)
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDNSRecord]")
 

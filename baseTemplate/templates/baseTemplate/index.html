@@ -289,6 +289,10 @@
             <i class="glyph-icon tooltip-button icon-cloud-upload" title="{% trans 'Version Management' %}" data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
             <span>{% trans "Version Management" %}</span>
         </a>
+        <a class="versionManagement" href="https://platform.cyberpanel.net" title="{% trans 'Connect' %}">
+            <i class="glyph-icon tooltip-button icon-cloud" title="{% trans 'Connect' %}" data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
+            <span>{% trans "Connect" %}</span>
+        </a>
     </li>
     <li class="divider"></li>
     <li class="header"><span>{% trans "Main" %}</span></li>
@@ -479,12 +483,10 @@
         <div class="sidebar-submenu">
 
             <ul>
-
+                <li><a href="{% url 'topProcesses' %}" title="{% trans 'Top Processes' %}"><span>{% trans "Top Processes" %}</span></a></li>
                 <li><a href="{% url 'litespeedStatus' %}" title="{% trans 'LiteSpeed Status' %}"><span>{% trans "LiteSpeed Status" %}</span></a></li>
                 <li><a href="{% url 'cyberCPMainLogFile' %}" title="{% trans 'CyberPanel Main Log File' %}"><span>{% trans "CyberPanel Main Log File" %}</span></a></li>
                 <li><a href="{% url 'services' %}" title="{% trans 'Services Status' %}"><span>{% trans "Services Status" %}</span></a></li>
-
-
             </ul>
 
         </div><!-- .sidebar-submenu -->

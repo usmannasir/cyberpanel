@@ -213,6 +213,7 @@ class InstallCyberPanel:
                 logging.InstallLog.writeToFile(str(msg) + " [setupFileManager]")
 
     def installAllPHPVersions(self):
+
         if self.distro == ubuntu:
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
                       'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
@@ -364,7 +365,11 @@ class InstallCyberPanel:
         self.startMariaDB()
 
     def changeMYSQLRootPassword(self):
-        passwordCMD = "use mysql;update user set password=PASSWORD('" + InstallCyberPanel.mysql_Root_password + "') where User='root';flush privileges;"
+        if self.distro == ubuntu:
+            passwordCMD = "use mysql;update user set password=PASSWORD('" + InstallCyberPanel.mysql_Root_password + "') where User='root';UPDATE user SET plugin='' WHERE User='root';flush privileges;"
+        else:
+            passwordCMD = "use mysql;update user set password=PASSWORD('" + InstallCyberPanel.mysql_Root_password + "') where User='root';flush privileges;"
+
         command = 'mysql -u root -e "' + passwordCMD + '"'
         install.preFlightsChecks.call(command, self.distro, '[changeMYSQLRootPassword]', 'MYSQL Root Password change.',
                                       1, 1, os.EX_OSERR)

@@ -18,7 +18,6 @@ class httpProc:
         final_dic = {'status': status, 'error_message': errorMessage, 'success': success}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
-
     def ajax(self, status, errorMessage, data = None):
         if data == None:
             finalDic = {'status': status, 'error_message': errorMessage}

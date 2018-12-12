@@ -999,7 +999,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
 
     $scope.addRemoveWebsite = function (website,websiteStatus) {
 
-        if(websiteStatus==true)
+        if(websiteStatus === true)
         {
             var check = 1;
             for(var j = 0; j < websitesToBeBacked.length; j++){
@@ -1028,9 +1028,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
 
     $scope.allChecked = function (webSiteStatus) {
 
-
-
-        if(webSiteStatus==true) {
+        if(webSiteStatus === true) {
 
             websitesToBeBacked = websitesToBeBackedTemp;
             $scope.webSiteStatus = true;
@@ -1142,7 +1140,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
 
 
         if(websitesToBeBacked.length === 0){
-            alert("No websites selected for transfer.")
+            alert("No websites selected for transfer.");
             return;
         }
 

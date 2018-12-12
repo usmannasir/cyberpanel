@@ -116,24 +116,10 @@ class preFlightsChecks:
         try:
 
             if self.distro == centos:
-                count = 0
-                while (1):
-                    command = "yum install sudo -y"
-                    cmd = shlex.split(command)
-                    res = subprocess.call(cmd)
-
-                    if preFlightsChecks.resFailed(self.distro, res):
-                        count = count + 1
-                        preFlightsChecks.stdOut("SUDO install failed, trying again, try number: " + str(count))
-                        if count == 3:
-                            logging.InstallLog.writeToFile(
-                                "We are not able to install SUDO, exiting the installer. [setup_account_cyberpanel]")
-                            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                            os._exit(0)
-                    else:
-                        logging.InstallLog.writeToFile("SUDO successfully installed!")
-                        preFlightsChecks.stdOut("SUDO successfully installed!")
-                        break
+                command = "yum install sudo -y"
+                preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
+                                              'Install sudo.',
+                                              1, 0, os.EX_OSERR)
 
             ##
 
@@ -168,49 +154,19 @@ class preFlightsChecks:
                     preFlightsChecks.stdOut("CyberPanel user added")
 
             else:
-                while (1):
-                    command = "adduser cyberpanel"
-                    cmd = shlex.split(command)
-                    res = subprocess.call(cmd)
-
-                    if preFlightsChecks.resFailed(self.distro, res):
-                        count = count + 1
-                        preFlightsChecks.stdOut(
-                            "Not able to add user cyberpanel to system, trying again, try number: " + str(count) + "\n")
-                        if count == 3:
-                            logging.InstallLog.writeToFile(
-                                "We are not able add user cyberpanel to system, exiting the installer. [setup_account_cyberpanel]")
-                            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                            os._exit(0)
-                    else:
-                        logging.InstallLog.writeToFile("CyberPanel user added!")
-                        preFlightsChecks.stdOut("CyberPanel user added!")
-                        break
+                command = "adduser cyberpanel"
+                preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
+                                              'add user cyberpanel',
+                                              1, 0, os.EX_OSERR)
 
                 ##
 
-                count = 0
+                command = "usermod -aG wheel cyberpanel"
+                preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
+                                              'add user cyberpanel',
+                                              1, 0, os.EX_OSERR)
 
-                while (1):
 
-                    command = "usermod -aG wheel cyberpanel"
-                    cmd = shlex.split(command)
-                    res = subprocess.call(cmd)
-
-                    if preFlightsChecks.resFailed(self.distro, res):
-                        count = count + 1
-                        preFlightsChecks.stdOut(
-                            "We are trying to add CyberPanel user to SUDO group, trying again, try number: " + str(
-                                count) + "\n")
-                        if count == 3:
-                            logging.InstallLog.writeToFile(
-                                "Not able to add user CyberPanel to SUDO group, exiting the installer. [setup_account_cyberpanel]")
-                            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                            os._exit(0)
-                    else:
-                        logging.InstallLog.writeToFile("CyberPanel user was successfully added to SUDO group!")
-                        preFlightsChecks.stdOut("CyberPanel user was successfully added to SUDO group!")
-                        break
 
             ###############################
 
@@ -230,35 +186,13 @@ class preFlightsChecks:
 
             ###############################
 
-            count = 0
+            command = "mkdir -p /etc/letsencrypt/live/"
+            preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
+                                          'add user cyberpanel',
+                                          1, 0, os.EX_OSERR)
 
-            while (1):
-
-                command = "mkdir -p /etc/letsencrypt/live/"
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut(
-                        "We are trying to create Let's Encrypt directory to store SSLs, trying again, try number: " + str(
-                            count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Failed to create Let's Encrypt directory to store SSLs. Installer can continue without this.. [setup_account_cyberpanel]")
-                else:
-                    logging.InstallLog.writeToFile("Successfully created Let's Encrypt directory!")
-                    preFlightsChecks.stdOut("Successfully created Let's Encrypt directory!")
-                    break
-
-                    ##
-
-        except:
-            logging.InstallLog.writeToFile("[116] setup_account_cyberpanel")
-            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-            os._exit(0)
+        except BaseException, msg:
+            logging.InstallLog.writeToFile("[ERROR] setup_account_cyberpanel. " + str(msg))
 
     def yum_update(self):
         try:

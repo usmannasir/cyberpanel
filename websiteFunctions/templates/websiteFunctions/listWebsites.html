@@ -38,7 +38,9 @@
 
                 <tr ng-repeat="web in WebSitesList track by $index">
                     <td ng-bind="web.domain"></td>
-                    <td><a href="{$ web.domain $}"><img width="30px" height="30" class="center-block" src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"></a></td>
+                    <td><a href="{$ web.domain $}"><img width="30px" height="30" class="center-block"
+                                                        src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"></a>
+                    </td>
                     <td ng-bind="web.ipAddress"></td>
                     <td ng-bind="web.package"></td>
                     <td ng-bind="web.admin"></td>

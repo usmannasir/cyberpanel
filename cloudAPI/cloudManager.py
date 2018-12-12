@@ -20,7 +20,7 @@ from serverLogs.views import getLogsFromFile
 from random import randint
 from highAvailability.haManager import HAManager
 from plogical.httpProc import httpProc
-from api.views import fetchSSHkey
+from s3Backups.s3Backups import S3Backups
 import os
 
 class CloudManager:
@@ -828,5 +828,86 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             ham = HAManager(request, self.data, 'submitEditCluster')
             return ham.submitEditCluster()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def connectAccount(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'connectAccount')
+            return s3.connectAccount()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchBuckets(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'fetchBuckets')
+            return s3.fetchBuckets()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def createPlan(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'createPlan')
+            return s3.createPlan()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchBackupPlans(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'fetchBackupPlans')
+            return s3.fetchBackupPlans()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def deletePlan(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'deletePlan')
+            return s3.deletePlan()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchWebsitesInPlan(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'fetchWebsitesInPlan')
+            return s3.fetchWebsitesInPlan()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def deleteDomainFromPlan(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'deleteDomainFromPlan')
+            return s3.deleteDomainFromPlan()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def savePlanChanges(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'savePlanChanges')
+            return s3.savePlanChanges()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchBackupLogs(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'fetchBackupLogs')
+            return s3.fetchBackupLogs()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def forceRunAWSBackup(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'forceRunAWSBackup')
+            s3.start()
+            return self.ajaxPre(1, None)
         except BaseException, msg:
             return self.ajaxPre(0, str(msg))

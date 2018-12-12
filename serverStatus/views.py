@@ -16,6 +16,7 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 import time
 import serverStatusUtil
 from plogical.processUtilities import ProcessUtilities
+from plogical.httpProc import httpProc
 # Create your views here.
 
 def serverStatusHome(request):
@@ -435,6 +436,172 @@ def changeLicense(request):
             final_dic = {'status': 1, "erroMessage": 'None'}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+        except BaseException, msg:
+            final_dic = {'status': 0, 'erroMessage': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError, msg:
+        final_dic = {'status': 0, 'erroMessage': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def topProcesses(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        templateName = "serverStatus/topProcesses.html"
+        proc = httpProc(request, templateName)
+        return proc.renderPre()
+
+    except KeyError,msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
+        return redirect(loadLoginPage)
+
+def topProcessesStatus(request):
+    try:
+
+        with open("/home/cyberpanel/top", "w") as outfile:
+            subprocess.call("sudo top -n1 -b", shell=True, stdout=outfile)
+
+        data = open('/home/cyberpanel/top', 'r').readlines()
+
+        json_data = "["
+        checker = 0
+        counter = 0
+
+        loadAVG = data[0].split(' ')
+        loadAVG = filter(lambda a: a != '', loadAVG)
+        logging.CyberCPLogFileWriter.writeToFile(str(loadAVG))
+
+        loadNow = data[2].split(' ')
+        loadNow = filter(lambda a: a != '', loadNow)
+
+
+        memory = data[3].split(' ')
+        memory = filter(lambda a: a != '', memory)
+
+        swap = data[4].split(' ')
+        swap = filter(lambda a: a != '', swap)
+
+        processes = data[1].split(' ')
+        processes = filter(lambda a: a != '', processes)
+
+
+        for items in data:
+            counter = counter + 1
+            if counter <= 7:
+                continue
+
+            points = items.split(' ')
+            points = filter(lambda a: a != '', points)
+
+            dic = {'PID': points[0], 'User': points[1], 'VIRT': points[4],
+                   'RES': points[5], 'S': points[7], 'CPU': points[8], 'MEM': points[9],
+                   'Time': points[10], 'Command': points[11]
+                   }
+
+            if checker == 0:
+                json_data = json_data + json.dumps(dic)
+                checker = 1
+            else:
+                json_data = json_data + ',' + json.dumps(dic)
+
+
+        json_data = json_data + ']'
+
+        data = {}
+        data['status'] = 1
+        data['error_message'] = 'None'
+        data['data'] = json_data
+
+        ## CPU
+        data['cpuNow'] = loadNow[1]
+        data['cpuOne'] = loadAVG[-3].rstrip(',')
+        data['cpuFive'] = loadAVG[-2].rstrip(',')
+        data['cpuFifteen'] = loadAVG[-1]
+
+        ## CPU Time spent
+
+        data['ioWait'] = loadNow[9] + '%'
+        data['idleTime'] = loadNow[7] + '%'
+        data['hwInterrupts'] = loadNow[11] + '%'
+        data['Softirqs'] = loadNow[13] + '%'
+
+        ## Memory
+        data['totalMemory'] = str(int(float(memory[3])/1024)) + 'MB'
+        data['freeMemory'] = str(int(float(memory[5])/1024)) + 'MB'
+        data['usedMemory'] = str(int(float(memory[7])/1024)) + 'MB'
+        data['buffCache'] = str(int(float(memory[9])/1024)) + 'MB'
+
+        ## Swap
+
+        data['swapTotalMemory'] = str(int(float(swap[2]) / 1024)) + 'MB'
+        data['swapFreeMemory'] = str(int(float(swap[4]) / 1024)) + 'MB'
+        data['swapUsedMemory'] = str(int(float(swap[6]) / 1024)) + 'MB'
+        data['swapBuffCache'] = str(int(float(swap[8]) / 1024)) + 'MB'
+
+        ## Processes
+
+        data['totalProcesses'] = processes[1]
+        data['runningProcesses'] = processes[3]
+        data['sleepingProcesses'] = processes[5]
+        data['stoppedProcesses'] = processes[7]
+        data['zombieProcesses'] = processes[9]
+
+        ## CPU Details
+
+        command = 'sudo cat /proc/cpuinfo'
+        output = subprocess.check_output(shlex.split(command)).splitlines()
+
+        import psutil
+
+        data['cores'] = psutil.cpu_count()
+
+        for items in output:
+            if items.find('model name') > -1:
+                modelName = items.split(':')[1].strip(' ')
+                index = modelName.find('CPU')
+                data['modelName'] = modelName[0:index]
+            elif items.find('cpu MHz') > -1:
+                data['cpuMHZ'] = items.split(':')[1].strip(' ')
+            elif items.find('cache size') > -1:
+                data['cacheSize'] = items.split(':')[1].strip(' ')
+                break
+
+        final_json = json.dumps(data)
+        return HttpResponse(final_json)
+
+    except BaseException, msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def killProcess(request):
+    try:
+        userID = request.session['userID']
+
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            data = json.loads(request.body)
+            pid = data['pid']
+
+            ProcessUtilities.executioner('sudo kill ' + pid)
+
+            proc = httpProc(request, None)
+            return proc.ajax(1, None)
 
         except BaseException, msg:
             final_dic = {'status': 0, 'erroMessage': str(msg)}

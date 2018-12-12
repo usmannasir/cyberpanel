@@ -637,3 +637,142 @@ app.controller('lswsSwitch', function ($scope, $http, $timeout, $window) {
     }
 
 });
+
+app.controller('topProcesses', function ($scope, $http, $timeout) {
+
+    $scope.cyberPanelLoading = true;
+
+    $scope.topProcessesStatus = function () {
+
+        $scope.cyberPanelLoading = false;
+
+        url = "/serverstatus/topProcessesStatus";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.processes = JSON.parse(response.data.data);
+
+                //CPU Details
+                $scope.cores = response.data.cores;
+                $scope.modelName = response.data.modelName;
+                $scope.cpuMHZ = response.data.cpuMHZ;
+                $scope.cacheSize = response.data.cacheSize;
+
+                //CPU Load
+                $scope.cpuNow = response.data.cpuNow;
+                $scope.cpuOne = response.data.cpuOne;
+                $scope.cpuFive = response.data.cpuFive;
+                $scope.cpuFifteen = response.data.cpuFifteen;
+
+                //CPU Time spent
+                $scope.ioWait = response.data.ioWait;
+                $scope.idleTime = response.data.idleTime;
+                $scope.hwInterrupts = response.data.hwInterrupts;
+                $scope.Softirqs = response.data.Softirqs;
+
+                //Memory
+                $scope.totalMemory = response.data.totalMemory;
+                $scope.freeMemory = response.data.freeMemory;
+                $scope.usedMemory = response.data.usedMemory;
+                $scope.buffCache = response.data.buffCache;
+
+                //Swap
+                $scope.swapTotalMemory = response.data.swapTotalMemory;
+                $scope.swapFreeMemory = response.data.swapFreeMemory;
+                $scope.swapUsedMemory = response.data.swapUsedMemory;
+                $scope.swapBuffCache = response.data.swapBuffCache;
+
+                //Processes
+                $scope.totalProcesses = response.data.totalProcesses;
+                $scope.runningProcesses = response.data.runningProcesses;
+                $scope.sleepingProcesses = response.data.sleepingProcesses;
+                $scope.stoppedProcesses = response.data.stoppedProcesses;
+                $scope.zombieProcesses = response.data.zombieProcesses;
+
+                $timeout($scope.topProcessesStatus, 3000);
+            }
+            else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+    $scope.topProcessesStatus();
+
+    $scope.killProcess = function (pid) {
+
+        $scope.cyberPanelLoading = false;
+
+        url = "/serverstatus/killProcess";
+
+        var data = {
+            pid: pid
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Process successfully killed.',
+                    type: 'success'
+                });
+            }
+            else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
+});

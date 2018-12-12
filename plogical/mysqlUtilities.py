@@ -22,14 +22,18 @@ class mysqlUtilities:
             data = f.read()
             password = data.split('\n', 1)[0]
 
+            logging.CyberCPLogFileWriter.writeToFile(password)
+
             conn = mysql.connect(user='root', passwd=password)
             cursor = conn.cursor()
+            logging.CyberCPLogFileWriter.writeToFile('hekkk')
             return conn, cursor
+
+
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0, 0
-
 
     @staticmethod
     def createDatabase(dbname,dbuser,dbpassword):

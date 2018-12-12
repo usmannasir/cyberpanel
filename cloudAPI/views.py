@@ -177,6 +177,26 @@ def router(request):
             return cm.setUpDataNode(request)
         elif controller == 'submitEditCluster':
             return cm.submitEditCluster(request)
+        elif controller == 'connectAccount':
+            return cm.connectAccount(request)
+        elif controller == 'fetchBuckets':
+            return cm.fetchBuckets(request)
+        elif controller == 'createPlan':
+            return cm.createPlan(request)
+        elif controller == 'fetchBackupPlans':
+            return cm.fetchBackupPlans(request)
+        elif controller == 'deletePlan':
+            return cm.deletePlan(request)
+        elif controller == 'fetchWebsitesInPlan':
+            return cm.fetchWebsitesInPlan(request)
+        elif controller == 'deleteDomainFromPlan':
+            return cm.deleteDomainFromPlan(request)
+        elif controller == 'savePlanChanges':
+            return cm.savePlanChanges(request)
+        elif controller == 'fetchBackupLogs':
+            return cm.fetchBackupLogs(request)
+        elif controller == 'forceRunAWSBackup':
+            return cm.forceRunAWSBackup(request)
         else:
             return cm.ajaxPre(0, 'This function is not available in your version of CyberPanel.')
 
