@@ -19,8 +19,9 @@ from plogical.website import WebsiteManager
 from loginSystem.models import ACL
 from plogical.acl import ACLManager
 from firewall.models import FirewallRules
+from s3Backups.s3Backups import S3Backups
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 # Create your views here.
-
 
 
 def verifyConn(request):
@@ -641,3 +642,15 @@ def changeAdminPassword(request):
 
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+def runAWSBackups(request):
+    try:
+
+        data = json.loads(request.body)
+        randomFile = data['randomFile']
+
+        if os.path.exists(randomFile):
+            s3 = S3Backups(request, None, 'runAWSBackups')
+            s3.start()
+    except BaseException, msg:
+        logging.writeToFile(str(msg) + ' [API.runAWSBackups]')

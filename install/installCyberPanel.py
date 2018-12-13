@@ -219,12 +219,17 @@ class InstallCyberPanel:
                       'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
                       'lsphp7?-ldap lsphp7?-mysql lsphp7?-opcache lsphp7?-pspell lsphp7?-recode ' \
                       'lsphp7?-sqlite3 lsphp7?-tidy'
+
+            res = os.system(command)
+            if res != 0:
+                InstallCyberPanel.stdOut("Failed to install PHP on Ubuntu.", 1, 1)
+
         else:
             command = 'yum -y groupinstall lsphp-all'
 
-        install.preFlightsChecks.call(command, self.distro, '[installAllPHPVersions]',
-                                      'Install PHP',
-                                      1, 1, os.EX_OSERR)
+            install.preFlightsChecks.call(command, self.distro, '[installAllPHPVersions]',
+                                          'Install PHP',
+                                          1, 1, os.EX_OSERR)
 
         InstallCyberPanel.stdOut("LiteSpeed PHPs successfully installed!", 1)
 
@@ -391,7 +396,7 @@ class InstallCyberPanel:
             command = "systemctl enable mysql"
 
         install.preFlightsChecks.call(command, self.distro, '[installMySQL]',
-                                      'Install MySQL',
+                                      'Enable MySQL',
                                       1, 1, os.EX_OSERR)
 
     def fixMariaDB(self):

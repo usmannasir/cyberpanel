@@ -11,7 +11,8 @@ class BackupPlan(models.Model):
     bucket = models.CharField(max_length=50, default='NONE')
     freq = models.CharField(max_length=50)
     retention = models.IntegerField()
-    lastRun = models.CharField(max_length=50, default='NEVER')
+    type = models.CharField(max_length=5, default='AWS')
+    lastRun = models.CharField(max_length=50, default='0:0:0')
 
 class WebsitesInPlan(models.Model):
     owner = models.ForeignKey(BackupPlan,on_delete=models.CASCADE)
@@ -20,5 +21,6 @@ class WebsitesInPlan(models.Model):
 
 class BackupLogs(models.Model):
     owner = models.ForeignKey(BackupPlan,on_delete=models.CASCADE)
+    timeStamp = models.CharField(max_length=200)
     level = models.CharField(max_length=5)
     msg = models.CharField(max_length=500)

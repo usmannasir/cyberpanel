@@ -478,7 +478,6 @@ def topProcessesStatus(request):
 
         loadAVG = data[0].split(' ')
         loadAVG = filter(lambda a: a != '', loadAVG)
-        logging.CyberCPLogFileWriter.writeToFile(str(loadAVG))
 
         loadNow = data[2].split(' ')
         loadNow = filter(lambda a: a != '', loadNow)
@@ -492,7 +491,6 @@ def topProcessesStatus(request):
 
         processes = data[1].split(' ')
         processes = filter(lambda a: a != '', processes)
-
 
         for items in data:
             counter = counter + 1
@@ -512,7 +510,6 @@ def topProcessesStatus(request):
                 checker = 1
             else:
                 json_data = json_data + ',' + json.dumps(dic)
-
 
         json_data = json_data + ']'
 
