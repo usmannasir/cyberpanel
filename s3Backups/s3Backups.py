@@ -16,6 +16,7 @@ try:
     import time
     from random import randint
     import subprocess, shlex
+    from plogical.processUtilities import ProcessUtilities
 except BaseException, msg:
     from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
     logging.writeToFile(str(msg))
@@ -127,8 +128,14 @@ class S3Backups(multi.Thread):
                     break
 
             if insertCron:
-                command = 'echo "0 24 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/s3Backups/s3Backups.py" >> ' + cronPath
-                subprocess.call(command, shell=True)
+                pathToFile = "/home/cyberpanel/" + str(randint(1000, 9999))
+                writeToFile = open(pathToFile, 'w')
+                for items in output:
+                    writeToFile.writelines(items + '\n')
+                writeToFile.writelines('0 24 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/s3Backups/s3Backups.py\n')
+                writeToFile.close()
+                command = 'sudo mv ' + pathToFile + ' /etc/crontab'
+                ProcessUtilities.executioner(command)
 
             return proc.ajax(1, None)
 

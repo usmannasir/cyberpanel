@@ -12,13 +12,13 @@ import requests
 import json
 import time
 from baseTemplate.models import version
-from CyberCP import settings
+import MySQLdb as mysql
 
 class Upgrade:
     logPath = "/usr/local/lscp/logs/upgradeLog"
 
     @staticmethod
-    def stdOut(message):
+    def stdOut(message, do_exit = 0):
         print("\n\n")
         print ("[" + time.strftime(
             "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
@@ -26,14 +26,25 @@ class Upgrade:
         print ("[" + time.strftime(
             "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
 
+        if do_exit:
+            os._exit(0)
+
     @staticmethod
-    def executioner(command):
+    def executioner(command, component, do_exit = 0):
         try:
-            res = subprocess.call(shlex.split(command))
-            if res == 0:
-                return 1
-            else:
-                return 0
+            count = 0
+            while True:
+                res = subprocess.call(shlex.split(command))
+                if res != 0:
+                    count = count + 1
+                    Upgrade.stdOut(component + ' failed, trying again, try number: ' + str(count), 0)
+                    if count == 3:
+                        Upgrade.stdOut(component + ' failed.', do_exit)
+                        return False
+                else:
+                    Upgrade.stdOut(component + ' successful.', 0)
+                    break
+            return True
         except:
             return 0
 
@@ -55,57 +66,21 @@ class Upgrade:
         try:
             Upgrade.stdOut('Setting up virtual environment for CyberPanel.')
             ##
-            count = 0
-            while (1):
-                command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
-                res = subprocess.call(shlex.split(command))
 
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut(
-                        "Trying to install project dependant modules, trying again, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut("Failed to install project dependant modules! [setupVirtualEnv]")
-                        os._exit(0)
-                else:
-                    Upgrade.stdOut("Project dependant modules installed successfully!!")
-                    break
+            command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
+            Upgrade.executioner(command, 'VirtualEnv Pre-reqs', 0)
+
 
             ##
 
-            count = 0
-            while (1):
-                command = "pip install virtualenv"
-                res = subprocess.call(shlex.split(command))
-
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut(
-                        "Trying to install virtualenv, trying again, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut("Failed install virtualenv! [setupVirtualEnv]")
-                        os._exit(0)
-                else:
-                    Upgrade.stdOut("virtualenv installed successfully!")
-                    break
+            command = "pip install virtualenv"
+            Upgrade.executioner(command, 'VirtualEnv Install', 0)
 
             ####
 
-            count = 0
-            while (1):
-                command = "virtualenv --system-site-packages /usr/local/CyberCP"
-                res = subprocess.call(shlex.split(command))
+            command = "virtualenv --system-site-packages /usr/local/CyberCP"
+            Upgrade.executioner(command, 'Setting up VirtualEnv [One]', 1)
 
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut(
-                        "Trying to setup virtualenv, trying again, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut("Failed to setup virtualenv! [setupVirtualEnv]")
-                        os._exit(0)
-                else:
-                    Upgrade.stdOut("virtualenv setuped successfully!")
-                    break
 
             ##
 
@@ -116,34 +91,18 @@ class Upgrade:
 
             ##
 
-            count = 0
-            while (1):
-                command = "pip install --ignore-installed -r /usr/local/CyberCP/requirments.txt"
-                res = subprocess.call(shlex.split(command))
-
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut("Trying to install project dependant modules, trying again, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut("Failed to install project dependant modules! [setupVirtualEnv]")
-                        os._exit(0)
-                        break
-                else:
-                    Upgrade.stdOut("Project dependant modules installed successfully!!")
-                    break
-
+            command = "pip install --ignore-installed -r /usr/local/CyberCP/requirments.txt"
+            Upgrade.executioner(command, 'CyberPanel requirements', 1)
 
             command = "systemctl stop gunicorn.socket"
-            Upgrade.executioner(command)
+            Upgrade.executioner(command, '', 0)
 
             command = "virtualenv --system-site-packages /usr/local/CyberCP"
-            Upgrade.executioner(command)
+            Upgrade.executioner(command, 'Setting up VirtualEnv [Two]', 1)
 
             Upgrade.stdOut('Virtual enviroment for CyberPanel successfully installed.')
-
         except OSError, msg:
-            Upgrade.stdOut(str(msg) + " [setupVirtualEnv]")
-            os._exit(0)
+            Upgrade.stdOut(str(msg) + " [setupVirtualEnv]", 0)
 
     @staticmethod
     def updateGunicornConf():
@@ -174,79 +133,47 @@ WantedBy=multi-user.target"""
             writeToFile.write(cont)
             writeToFile.close()
 
-            try:
-                command = 'systemctl daemon-reload'
-                subprocess.call(shlex.split(command))
-            except:
-                pass
+            ##
 
-            try:
-                command = 'systemctl restart gunicorn.socket'
-                subprocess.call(shlex.split(command))
-            except:
-                pass
+            command = 'systemctl daemon-reload'
+            Upgrade.executioner(command, 'daemon-reload', 0)
 
+            ##
+
+            command = 'systemctl restart gunicorn.socket'
+            Upgrade.executioner(command, 'restart gunicorn.socket', 0)
         except BaseException, msg:
             Upgrade.stdOut(str(msg) + " [updateGunicornConf]")
-            os._exit(0)
 
     @staticmethod
     def fileManager():
         ## Copy File manager files
 
         command = "rm -rf /usr/local/lsws/Example/html/FileManager"
-        Upgrade.executioner(command)
+        Upgrade.executioner(command, 'Remove old Filemanager', 0)
 
         if os.path.exists('/usr/local/lsws/bin/openlitespeed'):
-            count = 1
-            while (1):
-                command = "mv /usr/local/CyberCP/install/FileManager /usr/local/lsws/Example/html"
-                res = subprocess.call(shlex.split(command))
-
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut(
-                        "Trying to upgrade File manager, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut("Failed to upgrade File manager! [upgrade]")
-                        os._exit(0)
-                else:
-                    Upgrade.stdOut("File manager successfully upgraded!")
-                    break
-
+            command = "mv /usr/local/CyberCP/install/FileManager /usr/local/lsws/Example/html"
+            Upgrade.executioner(command, 'Setup new Filemanager', 0)
         else:
-            count = 1
-            while (1):
-                command = "mv /usr/local/CyberCP/install/FileManager /usr/local/lsws"
-                res = subprocess.call(shlex.split(command))
+            command = "mv /usr/local/CyberCP/install/FileManager /usr/local/lsws"
+            Upgrade.executioner(command, 'Setup new Filemanager', 0)
 
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut(
-                        "Trying to upgrade File manager, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut("Failed to upgrade File manager! [upgrade]")
-                        os._exit(0)
-                else:
-                    Upgrade.stdOut("File manager successfully upgraded!")
-                    break
 
-        try:
-            command = "chmod -R 777 /usr/local/lsws/Example/html/FileManager"
-            subprocess.call(shlex.split(command))
-        except:
-            pass
+        ##
+
+        command = "chmod -R 777 /usr/local/lsws/Example/html/FileManager"
+        Upgrade.executioner(command, 'Filemanager permissions change', 0)
 
     @staticmethod
     def setupCLI():
         try:
 
             command = "ln -s /usr/local/CyberCP/cli/cyberPanel.py /usr/bin/cyberpanel"
-            Upgrade.executioner(command)
+            Upgrade.executioner(command, 'CLI Symlink', 0)
 
             command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
-            Upgrade.executioner(command)
-
+            Upgrade.executioner(command, 'CLI Permissions', 0)
 
         except OSError, msg:
             Upgrade.stdOut(str(msg) + " [setupCLI]")
@@ -254,197 +181,346 @@ WantedBy=multi-user.target"""
 
     @staticmethod
     def staticContent():
-        count = 1
-        while (1):
-            command = "rm -rf /usr/local/lscp/cyberpanel/static"
-            res = subprocess.call(shlex.split(command))
 
-            if res == 1:
-                count = count + 1
-                Upgrade.stdOut(
-                    "Trying to remove old static content, try number: " + str(count))
-                if count == 3:
-                    Upgrade.stdOut("Failed to remove old static content! [upgrade]")
-                    os._exit(0)
-            else:
-                Upgrade.stdOut("Static content successfully removed!")
-                break
+        command = "rm -rf /usr/local/lscp/cyberpanel/static"
+        Upgrade.executioner(command, 'Remove old static content', 0)
 
-        count = 1
-        while (1):
-            command = "mv /usr/local/CyberCP/static /usr/local/lscp/cyberpanel"
-            res = subprocess.call(shlex.split(command))
+        ##
 
-            if res == 1:
-                count = count + 1
-                Upgrade.stdOut(
-                    "Trying to update static content, try number: " + str(count))
-                if count == 3:
-                    Upgrade.stdOut("Failed to update static content! [upgrade]")
-                    os._exit(0)
-            else:
-                Upgrade.stdOut("Static content in place!")
-                break
+        command = "mv /usr/local/CyberCP/static /usr/local/lscp/cyberpanel"
+        Upgrade.executioner(command, 'Update new static content', 0)
 
     @staticmethod
     def upgradeVersion():
-        vers = version.objects.get(pk=1)
-        getVersion = requests.get('https://cyberpanel.net/version.txt')
-        latest = getVersion.json()
-        vers.currentVersion = latest['version']
-        vers.build = latest['build']
-        vers.save()
+        try:
+            vers = version.objects.get(pk=1)
+            getVersion = requests.get('https://cyberpanel.net/version.txt')
+            latest = getVersion.json()
+            vers.currentVersion = latest['version']
+            vers.build = latest['build']
+            vers.save()
+        except:
+            pass
+
+    @staticmethod
+    def setupConnection(db = None):
+        try:
+            passFile = "/etc/cyberpanel/mysqlPassword"
+
+            f = open(passFile)
+            data = f.read()
+            password = data.split('\n', 1)[0]
+
+            if db == None:
+                conn = mysql.connect(user='root', passwd=password)
+            else:
+                conn = mysql.connect(db=db, user='root', passwd=password)
+
+            cursor = conn.cursor()
+            return conn, cursor
+
+        except BaseException, msg:
+            Upgrade.stdOut(str(msg))
+            return 0, 0
 
     @staticmethod
     def applyLoginSystemMigrations():
         try:
 
-            cwd = os.getcwd()
-            os.chdir('/usr/local/CyberCP')
+            connection, cursor = Upgrade.setupConnection('cyberpanel')
 
             try:
-                command = "echo 'CREATE TABLE `loginSystem_acl` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `name` varchar(50) NOT NULL UNIQUE, `adminStatus` integer NOT NULL DEFAULT 0, `versionManagement` integer NOT NULL DEFAULT 0, `createNewUser` integer NOT NULL DEFAULT 0, `deleteUser` integer NOT NULL DEFAULT 0, `resellerCenter` integer NOT NULL DEFAULT 0, `changeUserACL` integer NOT NULL DEFAULT 0, `createWebsite` integer NOT NULL DEFAULT 0, `modifyWebsite` integer NOT NULL DEFAULT 0, `suspendWebsite` integer NOT NULL DEFAULT 0, `deleteWebsite` integer NOT NULL DEFAULT 0, `createPackage` integer NOT NULL DEFAULT 0, `deletePackage` integer NOT NULL DEFAULT 0, `modifyPackage` integer NOT NULL DEFAULT 0, `createDatabase` integer NOT NULL DEFAULT 0, `deleteDatabase` integer NOT NULL DEFAULT 0, `listDatabases` integer NOT NULL DEFAULT 0, `createNameServer` integer NOT NULL DEFAULT 0, `createDNSZone` integer NOT NULL DEFAULT 0, `deleteZone` integer NOT NULL DEFAULT 0, `addDeleteRecords` integer NOT NULL DEFAULT 0, `createEmail` integer NOT NULL DEFAULT 0, `deleteEmail` integer NOT NULL DEFAULT 0, `emailForwarding` integer NOT NULL DEFAULT 0, `changeEmailPassword` integer NOT NULL DEFAULT 0, `dkimManager` integer NOT NULL DEFAULT 0, `createFTPAccount` integer NOT NULL DEFAULT 0, `deleteFTPAccount` integer NOT NULL DEFAULT 0, `listFTPAccounts` integer NOT NULL DEFAULT 0, `createBackup` integer NOT NULL DEFAULT 0, `restoreBackup` integer NOT NULL DEFAULT 0, `addDeleteDestinations` integer NOT NULL DEFAULT 0, `scheDuleBackups` integer NOT NULL DEFAULT 0, `remoteBackups` integer NOT NULL DEFAULT 0, `manageSSL` integer NOT NULL DEFAULT 0, `hostnameSSL` integer NOT NULL DEFAULT 0, `mailServerSSL` integer NOT NULL DEFAULT 0);' | python manage.py dbshell"
-                subprocess.check_output(command, shell=True)
+                cursor.execute('CREATE TABLE `loginSystem_acl` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `name` varchar(50) NOT NULL UNIQUE, `adminStatus` integer NOT NULL DEFAULT 0, `versionManagement` integer NOT NULL DEFAULT 0, `createNewUser` integer NOT NULL DEFAULT 0, `deleteUser` integer NOT NULL DEFAULT 0, `resellerCenter` integer NOT NULL DEFAULT 0, `changeUserACL` integer NOT NULL DEFAULT 0, `createWebsite` integer NOT NULL DEFAULT 0, `modifyWebsite` integer NOT NULL DEFAULT 0, `suspendWebsite` integer NOT NULL DEFAULT 0, `deleteWebsite` integer NOT NULL DEFAULT 0, `createPackage` integer NOT NULL DEFAULT 0, `deletePackage` integer NOT NULL DEFAULT 0, `modifyPackage` integer NOT NULL DEFAULT 0, `createDatabase` integer NOT NULL DEFAULT 0, `deleteDatabase` integer NOT NULL DEFAULT 0, `listDatabases` integer NOT NULL DEFAULT 0, `createNameServer` integer NOT NULL DEFAULT 0, `createDNSZone` integer NOT NULL DEFAULT 0, `deleteZone` integer NOT NULL DEFAULT 0, `addDeleteRecords` integer NOT NULL DEFAULT 0, `createEmail` integer NOT NULL DEFAULT 0, `deleteEmail` integer NOT NULL DEFAULT 0, `emailForwarding` integer NOT NULL DEFAULT 0, `changeEmailPassword` integer NOT NULL DEFAULT 0, `dkimManager` integer NOT NULL DEFAULT 0, `createFTPAccount` integer NOT NULL DEFAULT 0, `deleteFTPAccount` integer NOT NULL DEFAULT 0, `listFTPAccounts` integer NOT NULL DEFAULT 0, `createBackup` integer NOT NULL DEFAULT 0, `restoreBackup` integer NOT NULL DEFAULT 0, `addDeleteDestinations` integer NOT NULL DEFAULT 0, `scheDuleBackups` integer NOT NULL DEFAULT 0, `remoteBackups` integer NOT NULL DEFAULT 0, `manageSSL` integer NOT NULL DEFAULT 0, `hostnameSSL` integer NOT NULL DEFAULT 0, `mailServerSSL` integer NOT NULL DEFAULT 0)')
+            except:
+                pass
+            try:
+                cursor.execute('ALTER TABLE loginSystem_administrator ADD token varchar(500)')
+            except:
+                pass
+            try:
+                cursor.execute('ALTER TABLE loginSystem_administrator ADD acl_id integer')
+            except:
+                pass
+            try:
+                cursor.execute('ALTER TABLE loginSystem_administrator ADD FOREIGN KEY (acl_id) REFERENCES loginSystem_acl(id)')
             except:
                 pass
 
             try:
-                command = "echo 'ALTER TABLE loginSystem_administrator ADD token varchar(500);' | python manage.py dbshell"
-                subprocess.call(command, shell=True)
+                cursor.execute("insert into loginSystem_acl (id, name, adminStatus) values (1,'admin',1)")
             except:
                 pass
 
             try:
-                command = "echo 'ALTER TABLE loginSystem_administrator ADD acl_id integer;' | python manage.py dbshell"
-                subprocess.call(command, shell=True)
+                cursor.execute("insert into loginSystem_acl (id, name, adminStatus, createNewUser, deleteUser, createWebsite, resellerCenter, modifyWebsite, suspendWebsite, deleteWebsite, createPackage, deletePackage, modifyPackage, createNameServer, restoreBackup) values (2,'reseller',0,1,1,1,1,1,1,1,1,1,1,1,1)")
+            except:
+                pass
+            try:
+                cursor.execute("insert into loginSystem_acl (id, name, createDatabase, deleteDatabase, listDatabases, createDNSZone, deleteZone, addDeleteRecords, createEmail, deleteEmail, emailForwarding, changeEmailPassword, dkimManager, createFTPAccount, deleteFTPAccount, listFTPAccounts, createBackup, manageSSL) values (3,'user', 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)")
             except:
                 pass
 
             try:
-                command = "echo 'ALTER TABLE loginSystem_administrator ADD FOREIGN KEY (acl_id) REFERENCES loginSystem_acl(id);' | python manage.py dbshell"
-                subprocess.check_output(command, shell=True)
-            except:
-                pass
-
-            dbName = settings.DATABASES['default']['NAME']
-            dbUser = settings.DATABASES['default']['USER']
-            password = settings.DATABASES['default']['PASSWORD']
-            host = settings.DATABASES['default']['HOST']
-            port = settings.DATABASES['default']['PORT']
-
-            if len(port) == 0:
-                port = '3306'
-
-            try:
-                passwordCMD = "use " + dbName+";insert into loginSystem_acl (id, name, adminStatus) values (1,'admin',1);"
-                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
-                cmd = shlex.split(command)
-                subprocess.call(cmd)
+                cursor.execute("UPDATE loginSystem_administrator SET  acl_id = 3")
             except:
                 pass
 
             try:
-                passwordCMD = "use " + dbName + ";insert into loginSystem_acl (id, name, adminStatus, createNewUser, deleteUser, createWebsite, resellerCenter, modifyWebsite, suspendWebsite, deleteWebsite, createPackage, deletePackage, modifyPackage, createNameServer, restoreBackup) values (2,'reseller',0,1,1,1,1,1,1,1,1,1,1,1,1);"
-                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
-                cmd = shlex.split(command)
-                subprocess.call(cmd)
+                cursor.execute("UPDATE loginSystem_administrator SET  acl_id = 1 where userName = 'admin'")
             except:
                 pass
 
             try:
-                passwordCMD = "use " + dbName + ";insert into loginSystem_acl (id, name, createDatabase, deleteDatabase, listDatabases, createDNSZone, deleteZone, addDeleteRecords, createEmail, deleteEmail, emailForwarding, changeEmailPassword, dkimManager, createFTPAccount, deleteFTPAccount, listFTPAccounts, createBackup, manageSSL) values (3,'user', 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);"
-                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
-                cmd = shlex.split(command)
-                subprocess.call(cmd)
+                cursor.execute("alter table loginSystem_administrator drop initUserAccountsLimit")
             except:
                 pass
 
             try:
-                passwordCMD = "use " + dbName + ";UPDATE loginSystem_administrator SET  acl_id = 3;"
-                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
-                cmd = shlex.split(command)
-                subprocess.call(cmd)
+                cursor.execute("CREATE TABLE `websiteFunctions_aliasdomains` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `aliasDomain` varchar(75) NOT NULL)")
             except:
                 pass
-
             try:
-                passwordCMD = "use " + dbName + ";UPDATE loginSystem_administrator SET  acl_id = 1 where userName = 'admin';"
-                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
-                cmd = shlex.split(command)
-                subprocess.call(cmd)
+                cursor.execute("ALTER TABLE `websiteFunctions_aliasdomains` ADD COLUMN `master_id` integer NOT NULL")
             except:
                 pass
-
             try:
-                passwordCMD = "use " + dbName + ";alter table loginSystem_administrator drop initUserAccountsLimit;"
-                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
-                cmd = shlex.split(command)
-                subprocess.call(cmd)
+                cursor.execute("ALTER TABLE `websiteFunctions_aliasdomains` ADD CONSTRAINT `websiteFunctions_ali_master_id_726c433d_fk_websiteFu` FOREIGN KEY (`master_id`) REFERENCES `websiteFunctions_websites` (`id`)")
             except:
                 pass
 
-            try:
-                passwordCMD = "use " + dbName + ";CREATE TABLE `websiteFunctions_aliasdomains` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `aliasDomain` varchar(75) NOT NULL);"
-                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
-                cmd = shlex.split(command)
-                subprocess.call(cmd)
-            except:
-                pass
-
-            try:
-                passwordCMD = "use " + dbName + ";ALTER TABLE `websiteFunctions_aliasdomains` ADD COLUMN `master_id` integer NOT NULL;"
-                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
-                cmd = shlex.split(command)
-                subprocess.call(cmd)
-            except:
-                pass
-
-            try:
-                passwordCMD = "use " + dbName + ";ALTER TABLE `websiteFunctions_aliasdomains` ADD CONSTRAINT `websiteFunctions_ali_master_id_726c433d_fk_websiteFu` FOREIGN KEY (`master_id`) REFERENCES `websiteFunctions_websites` (`id`);"
-                command = 'sudo mysql --host=' + host + ' --port=' + port + ' -u ' + dbUser + ' -p' + password + ' -e "' + passwordCMD + '"'
-                cmd = shlex.split(command)
-                subprocess.call(cmd)
-            except:
-                pass
-
-            os.chdir(cwd)
+            connection.close()
 
         except OSError, msg:
             Upgrade.stdOut(str(msg) + " [applyLoginSystemMigrations]")
-            os._exit(0)
+
+    @staticmethod
+    def s3BackupMigrations():
+        try:
+
+            connection, cursor = Upgrade.setupConnection('cyberpanel')
+
+            query = """CREATE TABLE `s3Backups_backupplan` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `bucket` varchar(50) NOT NULL,
+  `freq` varchar(50) NOT NULL,
+  `retention` int(11) NOT NULL,
+  `type` varchar(5) NOT NULL,
+  `lastRun` varchar(50) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `s3Backups_backupplan_owner_id_7d058ced_fk_loginSyst` (`owner_id`),
+  CONSTRAINT `s3Backups_backupplan_owner_id_7d058ced_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `s3Backups_websitesinplan` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `domain` varchar(100) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `s3Backups_websitesin_owner_id_0e9a4fe3_fk_s3Backups` (`owner_id`),
+  CONSTRAINT `s3Backups_websitesin_owner_id_0e9a4fe3_fk_s3Backups` FOREIGN KEY (`owner_id`) REFERENCES `s3Backups_backupplan` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `s3Backups_backuplogs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `timeStamp` varchar(200) NOT NULL,
+  `level` varchar(5) NOT NULL,
+  `msg` varchar(500) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `s3Backups_backuplogs_owner_id_7b4653af_fk_s3Backups` (`owner_id`),
+  CONSTRAINT `s3Backups_backuplogs_owner_id_7b4653af_fk_s3Backups` FOREIGN KEY (`owner_id`) REFERENCES `s3Backups_backupplan` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            connection.close()
+
+        except OSError, msg:
+            Upgrade.stdOut(str(msg) + " [applyLoginSystemMigrations]")
 
     @staticmethod
     def mailServerMigrations():
         try:
-            os.chdir('/usr/local/CyberCP')
+            connection, cursor = Upgrade.setupConnection('cyberpanel')
+
             try:
-                command = "echo 'ALTER TABLE e_forwardings DROP PRIMARY KEY;ALTER TABLE e_forwardings ADD id INT AUTO_INCREMENT PRIMARY KEY;' | python manage.py dbshell"
-                subprocess.check_output(command, shell=True)
+                cursor.execute('ALTER TABLE e_forwardings DROP PRIMARY KEY;ALTER TABLE e_forwardings ADD id INT AUTO_INCREMENT PRIMARY KEY')
             except:
                 pass
+
+            query = """CREATE TABLE `emailPremium_domainlimits` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `limitStatus` int(11) NOT NULL,
+  `monthlyLimit` int(11) NOT NULL,
+  `monthlyUsed` int(11) NOT NULL,
+  `domain_id` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `emailPremium_domainlimits_domain_id_303ab297_fk_e_domains_domain` (`domain_id`),
+  CONSTRAINT `emailPremium_domainlimits_domain_id_303ab297_fk_e_domains_domain` FOREIGN KEY (`domain_id`) REFERENCES `e_domains` (`domain`)
+)"""
             try:
-                command = "python manage.py makemigrations emailPremium"
-                subprocess.call(shlex.split(command))
+                cursor.execute(query)
             except:
                 pass
+
+            query = """CREATE TABLE `emailPremium_emaillimits` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `limitStatus` int(11) NOT NULL,
+  `monthlyLimits` int(11) NOT NULL,
+  `monthlyUsed` int(11) NOT NULL,
+  `hourlyLimit` int(11) NOT NULL,
+  `hourlyUsed` int(11) NOT NULL,
+  `emailLogs` int(11) NOT NULL,
+  `email_id` varchar(80) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `emailPremium_emaillimits_email_id_1c111df5_fk_e_users_email` (`email_id`),
+  CONSTRAINT `emailPremium_emaillimits_email_id_1c111df5_fk_e_users_email` FOREIGN KEY (`email_id`) REFERENCES `e_users` (`email`)
+)"""
             try:
-                command = "python manage.py migrate emailPremium"
-                subprocess.call(shlex.split(command))
+                cursor.execute(query)
             except:
                 pass
+
+            query = """CREATE TABLE `emailPremium_emaillogs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `destination` varchar(200) NOT NULL,
+  `timeStamp` varchar(200) NOT NULL,
+  `email_id` varchar(80) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `emailPremium_emaillogs_email_id_9ef49552_fk_e_users_email` (`email_id`),
+  CONSTRAINT `emailPremium_emaillogs_email_id_9ef49552_fk_e_users_email` FOREIGN KEY (`email_id`) REFERENCES `e_users` (`email`)
+)"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            connection.close()
         except:
             pass
 
     @staticmethod
     def emailMarketingMigrationsa():
         try:
-            os.chdir('/usr/local/CyberCP')
+            connection, cursor = Upgrade.setupConnection('cyberpanel')
 
-            command = "python manage.py makemigrations emailMarketing"
-            Upgrade.executioner(command)
+            query = """CREATE TABLE `emailMarketing_emailmarketing` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `userName` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `userName` (`userName`)
+)"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
 
-            command = "python manage.py migrate emailMarketing"
-            Upgrade.executioner(command)
+            query = """CREATE TABLE `emailMarketing_emaillists` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `listName` varchar(50) NOT NULL,
+  `dateCreated` varchar(200) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `listName` (`listName`),
+  KEY `emailMarketing_email_owner_id_bf1b4530_fk_websiteFu` (`owner_id`),
+  CONSTRAINT `emailMarketing_email_owner_id_bf1b4530_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_websites` (`id`)
+)"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `emailMarketing_emailsinlist` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `email` varchar(50) NOT NULL,
+  `firstName` varchar(20) NOT NULL,
+  `lastName` varchar(20) NOT NULL,
+  `verificationStatus` varchar(100) NOT NULL,
+  `dateCreated` varchar(200) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `emailMarketing_email_owner_id_c5c27005_fk_emailMark` (`owner_id`),
+  CONSTRAINT `emailMarketing_email_owner_id_c5c27005_fk_emailMark` FOREIGN KEY (`owner_id`) REFERENCES `emailMarketing_emaillists` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `emailMarketing_smtphosts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `host` varchar(150) NOT NULL,
+  `port` varchar(10) NOT NULL,
+  `userName` varchar(50) NOT NULL,
+  `password` varchar(50) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `host` (`host`),
+  KEY `emailMarketing_smtph_owner_id_8b2d4ac7_fk_loginSyst` (`owner_id`),
+  CONSTRAINT `emailMarketing_smtph_owner_id_8b2d4ac7_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `emailMarketing_emailtemplate` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `subject` varchar(1000) NOT NULL,
+  `fromName` varchar(100) NOT NULL,
+  `fromEmail` varchar(150) NOT NULL,
+  `replyTo` varchar(150) NOT NULL,
+  `emailMessage` varchar(30000) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `emailMarketing_email_owner_id_d27e1d00_fk_loginSyst` (`owner_id`),
+  CONSTRAINT `emailMarketing_email_owner_id_d27e1d00_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `emailMarketing_emailjobs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `date` varchar(200) NOT NULL,
+  `host` varchar(1000) NOT NULL,
+  `totalEmails` int(11) NOT NULL,
+  `sent` int(11) NOT NULL,
+  `failed` int(11) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `emailMarketing_email_owner_id_73ee4827_fk_emailMark` (`owner_id`),
+  CONSTRAINT `emailMarketing_email_owner_id_73ee4827_fk_emailMark` FOREIGN KEY (`owner_id`) REFERENCES `emailMarketing_emailtemplate` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            connection.close()
         except:
             pass
 
@@ -462,31 +538,17 @@ WantedBy=multi-user.target"""
             servicePath = '/home/cyberpanel/pureftpd'
             writeToFile = open(servicePath, 'w+')
             writeToFile.close()
-
         except:
             pass
 
     @staticmethod
-    def downloadAndUpgrade(Version, versionNumbring):
+    def downloadAndUpgrade(versionNumbring):
         try:
             ## Download latest version.
 
-            count = 0
-            while (1):
-                command = "wget https://cyberpanel.net/CyberPanel." + versionNumbring
-                #command = "wget https://cyberpanel.net/CyberPanel.1.7.4.tar.gz"
-                res = subprocess.call(shlex.split(command))
-
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut(
-                        "Downloading latest version, trying again, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut("Failed to download latest version! [upgrade]")
-                        os._exit(0)
-                else:
-                    Upgrade.stdOut("Latest version successfully downloaded!")
-                    break
+            command = "wget https://cyberpanel.net/CyberPanel." + versionNumbring
+            # command = "wget https://cyberpanel.net/CyberPanel.1.7.4.tar.gz"
+            Upgrade.executioner(command, 'Download latest version', 1)
 
             ## Backup settings file.
 
@@ -501,22 +563,9 @@ WantedBy=multi-user.target"""
 
             ## Extract Latest files
 
-            count = 1
-            while (1):
-                #command = "tar zxf CyberPanel.1.7.4.tar.gz"
-                command = "tar zxf CyberPanel." + versionNumbring
-                res = subprocess.call(shlex.split(command))
-
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut(
-                        "Trying to extract new version, trying again, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut("Failed to extract new version! [upgrade]")
-                        os._exit(0)
-                else:
-                    Upgrade.stdOut("New version successfully extracted!")
-                    break
+            # command = "tar zxf CyberPanel.1.7.4.tar.gz"
+            command = "tar zxf CyberPanel." + versionNumbring
+            Upgrade.executioner(command, 'Extract latest version', 1)
 
             ## Copy settings file
 
@@ -537,6 +586,11 @@ WantedBy=multi-user.target"""
                 if items.find('emailPremium') > -1:
                     emailPremium = 0
 
+            s3Backups = 1
+            for items in data:
+                if items.find('s3Backups') > -1:
+                    s3Backups = 0
+
 
             Upgrade.stdOut('Restoring settings file!')
 
@@ -552,6 +606,8 @@ WantedBy=multi-user.target"""
                         writeToFile.writelines("    'emailMarketing',\n")
                     if emailPremium == 1:
                         writeToFile.writelines("    'emailPremium',\n")
+                    if s3Backups == 1:
+                        writeToFile.writelines("    's3Backups',\n")
                 else:
                     writeToFile.writelines(items)
 
@@ -569,7 +625,7 @@ WantedBy=multi-user.target"""
     def installPYDNS():
         try:
             command = "pip install pydns"
-            res = subprocess.call(shlex.split(command))
+            Upgrade.executioner(command, 'Install PyDNS', 1)
         except OSError, msg:
             Upgrade.stdOut(str(msg) + " [installPYDNS]")
             return 0
@@ -577,24 +633,8 @@ WantedBy=multi-user.target"""
     @staticmethod
     def installTLDExtract():
         try:
-            count = 0
-            while (1):
-                command = "pip install tldextract"
-
-                res = subprocess.call(shlex.split(command))
-
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut(
-                        "Trying to install tldextract, trying again, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut(
-                            "Failed to install tldextract! [installTLDExtract]")
-                        break
-                else:
-                    Upgrade.stdOut("tldextract successfully installed!  [pip]")
-                    Upgrade.stdOut("tldextract successfully installed!  [pip]")
-                    break
+            command = "pip install tldextract"
+            Upgrade.executioner(command, 'Install tldextract', 1)
         except OSError, msg:
             Upgrade.stdOut(str(msg) + " [installTLDExtract]")
             return 0
@@ -605,61 +645,25 @@ WantedBy=multi-user.target"""
 
             Upgrade.stdOut("Starting LSCPD installation..")
 
-            count = 0
+            command = 'yum -y install gcc gcc-c++ make autoconf glibc rcs'
+            Upgrade.executioner(command, 'LSCPD Pre-reqs [one]', 0)
 
-            while(1):
-                command = 'yum -y install gcc gcc-c++ make autoconf glibc rcs'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+            ##
 
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut("Trying to install LSCPD prerequisites, trying again, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut("Failed to install LSCPD prerequisites.")
-                        os._exit(0)
-                else:
-                    Upgrade.stdOut("LSCPD prerequisites successfully installed!")
-                    break
+            command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel which curl'
+            Upgrade.executioner(command, 'LSCPD Pre-reqs [two]', 0)
 
-            count = 0
-
-            while(1):
-                command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel which curl'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut("Trying to install LSCPD prerequisites, trying again, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut("Failed to install LSCPD prerequisites.")
-                        os._exit(0)
-                else:
-                    Upgrade.stdOut("LSCPD prerequisites successfully installed!")
-                    break
 
             command = 'wget https://cyberpanel.net/lscp.tar.gz'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            Upgrade.executioner(command, 'Download LSCPD [two]', 0)
 
-            count = 0
+            if os.path.exists('/usr/local/lscp.tar.gz'):
+                os.remove('/usr/local/lscp.tar.gz')
 
-            while(1):
+            ##
 
-                command = 'tar zxf lscp.tar.gz -C /usr/local/'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-
-                if res == 1:
-                    count = count + 1
-                    Upgrade.stdOut("Trying to configure LSCPD, trying again, try number: " + str(count))
-                    if count == 3:
-                        Upgrade.stdOut("Failed to configure LSCPD, exiting installer! [installLSCPD]")
-                        os._exit(0)
-                else:
-                    Upgrade.stdOut("LSCPD successfully configured!")
-                    break
+            command = 'tar zxf lscp.tar.gz -C /usr/local/'
+            Upgrade.executioner(command, 'Extract LSCPD [two]', 0)
 
             try:
                 os.remove("/usr/local/lscp/fcgi-bin/lsphp")
@@ -668,44 +672,30 @@ WantedBy=multi-user.target"""
                 pass
 
             command = 'adduser lscpd -M -d /usr/local/lscp'
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            Upgrade.executioner(command, 'Add user LSCPD', 0)
 
             command = 'groupadd lscpd'
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            Upgrade.executioner(command, 'Add group LSCPD', 0)
 
             command = 'usermod -a -G lscpd lscpd'
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            Upgrade.executioner(command, 'Add group LSCPD', 0)
 
             command = 'usermod -a -G lsadm lscpd'
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            Upgrade.executioner(command, 'Add group LSCPD', 0)
 
             command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            Upgrade.executioner(command, 'chown cyberpanel', 0)
 
             command = 'systemctl daemon-reload'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            Upgrade.executioner(command, 'daemon-reload LSCPD', 0)
 
             command = 'systemctl restart lscpd'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            Upgrade.executioner(command, 'Restart LSCPD', 0)
 
             Upgrade.stdOut("LSCPD successfully installed!")
-            Upgrade.stdOut("LSCPD successfully installed!")
 
-        except OSError, msg:
+        except BaseException, msg:
             Upgrade.stdOut(str(msg) + " [installLSCPD]")
-            return 0
-        except ValueError, msg:
-            Upgrade.stdOut(str(msg) + " [installLSCPD]")
-            return 0
-
-        return 1
 
     @staticmethod
     def fixPermissions():
@@ -714,27 +704,18 @@ WantedBy=multi-user.target"""
             Upgrade.stdOut("Fixing permissions..")
 
             command = 'chown -R cyberpanel:cyberpanel /usr/local/CyberCP'
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            Upgrade.executioner(command, 'chown core code', 0)
 
             command = 'chown -R cyberpanel:cyberpanel /usr/local/lscp'
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            Upgrade.executioner(command, 'chown lscp', 0)
 
             command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            Upgrade.executioner(command, 'chown static content', 0)
 
             Upgrade.stdOut("Permissions updated.")
 
-        except OSError, msg:
-            Upgrade.stdOut(str(msg) + " [fixPermissions]")
-            return 0
-        except ValueError, msg:
-            Upgrade.stdOut(str(msg) + " [fixPermissions]")
-            return 0
-
-        return 1
+        except BaseException, msg:
+            Upgrade.stdOut(str(msg) + " [installLSCPD]")
 
     @staticmethod
     def upgrade():
@@ -746,10 +727,10 @@ WantedBy=multi-user.target"""
         Version = version.objects.get(pk=1)
 
         command = "systemctl stop gunicorn.socket"
-        Upgrade.executioner(command)
+        Upgrade.executioner(command, 'stop gunicorn', 0)
 
         command = "systemctl stop lscpd"
-        Upgrade.executioner(command)
+        Upgrade.executioner(command, 'stop lscpd', 0)
 
         ##
 
@@ -764,10 +745,14 @@ WantedBy=multi-user.target"""
             os._exit(0)
 
         ##
+
         Upgrade.installPYDNS()
-        Upgrade.downloadAndUpgrade(Version, versionNumbring)
+        Upgrade.downloadAndUpgrade(versionNumbring)
+
         ##
+
         Upgrade.installTLDExtract()
+
         ##
 
         Upgrade.mailServerMigrations()
@@ -781,6 +766,7 @@ WantedBy=multi-user.target"""
         ##
 
         Upgrade.applyLoginSystemMigrations()
+        Upgrade.s3BackupMigrations()
         Upgrade.enableServices()
 
         Upgrade.setupCLI()
@@ -794,10 +780,14 @@ WantedBy=multi-user.target"""
 
         try:
             command = "systemctl start lscpd"
-            subprocess.call(shlex.split(command))
+            Upgrade.executioner(command, 'Start LSCPD', 0)
         except:
             pass
 
         Upgrade.stdOut("Upgrade Completed.")
 
-Upgrade.upgrade()
+def main():
+    Upgrade.upgrade()
+
+if __name__ == "__main__":
+    main()
