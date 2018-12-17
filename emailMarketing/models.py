@@ -39,7 +39,7 @@ class EmailTemplate(models.Model):
     fromName = models.CharField(max_length=100)
     fromEmail = models.CharField(max_length=150)
     replyTo = models.CharField(max_length=150)
-    emailMessage = models.CharField(max_length=30000)
+    emailMessage = models.CharField(max_length=3000000)
 
 class EmailJobs(models.Model):
     owner = models.ForeignKey(EmailTemplate, on_delete=models.CASCADE)

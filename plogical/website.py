@@ -32,6 +32,7 @@ from mysqlUtilities import mysqlUtilities
 from plogical import hashPassword
 from emailMarketing.emACL import emACL
 from processUtilities import ProcessUtilities
+from managePHP.phpManager import PHPManager
 
 class WebsiteManager:
     def __init__(self, domain = None, childDomain = None):
@@ -46,8 +47,9 @@ class WebsiteManager:
 
             adminNames = ACLManager.loadAllUsers(userID)
             packagesName = ACLManager.loadPackages(userID, currentACL)
+            phps = PHPManager.findPHPVersions()
 
-            Data = {'packageList': packagesName, "owernList": adminNames}
+            Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
             return render(request, 'websiteFunctions/createWebsite.html', Data)
 
         except BaseException, msg:
@@ -62,8 +64,9 @@ class WebsiteManager:
                 return ACLManager.loadError()
 
             websitesName = ACLManager.findAllSites(currentACL, userID)
+            phps = PHPManager.findPHPVersions()
 
-            return render(request, 'websiteFunctions/modifyWebsite.html', {'websiteList': websitesName})
+            return render(request, 'websiteFunctions/modifyWebsite.html', {'websiteList': websitesName, 'phps': phps})
         except BaseException, msg:
             return HttpResponse(str(msg))
 
@@ -74,6 +77,7 @@ class WebsiteManager:
                 return ACLManager.loadError()
 
             websitesName = ACLManager.findAllSites(currentACL, userID)
+
 
             return render(request, 'websiteFunctions/deleteWebsite.html', {'websiteList': websitesName})
         except BaseException, msg:
@@ -574,6 +578,8 @@ class WebsiteManager:
                 Data['diskInMB'] = 0
                 Data['diskInMBTotal'] = website.package.diskSpace
 
+            Data['phps'] = PHPManager.findPHPVersions()
+
             return render(request, 'websiteFunctions/website.html', Data)
 
         else:
@@ -636,6 +642,8 @@ class WebsiteManager:
                 Data['diskUsage'] = 0
                 Data['diskInMB'] = 0
                 Data['diskInMBTotal'] = website.package.diskSpace
+
+            Data['phps'] = PHPManager.findPHPVersions()
 
             return render(request, 'websiteFunctions/launchChild.html', Data)
         else:

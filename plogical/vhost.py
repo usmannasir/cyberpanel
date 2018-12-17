@@ -17,6 +17,7 @@ from mysqlUtilities import mysqlUtilities
 from dnsUtilities import DNS
 from random import randint
 from processUtilities import ProcessUtilities
+from managePHP.phpManager import PHPManager
 
 
 ## If you want justice, you have come to the wrong place.
@@ -270,20 +271,7 @@ class vhost:
 
                 ## external app
 
-                if phpVersion == "PHP 5.3":
-                    php = "53"
-                elif phpVersion == "PHP 5.4":
-                    php = "55"
-                elif phpVersion == "PHP 5.5":
-                    php = "55"
-                elif phpVersion == "PHP 5.6":
-                    php = "56"
-                elif phpVersion == "PHP 7.0":
-                    php = "70"
-                elif phpVersion == "PHP 7.1":
-                    php = "71"
-                elif phpVersion == "PHP 7.2":
-                    php = "72"
+                php = PHPManager.getPHPString(phpVersion)
 
                 extprocessor = "extprocessor "+virtualHostUser+" {\n"
                 type = "  type                    lsapi\n"
@@ -437,20 +425,7 @@ class vhost:
 
                 ## external app
 
-                if phpVersion == "PHP 5.3":
-                    php = "53"
-                elif phpVersion == "PHP 5.4":
-                    php = "55"
-                elif phpVersion == "PHP 5.5":
-                    php = "55"
-                elif phpVersion == "PHP 5.6":
-                    php = "56"
-                elif phpVersion == "PHP 7.0":
-                    php = "70"
-                elif phpVersion == "PHP 7.1":
-                    php = "71"
-                elif phpVersion == "PHP 7.2":
-                    php = "72"
+                php = PHPManager.getPHPString(phpVersion)
 
                 AddType = '    AddHandler application/x-httpd-php' + php + ' .php .php7 .phtml\n\n'
                 VirtualHostEnd = '</VirtualHost>\n'
@@ -710,20 +685,7 @@ class vhost:
             try:
                 data = open(vhFile, "r").readlines()
 
-                if phpVersion == "PHP 5.3":
-                    finalphp = 53
-                elif phpVersion == "PHP 5.4":
-                    finalphp = 54
-                elif phpVersion == "PHP 5.5":
-                    finalphp = 55
-                elif phpVersion == "PHP 5.6":
-                    finalphp = 56
-                elif phpVersion == "PHP 7.0":
-                    finalphp = 70
-                elif phpVersion == "PHP 7.1":
-                    finalphp = 71
-                elif phpVersion == "PHP 7.2":
-                    finalphp = 72
+                php = PHPManager.getPHPString(phpVersion)
 
                 writeDataToFile = open(vhFile, "w")
 
@@ -752,22 +714,11 @@ class vhost:
                 if phpVersion == "PHP 5.3":
                     finalphp = 53
 
-                elif phpVersion == "PHP 5.4":
-                    finalphp = 54
-                elif phpVersion == "PHP 5.5":
-                    finalphp = 55
-                elif phpVersion == "PHP 5.6":
-                    finalphp = 56
-                elif phpVersion == "PHP 7.0":
-                    finalphp = 70
-                elif phpVersion == "PHP 7.1":
-                    finalphp = 71
-                elif phpVersion == "PHP 7.2":
-                    finalphp = 72
+                php = PHPManager.getPHPString(phpVersion)
 
                 writeDataToFile = open(vhFile, "w")
 
-                finalString = '    AddHandler application/x-httpd-php' + str(finalphp) + ' .php\n'
+                finalString = '    AddHandler application/x-httpd-php' + str(php) + ' .php\n'
 
                 for items in data:
                     if items.find("AddHandler application/x-httpd") > -1:
@@ -1075,20 +1026,7 @@ class vhost:
 
                 ## external app
 
-                if phpVersion == "PHP 5.3":
-                    php = "53"
-                elif phpVersion == "PHP 5.4":
-                    php = "55"
-                elif phpVersion == "PHP 5.5":
-                    php = "55"
-                elif phpVersion == "PHP 5.6":
-                    php = "56"
-                elif phpVersion == "PHP 7.0":
-                    php = "70"
-                elif phpVersion == "PHP 7.1":
-                    php = "71"
-                elif phpVersion == "PHP 7.2":
-                    php = "72"
+                php = PHPManager.getPHPString(phpVersion)
 
                 extprocessor = "extprocessor " + virtualHostUser + sockRandomPath + " {\n"
                 type = "  type                    lsapi\n"
@@ -1170,20 +1108,7 @@ class vhost:
 
                 ## external app
 
-                if phpVersion == "PHP 5.3":
-                    php = "53"
-                elif phpVersion == "PHP 5.4":
-                    php = "55"
-                elif phpVersion == "PHP 5.5":
-                    php = "55"
-                elif phpVersion == "PHP 5.6":
-                    php = "56"
-                elif phpVersion == "PHP 7.0":
-                    php = "70"
-                elif phpVersion == "PHP 7.1":
-                    php = "71"
-                elif phpVersion == "PHP 7.2":
-                    php = "72"
+                php = php = PHPManager.getPHPString(phpVersion)
 
                 AddType = '    AddHandler application/x-httpd-php' + php + ' .php .php7 .phtml\n\n'
                 VirtualHostEnd = '</VirtualHost>\n'

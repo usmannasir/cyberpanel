@@ -118,8 +118,8 @@ class preFlightsChecks:
             if self.distro == centos:
                 command = "yum install sudo -y"
                 preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
-                                              'Install sudo.',
-                                              1, 0, os.EX_OSERR)
+                                      'Install sudo.',
+                                      1, 0, os.EX_OSERR)
 
             ##
 
@@ -156,17 +156,15 @@ class preFlightsChecks:
             else:
                 command = "adduser cyberpanel"
                 preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
-                                              'add user cyberpanel',
-                                              1, 0, os.EX_OSERR)
+                                      'add user cyberpanel',
+                                      1, 0, os.EX_OSERR)
 
                 ##
 
                 command = "usermod -aG wheel cyberpanel"
                 preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
-                                              'add user cyberpanel',
-                                              1, 0, os.EX_OSERR)
-
-
+                                      'add user cyberpanel',
+                                      1, 0, os.EX_OSERR)
 
             ###############################
 
@@ -188,8 +186,8 @@ class preFlightsChecks:
 
             command = "mkdir -p /etc/letsencrypt/live/"
             preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
-                                          'add user cyberpanel',
-                                          1, 0, os.EX_OSERR)
+                                  'add user cyberpanel',
+                                  1, 0, os.EX_OSERR)
 
         except BaseException, msg:
             logging.InstallLog.writeToFile("[ERROR] setup_account_cyberpanel. " + str(msg))
@@ -771,23 +769,10 @@ class preFlightsChecks:
             ## On OpenVZ there is an issue with requests module, which needs to upgrade requests module
 
             if subprocess.check_output('systemd-detect-virt').find("openvz") > -1:
-                count = 0
-                while (1):
-                    command = "pip install --upgrade requests"
-                    res = subprocess.call(shlex.split(command))
-
-                    if preFlightsChecks.resFailed(self.distro, res):
-                        count = count + 1
-                        preFlightsChecks.stdOut("Unable to upgrade requests, trying again, try number: " + str(count))
-                        if count == 3:
-                            logging.InstallLog.writeToFile(
-                                "Unable to install upgrade requests, exiting installer! [download_install_CyberPanel]")
-                            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                            os._exit(0)
-                    else:
-                        logging.InstallLog.writeToFile("requests module successfully upgraded!")
-                        preFlightsChecks.stdOut("requests module successfully upgraded!")
-                        break
+                command = "pip install --upgrade requests"
+                install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+                                              'Upgrade requests',
+                                              1, 0, os.EX_OSERR)
         except:
             pass
 
@@ -795,46 +780,18 @@ class preFlightsChecks:
 
         os.chdir(self.path)
 
-        count = 0
-        while (1):
-            #command = "wget http://cyberpanel.net/CyberPanel.1.7.4.tar.gz"
-            command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
-            res = subprocess.call(shlex.split(command))
-
-            if preFlightsChecks.resFailed(self.distro, res):
-                count = count + 1
-                preFlightsChecks.stdOut("Unable to download CyberPanel, trying again, try number: " + str(count))
-                if count == 3:
-                    logging.InstallLog.writeToFile(
-                        "Unable to download CyberPanel, exiting installer! [download_install_CyberPanel]")
-                    preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    os._exit(0)
-            else:
-                logging.InstallLog.writeToFile("CyberPanel successfully downloaded!")
-                preFlightsChecks.stdOut("CyberPanel successfully downloaded!")
-                break
+        #command = "wget http://cyberpanel.net/CyberPanel.1.7.5.tar.gz"
+        command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
+        install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+                                      'CyberPanel Download',
+                                      1, 1, os.EX_OSERR)
 
         ##
 
         count = 0
-        while (1):
-            #command = "tar zxf CyberPanel.1.7.4.tar.gz"
-            command = "tar zxf CyberPanelTemp.tar.gz"
-
-            res = subprocess.call(shlex.split(command))
-
-            if preFlightsChecks.resFailed(self.distro, res):
-                count = count + 1
-                preFlightsChecks.stdOut("Unable to extract CyberPanel, trying again, try number: " + str(count))
-                if count == 3:
-                    logging.InstallLog.writeToFile(
-                        "Unable to extract CyberPanel. You can try to install on fresh OS again, exiting installer! [download_install_CyberPanel]")
-                    preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    os._exit(0)
-            else:
-                logging.InstallLog.writeToFile("Successfully extracted CyberPanel!")
-                preFlightsChecks.stdOut("Successfully extracted CyberPanel!")
-                break
+        command = "tar zxf CyberPanelTemp.tar.gz"
+        install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+                                      'Extract CyberPanel',1, 1, os.EX_OSERR)
 
         ### update password:
 
@@ -894,253 +851,86 @@ class preFlightsChecks:
 
         os.chdir("CyberCP")
 
-        count = 0
-
-        while (1):
-            command = "python manage.py makemigrations"
-            res = subprocess.call(shlex.split(command))
-
-            if preFlightsChecks.resFailed(self.distro, res):
-                count = count + 1
-                preFlightsChecks.stdOut(
-                    "Unable to prepare migrations file, trying again, try number: " + str(count) + "\n")
-                if count == 3:
-                    logging.InstallLog.writeToFile(
-                        "Unable to prepare migrations file. You can try to install on fresh OS again, exiting installer! [download_install_CyberPanel]")
-                    preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    os._exit(0)
-            else:
-                logging.InstallLog.writeToFile("Successfully prepared migrations file!")
-                preFlightsChecks.stdOut("Successfully prepared migrations file!")
-                break
+        command = "python manage.py makemigrations"
+        install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+                                      'CyberPanel Make Migrations',
+                                      1, 1, os.EX_OSERR)
 
         ##
 
-        count = 0
+        command = "python manage.py migrate"
+        install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+                                      'CyberPanel Migrate',1, 1, os.EX_OSERR)
 
-        while (1):
-            command = "python manage.py migrate"
-
-            res = subprocess.call(shlex.split(command))
-
-            if preFlightsChecks.resFailed(self.distro, res):
-                count = count + 1
-                preFlightsChecks.stdOut(
-                    "Unable to execute the migrations file, trying again, try number: " + str(count))
-                if count == 3:
-                    logging.InstallLog.writeToFile(
-                        "Unable to execute the migrations file, exiting installer! [download_install_CyberPanel]")
-                    preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    os._exit(0)
-            else:
-                logging.InstallLog.writeToFile("Migrations file successfully executed!")
-                preFlightsChecks.stdOut("Migrations file successfully executed!")
-                break
 
         ## Moving static content to lscpd location
         command = 'mv static /usr/local/lscp/cyberpanel'
-        cmd = shlex.split(command)
-        res = subprocess.call(cmd)
-
-        if preFlightsChecks.resFailed(self.distro, res):
-            logging.InstallLog.writeToFile("Could not move static content!")
-            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-            os._exit(0)
-        else:
-            logging.InstallLog.writeToFile("Static content moved!")
-            preFlightsChecks.stdOut("Static content moved!")
+        install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+                                      'Move static content', 1, 1, os.EX_OSERR)
 
         ## fix permissions
 
-        count = 0
+        command = "chmod -R 744 /usr/local/CyberCP"
+        install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+                                      'change permissions /usr/local/CyberCP', 1, 0, os.EX_OSERR)
 
-        while (1):
-            command = "chmod -R 744 /usr/local/CyberCP"
-            res = subprocess.call(shlex.split(command))
-
-            if preFlightsChecks.resFailed(self.distro, res):
-                count = count + 1
-                preFlightsChecks.stdOut(
-                    "Changing permissions for '/usr/local/CyberCP' failed, trying again, try number: " + str(count))
-                if count == 3:
-                    logging.InstallLog.writeToFile(
-                        "Unable to change permissions for '/usr/local/CyberCP', we are being optimistic that it is still going to work :) [download_install_CyberPanel]")
-                    break
-            else:
-                logging.InstallLog.writeToFile("Permissions successfully changed for '/usr/local/CyberCP'")
-                preFlightsChecks.stdOut("Permissions successfully changed for '/usr/local/CyberCP'")
-                break
 
         ## change owner
 
-        count = 0
-        while (1):
-            command = "chown -R cyberpanel:cyberpanel /usr/local/CyberCP"
-            res = subprocess.call(shlex.split(command))
+        command = "chown -R cyberpanel:cyberpanel /usr/local/CyberCP"
+        install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+                                      'change owner /usr/local/CyberCP', 1, 0, os.EX_OSERR)
 
-            if preFlightsChecks.resFailed(self.distro, res):
-                count = count + 1
-                preFlightsChecks.stdOut(
-                    "Unable to change owner for '/usr/local/CyberCP', trying again, try number: " + str(count))
-                if count == 3:
-                    logging.InstallLog.writeToFile(
-                        "Unable to change owner for '/usr/local/CyberCP', we are being optimistic that it is still going to work :) [download_install_CyberPanel]")
-                    break
-            else:
-                logging.InstallLog.writeToFile("Owner for '/usr/local/CyberCP' successfully changed!")
-                preFlightsChecks.stdOut("Owner for '/usr/local/CyberCP' successfully changed!")
-                break
 
     def install_unzip(self):
-        self.stdOut("Install zip")
+        self.stdOut("Install unzip")
         try:
-            count = 0
-            while (1):
+            if self.distro == centos:
+                command = 'yum -y install unzip'
+            else:
+                command = 'apt-get -y install unzip'
 
-                if self.distro == centos:
-                    command = 'yum -y install unzip'
-                else:
-                    command = 'apt-get -y install unzip'
-
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut("Unable to install unzip, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Unable to install unzip, exiting installer! [install_unzip]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("unzip successfully installed!")
-                    preFlightsChecks.stdOut("unzip Successfully installed!")
-                    break
-
-
-        except OSError, msg:
+            install.preFlightsChecks.call(command, self.distro, '[install_unzip]',
+                                          'Install unzip', 1, 0, os.EX_OSERR)
+        except BaseException, msg:
             logging.InstallLog.writeToFile(str(msg) + " [install_unzip]")
-            return 0
-        except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [install_unzip]")
-            return 0
-
-        return 1
 
     def install_zip(self):
         self.stdOut("Install zip")
         try:
-            count = 0
-            while (1):
+            if self.distro == centos:
+                command = 'yum -y install zip'
+            else:
+                command = 'apt-get -y install zip'
 
-                if self.distro == centos:
-                    command = 'yum -y install zip'
-                else:
-                    command = 'apt-get -y install zip'
-
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut("Unable to install zip, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Unable to install zip, exiting installer! [install_zip]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("zip successfully installed!")
-                    preFlightsChecks.stdOut("zip successfully installed!")
-                    break
-
-
-        except OSError, msg:
+            install.preFlightsChecks.call(command, self.distro, '[install_zip]',
+                                          'Install zip', 1, 0, os.EX_OSERR)
+        except BaseException, msg:
             logging.InstallLog.writeToFile(str(msg) + " [install_zip]")
-            return 0
-        except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [install_zip]")
-            return 0
-
-        return 1
 
     def download_install_phpmyadmin(self):
         try:
             os.chdir("/usr/local/lscp/cyberpanel/")
-            count = 0
 
-            while (1):
-                command = 'wget https://files.phpmyadmin.net/phpMyAdmin/4.8.2/phpMyAdmin-4.8.2-all-languages.zip'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut("Unable to download PYPMYAdmin, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to download PYPMYAdmin, exiting installer! [download_install_phpmyadmin]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("PHPMYAdmin successfully downloaded!")
-                    preFlightsChecks.stdOut("PHPMYAdmin successfully downloaded!")
-                    break
-
+            command = 'wget https://files.phpmyadmin.net/phpMyAdmin/4.8.2/phpMyAdmin-4.8.2-all-languages.zip'
+            install.preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+                                          'Download PHPMYAdmin', 1, 0, os.EX_OSERR)
             #####
 
-            count = 0
+            command = 'unzip phpMyAdmin-4.8.2-all-languages.zip'
+            install.preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+                                          'Unzip PHPMYAdmin', 1, 0, os.EX_OSERR)
 
-            while (1):
-                command = 'unzip phpMyAdmin-4.8.2-all-languages.zip'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    print("[" + time.strftime(
-                        "%I-%M-%S-%a-%b-%Y") + "] " + "Unable to unzip PHPMYAdmin, trying again, try number: " + str(
-                        count) + "\n")
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to unzip PHPMYAdmin, exiting installer! [download_install_phpmyadmin]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("PHPMYAdmin unzipped!")
-                    print(
-                        "[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + "PHPMYAdmin unzipped!")
-                    break
 
             ###
 
             os.remove("phpMyAdmin-4.8.2-all-languages.zip")
 
-            count = 0
-
-            while (1):
-                command = 'mv phpMyAdmin-4.8.2-all-languages phpmyadmin'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    print("[" + time.strftime(
-                        "%I-%M-%S-%a-%b-%Y") + "] " + "Unable to install PHPMYAdmin, trying again, try number: " + str(
-                        count) + "\n")
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to install PHPMYAdmin, exiting installer! [download_install_phpmyadmin]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("PHPMYAdmin Successfully installed!")
-                    print(
-                        "[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + "PHPMYAdmin Successfully installed!")
-                    break
+            command = 'mv phpMyAdmin-4.8.2-all-languages phpmyadmin'
+            install.preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+                                          'Move PHPMYAdmin', 1, 0, os.EX_OSERR)
 
             ## Write secret phrase
-
 
             rString = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])
 
@@ -1164,14 +954,9 @@ class preFlightsChecks:
             command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/phpmyadmin'
             subprocess.call(shlex.split(command))
 
-        except OSError, msg:
+        except BaseException, msg:
             logging.InstallLog.writeToFile(str(msg) + " [download_install_phpmyadmin]")
             return 0
-        except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [download_install_phpmyadmin]")
-            return 0
-
-        return 1
 
     ###################################################### Email setup
 

@@ -20,6 +20,7 @@ from random import randint
 from xml.etree import ElementTree
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
+from phpManager import PHPManager
 # Create your views here.
 
 
@@ -1164,7 +1165,35 @@ def installExtensions(request):
 
                 phpExtension.save()
 
-        return render(request,'managePHP/installExtensions.html')
+        if PHP.objects.count() == 7:
+
+            newPHP73 = PHP(phpVers="php73")
+            newPHP73.save()
+
+            php73Path = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                php73Path = os.path.join('/usr','local','CyberCP','managePHP','php73.xml')
+            else:
+                php73Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp73.xml')
+
+            php73 = ElementTree.parse(php73Path)
+
+            php73Extensions = php73.findall('extension')
+
+            for extension in php73Extensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=newPHP73,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+
+        return render(request,'managePHP/installExtensions.html', {'phps': PHPManager.findPHPVersions()})
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -1184,20 +1213,7 @@ def getExtensionsInformation(request):
                 data = json.loads(request.body)
                 phpVers = data['phpSelection']
 
-                if phpVers == "PHP 5.3":
-                    phpVers = "php53"
-                elif phpVers == "PHP 5.4":
-                    phpVers = "php54"
-                elif phpVers == "PHP 5.5":
-                    phpVers = "php55"
-                elif phpVers == "PHP 5.6":
-                    phpVers = "php56"
-                elif phpVers == "PHP 7.0":
-                    phpVers = "php70"
-                elif phpVers == "PHP 7.1":
-                    phpVers = "php71"
-                elif phpVers == "PHP 7.2":
-                    phpVers = "php72"
+                phpVers = "php" + PHPManager.getPHPString(phpVers)
 
                 php = PHP.objects.get(phpVers=phpVers)
 
@@ -1393,7 +1409,7 @@ def editPHPConfigs(request):
         else:
             return ACLManager.loadError()
 
-        return render(request,'managePHP/editPHPConfig.html')
+        return render(request,'managePHP/editPHPConfig.html', {'phps': PHPManager.findPHPVersions()})
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -1412,20 +1428,7 @@ def getCurrentPHPConfig(request):
                 data = json.loads(request.body)
                 phpVers = data['phpSelection']
 
-                if phpVers == "PHP 5.3":
-                    phpVers = "php53"
-                elif phpVers == "PHP 5.4":
-                    phpVers = "php54"
-                elif phpVers == "PHP 5.5":
-                    phpVers = "php55"
-                elif phpVers == "PHP 5.6":
-                    phpVers = "php56"
-                elif phpVers == "PHP 7.0":
-                    phpVers = "php70"
-                elif phpVers == "PHP 7.1":
-                    phpVers = "php71"
-                elif phpVers == "PHP 7.2":
-                    phpVers = "php72"
+                phpVers = "php" + PHPManager.getPHPString(phpVers)
 
                 if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                     path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
@@ -1541,20 +1544,7 @@ def savePHPConfigBasic(request):
                 else:
                     allow_url_include = "allow_url_include = Off"
 
-                if phpVers == "PHP 5.3":
-                    phpVers = "php53"
-                elif phpVers == "PHP 5.4":
-                    phpVers = "php54"
-                elif phpVers == "PHP 5.5":
-                    phpVers = "php55"
-                elif phpVers == "PHP 5.6":
-                    phpVers = "php56"
-                elif phpVers == "PHP 7.0":
-                    phpVers = "php70"
-                elif phpVers == "PHP 7.1":
-                    phpVers = "php71"
-                elif phpVers == "PHP 7.2":
-                    phpVers = "php72"
+                phpVers = "php" + PHPManager.getPHPString(phpVers)
 
                 ##
 
@@ -1597,20 +1587,7 @@ def getCurrentAdvancedPHPConfig(request):
                 data = json.loads(request.body)
                 phpVers = data['phpSelection']
 
-                if phpVers == "PHP 5.3":
-                    phpVers = "php53"
-                elif phpVers == "PHP 5.4":
-                    phpVers = "php54"
-                elif phpVers == "PHP 5.5":
-                    phpVers = "php55"
-                elif phpVers == "PHP 5.6":
-                    phpVers = "php56"
-                elif phpVers == "PHP 7.0":
-                    phpVers = "php70"
-                elif phpVers == "PHP 7.1":
-                    phpVers = "php71"
-                elif phpVers == "PHP 7.2":
-                    phpVers = "php72"
+                phpVers = "php" + PHPManager.getPHPString(phpVers)
 
                 if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                     path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
@@ -1650,20 +1627,7 @@ def savePHPConfigAdvance(request):
                 data = json.loads(request.body)
                 phpVers = data['phpSelection']
 
-                if phpVers == "PHP 5.3":
-                    phpVers = "php53"
-                elif phpVers == "PHP 5.4":
-                    phpVers = "php54"
-                elif phpVers == "PHP 5.5":
-                    phpVers = "php55"
-                elif phpVers == "PHP 5.6":
-                    phpVers = "php56"
-                elif phpVers == "PHP 7.0":
-                    phpVers = "php70"
-                elif phpVers == "PHP 7.1":
-                    phpVers = "php71"
-                elif phpVers == "PHP 7.2":
-                    phpVers = "php72"
+                phpVers = "php" + PHPManager.getPHPString(phpVers)
 
                 if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                     path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"

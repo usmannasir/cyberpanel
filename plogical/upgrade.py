@@ -214,7 +214,10 @@ WantedBy=multi-user.target"""
             if db == None:
                 conn = mysql.connect(user='root', passwd=password)
             else:
-                conn = mysql.connect(db=db, user='root', passwd=password)
+                try:
+                    conn = mysql.connect(db=db, user='root', passwd=password)
+                except:
+                    conn = mysql.connect(host = '127.0.0.1', port = 3307 , db=db, user='root', passwd=password)
 
             cursor = conn.cursor()
             return conn, cursor
@@ -645,6 +648,10 @@ WantedBy=multi-user.target"""
 
             Upgrade.stdOut("Starting LSCPD installation..")
 
+            cwd = os.getcwd()
+
+            os.chdir('/usr/local')
+
             command = 'yum -y install gcc gcc-c++ make autoconf glibc rcs'
             Upgrade.executioner(command, 'LSCPD Pre-reqs [one]', 0)
 
@@ -691,6 +698,8 @@ WantedBy=multi-user.target"""
 
             command = 'systemctl restart lscpd'
             Upgrade.executioner(command, 'Restart LSCPD', 0)
+
+            os.chdir(cwd)
 
             Upgrade.stdOut("LSCPD successfully installed!")
 

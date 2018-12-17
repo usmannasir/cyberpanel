@@ -17,9 +17,7 @@ try:
     from random import randint
     import subprocess, shlex
     from plogical.processUtilities import ProcessUtilities
-except BaseException, msg:
-    from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-    logging.writeToFile(str(msg))
+except:
     import threading as multi
     from random import randint
     import json
@@ -132,7 +130,7 @@ class S3Backups(multi.Thread):
                 writeToFile = open(pathToFile, 'w')
                 for items in output:
                     writeToFile.writelines(items + '\n')
-                writeToFile.writelines('0 24 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/s3Backups/s3Backups.py\n')
+                writeToFile.writelines('0 24 * * * cyberpanel /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/s3Backups/s3Backups.py\n')
                 writeToFile.close()
                 command = 'sudo mv ' + pathToFile + ' /etc/crontab'
                 ProcessUtilities.executioner(command)

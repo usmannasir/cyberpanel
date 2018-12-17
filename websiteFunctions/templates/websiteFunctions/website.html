@@ -341,13 +341,9 @@
                                         <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
                                         <div class="col-sm-6">
                                             <select ng-model="phpSelection" class="form-control">
-                                                <option>PHP 5.3</option>
-                                                <option>PHP 5.4</option>
-                                                <option>PHP 5.5</option>
-                                                <option>PHP 5.6</option>
-                                                <option>PHP 7.0</option>
-                                                <option>PHP 7.1</option>
-                                                <option>PHP 7.2</option>
+                                                {% for php in phps %}
+                                                    <option>{{ php }}</option>
+                                                {% endfor %}
                                             </select>
                                         </div>
                                     </div>
@@ -521,13 +517,9 @@
                                                     <td>
                                                         <select ng-change="changePHP(record.childDomain,phpSelection)"
                                                                 ng-model="phpSelection" class="form-control">
-                                                            <option>PHP 5.3</option>
-                                                            <option>PHP 5.4</option>
-                                                            <option>PHP 5.5</option>
-                                                            <option>PHP 5.6</option>
-                                                            <option>PHP 7.0</option>
-                                                            <option>PHP 7.1</option>
-                                                            <option>PHP 7.2</option>
+                                                            {% for php in phps %}
+                                                                <option>{{ php }}</option>
+                                                            {% endfor %}
                                                         </select>
                                                     </td>
                                                     <td>
@@ -802,13 +794,9 @@
                                         <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
                                         <div class="col-sm-6">
                                             <select ng-model="phpSelectionMaster" class="form-control">
-                                                <option>PHP 5.3</option>
-                                                <option>PHP 5.4</option>
-                                                <option>PHP 5.5</option>
-                                                <option>PHP 5.6</option>
-                                                <option>PHP 7.0</option>
-                                                <option>PHP 7.1</option>
-                                                <option>PHP 7.2</option>
+                                                {% for php in phps %}
+                                                    <option>{{ php }}</option>
+                                                {% endfor %}
                                             </select>
                                         </div>
 

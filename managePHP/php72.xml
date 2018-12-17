@@ -255,7 +255,7 @@
     </extension>
 	
 	<extension>
-         <extensionName>lsphp71-dbg</extensionName>
+         <extensionName>lsphp72-dbg</extensionName>
          <extensionDescription>php72-dbg lsphp72-package</extensionDescription>
          <status>0</status>
     </extension>
