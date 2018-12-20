@@ -770,7 +770,7 @@ class preFlightsChecks:
 
             if subprocess.check_output('systemd-detect-virt').find("openvz") > -1:
                 command = "pip install --upgrade requests"
-                install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+                preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                               'Upgrade requests',
                                               1, 0, os.EX_OSERR)
         except:
@@ -780,17 +780,18 @@ class preFlightsChecks:
 
         os.chdir(self.path)
 
-        #command = "wget http://cyberpanel.net/CyberPanel.1.7.5.tar.gz"
-        command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
-        install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+        command = "wget http://cyberpanel.sh/CyberPanel.1.7.5.tar.gz"
+        #command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
+        preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'CyberPanel Download',
                                       1, 1, os.EX_OSERR)
 
         ##
 
         count = 0
-        command = "tar zxf CyberPanelTemp.tar.gz"
-        install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+        command = "tar zxf CyberPanel.1.7.5.tar.gz"
+        #command = "tar zxf CyberPanelTemp.tar.gz"
+        preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'Extract CyberPanel',1, 1, os.EX_OSERR)
 
         ### update password:
@@ -852,33 +853,33 @@ class preFlightsChecks:
         os.chdir("CyberCP")
 
         command = "python manage.py makemigrations"
-        install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+        preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'CyberPanel Make Migrations',
                                       1, 1, os.EX_OSERR)
 
         ##
 
         command = "python manage.py migrate"
-        install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+        preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'CyberPanel Migrate',1, 1, os.EX_OSERR)
 
 
         ## Moving static content to lscpd location
         command = 'mv static /usr/local/lscp/cyberpanel'
-        install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+        preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'Move static content', 1, 1, os.EX_OSERR)
 
         ## fix permissions
 
         command = "chmod -R 744 /usr/local/CyberCP"
-        install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+        preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'change permissions /usr/local/CyberCP', 1, 0, os.EX_OSERR)
 
 
         ## change owner
 
         command = "chown -R cyberpanel:cyberpanel /usr/local/CyberCP"
-        install.preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
+        preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'change owner /usr/local/CyberCP', 1, 0, os.EX_OSERR)
 
 
@@ -890,7 +891,7 @@ class preFlightsChecks:
             else:
                 command = 'apt-get -y install unzip'
 
-            install.preFlightsChecks.call(command, self.distro, '[install_unzip]',
+            preFlightsChecks.call(command, self.distro, '[install_unzip]',
                                           'Install unzip', 1, 0, os.EX_OSERR)
         except BaseException, msg:
             logging.InstallLog.writeToFile(str(msg) + " [install_unzip]")
@@ -903,7 +904,7 @@ class preFlightsChecks:
             else:
                 command = 'apt-get -y install zip'
 
-            install.preFlightsChecks.call(command, self.distro, '[install_zip]',
+            preFlightsChecks.call(command, self.distro, '[install_zip]',
                                           'Install zip', 1, 0, os.EX_OSERR)
         except BaseException, msg:
             logging.InstallLog.writeToFile(str(msg) + " [install_zip]")
@@ -913,12 +914,12 @@ class preFlightsChecks:
             os.chdir("/usr/local/lscp/cyberpanel/")
 
             command = 'wget https://files.phpmyadmin.net/phpMyAdmin/4.8.2/phpMyAdmin-4.8.2-all-languages.zip'
-            install.preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                           'Download PHPMYAdmin', 1, 0, os.EX_OSERR)
             #####
 
             command = 'unzip phpMyAdmin-4.8.2-all-languages.zip'
-            install.preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                           'Unzip PHPMYAdmin', 1, 0, os.EX_OSERR)
 
 
@@ -927,7 +928,7 @@ class preFlightsChecks:
             os.remove("phpMyAdmin-4.8.2-all-languages.zip")
 
             command = 'mv phpMyAdmin-4.8.2-all-languages phpmyadmin'
-            install.preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                           'Move PHPMYAdmin', 1, 0, os.EX_OSERR)
 
             ## Write secret phrase
@@ -2128,80 +2129,43 @@ class preFlightsChecks:
         try:
             preFlightsChecks.stdOut("Enabling Firewall!")
 
-            count = 0
+            if self.distro == ubuntu:
+                command = 'apt-get -y install firewalld'
+            else:
+                command = 'yum -y install firewalld'
 
-            while (1):
-                if self.distro == ubuntu:
-                    command = 'apt-get -y install firewalld'
-                else:
-                    command = 'yum -y install firewalld'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+            preFlightsChecks.call(command, self.distro, '[installFirewalld]',
+                                  'Install FirewallD',
+                                  1, 0, os.EX_OSERR)
 
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut("Unable to install FirewallD, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to install FirewallD, funtions related to Firewall will not work! [installFirewalld]")
-                        break
-                else:
-                    logging.InstallLog.writeToFile("FirewallD successfully installed!")
-                    preFlightsChecks.stdOut("FirewallD successfully installed!")
-                    break
 
             ######
             if self.distro == centos:
                 # Not available in ubuntu
                 command = 'systemctl restart dbus'
-                cmd = shlex.split(command)
-                subprocess.call(cmd)
+                preFlightsChecks.call(command, self.distro, '[installFirewalld]',
+                                      'Start dbus',
+                                      1, 0, os.EX_OSERR)
 
             command = 'systemctl restart systemd-logind'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            preFlightsChecks.call(command, self.distro, '[installFirewalld]',
+                                  'restart logind',
+                                  1, 0, os.EX_OSERR)
 
-            count = 0
+            command = 'systemctl start firewalld'
+            preFlightsChecks.call(command, self.distro, '[installFirewalld]',
+                                  'Restart FirewallD',
+                                  1, 0, os.EX_OSERR)
 
-            while (1):
-                command = 'systemctl start firewalld'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut("Unable to start FirewallD, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to start FirewallD, you can manually start it later using systemctl start firewalld! [installFirewalld]")
-                        break
-                else:
-                    logging.InstallLog.writeToFile("FirewallD successfully started!")
-                    preFlightsChecks.stdOut("FirewallD successfully started!")
-                    break
 
             ##########
 
-            count = 0
+            command = 'systemctl enable firewalld'
+            preFlightsChecks.call(command, self.distro, '[installFirewalld]',
+                                  'Install FirewallD',
+                                  1, 0, os.EX_OSERR)
 
-            while (1):
 
-                command = 'systemctl enable firewalld'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut(
-                        "Trying to enable FirewallD at system startup, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "FirewallD may not start after restart, you need to manually run systemctl enable firewalld ! [installFirewalld]")
-                        break
-                else:
-                    logging.InstallLog.writeToFile("FirewallD successfully enabled on system startup!")
-                    preFlightsChecks.stdOut("FirewallD successfully enabled on system startup!")
-                    break
 
             FirewallUtilities.addRule("tcp", "8090")
             FirewallUtilities.addRule("tcp", "80")

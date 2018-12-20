@@ -1,16 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render,redirect
-from django.http import HttpResponse
+from django.shortcuts import redirect
 import json
-import plogical.CyberCPLogFileWriter as logging
-from plogical.tuning import tuning
 from loginSystem.views import loadLoginPage
-from plogical.virtualHostUtilities import virtualHostUtilities
-import subprocess
-import shlex
-from plogical.acl import ACLManager
 from tuning import tuningManager
 # Create your views here.
 

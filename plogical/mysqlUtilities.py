@@ -21,6 +21,7 @@ class mysqlUtilities:
             f = open(passFile)
             data = f.read()
             password = data.split('\n', 1)[0]
+            password = password.strip('\n').strip('\r')
 
             conn = mysql.connect(user='root', passwd=password)
             cursor = conn.cursor()

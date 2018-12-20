@@ -175,7 +175,7 @@ class CSF(multi.Thread):
             return currentSettings
 
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[fetchCSFSettings]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [fetchCSFSettings]")
 
     @staticmethod
     def changeStatus(controller, status):

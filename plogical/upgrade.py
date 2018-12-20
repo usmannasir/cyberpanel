@@ -13,6 +13,7 @@ import json
 import time
 from baseTemplate.models import version
 import MySQLdb as mysql
+from CyberCP import settings
 
 class Upgrade:
     logPath = "/usr/local/lscp/logs/upgradeLog"
@@ -217,7 +218,15 @@ WantedBy=multi-user.target"""
                 try:
                     conn = mysql.connect(db=db, user='root', passwd=password)
                 except:
-                    conn = mysql.connect(host = '127.0.0.1', port = 3307 , db=db, user='root', passwd=password)
+                    try:
+                        conn = mysql.connect(host = '127.0.0.1', port = 3307 , db=db, user='root', passwd=password)
+                    except:
+                        dbUser = settings.DATABASES['default']['USER']
+                        password = settings.DATABASES['default']['PASSWORD']
+                        host = settings.DATABASES['default']['HOST']
+                        port = settings.DATABASES['default']['PORT']
+
+                        conn = mysql.connect(host=host, port=port, db=db, user=dbUser, passwd=password)
 
             cursor = conn.cursor()
             return conn, cursor
@@ -291,7 +300,10 @@ WantedBy=multi-user.target"""
             except:
                 pass
 
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
 
         except OSError, msg:
             Upgrade.stdOut(str(msg) + " [applyLoginSystemMigrations]")
@@ -352,7 +364,10 @@ WantedBy=multi-user.target"""
             except:
                 pass
 
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
 
         except OSError, msg:
             Upgrade.stdOut(str(msg) + " [applyLoginSystemMigrations]")
@@ -414,7 +429,10 @@ WantedBy=multi-user.target"""
             except:
                 pass
 
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
         except:
             pass
 
@@ -523,7 +541,10 @@ WantedBy=multi-user.target"""
             except:
                 pass
 
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
         except:
             pass
 
@@ -727,6 +748,21 @@ WantedBy=multi-user.target"""
             Upgrade.stdOut(str(msg) + " [installLSCPD]")
 
     @staticmethod
+    def installPHP73():
+        try:
+            command = 'yum install -y lsphp73 lsphp73-json lsphp73-xmlrpc lsphp73-xml lsphp73-tidy lsphp73-soap lsphp73-snmp ' \
+                      'lsphp73-recode lsphp73-pspell lsphp73-process lsphp73-pgsql lsphp73-pear lsphp73-pdo lsphp73-opcache ' \
+                      'lsphp73-odbc lsphp73-mysqlnd lsphp73-mcrypt lsphp73-mbstring lsphp73-ldap lsphp73-intl lsphp73-imap ' \
+                      'lsphp73-gmp lsphp73-gd lsphp73-enchant lsphp73-dba  lsphp73-common  lsphp73-bcmath'
+            Upgrade.executioner(command, 'Install PHP 73, 0')
+        except:
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
+                      'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
+                      'lsphp7?-ldap lsphp7?-mysql lsphp7?-opcache lsphp7?-pspell lsphp7?-recode ' \
+                      'lsphp7?-sqlite3 lsphp7?-tidy'
+            Upgrade.executioner(command, 'Install PHP 73, 0')
+
+    @staticmethod
     def upgrade():
 
         os.chdir("/usr/local")
@@ -778,6 +814,7 @@ WantedBy=multi-user.target"""
         Upgrade.s3BackupMigrations()
         Upgrade.enableServices()
 
+        Upgrade.installPHP73()
         Upgrade.setupCLI()
         Upgrade.installLSCPD()
         Upgrade.fixPermissions()

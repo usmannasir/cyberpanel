@@ -681,7 +681,6 @@ class vhost:
     @staticmethod
     def changePHP(vhFile, phpVersion):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-            finalphp = 0
             try:
                 data = open(vhFile, "r").readlines()
 
@@ -689,7 +688,7 @@ class vhost:
 
                 writeDataToFile = open(vhFile, "w")
 
-                path = "  path                    /usr/local/lsws/lsphp" + str(finalphp) + "/bin/lsphp\n"
+                path = "  path                    /usr/local/lsws/lsphp" + str(php) + "/bin/lsphp\n"
 
                 for items in data:
                     if items.find("/usr/local/lsws/lsphp") > -1 and items.find("path") > -1:
@@ -711,8 +710,6 @@ class vhost:
         else:
             try:
                 data = open(vhFile, "r").readlines()
-                if phpVersion == "PHP 5.3":
-                    finalphp = 53
 
                 php = PHPManager.getPHPString(phpVersion)
 
@@ -760,7 +757,6 @@ class vhost:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + " [IO Error with per host config file [checkIfRewriteEnabled]]")
             return 0
-        return 1
 
     @staticmethod
     def findDomainBW(domainName, totalAllowed):

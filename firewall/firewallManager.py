@@ -1452,7 +1452,7 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('installStatus', 0)
 
-            execPath = "sudo " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
+            execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " installCSF"
             subprocess.Popen(shlex.split(execPath))
 
@@ -1520,7 +1520,7 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('installStatus', 0)
 
-            execPath = "sudo " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
+            execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " removeCSF"
             subprocess.Popen(shlex.split(execPath))
 
@@ -1579,7 +1579,7 @@ class FirewallManager:
             controller = data['controller']
             status = data['status']
 
-            execPath = "sudo " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
+            execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " changeStatus --controller " + controller + " --status " + status
             output = subprocess.check_output(shlex.split(execPath))
 
@@ -1613,7 +1613,7 @@ class FirewallManager:
             protocol = data['protocol']
             ports = data['ports']
 
-            execPath = "sudo " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
+            execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " modifyPorts --protocol " + protocol + " --ports " + ports
             output = subprocess.check_output(shlex.split(execPath))
 

@@ -609,6 +609,8 @@ class InstallCyberPanel:
 
             if self.distro == ubuntu:
                 command = "DEBIAN_FRONTEND=noninteractive apt-get -y install pdns-server pdns-backend-mysql"
+                os.system(command)
+                return 1
             else:
                 command = 'yum -y install pdns pdns-backend-mysql'
 
