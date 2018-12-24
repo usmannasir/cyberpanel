@@ -681,12 +681,13 @@ WantedBy=multi-user.target"""
             command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel which curl'
             Upgrade.executioner(command, 'LSCPD Pre-reqs [two]', 0)
 
-
-            command = 'wget https://cyberpanel.net/lscp.tar.gz'
-            Upgrade.executioner(command, 'Download LSCPD [two]', 0)
+            ##
 
             if os.path.exists('/usr/local/lscp.tar.gz'):
                 os.remove('/usr/local/lscp.tar.gz')
+
+            command = 'wget https://cyberpanel.net/lscp.tar.gz'
+            Upgrade.executioner(command, 'Download LSCPD [two]', 0)
 
             ##
 

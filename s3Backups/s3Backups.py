@@ -9,6 +9,7 @@ try:
     import threading as multi
     from plogical.mailUtilities import mailUtilities
     import boto3
+    from boto3.s3.transfer import TransferConfig
     import json
     from .models import *
     from math import ceil
@@ -75,7 +76,7 @@ class S3Backups(multi.Thread):
         checker = 0
         counter = 1
 
-        for items in reversed(logs):
+        for items in logs:
             dic = { 'id': items.id, 'timeStamp': items.timeStamp, 'level': items.level, 'mesg': items.msg }
             if checker == 0:
                 json_data = json_data + json.dumps(dic)
@@ -130,7 +131,7 @@ class S3Backups(multi.Thread):
                 writeToFile = open(pathToFile, 'w')
                 for items in output:
                     writeToFile.writelines(items + '\n')
-                writeToFile.writelines('0 24 * * * cyberpanel /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/s3Backups/s3Backups.py\n')
+                writeToFile.writelines('0 0 * * * cyberpanel /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/s3Backups/s3Backups.py\n')
                 writeToFile.close()
                 command = 'sudo mv ' + pathToFile + ' /etc/crontab'
                 ProcessUtilities.executioner(command)
@@ -359,7 +360,7 @@ class S3Backups(multi.Thread):
             page = int(self.data['page'])
 
             backupPlan = BackupPlan.objects.get(name=self.data['planName'])
-            logs = backupPlan.backuplogs_set.all()
+            logs = backupPlan.backuplogs_set.all().order_by('-id')
 
             pagination = S3Backups.getPagination(len(logs), recordsToShow)
             endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
@@ -399,14 +400,16 @@ class S3Backups(multi.Thread):
     def forceRunAWSBackup(self):
         try:
 
-            s3 = boto3.resource('s3')
             plan = BackupPlan.objects.get(name=self.data['planName'])
             bucketName = plan.bucket.strip('\n').strip(' ')
             runTime = time.strftime("%d:%m:%Y")
+            client = boto3.client('s3')
+            config = TransferConfig(multipart_threshold=1024 * 25, max_concurrency=10,
+                                    multipart_chunksize=1024 * 25, use_threads=True)
 
             ## Set Expiration for objects
             try:
-                client = boto3.client('s3')
+
                 client.put_bucket_lifecycle_configuration(
                     Bucket='string',
                     LifecycleConfiguration={
@@ -444,8 +447,13 @@ class S3Backups(multi.Thread):
             for items in plan.websitesinplan_set.all():
                 result = self.createBackup(items.domain)
                 if result[0]:
-                    data = open(result[1] + ".tar.gz", 'rb')
-                    s3.Bucket(bucketName).put_object(Key=plan.name + '/' + runTime + '/' + result[1].split('/')[-1] + ".tar.gz", Body=data)
+                    key = plan.name + '/' + runTime + '/' + result[1].split('/')[-1] + ".tar.gz"
+                    client.upload_file(
+                                        result[1] + ".tar.gz",
+                                        bucketName,
+                                        key,
+                                        Config=config,
+                                    )
                     BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"), msg='Backup successful for ' + items.domain + '.').save()
                 else:
                     BackupLogs(owner=plan, level='ERROR', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"), msg='Backup failed for ' + items.domain + '. Error: ' + result[1]).save()
@@ -455,8 +463,6 @@ class S3Backups(multi.Thread):
             plan.save()
 
             BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"), msg='Backup Process Finished.').save()
-
-
         except BaseException, msg:
             logging.writeToFile(str(msg) + ' [S3Backups.runBackupPlan]')
             plan = BackupPlan.objects.get(name=self.data['planName'])

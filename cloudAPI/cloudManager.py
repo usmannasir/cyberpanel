@@ -22,6 +22,7 @@ from highAvailability.haManager import HAManager
 from plogical.httpProc import httpProc
 from s3Backups.s3Backups import S3Backups
 import os
+from serverStatus.views import topProcessesStatus, killProcess
 
 class CloudManager:
     def __init__(self, data=None, admin = None):
@@ -909,5 +910,20 @@ class CloudManager:
             s3 = S3Backups(request, self.data, 'forceRunAWSBackup')
             s3.start()
             return self.ajaxPre(1, None)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+
+    def systemStatus(self, request):
+        try:
+            return topProcessesStatus(request)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+
+    def killProcess(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            return killProcess(request)
         except BaseException, msg:
             return self.ajaxPre(0, str(msg))

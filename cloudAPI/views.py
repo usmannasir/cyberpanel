@@ -197,6 +197,10 @@ def router(request):
             return cm.fetchBackupLogs(request)
         elif controller == 'forceRunAWSBackup':
             return cm.forceRunAWSBackup(request)
+        elif controller == 'systemStatus':
+            return cm.systemStatus(request)
+        elif controller == 'killProcess':
+            return cm.killProcess(request)
         else:
             return cm.ajaxPre(0, 'This function is not available in your version of CyberPanel.')
 

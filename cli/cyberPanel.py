@@ -21,6 +21,8 @@ from cliParser import cliParser
 from plogical.vhost import vhost
 from plogical.mailUtilities import mailUtilities
 from plogical.ftpUtilities import FTPUtilities
+from plogical.sslUtilities import sslUtilities
+from plogical.processUtilities import ProcessUtilities
 
 # All that we see or seem is but a dream within a dream.
 
@@ -784,6 +786,35 @@ class cyberPanel:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
+
+    def issueSelfSignedSSL(self, virtualHost):
+        try:
+
+            try:
+                website = ChildDomains.objects.get(domain=virtualHost)
+                adminEmail = website.master.adminEmail
+            except:
+                website = Websites.objects.get(domain=virtualHost)
+                adminEmail = website.adminEmail
+
+            pathToStoreSSL = "/etc/letsencrypt/live/" + virtualHost
+            command = 'mkdir -p ' + pathToStoreSSL
+            ProcessUtilities.executioner(command)
+
+            pathToStoreSSLPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
+            pathToStoreSSLFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
+
+            command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
+            ProcessUtilities.executioner(command)
+
+            sslUtilities.installSSLForDomain(virtualHost, adminEmail)
+            ProcessUtilities.restartLitespeed()
+            self.printStatus(1, 'None')
+
+        except BaseException, msg:
+            logger.writeforCLI(str(msg), "Error", stack()[0][3])
+            self.printStatus(0, str(msg))
+
 def main():
 
     parser = cliParser()
@@ -1266,6 +1297,15 @@ def main():
             return
 
         cyberpanel.issueSSLForMailServer(args.domainName)
+
+    elif args.function == "issueSelfSignedSSL":
+        completeCommandExample = 'cyberpanel issueSelfSignedSSL --domainName cyberpanel.net'
+
+        if not args.domainName:
+            print "\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n"
+            return
+
+        cyberpanel.issueSelfSignedSSL(args.domainName)
 
 
 
