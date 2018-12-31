@@ -9,7 +9,9 @@ import shlex
 from websiteFunctions.models import Websites
 from databases.models import Databases
 import MySQLdb as mysql
-
+import json
+from random import randint
+from plogical.processUtilities import ProcessUtilities
 
 class mysqlUtilities:
 
@@ -192,3 +194,143 @@ class mysqlUtilities:
             return website.databases_set.all()
         except:
             0
+
+    @staticmethod
+    def showStatus():
+        try:
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+
+            cursor.execute("SHOW GLOBAL STATUS")
+            result = cursor.fetchall()
+
+            data = {}
+            data['status'] = 1
+
+            for items in result:
+                if items[0] == 'Uptime':
+                    data['uptime'] = mysqlUtilities.GetTime(items[1])
+                elif items[0] == 'Connections':
+                    data['connections'] = items[1]
+                elif items[0] == 'Slow_queries':
+                    data['Slow_queries'] = items[1]
+
+            ## Process List
+
+            cursor.execute("show processlist")
+            result = cursor.fetchall()
+
+            json_data = "["
+            checker = 0
+
+            for items in result:
+                if len(str(items[1])) == 0:
+                    database = 'NULL'
+                else:
+                    database = items[1]
+
+                if len(str(items[6])) == 0:
+                    state = 'NULL'
+                else:
+                    state = items[6]
+
+                if len(str(items[7])) == '':
+                    info = 'NULL'
+                else:
+                    info = items[7]
+
+                dic = {
+                    'id': items[0],
+                    'user': items[1],
+                    'database': database,
+                    'command': items[4],
+                    'time': items[5],
+                    'state': state,
+                    'info': info,
+                    'progress': items[8],
+                }
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+            json_data = json_data + ']'
+
+            data['processes'] = json_data
+
+            ##
+
+            return data
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[showStatus]")
+            return 0
+
+    @staticmethod
+    def GetTime(seconds):
+        time = float(seconds)
+        day = time // (24 * 3600)
+        time = time % (24 * 3600)
+        hour = time // 3600
+        time %= 3600
+        minutes = time // 60
+        time %= 60
+        seconds = time
+
+        return ("%d:%d:%d:%d" % (day, hour, minutes, seconds))
+
+    @staticmethod
+    def applyMySQLChanges(data):
+        try:
+            command = 'sudo mv /etc/my.cnf /etc/my.cnf.bak'
+            ProcessUtilities.executioner(command)
+
+            ## Temp
+
+            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+            writeToFile = open(tempPath, 'w')
+            writeToFile.write(data['suggestedContent'])
+            writeToFile.close()
+
+            ##
+
+            command = 'sudo mv ' + tempPath + ' /etc/my.cnf'
+            ProcessUtilities.executioner(command)
+
+            command = 'sudo systemctl restart mysql'
+            ProcessUtilities.executioner(command)
+
+            return 1, None
+
+        except BaseException, msg:
+            command = 'sudo mv /etc/my.cnf.bak /etc/my.cnf'
+            subprocess.call(shlex.split(command))
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return 0, str(msg)
+
+    @staticmethod
+    def fetchVariables():
+        try:
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+
+            cursor.execute("SHOW VARIABLES")
+            result = cursor.fetchall()
+
+            for items in result:
+                logging.CyberCPLogFileWriter.writeToFile(str(items))
+
+
+            ##
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[showStatus]")
+            return 0

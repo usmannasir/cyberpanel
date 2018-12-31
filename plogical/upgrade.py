@@ -364,6 +364,57 @@ WantedBy=multi-user.target"""
             except:
                 pass
 
+            query = """CREATE TABLE `s3Backups_backupplando` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `bucket` varchar(50) NOT NULL,
+  `freq` varchar(50) NOT NULL,
+  `retention` int(11) NOT NULL,
+  `type` varchar(5) NOT NULL,
+  `region` varchar(5) NOT NULL,
+  `lastRun` varchar(50) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `s3Backups_backupplan_owner_id_1a3ec86d_fk_loginSyst` (`owner_id`),
+  CONSTRAINT `s3Backups_backupplan_owner_id_1a3ec86d_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `s3Backups_websitesinplando` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `domain` varchar(100) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `s3Backups_websitesin_owner_id_cef3ea04_fk_s3Backups` (`owner_id`),
+  CONSTRAINT `s3Backups_websitesin_owner_id_cef3ea04_fk_s3Backups` FOREIGN KEY (`owner_id`) REFERENCES `s3Backups_backupplando` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `s3Backups_backuplogsdo` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `timeStamp` varchar(200) NOT NULL,
+  `level` varchar(5) NOT NULL,
+  `msg` varchar(500) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `s3Backups_backuplogs_owner_id_c7cb5872_fk_s3Backups` (`owner_id`),
+  CONSTRAINT `s3Backups_backuplogs_owner_id_c7cb5872_fk_s3Backups` FOREIGN KEY (`owner_id`) REFERENCES `s3Backups_backupplando` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             try:
                 connection.close()
             except:

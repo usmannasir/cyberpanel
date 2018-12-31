@@ -23,6 +23,7 @@ from plogical.httpProc import httpProc
 from s3Backups.s3Backups import S3Backups
 import os
 from serverStatus.views import topProcessesStatus, killProcess
+from plogical.mysqlUtilities import mysqlUtilities
 
 class CloudManager:
     def __init__(self, data=None, admin = None):
@@ -925,5 +926,145 @@ class CloudManager:
         try:
             request.session['userID'] = self.admin.pk
             return killProcess(request)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+
+    def connectAccountDO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'connectAccountDO')
+            return s3.connectAccountDO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchBucketsDO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'fetchBucketsDO')
+            return s3.fetchBucketsDO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+
+    def createPlanDO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'createPlanDO')
+            return s3.createPlanDO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchBackupPlansDO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'fetchBackupPlansDO')
+            return s3.fetchBackupPlansDO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def deletePlanDO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'deletePlanDO')
+            return s3.deletePlanDO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchWebsitesInPlanDO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'fetchWebsitesInPlanDO')
+            return s3.fetchWebsitesInPlanDO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchBackupLogsDO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'fetchBackupLogsDO')
+            return s3.fetchBackupLogsDO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def deleteDomainFromPlanDO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'deleteDomainFromPlanDO')
+            return s3.deleteDomainFromPlanDO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def savePlanChangesDO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'savePlanChangesDO')
+            return s3.savePlanChangesDO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def forceRunAWSBackupDO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'forceRunAWSBackupDO')
+            s3.start()
+            return self.ajaxPre(1, None)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def showStatus(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            currentACL = ACLManager.loadedACL( self.admin.pk)
+
+            if currentACL['admin'] == 0:
+                return self.ajaxPre(0, 'Only administrators can see MySQL status.')
+
+            finalData = mysqlUtilities.showStatus()
+
+            finalData = json.dumps(finalData)
+            return HttpResponse(finalData)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+
+    def fetchRam(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            currentACL = ACLManager.loadedACL( self.admin.pk)
+
+            if currentACL['admin'] == 0:
+                return self.ajaxPre(0, 'Only administrators can see MySQL status.')
+
+            from psutil import virtual_memory
+            import math
+
+            finalData = {}
+            mem = virtual_memory()
+            inGB = math.ceil(float(mem.total)/float(1024 * 1024 * 1024))
+            finalData['ramInGB'] = inGB
+            finalData['conf'] = subprocess.check_output(shlex.split('sudo cat /etc/my.cnf'))
+            finalData['status'] = 1
+
+            finalData = json.dumps(finalData)
+            return HttpResponse(finalData)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def applyMySQLChanges(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            currentACL = ACLManager.loadedACL( self.admin.pk)
+
+            if currentACL['admin'] == 0:
+                return self.ajaxPre(0, 'Only administrators can see MySQL status.')
+
+            result = mysqlUtilities.applyMySQLChanges(self.data)
+
+            if result[0] == 0:
+                return self.ajaxPre(0, result[1])
+            else:
+                return self.ajaxPre(1, None)
+
         except BaseException, msg:
             return self.ajaxPre(0, str(msg))

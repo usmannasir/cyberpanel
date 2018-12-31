@@ -260,4 +260,10 @@
          <status>0</status>
     </extension>
 
+    <extension>
+         <extensionName>lsphp72-ioncube</extensionName>
+         <extensionDescription>ioncube loaders</extensionDescription>
+         <status>0</status>
+    </extension>
+
 </php>

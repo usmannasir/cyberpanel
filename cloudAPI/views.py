@@ -201,6 +201,32 @@ def router(request):
             return cm.systemStatus(request)
         elif controller == 'killProcess':
             return cm.killProcess(request)
+        elif controller == 'connectAccountDO':
+            return cm.connectAccountDO(request)
+        elif controller == 'fetchBucketsDO':
+            return cm.fetchBucketsDO(request)
+        elif controller == 'createPlanDO':
+            return cm.createPlanDO(request)
+        elif controller == 'fetchBackupPlansDO':
+            return cm.fetchBackupPlansDO(request)
+        elif controller == 'deletePlanDO':
+            return cm.deletePlanDO(request)
+        elif controller == 'fetchWebsitesInPlanDO':
+            return cm.fetchWebsitesInPlanDO(request)
+        elif controller == 'fetchBackupLogsDO':
+            return cm.fetchBackupLogsDO(request)
+        elif controller == 'deleteDomainFromPlanDO':
+            return cm.deleteDomainFromPlanDO(request)
+        elif controller == 'savePlanChangesDO':
+            return cm.savePlanChangesDO(request)
+        elif controller == 'forceRunAWSBackupDO':
+            return cm.forceRunAWSBackupDO(request)
+        elif controller == 'showStatus':
+            return cm.showStatus(request)
+        elif controller == 'fetchRam':
+            return cm.fetchRam(request)
+        elif controller == 'applyMySQLChanges':
+            return cm.applyMySQLChanges(request)
         else:
             return cm.ajaxPre(0, 'This function is not available in your version of CyberPanel.')
 
