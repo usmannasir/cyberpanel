@@ -3,12 +3,20 @@
 # This file is distributed under the same license as the CyberPanel package.
 # FIRST AUTHOR <unasir@litespeedtech.com>, 2017.
 #
+#: baseTemplate/templates/baseTemplate/index.html:177
+#: baseTemplate/templates/baseTemplate/index.html:223
+#: baseTemplate/templates/baseTemplate/index.html:229
+#: baseTemplate/templates/baseTemplate/index.html:235
+#: baseTemplate/templates/baseTemplate/index.html:241
+#: baseTemplate/templates/baseTemplate/index.html:247
+#: baseTemplate/templates/baseTemplate/index.html:253
+#: emailMarketing/templates/emailMarketing/sendEmails.html:93
 msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-11-10 14:17+0500\n"
-"PO-Revision-Date: 2018-12-25 22:08+0900\n"
+"PO-Revision-Date: 2018-09-21 15:46+0900\n"
 "Last-Translator: @ kazuo210 <kazu.nito@gmail.com>\n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
 "Language: ja\n"
@@ -16,7 +24,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 2.2\n"
+"X-Generator: Poedit 2.1.1\n"
 
 #: CyberCP/settings.py:172
 msgid "English"
@@ -63,12 +71,16 @@ msgid "French"
 msgstr "フランス語"
 
 #: CyberCP/settings.py:183
+#, fuzzy
+#| msgid "Policy"
 msgid "Polish"
-msgstr "ポーランド語"
+msgstr "ポリシ"
 
 #: CyberCP/settings.py:184
+#, fuzzy
+#| msgid "Filename"
 msgid "Vietnamese"
-msgstr "ベトナム語"
+msgstr "ファイル名"
 
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
@@ -1339,8 +1351,10 @@ msgstr "Spamassassin"
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:22
 #: emailMarketing/templates/emailMarketing/website.html:947
 #: websiteFunctions/templates/websiteFunctions/website.html:947
+#, fuzzy
+#| msgid "Email Forwarding"
 msgid "Email Marketing"
-msgstr "Eメールマーケティング"
+msgstr "Eメール転送"
 
 #: baseTemplate/templates/baseTemplate/index.html:564
 #: baseTemplate/templates/baseTemplate/index.html:566
@@ -1355,7 +1369,7 @@ msgstr "PowerDNS の管理"
 #: baseTemplate/templates/baseTemplate/index.html:572
 #: manageServices/templates/manageServices/managePostfix.html:22
 msgid "Manage Postfix"
-msgstr "Postfix を管理する"
+msgstr "postfixの管理"
 
 #: baseTemplate/templates/baseTemplate/index.html:573
 msgid "Manage FTP"
@@ -1366,15 +1380,19 @@ msgstr "FTP の管理"
 #: pluginHolder/templates/pluginHolder/plugins.html:14
 #: pluginHolder/templates/pluginHolder/plugins.html:21
 msgid "Plugins"
-msgstr "プラグイン"
+msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:587
+#, fuzzy
+#| msgid "Install Extensions"
 msgid "Installed Plugins"
-msgstr "インストール済みのプラグイン"
+msgstr "拡張機能のインストール"
 
 #: baseTemplate/templates/baseTemplate/index.html:587
+#, fuzzy
+#| msgid "Install"
 msgid "Installed"
-msgstr "インストール済み"
+msgstr "インストール"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
@@ -1791,60 +1809,78 @@ msgid "Add Delete/Records"
 msgstr "削除/レコードを追加"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:3
+#, fuzzy
+#| msgid "Change Email Password - CyberPanel"
 msgid "Compose Email Message - CyberPanel"
-msgstr "Eメールメッセージの作成 - CyberPanel"
+msgstr "メール パスワードの変更 - CyberPanel"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:13
 #: emailMarketing/templates/emailMarketing/composeMessages.html:19
 msgid "Compose Email Message"
-msgstr "Eメールメッセージを作成する"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:14
+#, fuzzy
+#| msgid "On this page you can configure SpamAssassin settings."
 msgid "On this page you can compose email message to be sent out later."
-msgstr ""
-"このページでは、後で送信するEメールメッセージを作成することができます。"
+msgstr "このページでは、SpamAssassin の設定を構成できます。"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:29
+#, fuzzy
+#| msgid "Site Name"
 msgid "Template Name"
-msgstr "テンプレート名"
+msgstr "サイト名"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:36
 msgid "Email Subject"
-msgstr "メールの件名"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:43
+#, fuzzy
+#| msgid "First Name"
 msgid "From Name"
-msgstr "送信元の名前"
+msgstr "名"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:50
+#, fuzzy
+#| msgid "Forward Email"
 msgid "From Email"
-msgstr "送信元のメールアドレス"
+msgstr "Eメール転送"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:57
+#, fuzzy
+#| msgid "Delete Email"
 msgid "Reply Email"
 msgstr "メールの削除"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:73
+#, fuzzy
+#| msgid "Save edits"
 msgid "Save Template"
-msgstr "テンプレートの保存"
+msgstr "編集の保存"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:3
+#, fuzzy
+#| msgid "Create Email Account - CyberPanel"
 msgid "Create Email List - CyberPanel"
-msgstr "Eメールリストの作成 - CyberPanel"
+msgstr "メールアカウントの作成 - Cyber​​Panel"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:13
 #: emailMarketing/templates/emailMarketing/createEmailList.html:19
+#, fuzzy
+#| msgid "Create Email"
 msgid "Create Email List"
-msgstr "Eメールリストの作成"
+msgstr "メールの作成"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:14
 msgid "Create email list, to send out news letters and marketing emails."
 msgstr ""
-"Eメールリストを作成し、ニュースレターやマーケティングメールを送信します。"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:26
+#, fuzzy
+#| msgid "Last Name"
 msgid "List Name"
-msgstr "リスト名"
+msgstr "姓"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:33
 #: emailMarketing/templates/emailMarketing/manageLists.html:74
@@ -1857,8 +1893,10 @@ msgid "Path"
 msgstr "パス"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:42
+#, fuzzy
+#| msgid "Create Alias"
 msgid "Create List"
-msgstr "リストの作成"
+msgstr "エイリアスの作成"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:59
 #: emailMarketing/templates/emailMarketing/manageLists.html:100
@@ -1875,12 +1913,14 @@ msgid "Go Back"
 msgstr "前に戻る"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:3
+#, fuzzy
+#| msgid "Setup Email Forwarding - CyberPanel"
 msgid "Email Marketing - CyberPanel"
-msgstr "Eメールマーケティング - CyberPanel"
+msgstr "Eメール転送の設定 - CyberPanel"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:15
 msgid "Select users to Enable/Disable Email Marketing feature!"
-msgstr "Eメールマーケティング機能を有効/無効にするユーザーを選択してください！"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:29
 #: emailPremium/templates/emailPremium/listDomains.html:29
@@ -1903,7 +1943,7 @@ msgstr "ユーザー名"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:54
 msgid "Email Marketing Enabled."
-msgstr "Eメールマーケティングを有効にします。"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:55
 #: emailPremium/templates/emailPremium/emailLimits.html:53
@@ -1918,7 +1958,7 @@ msgstr "無効化"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:56
 msgid "Email Marketing Disabled."
-msgstr "Eメールマーケティングを無効にします。"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:57
 #: emailPremium/templates/emailPremium/emailLimits.html:55
@@ -1932,34 +1972,42 @@ msgid "Enable"
 msgstr "有効化"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:3
+#, fuzzy
+#| msgid "Change Email Password - CyberPanel"
 msgid "Manage Email Lists - CyberPanel"
-msgstr "Eメールリストの管理 - CyberPanel"
+msgstr "メール パスワードの変更 - CyberPanel"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:13
 #: emailMarketing/templates/emailMarketing/manageLists.html:19
+#, fuzzy
+#| msgid "Change Email Password"
 msgid "Manage Email Lists"
-msgstr "Eメールリストの管理"
+msgstr "メール パスワードの変更"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:14
+#, fuzzy
+#| msgid "On this page you manage emails limits for Domains/Email Addresses"
 msgid ""
 "On this page you can manage your email lists (Delete, Verify, Add More "
 "Emails)."
-msgstr ""
-"このページでは、Eメールリストを管理することができます（削除、確認、追加電子"
-"メールの追加）。"
+msgstr "このページでは、ドメイン/EメールアドレスのEメールの制限を管理します"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:28
 #: emailMarketing/templates/emailMarketing/sendEmails.html:71
+#, fuzzy
+#| msgid "Select ACL"
 msgid "Select List"
-msgstr "リストを選択"
+msgstr "ACL を選択"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:41
+#, fuzzy
+#| msgid "Delete Website"
 msgid "Delete This List"
-msgstr "このリストを削除"
+msgstr "Web サイトの削除"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:48
 msgid "You are doing to delete this list.."
-msgstr "このリストを削除しています.."
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:54
 #: emailMarketing/templates/emailMarketing/sendEmails.html:54
@@ -1982,27 +2030,35 @@ msgstr "確認"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:63
 msgid "Verify This List"
-msgstr "このリストを検証する"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:66
+#, fuzzy
+#| msgid "Add Domains"
 msgid "Add More Emails"
-msgstr "Eメールを追加する"
+msgstr "ドメインの追加"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:83
+#, fuzzy
+#| msgid "Forward Email"
 msgid "Load Emails"
-msgstr "Eメールの読み込み"
+msgstr "Eメール転送"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:142
+#, fuzzy
+#| msgid "Email"
 msgid "email"
-msgstr "eメール"
+msgstr "メール"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:143
+#, fuzzy
+#| msgid "Services Status"
 msgid "Verification Status"
-msgstr "検証ステータス"
+msgstr "サービスの状態"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:144
 msgid "Date Created"
-msgstr "作成日"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:145
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:79
@@ -2013,45 +2069,59 @@ msgid "Actions"
 msgstr "操作"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:3
+#, fuzzy
+#| msgid "Manage SSL - CyberPanel"
 msgid "Manage SMTP Hosts - CyberPanel"
-msgstr "SMTP ホストの管理 - CyberPanel"
+msgstr "SSL の管理 - Cyber​​Panel"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:13
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:19
+#, fuzzy
+#| msgid "Manage Postfix"
 msgid "Manage SMTP Hosts"
-msgstr "SMTP ホストの管理"
+msgstr "postfixの管理"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:14
+#, fuzzy
+#| msgid ""
+#| "On this page you can manage versions and or upgrade to latest version of "
+#| "CyberPanel"
 msgid ""
 "On this page you can manage STMP Host. (SMTP hosts are used to send emails)"
 msgstr ""
-"このページでは、SMTP ホストを管理できます。 （SMTP ホストは電子メールの送信に"
-"使用されます）"
+"このページでは、バージョン管理や CyberPanel の最新バージョンへのアップグレー"
+"ドが可能です"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:29
 #: emailMarketing/templates/emailMarketing/sendEmails.html:153
 msgid "SMTP Host"
-msgstr "SMTP ホスト"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:59
+#, fuzzy
+#| msgid "Save edits"
 msgid "Save Host"
-msgstr "ホストを保存"
+msgstr "編集の保存"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:75
+#, fuzzy
+#| msgid "New Owner"
 msgid "Owner"
-msgstr "所有者"
+msgstr "新しい所有者"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:76
 msgid "Host"
-msgstr "ホスト"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:91
 msgid "Verify Host"
-msgstr "ホストの検証"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:3
+#, fuzzy
+#| msgid "Domains - CyberPanel"
 msgid "Send Emails - CyberPanel"
-msgstr "Eメール送信 - CyberPanel"
+msgstr "ドメイン - CyberPanel"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:13
 #: emailMarketing/templates/emailMarketing/sendEmails.html:19
@@ -2062,62 +2132,73 @@ msgstr "Eメール送信 - CyberPanel"
 #: websiteFunctions/templates/websiteFunctions/website.html:999
 #: websiteFunctions/templates/websiteFunctions/website.html:1002
 #: websiteFunctions/templates/websiteFunctions/website.html:1003
+#, fuzzy
+#| msgid "Emails"
 msgid "Send Emails"
-msgstr "Eメールを送信"
+msgstr "メール"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:14
 msgid ""
 "On this page you can send emails to the lists you created using SMTP Hosts."
 msgstr ""
-"このページでは、SMTP ホストを使用して作成したリストにEメールを送信できます。"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:28
+#, fuzzy
+#| msgid "Select Website"
 msgid "Select Template"
-msgstr "テンプレートを選択"
+msgstr "Web サイトを選択"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:41
 msgid "Delete This Template"
-msgstr "このテンプレートを削除する"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:48
 msgid "You are doing to delete this template.."
-msgstr "このテンプレートを削除しています.."
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:63
+#, fuzzy
+#| msgid "Preview"
 msgid "Preview Template"
-msgstr "テンプレートのプレビュー"
+msgstr "プレビュー"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:82
+#, fuzzy
+#| msgid "Select FTP Account"
 msgid "Select STMP Host"
-msgstr "STMP ホストの選択"
+msgstr "FTP アカウントを選択"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:98
 msgid "Send to un-verified email addresses."
-msgstr "未検証のメールアドレスに送信します。"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:107
 msgid "Include unsubscribe link."
-msgstr "登録解除リンクを含めます。"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:116
+#, fuzzy
+#| msgid "Start"
 msgid "Start Job"
-msgstr "ジョブの開始"
+msgstr "起動"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:151
 msgid "Job ID"
-msgstr "ジョブ ID"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:154
+#, fuzzy
+#| msgid "Emails"
 msgid "Total Emails"
-msgstr "メール総数"
+msgstr "メール"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:155
 msgid "Sent"
-msgstr "送信"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:156
 msgid "Failed"
-msgstr "失敗しました"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:13
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:13
@@ -2566,8 +2647,10 @@ msgstr "変更は保存されました。"
 #: websiteFunctions/templates/websiteFunctions/website.html:955
 #: websiteFunctions/templates/websiteFunctions/website.html:958
 #: websiteFunctions/templates/websiteFunctions/website.html:959
+#, fuzzy
+#| msgid "Create Alias"
 msgid "Create Lists"
-msgstr "リストの作成"
+msgstr "エイリアスの作成"
 
 #: emailMarketing/templates/emailMarketing/website.html:966
 #: emailMarketing/templates/emailMarketing/website.html:969
@@ -2575,8 +2658,10 @@ msgstr "リストの作成"
 #: websiteFunctions/templates/websiteFunctions/website.html:966
 #: websiteFunctions/templates/websiteFunctions/website.html:969
 #: websiteFunctions/templates/websiteFunctions/website.html:970
+#, fuzzy
+#| msgid "Manage SSL"
 msgid "Manage Lists"
-msgstr "リストを管理"
+msgstr "SSL の管理"
 
 #: emailMarketing/templates/emailMarketing/website.html:977
 #: emailMarketing/templates/emailMarketing/website.html:980
@@ -2585,19 +2670,23 @@ msgstr "リストを管理"
 #: websiteFunctions/templates/websiteFunctions/website.html:980
 #: websiteFunctions/templates/websiteFunctions/website.html:981
 msgid "SMTP Hosts"
-msgstr "SMTP ホスト"
+msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:988
 #: emailMarketing/templates/emailMarketing/website.html:991
 #: websiteFunctions/templates/websiteFunctions/website.html:988
 #: websiteFunctions/templates/websiteFunctions/website.html:991
+#, fuzzy
+#| msgid "Compress"
 msgid "Compose Message"
-msgstr "メッセージの作成"
+msgstr "圧縮"
 
 #: emailMarketing/templates/emailMarketing/website.html:992
 #: websiteFunctions/templates/websiteFunctions/website.html:992
+#, fuzzy
+#| msgid "Compress"
 msgid "Compose"
-msgstr "作成"
+msgstr "圧縮"
 
 #: emailMarketing/templates/emailMarketing/website.html:1019
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:14
@@ -4174,12 +4263,16 @@ msgid "Successfully Modified"
 msgstr "更新されました"
 
 #: pluginHolder/templates/pluginHolder/plugins.html:15
+#, fuzzy
+#| msgid "List Databases  - CyberPanel"
 msgid "List of installed plugins on your CyberPanel."
-msgstr "CyberPanel にインストールされているプラグインのリスト。"
+msgstr "データベースの一覧 - Cyber​​Panel"
 
 #: pluginHolder/templates/pluginHolder/plugins.html:31
+#, fuzzy
+#| msgid "Latest Version"
 msgid "Version"
-msgstr "バージョン"
+msgstr "最新バージョン"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:3
 msgid "Access Logs - CyberPanel"
@@ -4363,43 +4456,53 @@ msgstr "サーバーに接続できませんでした。"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:140
 msgid "Switch to LiteSpeed Enterprise Web Server"
-msgstr "LiteSpeed Enterprise Web Server への切り替え"
+msgstr ""
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:151
 msgid "License Key"
-msgstr "ライセンスキー"
+msgstr ""
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:162
 msgid "Switch"
-msgstr "切り替え"
+msgstr ""
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:178
 msgid "With great wisdom comes great responsibility."
-msgstr "偉大な知恵で大きな責任を負う。"
+msgstr ""
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:297
+#, fuzzy
+#| msgid "File Manager"
 msgid "License Manager"
-msgstr "ライセンス管理"
+msgstr "ファイル 管理"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:304
 #: serverStatus/templates/serverStatus/litespeedStatus.html:307
 #: serverStatus/templates/serverStatus/litespeedStatus.html:308
+#, fuzzy
+#| msgid "Services Status"
 msgid "License Status"
-msgstr "ライセンス状態"
+msgstr "サービスの状態"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:314
 #: serverStatus/templates/serverStatus/litespeedStatus.html:317
 #: serverStatus/templates/serverStatus/litespeedStatus.html:318
+#, fuzzy
+#| msgid "Change Limits"
 msgid "Change License"
-msgstr "ライセンスの変更"
+msgstr "制限の変更する"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:346
+#, fuzzy
+#| msgid "New File"
 msgid "New key"
-msgstr "新しいキー"
+msgstr "新しいファイル"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:357
+#, fuzzy
+#| msgid "Change"
 msgid "Change Key"
-msgstr "キーの変更"
+msgstr "変更"
 
 #: serverStatus/templates/serverStatus/services.html:3
 msgid "Services - CyberPanel"

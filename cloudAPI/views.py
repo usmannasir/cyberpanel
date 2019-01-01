@@ -227,6 +227,8 @@ def router(request):
             return cm.fetchRam(request)
         elif controller == 'applyMySQLChanges':
             return cm.applyMySQLChanges(request)
+        elif controller == 'restartMySQL':
+            return cm.restartMySQL(request)
         else:
             return cm.ajaxPre(0, 'This function is not available in your version of CyberPanel.')
 

@@ -24,6 +24,7 @@ from s3Backups.s3Backups import S3Backups
 import os
 from serverStatus.views import topProcessesStatus, killProcess
 from plogical.mysqlUtilities import mysqlUtilities
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 class CloudManager:
     def __init__(self, data=None, admin = None):
@@ -1027,7 +1028,6 @@ class CloudManager:
         except BaseException, msg:
             return self.ajaxPre(0, str(msg))
 
-
     def fetchRam(self, request):
         try:
             request.session['userID'] = self.admin.pk
@@ -1036,6 +1036,10 @@ class CloudManager:
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                return self.ajaxPre(0, 'This feature is currently only available on CentOS.')
+
+
             from psutil import virtual_memory
             import math
 
@@ -1043,7 +1047,13 @@ class CloudManager:
             mem = virtual_memory()
             inGB = math.ceil(float(mem.total)/float(1024 * 1024 * 1024))
             finalData['ramInGB'] = inGB
-            finalData['conf'] = subprocess.check_output(shlex.split('sudo cat /etc/my.cnf'))
+
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                finalData['conf'] = subprocess.check_output(shlex.split('sudo cat /etc/my.cnf'))
+            else:
+                finalData['conf'] = subprocess.check_output(shlex.split('sudo cat /etc/mysql/my.cnf'))
+
             finalData['status'] = 1
 
             finalData = json.dumps(finalData)
@@ -1066,5 +1076,20 @@ class CloudManager:
             else:
                 return self.ajaxPre(1, None)
 
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def restartMySQL(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            currentACL = ACLManager.loadedACL( self.admin.pk)
+
+            if currentACL['admin'] == 0:
+                return self.ajaxPre(0, 'Only administrators can see MySQL status.')
+
+            finalData = mysqlUtilities.restartMySQL()
+
+            finalData = json.dumps(finalData)
+            return HttpResponse(finalData)
         except BaseException, msg:
             return self.ajaxPre(0, str(msg))

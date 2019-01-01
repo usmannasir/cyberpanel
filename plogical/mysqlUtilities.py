@@ -287,7 +287,12 @@ class mysqlUtilities:
     @staticmethod
     def applyMySQLChanges(data):
         try:
-            command = 'sudo mv /etc/my.cnf /etc/my.cnf.bak'
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                command = 'sudo mv /etc/my.cnf /etc/my.cnf.bak'
+            else:
+                command = 'sudo mv /etc/mysql/my.cnf /etc/mysql/my.cnf.bak'
+
             ProcessUtilities.executioner(command)
 
             ## Temp
@@ -298,17 +303,20 @@ class mysqlUtilities:
             writeToFile.close()
 
             ##
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                command = 'sudo mv ' + tempPath + ' /etc/my.cnf'
+            else:
+                command = 'sudo mv ' + tempPath + ' /etc/mysql/my.cnf'
 
-            command = 'sudo mv ' + tempPath + ' /etc/my.cnf'
-            ProcessUtilities.executioner(command)
-
-            command = 'sudo systemctl restart mysql'
             ProcessUtilities.executioner(command)
 
             return 1, None
 
         except BaseException, msg:
-            command = 'sudo mv /etc/my.cnf.bak /etc/my.cnf'
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                command = 'sudo mv /etc/my.cnf.bak /etc/my.cnf'
+            else:
+                command = 'sudo mv /etc/mysql/my.cnf.bak /etc/mysql//my.cnf'
             subprocess.call(shlex.split(command))
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0, str(msg)
@@ -334,3 +342,17 @@ class mysqlUtilities:
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[showStatus]")
             return 0
+
+    @staticmethod
+    def restartMySQL():
+        try:
+            command = 'sudo systemctl restart mysql'
+            ProcessUtilities.executioner(command)
+
+            return 1, None
+
+        except BaseException, msg:
+            command = 'sudo mv /etc/my.cnf.bak /etc/my.cnf'
+            subprocess.call(shlex.split(command))
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return 0, str(msg)
