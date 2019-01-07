@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'xr%j*p!*$0d%(-(e%@-*hyoz4$f%y77coq0u)6pwmjg4)q&19f'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -62,9 +62,7 @@ INSTALLED_APPS = [
     'pluginHolder',
     'emailPremium',
     'emailMarketing',
-    'cloudAPI',
-    'highAvailability',
-    's3Backups'
+    'dockerManager'
 ]
 
 MIDDLEWARE = [
@@ -109,15 +107,15 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'cyberpanel',
         'USER': 'cyberpanel',
-        'PASSWORD': 'Bz9gF7Hr7X4RtD',
-        'HOST': '127.0.0.1',
-        'PORT':'3307'
+        'PASSWORD': 'a9AwLb7zY7ZwCd',
+        'HOST': 'localhost',
+        'PORT': '',
     },
     'rootdb': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'mysql',
         'USER': 'root',
-        'PASSWORD': 'sXm5VlRaAsXkDd',
+        'PASSWORD': '3bL8X7wGo0kT3b',
         'HOST': 'localhost',
         'PORT': '',
     },
