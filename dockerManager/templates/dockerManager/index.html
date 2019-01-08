@@ -1,0 +1,67 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Docker Container Management - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Docker Container Management" %}</h2>
+</div>
+
+    <div class="panel">
+        <div class="panel-body">
+
+
+            <h3 class="title-hero">
+            {% trans "Available Functions" %}
+            </h3>
+
+
+
+             <div class="example-box-wrapper">
+                 <div class="row">
+                    <div class="col-md-4">
+                        <a href="{% url 'listContainers' %}" title="{% trans 'Manage Containers' %}" class="tile-box tile-box-shortcut btn-primary">
+                            <div class="tile-header">
+                                {% trans "Manage Containers" %}
+                            </div>
+                            <div class="tile-content-wrapper">
+                                <i class="glyph-icon icon-dashboard"></i>
+                            </div>
+                        </a>
+                    </div>
+                     <div class="col-md-4">
+                        <a href="{% url 'containerImage' %}" title="{% trans 'Create new container' %}" class="tile-box tile-box-shortcut btn-primary">
+                            <div class="tile-header">
+                                {% trans "New Container" %}
+                            </div>
+                            <div class="tile-content-wrapper">
+                                <i class="glyph-icon icon-dashboard"></i>
+                            </div>
+                        </a>
+                    </div>
+                     <div class="col-md-4">
+                        <a href="{% url 'manageImages' %}" title="{% trans 'Manage Images' %}" class="tile-box tile-box-shortcut btn-primary">
+                            <div class="tile-header">
+                                {% trans "Manage Images" %}
+                            </div>
+                            <div class="tile-content-wrapper">
+                                <i class="glyph-icon icon-dashboard"></i>
+                            </div>
+                        </a>
+                    </div>
+                 </div>
+                
+             </div>
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}
