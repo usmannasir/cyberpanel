@@ -394,7 +394,6 @@ app.controller('servicesManager', function ($scope, $http) {
 
 
         function ListInitialDatas(response) {
-            console.log(response.data)
 
             if (response.data.status.litespeed) {
                 $scope.olsStatus = "Running";
