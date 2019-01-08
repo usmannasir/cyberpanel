@@ -13,8 +13,6 @@ import json
 import requests
 import docker
 
-# Use default socket to connect
-client = docker.from_env()
 # Create your views here.
 
 # This function checks if user has admin permissions

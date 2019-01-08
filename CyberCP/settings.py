@@ -62,6 +62,9 @@ INSTALLED_APPS = [
     'pluginHolder',
     'emailPremium',
     'emailMarketing',
+    'cloudAPI',
+    'highAvailability',
+    's3Backups',
     'dockerManager'
 ]
 

@@ -1,0 +1,46 @@
+#!/home/stefan/work/python-json-patch/venv/bin/python
+# -*- coding: utf-8 -*-
+
+from __future__ import print_function
+
+import sys
+import os.path
+import json
+import jsonpointer
+import argparse
+
+
+parser = argparse.ArgumentParser(
+    description='Resolve a JSON pointer on JSON files')
+parser.add_argument('POINTER', type=argparse.FileType('r'),
+                    help='File containing a JSON pointer expression')
+parser.add_argument('FILE', type=argparse.FileType('r'), nargs='+',
+                    help='Files for which the pointer should be resolved')
+parser.add_argument('--indent', type=int, default=None,
+                    help='Indent output by n spaces')
+parser.add_argument('-v', '--version', action='version',
+                    version='%(prog)s ' + jsonpointer.__version__)
+
+
+def main():
+    try:
+        resolve_files()
+    except KeyboardInterrupt:
+        sys.exit(1)
+
+
+def resolve_files():
+    """ Resolve a JSON pointer on JSON files """
+    args = parser.parse_args()
+    ptr = json.load(args.POINTER)
+    for f in args.FILE:
+        doc = json.load(f)
+        try:
+            result = jsonpointer.resolve_pointer(doc, ptr)
+            print(json.dumps(result, indent=args.indent))
+        except jsonpointer.JsonPointerException as e:
+            print('Could not resolve pointer: %s' % str(e), file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()

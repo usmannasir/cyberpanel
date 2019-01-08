@@ -25,9 +25,6 @@ import docker.utils
 import requests
 
 # Use default socket to connect
-client = docker.from_env()
-dockerAPI = docker.APIClient()
-
 class ContainerManager:
     def __init__(self, name = None):
         self.name = name
@@ -38,11 +35,23 @@ class ContainerManager:
             if ACLManager.currentContextPermission(currentACL, 'createContainer') == 0:
                 return ACLManager.loadError()
             
-            command = 'yum install -y docker'
+            command = 'sudo yum install -y docker'
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
             
-            if res == 0:
+            command = 'sudo groupadd docker'
+            cmd = shlex.split(command)
+            res2 = subprocess.call(cmd)
+            
+            command = 'sudo usermod -aG docker cyberpanel'
+            cmd = shlex.split(command)
+            res3 = subprocess.call(cmd)
+            
+            command = 'sudo service docker start'
+            cmd = shlex.split(command)
+            res4 = subprocess.call(cmd)
+            
+            if res == 0 and res2 == 0 and res3 == 0 and res4 ==0:
                 data_ret = {'installDockerStatus': 1, 'error_message': 'None'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -57,11 +66,14 @@ class ContainerManager:
             return HttpResponse(str(msg))            
             
     def createContainer(self, request = None, userID = None, data = None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            if ACLManager.currentContextPermission(currentACL, 'createContainer') == 0:
+        try:            
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
                 return ACLManager.loadError()
-            
+                
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+        
             adminNames = ACLManager.loadAllUsers(userID)
             tag = request.GET.get('tag')
             image = request.GET.get('image')
@@ -97,7 +109,6 @@ class ContainerManager:
                     portDef = item.split('/')
                     portConfig[portDef[0]] = portDef[1]                
             
-            print portConfig
             if image is None or image is '' or tag is None or tag is '':
                 return redirect(loadImages)
             
@@ -114,6 +125,8 @@ class ContainerManager:
         if ACLManager.checkContainerOwnership(name, userID) != 1:
             return ACLManager.loadError()
         
+        client = docker.from_env()
+        dockerAPI = docker.APIClient()
         try:
             container = client.containers.get(name)
         except docker.errors.NotFound as err:
@@ -161,6 +174,11 @@ class ContainerManager:
         
     def listContainers(self, request = None, userID = None, data = None):
         try:
+            if ACLManager.checkContainerOwnership(name, userID) != 1:
+                return ACLManager.loadError()
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+            
             currentACL = ACLManager.loadedACL(userID)
             containers = ACLManager.findAllContainers(currentACL, userID)
             
@@ -208,6 +226,9 @@ class ContainerManager:
             if Containers.objects.filter(name=name).exists():            
                 if ACLManager.checkContainerOwnership(name, userID) != 1:
                     return ACLManager.loadErrorJson('containerLogStatus',0)
+                
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()                
             
             container = client.containers.get(name)
             logs = container.logs()
@@ -225,9 +246,12 @@ class ContainerManager:
     def submitContainerCreation(self, userID = None, data = None):
         try:
 
-            currentACL = ACLManager.loadedACL(userID)
-            if ACLManager.currentContextPermission(currentACL, 'createWebsite') == 0:
-                return ACLManager.loadErrorJson('createWebSiteStatus', 0)
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadErrorJson('createContainerStatus',0)
+                
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
 
             name = data['name']
             image = data['image']
@@ -300,9 +324,12 @@ class ContainerManager:
     def submitInstallImage(self, userID = None, data = None):
         try:
 
-            currentACL = ACLManager.loadedACL(userID)
-            if ACLManager.currentContextPermission(currentACL, 'createWebsite') == 0:
-                return ACLManager.loadErrorJson('createWebSiteStatus', 0)
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadErrorJson('installImageStatus',0)
+                
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
 
             image = data['image']
             tag = data['tag']
@@ -345,6 +372,9 @@ class ContainerManager:
                     else:
                         return ACLManager.loadErrorJson('websiteDeleteStatus', 0)
 
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+            
             unlisted = data['unlisted']
             
             if 'force' in data:
@@ -406,6 +436,10 @@ class ContainerManager:
 
     def getContainerList(self, userID = None, data = None):
         try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadErrorJson('listContainerStatus',0)
+            
             currentACL = ACLManager.loadedACL(userID)
             pageNumber = int(data['page'])
             json_data = self.findContainersJson(currentACL, userID, pageNumber)
@@ -418,6 +452,10 @@ class ContainerManager:
             return HttpResponse(json_data)        
         
     def findContainersJson(self, currentACL, userID, pageNumber):
+        admin = Administrator.objects.get(pk=userID)
+        if admin.acl.adminStatus != 1:
+            return ACLManager.loadError()
+            
         finalPageNumber = ((pageNumber * 10)) - 10
         endPageNumber = finalPageNumber + 10
         containers = ACLManager.findContainersObjects(currentACL, userID)[finalPageNumber:endPageNumber]
@@ -444,6 +482,9 @@ class ContainerManager:
             name = data['name']
             if ACLManager.checkContainerOwnership(name, userID) != 1:
                 return ACLManager.loadErrorJson('containerActionStatus',0)
+            
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
             
             action = data['action']
             try:
@@ -490,6 +531,9 @@ class ContainerManager:
             if ACLManager.checkContainerOwnership(name, userID) != 1:
                 return ACLManager.loadErrorJson('containerStatus',0)
             
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+            
             try:
                 container = client.containers.get(name)
             except docker.errors.NotFound as err:
@@ -517,6 +561,9 @@ class ContainerManager:
             if ACLManager.checkContainerOwnership(name, userID) != 1:
                 return ACLManager.loadErrorJson('containerStatus',0)
             
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+            
             try:
                 container = client.containers.get(name)
             except docker.errors.NotFound as err:
@@ -543,6 +590,10 @@ class ContainerManager:
             name = data['name']
             if ACLManager.checkContainerOwnership(name, userID) != 1:
                 return ACLManager.loadErrorJson('containerTopStatus',0)
+            
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+            
             try:
                 container = client.containers.get(name)
             except docker.errors.NotFound as err:
@@ -573,6 +624,13 @@ class ContainerManager:
     def assignContainer(self, userID = None, data = None):
         try:
             # Todo: add check only for super user i.e. main admin
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadErrorJson('assignContainerStatus',0)
+                
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+            
             name = data['name']
             dockerOwner = data['admin']
                 
@@ -606,6 +664,13 @@ class ContainerManager:
                 
     def searchImage(self, userID = None, data = None):
         try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadErrorJson('searchImageStatus',0)
+                
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+            
             string = data['string']
             try:
                 matches = client.images.search(term=string)
@@ -638,6 +703,13 @@ class ContainerManager:
         
     def images(self, request = None, userID = None, data = None):
         try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+                
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+            
             try:
                 imageList = client.images.list()
             except docker.errors.APIError as err:
@@ -677,6 +749,13 @@ class ContainerManager:
     
     def manageImages(self, request = None, userID = None, data = None):
         try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+                
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+            
             imageList = client.images.list()
             
             images = {}
@@ -700,6 +779,13 @@ class ContainerManager:
         try:
 
             name = data['name']
+            
+            if ACLManager.checkContainerOwnership(name, userID) != 1:
+                return ACLManager.loadError()
+            
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+            
             try:
                 image = client.images.get(name)
             except docker.errors.APIError as err:
@@ -724,6 +810,13 @@ class ContainerManager:
         
     def removeImage(self, userID = None, data = None):
         try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+                
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+            
             name = data['name']
             try:
                 if name == 0:
@@ -795,6 +888,9 @@ class ContainerManager:
             name = data['name']
             if ACLManager.checkContainerOwnership(name, userID) != 1:
                 return ACLManager.loadErrorJson('saveSettingsStatus',0)
+                
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
             
             memory = data['memory']
             startOnReboot = data['startOnReboot']
@@ -873,6 +969,9 @@ class ContainerManager:
             if ACLManager.checkContainerOwnership(name, userID) != 1:
                 return ACLManager.loadErrorJson('saveSettingsStatus',0)
             
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+            
             try:
                 container = client.containers.get(name)
             except docker.errors.NotFound as err:
@@ -914,6 +1013,11 @@ class ContainerManager:
         
     def getTags(self, userID = None, data = None):
         try:
+            
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+            
             image = data['image']
             page = data['page']
 
