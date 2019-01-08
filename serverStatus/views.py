@@ -164,7 +164,13 @@ def services(request):
             data['serverName'] = 'OpenLiteSpeed'
         else:
             data['serverName'] = 'LiteSpeed Ent'
-
+            
+        dockerInstallPath = '/usr/bin/docker'
+        if not os.path.exists(dockerInstallPath):
+            data['isDocker'] = False
+        else:
+            data['isDocker'] = True
+            
         return render(request, 'serverStatus/services.html', data)
     except KeyError:
         return redirect(loadLoginPage)
@@ -178,6 +184,7 @@ def servicesStatus(request):
         dnsStatus = []
         ftpStatus = []
         mailStatus = []
+        dockerStatus = []
 
         processlist = subprocess.check_output(['ps', '-A'])
 
@@ -202,8 +209,10 @@ def servicesStatus(request):
         else:
             lsStatus.append(0)
 
+        # Docker status
+        dockerStatus.append(getServiceStats('docker'))
+            
         # mysql status
-
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         result = s.connect_ex(('127.0.0.1', 3306))
 
@@ -241,7 +250,8 @@ def servicesStatus(request):
                           'mysql': sqlStatus[0],
                           'powerdns': dnsStatus[0],
                           'pureftp': ftpStatus[0],
-                          'postfix': mailStatus[0]},
+                          'postfix': mailStatus[0],
+                          'docker': dockerStatus[0]},
                      'memUsage':
                          {'litespeed': lsStatus[1],
                           'mysql': sqlStatus[1],
@@ -277,8 +287,7 @@ def servicesAction(request):
                 else:
                     pass
 
-                if service not in ["lsws", "mysql", "pdns", "pure-ftpd"]:
-
+                if service not in ["lsws", "mysql", "pdns", "pure-ftpd", "docker"]:
                     final_dic = {'serviceAction': 0, "error_message": "Invalid Service"}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
