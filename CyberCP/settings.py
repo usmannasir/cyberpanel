@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'xr%j*p!*$0d%(-(e%@-*hyoz4$f%y77coq0u)6pwmjg4)q&19f'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -110,15 +110,15 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'cyberpanel',
         'USER': 'cyberpanel',
-        'PASSWORD': 'a9AwLb7zY7ZwCd',
-        'HOST': 'localhost',
-        'PORT': '',
+        'PASSWORD': 'Bz9gF7Hr7X4RtD',
+        'HOST': '127.0.0.1',
+        'PORT':'3307'
     },
     'rootdb': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'mysql',
         'USER': 'root',
-        'PASSWORD': '3bL8X7wGo0kT3b',
+        'PASSWORD': 'sXm5VlRaAsXkDd',
         'HOST': 'localhost',
         'PORT': '',
     },

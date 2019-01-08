@@ -570,7 +570,7 @@ def changeAdminPassword(request):
                                       firstName="Cyber", lastName="Panel", acl=acl, token=token)
                 admin.save()
 
-                vers = version(currentVersion="1.7", build=6)
+                vers = version(currentVersion="1.7", build=7)
                 vers.save()
 
                 package = Package(admin=admin, packageName="Default", diskSpace=1000,

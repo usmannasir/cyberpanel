@@ -12,8 +12,36 @@ import MySQLdb as mysql
 import json
 from random import randint
 from plogical.processUtilities import ProcessUtilities
+import MySQLdb.cursors as cursors
+from math import ceil
 
 class mysqlUtilities:
+
+    @staticmethod
+    def getPagination(records, toShow):
+        pages = float(records) / float(toShow)
+
+        pagination = []
+        counter = 1
+
+        if pages <= 1.0:
+            pages = 1
+            pagination.append(counter)
+        else:
+            pages = ceil(pages)
+            finalPages = int(pages) + 1
+
+            for i in range(1, finalPages):
+                pagination.append(counter)
+                counter = counter + 1
+
+        return pagination
+
+    @staticmethod
+    def recordsPointer(page, toShow):
+        finalPageNumber = ((page * toShow)) - toShow
+        endPageNumber = finalPageNumber + toShow
+        return endPageNumber, finalPageNumber
 
     @staticmethod
     def setupConnection():
@@ -25,7 +53,7 @@ class mysqlUtilities:
             password = data.split('\n', 1)[0]
             password = password.strip('\n').strip('\r')
 
-            conn = mysql.connect(user='root', passwd=password)
+            conn = mysql.connect(user='root', passwd=password, cursorclass=cursors.SSCursor)
             cursor = conn.cursor()
 
             return conn, cursor
@@ -356,3 +384,226 @@ class mysqlUtilities:
             subprocess.call(shlex.split(command))
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0, str(msg)
+
+    @staticmethod
+    def fetchDatabases():
+        try:
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+
+            data = {}
+            data['status'] = 1
+
+            cursor.execute("SHOW DATABASES")
+            result = cursor.fetchall()
+
+            counter = 1
+            json_data = "["
+            checker = 0
+
+            for items in result:
+                if items[0] == 'information_schema' or items[0] == 'mysql' or items[0] == 'performance_schema' or items[
+                    0] == 'performance_schema':
+                    continue
+
+                dic = {
+                    'id': counter,
+                    'database': items[0]
+
+                }
+                counter = counter + 1
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+
+            json_data = json_data + ']'
+            data['databases'] = json_data
+            return data
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[fetchDatabases]")
+            return 0
+
+    @staticmethod
+    def fetchTables(name):
+        try:
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+
+            data = {}
+            data['status'] = 1
+
+            cursor.execute("use " + name['databaseName'])
+            cursor.execute("SHOW TABLE STATUS")
+            result = cursor.fetchall()
+
+            counter = 1
+            json_data = "["
+            checker = 0
+
+            for items in result:
+
+                dic = {
+                    'Name': items[0],
+                    'Engine': items[1],
+                    'Version': items[2],
+                    'rowFormat': items[3],
+                    'rows': items[4],
+                    'Collation': items[14]
+                }
+                counter = counter + 1
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+            json_data = json_data + ']'
+            data['tables'] = json_data
+            return data
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[fetchDatabases]")
+            return 0
+
+    @staticmethod
+    def deleteTable(name):
+        try:
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+
+            data = {}
+            data['status'] = 1
+
+            cursor.execute("use " + name['databaseName'])
+            cursor.execute("DROP TABLE " + name['tableName'])
+
+            return data
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[fetchDatabases]")
+            return 0
+
+    @staticmethod
+    def fetchTableData(name):
+        try:
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+
+            recordsToShow = int(name['recordsToShow'])
+            page = int(name['currentPage'])
+
+            data = {}
+            data['status'] = 1
+
+            ##
+
+            cursor.execute("use " + name['databaseName'])
+            cursor.execute("select count(*) from " + name['tableName'])
+            rows = cursor.fetchall()[0][0]
+
+
+            ##
+
+            cursor.execute("desc " + name['tableName'])
+            result = cursor.fetchall()
+
+            data['completeData'] = '<thead><tr>'
+
+            for items in result:
+                data['completeData'] = data['completeData'] + '<th>' + items[0] + '</th>'
+
+            data['completeData'] = data['completeData'] + '</tr></thead>'
+
+            data['completeData'] = data['completeData'] + '<tbody>'
+
+            ##
+
+            data['pagination'] = mysqlUtilities.getPagination(rows, recordsToShow)
+            endPageNumber, finalPageNumber = mysqlUtilities.recordsPointer(page, recordsToShow)
+
+            cursor.execute("select * from " + name['tableName'])
+            result = cursor.fetchall()
+
+            for items in result[finalPageNumber:endPageNumber]:
+                data['completeData'] = data['completeData'] + '<tr>'
+                for it in items:
+                    data['completeData'] = data['completeData'] + '<td>' + str(it) + '</td>'
+                data['completeData'] = data['completeData'] + '</tr>'
+
+            data['completeData'] = data['completeData'] + '</tbody>'
+
+            ##
+
+            return data
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[fetchTableData]")
+            return 0
+
+    @staticmethod
+    def fetchStructure(name):
+        try:
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+
+            cursor.execute("use " + name['databaseName'])
+            cursor.execute("desc " + name['tableName'])
+            result = cursor.fetchall()
+
+            ## Columns List
+
+            data = {}
+            data['status'] = 1
+
+            json_data = "["
+            checker = 0
+
+            for items in result:
+
+                dic = {
+                    'Name': items[0],
+                    'Type': items[1],
+                    'Null': items[2],
+                    'Key': items[3],
+                    'Default': items[4],
+                    'Extra': items[5]
+                }
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+            json_data = json_data + ']'
+
+            data['columns'] = json_data
+
+            ##
+
+            return data
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[showStatus]")
+            return 0

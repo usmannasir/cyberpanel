@@ -12,6 +12,8 @@ ConfigArgParse==0.13.0
 configobj==4.7.2
 cryptography==2.2.2
 decorator==3.4.0
+docker==3.6.0
+docker-pycreds==0.4.0
 Django==1.11
 docutils==0.14
 enum34==1.1.6

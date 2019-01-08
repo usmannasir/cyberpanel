@@ -229,6 +229,16 @@ def router(request):
             return cm.applyMySQLChanges(request)
         elif controller == 'restartMySQL':
             return cm.restartMySQL(request)
+        elif controller == 'fetchDatabasesMYSQL':
+            return cm.fetchDatabasesMYSQL(request)
+        elif controller == 'fetchTables':
+            return cm.fetchTables(request)
+        elif controller == 'deleteTable':
+            return cm.deleteTable(request)
+        elif controller == 'fetchTableData':
+            return cm.fetchTableData(request)
+        elif controller == 'fetchStructure':
+            return cm.fetchStructure(request)
         else:
             return cm.ajaxPre(0, 'This function is not available in your version of CyberPanel.')
 

@@ -1345,9 +1345,9 @@ class FirewallManager:
                     if fileName == 'categories.conf':
                         continue
 
-                    if fileName.endswith('dis'):
+                    if fileName.endswith('bak'):
                         status = 0
-                        fileName = fileName.rstrip('.dis')
+                        fileName = fileName.rstrip('.bak')
                     elif fileName.endswith('conf'):
                         status = 1
                     else:
