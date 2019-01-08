@@ -394,6 +394,7 @@ app.controller('servicesManager', function ($scope, $http) {
 
 
         function ListInitialDatas(response) {
+            console.log(response.data)
 
             if (response.data.status.litespeed) {
                 $scope.olsStatus = "Running";
@@ -408,7 +409,7 @@ app.controller('servicesManager', function ($scope, $http) {
                 $scope.olsStart = true;
                 $scope.olsStop = false;
             }
-            
+
             if (response.data.status.docker) {
                 $scope.dockerStatus = "Running";
                 $scope.dockerStart = false;

@@ -31,7 +31,8 @@ def preDockerRun(function):
             else:
                 return render(request, 'dockerManager/install.html', {'status':admin.type, 'conErr':0})
             
-        # Check if docker is running and we are able to connect        
+        # Check if docker is running and we are able to connect
+                
         try:
             client = docker.from_env()
             client.ping()

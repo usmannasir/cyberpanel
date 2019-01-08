@@ -110,15 +110,15 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'cyberpanel',
         'USER': 'cyberpanel',
-        'PASSWORD': 'a9AwLb7zY7ZwCd',
+        'PASSWORD': 'Bz9gF7Hr7X4RtD',
         'HOST': '127.0.0.1',
-        'PORT':''
+        'PORT':'3307'
     },
     'rootdb': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'mysql',
         'USER': 'root',
-        'PASSWORD': '3bL8X7wGo0kT3b',
+        'PASSWORD': 'sXm5VlRaAsXkDd',
         'HOST': 'localhost',
         'PORT': '',
     },

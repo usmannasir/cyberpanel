@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
@@ -17,17 +17,19 @@ import time
 import serverStatusUtil
 from plogical.processUtilities import ProcessUtilities
 from plogical.httpProc import httpProc
+
+
 # Create your views here.
 
 def serverStatusHome(request):
     try:
         userID = request.session['userID']
-        return render(request,'serverStatus/index.html')
+        return render(request, 'serverStatus/index.html')
     except KeyError:
         return redirect(loadLoginPage)
 
-def litespeedStatus(request):
 
+def litespeedStatus(request):
     try:
         userID = request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
@@ -58,23 +60,25 @@ def litespeedStatus(request):
                 else:
                     loadedModules.append(items)
 
-        except subprocess.CalledProcessError,msg:
+        except subprocess.CalledProcessError, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
-            return render(request,"serverStatus/litespeedStatus.html",{"processList":processList,"liteSpeedVersionStatus":"For some reaons not able to load version details, see CyberCP main log file.", 'OLS': OLS})
+            return render(request, "serverStatus/litespeedStatus.html", {"processList": processList,
+                                                                         "liteSpeedVersionStatus": "For some reaons not able to load version details, see CyberCP main log file.",
+                                                                         'OLS': OLS})
 
-
-        if(processList!=0):
+        if (processList != 0):
             dataForHtml = {"processList": processList, "lsversion": lsversion, "modules": modules,
-                           "loadedModules": loadedModules, 'OLS':OLS}
-            return render(request,"serverStatus/litespeedStatus.html",dataForHtml)
+                           "loadedModules": loadedModules, 'OLS': OLS}
+            return render(request, "serverStatus/litespeedStatus.html", dataForHtml)
         else:
             dataForHtml = {"lsversion": lsversion, "modules": modules,
                            "loadedModules": loadedModules, 'OLS': OLS}
-            return render(request, "serverStatus/litespeedStatus.html",dataForHtml)
+            return render(request, "serverStatus/litespeedStatus.html", dataForHtml)
 
-    except KeyError,msg:
+    except KeyError, msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
         return redirect(loadLoginPage)
+
 
 def stopOrRestartLitespeed(request):
     try:
@@ -91,16 +95,16 @@ def stopOrRestartLitespeed(request):
 
         reboot = data['reboot']
 
-        if reboot==1:
+        if reboot == 1:
             if ProcessUtilities.restartLitespeed() == 1:
-                status = {"reboot":1,"shutdown":0}
+                status = {"reboot": 1, "shutdown": 0}
             else:
-                status = {"reboot": 0, "shutdown": 0, "error_message":"Please see CyberCP main log file."}
+                status = {"reboot": 0, "shutdown": 0, "error_message": "Please see CyberCP main log file."}
         else:
             if ProcessUtilities.stopLitespeed() == 1:
-                status = {"reboot":0,"shutdown":1}
+                status = {"reboot": 0, "shutdown": 1}
             else:
-                status = {"reboot": 0, "shutdown": 0, "error_message":"Please see CyberCP main log file."}
+                status = {"reboot": 0, "shutdown": 0, "error_message": "Please see CyberCP main log file."}
 
         final_json = json.dumps(status)
         return HttpResponse(final_json)
@@ -109,8 +113,8 @@ def stopOrRestartLitespeed(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[stopOrRestartLitespeed]")
         return HttpResponse("Not Logged in as admin")
 
-def cyberCPMainLogFile(request):
 
+def cyberCPMainLogFile(request):
     try:
         userID = request.session['userID']
 
@@ -121,12 +125,12 @@ def cyberCPMainLogFile(request):
         else:
             return ACLManager.loadError()
 
+        return render(request, 'serverStatus/cybercpmainlogfile.html')
 
-        return render(request,'serverStatus/cybercpmainlogfile.html')
-
-    except KeyError,msg:
+    except KeyError, msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[cyberCPMainLogFile]")
         return redirect(loadLoginPage)
+
 
 def getFurtherDataFromLogFile(request):
     try:
@@ -145,9 +149,11 @@ def getFurtherDataFromLogFile(request):
         return HttpResponse(final_json)
 
     except KeyError, msg:
-        status = {"logstatus":0,"error":"Could not fetch data from log file, please see CyberCP main log file through command line."}
+        status = {"logstatus": 0,
+                  "error": "Could not fetch data from log file, please see CyberCP main log file through command line."}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[getFurtherDataFromLogFile]")
         return HttpResponse("Not Logged in as admin")
+
 
 def services(request):
     try:
@@ -164,16 +170,17 @@ def services(request):
             data['serverName'] = 'OpenLiteSpeed'
         else:
             data['serverName'] = 'LiteSpeed Ent'
-            
+
         dockerInstallPath = '/usr/bin/docker'
         if not os.path.exists(dockerInstallPath):
             data['isDocker'] = False
         else:
             data['isDocker'] = True
-            
+
         return render(request, 'serverStatus/services.html', data)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def servicesStatus(request):
     try:
@@ -211,7 +218,7 @@ def servicesStatus(request):
 
         # Docker status
         dockerStatus.append(getServiceStats('docker'))
-            
+
         # mysql status
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         result = s.connect_ex(('127.0.0.1', 3306))
@@ -262,6 +269,7 @@ def servicesStatus(request):
         return HttpResponse(json.dumps(json_data))
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def servicesAction(request):
     try:
@@ -324,6 +332,7 @@ def servicesAction(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def switchTOLSWS(request):
     try:
         userID = request.session['userID']
@@ -352,6 +361,7 @@ def switchTOLSWS(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 def switchTOLSWSStatus(request):
     try:
 
@@ -376,6 +386,7 @@ def switchTOLSWSStatus(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 def licenseStatus(request):
     try:
         userID = request.session['userID']
@@ -390,7 +401,6 @@ def licenseStatus(request):
 
             command = 'sudo cat /usr/local/lsws/conf/serial.no'
             serial = subprocess.check_output(shlex.split(command))
-
 
             command = 'sudo /usr/local/lsws/bin/lshttpd -V'
             expiration = subprocess.check_output(shlex.split(command))
@@ -407,6 +417,7 @@ def licenseStatus(request):
         final_dic = {'status': 0, 'erroMessage': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
 
 def changeLicense(request):
     try:
@@ -434,13 +445,11 @@ def changeLicense(request):
             command = 'sudo chown -R lsadm:lsadm /usr/local/lsws/conf'
             subprocess.call(shlex.split(command))
 
-
             command = 'sudo /usr/local/lsws/bin/lshttpd -r'
             subprocess.call(shlex.split(command))
 
             command = 'sudo /usr/local/lsws/bin/lswsctrl restart'
             subprocess.call(shlex.split(command))
-
 
             final_dic = {'status': 1, "erroMessage": 'None'}
             final_json = json.dumps(final_dic)
@@ -454,6 +463,7 @@ def changeLicense(request):
         final_dic = {'status': 0, 'erroMessage': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
 
 def topProcesses(request):
     try:
@@ -469,9 +479,10 @@ def topProcesses(request):
         proc = httpProc(request, templateName)
         return proc.renderPre()
 
-    except KeyError,msg:
+    except KeyError, msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
         return redirect(loadLoginPage)
+
 
 def topProcessesStatus(request):
     try:
@@ -490,7 +501,6 @@ def topProcessesStatus(request):
 
         loadNow = data[2].split(' ')
         loadNow = filter(lambda a: a != '', loadNow)
-
 
         memory = data[3].split(' ')
         memory = filter(lambda a: a != '', memory)
@@ -541,10 +551,10 @@ def topProcessesStatus(request):
         data['Softirqs'] = loadNow[13] + '%'
 
         ## Memory
-        data['totalMemory'] = str(int(float(memory[3])/1024)) + 'MB'
-        data['freeMemory'] = str(int(float(memory[5])/1024)) + 'MB'
-        data['usedMemory'] = str(int(float(memory[7])/1024)) + 'MB'
-        data['buffCache'] = str(int(float(memory[9])/1024)) + 'MB'
+        data['totalMemory'] = str(int(float(memory[3]) / 1024)) + 'MB'
+        data['freeMemory'] = str(int(float(memory[5]) / 1024)) + 'MB'
+        data['usedMemory'] = str(int(float(memory[7]) / 1024)) + 'MB'
+        data['buffCache'] = str(int(float(memory[9]) / 1024)) + 'MB'
 
         ## Swap
 
@@ -588,6 +598,7 @@ def topProcessesStatus(request):
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def killProcess(request):
     try:

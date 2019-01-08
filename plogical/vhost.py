@@ -686,6 +686,10 @@ class vhost:
 
                 php = PHPManager.getPHPString(phpVersion)
 
+                if not os.path.exists("/usr/local/lsws/lsphp" + str(php) + "/bin/lsphp"):
+                    print 0, 'This PHP version is not available on your CyberPanel.'
+                    return [0, "[This PHP version is not available on your CyberPanel. [changePHP]"]
+
                 writeDataToFile = open(vhFile, "w")
 
                 path = "  path                    /usr/local/lsws/lsphp" + str(php) + "/bin/lsphp\n"
@@ -704,14 +708,18 @@ class vhost:
                 return 1,'None'
             except BaseException, msg:
                 logging.CyberCPLogFileWriter.writeToFile(
-                    str(msg) + " [IO Error with per host config file [changePHP]]")
+                    str(msg) + " [IO Error with per host config file [changePHP]")
                 print 0,str(msg)
-                return [0, str(msg) + " [IO Error with per host config file [changePHP]]"]
+                return [0, str(msg) + " [IO Error with per host config file [changePHP]"]
         else:
             try:
                 data = open(vhFile, "r").readlines()
 
                 php = PHPManager.getPHPString(phpVersion)
+
+                if not os.path.exists("/usr/local/lsws/lsphp" + str(php) + "/bin/lsphp"):
+                    print 0, 'This PHP version is not available on your CyberPanel.'
+                    return [0, "[This PHP version is not available on your CyberPanel. [changePHP]"]
 
                 writeDataToFile = open(vhFile, "w")
 
