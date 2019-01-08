@@ -12,7 +12,7 @@
 
     <div id="page-title">
        <h2 id="domainNamePage">{% trans "Manage Images" %}
-        <a class="pull-right btn btn-primary" href="{% url "containerImage" %}">Create</a>
+        <a class="pull-right btn btn-primary" href="{% url "containerImage" %}">Create Container</a>
         </h2>
        <p>{% trans "On this page you can manage docker images." %}</p>
     </div>
@@ -112,7 +112,7 @@
                 <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="imageList">
                 <thead>
                 <tr>
-                    <th>Name (Installed)</th>
+                    <th>Name (Locally Available)</th>
                     <th>Tags</th>
                     <th>Action</th>
                 </tr>

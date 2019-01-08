@@ -1093,3 +1093,78 @@ class CloudManager:
             return HttpResponse(finalData)
         except BaseException, msg:
             return self.ajaxPre(0, str(msg))
+
+    def fetchDatabasesMYSQL(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            currentACL = ACLManager.loadedACL( self.admin.pk)
+
+            if currentACL['admin'] == 0:
+                return self.ajaxPre(0, 'Only administrators can see MySQL status.')
+
+            finalData = mysqlUtilities.fetchDatabases()
+
+            finalData = json.dumps(finalData)
+            return HttpResponse(finalData)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchTables(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            currentACL = ACLManager.loadedACL( self.admin.pk)
+
+            if currentACL['admin'] == 0:
+                return self.ajaxPre(0, 'Only administrators can see MySQL status.')
+
+            finalData = mysqlUtilities.fetchTables(self.data)
+
+            finalData = json.dumps(finalData)
+            return HttpResponse(finalData)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def deleteTable(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            currentACL = ACLManager.loadedACL( self.admin.pk)
+
+            if currentACL['admin'] == 0:
+                return self.ajaxPre(0, 'Only administrators can see MySQL status.')
+
+            finalData = mysqlUtilities.deleteTable(self.data)
+
+            finalData = json.dumps(finalData)
+            return HttpResponse(finalData)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchTableData(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            currentACL = ACLManager.loadedACL( self.admin.pk)
+
+            if currentACL['admin'] == 0:
+                return self.ajaxPre(0, 'Only administrators can see MySQL status.')
+
+            finalData = mysqlUtilities.fetchTableData(self.data)
+
+            finalData = json.dumps(finalData)
+            return HttpResponse(finalData)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchStructure(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            currentACL = ACLManager.loadedACL( self.admin.pk)
+
+            if currentACL['admin'] == 0:
+                return self.ajaxPre(0, 'Only administrators can see MySQL status.')
+
+            finalData = mysqlUtilities.fetchStructure(self.data)
+
+            finalData = json.dumps(finalData)
+            return HttpResponse(finalData)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))

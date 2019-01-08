@@ -4,14 +4,11 @@ from __future__ import unicode_literals
 from django.shortcuts import render,redirect
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
-from django.http import HttpResponse
 from plogical.container import ContainerManager
 from dockerManager.pluginManager import pluginManager
 from decorators import preDockerRun
 from plogical.acl import ACLManager
 import json
-import requests
-import docker
 
 # Create your views here.
 

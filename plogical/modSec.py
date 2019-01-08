@@ -498,17 +498,26 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCL
     def disableRuleFile(fileName, packName):
         try:
 
-            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
-            confData = open(confFile).readlines()
-            conf = open(confFile, 'w')
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+                confData = open(confFile).readlines()
+                conf = open(confFile, 'w')
 
-            for items in confData:
-                if items.find('modsec/'+packName) > -1 and items.find(fileName) > -1:
-                    conf.write("#" + items)
-                else:
-                    conf.writelines(items)
+                for items in confData:
+                    if items.find('modsec/'+packName) > -1 and items.find(fileName) > -1:
+                        conf.write("#" + items)
+                    else:
+                        conf.writelines(items)
 
-            conf.close()
+                conf.close()
+
+            else:
+                path = '/usr/local/lsws/conf/comodo_litespeed/'
+                completePath = path + fileName
+                completePathBak = path + fileName + '.bak'
+
+                command = 'mv ' + completePath + ' ' + completePathBak
+                ProcessUtilities.executioner(command)
 
             print "1,None"
 
@@ -521,17 +530,25 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCL
     def enableRuleFile(fileName, packName):
         try:
 
-            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
-            confData = open(confFile).readlines()
-            conf = open(confFile, 'w')
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+                confData = open(confFile).readlines()
+                conf = open(confFile, 'w')
 
-            for items in confData:
-                if items.find('modsec/' + packName) > -1 and items.find(fileName) > -1:
-                    conf.write(items.lstrip('#'))
-                else:
-                    conf.writelines(items)
+                for items in confData:
+                    if items.find('modsec/' + packName) > -1 and items.find(fileName) > -1:
+                        conf.write(items.lstrip('#'))
+                    else:
+                        conf.writelines(items)
 
-            conf.close()
+                conf.close()
+            else:
+                path = '/usr/local/lsws/conf/comodo_litespeed/'
+                completePath = path + fileName
+                completePathBak = path + fileName + '.bak'
+
+                command = 'mv ' + completePathBak + ' ' + completePath
+                ProcessUtilities.executioner(command)
 
             print "1,None"
 

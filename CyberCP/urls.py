@@ -21,7 +21,6 @@ urlpatterns = [
     url(r'^', include('loginSystem.urls')),
     url(r'^packages/',include('packages.urls')),
     url(r'^websites/',include('websiteFunctions.urls')),
-    url(r'^docker/',include('dockerManager.urls')),
     url(r'^tuning/',include('tuning.urls')),
     url(r'^ftp/',include('ftp.urls')),
     url(r'^serverstatus/',include('serverStatus.urls')),
@@ -41,4 +40,5 @@ urlpatterns = [
     url(r'^plugins/',include('pluginHolder.urls')),
     url(r'^emailMarketing/', include('emailMarketing.urls')),
     url(r'^cloudAPI/', include('cloudAPI.urls')),
+    url(r'^docker/', include('dockerManager.urls')),
 ]

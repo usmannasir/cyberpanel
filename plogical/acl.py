@@ -8,12 +8,12 @@ from loginSystem.models import Administrator, ACL
 from django.shortcuts import HttpResponse
 from packages.models import Package
 from websiteFunctions.models import Websites, ChildDomains
-from dockerManager.models import Containers
 from dns.models import Domains
 import json
 from subprocess import call, CalledProcessError
 from shlex import split
 from CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from dockerManager.models import Containers
 
 class ACLManager:
 
@@ -364,73 +364,6 @@ class ACLManager:
 
         return websiteNames
 
-    
-    @staticmethod
-    def findAllContainers(currentACL, userID):
-        containerName = []
-
-        if currentACL['admin'] == 1:
-            allContainers = Containers.objects.all()
-            for items in allContainers:
-                containerName.append(items.name)
-        else:
-            admin = Administrator.objects.get(pk=userID)
-
-            containers = admin.containers_set.all()
-            admins = Administrator.objects.filter(owner=admin.pk)
-
-            for items in containers:
-                containerName.append(items.name)
-
-            for items in admins:
-                cons = items.containers_set.all()
-                for con in cons:
-                    containerName.append(con.name)
-
-        return containerName
-    
-    
-    @staticmethod
-    def findContainersObjects(currentACL, userID):
-
-        if currentACL['admin'] == 1:
-            return Containers.objects.all()
-        else:
-
-            containerList = []
-            admin = Administrator.objects.get(pk=userID)
-
-            containers = admin.containers_set.all()
-
-            for items in containers:
-                containerList.append(items)
-
-            admins = Administrator.objects.filter(owner=admin.pk)
-
-            for items in admins:
-                cons = items.containers_set.all()
-                for con in cons:
-                    containerList.append(web)
-
-            return containerList        
-        
-    
-    @staticmethod
-    def checkContainerOwnership(name, userID):
-        try:
-            container = Containers.objects.get(name=name)
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
-
-            if currentACL['admin'] == 1:
-                return 1
-            elif container.admin == admin:
-                return 1
-            else:
-                return 0
-        except:
-            return 0        
-    
     @staticmethod
     def findWebsiteObjects(currentACL, userID):
 
@@ -517,6 +450,72 @@ class ACLManager:
         except CalledProcessError, msg:
             logging.writeToFile(str(msg) + ' [ACLManager.executeCall]')
             return 0, str(msg)
+
+    @staticmethod
+    def checkContainerOwnership(name, userID):
+        return 1
+        try:
+            container = Containers.objects.get(name=name)
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            if currentACL['admin'] == 1:
+                return 1
+            elif container.admin == admin:
+                return 1
+            else:
+                return 0
+        except:
+            return 0
+
+    @staticmethod
+    def findAllContainers(currentACL, userID):
+        containerName = []
+
+        if currentACL['admin'] == 1:
+            allContainers = Containers.objects.all()
+            for items in allContainers:
+                containerName.append(items.name)
+        else:
+            admin = Administrator.objects.get(pk=userID)
+
+            containers = admin.containers_set.all()
+            admins = Administrator.objects.filter(owner=admin.pk)
+
+            for items in containers:
+                containerName.append(items.name)
+
+            for items in admins:
+                cons = items.containers_set.all()
+                for con in cons:
+                    containerName.append(con.name)
+
+
+        return containerName
+
+    @staticmethod
+    def findContainersObjects(currentACL, userID):
+
+        if currentACL['admin'] == 1:
+            return Containers.objects.all()
+        else:
+
+            containerList = []
+            admin = Administrator.objects.get(pk=userID)
+
+            containers = admin.containers_set.all()
+
+            for items in containers:
+                containerList.append(items)
+
+            admins = Administrator.objects.filter(owner=admin.pk)
+
+            for items in admins:
+                cons = items.containers_set.all()
+                for con in cons:
+                    containerList.append(web)
+
+            return containerList
 
 
 
