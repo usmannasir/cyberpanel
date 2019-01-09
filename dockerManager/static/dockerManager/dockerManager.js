@@ -1,58 +1,117 @@
-app.controller('installDocker', function($scope,$http) {
+
+
+app.controller('installDocker', function ($scope, $http, $timeout, $window) {
     $scope.installDockerStatus = true;
-    $scope.installDocker = function(){
+    $scope.installBoxGen = true;
+    $scope.dockerInstallBTN = false;
+
+    $scope.installDocker = function () {
+
         $scope.installDockerStatus = false;
+        $scope.installBoxGen = true;
+        $scope.dockerInstallBTN = true;
+
         url = "/docker/installDocker";
+
         var data = {};
         var config = {
-            headers : {
+            headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
 
-        $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
 
         function ListInitialDatas(response) {
-            if (response.data.installDockerStatus === 1)
-            {
-                new PNotify({
-                    title: 'Docker installed',
-                    text: 'Reloading...',
-                    type: 'success'
-                });
-                location.reload();
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.installBoxGen = false;
+                getRequestStatus();
             }
-            else{
+            else {
                 new PNotify({
-                    title: 'Failed to complete request',
-                    text: response.data.error,
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
                     type: 'error'
                 });
             }
-            $scope.installDockerStatus = true;
 
         }
+
         function cantLoadInitialDatas(response) {
-            $scope.installDockerStatus = true;
+            $scope.cyberPanelLoading = true;
             new PNotify({
-                title: 'Failed to complete request',
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
                 type: 'error'
             });
         }
+
+    };
+
+    function getRequestStatus() {
+        $scope.cyberPanelLoading = false;
+
+        url = "/serverstatus/switchTOLSWSStatus";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            if (response.data.abort === 0) {
+                $scope.requestData = response.data.requestStatus;
+                $timeout(getRequestStatus, 1000);
+            }
+            else {
+                // Notifications
+                $scope.cyberPanelLoading = true;
+                $timeout.cancel();
+                $scope.requestData = response.data.requestStatus;
+                if (response.data.installed === 1) {
+                    $timeout(function () {
+                        $window.location.reload();
+                    }, 3000);
+                }
+
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+
+
+        }
+
     }
 });
 
 /* Java script code for docker management */
 var delayTimer = null;
 
-app.controller('dockerImages', function($scope,$http) {
+app.controller('dockerImages', function ($scope) {
     $scope.tagList = [];
     $scope.imageTag = {};
 });
 
 /* Java script code to install Container */
 
-app.controller('runContainer', function($scope,$http) {
+app.controller('runContainer', function ($scope, $http) {
     $scope.containerCreationLoading = true;
     $scope.installationDetailsForm = false;
     $scope.installationProgress = true;
@@ -60,16 +119,16 @@ app.controller('runContainer', function($scope,$http) {
     $scope.success = true;
     $scope.couldNotConnect = true;
     $scope.goBackDisable = true;
-    
-    $scope.addEnvField = function() {
+
+    $scope.addEnvField = function () {
         var countEnv = Object.keys($scope.envList).length;
-        $scope.envList[countEnv+1] = {'name':'', 'value':''};
+        $scope.envList[countEnv + 1] = {'name': '', 'value': ''};
     }
 
     var statusFile;
 
-    $scope.createContainer = function(){
-        
+    $scope.createContainer = function () {
+
         console.log($scope.iport);
         console.log($scope.portType);
 
@@ -99,32 +158,31 @@ app.controller('runContainer', function($scope,$http) {
             dockerOwner: dockerOwner,
             image: image,
             envList: $scope.envList
-            
+
         };
-        
-        $.each($scope.portType, function( port, protocol ) {
-          data[port + "/" + protocol] = $scope.eport[port];
+
+        $.each($scope.portType, function (port, protocol) {
+            data[port + "/" + protocol] = $scope.eport[port];
         });
-        
+
         console.log(data)
 
         var config = {
-            headers : {
+            headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
 
-        $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
         function ListInitialDatas(response) {
 
-            if (response.data.createContainerStatus === 1)
-            {
+            if (response.data.createContainerStatus === 1) {
                 $scope.currentStatus = "Successful. Redirecting...";
                 window.location.href = "/docker/view/" + $scope.name
             }
-            else{
+            else {
 
                 $scope.containerCreationLoading = true;
                 $scope.installationDetailsForm = true;
@@ -138,8 +196,8 @@ app.controller('runContainer', function($scope,$http) {
             }
 
 
-
         }
+
         function cantLoadInitialDatas(response) {
 
             $scope.containerCreationLoading = true;
@@ -168,27 +226,27 @@ app.controller('runContainer', function($scope,$http) {
 /* Javascript code for listing containers */
 
 
-app.controller('listContainers', function($scope,$http) {
+app.controller('listContainers', function ($scope, $http) {
     $scope.activeLog = "";
     $scope.assignActive = "";
-    
-    $scope.assignContainer = function(name){
+
+    $scope.assignContainer = function (name) {
         $("#assign").modal("show");
         $scope.assignActive = name;
-    }
-    
-    $scope.submitAssignContainer = function(){
+    };
+
+    $scope.submitAssignContainer = function () {
         url = "/docker/assignContainer";
 
         var data = {name: $scope.assignActive, admin: $scope.dockerOwner};
 
         var config = {
-            headers : {
+            headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
 
-        $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
         function ListInitialData(response) {
 
@@ -199,8 +257,7 @@ app.controller('listContainers', function($scope,$http) {
                 });
                 window.location.href = '/docker/listContainers';
             }
-            else
-            {
+            else {
                 new PNotify({
                     title: 'Unable to complete request',
                     text: response.data.error_message,
@@ -209,6 +266,7 @@ app.controller('listContainers', function($scope,$http) {
             }
             $("#assign").modal("hide");
         }
+
         function cantLoadInitialData(response) {
             console.log("not good");
             new PNotify({
@@ -217,9 +275,9 @@ app.controller('listContainers', function($scope,$http) {
             });
             $("#assign").modal("hide");
         }
-    }
-    
-    $scope.delContainer = function(name, unlisted=false){
+    };
+
+    $scope.delContainer = function (name, unlisted=false) {
         (new PNotify({
             title: 'Confirmation Needed',
             text: 'Are you sure?',
@@ -235,19 +293,19 @@ app.controller('listContainers', function($scope,$http) {
             history: {
                 history: false
             }
-        })).get().on('pnotify.confirm', function() {
+        })).get().on('pnotify.confirm', function () {
             $('#imageLoading').show();
             url = "/docker/delContainer";
 
             var data = {name: name, unlisted: unlisted};
 
             var config = {
-                headers : {
+                headers: {
                     'X-CSRFToken': getCookie('csrftoken')
                 }
             };
 
-            $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
+            $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
 
             function ListInitialData(response) {
@@ -272,18 +330,18 @@ app.controller('listContainers', function($scope,$http) {
                         history: {
                             history: false
                         }
-                    })).get().on('pnotify.confirm', function() {
+                    })).get().on('pnotify.confirm', function () {
                         url = "/docker/delContainer";
 
                         var data = {name: name, unlisted: unlisted, force: 1};
 
                         var config = {
-                            headers : {
+                            headers: {
                                 'X-CSRFToken': getCookie('csrftoken')
                             }
                         };
 
-                        $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
+                        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
 
                         function ListInitialData(response) {
@@ -296,27 +354,28 @@ app.controller('listContainers', function($scope,$http) {
                             }
                             $('#imageLoading').hide();
                         }
+
                         function cantLoadInitialData(response) {
                             $('#imageLoading').hide();
                         }
                     })
                 }
-                else
-                {
+                else {
                     $("#listFail").fadeIn();
                     $scope.errorMessage = response.data.error_message;
                 }
                 $('#imageLoading').hide();
             }
+
             function cantLoadInitialData(response) {
                 $('#imageLoading').hide();
             }
         })
-    }  
-    
-    $scope.showLog = function(name, refresh = false){
+    }
+
+    $scope.showLog = function (name, refresh = false) {
         $scope.logs = "";
-        if (refresh === false){
+        if (refresh === false) {
             $('#logs').modal('show');
             $scope.activeLog = name;
         }
@@ -324,19 +383,19 @@ app.controller('listContainers', function($scope,$http) {
             name = $scope.activeLog;
         }
         console.log(name)
-        $scope.logs = "Loading...";       
-        
+        $scope.logs = "Loading...";
+
         url = "/docker/getContainerLogs";
 
         var data = {name: name};
 
         var config = {
-            headers : {
+            headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
 
-        $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
 
         function ListInitialData(response) {
@@ -345,16 +404,16 @@ app.controller('listContainers', function($scope,$http) {
             if (response.data.containerLogStatus === 1) {
                 $scope.logs = response.data.containerLog;
             }
-            else
-            {
+            else {
                 new PNotify({
-                title: 'Unable to complete request',
-                text: response.data.error_message,
-                type: 'error'
+                    title: 'Unable to complete request',
+                    text: response.data.error_message,
+                    type: 'error'
                 });
 
             }
         }
+
         function cantLoadInitialData(response) {
             new PNotify({
                 title: 'Unable to complete request',
@@ -368,12 +427,12 @@ app.controller('listContainers', function($scope,$http) {
     var data = {page: 1};
 
     var config = {
-        headers : {
+        headers: {
             'X-CSRFToken': getCookie('csrftoken')
         }
     };
 
-    $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
+    $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
 
     function ListInitialData(response) {
@@ -386,67 +445,66 @@ app.controller('listContainers', function($scope,$http) {
             console.log($scope.ContainerList);
             $("#listFail").hide();
         }
-        else
-        {
+        else {
             $("#listFail").fadeIn();
             $scope.errorMessage = response.data.error_message;
 
         }
     }
+
     function cantLoadInitialData(response) {
         console.log("not good");
     }
 
 
-    $scope.getFurtherContainersFromDB = function(pageNumber) {
+    $scope.getFurtherContainersFromDB = function (pageNumber) {
 
-    var config = {
-        headers : {
-            'X-CSRFToken': getCookie('csrftoken')
-        }
-    };
-
-    var data = {page: pageNumber};
-
-
-    dataurl = "/docker/getContainerList";
-
-    $http.post(dataurl, data,config).then(ListInitialData, cantLoadInitialData);
-
-
-    function ListInitialData(response) {
-        if (response.data.listContainerStatus ===1) {
-
-            var finalData = JSON.parse(response.data.data);
-            $scope.ContainerList = finalData;
-            $("#listFail").hide();
-        }
-        else
-        {
-            $("#listFail").fadeIn();
-            $scope.errorMessage = response.data.error_message;
-            console.log(response.data);
-
-        }
-    }
-    function cantLoadInitialData(response) {
-        console.log("not good");
-    }
-
-
-
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
         };
+
+        var data = {page: pageNumber};
+
+
+        dataurl = "/docker/getContainerList";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            if (response.data.listContainerStatus === 1) {
+
+                var finalData = JSON.parse(response.data.data);
+                $scope.ContainerList = finalData;
+                $("#listFail").hide();
+            }
+            else {
+                $("#listFail").fadeIn();
+                $scope.errorMessage = response.data.error_message;
+                console.log(response.data);
+
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            console.log("not good");
+        }
+
+
+    };
 });
 
 /* Java script code for containerr home page */
 
-app.controller('viewContainer', function($scope,$http) {
+app.controller('viewContainer', function ($scope, $http) {
     $scope.cName = "";
     $scope.status = "";
     $scope.savingSettings = false;
     $scope.loadingTop = false;
-    
-    $scope.recreate = function() {
+
+    $scope.recreate = function () {
         (new PNotify({
             title: 'Confirmation Needed',
             text: 'Are you sure?',
@@ -462,18 +520,18 @@ app.controller('viewContainer', function($scope,$http) {
             history: {
                 history: false
             }
-        })).get().on('pnotify.confirm', function() {
-          $('#infoLoading').show();
-            
-          url = "/docker/recreateContainer";
+        })).get().on('pnotify.confirm', function () {
+            $('#infoLoading').show();
+
+            url = "/docker/recreateContainer";
             var data = {name: $scope.cName};
             var config = {
-                headers : {
+                headers: {
                     'X-CSRFToken': getCookie('csrftoken')
                 }
             };
 
-            $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
+            $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
             function ListInitialData(response) {
                 if (response.data.recreateContainerStatus === 1) {
                     new PNotify({
@@ -483,8 +541,7 @@ app.controller('viewContainer', function($scope,$http) {
                     });
                     location.reload();
                 }
-                else
-                {
+                else {
                     new PNotify({
                         title: 'Unable to complete request',
                         text: response.data.error_message,
@@ -494,43 +551,43 @@ app.controller('viewContainer', function($scope,$http) {
                 }
                 $('#infoLoading').hide();
             }
+
             function cantLoadInitialData(response) {
                 PNotify.error({
-                  title: 'Unable to complete request',
-                  text: "Problem in connecting to server"
+                    title: 'Unable to complete request',
+                    text: "Problem in connecting to server"
                 });
                 $('#actionLoading').hide();
             }
-    })
+        })
     }
-    
-    $scope.addEnvField = function() {
+
+    $scope.addEnvField = function () {
         var countEnv = Object.keys($scope.envList).length;
-        $scope.envList[countEnv+1] = {'name':'', 'value':''};
+        $scope.envList[countEnv + 1] = {'name': '', 'value': ''};
     }
-    
-    $scope.showTop = function(){
+
+    $scope.showTop = function () {
         $scope.topHead = [];
         $scope.topProcesses = [];
         $scope.loadingTop = true;
         $("#processes").modal("show");
-        
+
         url = "/docker/getContainerTop";
         var data = {name: $scope.cName};
         var config = {
-            headers : {
+            headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
-        
-        $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
         function ListInitialData(response) {
             if (response.data.containerTopStatus === 1) {
                 $scope.topHead = response.data.processes.Titles;
                 $scope.topProcesses = response.data.processes.Processes;
             }
-            else
-            {
+            else {
                 new PNotify({
                     title: 'Unable to complete request',
                     text: response.data.error_message,
@@ -540,17 +597,18 @@ app.controller('viewContainer', function($scope,$http) {
             }
             $scope.loadingTop = false;
         }
+
         function cantLoadInitialData(response) {
             PNotify.error({
-              title: 'Unable to complete request',
-              text: "Problem in connecting to server"
+                title: 'Unable to complete request',
+                text: "Problem in connecting to server"
             });
             $scope.loadingTop = false;
         }
-        
+
     }
-    
-    $scope.cRemove = function(){
+
+    $scope.cRemove = function () {
         (new PNotify({
             title: 'Confirmation Needed',
             text: 'Are you sure?',
@@ -566,18 +624,18 @@ app.controller('viewContainer', function($scope,$http) {
             history: {
                 history: false
             }
-        })).get().on('pnotify.confirm', function() {
-          $('#actionLoading').show();
-            
-          url = "/docker/delContainer";
+        })).get().on('pnotify.confirm', function () {
+            $('#actionLoading').show();
+
+            url = "/docker/delContainer";
             var data = {name: $scope.cName, unlisted: false};
             var config = {
-                headers : {
+                headers: {
                     'X-CSRFToken': getCookie('csrftoken')
                 }
             };
 
-            $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
+            $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
             function ListInitialData(response) {
                 if (response.data.delContainerStatus === 1) {
                     new PNotify({
@@ -587,8 +645,7 @@ app.controller('viewContainer', function($scope,$http) {
                     });
                     window.location.href = '/docker/listContainers';
                 }
-                else
-                {
+                else {
                     new PNotify({
                         title: 'Unable to complete request',
                         text: response.data.error_message,
@@ -597,33 +654,33 @@ app.controller('viewContainer', function($scope,$http) {
                 }
                 $('#actionLoading').hide();
             }
+
             function cantLoadInitialData(response) {
                 PNotify.error({
-                  title: 'Unable to complete request',
-                  text: "Problem in connecting to server"
+                    title: 'Unable to complete request',
+                    text: "Problem in connecting to server"
                 });
                 $('#actionLoading').hide();
             }
-    })
+        })
     }
-    
-    $scope.refreshStatus = function(){
+
+    $scope.refreshStatus = function () {
         url = "/docker/getContainerStatus";
         var data = {name: $scope.cName};
         var config = {
-            headers : {
+            headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
-        
-        $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
         function ListInitialData(response) {
             if (response.data.containerStatus === 1) {
                 console.log(response.data.status);
                 $scope.status = response.data.status;
             }
-            else
-            {
+            else {
                 new PNotify({
                     title: 'Unable to complete request',
                     text: response.data.error_message,
@@ -632,54 +689,54 @@ app.controller('viewContainer', function($scope,$http) {
 
             }
         }
+
         function cantLoadInitialData(response) {
             PNotify.error({
-              title: 'Unable to complete request',
-              text: "Problem in connecting to server"
+                title: 'Unable to complete request',
+                text: "Problem in connecting to server"
             });
         }
-        
+
     }
-    
-    $scope.saveSettings = function(){
+
+    $scope.saveSettings = function () {
         $('#containerSettingLoading').show();
         url = "/docker/saveContainerSettings";
         $scope.savingSettings = true;
-        
+
         var data = {
             name: $scope.cName,
-            memory:$scope.memory,
+            memory: $scope.memory,
             startOnReboot: $scope.startOnReboot,
             envConfirmation: $scope.envConfirmation,
             envList: $scope.envList
         };
-        
+
         console.log(data)
         var config = {
-            headers : {
+            headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
-        
-        $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
         function ListInitialData(response) {
             if (response.data.saveSettingsStatus === 1) {
-                if ($scope.envConfirmation){
+                if ($scope.envConfirmation) {
                     new PNotify({
                         title: 'Done. Redirecting...',
                         type: 'success'
                     });
                     location.reload();
                 }
-                else{
+                else {
                     new PNotify({
                         title: 'Settings Saved',
                         type: 'success'
-                    });   
-                }                
+                    });
+                }
             }
-            else
-            {
+            else {
                 new PNotify({
                     title: 'Unable to complete request',
                     text: response.data.error_message,
@@ -690,37 +747,38 @@ app.controller('viewContainer', function($scope,$http) {
             $('#containerSettingLoading').hide();
             $scope.savingSettings = false;
         }
+
         function cantLoadInitialData(response) {
             new PNotify({
-              title: 'Unable to complete request',
-              text: "Problem in connecting to server",
-              type: 'error'
+                title: 'Unable to complete request',
+                text: "Problem in connecting to server",
+                type: 'error'
             });
             $('#containerSettingLoading').hide();
             $scope.savingSettings = false;
         }
-        
-        if ($scope.startOnReboot === true){
-            $scope.rPolicy="Yes";
+
+        if ($scope.startOnReboot === true) {
+            $scope.rPolicy = "Yes";
         }
-        else{
-            $scope.rPolicy="No";
+        else {
+            $scope.rPolicy = "No";
         }
-        
+
     }
-    
-    $scope.cAction = function(action){
+
+    $scope.cAction = function (action) {
         $('#actionLoading').show();
         console.log($scope.cName)
         url = "/docker/doContainerAction";
         var data = {name: $scope.cName, action: action};
         var config = {
-            headers : {
+            headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
-        
-        $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
 
         function ListInitialData(response) {
@@ -735,8 +793,7 @@ app.controller('viewContainer', function($scope,$http) {
                 $scope.status = response.data.status;
                 $scope.refreshStatus()
             }
-            else
-            {
+            else {
                 new PNotify({
                     title: 'Unable to complete request',
                     text: response.data.error_message,
@@ -746,17 +803,18 @@ app.controller('viewContainer', function($scope,$http) {
             }
             $('#actionLoading').hide();
         }
+
         function cantLoadInitialData(response) {
             PNotify.error({
-              title: 'Unable to complete request',
-              text: "Problem in connecting to server"
+                title: 'Unable to complete request',
+                text: "Problem in connecting to server"
             });
             $('#actionLoading').hide();
         }
-        
+
     }
-        
-    $scope.loadLogs = function(name){
+
+    $scope.loadLogs = function (name) {
         $scope.logs = "Loading...";
 
         url = "/docker/getContainerLogs";
@@ -764,12 +822,12 @@ app.controller('viewContainer', function($scope,$http) {
         var data = {name: name};
 
         var config = {
-            headers : {
+            headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
 
-        $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
 
         function ListInitialData(response) {
@@ -778,31 +836,30 @@ app.controller('viewContainer', function($scope,$http) {
             if (response.data.containerLogStatus === 1) {
                 $scope.logs = response.data.containerLog;
             }
-            else
-            {
+            else {
                 $scope.logs = response.data.error_message;
 
             }
         }
+
         function cantLoadInitialData(response) {
             console.log("not good");
             $scope.logs = "Error loading log";
         }
-    }    
+    }
 
 });
 
 
 /* Java script code for docker image management */
-app.controller('manageImages', function($scope,$http) {
-   $scope.tagList = [];
-   $scope.showingSearch = false;
-   $("#searchResult").hide();
-    
-    $scope.pullImage = function(image, tag){
+app.controller('manageImages', function ($scope, $http) {
+    $scope.tagList = [];
+    $scope.showingSearch = false;
+    $("#searchResult").hide();
+
+    $scope.pullImage = function (image, tag) {
         function ListInitialDatas(response) {
-            if (response.data.installImageStatus === 1)
-            {
+            if (response.data.installImageStatus === 1) {
                 new PNotify({
                     title: 'Image pulled successfully',
                     text: 'Reloading...',
@@ -810,7 +867,7 @@ app.controller('manageImages', function($scope,$http) {
                 });
                 location.reload()
             }
-            else{
+            else {
                 new PNotify({
                     title: 'Failed to complete request',
                     text: response.data.error_message,
@@ -821,6 +878,7 @@ app.controller('manageImages', function($scope,$http) {
             $('#imageLoading').hide();
 
         }
+
         function cantLoadInitialDatas(response) {
             $('#imageLoading').hide();
             new PNotify({
@@ -828,7 +886,8 @@ app.controller('manageImages', function($scope,$http) {
                 type: 'error'
             });
         }
-        if (image && tag){
+
+        if (image && tag) {
             $('#imageLoading').show();
 
             url = "/docker/installImage";
@@ -837,34 +896,34 @@ app.controller('manageImages', function($scope,$http) {
                 tag: tag
             };
             var config = {
-                headers : {
+                headers: {
                     'X-CSRFToken': getCookie('csrftoken')
                 }
             };
 
-            $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+            $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
         }
         else {
             new PNotify({
-                    title: 'Unable to complete request',
-                    text: 'Please select a tag',
-                    type: 'info'
-                });
+                title: 'Unable to complete request',
+                text: 'Please select a tag',
+                type: 'info'
+            });
         }
-        
+
     }
-    
-   $scope.searchImages = function(){
-       console.log($scope.searchString);
-       if (!$scope.searchString){
-           $("#searchResult").hide();
-       }
-       else {
-           $("#searchResult").show();
-       }
+
+    $scope.searchImages = function () {
+        console.log($scope.searchString);
+        if (!$scope.searchString) {
+            $("#searchResult").hide();
+        }
+        else {
+            $("#searchResult").show();
+        }
         clearTimeout(delayTimer);
-        delayTimer = setTimeout(function() {
+        delayTimer = setTimeout(function () {
             $('#imageLoading').show();
 
             url = "/docker/searchImage";
@@ -872,20 +931,19 @@ app.controller('manageImages', function($scope,$http) {
                 string: $scope.searchString
             };
             var config = {
-                headers : {
+                headers: {
                     'X-CSRFToken': getCookie('csrftoken')
                 }
             };
 
-            $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+            $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
             function ListInitialDatas(response) {
-                if (response.data.searchImageStatus === 1)
-                {
+                if (response.data.searchImageStatus === 1) {
                     $scope.images = response.data.matches;
                     console.log($scope.images)
                 }
-                else{
+                else {
                     new PNotify({
                         title: 'Failed to complete request',
                         text: response.data.error,
@@ -896,6 +954,7 @@ app.controller('manageImages', function($scope,$http) {
                 $('#imageLoading').hide();
 
             }
+
             function cantLoadInitialDatas(response) {
                 $('#imageLoading').hide();
                 new PNotify({
@@ -904,36 +963,35 @@ app.controller('manageImages', function($scope,$http) {
                 });
             }
         }, 500);
-    } 
-   
-   function populateTagList(image, page){
-       $('imageLoading').show();
+    }
+
+    function populateTagList(image, page) {
+        $('imageLoading').show();
         url = "/docker/getTags"
         var data = {
             image: image,
-            page: page+1
+            page: page + 1
         };
 
         var config = {
-            headers : {
+            headers: {
                 'X-CSRFToken': getCookie('csrftoken')
-                }
-            };
-       $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
+            }
+        };
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
 
         function ListInitialData(response) {
 
             if (response.data.getTagsStatus === 1) {
-                $scope.tagList[image].splice(-1,1);
+                $scope.tagList[image].splice(-1, 1);
                 $scope.tagList[image] = $scope.tagList[image].concat(response.data.list);
 
-                if (response.data.next != null){
-                    $scope.tagList[image].push("Load more");                
+                if (response.data.next != null) {
+                    $scope.tagList[image].push("Load more");
                 }
             }
-            else
-            {
+            else {
                 new PNotify({
                     title: 'Unable to complete request',
                     text: response.data.error_message,
@@ -942,6 +1000,7 @@ app.controller('manageImages', function($scope,$http) {
             }
             $('#imageLoading').hide();
         }
+
         function cantLoadInitialData(response) {
             new PNotify({
                 title: 'Unable to complete request',
@@ -949,60 +1008,60 @@ app.controller('manageImages', function($scope,$http) {
                 type: 'error'
             });
             $('#imageLoading').hide();
-        } 
+        }
     }
-    
-    $scope.runContainer = function(image){
+
+    $scope.runContainer = function (image) {
         $("#errorMessage").hide();
         if ($scope.imageTag[image] !== undefined) {
-            $("#imageList").css("pointer-events","none");
+            $("#imageList").css("pointer-events", "none");
         }
         else {
             $("#errorMessage").show();
             $scope.errorMessage = "Please select a tag";
         }
     }
-  
-    $scope.loadTags = function(event){
+
+    $scope.loadTags = function (event) {
         var pagesloaded = $(event.target).data('pageloaded');
         var image = event.target.id;
-        
+
         if (!pagesloaded) {
             $scope.tagList[image] = ['Loading...'];
-            $(event.target).data('pageloaded',1);
-        
+            $(event.target).data('pageloaded', 1);
+
             populateTagList(image, pagesloaded);
 //             $("#"+image+" option:selected").prop("selected", false);
         }
     }
-    
-    $scope.selectTag = function(){
+
+    $scope.selectTag = function () {
         var image = event.target.id;
-        var selectedTag = $('#'+image).find(":selected").text();
-        
+        var selectedTag = $('#' + image).find(":selected").text();
+
         if (selectedTag == 'Load more') {
             var pagesloaded = $(event.target).data('pageloaded');
-            $(event.target).data('pageloaded', pagesloaded+1);
-        
+            $(event.target).data('pageloaded', pagesloaded + 1);
+
             populateTagList(image, pagesloaded);
         }
     }
-    
-   $scope.getHistory = function(counter){
-       $('#imageLoading').show();
-       var name = $("#"+counter).val()
-       
-       url = "/docker/getImageHistory";
+
+    $scope.getHistory = function (counter) {
+        $('#imageLoading').show();
+        var name = $("#" + counter).val()
+
+        url = "/docker/getImageHistory";
 
         var data = {name: name};
 
         var config = {
-            headers : {
+            headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
 
-        $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
 
         function ListInitialData(response) {
@@ -1012,8 +1071,7 @@ app.controller('manageImages', function($scope,$http) {
                 $('#history').modal('show');
                 $scope.historyList = response.data.history;
             }
-            else
-            {
+            else {
                 new PNotify({
                     title: 'Unable to complete request',
                     text: response.data.error_message,
@@ -1022,6 +1080,7 @@ app.controller('manageImages', function($scope,$http) {
             }
             $('#imageLoading').hide();
         }
+
         function cantLoadInitialData(response) {
             new PNotify({
                 title: 'Unable to complete request',
@@ -1030,11 +1089,11 @@ app.controller('manageImages', function($scope,$http) {
             });
             $('#imageLoading').hide();
         }
-   }
-   
-   $scope.rmImage = function(counter){
-       
-       (new PNotify({
+    }
+
+    $scope.rmImage = function (counter) {
+
+        (new PNotify({
             title: 'Confirmation Needed',
             text: 'Are you sure?',
             icon: 'fa fa-question-circle',
@@ -1049,58 +1108,58 @@ app.controller('manageImages', function($scope,$http) {
             history: {
                 history: false
             }
-        })).get().on('pnotify.confirm', function() {
-        $('#imageLoading').show();
-           
-       if (counter == '0') {
-           var name = 0;
-       }
-       else {
-            var name = $("#"+counter).val()
-        }
-       
-       url = "/docker/removeImage";
+        })).get().on('pnotify.confirm', function () {
+            $('#imageLoading').show();
 
-        var data = {name: name};
-
-        var config = {
-            headers : {
-                'X-CSRFToken': getCookie('csrftoken')
+            if (counter == '0') {
+                var name = 0;
             }
-        };
-
-        $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
-
-
-        function ListInitialData(response) {
-            console.log(response);
-
-            if (response.data.removeImageStatus === 1) {
-                new PNotify({
-                    title: 'Image(s) removed',
-                    type: 'success'
-                });
-                window.location.href = "/docker/manageImages";
+            else {
+                var name = $("#" + counter).val()
             }
-            else
-            {
+
+            url = "/docker/removeImage";
+
+            var data = {name: name};
+
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+            function ListInitialData(response) {
+                console.log(response);
+
+                if (response.data.removeImageStatus === 1) {
+                    new PNotify({
+                        title: 'Image(s) removed',
+                        type: 'success'
+                    });
+                    window.location.href = "/docker/manageImages";
+                }
+                else {
+                    new PNotify({
+                        title: 'Unable to complete request',
+                        text: response.data.error_message,
+                        type: 'error'
+                    });
+                }
+                $('#imageLoading').hide();
+            }
+
+            function cantLoadInitialData(response) {
                 new PNotify({
                     title: 'Unable to complete request',
                     text: response.data.error_message,
                     type: 'error'
                 });
+                $('#imageLoading').hide();
             }
-            $('#imageLoading').hide();
-        }
-        function cantLoadInitialData(response) {
-            new PNotify({
-                title: 'Unable to complete request',
-                text: response.data.error_message,
-                type: 'error'
-            });
-            $('#imageLoading').hide();
-        }
-           
+
         })
-   }
+    }
 });

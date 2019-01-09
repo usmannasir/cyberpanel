@@ -453,7 +453,6 @@ class ACLManager:
 
     @staticmethod
     def checkContainerOwnership(name, userID):
-        return 1
         try:
             container = Containers.objects.get(name=name)
             currentACL = ACLManager.loadedACL(userID)
@@ -513,7 +512,7 @@ class ACLManager:
             for items in admins:
                 cons = items.containers_set.all()
                 for con in cons:
-                    containerList.append(web)
+                    containerList.append(con)
 
             return containerList
 

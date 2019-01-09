@@ -780,8 +780,8 @@ class preFlightsChecks:
 
         os.chdir(self.path)
 
-        command = "wget http://cyberpanel.sh/CyberPanel.1.7.7.tar.gz"
-        #command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
+        #command = "wget http://cyberpanel.sh/CyberPanel.1.7.7.tar.gz"
+        command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'CyberPanel Download',
                                       1, 1, os.EX_OSERR)
@@ -789,8 +789,8 @@ class preFlightsChecks:
         ##
 
         count = 0
-        command = "tar zxf CyberPanel.1.7.7.tar.gz"
-        #command = "tar zxf CyberPanelTemp.tar.gz"
+        #command = "tar zxf CyberPanel.1.7.7.tar.gz"
+        command = "tar zxf CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'Extract CyberPanel',1, 1, os.EX_OSERR)
 
@@ -2667,27 +2667,15 @@ class preFlightsChecks:
             return 0
 
     def installPYDNS(self):
-        try:
-            count = 0
-            while (1):
-                command = "pip install pydns"
-
-                res = subprocess.call(shlex.split(command))
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut(
-                        "Trying to install pydns, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Failed to install pydns! [installTLDExtract]")
-                else:
-                    logging.InstallLog.writeToFile("pydns successfully installed!  [pip]")
-                    preFlightsChecks.stdOut("pydns successfully installed!  [pip]")
-                    break
-        except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [installTLDExtract]")
-            return 0
+        command = "pip install pydns"
+        preFlightsChecks.call(command, self.distro, '[installPYDNS]',
+                                      'Install PYDNS',
+                                      1, 0, os.EX_OSERR)
+    def installDockerPY(self):
+        command = "pip install docker"
+        preFlightsChecks.call(command, self.distro, '[installDockerPY]',
+                                      'Install DockerPY',
+                                      1, 0, os.EX_OSERR)
 
     def installOpenDKIM(self):
         try:
@@ -3289,6 +3277,7 @@ def main():
     checks.installCertBot()
     checks.test_Requests()
     checks.installPYDNS()
+    checks.installDockerPY()
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
     checks.setupCLI()
     checks.setup_cron()

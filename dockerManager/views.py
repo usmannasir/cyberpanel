@@ -1,11 +1,10 @@
  # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect, HttpResponse
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
 from plogical.container import ContainerManager
-from dockerManager.pluginManager import pluginManager
 from decorators import preDockerRun
 from plogical.acl import ACLManager
 import json
@@ -22,7 +21,7 @@ def dockerPermission(request, userID, context):
         else:
             return ACLManager.loadError()
     else:
-        return None
+        return 0
         
 @preDockerRun
 def loadDockerHome(request):
@@ -41,22 +40,18 @@ def installDocker(request):
         userID = request.session['userID']
         perm = dockerPermission(request, userID, 'loadDockerHome')
         if perm: return perm
-        result = pluginManager.preDockerInstallation(request) # Later change to preInstallInstallation
 
-        if  result != 200:
-            return result
+        cm = ContainerManager(userID, 'submitInstallDocker')
+        cm.start()
 
-        cm = ContainerManager()
-        coreResult = cm.submitInstallDocker(userID, json.loads(request.body))
+        data_ret = {'status': 1, 'error_message': 'None'}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
 
-        result = pluginManager.postDockerInstallation(request, coreResult)
-        if result != 200:
-            return result
-
-        return coreResult
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    except BaseException, msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
 
 @preDockerRun    
 def installImage(request):
@@ -332,6 +327,7 @@ def manageImages(request):
 def getImageHistory(request):
     try:
         userID = request.session['userID']
+
         perm = dockerPermission(request, userID, 'loadDockerHome')
         if perm: return perm
         

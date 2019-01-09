@@ -18,54 +18,88 @@ import subprocess
 import shlex
 import time
 from dockerManager.models import Containers
-from django.http import StreamingHttpResponse
-from wsgiref.util import FileWrapper
 from math import ceil
 import docker
 import docker.utils
 import requests
+from processUtilities import ProcessUtilities
+from serverStatus.serverStatusUtil import ServerStatusUtil
+import threading as multi
 
 
 # Use default socket to connect
-class ContainerManager:
-    def __init__(self, name=None):
-        self.name = name
+class ContainerManager(multi.Thread):
 
-    def submitInstallDocker(self, userID=None, data=None):
+    def __init__(self, name=None, function=None):
+        multi.Thread.__init__(self)
+        self.name = name
+        self.function = function
+
+    def run(self):
         try:
-            currentACL = ACLManager.loadedACL(userID)
+            if self.function == 'submitInstallDocker':
+                self.submitInstallDocker()
+            elif self.function == 'restartGunicorn':
+                command = 'sudo systemctl restart gunicorn.socket'
+                ProcessUtilities.executioner(command)
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile( str(msg) + ' [ContainerManager.run]')
+
+    @staticmethod
+    def executioner(command, statusFile):
+        try:
+            res = subprocess.call(shlex.split(command), stdout=statusFile, stderr=statusFile)
+            if res == 1:
+                return 0
+            else:
+                return 1
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return 0
+
+    def submitInstallDocker(self):
+        try:
+            currentACL = ACLManager.loadedACL(self.name)
+
             if ACLManager.currentContextPermission(currentACL, 'createContainer') == 0:
                 return ACLManager.loadError()
 
-            command = 'sudo yum install -y docker'
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "Starting Docker Installation..\n", 1)
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                command = 'sudo yum install -y docker'
+            else:
+                command = 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io'
+
+            if not ServerStatusUtil.executioner(command, statusFile):
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                          "Failed to install Docker. [404]\n", 1)
+                return 0
+
 
             command = 'sudo groupadd docker'
-            cmd = shlex.split(command)
-            res2 = subprocess.call(cmd)
+            ServerStatusUtil.executioner(command, statusFile)
 
             command = 'sudo usermod -aG docker cyberpanel'
-            cmd = shlex.split(command)
-            res3 = subprocess.call(cmd)
+            ServerStatusUtil.executioner(command, statusFile)
 
-            command = 'sudo service docker start'
-            cmd = shlex.split(command)
-            res4 = subprocess.call(cmd)
+            command = 'sudo systemctl enable docker'
+            ServerStatusUtil.executioner(command, statusFile)
 
-            if res == 0 and res2 == 0 and res3 == 0 and res4 == 0:
-                data_ret = {'installDockerStatus': 1, 'error_message': 'None'}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            else:
-                data_ret = {'installDockerStatus': 0, 'error_message': 'Failed to install. Manual install required.'}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+            command = 'sudo systemctl start docker'
+            ServerStatusUtil.executioner(command, statusFile)
 
-            return HttpResponse(res)
+            cm = ContainerManager(self.name, 'restartGunicorn')
+            cm.start()
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "Docker successfully installed.[200]\n", 1)
 
         except BaseException, msg:
-            return HttpResponse(str(msg))
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
 
     def createContainer(self, request=None, userID=None, data=None):
         try:
@@ -779,9 +813,6 @@ class ContainerManager:
 
             name = data['name']
 
-            if ACLManager.checkContainerOwnership(name, userID) != 1:
-                return ACLManager.loadError()
-
             client = docker.from_env()
             dockerAPI = docker.APIClient()
 
@@ -808,6 +839,7 @@ class ContainerManager:
     def removeImage(self, userID=None, data=None):
         try:
             admin = Administrator.objects.get(pk=userID)
+
             if admin.acl.adminStatus != 1:
                 return ACLManager.loadError()
 

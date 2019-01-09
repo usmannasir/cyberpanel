@@ -600,6 +600,40 @@ WantedBy=multi-user.target"""
             pass
 
     @staticmethod
+    def dockerMigrations():
+        try:
+            connection, cursor = Upgrade.setupConnection('cyberpanel')
+
+
+            query = """CREATE TABLE `dockerManager_containers` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `cid` varchar(64) NOT NULL,
+  `image` varchar(50) NOT NULL,
+  `tag` varchar(50) NOT NULL,
+  `memory` int(11) NOT NULL,
+  `ports` longtext NOT NULL,
+  `env` longtext NOT NULL,
+  `startOnReboot` int(11) NOT NULL,
+  `admin_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `dockerManager_contai_admin_id_58fb62b7_fk_loginSyst` (`admin_id`),
+  CONSTRAINT `dockerManager_contai_admin_id_58fb62b7_fk_loginSyst` FOREIGN KEY (`admin_id`) REFERENCES `loginSystem_administrator` (`id`)
+)"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            try:
+                connection.close()
+            except:
+                pass
+        except:
+            pass
+
+    @staticmethod
     def enableServices():
         try:
             servicePath = '/home/cyberpanel/powerdns'
@@ -854,6 +888,7 @@ WantedBy=multi-user.target"""
 
         Upgrade.mailServerMigrations()
         Upgrade.emailMarketingMigrationsa()
+        Upgrade.dockerMigrations()
 
         ##
 
