@@ -57,22 +57,22 @@ class ServerStatusUtil:
             except:
                 pass
 
-            command = 'wget https://www.litespeedtech.com/packages/5.0/lsws-5.3-ent-x86_64-linux.tar.gz'
+            command = 'wget https://www.litespeedtech.com/packages/5.0/lsws-5.3.5-ent-x86_64-linux.tar.gz'
             if ServerStatusUtil.executioner(command, statusFile) == 0:
                 return 0
 
-            command = 'tar zxf lsws-5.3-ent-x86_64-linux.tar.gz'
+            command = 'tar zxf lsws-5.3.5-ent-x86_64-linux.tar.gz'
             if ServerStatusUtil.executioner(command, statusFile) == 0:
                 return 0
 
-            writeSerial = open('lsws-5.3/serial.no', 'w')
+            writeSerial = open('lsws-5.3.5/serial.no', 'w')
             writeSerial.writelines(licenseKey)
             writeSerial.close()
 
-            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/install.sh', 'lsws-5.3/')
-            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/functions.sh', 'lsws-5.3/')
+            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/install.sh', 'lsws-5.3.5/')
+            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/functions.sh', 'lsws-5.3.5/')
 
-            os.chdir('lsws-5.3')
+            os.chdir('lsws-5.3.5')
 
             command = 'chmod +x install.sh'
             if ServerStatusUtil.executioner(command, statusFile) == 0:

@@ -426,6 +426,21 @@ milter_default_action = accept
     def configureSpamAssassin():
         try:
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                confFile = "/etc/mail/spamassassin/local.cf"
+                confData = open(confFile).readlines()
+
+                conf = open(confFile, 'w')
+
+                for items in confData:
+                    if items.find('report_safe') > -1 or items.find('rewrite_header') > -1 or items.find('required_score') > -1 or items.find('required_hits') > -1:
+                        conf.write(items.strip('#').strip(' '))
+                    else:
+                        conf.write(items)
+
+                conf.close()
+
+
             command = "groupadd spamd"
             subprocess.call(shlex.split(command))
 

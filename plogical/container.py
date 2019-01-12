@@ -25,6 +25,7 @@ import requests
 from processUtilities import ProcessUtilities
 from serverStatus.serverStatusUtil import ServerStatusUtil
 import threading as multi
+from mailUtilities import mailUtilities
 
 
 # Use default socket to connect
@@ -64,6 +65,9 @@ class ContainerManager(multi.Thread):
             if ACLManager.currentContextPermission(currentACL, 'createContainer') == 0:
                 return ACLManager.loadError()
 
+
+            mailUtilities.checkHome()
+
             statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
@@ -92,11 +96,13 @@ class ContainerManager(multi.Thread):
             command = 'sudo systemctl start docker'
             ServerStatusUtil.executioner(command, statusFile)
 
-            cm = ContainerManager(self.name, 'restartGunicorn')
-            cm.start()
-
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "Docker successfully installed.[200]\n", 1)
+
+            time.sleep(2)
+
+            cm = ContainerManager(self.name, 'restartGunicorn')
+            cm.start()
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)

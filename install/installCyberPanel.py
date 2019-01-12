@@ -57,24 +57,24 @@ class InstallCyberPanel:
                 except:
                     pass
 
-                command = 'wget https://www.litespeedtech.com/packages/5.0/lsws-5.3.4-ent-x86_64-linux.tar.gz'
+                command = 'wget https://www.litespeedtech.com/packages/5.0/lsws-5.3.5-ent-x86_64-linux.tar.gz'
                 install.preFlightsChecks.call(command, self.distro, '[installLiteSpeed]',
                                               'Install LiteSpeed Webserver Enterprise.',
                                               1, 1, os.EX_OSERR)
 
-                command = 'tar zxf lsws-5.3.4-ent-x86_64-linux.tar.gz'
+                command = 'tar zxf lsws-5.3.5-ent-x86_64-linux.tar.gz'
                 install.preFlightsChecks.call(command, self.distro, '[installLiteSpeed]',
                                               'Install LiteSpeed Webserver Enterprise.',
                                               1, 1, os.EX_OSERR)
 
-                writeSerial = open('lsws-5.3.4/serial.no', 'w')
+                writeSerial = open('lsws-5.3.5/serial.no', 'w')
                 writeSerial.writelines(self.serial)
                 writeSerial.close()
 
-                shutil.copy('litespeed/install.sh', 'lsws-5.3.4/')
-                shutil.copy('litespeed/functions.sh', 'lsws-5.3.4/')
+                shutil.copy('litespeed/install.sh', 'lsws-5.3.5/')
+                shutil.copy('litespeed/functions.sh', 'lsws-5.3.5/')
 
-                os.chdir('lsws-5.3.4')
+                os.chdir('lsws-5.3.5')
 
                 command = 'chmod +x install.sh'
                 install.preFlightsChecks.call(command, self.distro, '[installLiteSpeed]',

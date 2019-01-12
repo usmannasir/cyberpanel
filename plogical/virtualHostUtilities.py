@@ -547,7 +547,7 @@ class virtualHostUtilities:
 
             writeFile.close()
 
-            p = Process(target=mailUtilities.restartServices, args=('restart',))
+            p = Process(target=mailUtilities.restartServices, args=())
             p.start()
 
             print "1,None"
