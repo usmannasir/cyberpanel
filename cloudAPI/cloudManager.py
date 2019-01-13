@@ -1036,8 +1036,8 @@ class CloudManager:
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
-                return self.ajaxPre(0, 'This feature is currently only available on CentOS.')
+            #if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            #    return self.ajaxPre(0, 'This feature is currently only available on CentOS.')
 
 
             from psutil import virtual_memory

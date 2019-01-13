@@ -219,7 +219,6 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
     @staticmethod
     def setupComodoRules():
         try:
-
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 pathTOOWASPFolder = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/comodo")
                 extractLocation = os.path.join(virtualHostUtilities.Server_root, "conf/modsec")

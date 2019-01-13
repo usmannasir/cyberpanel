@@ -700,6 +700,11 @@ WantedBy=multi-user.target"""
                 if items.find('s3Backups') > -1:
                     s3Backups = 0
 
+            dockerManager = 1
+            for items in data:
+                if items.find('dockerManager') > -1:
+                    dockerManager = 0
+
 
             Upgrade.stdOut('Restoring settings file!')
 
@@ -717,6 +722,8 @@ WantedBy=multi-user.target"""
                         writeToFile.writelines("    'emailPremium',\n")
                     if s3Backups == 1:
                         writeToFile.writelines("    's3Backups',\n")
+                    if dockerManager == 1:
+                        writeToFile.writelines("    'dockerManager',\n")
                 else:
                     writeToFile.writelines(items)
 

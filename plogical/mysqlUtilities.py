@@ -320,6 +320,8 @@ class mysqlUtilities:
                 command = 'sudo mv /etc/my.cnf /etc/my.cnf.bak'
             else:
                 command = 'sudo mv /etc/mysql/my.cnf /etc/mysql/my.cnf.bak'
+                data['suggestedContent'] = data['suggestedContent'].replace('/var/lib/mysql/mysql.sock', '/var/run/mysqld/mysqld.sock')
+
 
             ProcessUtilities.executioner(command)
 
