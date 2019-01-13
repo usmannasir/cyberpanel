@@ -190,7 +190,7 @@ class S3Backups(multi.Thread):
 
             admin = Administrator.objects.get(pk=userID)
 
-            newPlan = BackupPlan(owner=admin, name=self.data['planName'], freq = self.data['frequency'],
+            newPlan = BackupPlan(owner=admin, name=self.data['planName'].replace(' ', ''), freq = self.data['frequency'],
                                  retention= self.data['retenion'], bucket= self.data['bucketName'])
             newPlan.save()
 
@@ -586,7 +586,7 @@ class S3Backups(multi.Thread):
 
             admin = Administrator.objects.get(pk=userID)
 
-            newPlan = BackupPlanDO(owner=admin, name=self.data['planName'], freq = self.data['frequency'],
+            newPlan = BackupPlanDO(owner=admin, name=self.data['planName'].replace(' ', ''), freq = self.data['frequency'],
                                  retention= self.data['retenion'], bucket= self.data['bucketName'], type= self.data['type'],
                                    region= self.data['region'])
             newPlan.save()
