@@ -33,6 +33,7 @@ jsonpointer==1.9
 kitchen==1.1.1
 MarkupSafe==0.11
 mock==2.0.0
+minio==4.0.9
 parsedatetime==2.4
 pbr==4.0.4
 perf==0.1

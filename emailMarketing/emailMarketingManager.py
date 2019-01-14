@@ -134,7 +134,7 @@ class EmailMarketingManager:
             extraArgs = {}
             extraArgs['domain'] = data['domain']
             extraArgs['path'] = data['path']
-            extraArgs['listName'] = data['listName']
+            extraArgs['listName'] = data['listName'].replace(' ', '')
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             userID = self.request.session['userID']
@@ -550,7 +550,7 @@ class EmailMarketingManager:
             emailMessage = data['emailMessage']
 
             admin = Administrator.objects.get(pk=userID)
-            newTemplate = EmailTemplate(owner=admin, name=name, subject=subject, fromName=fromName, fromEmail=fromEmail,
+            newTemplate = EmailTemplate(owner=admin, name=name.replace(' ', ''), subject=subject, fromName=fromName, fromEmail=fromEmail,
                                         replyTo=replyTo, emailMessage=emailMessage)
             newTemplate.save()
 
