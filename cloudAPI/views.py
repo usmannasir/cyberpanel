@@ -239,6 +239,28 @@ def router(request):
             return cm.fetchTableData(request)
         elif controller == 'fetchStructure':
             return cm.fetchStructure(request)
+        elif controller == 'addMINIONode':
+            return cm.addMINIONode(request)
+        elif controller == 'fetchMINIONodes':
+            return cm.fetchMINIONodes(request)
+        elif controller == 'deleteMINIONode':
+            return cm.deleteMINIONode(request)
+        elif controller == 'createPlanMINIO':
+            return cm.createPlanMINIO(request)
+        elif controller == 'fetchBackupPlansMINIO':
+            return cm.fetchBackupPlansMINIO(request)
+        elif controller == 'deletePlanMINIO':
+            return cm.deletePlanMINIO(request)
+        elif controller == 'savePlanChangesMINIO':
+            return cm.savePlanChangesMINIO(request)
+        elif controller == 'forceRunAWSBackupMINIO':
+            return cm.forceRunAWSBackupMINIO(request)
+        elif controller == 'fetchWebsitesInPlanMINIO':
+            return cm.fetchWebsitesInPlanMINIO(request)
+        elif controller == 'fetchBackupLogsMINIO':
+            return cm.fetchBackupLogsMINIO(request)
+        elif controller == 'deleteDomainFromPlanMINIO':
+            return cm.deleteDomainFromPlanMINIO(request)
         else:
             return cm.ajaxPre(0, 'This function is not available in your version of CyberPanel.')
 

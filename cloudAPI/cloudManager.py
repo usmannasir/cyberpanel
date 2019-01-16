@@ -1168,3 +1168,93 @@ class CloudManager:
             return HttpResponse(finalData)
         except BaseException, msg:
             return self.ajaxPre(0, str(msg))
+
+    def addMINIONode(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'addMINIONode')
+            return s3.addMINIONode()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchMINIONodes(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'fetchMINIONodes')
+            return s3.fetchMINIONodes()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def deleteMINIONode(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'deleteMINIONode')
+            return s3.deleteMINIONode()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def createPlanMINIO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'createPlanMINIO')
+            return s3.createPlanMINIO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchBackupPlansMINIO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'fetchBackupPlansMINIO')
+            return s3.fetchBackupPlansMINIO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+
+    def deletePlanMINIO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'deletePlanMINIO')
+            return s3.deletePlanMINIO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def savePlanChangesMINIO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'savePlanChangesMINIO')
+            return s3.savePlanChangesMINIO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def forceRunAWSBackupMINIO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'forceRunAWSBackupMINIO')
+            s3.start()
+            return self.ajaxPre(1, None)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchWebsitesInPlanMINIO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'fetchWebsitesInPlanMINIO')
+            return s3.fetchWebsitesInPlanMINIO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchBackupLogsMINIO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'fetchBackupLogsMINIO')
+            return s3.fetchBackupLogsMINIO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def deleteDomainFromPlanMINIO(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            s3 = S3Backups(request, self.data, 'deleteDomainFromPlanMINIO')
+            return s3.deleteDomainFromPlanMINIO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
