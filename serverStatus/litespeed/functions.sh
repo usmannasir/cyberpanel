@@ -41,17 +41,17 @@ init()
     PHP_SUEXEC=2
 
     WS_USER=nobody
-    WS_GROUP=nogroup
+    WS_GROUP=nobody
 
     DIR_OWN="nobody:nobody"
     CONF_OWN="nobody:nobody"
-    
+
     BUILD_ROOT="$LSWS_HOME/../../../"
     WHM_CGIDIR="$BUILD_ROOT/usr/local/cpanel/whostmgr/docroot/cgi"
     if [ -d "$WHM_CGIDIR" ] ; then
         HOST_PANEL="cpanel"
     fi
-    
+
 }
 
 license()
@@ -59,14 +59,14 @@ license()
     SUCC=0
     TRY=1
     while [ $SUCC -eq "0" ]; do
-        printf "%s" "Do you agree with above license? "  
+        printf "%s" "Do you agree with above license? "
         YES_NO='Yes'
         if [ "x$YES_NO" != "xYes" ]; then
             if [ $TRY -lt 3 ]; then
                 echo "Sorry, wrong answer! Type 'Yes' with capital 'Y', try again!"
                 TRY=`expr $TRY + 1`
             else
-                echo "Abort installation!" 
+                echo "Abort installation!"
                 exit 0
             fi
 
@@ -114,11 +114,11 @@ install_dir()
             DEST_RECOM="/opt/lsws"
         fi
         WS_USER="nobody"
-    else 
+    else
         cat <<EOF
 
 As you are not the 'root' user, you may not be able to install the
-web server into a system directory or enable chroot, the web server 
+web server into a system directory or enable chroot, the web server
 process will run on behalf of current user - '$INST_USER'.
 
 EOF
@@ -131,8 +131,8 @@ EOF
     while [ $SUCC -eq "0" ];  do
         cat <<EOF
 
-Please specify the destination directory. You must have permissions to 
-create and manage the directory. It is recommended to install the web server 
+Please specify the destination directory. You must have permissions to
+create and manage the directory. It is recommended to install the web server
 at /opt/lsws, /usr/local/lsws or in your home directory like '~/lsws'.
 
 ATTENTION: The user '$WS_USER' must be able to access the destination
@@ -145,7 +145,7 @@ EOF
         if [ "x$TMP_DEST" = "x" ]; then
             TMP_DEST=$DEST_RECOM
         fi
-        if [ `expr "$TMP_DEST" : '~'` -gt 0 ]; then 
+        if [ `expr "$TMP_DEST" : '~'` -gt 0 ]; then
             LSWS_HOME="$HOME`echo $TMP_DEST | sed 's/^~//' `"
         else
             LSWS_HOME=$TMP_DEST
@@ -164,11 +164,11 @@ EOF
         if [ -f "$LSWS_HOME/conf/httpd_config.xml" ]; then
             cat <<EOF
 
-Found old configuration file under destination directory $LSWS_HOME. 
+Found old configuration file under destination directory $LSWS_HOME.
 
 To upgrade, press 'Enter', current configuration will not be changed.
 To reinstall, press 'R' or 'r'.
-To change directory, press 'C' or 'c'. 
+To change directory, press 'C' or 'c'.
 
 EOF
 
@@ -178,15 +178,15 @@ EOF
             if [ "x$TMP_URC" = "x" ]; then
                 INSTALL_TYPE="upgrade"
                 SET_LOGIN=0
-            else 
+            else
                 if [ `expr "$TMP_URC" : '[Uu]'` -gt 0 ]; then
                     INSTALL_TYPE="upgrade"
                     SET_LOGIN=0
-                else 
+                else
                     if [ `expr "$TMP_URC" : '[Rr]'` -gt 0 ]; then
                         INSTALL_TYPE="reinstall"
                         SET_LOGIN=1
-                    else 
+                    else
                     #if [ `expr "$TMP_URC" : '[Cc]'` -gt 0 ]; then
                         SUCC=0
                     fi
@@ -224,7 +224,7 @@ admin_login()
                 SET_LOGIN=1
             fi
         fi
-    fi        
+    fi
 
     if [ $SET_LOGIN -eq 1 ]; then
 
@@ -300,7 +300,7 @@ a non-system user who does not have login shell and home directory such as
 'nobody'.
 
 EOF
-# get user name 
+# get user name
         SUCC=0
         while [ $SUCC -eq "0" ]; do
             printf "%s" "User [$WS_USER]: "
@@ -312,22 +312,22 @@ EOF
             TST_USER=`expr "$USER_INFO" : 'uid=.*(\(.*\)) gid=.*'`
             if [ "x$TST_USER" = "x$TMP_USER" ]; then
                 USER_ID=`expr "$USER_INFO" : 'uid=\(.*\)(.*) gid=.*'`
-                if [ $USER_ID -gt 10 ]; then  
+                if [ $USER_ID -gt 10 ]; then
                     WS_USER=$TMP_USER
                     SUCC=1
                 else
                     cat <<EOF
 
-[ERROR] It is not allowed to run LiteSpeed web server on behalf of a 
-privileged user, user id must be greater than 10. The user id of user 
+[ERROR] It is not allowed to run LiteSpeed web server on behalf of a
+privileged user, user id must be greater than 10. The user id of user
 '$TMP_USER' is '$USER_ID'.
 
 EOF
                 fi
             else
-                cat <<EOF 
+                cat <<EOF
 
-[ERROR] '$TMP_USER' is not valid user name in your system, please choose 
+[ERROR] '$TMP_USER' is not valid user name in your system, please choose
 another user or create user '$TMP_USER' first.
 
 EOF
@@ -336,7 +336,7 @@ EOF
         done
     fi
 
-# get group name 
+# get group name
     SUCC=0
     TMP_GROUPS=`groups $WS_USER`
     TST_GROUPS=`expr "$TMP_GROUPS" : '.*:\(.*\)'`
@@ -347,7 +347,7 @@ EOF
     D_GROUP=`$ID_GROUPS $WS_USER`
     D_GROUP=`expr "$D_GROUP" : '.*gid=[0-9]*(\(.*\)) groups=.*'`
     echo "Please choose the group that the web server running as."
-    echo 
+    echo
     while [ $SUCC -eq "0" ];  do
         echo "User '$WS_USER' is the member of following group(s): $TST_GROUPS"
         printf "%s" "Group [$D_GROUP]: "
@@ -363,7 +363,7 @@ EOF
             cat <<EOF
 
 [ERROR] '$TMP_GROUP' is not valid group for user '$WS_USER', please choose
-another group in the list or add user '$WS_USER' to group '$TMP_GROUP' 
+another group in the list or add user '$WS_USER' to group '$TMP_GROUP'
 first.
 
 EOF
@@ -385,7 +385,7 @@ stopLshttpd()
     RUNNING_PROCESS=`$PS_CMD | grep lshttpd | grep -v grep`
     if [ "x$RUNNING_PROCESS" != "x" ]; then
         cat <<EOF
-LiteSpeed web server is running, in order to continue installation, the server 
+LiteSpeed web server is running, in order to continue installation, the server
 must be stopped.
 
 EOF
@@ -415,7 +415,7 @@ getServerPort()
     cat <<EOF
 
 Please specify the port for normal HTTP service.
-Port 80 is the standard HTTP port, only 'root' user is allowed to use 
+Port 80 is the standard HTTP port, only 'root' user is allowed to use
 port 80, if you have another web server running on port 80, you need to
 specify another port or stop the other web server before starting LiteSpeed
 Web Server.
@@ -513,9 +513,9 @@ configAdminEmail()
 
 Please specify administrators' email addresses.
 It is recommended to specify a real email address,
-Multiple email addresses can be set by a comma 
+Multiple email addresses can be set by a comma
 delimited list of email addresses. Whenever something
-abnormal happened, a notificiation will be sent to 
+abnormal happened, a notificiation will be sent to
 emails listed here.
 
 EOF
@@ -550,9 +550,9 @@ enablePHPHandler()
     cat <<EOF
 
 You can setup a global script handler for PHP with the pre-built PHP engine
-shipped with this package now. The PHP engine runs as Fast CGI which  
-outperforms Apache's mod_php. 
-You can always replace the pre-built PHP engine with your customized PHP 
+shipped with this package now. The PHP engine runs as Fast CGI which
+outperforms Apache's mod_php.
+You can always replace the pre-built PHP engine with your customized PHP
 engine.
 
 EOF
@@ -568,7 +568,7 @@ EOF
     fi
     if [ $SETUP_PHP -eq 1 ]; then
         PHP_SUFFIX="php"
-        printf "%s" "Suffix for PHP script(comma separated list) [$PHP_SUFFIX]: " 
+        printf "%s" "Suffix for PHP script(comma separated list) [$PHP_SUFFIX]: "
         TMP_SUFFIX='php'
         if [ "x$TMP_SUFFIX" != "x" ]; then
             PHP_SUFFIX=$TMP_SUFFIX
@@ -677,7 +677,7 @@ util_mkdir()
       chown "$OWNER" "$LSWS_HOME/$arg"
       chmod $PERM  "$LSWS_HOME/$arg"
     done
-    
+
 }
 
 
@@ -693,7 +693,7 @@ util_cpfile()
       chown "$OWNER" "$LSWS_HOME/$arg"
       chmod $PERM  "$LSWS_HOME/$arg"
     done
-    
+
 }
 
 util_ccpfile()
@@ -883,31 +883,31 @@ create_lsadm_freebsd()
 {
     pw group add lsadm
     lsadm_gid=`grep "^lsadm:" /etc/group | awk -F : '{ print $3; }'`
-    pw user add -g $lsadm_gid -d / -s /usr/sbin/nologin -n lsadm 
+    pw user add -g $lsadm_gid -d / -s /usr/sbin/nologin -n lsadm
     pw usermod lsadm -G $WS_GROUP
 }
 
 create_lsadm()
 {
-    groupadd lsadm 
+    groupadd lsadm
     #1>/dev/null 2>&1
     lsadm_gid=`grep "^lsadm:" /etc/group | awk -F : '{ print $3; }'`
-    useradd -g $lsadm_gid -d / -r -s /sbin/nologin lsadm 
+    useradd -g $lsadm_gid -d / -r -s /sbin/nologin lsadm
     usermod -a -G $WS_GROUP lsadm
     #1>/dev/null 2>&1
-    
+
 }
 
 create_lsadm_solaris()
 {
-    groupadd lsadm 
+    groupadd lsadm
     #1>/dev/null 2>&1
     lsadm_gid=`grep "^lsadm:" /etc/group | awk -F: '{ print $3; }'`
-    useradd -g $lsadm_gid -d / -s /bin/false lsadm 
+    useradd -g $lsadm_gid -d / -s /bin/false lsadm
     usermod -G $WS_GROUP lsadm
 
     #1>/dev/null 2>&1
-    
+
 }
 
 
@@ -946,7 +946,7 @@ installation()
             create_lsadm_freebsd
         elif [ "x$SYS_NAME" = "xSunOS" ]; then
             create_lsadm_solaris
-        fi 
+        fi
         grep "^lsadm:" /etc/passwd 1>/dev/null 2>&1
         if [ $? -eq 0 ]; then
             CONF_OWN="lsadm:lsadm"
@@ -959,33 +959,33 @@ installation()
     sed "s:%LSWS_CTRL%:$LSWS_HOME/bin/lswsctrl:" "$LSINSTALL_DIR/admin/misc/lsws.rc.in" > "$LSINSTALL_DIR/admin/misc/lsws.rc"
     sed "s:%LSWS_CTRL%:$LSWS_HOME/bin/lswsctrl:" "$LSINSTALL_DIR/admin/misc/lsws.rc.gentoo.in" > "$LSINSTALL_DIR/admin/misc/lsws.rc.gentoo"
     sed "s:%LSWS_CTRL%:$LSWS_HOME/bin/lswsctrl:" "$LSINSTALL_DIR/admin/misc/lshttpd.service.in" > "$LSINSTALL_DIR/admin/misc/lshttpd.service"
-    
+
     if [ -d "$LSWS_HOME/admin/html.$VERSION" ]; then
         rm -rf "$LSWS_HOME/admin/html.$VERSION"
     fi
 
-       
-    util_mkdir "$SDIR_OWN" $DIR_MOD admin bin docs fcgi-bin lib logs admin/logs add-ons share  admin/fcgi-bin 
+
+    util_mkdir "$SDIR_OWN" $DIR_MOD admin bin docs fcgi-bin lib logs admin/logs add-ons share  admin/fcgi-bin
     util_mkdir "$SDIR_OWN" $DIR_MOD admin/html.$VERSION admin/misc
-    util_mkdir "$CONF_OWN" $SDIR_MOD conf conf/cert conf/templates admin/conf admin/conf/cert admin/tmp phpbuild autoupdate 
+    util_mkdir "$CONF_OWN" $SDIR_MOD conf conf/cert conf/templates admin/conf admin/conf/cert admin/tmp phpbuild autoupdate
     util_mkdir "$SDIR_OWN" $SDIR_MOD admin/cgid admin/cgid/secret
     util_mkdir "$CONF_OWN" $DIR_MOD admin/htpasswds
     chgrp  $WS_GROUP $LSWS_HOME/admin/tmp $LSWS_HOME/admin/cgid $LSWS_HOME/admin/htpasswds
     chmod  g+x $LSWS_HOME/admin/tmp $LSWS_HOME/admin/cgid $LSWS_HOME/admin/htpasswds
     chown  $CONF_OWN $LSWS_HOME/admin/tmp/sess_* 1>/dev/null 2>&1
-    util_mkdir "$SDIR_OWN" $DIR_MOD DEFAULT 
+    util_mkdir "$SDIR_OWN" $DIR_MOD DEFAULT
 
     buildAdminSslCert
-    
+
     find "$LSWS_HOME/admin/tmp" -type s -atime +1 -delete 2>/dev/null
     if [ $? -ne 0 ]; then
         find "$LSWS_HOME/admin/tmp" -type s -atime +1 2>/dev/null | xargs rm -f
-    fi 
+    fi
 
     find "/tmp/lshttpd" -type s -atime +1 -delete 2>/dev/null
     if [ $? -ne 0 ]; then
         find "/tmp/lshttpd" -type s -atime +1 2>/dev/null | xargs rm -f
-    fi 
+    fi
 
     if [ "x$HOST_PANEL" = "xcpanel" ]; then
         if [ ! -d "$BUILD_ROOT/usr/local/lib/php/autoindex/" ]; then
@@ -1012,21 +1012,21 @@ installation()
     fi
     util_cpdir "$SDIR_OWN" $DOC_MOD add-ons
     util_cpfile "$SDIR_OWN" $EXEC_MOD add-ons/modsec/inspectmulti.sh
-    
-    util_ccpfile "$SDIR_OWN" $EXEC_MOD fcgi-bin/lsperld.fpl 
+
+    util_ccpfile "$SDIR_OWN" $EXEC_MOD fcgi-bin/lsperld.fpl
     util_cpfile "$SDIR_OWN" $EXEC_MOD fcgi-bin/RackRunner.rb fcgi-bin/RailsRunner.rb  fcgi-bin/RailsRunner.rb.2.3
-    util_cpfile "$SDIR_OWN" $EXEC_MOD admin/fcgi-bin/admin_php5 
-    util_cpfile "$SDIR_OWN" $EXEC_MOD admin/misc/rc-inst.sh admin/misc/admpass.sh admin/misc/rc-uninst.sh admin/misc/uninstall.sh 
+    util_cpfile "$SDIR_OWN" $EXEC_MOD admin/fcgi-bin/admin_php5
+    util_cpfile "$SDIR_OWN" $EXEC_MOD admin/misc/rc-inst.sh admin/misc/admpass.sh admin/misc/rc-uninst.sh admin/misc/uninstall.sh
     util_cpfile "$SDIR_OWN" $EXEC_MOD admin/misc/lsws.rc admin/misc/lshttpd.service admin/misc/lsws.rc.gentoo admin/misc/enable_ruby_python_selector.sh
-    util_cpfile "$SDIR_OWN" $EXEC_MOD admin/misc/mgr_ver.sh admin/misc/gzipStatic.sh admin/misc/fp_install.sh 
-    util_cpfile "$SDIR_OWN" $EXEC_MOD admin/misc/create_admin_keypair.sh admin/misc/awstats_install.sh admin/misc/update.sh 
-    util_cpfile "$SDIR_OWN" $EXEC_MOD admin/misc/cleancache.sh admin/misc/cleanlitemage.sh admin/misc/lsup5.sh 
+    util_cpfile "$SDIR_OWN" $EXEC_MOD admin/misc/mgr_ver.sh admin/misc/gzipStatic.sh admin/misc/fp_install.sh
+    util_cpfile "$SDIR_OWN" $EXEC_MOD admin/misc/create_admin_keypair.sh admin/misc/awstats_install.sh admin/misc/update.sh
+    util_cpfile "$SDIR_OWN" $EXEC_MOD admin/misc/cleancache.sh admin/misc/cleanlitemage.sh admin/misc/lsup5.sh
     util_cpfile "$SDIR_OWN" $EXEC_MOD admin/misc/fix_cagefs.sh admin/misc/cp_switch_ws.sh
     util_cpfile "$SDIR_OWN" $EXEC_MOD admin/misc/lscmctl
     ln -sf ./lsup5.sh "$LSWS_HOME/admin/misc/lsup.sh"
     util_cpfile "$SDIR_OWN" $EXEC_MOD admin/misc/ap_lsws.sh.in admin/misc/build_ap_wrapper.sh admin/misc/cpanel_restart_httpd.in
     util_cpfile "$SDIR_OWN" $DOC_MOD admin/misc/gdb-bt admin/misc/htpasswd.php admin/misc/php.ini admin/misc/genjCryptionKeyPair.php admin/misc/purge_cache_byurl.php
-    
+
     if [ -f "$LSINSTALL_DIR/admin/misc/chroot.sh" ]; then
         util_cpfile "$SDIR_OWN" $EXEC_MOD admin/misc/chroot.sh
     fi
@@ -1043,7 +1043,7 @@ installation()
     chown  $CONF_OWN "$LSWS_HOME/admin/htpasswds/status"
     chgrp  $WS_GROUP "$LSWS_HOME/admin/htpasswds/status"
     chmod  0640 "$LSWS_HOME/admin/htpasswds/status"
-    
+
     if [ $INSTALL_TYPE = "upgrade" ]; then
         util_ccpfile "$CONF_OWN" $CONF_MOD admin/conf/admin_config.xml
         util_cpfile "$CONF_OWN" $CONF_MOD admin/conf/php.ini
@@ -1067,7 +1067,7 @@ installation()
         fi
 
         if [ ! -f "$LSWS_HOME/DEFAULT/conf/vhconf.xml" ]; then
-            util_mkdir "$CONF_OWN" $DIR_MOD DEFAULT/conf 
+            util_mkdir "$CONF_OWN" $DIR_MOD DEFAULT/conf
             util_cpdir "$CONF_OWN" $DOC_MOD DEFAULT/conf
         fi
     else
@@ -1077,7 +1077,7 @@ installation()
         util_cpfile "$CONF_OWN" $CONF_MOD conf/httpd_config.xml conf/mime.properties
         util_mkdir "$CONF_OWN" $DIR_MOD DEFAULT/conf
         util_cpdir "$CONF_OWN" $DOC_MOD DEFAULT/conf
-        util_mkdir "$SDIR_OWN" $DIR_MOD DEFAULT/html DEFAULT/cgi-bin 
+        util_mkdir "$SDIR_OWN" $DIR_MOD DEFAULT/html DEFAULT/cgi-bin
         util_cpdir "$SDIR_OWN" $DOC_MOD DEFAULT/html DEFAULT/cgi-bin
     fi
     if [ $SETUP_PHP -eq 1 ]; then
@@ -1110,26 +1110,26 @@ installation()
 
 
     util_cpfile "$SDIR_OWN" $EXEC_MOD bin/wswatch.sh
-    util_cpfilev "$SDIR_OWN" $EXEC_MOD $VERSION bin/lswsctrl bin/lshttpd bin/lscgid 
+    util_cpfilev "$SDIR_OWN" $EXEC_MOD $VERSION bin/lswsctrl bin/lshttpd bin/lscgid
 
     $TEST_BIN ! -L "$LSWS_HOME/modules"
     if [ $? -eq 0 ]; then
         mv -f "$LSWS_HOME/modules" "$LSWS_HOME/modules.old"
     fi
-    
+
     if [ -d "$LSWS_HOME/modules.$VERSION" ]; then
         rm -rf "$LSWS_HOME/modules.$VERSION"
     fi
 
     util_mkdir "$SDIR_OWN" $DIR_MOD modules.$VERSION
-    util_cpdirv "$SDIR_OWN" $EXEC_MOD $VERSION modules 
-    
+    util_cpdirv "$SDIR_OWN" $EXEC_MOD $VERSION modules
+
     #if [ -e "$LSINSTALL_DIR/bin/lshttpd.dbg" ]; then
     #    if [ -f "$LSINSTALL_DIR/bin/lshttpd.dbg.$VERSION" ]; then
     #        rm "$LSINSTALL_DIR/bin/lshttpd.dbg.$VERSION"
     #    fi
     #    util_cpfilev "$SDIR_OWN" $EXEC_MOD $VERSION bin/lshttpd.dbg
-    #    
+    #
     #    #enable debug build for beta release
     #    ln -sf ./lshttpd.dbg.$VERSION $LSWS_HOME/bin/lshttpd
     #fi
@@ -1141,10 +1141,10 @@ installation()
     if [ $INST_USER = "root" ]; then
         chmod u+s  "$LSWS_HOME/bin/lscgid.$VERSION"
 
-    fi 
+    fi
 
     util_cpdir "$SDIR_OWN" $DOC_MOD docs/
-    util_cpfile "$SDIR_OWN" $DOC_MOD VERSION BUILD LICENSE* 
+    util_cpfile "$SDIR_OWN" $DOC_MOD VERSION BUILD LICENSE*
 
     if [ -f $LSWS_HOME/autoupdate/download ]; then
         rm $LSWS_HOME/autoupdate/download
@@ -1158,12 +1158,12 @@ installation()
     chown "$CONF_OWN" "$LSWS_HOME/admin/conf/jcryption_keypair"
     chmod 0600 "$LSWS_HOME/admin/conf/jcryption_keypair"
 
-    fix_cloudlinux    
-    
+    fix_cloudlinux
+
     if [ $INST_USER = "root" ]; then
         $LSWS_HOME/admin/misc/rc-inst.sh
-    fi 
-    
+    fi
+
 }
 
 
@@ -1179,7 +1179,7 @@ PHP scripts by caching them in compiled state, the overhead of compiling
 PHP is avoided.
 
 Note: If an opcode cache has been installed already, you do not need to
-      change it. If you need to built PHP binary by yourself, you need to 
+      change it. If you need to built PHP binary by yourself, you need to
       built PHP opcode cache from source as well, unless the version of your
       PHP binary is same as that the pre-built PHP opcode cache built for.
 
@@ -1205,8 +1205,8 @@ installAWStats()
 
 AWStats Integration
 
-AWStats is a popular log analyzer that generates advanced web server 
-statistics. LiteSpeed web server seamlessly integrates AWStats into 
+AWStats is a popular log analyzer that generates advanced web server
+statistics. LiteSpeed web server seamlessly integrates AWStats into
 its Web Admin Interface. AWStats configuration and statistics update
 have been taken care of by LiteSpeed web server.
 
@@ -1238,23 +1238,23 @@ Congratulations! The LiteSpeed Web Server has been successfully installed.
 Command line script - "$LSWS_HOME/bin/lswsctrl"
 can be used to start or stop the server.
 
-It is recommended to limit access to the web administration interface. 
+It is recommended to limit access to the web administration interface.
 Right now the interface can be accessed from anywhere where this
-machine can be reached over the network. 
+machine can be reached over the network.
 
 Three options are available:
-  1. If the interface needs to be accessed only from this machine, just 
-     change the listener for the interface to only listen on the loopback 
-     interface - localhost(127.0.0.1). 
-  2. If the interface needs to be accessible from limited IP addresses or sub 
+  1. If the interface needs to be accessed only from this machine, just
+     change the listener for the interface to only listen on the loopback
+     interface - localhost(127.0.0.1).
+  2. If the interface needs to be accessible from limited IP addresses or sub
      networks, then set up access control rules for the interface accordingly.
-  3. If the interface has to be accessible via internet, SSL (Secure Sockets 
+  3. If the interface has to be accessible via internet, SSL (Secure Sockets
      Layer) should be used. Please read respective HOW-TOs on SSL configuration.
 
-To change configurations of the interface, login and click 
+To change configurations of the interface, login and click
 "Interface Configuration" button on the main page.
 The administration interface is located at http://localhost:<ADMIN_PORT>/
-or http://<ip_or_Hostname_of_this_machine>:<ADMIN_PORT>/ 
+or http://<ip_or_Hostname_of_this_machine>:<ADMIN_PORT>/
 
 EOF
 
@@ -1262,7 +1262,7 @@ EOF
         if [ $INSTALL_TYPE != "upgrade" ]; then
             printf "%s\n%s" "Would you like to have LiteSpeed Web Server started automatically" "when the server restarts [Y/n]? "
             START_SERVER='y'
-            echo 
+            echo
 
             if [ "x$START_SERVER" = "x" ]; then
                 START_SERVER=y
@@ -1271,7 +1271,7 @@ EOF
                 $LSWS_HOME/admin/misc/rc-inst.sh
             else
                 cat <<EOF
-If you want to start the web server automatically later, just run 
+If you want to start the web server automatically later, just run
     "$LSWS_HOME//rc-inst.sh"
 to install the service control script.
 
@@ -1279,12 +1279,12 @@ EOF
             fi
         fi
         if [ "x$HOST_PANEL" != "x" ]; then
-            cat << EOF 
+            cat << EOF
 
 The default configuration file contain support for both PHP4 and PHP5,
-A prebuilt PHP4 binary comes with this package, however, we recommend 
+A prebuilt PHP4 binary comes with this package, however, we recommend
 you to build your own PHP4 and PHP5 binaries though our web console with
-the same configuration parameters as your current PHP installation. You 
+the same configuration parameters as your current PHP installation. You
 can check your current PHP configuration via a phpinfo() page.
 
 Press [ENTER] to continue
@@ -1293,7 +1293,7 @@ EOF
 
             read TMP_VAL
 
-            cat << EOF 
+            cat << EOF
 
 When you replace Apache with LiteSpeed, remember to stop Apache completely.
 On most Linux servers, you should do:
@@ -1323,7 +1323,7 @@ EOF
         printf "%s" "Would you like to restart it right now [Y/n]? "
     fi
     START_SERVER='y'
-    echo 
+    echo
 
     if [ "x$START_SERVER" = "x" ]; then
         START_SERVER=y
@@ -1361,4 +1361,3 @@ EOF
     fi
 
 }
-

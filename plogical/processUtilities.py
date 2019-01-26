@@ -114,5 +114,17 @@ class ProcessUtilities:
         else:
             return ProcessUtilities.centos
 
+    @staticmethod
+    def containerCheck():
+        try:
+            command = 'sudo cat /etc/cgrules.conf'
+            result = subprocess.call(shlex.split(command))
+            if result == 1:
+                return 0
+            else:
+                return 1
+        except BaseException:
+            return 0
+
 
 

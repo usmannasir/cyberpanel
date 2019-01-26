@@ -14,10 +14,12 @@ class httpProc:
             return render(self.request, self.templateName)
         else:
             return render(self.request, self.templateName, self.data)
+
     def ajaxPre(self, status, errorMessage, success = None):
         final_dic = {'status': status, 'error_message': errorMessage, 'success': success}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
     def ajax(self, status, errorMessage, data = None):
         if data == None:
             finalDic = {'status': status, 'error_message': errorMessage}
@@ -33,4 +35,10 @@ class httpProc:
 
             finalJson = json.dumps(finalDic)
             return HttpResponse(finalJson)
+
+    @staticmethod
+    def AJAX(status, errorMessage, success = None):
+        final_dic = {'status': status, 'error_message': errorMessage, 'success': success}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
 

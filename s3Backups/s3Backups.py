@@ -9,7 +9,6 @@ try:
     import threading as multi
     from plogical.mailUtilities import mailUtilities
     import boto3
-    from minio.error import ResponseError
     from boto3.s3.transfer import TransferConfig
     import json
     from .models import *
@@ -148,6 +147,17 @@ class S3Backups(multi.Thread):
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
+    def fetchAWSKeys(self):
+        path = '/home/cyberpanel/.aws'
+        credentials = path + '/credentials'
+
+        data = open(credentials, 'r').readlines()
+
+        aws_access_key_id = data[1].split(' ')[2].strip(' ').strip('\n')
+        aws_secret_access_key = data[2].split(' ')[2].strip(' ').strip('\n')
+
+        return aws_access_key_id, aws_secret_access_key
+
     def fetchBuckets(self):
         try:
 
@@ -159,7 +169,15 @@ class S3Backups(multi.Thread):
             if currentACL['admin'] == 0:
                 return proc.ajax(0, 'Only administrators can use AWS S3 Backups.')
 
-            s3 = boto3.resource('s3')
+
+            aws_access_key_id, aws_secret_access_key = self.fetchAWSKeys()
+
+            s3 = boto3.resource(
+                's3',
+                aws_access_key_id = aws_access_key_id,
+                aws_secret_access_key = aws_secret_access_key
+            )
+
             json_data = "["
             checker = 0
 
@@ -404,7 +422,16 @@ class S3Backups(multi.Thread):
             plan = BackupPlan.objects.get(name=self.data['planName'])
             bucketName = plan.bucket.strip('\n').strip(' ')
             runTime = time.strftime("%d:%m:%Y")
-            client = boto3.client('s3')
+
+            aws_access_key_id, aws_secret_access_key = self.fetchAWSKeys()
+
+            client = boto3.client(
+                's3',
+                aws_access_key_id = aws_access_key_id,
+                aws_secret_access_key = aws_secret_access_key
+            )
+
+
             config = TransferConfig(multipart_threshold=1024 * 25, max_concurrency=10,
                                     multipart_chunksize=1024 * 25, use_threads=True)
 

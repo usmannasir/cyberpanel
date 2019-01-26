@@ -5,6 +5,7 @@ import docker
 import json
 from django.http import HttpResponse
 from loginSystem.views import loadLoginPage
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 def preDockerRun(function):
     def wrap(request, *args, **kwargs):
@@ -36,7 +37,8 @@ def preDockerRun(function):
         try:
             client = docker.from_env()
             client.ping()
-        except:
+        except BaseException, msg:
+            logging.writeToFile(str(msg))
             if isPost:
                 data_ret = {'status': 0, 'error_message': 'Docker daemon not running or not responsive'}
                 json_data = json.dumps(data_ret)
@@ -45,4 +47,5 @@ def preDockerRun(function):
                 return render(request, 'dockerManager/install.html', {'status':admin.type, 'conErr':1})
         
         return function(request, *args, **kwargs)
+
     return wrap

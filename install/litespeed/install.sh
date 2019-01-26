@@ -473,13 +473,13 @@ fi
 
 cat <<EOF
 
-Installing, please wait... 
+Installing, please wait...
 
 EOF
 
 if [ "x$HOST_PANEL" = "xdirectadmin" ]; then
     chmod g+x /var/log/httpd/
-    chgrp apache /var/log/httpd/ 
+    chgrp apache /var/log/httpd/
     chown apache:apache /var/log/httpd/domains
 fi
 
@@ -502,5 +502,4 @@ fi
 
 
 finish
-
 

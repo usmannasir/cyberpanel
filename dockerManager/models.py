@@ -13,5 +13,6 @@ class Containers(models.Model):
     tag = models.CharField(max_length=50, default='unknown')
     memory = models.IntegerField(default=0)
     ports = models.TextField(default="{}")
+    volumes = models.TextField(default="{}")
     env = models.TextField(default="{}")
     startOnReboot = models.IntegerField(default=0)

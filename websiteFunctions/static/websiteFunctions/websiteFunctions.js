@@ -234,9 +234,9 @@ app.controller('listWebsites', function ($scope, $http) {
     function ListInitialData(response) {
 
         if (response.data.listWebSiteStatus === 1) {
-
             var finalData = JSON.parse(response.data.data);
             $scope.WebSitesList = finalData;
+            $scope.pagination = response.data.pagination;
             $("#listFail").hide();
         }
         else {

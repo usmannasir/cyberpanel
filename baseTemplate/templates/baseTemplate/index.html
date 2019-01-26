@@ -96,6 +96,7 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'websiteFunctions/websiteFunctions.css' %}">
+    <link rel="stylesheet" type="text/css" href="https://www.jsdelivr.com/package/npm/fontawesome">
     <!-- Components theme, component below was above three CSS files. -->
 
 
@@ -115,6 +116,8 @@
             }, 300);
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/flot-charts@0.8.3/jquery.flot.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery.flot@0.8.3/jquery.flot.time.js"></script>
 
     <!-- JS Ends -->
 
@@ -608,6 +611,24 @@
 
                     <li class="header serverACL"><span>{% trans "Server" %}</span></li>
 
+
+                    <li class="serverACL">
+                        <a href="#" title="{% trans 'Containerization' %}">
+                            <i class="glyph-icon icon-linecons-fire"></i>
+                            <span>{% trans "Containerization" %}</span>
+                            <span class="bs-label badge-yellow">{% trans "NEW" %}</span>
+                        </a>
+                        <div class="sidebar-submenu">
+
+                            <ul>
+                                <li><a href="{% url 'cHome' %}"
+                                       title="{% trans 'Create Website Limits' %}"><span>{% trans "Create Limits" %}</span></a>
+                                </li>
+                            </ul>
+
+                        </div><!-- .sidebar-submenu -->
+                    </li>
+
                     <li class="serverACL">
                         <a href="#" title="{% trans 'Docker' %}">
                             <i class="glyph-icon icon-linecons-fire"></i>
@@ -886,6 +907,7 @@
     <script src="{% static 'manageSSL/manageSSL.js' %}"></script>
     <script src="{% static 'manageServices/manageServices.js' %}"></script>
     <script src="{% static 'dockerManager/dockerManager.js' %}"></script>
+    <script src="{% static 'containerization/containerization.js' %}"></script>
 </div>
 </body>
 </html>

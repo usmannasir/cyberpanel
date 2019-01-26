@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.shortcuts import render, redirect, HttpResponse
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
-from plogical.container import ContainerManager
+from .container import ContainerManager
 from decorators import preDockerRun
 from plogical.acl import ACLManager
 import json

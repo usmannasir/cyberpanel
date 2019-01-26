@@ -65,7 +65,8 @@ INSTALLED_APPS = [
     'cloudAPI',
     'highAvailability',
     's3Backups',
-    'dockerManager'
+    'dockerManager',
+    'containerization'
 ]
 
 MIDDLEWARE = [

@@ -415,6 +415,77 @@ WantedBy=multi-user.target"""
             except:
                 pass
 
+            ##
+
+            query = """CREATE TABLE `s3Backups_minionodes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `endPointURL` varchar(200) NOT NULL,
+  `accessKey` varchar(200) NOT NULL,
+  `secretKey` varchar(200) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `endPointURL` (`endPointURL`),
+  UNIQUE KEY `accessKey` (`accessKey`),
+  KEY `s3Backups_minionodes_owner_id_e50993d9_fk_loginSyst` (`owner_id`),
+  CONSTRAINT `s3Backups_minionodes_owner_id_e50993d9_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `s3Backups_backupplanminio` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `freq` varchar(50) NOT NULL,
+  `retention` int(11) NOT NULL,
+  `lastRun` varchar(50) NOT NULL,
+  `minioNode_id` int(11) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `s3Backups_backupplan_minioNode_id_a4eaf917_fk_s3Backups` (`minioNode_id`),
+  KEY `s3Backups_backupplan_owner_id_d6830e67_fk_loginSyst` (`owner_id`),
+  CONSTRAINT `s3Backups_backupplan_minioNode_id_a4eaf917_fk_s3Backups` FOREIGN KEY (`minioNode_id`) REFERENCES `s3Backups_minionodes` (`id`),
+  CONSTRAINT `s3Backups_backupplan_owner_id_d6830e67_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `s3Backups_websitesinplanminio` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `domain` varchar(100) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `s3Backups_websitesin_owner_id_224ce049_fk_s3Backups` (`owner_id`),
+  CONSTRAINT `s3Backups_websitesin_owner_id_224ce049_fk_s3Backups` FOREIGN KEY (`owner_id`) REFERENCES `s3Backups_backupplanminio` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `s3Backups_backuplogsminio` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `timeStamp` varchar(200) NOT NULL,
+  `level` varchar(5) NOT NULL,
+  `msg` varchar(500) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `s3Backups_backuplogs_owner_id_f19e1736_fk_s3Backups` (`owner_id`),
+  CONSTRAINT `s3Backups_backuplogs_owner_id_f19e1736_fk_s3Backups` FOREIGN KEY (`owner_id`) REFERENCES `s3Backups_backupplanminio` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             try:
                 connection.close()
             except:
@@ -634,6 +705,37 @@ WantedBy=multi-user.target"""
             pass
 
     @staticmethod
+    def containerMigrations():
+        try:
+            connection, cursor = Upgrade.setupConnection('cyberpanel')
+
+            query = """CREATE TABLE `containerization_containerlimits` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `cpuPers` varchar(10) NOT NULL,
+  `IO` varchar(10) NOT NULL,
+  `IOPS` varchar(10) NOT NULL,
+  `memory` varchar(10) NOT NULL,
+  `networkSpeed` varchar(10) NOT NULL,
+  `networkHexValue` varchar(10) NOT NULL,
+  `enforce` int(11) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `containerization_con_owner_id_494eb637_fk_websiteFu` (`owner_id`),
+  CONSTRAINT `containerization_con_owner_id_494eb637_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_websites` (`id`)
+)"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            try:
+                connection.close()
+            except:
+                pass
+        except:
+            pass
+
+    @staticmethod
     def enableServices():
         try:
             servicePath = '/home/cyberpanel/powerdns'
@@ -705,6 +807,11 @@ WantedBy=multi-user.target"""
                 if items.find('dockerManager') > -1:
                     dockerManager = 0
 
+            containerization = 1
+            for items in data:
+                if items.find('containerization') > -1:
+                    containerization = 0
+
 
             Upgrade.stdOut('Restoring settings file!')
 
@@ -724,6 +831,10 @@ WantedBy=multi-user.target"""
                         writeToFile.writelines("    's3Backups',\n")
                     if dockerManager == 1:
                         writeToFile.writelines("    'dockerManager',\n")
+
+                    if containerization == 1:
+                        writeToFile.writelines("    'containerization',\n")
+
                 else:
                     writeToFile.writelines(items)
 
@@ -906,6 +1017,7 @@ WantedBy=multi-user.target"""
 
         Upgrade.applyLoginSystemMigrations()
         Upgrade.s3BackupMigrations()
+        Upgrade.containerMigrations()
         Upgrade.enableServices()
 
         Upgrade.installPHP73()

@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from cloudManager import CloudManager
 import json
 from loginSystem.models import Administrator
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 def router(request):
     try:
@@ -12,6 +13,7 @@ def router(request):
 
         serverUserName = data['serverUserName']
         admin = Administrator.objects.get(userName=serverUserName)
+
 
         cm = CloudManager(data, admin)
 

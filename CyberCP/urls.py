@@ -41,4 +41,5 @@ urlpatterns = [
     url(r'^emailMarketing/', include('emailMarketing.urls')),
     url(r'^cloudAPI/', include('cloudAPI.urls')),
     url(r'^docker/', include('dockerManager.urls')),
+    url(r'^container/', include('containerization.urls')),
 ]
