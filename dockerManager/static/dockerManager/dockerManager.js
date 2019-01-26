@@ -119,6 +119,18 @@ app.controller('runContainer', function ($scope, $http) {
     $scope.success = true;
     $scope.couldNotConnect = true;
     $scope.goBackDisable = true;
+    
+    $scope.volList = {};
+    $scope.volListNumber = 0;
+    $scope.addVolField = function() {
+        $scope.volList[$scope.volListNumber] = {'dest':'', 'src':''};
+        $scope.volListNumber = $scope.volListNumber + 1;
+        console.log($scope.volList)
+    }
+    $scope.removeVolField = function(){
+        delete $scope.volList[$scope.volListNumber - 1];
+        $scope.volListNumber = $scope.volListNumber - 1;
+    }
 
     $scope.addEnvField = function () {
         var countEnv = Object.keys($scope.envList).length;
@@ -157,8 +169,8 @@ app.controller('runContainer', function ($scope, $http) {
             memory: memory,
             dockerOwner: dockerOwner,
             image: image,
-            envList: $scope.envList
-
+            envList: $scope.envList,
+            volList: $scope.volList
         };
 
         $.each($scope.portType, function (port, protocol) {
@@ -698,6 +710,16 @@ app.controller('viewContainer', function ($scope, $http) {
         }
 
     }
+    
+    $scope.addVolField = function() {
+        $scope.volList[$scope.volListNumber] = {'dest':'', 'src':''};
+        $scope.volListNumber = $scope.volListNumber + 1;
+        console.log($scope.volList)
+    }
+    $scope.removeVolField = function(){
+        delete $scope.volList[$scope.volListNumber - 1];
+        $scope.volListNumber = $scope.volListNumber - 1;
+    }
 
     $scope.saveSettings = function () {
         $('#containerSettingLoading').show();
@@ -709,7 +731,8 @@ app.controller('viewContainer', function ($scope, $http) {
             memory: $scope.memory,
             startOnReboot: $scope.startOnReboot,
             envConfirmation: $scope.envConfirmation,
-            envList: $scope.envList
+            envList: $scope.envList,
+            volList: $scope.volList
         };
 
         console.log(data)

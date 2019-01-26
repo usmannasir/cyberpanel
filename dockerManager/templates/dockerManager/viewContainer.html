@@ -210,12 +210,12 @@
                         <div class="checkbox">
                             <label>
                                 <input ng-model="envConfirmation" type="checkbox">
-                                Editing ENV will recreate container <i class="fa fa-warning" title="If you tick this checkbox, your container will be recreated with saved information. Data saved inside container will be deleted (Not avaialble for container created outside of cyberpanel)"></i>
+                                Editing ENV or Volume will recreate container <i class="fa fa-warning" title="If you tick this checkbox, your container will be recreated with saved information. Data saved inside container will be deleted (Not avaialble for container created outside of cyberpanel)"></i>
                             </label>
                         </div>
                     </div>
                 </div>
-            
+            <hr>
             <span ng-init="envList = {}"></span>
             {% for env, value in envList.items %}
             
@@ -243,6 +243,43 @@
               
               <div class="col-md-offset-3">
                 <button type="button" class="btn btn-info" ng-click="addEnvField()">Add more</button>
+            </div><br>
+              
+              <span ng-init="volList = {}"></span>
+            {% for key, value in volList.items %}
+            
+                <span ng-init="volList[{{ forloop.counter0 }}] =  {'dest':'{{value.bind}}' , 'src':'{{key}}'}"></span>
+                <span ng-init="volListNumber={{ forloop.counter0 }} + 1"></span>
+            
+            {% endfor %}
+              
+              <hr>
+              
+              <div ng-hide="installationDetailsForm"  class="form-group text-center">
+            <label class="control-label">
+                {% trans "Map Volumes" %}
+            </label>
+            </div>
+            <div ng-repeat="volume in volList track by $index">
+              <div ng-hide="installationDetailsForm"  class="form-group">
+                    <div class="col-sm-3"></div>
+                    <div class="col-sm-2">
+                        <input type="text" class="form-control" ng-model="volList[$index].dest" placeholder="Destination" required>
+                    </div>
+                    <div class="col-sm-4">
+                        <input   type="text" class="form-control" ng-model="volList[$index].src" placeholder="Source" required>
+                    </div>
+                  <div ng-show="$last">
+                      <div class="col-sm-1">
+                          <button class="btn btn-primary" type="button" ng-click="removeVolField()"><i class="fa fa-times"></i></button>
+                      </div>
+                   </div>
+                </div>
+                
+            </div>
+            
+            <div ng-hide="installationDetailsForm" class="text-center">
+                <button type="button" class="btn btn-info" ng-click="addVolField()">{% trans "Add field" %}</button>
             </div><br>
               
             </form>

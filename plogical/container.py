@@ -182,7 +182,7 @@ class ContainerManager(multi.Thread):
         data['ports'] = json.loads(con.ports)
         data['cid'] = con.cid
         data['envList'] = json.loads(con.env)
-        print data['envList']
+        data['volList'] = json.loads(con.volumes)
 
         stats = container.stats(decode=False, stream=False)
         logs = container.logs(stream=True)
@@ -300,6 +300,7 @@ class ContainerManager(multi.Thread):
             dockerOwner = data['dockerOwner']
             memory = data['memory']
             envList = data['envList']
+            volList = data['volList']
 
             inspectImage = dockerAPI.inspect_image(image + ":" + tag)
             portConfig = {}
@@ -319,6 +320,12 @@ class ContainerManager(multi.Thread):
                         return HttpResponse(json_data)
                     portConfig[item] = data[item]
 
+            volumes = {}
+            for index, volume in volList.iteritems():
+                volumes[volume['src']] = {'bind': volume['dest'],
+                                         'mode': 'rw'}
+            print volumes
+            
             ## Create Configurations
             admin = Administrator.objects.get(userName=dockerOwner)
 
@@ -327,7 +334,8 @@ class ContainerManager(multi.Thread):
                              'name': name,
                              'ports': portConfig,
                              'publish_all_ports': True,
-                             'environment': envDict}
+                             'environment': envDict,
+                             'volumes': volumes}
 
             containerArgs['mem_limit'] = memory * 1048576;  # Converts MB to bytes ( 0 * x = 0 for unlimited memory)
 
@@ -347,6 +355,7 @@ class ContainerManager(multi.Thread):
                              image=image,
                              memory=memory,
                              ports=json.dumps(portConfig),
+                             volumes=json.dumps(volumes),
                              env=json.dumps(envDict),
                              cid=container.id)
 
@@ -881,11 +890,16 @@ class ContainerManager(multi.Thread):
 
     def doRecreateContainer(self, userID, data, con):
         try:
+                        
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+
             name = data['name']
             unlisted = data['unlisted']  # Pass this as 1 if image is not known for container
             image = data['image']
             tag = data['tag']
             env = data['env']
+            volumes = data['volumes']
             port = data['ports']
             memory = data['memory']
 
@@ -902,6 +916,7 @@ class ContainerManager(multi.Thread):
                              'name': name,
                              'ports': port,
                              'environment': env,
+                             'volumes': volumes,
                              'publish_all_ports': True,
                              'mem_limit': memory * 1048576}
 
@@ -928,6 +943,7 @@ class ContainerManager(multi.Thread):
             memory = data['memory']
             startOnReboot = data['startOnReboot']
             envList = data['envList']
+            volList = data['volList']
 
             if startOnReboot == True:
                 startOnReboot = 1
@@ -966,7 +982,10 @@ class ContainerManager(multi.Thread):
                     if (value['name'] != '') or (value['value'] != ''):
                         envDict[value['name']] = value['value']
 
-                print envDict
+                volumes = {}
+                for index, volume in volList.iteritems():
+                    volumes[volume['src']] = {'bind': volume['dest'],
+                                             'mode': 'rw'}
                 # Prepare data for recreate function
                 data = {
                     'name': name,
@@ -975,7 +994,7 @@ class ContainerManager(multi.Thread):
                     'tag': con.tag,
                     'env': envDict,
                     'ports': json.loads(con.ports),
-                # No filter needed now as its ports are filtered when adding to database
+                    'volumes': volumes,
                     'memory': con.memory
                 }
 
@@ -986,6 +1005,7 @@ class ContainerManager(multi.Thread):
                     return HttpResponse(json_data)
 
                 con.env = json.dumps(envDict)
+                con.volumes = json.dumps(volumes)
                 con.save()
 
             data_ret = {'saveSettingsStatus': 1, 'error_message': 'None'}
