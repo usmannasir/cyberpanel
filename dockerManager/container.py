@@ -784,8 +784,12 @@ class ContainerManager(multi.Thread):
 
             images = {}
             names = []
-
+            
+            skippedImages = 0
             for image in imageList:
+                if 0 not in image.attrs['RepoTags']:
+                    skippedImages += 1
+                    continue # If cannot find name for image, leave it
                 name = image.attrs['RepoTags'][0].split(":")[0]
                 if "/" in name:
                     name2 = ""
@@ -809,7 +813,7 @@ class ContainerManager(multi.Thread):
                                     "tags": tags}
             print "======"
             print images
-            return render(request, 'dockerManager/images.html', {"images": images, "test": ''})
+            return render(request, 'dockerManager/images.html', {"images": images, "test": '', "skippedImages": skippedImages})
 
         except BaseException, msg:
             return HttpResponse(str(msg))
@@ -830,8 +834,12 @@ class ContainerManager(multi.Thread):
 
             images = {}
             names = []
-
+            
+            skippedImages = 0
             for image in imageList:
+                if 0 not in image.attrs['RepoTags']:
+                    skippedImages += 1
+                    continue # If cannot find name for image, leave it
                 name = image.attrs['RepoTags'][0].split(":")[0]
                 if name in names:
                     images[name]['tags'].extend(image.tags)
@@ -840,7 +848,7 @@ class ContainerManager(multi.Thread):
                     images[name] = {"name": name,
                                     "tags": image.tags}
 
-            return render(request, 'dockerManager/manageImages.html', {"images": images})
+            return render(request, 'dockerManager/manageImages.html', {"images": images, "skippedImages": skippedImages})
 
         except BaseException, msg:
             return HttpResponse(str(msg))
