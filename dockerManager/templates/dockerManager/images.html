@@ -14,6 +14,10 @@
        <h2>{% trans "Create new container" %}
         <a href="{% url 'manageImages' %}" class="btn btn-info pull-right" title="{% trans 'Search new images and manage existing ones' %}">Manage Images</a>
         </h2>
+        {% if skippedImages %}
+        {% trans "Note: Skipped" %} {{ skippedImages }} {% trans "images" %}
+         <i class="fa fa-info-circle" title="{% trans "Could not find name for these images, therefore skipped" %}"></i>
+        {% endif %}
     </div>
     
 <div class="panel">
