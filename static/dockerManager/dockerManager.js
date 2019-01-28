@@ -1,5 +1,3 @@
-
-
 app.controller('installDocker', function ($scope, $http, $timeout, $window) {
     $scope.installDockerStatus = true;
     $scope.installBoxGen = true;
@@ -120,17 +118,26 @@ app.controller('runContainer', function ($scope, $http) {
     $scope.couldNotConnect = true;
     $scope.goBackDisable = true;
 
+    $scope.volList = {};
+    $scope.volListNumber = 0;
+    $scope.addVolField = function () {
+        $scope.volList[$scope.volListNumber] = {'dest': '', 'src': ''};
+        $scope.volListNumber = $scope.volListNumber + 1;
+        console.log($scope.volList)
+    };
+    $scope.removeVolField = function () {
+        delete $scope.volList[$scope.volListNumber - 1];
+        $scope.volListNumber = $scope.volListNumber - 1;
+    };
+
     $scope.addEnvField = function () {
         var countEnv = Object.keys($scope.envList).length;
         $scope.envList[countEnv + 1] = {'name': '', 'value': ''};
-    }
+    };
 
     var statusFile;
 
     $scope.createContainer = function () {
-
-        console.log($scope.iport);
-        console.log($scope.portType);
 
         $scope.containerCreationLoading = true;
         $scope.installationDetailsForm = true;
@@ -157,15 +164,14 @@ app.controller('runContainer', function ($scope, $http) {
             memory: memory,
             dockerOwner: dockerOwner,
             image: image,
-            envList: $scope.envList
+            envList: $scope.envList,
+            volList: $scope.volList
 
         };
 
         $.each($scope.portType, function (port, protocol) {
             data[port + "/" + protocol] = $scope.eport[port];
         });
-
-        console.log(data)
 
         var config = {
             headers: {
@@ -314,7 +320,7 @@ app.controller('listContainers', function ($scope, $http) {
                 if (response.data.delContainerStatus === 1) {
                     location.reload();
                 }
-                else if (response.data.delContainerStatus == 2) {
+                else if (response.data.delContainerStatus === 2) {
                     (new PNotify({
                         title: response.data.error_message,
                         text: 'Delete anyway?',
@@ -382,7 +388,6 @@ app.controller('listContainers', function ($scope, $http) {
         else {
             name = $scope.activeLog;
         }
-        console.log(name)
         $scope.logs = "Loading...";
 
         url = "/docker/getContainerLogs";
@@ -420,7 +425,7 @@ app.controller('listContainers', function ($scope, $http) {
                 type: 'error'
             });
         }
-    }
+    };
 
     url = "/docker/getContainerList";
 
@@ -697,7 +702,16 @@ app.controller('viewContainer', function ($scope, $http) {
             });
         }
 
-    }
+    };
+
+    $scope.addVolField = function () {
+        $scope.volList[$scope.volListNumber] = {'dest': '', 'src': ''};
+        $scope.volListNumber = $scope.volListNumber + 1;
+    };
+    $scope.removeVolField = function () {
+        delete $scope.volList[$scope.volListNumber - 1];
+        $scope.volListNumber = $scope.volListNumber - 1;
+    };
 
     $scope.saveSettings = function () {
         $('#containerSettingLoading').show();
@@ -709,10 +723,11 @@ app.controller('viewContainer', function ($scope, $http) {
             memory: $scope.memory,
             startOnReboot: $scope.startOnReboot,
             envConfirmation: $scope.envConfirmation,
-            envList: $scope.envList
+            envList: $scope.envList,
+            volList: $scope.volList
         };
 
-        console.log(data)
+
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')

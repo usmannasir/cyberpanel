@@ -121,7 +121,7 @@ User=cyberpanel
 Group=cyberpanel
 RuntimeDirectory=gunicorn
 WorkingDirectory=/usr/local/CyberCP
-ExecStart=/usr/local/CyberCP/bin/gunicorn --pid /run/gunicorn/gucpid   \
+ExecStart=/usr/local/CyberCP/bin/gunicorn --pid /run/gunicorn/gucpid --timeout 2000 --workers 2   \
           --bind 127.0.0.1:5003 CyberCP.wsgi
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s TERM $MAINPID
@@ -698,6 +698,11 @@ WantedBy=multi-user.target"""
                 pass
 
             try:
+                cursor.execute('ALTER TABLE dockerManager_containers ADD volumes longtext')
+            except:
+                pass
+
+            try:
                 connection.close()
             except:
                 pass
@@ -837,6 +842,15 @@ WantedBy=multi-user.target"""
 
                 else:
                     writeToFile.writelines(items)
+
+            MEDIA_URL = 1
+            for items in data:
+                if items.find('MEDIA_URL') > -1:
+                    MEDIA_URL = 0
+
+            if MEDIA_URL == 1:
+                writeToFile.writelines("MEDIA_URL = '/home/cyberpanel/media/'\n")
+                writeToFile.writelines('MEDIA_ROOT = MEDIA_URL\n')
 
             writeToFile.close()
 

@@ -63,7 +63,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             nodeForChilds = element.parentNode;
             funcCompletePath = completePath;
         }
-        url = domainName + "/php/fileManager.php";
+        url = '/filemanager/controller';
 
 
         var data = {
@@ -81,7 +81,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             $scope.treeLoading = true;
 
 
-            if (response.data.fetchStatus === 1) {
+            if (response.data.status === 1) {
 
                 /// node prepration
 
@@ -93,7 +93,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
                 var keys = Object.keys(filesData);
 
                 for (var i = 0; i < keys.length; i++) {
-                    if (keys[i] === "error_message" | keys[i] === "fetchStatus") {
+                    if (keys[i] === "error_message" | keys[i] === "status") {
                         continue;
                     }
                     else {
@@ -620,7 +620,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
         allFilesAndFolders = [];
         $scope.buttonActivator();
-        url = domainName + "/php/fileManager.php";
+        url = "/filemanager/controller";
         var completePathToFile = "";
 
         if (functionName === "startPoint") {
@@ -666,7 +666,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             tableBody.innerHTML = '';
 
 
-            if (response.data.fetchStatus === 1) {
+            if (response.data.status === 1) {
 
 
                 /// node prepration
@@ -676,7 +676,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
                 var keys = Object.keys(filesData);
 
                 for (var i = 0; i < keys.length; i++) {
-                    if (keys[i] === "error_message" | keys[i] === "fetchStatus") {
+                    if (keys[i] === "error_message" | keys[i] === "status") {
                         continue;
                     }
                     else {
@@ -697,7 +697,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             }
             else {
                 var notification = alertify.notify(response.data.error_message, 'error', 10, function () {
-                    console.log('dismissed');
                 });
                 $scope.fetchForTableSecondary(null, 'homeFetch');
             }
@@ -712,46 +711,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     function findFileExtension(fileName) {
         return (/[.]/.exec(fileName)) ? /[^.]+$/.exec(fileName) : undefined;
     }
-
-    // Create entry point for domain
-
-    function createEntryPoint() {
-
-        url = "/filemanager/createTemporaryFile";
-
-        var data = {
-            domainName: domainName
-        };
-
-        var config = {};
-
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-        function ListInitialDatas(response) {
-
-            if (response.data.createTemporaryFile === 1) {
-                domainRandomSeed = response.data.domainRandomSeed;
-                $scope.fetchForTableSecondary(null, "startPoint");
-            }
-            else {
-                var notification = alertify.notify(response.data.error_message, 'error', 10, function () {
-                    console.log('dismissed');
-                });
-            }
-        }
-
-        function cantLoadInitialDatas(response) {
-            var notification = alertify.notify("Could not connec to server, refresh page.", 'error', 10, function () {
-                console.log('dismissed');
-            });
-        }
-
-
-    }
-
-    createEntryPoint();
-
 
     // html editor
 
@@ -774,7 +733,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
             $scope.htmlEditorLoading = true;
 
-            if (response.data.fetchStatus === 1) {
+            if (response.data.status === 1) {
 
                 var editor = ace.edit("htmlEditorContent");
                 editor.setTheme("ace/theme/chrome");
@@ -817,7 +776,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
             $scope.htmlEditorLoading = true;
 
-            if (response.data.saveStatus === 1) {
+            if (response.data.status === 1) {
                 $scope.htmlEditorLoading = true;
                 $scope.saveSuccess = false;
             }
@@ -839,7 +798,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     $scope.errorMessage = true;
 
     var uploader = $scope.uploader = new FileUploader({
-        url: domainName + "/php/caller.php",
+        url: "/filemanager/upload",
         formData: [{
             "method": "upload",
             "home": homePathBack
@@ -902,12 +861,12 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             domainName: domainName
         };
 
-
+        var url = '/filemanager/controller';
         $http.post(url, data).then(ListInitialDatas, cantLoadInitialDatas);
 
         function ListInitialDatas(response) {
 
-            if (response.data.createStatus === 1) {
+            if (response.data.status === 1) {
                 $scope.createSuccess = false;
                 $scope.fetchForTableSecondary(null, 'refresh');
                 $('#showCreateFolder').modal('hide');
@@ -959,7 +918,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
         function ListInitialDatas(response) {
 
-            if (response.data.createStatus === 1) {
+            if (response.data.status === 1) {
                 $scope.createSuccess = false;
                 $scope.fetchForTableSecondary(null, 'refresh');
                 $('#showCreateFile').modal('hide');
@@ -1004,10 +963,9 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
         function ListInitialDatas(response) {
             $scope.deleteLoading = true;
-            if (response.data.deleteStatus === 1) {
+            if (response.data.status === 1) {
                 $('#showDelete').modal('hide');
                 var notification = alertify.notify('Successfully Deleted!', 'success', 5, function () {
-                    console.log('dismissed');
                 });
                 $scope.fetchForTableSecondary(null, 'refresh');
             }
@@ -1062,15 +1020,13 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
             $scope.compressionLoading = true;
             $('#showCompression').modal('hide');
-            if (response.data.compressed === 1) {
+            if (response.data.status === 1) {
                 var notification = alertify.notify('Successfully Compressed!', 'success', 5, function () {
-                    console.log('dismissed');
                 });
                 $scope.fetchForTableSecondary(null, 'refresh');
             }
             else {
                 var notification = alertify.notify(response.data.error_message, 'error', 5, function () {
-                    console.log('dismissed');
                 });
             }
 
@@ -1125,7 +1081,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             $scope.extractionLoading = true;
             $('#showExtraction').modal('hide');
 
-            if (response.data.extracted === 1) {
+            if (response.data.status === 1) {
                 var notification = alertify.notify('Successfully Extracted!', 'success', 5, function () {
                     console.log('dismissed');
                 });
@@ -1184,15 +1140,13 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             $scope.moveLoading = true;
             $('#showMove').modal('hide');
 
-            if (response.data.moved === 1) {
+            if (response.data.status === 1) {
                 var notification = alertify.notify('Successfully Moved!', 'success', 5, function () {
-                    console.log('dismissed');
                 });
                 $scope.fetchForTableSecondary(null, 'refresh');
             }
             else {
                 var notification = alertify.notify(response.data.error_message, 'error', 5, function () {
-                    console.log('dismissed');
                 });
             }
 
@@ -1242,15 +1196,13 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
             $('#showCopy').modal('hide');
 
-            if (response.data.copied === 1) {
+            if (response.data.status === 1) {
                 var notification = alertify.notify('Successfully Copied!', 'success', 5, function () {
-                    console.log('dismissed');
                 });
                 $scope.fetchForTableSecondary(null, 'refresh');
             }
             else {
                 var notification = alertify.notify(response.data.error_message, 'error', 5, function () {
-                    console.log('dismissed');
                 });
             }
 
@@ -1366,15 +1318,13 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             $('#showRename').modal('hide');
             $scope.renameLoading = true;
 
-            if (response.data.renamed === 1) {
+            if (response.data.status === 1) {
                 var notification = alertify.notify('Successfully Renamed!', 'success', 5, function () {
-                    console.log('dismissed');
                 });
                 $scope.fetchForTableSecondary(null, 'refresh');
             }
             else {
                 var notification = alertify.notify(response.data.error_message, 'error', 5, function () {
-                    console.log('dismissed');
                 });
             }
 
@@ -1602,13 +1552,11 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
             if (response.data.permissionsChanged === 1) {
                 var notification = alertify.notify('Permissions Successfully Changed!', 'success', 5, function () {
-                    console.log('dismissed');
                 });
                 $scope.fetchForTableSecondary(null, 'refresh');
             }
             else {
                 var notification = alertify.notify(response.data.error_message, 'error', 5, function () {
-                    console.log('dismissed');
                 });
             }
 
