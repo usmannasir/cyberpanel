@@ -15,6 +15,10 @@
         <a class="pull-right btn btn-primary" href="{% url "containerImage" %}">Create Container</a>
         </h2>
        <p>{% trans "On this page you can manage docker images." %}</p>
+        {% if skippedImages %}
+        {% trans "Note: Skipped" %} {{ skippedImages }} {% trans "images" %}
+         <i class="fa fa-info-circle" title="{% trans "Could not find name for these images, therefore skipped" %}"></i>
+        {% endif %}
     </div>
 
 <div id="history" class="modal fade" role="dialog">
