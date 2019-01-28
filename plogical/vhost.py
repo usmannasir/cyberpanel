@@ -18,7 +18,7 @@ from dnsUtilities import DNS
 from random import randint
 from processUtilities import ProcessUtilities
 from managePHP.phpManager import PHPManager
-
+from vhostConfs import vhostConfs
 
 ## If you want justice, you have come to the wrong place.
 
@@ -197,192 +197,22 @@ class vhost:
             try:
                 confFile = open(vhFile, "w+")
 
-                docRoot = "docRoot                   $VH_ROOT/public_html" + "\n"
-                vhDomain = "vhDomain                  $VH_NAME" + "\n"
-                vhAliases = "vhAliases                 www.$VH_NAME"+ "\n"
-                adminEmails = "adminEmails               " + administratorEmail + "\n"
-                enableGzip = "enableGzip                1" + "\n"
-                enableIpGeo = "enableIpGeo               1" + "\n" + "\n"
-
-                confFile.writelines(docRoot)
-                confFile.writelines(vhDomain)
-                confFile.writelines(vhAliases)
-                confFile.writelines(adminEmails)
-                confFile.writelines(enableGzip)
-                confFile.writelines(enableIpGeo)
-
-                # Index file settings
-
-                index = "index  {" + "\n"
-                userServer = "  useServer               0" + "\n"
-                indexFiles = "  indexFiles              index.php, index.html" + "\n"
-                index_end = "}" + "\n" + "\n"
-
-                confFile.writelines(index)
-                confFile.writelines(userServer)
-                confFile.writelines(indexFiles)
-                confFile.writelines(index_end)
-
-                # Error Log Settings
-
-
-                error_log = "errorlog $VH_ROOT/logs/$VH_NAME.error_log {" + "\n"
-                useServer = "  useServer               0" + "\n"
-                logLevel = "  logLevel                ERROR" + "\n"
-                rollingSize = "  rollingSize             10M" + "\n"
-                error_log_end = "}" + "\n" + "\n"
-
-                confFile.writelines(error_log)
-                confFile.writelines(useServer)
-                confFile.writelines(logLevel)
-                confFile.writelines(rollingSize)
-                confFile.writelines(error_log_end)
-
-                # Access Log Settings
-
-                access_Log = "accesslog $VH_ROOT/logs/$VH_NAME.access_log {" + "\n"
-                useServer = "  useServer               0" + "\n"
-                logFormat = '  logFormat               "%v %h %l %u %t \"%r\" %>s %b"' + "\n"
-                logHeaders = "  logHeaders              5" + "\n"
-                rollingSize = "  rollingSize             10M" + "\n"
-                keepDays = "  keepDays                10"
-                compressArchive = "  compressArchive         1" + "\n"
-                access_Log_end = "}" + "\n" + "\n"
-
-                confFile.writelines(access_Log)
-                confFile.writelines(useServer)
-                confFile.writelines(logFormat)
-                confFile.writelines(logHeaders)
-                confFile.writelines(rollingSize)
-                confFile.writelines(keepDays)
-                confFile.writelines(compressArchive)
-                confFile.writelines(access_Log_end)
-
-                # php settings
-
-                scripthandler = "scripthandler  {" + "\n"
-                add = "  add                     lsapi:"+virtualHostUser+" php" + "\n"
-                php_end = "}" + "\n" + "\n"
-
-                confFile.writelines(scripthandler)
-                confFile.writelines(add)
-                confFile.writelines(php_end)
-
-
-                ## external app
-
                 php = PHPManager.getPHPString(phpVersion)
 
-                extprocessor = "extprocessor "+virtualHostUser+" {\n"
-                type = "  type                    lsapi\n"
-                address = "  address                 UDS://tmp/lshttpd/"+virtualHostUser+".sock\n"
-                maxConns = "  maxConns                10\n"
-                env = "  env                     LSAPI_CHILDREN=10\n"
-                initTimeout = "  initTimeout             600\n"
-                retryTimeout = "  retryTimeout            0\n"
-                persistConn = "  persistConn             1\n"
-                persistConnTimeout = "  pcKeepAliveTimeout      1\n"
-                respBuffer = "  respBuffer              0\n"
-                autoStart = "  autoStart               1\n"
-                path = "  path                    /usr/local/lsws/lsphp"+php+"/bin/lsphp\n"
-                extUser = "  extUser                 " + virtualHostUser + "\n"
-                extGroup = "  extGroup                 " + virtualHostUser + "\n"
-                memSoftLimit = "  memSoftLimit            2047M\n"
-                memHardLimit = "  memHardLimit            2047M\n"
-                procSoftLimit = "  procSoftLimit           400\n"
-                procHardLimit = "  procHardLimit           500\n"
-                extprocessorEnd = "}\n"
+                currentConf = vhostConfs.olsMasterConf
+                currentConf = currentConf.replace('{adminEmails}', administratorEmail)
+                currentConf = currentConf.replace('{virtualHostUser}', virtualHostUser)
+                currentConf = currentConf.replace('{php}', php)
+                currentConf = currentConf.replace('{adminEmails}', administratorEmail)
+                currentConf = currentConf.replace('{php}', php)
 
-                confFile.writelines(extprocessor)
-                confFile.writelines(type)
-                confFile.writelines(address)
-                confFile.writelines(maxConns)
-                confFile.writelines(env)
-                confFile.writelines(initTimeout)
-                confFile.writelines(retryTimeout)
-                confFile.writelines(persistConn)
-                confFile.writelines(persistConnTimeout)
-                confFile.writelines(respBuffer)
-                confFile.writelines(autoStart)
-                confFile.writelines(path)
-                confFile.writelines(extUser)
-                confFile.writelines(extGroup)
-                confFile.writelines(memSoftLimit)
-                confFile.writelines(memHardLimit)
-                confFile.writelines(procSoftLimit)
-                confFile.writelines(procHardLimit)
-                confFile.writelines(extprocessorEnd)
-
-                ## File Manager defination
-
-                context = "context /.filemanager {\n"
-                location = "  location                /usr/local/lsws/Example/html/FileManager\n"
-                allowBrowse = "  allowBrowse             1\n"
-                autoIndex = "  autoIndex               1\n\n"
-
-                accessControl = "  accessControl  {\n"
-                allow = "    allow                 127.0.0.1, localhost\n"
-                deny = "    deny                  0.0.0.0/0\n"
-                accessControlEnds = "  }\n"
-
-                rewriteInherit = """  rewrite  {
-        enable               0
-    
-      }
-      """
-
-                phpIniOverride = "phpIniOverride  {\n"
-                php_admin_value = 'php_admin_value open_basedir "/tmp:/usr/local/lsws/Example/html/FileManager:$VH_ROOT"\n'
-                php_value = 'php_value display_errors "Off"\n'
-                php_value_upload_max_size = 'php_value upload_max_filesize "200M"\n'
-                php_value_post_max_size = 'php_value post_max_size "250M"\n'
-                endPHPIniOverride = "}\n"
-
-
-                defaultCharSet = "  addDefaultCharset       off\n"
-                contextEnds = "}\n"
-
-                confFile.writelines(context)
-                confFile.writelines(location)
-                confFile.writelines(allowBrowse)
-                confFile.writelines(autoIndex)
-                confFile.writelines(accessControl)
-                confFile.writelines(allow)
-                confFile.writelines(deny)
-                confFile.writelines(accessControlEnds)
-                confFile.write(rewriteInherit)
-
-                confFile.writelines(phpIniOverride)
                 if openBasedir == 1:
-                    confFile.writelines(php_admin_value)
-                confFile.write(php_value)
-                confFile.write(php_value_upload_max_size)
-                confFile.write(php_value_post_max_size)
-                confFile.writelines(endPHPIniOverride)
-
-                confFile.writelines(defaultCharSet)
-                confFile.writelines(contextEnds)
-
-                ## OpenBase Dir Protection
-
-                phpIniOverride = "phpIniOverride  {\n"
-                php_admin_value = 'php_admin_value open_basedir "/tmp:$VH_ROOT"\n'
-                endPHPIniOverride = "}\n"
-
-                confFile.writelines(phpIniOverride)
-                if openBasedir == 1:
-                    confFile.writelines(php_admin_value)
-                confFile.writelines(endPHPIniOverride)
+                    currentConf = currentConf.replace('{open_basedir}', 'php_admin_value open_basedir "/tmp:$VH_ROOT"')
+                else:
+                    currentConf = currentConf.replace('{open_basedir}', '')
 
 
-                htaccessAutoLoad = """
-    rewrite  {
-      enable                  1
-      autoLoadHtaccess        1
-    }
-    """
-                confFile.write(htaccessAutoLoad)
-
+                confFile.write(currentConf)
                 confFile.close()
 
             except BaseException, msg:
@@ -399,7 +229,6 @@ class vhost:
                 VirtualHost = '<VirtualHost *:80>\n\n'
                 ServerName = '    ServerName ' + virtualHostName + '\n'
                 ServerAlias = '    ServerAlias www.' + virtualHostName + '\n'
-                ScriptAlias = '    Alias /.filemanager/ /usr/local/lsws/FileManager\n'
                 ServerAdmin = '    ServerAdmin ' + administratorEmail + '\n'
                 SeexecUserGroup = '    SuexecUserGroup ' + virtualHostUser + ' ' + virtualHostUser + '\n'
                 DocumentRoot = '    DocumentRoot /home/' + virtualHostName + '/public_html\n'
@@ -409,19 +238,10 @@ class vhost:
                 confFile.writelines(VirtualHost)
                 confFile.writelines(ServerName)
                 confFile.writelines(ServerAlias)
-                confFile.writelines(ScriptAlias)
                 confFile.writelines(ServerAdmin)
                 confFile.writelines(SeexecUserGroup)
                 confFile.writelines(DocumentRoot)
                 confFile.writelines(CustomLogCombined)
-
-                DirectoryFileManager = """\n    <Directory /usr/local/lsws/FileManager>
-                            Options +Includes -Indexes +ExecCGI
-                            php_value display_errors "Off"
-                            php_value upload_max_filesize "200M"
-                            php_value post_max_size "250M"
-                        </Directory>\n"""
-                confFile.writelines(DirectoryFileManager)
 
                 ## external app
 

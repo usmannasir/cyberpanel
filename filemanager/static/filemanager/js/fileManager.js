@@ -711,6 +711,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     function findFileExtension(fileName) {
         return (/[.]/.exec(fileName)) ? /[^.]+$/.exec(fileName) : undefined;
     }
+    $scope.fetchForTableSecondary(null, "startPoint");
 
     // html editor
 

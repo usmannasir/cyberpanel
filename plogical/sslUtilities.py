@@ -192,7 +192,6 @@ class sslUtilities:
                 VirtualHost = '<VirtualHost *:443>\n\n'
                 ServerName = '    ServerName ' + virtualHostName + '\n'
                 ServerAlias = '    ServerAlias www.' + virtualHostName + '\n'
-                ScriptAlias = '    Alias /.filemanager/ /usr/local/lsws/FileManager\n'
                 ServerAdmin = '    ServerAdmin ' + adminEmail + '\n'
                 SeexecUserGroup = '    SuexecUserGroup ' + externalApp + ' ' + externalApp + '\n'
                 CustomLogCombined = '    CustomLog /home/' + virtualHostName + '/logs/' + virtualHostName + '.access_log combined\n'
@@ -201,19 +200,10 @@ class sslUtilities:
                 confFile.writelines(VirtualHost)
                 confFile.writelines(ServerName)
                 confFile.writelines(ServerAlias)
-                confFile.writelines(ScriptAlias)
                 confFile.writelines(ServerAdmin)
                 confFile.writelines(SeexecUserGroup)
                 confFile.writelines(DocumentRoot)
                 confFile.writelines(CustomLogCombined)
-                DirectoryFileManager = """\n    <Directory /usr/local/lsws/FileManager>
-                            AllowOverride All
-                            Options +Includes -Indexes +ExecCGI
-                            php_value display_errors "Off"
-                            php_value upload_max_filesize "200M"
-                            php_value post_max_size "250M"
-                        </Directory>\n"""
-                confFile.writelines(DirectoryFileManager)
 
                 SSLEngine = '    SSLEngine on\n'
                 SSLVerifyClient = '    SSLVerifyClient none\n'
