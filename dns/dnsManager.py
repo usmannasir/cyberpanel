@@ -15,6 +15,7 @@ from models import Domains,Records
 from re import match,I,M
 from plogical.mailUtilities import mailUtilities
 from plogical.acl import ACLManager
+from manageServices.models import PDNSStatus
 
 class DNSManager:
 
@@ -56,7 +57,16 @@ class DNSManager:
             secondNSIP = data['secondNSIP']
 
             if Domains.objects.filter(name=domainForNS).count() == 0:
-                newZone = Domains(admin=admin, name=domainForNS, type="NATIVE")
+
+                try:
+                    pdns = PDNSStatus.objects.get(pk=1)
+                    if pdns.type == 'MASTER':
+                        newZone = Domains(admin=admin, name=domainForNS, type="MASTER")
+                    else:
+                        newZone = Domains(admin=admin, name=domainForNS, type="NATIVE")
+                except:
+                    newZone = Domains(admin=admin, name=domainForNS, type="NATIVE")
+
                 newZone.save()
 
                 content = "ns1." + domainForNS + " hostmaster." + domainForNS + " 1 10800 3600 604800 3600"

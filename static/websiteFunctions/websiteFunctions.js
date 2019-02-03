@@ -247,9 +247,7 @@ app.controller('listWebsites', function ($scope, $http) {
     }
 
     function cantLoadInitialData(response) {
-        console.log("not good");
     }
-
 
     $scope.getFurtherWebsitesFromDB = function (pageNumber) {
 
@@ -284,6 +282,58 @@ app.controller('listWebsites', function ($scope, $http) {
 
         function cantLoadInitialData(response) {
             console.log("not good");
+        }
+
+
+    };
+
+    $scope.cyberPanelLoading = true;
+
+    $scope.issueSSL = function (virtualHost) {
+        $scope.cyberPanelLoading = false;
+
+        var url = "/manageSSL/issueSSL";
+
+
+        var data = {
+            virtualHost: virtualHost
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.SSL === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'SSL successfully issued.',
+                    type: 'success'
+                });
+            }
+            else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
         }
 
 

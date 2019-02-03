@@ -10,10 +10,10 @@ import json
 from plogical.mailUtilities import mailUtilities
 import subprocess, shlex
 from plogical.acl import ACLManager
+from models import PDNSStatus
+from .serviceManager import ServiceManager
 # Create your views here.
 
-
-# Create your views here.
 
 def managePowerDNS(request):
     try:
@@ -90,14 +90,20 @@ def fetchStatus(request):
                 service = data['service']
 
                 if service == 'powerdns':
-                    if os.path.exists('/home/cyberpanel/powerdns'):
-                        data_ret = {'status': 1, 'error_message': 'None', 'installCheck': 1}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-                    else:
-                        data_ret = {'status': 1, 'error_message': 'None', 'installCheck': 0}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
+                    data_ret = {}
+                    data_ret['status'] = 1
+
+                    try:
+                        pdns = PDNSStatus.objects.get(pk=1)
+                        data_ret['installCheck'] = pdns.serverStatus
+                        data_ret['slaveIPData'] = pdns.also_notify
+                    except:
+                        PDNSStatus(serverStatus=1).save()
+                        data_ret['installCheck'] = 0
+                        data_ret['slaveIPData'] = ''
+
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
 
                 elif service == 'postfix':
                     if os.path.exists('/home/cyberpanel/postfix'):
@@ -151,25 +157,39 @@ def saveStatus(request):
 
                 if service == 'powerdns':
 
-                    servicePath = '/home/cyberpanel/powerdns'
                     if status == True:
-                        writeToFile = open(servicePath, 'w+')
-                        writeToFile.close()
+
+                        pdns = PDNSStatus.objects.get(pk=1)
+                        pdns.serverStatus = 1
+                        pdns.allow_axfr_ips = data['slaveIPData'].replace(',', '/32,')
+                        pdns.also_notify = data['slaveIPData']
+                        pdns.type = data['dnsMode']
+                        pdns.save()
+
+                        extraArgs = {}
+                        extraArgs['type'] = data['dnsMode']
+                        extraArgs['slaveIPData'] = data['slaveIPData']
+
+                        sm = ServiceManager(extraArgs)
+                        sm.managePDNS()
+
                         command = 'sudo systemctl start pdns'
                         subprocess.call(shlex.split(command))
 
+                        command = 'sudo systemctl enable pdns'
+                        subprocess.call(shlex.split(command))
 
                     else:
+
+                        pdns = PDNSStatus.objects.get(pk=1)
+                        pdns.serverStatus = 0
+                        pdns.save()
+
                         command = 'sudo systemctl stop pdns'
                         subprocess.call(shlex.split(command))
 
                         command = 'sudo systemctl disable pdns'
                         subprocess.call(shlex.split(command))
-
-                        try:
-                            os.remove(servicePath)
-                        except:
-                            pass
 
 
                 elif service == 'postfix':

@@ -5,128 +5,148 @@
 
 /* Java script code */
 
-app.controller('powerDNS', function($scope, $http, $timeout, $window) {
+app.controller('powerDNS', function ($scope, $http, $timeout, $window) {
 
-           $scope.pdnsLoading = true;
-           $scope.failedToFetch = true;
-           $scope.couldNotConnect = true;
-           $scope.changesApplied = true;
+    $scope.pdnsLoading = true;
+    $scope.failedToFetch = true;
+    $scope.couldNotConnect = true;
+    $scope.changesApplied = true;
+    $scope.slaveIPs = true;
 
-           var pdnsStatus = false;
-
-
-           $('#pdnsStatus').change(function() {
-                pdnsStatus = $(this).prop('checked');
-           });
-
-           fetchPDNSStatus('powerdns');
-           function fetchPDNSStatus(service){
-
-               $scope.pdnsLoading = false;
-
-               $('#pdnsStatus').bootstrapToggle('off');
-
-               url = "/manageservices/fetchStatus";
-
-               var data = {
-                   'service' : service
-               };
-
-               var config = {
-                   headers : {
-                       'X-CSRFToken': getCookie('csrftoken')
-                   }
-               };
+    var pdnsStatus = false;
 
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+    $('#pdnsStatus').change(function () {
+        pdnsStatus = $(this).prop('checked');
+    });
+
+    fetchPDNSStatus('powerdns');
+    function fetchPDNSStatus(service) {
+
+        $scope.pdnsLoading = false;
+
+        $('#pdnsStatus').bootstrapToggle('off');
+
+        url = "/manageservices/fetchStatus";
+
+        var data = {
+            'service': service
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
-                function ListInitialDatas(response) {
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
-                    $scope.pdnsLoading = true;
 
-                    if(response.data.status === 1){
+        function ListInitialDatas(response) {
 
-                        if (response.data.installCheck === 1) {
-                                $('#pdnsStatus').bootstrapToggle('on');
-                            }
+            $scope.pdnsLoading = true;
 
-                    }else{
-                       $scope.failedToFetch = false;
-                       $scope.couldNotConnect = true;
-                       $scope.changesApplied = true;
+            if (response.data.status === 1) {
 
-                       $scope.errorMessage = response.data.error_message;
-
-                    }
-
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.pdnsLoading = true;
-                    $scope.failedToFetch = true;
-                    $scope.couldNotConnect = false;
-                    $scope.changesApplied = true;
+                if (response.data.installCheck === 1) {
+                    $('#pdnsStatus').bootstrapToggle('on');
                 }
 
-           }
+                $scope.slaveIPData = response.data.slaveIPData;
+
+            } else {
+                $scope.failedToFetch = false;
+                $scope.couldNotConnect = true;
+                $scope.changesApplied = true;
+
+                $scope.errorMessage = response.data.error_message;
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.pdnsLoading = true;
+            $scope.failedToFetch = true;
+            $scope.couldNotConnect = false;
+            $scope.changesApplied = true;
+        }
+
+    }
+
+    $scope.saveStatus = function (service) {
+
+        $scope.pdnsLoading = false;
+        $scope.failedToFetch = true;
+        $scope.couldNotConnect = true;
+        $scope.changesApplied = true;
 
 
-           $scope.saveStatus = function (service) {
+        url = "/manageservices/saveStatus";
 
-               $scope.pdnsLoading = false;
-               $scope.failedToFetch = true;
-               $scope.couldNotConnect = true;
-               $scope.changesApplied = true;
+        if (service === 'powerdns') {
+            var data = {
+                status: pdnsStatus,
+                service: service,
+                dnsMode: $scope.dnsMode,
+                slaveIPData: $scope.slaveIPData
+            };
+        }else {
+            var data = {
+                status: pdnsStatus,
+                service: service
+            };
+        }
 
-
-
-                        url = "/manageservices/saveStatus";
-
-                        var data = {
-                            status:pdnsStatus,
-                            service: service
-                        };
-
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
-                function ListInitialDatas(response) {
-                    $scope.pdnsLoading = true;
-
-                    if(response.data.status === 1){
-
-                        $scope.failedToFetch = true;
-                        $scope.couldNotConnect = true;
-                        $scope.changesApplied = false;
-
-                    }
-                    else{
-                        $scope.errorMessage = response.data.error_message;
-
-                        $scope.failedToFetch = false;
-                        $scope.couldNotConnect = true;
-                        $scope.changesApplied = true;
-                    }
-
-                }
-                function cantLoadInitialDatas(response) {
-                        $scope.policyServerLoading = true;
-                        $scope.failedToFetch = true;
-                        $scope.couldNotConnect = false;
-                        $scope.changesApplied = true;
-                }
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-           };
+        function ListInitialDatas(response) {
+            $scope.pdnsLoading = true;
+
+            if (response.data.status === 1) {
+
+                $scope.failedToFetch = true;
+                $scope.couldNotConnect = true;
+                $scope.changesApplied = false;
+
+            }
+            else {
+                $scope.errorMessage = response.data.error_message;
+
+                $scope.failedToFetch = false;
+                $scope.couldNotConnect = true;
+                $scope.changesApplied = true;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.policyServerLoading = true;
+            $scope.failedToFetch = true;
+            $scope.couldNotConnect = false;
+            $scope.changesApplied = true;
+        }
+
+
+    };
+
+    $scope.modeChange = function () {
+        if ($scope.dnsMode === 'MASTER') {
+            $scope.slaveIPs = false;
+
+        } else {
+            $scope.slaveIPs = true;
+        }
+    }
 
 });
 
@@ -137,129 +157,129 @@ app.controller('powerDNS', function($scope, $http, $timeout, $window) {
 
 /* Java script code */
 
-app.controller('postfix', function($scope, $http, $timeout, $window) {
+app.controller('postfix', function ($scope, $http, $timeout, $window) {
 
-           $scope.serviceLoading = true;
-           $scope.failedToFetch = true;
-           $scope.couldNotConnect = true;
-           $scope.changesApplied = true;
-
-
-           var serviceStatus = false;
+    $scope.serviceLoading = true;
+    $scope.failedToFetch = true;
+    $scope.couldNotConnect = true;
+    $scope.changesApplied = true;
 
 
-           $('#serviceStatus').change(function() {
-                serviceStatus = $(this).prop('checked');
-           });
-
-           fetchPDNSStatus('postfix');
-           function fetchPDNSStatus(service){
-
-               $scope.serviceLoading = false;
-
-               $('#serviceStatus').bootstrapToggle('off');
-
-               url = "/manageservices/fetchStatus";
-
-               var data = {
-                   'service' : service
-               };
-
-               var config = {
-                   headers : {
-                       'X-CSRFToken': getCookie('csrftoken')
-                   }
-               };
+    var serviceStatus = false;
 
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+    $('#serviceStatus').change(function () {
+        serviceStatus = $(this).prop('checked');
+    });
+
+    fetchPDNSStatus('postfix');
+    function fetchPDNSStatus(service) {
+
+        $scope.serviceLoading = false;
+
+        $('#serviceStatus').bootstrapToggle('off');
+
+        url = "/manageservices/fetchStatus";
+
+        var data = {
+            'service': service
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
-                function ListInitialDatas(response) {
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
-                    $scope.serviceLoading = true;
 
-                    if(response.data.status === 1){
+        function ListInitialDatas(response) {
 
-                        if (response.data.installCheck === 1) {
-                                $('#serviceStatus').bootstrapToggle('on');
-                            }
+            $scope.serviceLoading = true;
 
-                    }else{
-                       $scope.failedToFetch = false;
-                       $scope.couldNotConnect = true;
-                       $scope.changesApplied = true;
+            if (response.data.status === 1) {
 
-                       $scope.errorMessage = response.data.error_message;
-
-                    }
-
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.serviceLoading = true;
-                    $scope.failedToFetch = true;
-                    $scope.couldNotConnect = false;
-                    $scope.changesApplied = true;
+                if (response.data.installCheck === 1) {
+                    $('#serviceStatus').bootstrapToggle('on');
                 }
 
-           }
+            } else {
+                $scope.failedToFetch = false;
+                $scope.couldNotConnect = true;
+                $scope.changesApplied = true;
+
+                $scope.errorMessage = response.data.error_message;
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.serviceLoading = true;
+            $scope.failedToFetch = true;
+            $scope.couldNotConnect = false;
+            $scope.changesApplied = true;
+        }
+
+    }
 
 
-           $scope.saveStatus = function (service) {
+    $scope.saveStatus = function (service) {
 
-               $scope.serviceLoading = false;
-               $scope.failedToFetch = true;
-               $scope.couldNotConnect = true;
-               $scope.changesApplied = true;
-
-
-
-                        url = "/manageservices/saveStatus";
-
-                        var data = {
-                            status:serviceStatus,
-                            service: service
-                        };
-
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
+        $scope.serviceLoading = false;
+        $scope.failedToFetch = true;
+        $scope.couldNotConnect = true;
+        $scope.changesApplied = true;
 
 
+        url = "/manageservices/saveStatus";
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        var data = {
+            status: serviceStatus,
+            service: service
+        };
 
-
-                function ListInitialDatas(response) {
-                    $scope.serviceLoading = true;
-
-                    if(response.data.status === 1){
-
-                        $scope.failedToFetch = true;
-                        $scope.couldNotConnect = true;
-                        $scope.changesApplied = false;
-
-                    }
-                    else{
-                        $scope.errorMessage = response.data.error_message;
-
-                        $scope.failedToFetch = false;
-                        $scope.couldNotConnect = true;
-                        $scope.changesApplied = true;
-                    }
-
-                }
-                function cantLoadInitialDatas(response) {
-                        $scope.serviceLoading = true;
-                        $scope.failedToFetch = true;
-                        $scope.couldNotConnect = false;
-                        $scope.changesApplied = true;
-                }
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
-           };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.serviceLoading = true;
+
+            if (response.data.status === 1) {
+
+                $scope.failedToFetch = true;
+                $scope.couldNotConnect = true;
+                $scope.changesApplied = false;
+
+            }
+            else {
+                $scope.errorMessage = response.data.error_message;
+
+                $scope.failedToFetch = false;
+                $scope.couldNotConnect = true;
+                $scope.changesApplied = true;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.serviceLoading = true;
+            $scope.failedToFetch = true;
+            $scope.couldNotConnect = false;
+            $scope.changesApplied = true;
+        }
+
+
+    };
 
 });
 
@@ -268,129 +288,129 @@ app.controller('postfix', function($scope, $http, $timeout, $window) {
 
 /* Java script code */
 
-app.controller('pureFTPD', function($scope, $http, $timeout, $window) {
+app.controller('pureFTPD', function ($scope, $http, $timeout, $window) {
 
-           $scope.serviceLoading = true;
-           $scope.failedToFetch = true;
-           $scope.couldNotConnect = true;
-           $scope.changesApplied = true;
-
-
-           var serviceStatus = false;
+    $scope.serviceLoading = true;
+    $scope.failedToFetch = true;
+    $scope.couldNotConnect = true;
+    $scope.changesApplied = true;
 
 
-           $('#serviceStatus').change(function() {
-                serviceStatus = $(this).prop('checked');
-           });
-
-           fetchPDNSStatus('pureftpd');
-           function fetchPDNSStatus(service){
-
-               $scope.serviceLoading = false;
-
-               $('#serviceStatus').bootstrapToggle('off');
-
-               url = "/manageservices/fetchStatus";
-
-               var data = {
-                   'service' : service
-               };
-
-               var config = {
-                   headers : {
-                       'X-CSRFToken': getCookie('csrftoken')
-                   }
-               };
+    var serviceStatus = false;
 
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+    $('#serviceStatus').change(function () {
+        serviceStatus = $(this).prop('checked');
+    });
+
+    fetchPDNSStatus('pureftpd');
+    function fetchPDNSStatus(service) {
+
+        $scope.serviceLoading = false;
+
+        $('#serviceStatus').bootstrapToggle('off');
+
+        url = "/manageservices/fetchStatus";
+
+        var data = {
+            'service': service
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
-                function ListInitialDatas(response) {
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
-                    $scope.serviceLoading = true;
 
-                    if(response.data.status === 1){
+        function ListInitialDatas(response) {
 
-                        if (response.data.installCheck === 1) {
-                                $('#serviceStatus').bootstrapToggle('on');
-                            }
+            $scope.serviceLoading = true;
 
-                    }else{
-                       $scope.failedToFetch = false;
-                       $scope.couldNotConnect = true;
-                       $scope.changesApplied = true;
+            if (response.data.status === 1) {
 
-                       $scope.errorMessage = response.data.error_message;
-
-                    }
-
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.serviceLoading = true;
-                    $scope.failedToFetch = true;
-                    $scope.couldNotConnect = false;
-                    $scope.changesApplied = true;
+                if (response.data.installCheck === 1) {
+                    $('#serviceStatus').bootstrapToggle('on');
                 }
 
-           }
+            } else {
+                $scope.failedToFetch = false;
+                $scope.couldNotConnect = true;
+                $scope.changesApplied = true;
+
+                $scope.errorMessage = response.data.error_message;
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.serviceLoading = true;
+            $scope.failedToFetch = true;
+            $scope.couldNotConnect = false;
+            $scope.changesApplied = true;
+        }
+
+    }
 
 
-           $scope.saveStatus = function (service) {
+    $scope.saveStatus = function (service) {
 
-               $scope.serviceLoading = false;
-               $scope.failedToFetch = true;
-               $scope.couldNotConnect = true;
-               $scope.changesApplied = true;
-
-
-
-                        url = "/manageservices/saveStatus";
-
-                        var data = {
-                            status:serviceStatus,
-                            service: service
-                        };
-
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
+        $scope.serviceLoading = false;
+        $scope.failedToFetch = true;
+        $scope.couldNotConnect = true;
+        $scope.changesApplied = true;
 
 
+        url = "/manageservices/saveStatus";
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        var data = {
+            status: serviceStatus,
+            service: service
+        };
 
-
-                function ListInitialDatas(response) {
-                    $scope.serviceLoading = true;
-
-                    if(response.data.status === 1){
-
-                        $scope.failedToFetch = true;
-                        $scope.couldNotConnect = true;
-                        $scope.changesApplied = false;
-
-                    }
-                    else{
-                        $scope.errorMessage = response.data.error_message;
-
-                        $scope.failedToFetch = false;
-                        $scope.couldNotConnect = true;
-                        $scope.changesApplied = true;
-                    }
-
-                }
-                function cantLoadInitialDatas(response) {
-                        $scope.serviceLoading = true;
-                        $scope.failedToFetch = true;
-                        $scope.couldNotConnect = false;
-                        $scope.changesApplied = true;
-                }
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
-           };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.serviceLoading = true;
+
+            if (response.data.status === 1) {
+
+                $scope.failedToFetch = true;
+                $scope.couldNotConnect = true;
+                $scope.changesApplied = false;
+
+            }
+            else {
+                $scope.errorMessage = response.data.error_message;
+
+                $scope.failedToFetch = false;
+                $scope.couldNotConnect = true;
+                $scope.changesApplied = true;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.serviceLoading = true;
+            $scope.failedToFetch = true;
+            $scope.couldNotConnect = false;
+            $scope.changesApplied = true;
+        }
+
+
+    };
 
 });
 

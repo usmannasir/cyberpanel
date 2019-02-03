@@ -169,9 +169,13 @@ app.controller('runContainer', function ($scope, $http) {
 
         };
 
-        $.each($scope.portType, function (port, protocol) {
-            data[port + "/" + protocol] = $scope.eport[port];
-        });
+        try {
+            $.each($scope.portType, function (port, protocol) {
+                data[port + "/" + protocol] = $scope.eport[port];
+            });
+        }
+        catch (err) {
+        }
 
         var config = {
             headers: {

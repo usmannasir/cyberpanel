@@ -11,11 +11,11 @@ from plogical.acl import ACLManager
 def preDockerRun(function):
     def wrap(request, *args, **kwargs):
         
-        try:        
-           userID = request.session['userID']
+        try:
+            userID = request.session['userID']
         except KeyError:
             return redirect(loadLoginPage)
-        
+
         currentACL = ACLManager.loadedACL(userID)
         
         if request.method == "POST":

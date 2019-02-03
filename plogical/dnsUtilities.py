@@ -9,6 +9,7 @@ import subprocess
 import shlex
 from dns.models import Domains,Records
 from processUtilities import ProcessUtilities
+from manageServices.models import PDNSStatus
 
 class DNS:
 
@@ -36,7 +37,16 @@ class DNS:
             if len(subDomain) == 0:
 
                 if Domains.objects.filter(name=topLevelDomain).count() == 0:
-                    zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
+                    try:
+                        pdns = PDNSStatus.objects.get(pk=1)
+                        if pdns.type == 'MASTER':
+                            zone = Domains(admin=admin, name=topLevelDomain, type="MASTER")
+                        else:
+                            zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
+                    except:
+                        zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
+
+
                     zone.save()
 
                     content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
@@ -155,8 +165,14 @@ class DNS:
                     record.save()
             else:
                 if Domains.objects.filter(name=topLevelDomain).count() == 0:
-                    zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
-                    zone.save()
+                    try:
+                        pdns = PDNSStatus.objects.get(pk=1)
+                        if pdns.type == 'MASTER':
+                            zone = Domains(admin=admin, name=topLevelDomain, type="MASTER")
+                        else:
+                            zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
+                    except:
+                        zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
 
                     content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
 
