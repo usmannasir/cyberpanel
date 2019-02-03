@@ -6,7 +6,7 @@ from websiteFunctions.models import Websites
 # Create your models here.
 
 class ContainerLimits(models.Model):
-    owner = models.ForeignKey(Websites, on_delete=models.PROTECT)
+    owner = models.ForeignKey(Websites, on_delete=models.CASCADE)
     cpuPers = models.CharField(max_length=10)
     IO = models.CharField(max_length=10)
     IOPS = models.CharField(max_length=10)

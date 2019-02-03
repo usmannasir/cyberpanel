@@ -13,48 +13,42 @@
    <h2>{% trans "User Functions" %}</h2>
    <p>{% trans "Create, edit and delete users on this page." %}</p>
 </div>
-
-    <div class="panel">
+    <div class="panel col-md-11">
         <div class="panel-body">
-            <h3 class="title-hero">
+            <h3 class="content-box-header">
             {% trans "Available Functions" %}
             </h3>
-
              <div class="example-box-wrapper">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'viewProfile' %}" title="{% trans 'View Profile' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "View Profile" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-id-card"></i>
                                         </div>
                                     </a>
                     </div>
-
                     {% if type != 3 %}
-
-
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'createUser' %}" title="{% trans 'Create User' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Create User" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-user"></i>
                                         </div>
                                     </a>
                     </div>
 
-
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'modifyUsers' %}" title="{% trans 'Modify User' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Modify User" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-edit"></i>
                                         </div>
                                     </a>
                     </div>
@@ -62,35 +56,25 @@
                     {% endif %}
 
 
-
-                </div>
-
-
              {% if type != 3 %}
 
-                  <div class="row">
-
-                        <div class="col-md-4">
+                        <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'deleteUser' %}" title="{% trans 'Delete User' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Delete User" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-trash"></i>
                                         </div>
                                     </a>
                     </div>
 
-
-
-                    </div>
              {% endif %}
-
 
              </div>
         </div>
     </div>
-
+                </div>
 </div>
 
 

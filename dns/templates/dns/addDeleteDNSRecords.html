@@ -15,7 +15,7 @@
 </div>
 <div ng-controller="addModifyDNSRecords" class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Add Records" %} <img ng-hide="recordsLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
@@ -35,7 +35,7 @@
         {% else %}
 
 
-            <form action="/" class="form-horizontal bordered-row">
+            <form action="/" class="form-horizontal bordered-row panel-body">
 
 
                  <div class="form-group">

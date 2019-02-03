@@ -3,155 +3,166 @@
 {% block title %}{% trans "SpamAssassin - CyberPanel" %}{% endblock %}
 {% block content %}
 
-{% load static %}
-{% get_current_language as LANGUAGE_CODE %}
-<!-- Current language: {{ LANGUAGE_CODE }} -->
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
 
 
-<div class="container">
-<div id="page-title">
-   <h2>{% trans "SpamAssassin Configurations!" %}  - <a  target="_blank" href="http://go.cyberpanel.net/SpamAssassin" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "SpamAssassin Docs" %}</span></a> </h2>
-   <p>{% trans "On this page you can configure SpamAssassin settings." %}</p>
-</div>
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "SpamAssassin Configurations!" %} - <a target="_blank"
+                                                                href="http://go.cyberpanel.net/SpamAssassin"
+                                                                style="height: 23px;line-height: 21px;"
+                                                                class="btn btn-border btn-alt border-red btn-link font-red"
+                                                                title=""><span>{% trans "SpamAssassin Docs" %}</span></a>
+            </h2>
+            <p>{% trans "On this page you can configure SpamAssassin settings." %}</p>
+        </div>
 
-<div ng-controller="SpamAssassin" class="example-box-wrapper">
-        <div style="border-radius: 25px;border-color:#3498db" class="content-box">
-            <h3 class="content-box-header bg-blue">
-                {% trans "SpamAssassin" %} <img ng-hide="SpamAssassinLoading"  src="/static/images/loading.gif">
-            </h3>
+        <div ng-controller="SpamAssassin" class="example-box-wrapper">
+            <div class="panel panel-body">
+                <h3 class="content-box-header">
+                    {% trans "SpamAssassin" %} <img ng-hide="SpamAssassinLoading" src="/static/images/loading.gif">
+                </h3>
 
-            <div class="content-box-wrapper">
-                <div class="row">
+                <div class="content-box-wrapper">
+                    <div class="row">
 
-                 {% if checkIfSpamAssassinInstalled == 0 %}
+                        {% if checkIfSpamAssassinInstalled == 0 %}
 
-                    <div class="col-md-12 text-center" style="margin-bottom: 2%;">
-                                <h3>{% trans "SpamAssassin is not installed " %}
-                                    <button ng-click="installSpamAssassin()" class="btn btn-alt btn-hover btn-blue-alt">
-                                        <span>{% trans "Install Now." %}</span>
-                                        <i class="glyph-icon icon-arrow-right"></i>
-                                    </button></h3>
-                    </div>
-
-                    <!------ SpamAssassin Install Log box ----------------->
-
-                     <div ng-hide="SpamAssassinNotifyBox" class="form-group">
-                        <label class="col-sm-3 control-label"></label>
-                        <div class="col-sm-6">
-
-                                <div ng-hide="failedToStartInallation" class="alert alert-danger">
-                                            <p>{% trans "Failed to start installation, Error message: " %} {$ errorMessage $}</p>
-                                </div>
-
-                                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                        <p>{% trans "Could not connect. Please refresh this page." %} </p>
-                                </div>
-
-                                <div ng-hide="installationFailed" class="alert alert-danger">
-                                        <p>{% trans "Installation failed." %} {$ errorMessage $}</p>
-                                </div>
-
-                                <div ng-hide="SpamAssassinSuccessfullyInstalled" class="alert alert-success">
-                                        <p>{% trans "SpamAssassin successfully installed, refreshing page in 3 seconds.." %}</p>
-                                </div>
-                        </div>
-                    </div>
-
-
-                     <div ng-hide="SpamAssassinInstallBox" class="col-md-12">
-
-                        <form  action="/" id="" class="form-horizontal bordered-row">
-                            <div class="form-group">
-                                    <div class="col-sm-12 text-center">
-                                         <h3><img  src="{% static 'firewall/icons/firewall.png'  %}"> {% trans "Winter is coming, but so is SpamAssassin." %} <img ng-hide="SpamAssassinLoading"  src="/static/images/loading.gif"></h3>
-                                    </div>
-                                    <div style="margin-top: 2%;" class="col-sm-12">
-                                        <textarea ng-model="requestData" rows="15" class="form-control">{{ requestData }}</textarea>
-                                    </div>
+                            <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                                <h4 class="mb-10">{% trans "SpamAssassin is not installed " %}
+                                </h4>
+                                <button ng-click="installSpamAssassin()" class="btn btn-alt btn-hover btn-blue-alt">
+                                    <span>{% trans "Install Now." %}</span>
+                                    <i class="glyph-icon icon-arrow-right"></i>
+                                </button>
                             </div>
-                        </form>
-                    </div>
 
+                            <!------ SpamAssassin Install Log box ----------------->
 
-                    <!----- SpamAssassin Install Log box ----------------->
-                {% else %}
+                            <div ng-hide="SpamAssassinNotifyBox" class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-6">
 
-                <div style="padding: 2%"  class="col-md-12">
-                    <form  action="/" id="createPackages" class="form-horizontal bordered-row">
-
-                        <div ng-hide="phpDetailsBox" class="form-group">
-                            <label class="col-sm-4 control-label">report_safe</label>
-                            <div class="col-sm-6">
-                                <input type="checkbox" id="report_safe" data-toggle="toggle">
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">required_hits</label>
-                            <div class="col-sm-6">
-                                <input type="text" class="form-control" ng-model="required_hits"  required>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">rewrite_header</label>
-                            <div class="col-sm-6">
-                                <input type="text" class="form-control" ng-model="rewrite_header"  required>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">required_score</label>
-                            <div class="col-sm-6">
-                                <input type="text" class="form-control" ng-model="required_score"  required>
-                            </div>
-                        </div>
-
-
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label"></label>
-                            <div class="col-sm-4">
-                                 <button type="button" ng-click="saveSpamAssassinConfigurations()" class="btn btn-primary btn-lg btn-block">{% trans "Save changes." %}</button>
-
-                            </div>
-                        </div>
-
-
-
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label"></label>
-                            <div class="col-sm-4">
-
-                                    <div ng-hide="failedToSave" class="alert alert-danger">
-                                                <p>{% trans "Failed to save SpamAssassin configurations. Error message: " %} {$ errorMessage $}</p>
-                                    </div>
-
-                                    <div ng-hide="successfullySaved" class="alert alert-success">
-                                        <p>{% trans "SpamAssassin configurations successfully saved." %}</p>
+                                    <div ng-hide="failedToStartInallation" class="alert alert-danger">
+                                        <p>{% trans "Failed to start installation, Error message: " %} {$ errorMessage
+                                            $}</p>
                                     </div>
 
                                     <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                            <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                        <p>{% trans "Could not connect. Please refresh this page." %} </p>
                                     </div>
 
+                                    <div ng-hide="installationFailed" class="alert alert-danger">
+                                        <p>{% trans "Installation failed." %} {$ errorMessage $}</p>
+                                    </div>
+
+                                    <div ng-hide="SpamAssassinSuccessfullyInstalled" class="alert alert-success">
+                                        <p>{% trans "SpamAssassin successfully installed, refreshing page in 3 seconds.." %}</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
 
 
-                    </form>
-                </div>
+                            <div ng-hide="SpamAssassinInstallBox" class="col-md-12">
 
-                {% endif %}
+                                <form action="/" id="" class="form-horizontal bordered-row">
+                                    <div class="form-group">
+                                        <div class="col-sm-12 text-center">
+                                            <h3><img
+                                                    src="{% static 'firewall/icons/firewall.png' %}"> {% trans "Winter is coming, but so is SpamAssassin." %}
+                                                <img ng-hide="SpamAssassinLoading" src="/static/images/loading.gif">
+                                            </h3>
+                                        </div>
+                                        <div style="margin-top: 2%;" class="col-sm-12">
+                                            <textarea ng-model="requestData" rows="15"
+                                                      class="form-control">{{ requestData }}</textarea>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
 
 
+                            <!----- SpamAssassin Install Log box ----------------->
+                        {% else %}
 
+                            <div style="padding: 2%" class="col-md-12">
+                                <form action="/" id="createPackages" class="form-horizontal bordered-row">
+
+                                    <div ng-hide="phpDetailsBox" class="form-group">
+                                        <label class="col-sm-4 control-label">report_safe</label>
+                                        <div class="col-sm-6">
+                                            <input type="checkbox" id="report_safe" data-toggle="toggle">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-4 control-label">required_hits</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control" ng-model="required_hits" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-4 control-label">rewrite_header</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control" ng-model="rewrite_header" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-4 control-label">required_score</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control" ng-model="required_score" required>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label"></label>
+                                        <div class="col-sm-4">
+                                            <button type="button" ng-click="saveSpamAssassinConfigurations()"
+                                                    class="btn btn-primary btn-lg btn-block">{% trans "Save changes." %}</button>
+
+                                        </div>
+                                    </div>
+
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label"></label>
+                                        <div class="col-sm-6">
+
+                                            <div ng-hide="failedToSave" class="alert alert-danger">
+                                                <p>{% trans "Failed to save SpamAssassin configurations. Error message: " %}
+                                                    {$ errorMessage $}</p>
+                                            </div>
+
+                                            <div ng-hide="successfullySaved" class="alert alert-success">
+                                                <p>{% trans "SpamAssassin configurations successfully saved." %}</p>
+                                            </div>
+
+                                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+
+                                </form>
+                            </div>
+
+                        {% endif %}
+
+
+                    </div>
                 </div>
             </div>
         </div>
+
+
     </div>
-
-
-</div>
 
 
 {% endblock %}

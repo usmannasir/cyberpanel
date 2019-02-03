@@ -16,8 +16,8 @@
 
 {% if csfInstalled == 0 %}
     <div class="example-box-wrapper">
-        <div style="border-radius: 25px;border-color:#3498db" class="content-box">
-            <h3 class="content-box-header bg-blue">
+        <div class="panel panel-body">
+            <h3 class="content-box-header">
                 {% trans "CSF" %} <img ng-hide="csfLoading"  src="/static/images/loading.gif">
             </h3>
 
@@ -25,11 +25,12 @@
                 <div class="row">
 
                     <div class="col-md-12 text-center" style="margin-bottom: 2%;">
-                                <h3>{% trans "CSF is not installed " %}
+                                <h4 class="mb-10">{% trans "CSF is not installed " %}
+                                    </h4>
                                     <button ng-click="installCSF()" class="btn btn-alt btn-hover btn-blue-alt">
                                         <span>{% trans "Install Now." %}</span>
                                         <i class="glyph-icon icon-arrow-right"></i>
-                                    </button></h3>
+                                    </button>
                     </div>
 
                     <!------ ModeSec Install Log box ----------------->

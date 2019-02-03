@@ -17,8 +17,8 @@
     {% if status %}
 
     <div ng-controller="pureFTPD" class="example-box-wrapper">
-        <div style="border-radius: 25px;border-color:#3498db" class="content-box">
-            <h3 class="content-box-header bg-blue">
+        <div class="panel panel-body">
+            <h3 class="content-box-header">
                 {% trans "Manage PureFTPD" %} <img ng-hide="serviceLoading"  src="/static/images/loading.gif">
             </h3>
 
@@ -29,22 +29,19 @@
                     <form  action="/" id="createPackages" class="form-horizontal bordered-row">
 
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">FTP Status</label>
+                            <label class="col-sm-3 control-label">FTP Status</label>
                             <div class="col-sm-6">
                                 <input type="checkbox" id="serviceStatus" data-toggle="toggle">
                             </div>
                         </div>
 
-
                         <div class="form-group">
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-4">
-                                 <button type="button" ng-click="saveStatus('pureftpd')" class="btn btn-primary btn-lg btn-block">{% trans "Save changes." %}</button>
+                                 <button type="button" ng-click="saveStatus('pureftpd')" class="btn btn-primary btn-lg">{% trans "Save changes" %}</button>
 
                             </div>
                         </div>
-
-
 
                         <div class="form-group">
                             <label class="col-sm-3 control-label"></label>

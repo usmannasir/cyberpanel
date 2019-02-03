@@ -18,7 +18,7 @@
 <div ng-controller="emailMarketing" class="panel">
     <div class="panel-body">
 
-    <h3 class="title-hero">
+    <h3 class="content-box-header">
             {% trans "Email Marketing" %} <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
         </h3>
 
@@ -37,7 +37,7 @@
     {% else %}
         <div class="example-box-wrapper">
 
-                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="datatable-example">
+                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped" id="datatable-example">
                 <thead>
                 <tr>
                     <th>{% trans 'ID' %}</th>

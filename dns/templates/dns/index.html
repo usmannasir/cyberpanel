@@ -13,9 +13,9 @@
    <p>{% trans "Create, edit and delete DNS zones on this page." %}</p>
 </div>
 
-    <div class="panel">
+    <div class="panel col-md-11">
         <div class="panel-body">
-            <h3 class="title-hero">
+            <h3 class="content-box-header">
             {% trans "Available Functions" %}
             </h3>
 
@@ -25,7 +25,7 @@
 
                 <div class="row">
 
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'createDNSZone' %}" title="{% trans 'Create DNS Zone' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Create DNS Zone" %}
@@ -37,7 +37,7 @@
                     </div>
 
 
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'deleteDNSZone' %}" title="{% trans 'Delete Zone' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Delete Zone" %}
@@ -49,7 +49,7 @@
                     </div>
 
 
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'addDeleteDNSRecords' %}" title="{% trans 'Add Delete Records' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Add Delete/Records" %}
@@ -68,49 +68,49 @@
                  <div class="row">
 
 
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                         <a href="{% url 'createNameserver' %}" title="{% trans 'Create Nameserver' %}" class="tile-box tile-box-shortcut btn-primary">
                                             <div class="tile-header">
                                                 {% trans "Create Nameserver" %}
                                             </div>
                                             <div class="tile-content-wrapper">
-                                                <i class="glyph-icon icon-dashboard"></i>
+                                                <i class="fa fa-server"></i>
                                             </div>
                                         </a>
                     </div>
 
 
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'createDNSZone' %}" title="{% trans 'Create DNS Zone' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Create DNS Zone" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-globe"></i>
                                         </div>
                                     </a>
                     </div>
 
 
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'deleteDNSZone' %}" title="{% trans 'Delete Zone' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Delete Zone" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-trash"></i>
                                         </div>
                                     </a>
                     </div>
 
 
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'addDeleteDNSRecords' %}" title="{% trans 'Add Delete Records' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Add Delete/Records" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-folder-open"></i>
                                         </div>
                                     </a>
                     </div>

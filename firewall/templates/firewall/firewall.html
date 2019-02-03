@@ -15,13 +15,13 @@
 </div>
 <div ng-controller="firewallController" class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Add/Delete Rules" %} <img ng-hide="rulesLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
 
-            <form action="/" class="form-horizontal bordered-row">
+            <form action="/" class="form-horizontal bordered-row panel-body">
 
 
                 <div style="padding-bottom: 0px; padding-top: 15px;" class="form-group">
@@ -29,35 +29,27 @@
                     <div class="col-sm-6">
                         <div class="example-box-wrapper">
 
-                    <div class="content-box remove-border dashboard-buttons clearfix">
+                    <div class="content-box remove-border clearfix text-center">
 
-
-                        <a style="height: 70px;" class="btn vertical-button btn-border btn-alt border-purple btn-link font-purple " href="#" title="">
-                            <span>{% trans "Status" %}</span>
-                            <h4 style="margin-top: 6%">{$ status $}</h4>
+                        <a class="btn btn-primary" href="#" title="">
+                            <span>{% trans "Status" %}
+                            <b>{$ status $}</b></span>
                         </a>
 
 
-                        <a ng-click="startFirewall()"  href="#" class="btn vertical-button remove-border btn-success" title="">
-                            <span class="glyph-icon icon-separator-vertical">
-                                <i class="glyph-icon icon-tags"></i>
-                            </span>
-                            <span class="button-content">{% trans "Start" %}</span>
+                        <a ng-click="startFirewall()"  href="#" class="btn btn-success" title="">
+
+                                <i class="fa fa-play btn-icon"></i>
                         </a>
-                        <a ng-click="stopFirewall()" href="#" class="btn vertical-button remove-border btn-warning" title="">
-                            <span class="glyph-icon icon-separator-vertical">
-                                <i class="glyph-icon icon-fire"></i>
-                            </span>
-                            <span class="button-content">{% trans "Stop" %}</span>
+                        <a ng-click="stopFirewall()" href="#" class="btn btn-warning" title="">
+
+                                <i class="fa fa-pause btn-icon"></i>
                         </a>
 
-                        <a ng-click="reloadFireWall()" href="#" class="btn vertical-button remove-border btn-yellow" title="">
-                            <span class="glyph-icon icon-separator-vertical">
-                                <i class="glyph-icon icon-laptop"></i>
-                            </span>
-                            <span class="button-content">{% trans "Reload" %}</span>
-                        </a>
+                        <a ng-click="reloadFireWall()" href="#" class="btn btn-info" title="">
 
+                                <i class="fa fa-refresh btn-icon"></i>
+                        </a>
 
                         <div style="margin-top: 2%;margin-bottom: 0px;" ng-hide="actionFailed" class="alert alert-danger">
                                 <p>{% trans "Action failed. Error message:" %} {$ errorMessage $}</p>
@@ -74,13 +66,9 @@
                     </div>
                 </div>
 
-
-
-
-
                 <div ng-hide="rulesDetails" class="form-group">
 
-                <div class="col-sm-2">
+                <div class="col-sm-3">
                     <input placeholder="Rule Name"  type="text" class="form-control" ng-model="ruleName" required>
                 </div>
 
@@ -90,9 +78,6 @@
                                 <option>udp</option>
                         </select>
                 </div>
-
-
-
                 <!------------- ip box ------------->
 
                 <div class="col-sm-3">
@@ -100,9 +85,6 @@
                 </div>
 
                 <!------------- ip box ------------->
-
-
-
 
                 <!------------- port box ------------->
 
@@ -113,7 +95,7 @@
                 <!------------- port box ------------->
 
 
-                <div class="col-sm-3">
+                <div class="col-sm-1">
                     <button style="width: 100%;"  type="button" ng-click="addRule()" class="btn btn-primary">{% trans "Add" %}</button>
                 </div>
 
@@ -129,7 +111,7 @@
 
                     <div  class="col-sm-12">
 
-                        <table class="table">
+                        <table class="table" style="margin-left: 0px;">
                             <thead>
                             <tr>
                                 <th>{% trans "ID" %}</th>
@@ -147,7 +129,7 @@
                                 <td ng-bind="rule.proto"></td>
                                 <td ng-bind="rule.ipAddress"></td>
                                 <td ng-bind="rule.port"></td>
-                                <td ng-click="deleteRule(rule.id,rule.proto,rule.port,rule.ipAddress)"><img src="{% static 'images/delete.png' %}"></td>
+                                <td ng-click="deleteRule(rule.id,rule.proto,rule.port,rule.ipAddress)"><div class=" h4 text-danger text-bold">X</div></td>
                             </tr>
                             </tbody>
                         </table>

@@ -15,14 +15,11 @@
 
 <div ng-controller="resellerCenterCTRL" class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Reseller Center" %} <img ng-hide="aclLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
-
-
-            <form action="/" class="form-horizontal bordered-row">
-
+            <form action="/" class="form-horizontal bordered-row panel-body">
 
                  <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Select User" %} </label>
@@ -58,7 +55,7 @@
             <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="saveResellerChanges()" class="btn btn-primary btn-lg btn-block">{% trans "Save Changes" %}</button>
+                         <button type="button" ng-click="saveResellerChanges()" class="btn btn-primary btn-lg">{% trans "Save Changes" %}</button>
 
                     </div>
             </div>

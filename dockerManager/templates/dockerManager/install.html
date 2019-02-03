@@ -12,14 +12,13 @@
             <h2>{% trans "Install Docker" %}</h2>
         </div>
 
-
         <div ng-controller="installDocker" class="panel">
             <div class="panel-body">
-                <h3 class="title-hero">
+                <h3 class="content-box-header">
                     {% trans "Install Docker" %} <img ng-hide="installDockerStatus"
                                                       src="{% static 'images/loading.gif' %}">
                 </h3>
-                <div class="example-box-wrapper">
+                <div class="example-box-wrapper text-center">
 
                     {% if conErr == 1 %}
 
@@ -30,12 +29,12 @@
                         {% endif %}
 
                     {% else %}
-                        <p>{% trans "Docker is currently not installed on this server. To manage containers, you must first install it." %}</p>
+                        <p class="h4">{% trans "Docker is currently not installed on this server. To manage containers, you must first install it." %}</p>
                         <!------ LSWS Switch box ----------------->
 
                         <div style="margin-top: 2%" ng-hide="installBoxGen" class="col-md-12">
 
-                            <form action="/" id="" class="form-horizontal bordered-row">
+                            <form action="/" id="" class="form-horizontal bordered-row panel-body">
                                 <div class="form-group">
                                     <div style="margin-top: 2%;" class="col-sm-12">
                                             <textarea ng-model="requestData" rows="15"

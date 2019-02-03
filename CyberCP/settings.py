@@ -186,6 +186,7 @@ LANGUAGES = (
     ('fr', _('French')),
     ('pl', _('Polish')),
     ('vi', _('Vietnamese')),
+    ('it', _('Italian')),
 )
 
 MEDIA_URL = '/home/cyberpanel/media/'

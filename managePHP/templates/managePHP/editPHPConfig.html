@@ -17,22 +17,23 @@
 
         <div ng-controller="editPHPConfig" class="panel">
             <div class="panel-body">
-                <h3 class="title-hero">
+                <h3 class="content-box-header">
                     {% trans "Edit PHP Configurations" %}
                 </h3>
                 <div class="example-box-wrapper">
-                    <ul class="list-group list-group-separator row list-group-icons">
+                    <ul class="nav nav-tabs">
 
-                        <li class="col-md-3 active">
-                            <a href="#tab-example-1" data-toggle="tab" class="list-group-item">
-                                <i class="glyph-icon icon-dashboard"></i>
-                                {% trans "Basic" %}
+                        <li class="col-md-2 nav-item tab-mod active">
+                            <a href="#tab-example-1" data-toggle="tab" class="h4 nav-link">
+                                    <i class="fa fa-cog btn-icon"></i>
+                                    <span>{% trans "Basic" %}</span>
                             </a>
+
                         </li>
-                        <li class="col-md-3">
-                            <a href="#tab-example-3" data-toggle="tab" class="list-group-item">
-                                <i class="glyph-icon font-blue-alt icon-globe"></i>
-                                {% trans "Advanced" %}
+                        <li class="col-md-2 tab-mod nav-item">
+                            <a href="#tab-example-3" data-toggle="tab" class="h4 nav-link">
+                                <i class="fa fa-cogs btn-icon"></i>
+                                <span>{% trans "Advanced" %}</span>
                             </a>
                         </li>
                     </ul>

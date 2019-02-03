@@ -16,22 +16,22 @@
 
 <div ng-controller="secureSSHCTRL" class="panel">
             <div class="panel-body">
-                <h3 class="title-hero">
+                <h3 class="content-box-header">
                     {% trans "Secure SSH" %} <img ng-hide="secureSSHLoading" src="{% static 'images/loading.gif' %}">
                 </h3>
                 <div class="example-box-wrapper">
-                    <ul class="list-group list-group-separator row list-group-icons">
+                    <ul class="nav nav-tabs">
 
-                        <li class="col-md-3 active">
-                            <a href="#tab-example-1" data-toggle="tab" class="list-group-item">
-                                <i class="glyph-icon icon-dashboard"></i>
-                                {% trans "Basic" %}
+                        <li class="col-md-2 nav-item active">
+                            <a href="#tab-example-1" data-toggle="tab" class="nav-link tab-mod h4">
+                                <i class="fa fa-cog btn-icon mr-10"></i>&nbsp;
+                                <span>{% trans "Basic" %}</span>
                             </a>
                         </li>
-                        <li class="col-md-3">
-                            <a href="#tab-example-3" data-toggle="tab" class="list-group-item">
-                                <i class="glyph-icon font-blue-alt icon-globe"></i>
-                                {% trans "SSH Keys" %}
+                        <li class="col-md-2 nav-item">
+                            <a href="#tab-example-3" data-toggle="tab" class="nav-link tab-mod h4">
+                                <i class="fa fa-cogs btn-icon mr-10"></i>&nbsp;
+                                <span>{% trans "SSH Keys" %}</span>
                             </a>
                         </li>
                     </ul>
@@ -54,7 +54,7 @@
 
                     <div class="form-group">
                         <label class="col-sm-3 control-label">{% trans "Permit Root Login" %}</label>
-                        <div class="col-sm-6">
+                        <div class="col-md-8 text-white">
                             <input type="checkbox" id="rootLogin" data-toggle="toggle" data-on="Enabled">
                             <div style="margin-top: 2%;margin-bottom: -2%" class="alert alert-warning">
                                     <p>{% trans "Before disabling root login, make sure you have another account with sudo priviliges on server." %}</p>
@@ -65,7 +65,7 @@
             <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="saveChanges()" class="btn btn-primary btn-lg btn-block">{% trans "Save Changes" %}</button>
+                         <button type="button" ng-click="saveChanges()" class="btn btn-primary btn-lg">{% trans "Save Changes" %}</button>
 
                     </div>
             </div>
@@ -126,7 +126,7 @@
                             <tr ng-repeat="record in records track by $index">
                                 <td ng-bind="record.userName">root</td>
                                 <td ng-bind="record.key"></td>
-                                <td ng-click="deleteKey(record.key)"><img src="{% static 'images/delete.png' %}"></td>
+                                <td ng-click="deleteKey(record.key)"><div class="h4 text-danger text-bold">X</div></td>
                             </tr>
                             </tbody>
                         </table>
@@ -147,7 +147,7 @@
                 <div ng-hide="showKeyBox" class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                        <button type="button" ng-click="addKey()" class="btn btn-primary btn-lg btn-block">{% trans "Add Key" %}</button>
+                        <button type="button" ng-click="addKey()" class="btn btn-primary btn-lg">{% trans "Add Key" %}</button>
 
                     </div>
                 </div>
@@ -155,7 +155,7 @@
                 <div ng-hide="saveKeyBtn" class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                        <button type="button" ng-click="saveKey()" class="btn btn-primary btn-lg btn-block">{% trans "Save" %}</button>
+                        <button type="button" ng-click="saveKey()" class="btn btn-primary btn-lg">{% trans "Save" %}</button>
                     </div>
                 </div>
 

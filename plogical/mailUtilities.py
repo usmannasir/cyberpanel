@@ -321,6 +321,7 @@ milter_default_action = accept
                 command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
                 subprocess.call(shlex.split(command), stdout=FNULL)
             except:
+                FNULL = open(os.devnull, 'w')
                 command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
                 subprocess.call(shlex.split(command), stdout=FNULL)
 

@@ -16,14 +16,14 @@
 
         <div ng-controller="createWebsite" class="panel">
             <div class="panel-body">
-                <h3 class="title-hero">
+                <h3 class="content-box-header">
                     {% trans "Website Details" %} <img ng-hide="webSiteCreationLoading"
                                                        src="{% static 'images/loading.gif' %}">
                 </h3>
                 <div class="example-box-wrapper">
-                    <form name="websiteCreationForm" action="/" id="createPackages"
-                          class="form-horizontal bordered-row">
 
+                    <form name="websiteCreationForm" action="/" id="createPackages"
+                          class="form-horizontal bordered-row panel-body">
 
                         <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Select Package" %}</label>
@@ -115,7 +115,7 @@
                             <div class="col-sm-4">
                                 <button ng-disabled="websiteCreationForm.dom.$error.required || websiteCreationForm.email.$invalid"
                                         type="button" ng-click="createWebsite()"
-                                        class="btn btn-primary btn-lg btn-block">{% trans "Create Website" %}</button>
+                                        class="btn btn-primary btn-lg">{% trans "Create Website" %}</button>
 
                             </div>
                         </div>
@@ -157,12 +157,13 @@
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-4">
                                 <button type="button" ng-disabled="goBackDisable" ng-click="goBack()"
-                                        class="btn btn-primary btn-lg btn-block">{% trans "Go Back" %}</button>
+                                        class="btn btn-primary btn-lg">{% trans "Go Back" %}</button>
                             </div>
                         </div>
 
 
                     </form>
+
                 </div>
             </div>
         </div>

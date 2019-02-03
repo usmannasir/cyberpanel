@@ -15,13 +15,13 @@
 </div>
 <div class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Package Details" %}
         </h3>
         <div ng-controller="createPackage" class="example-box-wrapper">
 
 
-            <form name="createPackageFrm"  action="/" id="createPackages" class="form-horizontal bordered-row">
+            <form name="createPackageFrm"  action="/" id="createPackages" class="form-horizontal bordered-row panel-body">
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Package Name" %}</label>
                     <div class="col-sm-6">
@@ -81,12 +81,9 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="insertPackInDB()" class="btn btn-primary btn-lg btn-block">{% trans "Create Package" %}</button>
-
+                         <button type="button" ng-click="insertPackInDB()" class="btn btn-primary btn-lg">{% trans "Create Package" %}</button>
                     </div>
                 </div>
-
-
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
@@ -99,8 +96,6 @@
                                 <p>{% trans "Package" %} <strong>{$ createdPackage $}</strong> {% trans "Successfully Created" %}</p>
                             </div>
                     </div>
-
-
 
                 </div>
 
@@ -117,4 +112,3 @@
 
 </div>
 {% endblock %}
-

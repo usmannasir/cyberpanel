@@ -15,14 +15,12 @@
 
 <div ng-controller="deleteDatabase" class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Delete Database" %} <img ng-hide="deleteDatabaseLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
-
-            <form  action="/" class="form-horizontal bordered-row">
-
+            <form  action="/" class="form-horizontal bordered-row panel-body">
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Select Website" %}</label>
@@ -50,12 +48,10 @@
                 <div ng-hide="fetchedDatabases" class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="deleteDatabase()" class="btn btn-primary btn-lg btn-block">{% trans "Delete Database" %}</button>
+                         <button type="button" ng-click="deleteDatabase()" class="btn btn-primary btn-lg">{% trans "Delete Database" %}</button>
 
                     </div>
                 </div>
-
-
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>

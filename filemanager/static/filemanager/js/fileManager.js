@@ -1570,5 +1570,3 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
 
 });
-
-

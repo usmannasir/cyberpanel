@@ -91,3 +91,10 @@ class Tsigkeys(models.Model):
     class Meta:
         db_table = 'tsigkeys'
         unique_together = (('name', 'algorithm'),)
+
+
+
+class DNSMaster:
+    type = models.CharField(max_length=5, default='NATIVE')
+    allow_axfr_ips = models.CharField(max_length=500, default='')
+    also_notify = models.CharField(max_length=500, default='')

@@ -15,13 +15,13 @@
 
 <div ng-controller="changeUserACLCTRL" class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Delete Website" %} <img ng-hide="aclLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
 
-            <form action="/" class="form-horizontal bordered-row">
+            <form action="/" class="form-horizontal bordered-row panel-body">
 
 
                  <div class="form-group">
@@ -52,7 +52,7 @@
                 <div ng-hide="deleteACLButton" class="form-group">
                         <label class="col-sm-3 control-label"></label>
                         <div class="col-sm-4">
-                             <button type="button" ng-click="changeACLFunc()" class="btn btn-primary btn-lg btn-block">{% trans "Change ACL" %}</button>
+                             <button type="button" ng-click="changeACLFunc()" class="btn btn-primary btn-lg">{% trans "Change ACL" %}</button>
 
                         </div>
                 </div>

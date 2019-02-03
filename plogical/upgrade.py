@@ -71,6 +71,9 @@ class Upgrade:
             command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
             Upgrade.executioner(command, 'VirtualEnv Pre-reqs', 0)
 
+            command = "yum install -y libattr-devel xz-devel gpgme-devel curl-devel"
+            Upgrade.executioner(command, 'VirtualEnv Pre-reqs', 0)
+
 
             ##
 
@@ -226,7 +229,10 @@ WantedBy=multi-user.target"""
                         host = settings.DATABASES['default']['HOST']
                         port = settings.DATABASES['default']['PORT']
 
-                        conn = mysql.connect(host=host, port=port, db=db, user=dbUser, passwd=password)
+                        if port == '':
+                            conn = mysql.connect(host=host, port=3306, db=db, user=dbUser, passwd=password)
+                        else:
+                            conn = mysql.connect(host=host, port=int(port), db=db, user=dbUser, passwd=password)
 
             cursor = conn.cursor()
             return conn, cursor

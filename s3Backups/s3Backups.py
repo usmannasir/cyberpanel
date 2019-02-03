@@ -92,6 +92,20 @@ class S3Backups(multi.Thread):
         json_data = json_data + ']'
         return json_data
 
+    def setupCron(self):
+        tempPath = '/home/cyberpanel/' + str(randint(10000, 99999))
+
+        writeToFile = open(tempPath, 'w')
+        writeToFile.write('* * * * * /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/s3Backups/s3Backups.py > /home/cyberpanel/error-logs.txt 2>&1\n')
+        writeToFile.close()
+
+        command = 'sudo crontab -u cyberpanel ' + tempPath
+        ProcessUtilities.executioner(command)
+        try:
+            os.remove(tempPath)
+        except:
+            pass
+
     def connectAccount(self):
         try:
 
@@ -118,28 +132,7 @@ class S3Backups(multi.Thread):
 
             ##
 
-            cronPath = '/etc/crontab'
-
-            command = 'sudo cat ' + cronPath
-            output = subprocess.check_output(shlex.split(command)).split('\n')
-
-            insertCron = 1
-
-            for items in output:
-                if items.find('s3backups.py') > -1:
-                    insertCron = 0
-                    break
-
-            if insertCron:
-                pathToFile = "/home/cyberpanel/" + str(randint(1000, 9999))
-                writeToFile = open(pathToFile, 'w')
-                for items in output:
-                    writeToFile.writelines(items + '\n')
-                writeToFile.writelines(
-                    '0 0 * * * cyberpanel /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/s3Backups/s3Backups.py\n')
-                writeToFile.close()
-                command = 'sudo mv ' + pathToFile + ' /etc/crontab'
-                ProcessUtilities.executioner(command)
+            self.setupCron()
 
             return proc.ajax(1, None)
 
@@ -527,28 +520,7 @@ class S3Backups(multi.Thread):
 
             ##
 
-            cronPath = '/etc/crontab'
-
-            command = 'sudo cat ' + cronPath
-            output = subprocess.check_output(shlex.split(command)).split('\n')
-
-            insertCron = 1
-
-            for items in output:
-                if items.find('s3backups.py') > -1:
-                    insertCron = 0
-                    break
-
-            if insertCron:
-                pathToFile = "/home/cyberpanel/" + str(randint(1000, 9999))
-                writeToFile = open(pathToFile, 'w')
-                for items in output:
-                    writeToFile.writelines(items + '\n')
-                writeToFile.writelines(
-                    '0 0 * * * cyberpanel /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/s3Backups/s3Backups.py\n')
-                writeToFile.close()
-                command = 'sudo mv ' + pathToFile + ' /etc/crontab'
-                ProcessUtilities.executioner(command)
+            self.setupCron()
 
             return proc.ajax(1, None)
 
@@ -900,60 +872,6 @@ class S3Backups(multi.Thread):
             plan = BackupPlanDO.objects.get(name=self.data['planName'])
             BackupLogsDO(owner=plan, timeStamp=time.strftime("%b %d %Y, %H:%M:%S"), level='ERROR', msg=str(msg)).save()
 
-    def runAWSBackups(self):
-        try:
-            admin = Administrator.objects.get(pk=1)
-            self.request.session['userID'] = admin.pk
-
-            for plan in BackupPlan.objects.all():
-                lastRunDay = plan.lastRun.split(':')[0]
-                lastRunMonth = plan.lastRun.split(':')[1]
-
-                if plan.freq == 'Daily' and lastRunDay != time.strftime("%d"):
-                    self.data = {}
-                    self.data['planName'] = plan.name
-                    self.forceRunAWSBackup()
-                else:
-                    if lastRunMonth == time.strftime("%m"):
-                        days = int(time.strftime("%d")) - int(lastRunDay)
-                        if days >= 6:
-                            self.data = {}
-                            self.data['planName'] = plan.name
-                            self.forceRunAWSBackup()
-                    else:
-                        days = 30 - int(lastRunDay)
-                        days = days + int(time.strftime("%d"))
-                        if days >= 6:
-                            self.data = {}
-                            self.data['planName'] = plan.name
-                            self.forceRunAWSBackup()
-
-            for plan in BackupPlanDO.objects.all():
-                lastRunDay = plan.lastRun.split(':')[0]
-                lastRunMonth = plan.lastRun.split(':')[1]
-
-                if plan.freq == 'Daily' and lastRunDay != time.strftime("%d"):
-                    self.data = {}
-                    self.data['planName'] = plan.name
-                    self.forceRunAWSBackupDO()
-                else:
-                    if lastRunMonth == time.strftime("%m"):
-                        days = int(time.strftime("%d")) - int(lastRunDay)
-                        if days >= 6:
-                            self.data = {}
-                            self.data['planName'] = plan.name
-                            self.forceRunAWSBackupDO()
-                    else:
-                        days = 30 - int(lastRunDay)
-                        days = days + int(time.strftime("%d"))
-                        if days >= 6:
-                            self.data = {}
-                            self.data['planName'] = plan.name
-                            self.forceRunAWSBackupDO()
-
-        except BaseException, msg:
-            logging.writeToFile(str(msg) + ' [S3Backups.runAWSBackups]')
-
     def addMINIONode(self):
         try:
 
@@ -970,6 +888,8 @@ class S3Backups(multi.Thread):
             newNode = MINIONodes(owner=admin, endPointURL=self.data['endPoint'], accessKey=self.data['accessKey'],
                                  secretKey=self.data['secretKey'])
             newNode.save()
+
+            self.setupCron()
 
             return proc.ajax(1, None)
 
@@ -1305,6 +1225,83 @@ class S3Backups(multi.Thread):
         except BaseException, msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
+
+    def runAWSBackups(self):
+        try:
+            admin = Administrator.objects.get(pk=1)
+            self.request.session['userID'] = admin.pk
+
+            for plan in BackupPlan.objects.all():
+                lastRunDay = plan.lastRun.split(':')[0]
+                lastRunMonth = plan.lastRun.split(':')[1]
+
+                if plan.freq == 'Daily' and lastRunDay != time.strftime("%d"):
+                    self.data = {}
+                    self.data['planName'] = plan.name
+                    self.forceRunAWSBackup()
+                else:
+                    if lastRunMonth == time.strftime("%m"):
+                        days = int(time.strftime("%d")) - int(lastRunDay)
+                        if days >= 6:
+                            self.data = {}
+                            self.data['planName'] = plan.name
+                            self.forceRunAWSBackup()
+                    else:
+                        days = 30 - int(lastRunDay)
+                        days = days + int(time.strftime("%d"))
+                        if days >= 6:
+                            self.data = {}
+                            self.data['planName'] = plan.name
+                            self.forceRunAWSBackup()
+
+            for plan in BackupPlanDO.objects.all():
+                lastRunDay = plan.lastRun.split(':')[0]
+                lastRunMonth = plan.lastRun.split(':')[1]
+
+                if plan.freq == 'Daily' and lastRunDay != time.strftime("%d"):
+                    self.data = {}
+                    self.data['planName'] = plan.name
+                    self.forceRunAWSBackupDO()
+                else:
+                    if lastRunMonth == time.strftime("%m"):
+                        days = int(time.strftime("%d")) - int(lastRunDay)
+                        if days >= 6:
+                            self.data = {}
+                            self.data['planName'] = plan.name
+                            self.forceRunAWSBackupDO()
+                    else:
+                        days = 30 - int(lastRunDay)
+                        days = days + int(time.strftime("%d"))
+                        if days >= 6:
+                            self.data = {}
+                            self.data['planName'] = plan.name
+                            self.forceRunAWSBackupDO()
+
+            for plan in BackupPlanMINIO.objects.all():
+                lastRunDay = plan.lastRun.split(':')[0]
+                lastRunMonth = plan.lastRun.split(':')[1]
+
+                if plan.freq == 'Daily' and lastRunDay != time.strftime("%d"):
+                    self.data = {}
+                    self.data['planName'] = plan.name
+                    self.forceRunAWSBackupMINIO()
+                else:
+                    if lastRunMonth == time.strftime("%m"):
+                        days = int(time.strftime("%d")) - int(lastRunDay)
+                        if days >= 6:
+                            self.data = {}
+                            self.data['planName'] = plan.name
+                            self.forceRunAWSBackupMINIO()
+                    else:
+                        days = 30 - int(lastRunDay)
+                        days = days + int(time.strftime("%d"))
+                        if days >= 6:
+                            self.data = {}
+                            self.data['planName'] = plan.name
+                            self.forceRunAWSBackupMINIO()
+
+        except BaseException, msg:
+            logging.writeToFile(str(msg) + ' [S3Backups.runAWSBackups]')
 
 
 def main():

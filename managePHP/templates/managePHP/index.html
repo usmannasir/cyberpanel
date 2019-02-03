@@ -12,33 +12,32 @@
    <h2>{% trans "Manage PHP Installations" %}</h2>
    <p>{% trans "Edit your PHP Configurations to suit your needs." %}</p>
 </div>
-    <div class="panel">
+    <div class="panel col-lg-10 col-md-10" style="width: auto;">
         <div class="panel-body">
-            <h3 class="title-hero">
+            <h3 class="content-box-header">
             {% trans "Available Functions" %}
             </h3>
 
              <div class="example-box-wrapper">
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-lg-3 col-md-5 btn-min-width">
                                     <a href="{% url 'installExtensions' %}" title="{% trans 'Install Extensions' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Install Extensions" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-download"></i>
                                         </div>
                                     </a>
                     </div>
 
-
-                    <div class="col-md-6">
+                    <div class="col-lg-3 col-md-5 btn-min-width">
                                     <a href="{% url 'editPHPConfigs' %}" title="{% trans 'Edit PHP Configs' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Edit PHP Configs" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-edit"></i>
                                         </div>
                                     </a>
                     </div>

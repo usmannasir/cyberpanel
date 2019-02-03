@@ -15,14 +15,12 @@
 </div>
 <div ng-controller="listDBs" class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "List Databases" %} <img ng-hide="dbLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
-
-            <form action="/" class="form-horizontal bordered-row">
-
+            <form action="/" class="form-horizontal bordered-row panel-body">
 
                  <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Select Domain" %}</label>
@@ -70,7 +68,7 @@
                     </div>
 
                     <div style="margin-top: 1%" class="col-sm-6 col-md-offset-3">
-                         <button type="button" ng-click="changePasswordBtn()" class="btn btn-primary btn-lg btn-block">{% trans "Change Password" %}</button>
+                         <button type="button" ng-click="changePasswordBtn()" class="btn btn-primary btn-lg">{% trans "Change Password" %}</button>
                     </div>
             </div>
 

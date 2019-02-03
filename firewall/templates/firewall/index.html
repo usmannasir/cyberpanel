@@ -13,32 +13,32 @@
    <p>{% trans "Manage the security of the server on this page." %}</p>
 </div>
 
-    <div class="panel">
+    <div class="panel col-lg-8 col-md-4" style="width: auto;">
         <div class="panel-body">
-            <h3 class="title-hero">
+            <h3 class="content-box-header">
             {% trans "Available Functions" %}
             </h3>
 
              <div class="example-box-wrapper">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-lg-5 col-md-6 btn-min-width">
                                     <a href="{% url 'firewallHome' %}" title="{% trans 'Firewall' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Firewall" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-shield"></i>
                                         </div>
                                     </a>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-lg-5 col-md-6 btn-min-width">
                                     <a href="{% url 'secureSSH' %}" title="{% trans 'Secure SSH' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Secure SSH" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-lock"></i>
                                         </div>
                                     </a>
                     </div>

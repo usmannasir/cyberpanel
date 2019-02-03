@@ -15,14 +15,12 @@
 
 <div ng-controller="deleteACTCTRL" class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Delete Website" %} <img ng-hide="aclLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
-
-            <form action="/" class="form-horizontal bordered-row">
-
+            <form action="/" class="form-horizontal bordered-row panel-body">
 
                  <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Select ACL" %} </label>
@@ -39,7 +37,7 @@
             <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="deleteACLFunc()" class="btn btn-primary btn-lg btn-block">{% trans "Delete ACL" %}</button>
+                         <button type="button" ng-click="deleteACLFunc()" class="btn btn-primary btn-lg">{% trans "Delete ACL" %}</button>
 
                     </div>
             </div>
@@ -48,7 +46,7 @@
             <div ng-hide="deleteACLButton" class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="deleteACLFinal()" class="btn btn-primary btn-lg btn-block">{% trans "Are you sure?" %}</button>
+                         <button type="button" ng-click="deleteACLFinal()" class="btn btn-primary btn-lg">{% trans "Are you sure?" %}</button>
 
                     </div>
             </div>

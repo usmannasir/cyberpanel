@@ -15,7 +15,7 @@
 
 <div ng-controller="emailForwarding" class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Setup Email Forwarding" %} <img ng-hide="forwardLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
@@ -30,12 +30,9 @@
                     </button></a></h3>
             </div>
 
-
         {% else %}
 
-
-            <form  action="/" class="form-horizontal bordered-row">
-
+            <form  action="/" class="form-horizontal bordered-row panel-body">
 
                  <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>

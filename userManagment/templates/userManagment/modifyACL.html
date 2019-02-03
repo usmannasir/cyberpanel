@@ -15,13 +15,13 @@
 
 <div class="panel">
     <div ng-controller="modifyACLCtrl" class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "ACL Details" %} - <img ng-hide="aclLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
 
-            <form action="/" class="form-horizontal bordered-row">
+            <form action="/" class="form-horizontal bordered-row panel-body">
 
 
                 <div class="form-group">
@@ -407,7 +407,7 @@
                 <div ng-hide="aclDetails" class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="saveChanges()" class="btn btn-primary btn-lg btn-block">{% trans "Save Changes" %} <img ng-hide="aclLoading" src="{% static 'images/loading.gif' %}"></button>
+                         <button type="button" ng-click="saveChanges()" class="btn btn-primary btn-lg">{% trans "Save Changes" %} <img ng-hide="aclLoading" src="{% static 'images/loading.gif' %}"></button>
                     </div>
                 </div>
 

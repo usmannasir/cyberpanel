@@ -15,12 +15,12 @@
 
 <div class="panel">
     <div ng-controller="modifyUser" class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Details" %} <img ng-hide="userModificationLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
-            <form  action="/" class="form-horizontal bordered-row">
+            <form  action="/" class="form-horizontal bordered-row panel-body">
 
                 <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Select Account" %}</label>
@@ -69,7 +69,7 @@
                 <div ng-hide="acctDetailsFetched" class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="modifyUser()" class="btn btn-primary btn-lg btn-block">{% trans "Modify User" %}</button>
+                         <button type="button" ng-click="modifyUser()" class="btn btn-primary btn-lg">{% trans "Modify User" %}</button>
 
                     </div>
                 </div>
@@ -78,7 +78,7 @@
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
+                    <div class="col-sm-6">
                             <div ng-hide="userModified" class="alert alert-success">
                                 <p>{% trans "Account with username:" %} <strong>{$ userName $}</strong>{% trans " is successfully modified." %}</p>
                             </div>

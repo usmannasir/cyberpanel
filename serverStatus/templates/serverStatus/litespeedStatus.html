@@ -10,28 +10,26 @@
 
     {% if OLS %}
         <div class="container">
-
             <div id="page-title">
-                <h2>{% trans "LiteSpeed Status:" %} <img src="{% static 'images/lsON.png' %}"></h2>
+                <h2>{% trans "LiteSpeed Status:" %} <img src="{% static 'images/lsON.png' %}" style="margin-bottom: 5px;"></h2>
                 <p>{% trans "On this page you can get information regarding your LiteSpeed processes." %}</p>
             </div>
 
-
-            <div class="row">
+            <div class="example-box-wrapper">
                 <div class="panel">
                     <div class="panel-body">
-                        <div ng-controller="litespeedStatus" class="col-md-6">
+                        <div ng-controller="litespeedStatus" class="col-md-6" style="min-width: 350px;">
 
 
-                            <div class="example-box-wrapper">
+                            <div class="example-box-wrapper mr-10">
 
                                 {% if processList %}
 
-                                    <h3 class="content-box-header bg-black">
+                                    <h3 class="content-box-header">
                                         {% trans "LiteSpeed Processes" %}
                                     </h3>
 
-                                    <table class="table">
+                                    <table class="table mb-5">
                                         <thead>
                                         <tr>
                                             <th>#</th>
@@ -66,18 +64,19 @@
                                         <p>{% trans "Could not fetch details, either LiteSpeed is not running or some error occurred, please see CyberPanel Main log file." %}</p>
                                     </div>
                                 {% endif %}
+                                <div class="mx-10">
+                                    <button ng-click="restartLitespeed()" ng-disabled="disableReboot"
+                                            class="btn btn-alt btn-hover btn-blue-alt mx-5 my-10">
+                                        <span>{% trans "Reboot Litespeed" %}</span>
+                                        <i class="glyph-icon icon-arrow-right"></i>
+                                    </button>
 
-                                <button ng-click="restartLitespeed()" ng-disabled="disableReboot"
-                                        class="btn btn-alt btn-hover btn-blue-alt">
-                                    <span>{% trans "Reboot Litespeed" %}</span>
-                                    <i class="glyph-icon icon-arrow-right"></i>
-                                </button>
-
-                                <button ng-click="stopLitespeed()" ng-disable="disableStop"
-                                        class="btn btn-alt btn-hover btn-danger">
-                                    <span>{% trans "Stop LiteSpeed" %}</span>
-                                    <i class="glyph-icon icon-arrow-right"></i>
-                                </button>
+                                    <button ng-click="stopLitespeed()" ng-disable="disableStop"
+                                            class="btn btn-alt btn-hover btn-danger mx-5 my-10">
+                                        <span>{% trans "Stop LiteSpeed" %}</span>
+                                        <i class="glyph-icon icon-arrow-right"></i>
+                                    </button>
+                                </div>
 
                                 <img ng-hide="restartorStopLoading" src="{% static 'images/loading.gif' %}">
 
@@ -105,7 +104,7 @@
                         <div class="col-md-6">
 
                             <div class="example-box-wrapper">
-                                <h3 class="content-box-header bg-black">
+                                <h3 class="content-box-header">
                                     Version: {{ lsversion }}
                                 </h3>
                                 <div class="content-box-wrapper">
@@ -132,13 +131,13 @@
                 </div>
             </div>
         </div>
-        <div class="container">
 
+        <div class="row">
+        <div class="panel panel-body">
             <div ng-controller="lswsSwitch" class="example-box-wrapper">
-                <div style="border-radius: 25px;border-color:#3498db" class="content-box">
-                    <h3 class="content-box-header bg-blue">
-                        {% trans "Switch to LiteSpeed Enterprise Web Server" %} <img ng-hide="cyberPanelLoading"
-                                                                                     src="/static/images/loading.gif">
+                <div class="panel-body">
+                    <h3 class="content-box-header">
+                        {% trans "Switch to LiteSpeed Enterprise Web Server" %} <img ng-hide="cyberPanelLoading" src="/static/images/loading.gif">
                     </h3>
 
                     <div class="content-box-wrapper">
@@ -159,7 +158,7 @@
                                         <label class="col-sm-3 control-label"></label>
                                         <div class="col-sm-4">
                                             <button type="button" ng-click="switchTOLSWS()"
-                                                    class="btn btn-primary btn-lg btn-block">{% trans "Switch" %}</button>
+                                                    class="btn btn-primary btn-lg">{% trans "Switch" %}</button>
 
                                         </div>
                                     </div>
@@ -194,10 +193,11 @@
                     </div>
                 </div>
             </div>
-
-
+</div>
         </div>
     {% else %}
+
+
         <div ng-controller="litespeedStatus" class="container">
 
             <div id="page-title">
@@ -205,8 +205,7 @@
                 <p>{% trans "On this page you can get information regarding your LiteSpeed processes." %}</p>
             </div>
 
-
-            <div class="row">
+            <div class="example-box-wrapper">
                 <div class="panel">
                     <div class="panel-body">
                         <div class="col-md-12">
@@ -255,13 +254,13 @@
                                 {% endif %}
 
                                 <button ng-click="restartLitespeed()" ng-disabled="disableReboot"
-                                        class="btn btn-alt btn-hover btn-blue-alt">
+                                        class="btn btn-alt btn-hover btn-blue-alt mx-5 my-10">
                                     <span>{% trans "Reboot Litespeed" %}</span>
                                     <i class="glyph-icon icon-arrow-right"></i>
                                 </button>
 
                                 <button ng-click="stopLitespeed()" ng-disable="disableStop"
-                                        class="btn btn-alt btn-hover btn-danger">
+                                        class="btn btn-alt btn-hover btn-danger mx-5 my-10">
                                     <span>{% trans "Stop LiteSpeed" %}</span>
                                     <i class="glyph-icon icon-arrow-right"></i>
                                 </button>
@@ -283,7 +282,6 @@
                                     <p>{% trans "Could not connect to server." %}</p>
                                 </div>
 
-
                             </div>
                         </div>
                     </div>
@@ -292,34 +290,34 @@
 
 
             <div class="example-box-wrapper">
-                <div style="border-radius: 25px;border-color:#3498db" class="content-box">
-                    <h3 class="content-box-header bg-blue">
+                <div class="panel panel-body">
+                    <h3 class="content-box-header">
                         {% trans "License Manager" %} <img ng-hide="cpLoading" src="/static/images/loading.gif">
                     </h3>
 
                     <div class="content-box-wrapper">
-                        <div class="row">
+                        <div class="row mt-5 mx-10">
 
-                            <div class="col-md-6" style="margin-bottom: 2%;">
+                            <div class="col-md-6 panel-body">
                                 <a ng-click="licenseStatus(1)" href="" title="{% trans 'License Status' %}">
-                                    <img src="{% static 'images/agreement.png' %}">
+                                    <img src="{% static 'images/license-status.png' %}" width="65" class="mr-10 ">
                                 </a>
+                                &nbsp;
                                 <a ng-click="licenseStatus(1)" href="" title="{% trans 'License Status' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans 'License Status' %}</span>
+                                    <span class="h4">{% trans 'License Status' %}</span>
                                 </a>
                             </div>
 
+                            <div class="col-md-6 panel-body">
+                                <a ng-click="showSerialBox()" href="" title="{% trans 'Change License' %}">
+                                    <img src="{% static 'images/change-license.png' %}" width="65" class="mr-10">
+                                </a>
+                                &nbsp;
+                                <a ng-click="showSerialBox()" href="" title="{% trans 'Change License' %}">
+                                    <span class="h4">{% trans 'Change License' %}</span>
+                                </a>
 
-                            <div class="col-md-6" style="margin-bottom: 2%;">
-                                <a ng-click="showSerialBox()" href="" title="{% trans 'Change License' %}">
-                                    <img src="{% static 'images/change.png' %}">
-                                </a>
-                                <a ng-click="showSerialBox()" href="" title="{% trans 'Change License' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans 'Change License' %}</span>
-                                </a>
-                                </a>
                             </div>
-
 
                             <div class="col-md-12">
 
@@ -349,15 +347,13 @@
                                         </div>
                                     </div>
 
-
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label"></label>
                                         <div class="col-sm-4">
                                             <button type="button" ng-click="changeLicense()"
-                                                    class="btn btn-primary btn-lg btn-block">{% trans "Change Key" %}</button>
+                                                    class="btn btn-primary btn-lg">{% trans "Change Key" %}</button>
                                         </div>
                                     </div>
-
 
                                 </form>
                             </div>

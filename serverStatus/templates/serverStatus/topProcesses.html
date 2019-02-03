@@ -24,10 +24,10 @@
                         <table class="table">
                             <thead>
                             <tr >
-                                <th style="background: #3498db;color:white">{% trans 'Cores' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'Model Name' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'CPU Mhz' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'Cache Size' %}</th>
+                                <th>{% trans 'Cores' %}</th>
+                                <th>{% trans 'Model Name' %}</th>
+                                <th>{% trans 'CPU Mhz' %}</th>
+                                <th>{% trans 'Cache Size' %}</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -48,11 +48,11 @@
                         <table class="table">
                             <thead>
                             <tr>
-                                <th style="background: #3498db;color:white">{% trans 'Processes' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'Running' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'Sleeping' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'Stopped' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'Zombie' %}</th>
+                                <th >{% trans 'Processes' %}</th>
+                                <th >{% trans 'Running' %}</th>
+                                <th >{% trans 'Sleeping' %}</th>
+                                <th >{% trans 'Stopped' %}</th>
+                                <th >{% trans 'Zombie' %}</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -77,10 +77,10 @@
                         <table class="table">
                             <thead>
                             <tr>
-                                <th style="background: #3498db;color:white">{% trans 'CPU Load' %}</th>
-                                <th style="background: #3498db;color:white">{% trans '1 Min' %}</th>
-                                <th style="background: #3498db;color:white">{% trans '5 Min' %}</th>
-                                <th style="background: #3498db;color:white">{% trans '15 Min' %}</th>
+                                <th>{% trans 'CPU Load' %}</th>
+                                <th>{% trans '1 Min' %}</th>
+                                <th>{% trans '5 Min' %}</th>
+                                <th>{% trans '15 Min' %}</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -101,10 +101,10 @@
                         <table class="table">
                             <thead>
                             <tr>
-                                <th style="background: #3498db;color:white">{% trans 'I/O Wait' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'Idle Time' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'HW Interrupts' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'Softirqs' %}</th>
+                                <th>{% trans 'I/O Wait' %}</th>
+                                <th>{% trans 'Idle Time' %}</th>
+                                <th>{% trans 'HW Interrupts' %}</th>
+                                <th>{% trans 'Softirqs' %}</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -128,10 +128,10 @@
                         <table class="table">
                             <thead>
                             <tr>
-                                <th style="background: #3498db;color:white">{% trans 'Memory' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'Free' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'Used' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'buff/cache' %}</th>
+                                <th>{% trans 'Memory' %}</th>
+                                <th>{% trans 'Free' %}</th>
+                                <th>{% trans 'Used' %}</th>
+                                <th>{% trans 'buff/cache' %}</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -152,10 +152,10 @@
                         <table class="table">
                             <thead>
                             <tr>
-                                <th style="background: #3498db;color:white">{% trans 'SWAP' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'Free' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'Used' %}</th>
-                                <th style="background: #3498db;color:white">{% trans 'buff/cache' %}</th>
+                                <th>{% trans 'SWAP' %}</th>
+                                <th>{% trans 'Free' %}</th>
+                                <th>{% trans 'Used' %}</th>
+                                <th>{% trans 'buff/cache' %}</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -173,18 +173,16 @@
         </div>
 
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-12 mt-30">
                 <div class="example-box-wrapper">
-                    <h3 style="background:#3498db; color: white" class="content-box-header bg-black">
+                    <h3 style="" class="content-box-header bg-blue mx-10">
                         {% trans 'Top Processes' %}
                     </h3>
-                    <div class="content-box-wrapper">
-
+                    <div class="content-box-wrapper content">
                         <div style="margin-top: 2%; margin-bottom: 2%" class="row">
-
-                            <div class="col-sm-12">
+                            <div class="col-sm-8">
                                 <input placeholder="Search..." ng-model="search" name="dom" type="text"
-                                       class="form-control" ng-model="domainNameCreate" required>
+                                       class="form-control mx-10" ng-model="domainNameCreate" required>
                             </div>
                         </div>
 
@@ -215,7 +213,7 @@
                                 <td ng-bind="process.Time"></td>
                                 <td ng-bind="process.Command"></td>
                                 <td>
-                                    <button ng-click="killProcess(process.PID)" class="btn btn-danger">KILL</button>
+                                    <button ng-click="killProcess(process.PID)" class="btn btn-sm btn-danger">KILL</button>
                                 </td>
                             </tr>
                             </tbody>

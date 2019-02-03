@@ -22,9 +22,9 @@
 
             <div class="example-box-wrapper">
 
-                <div style="border-radius: 25px;border-color:#3498db" class="content-box">
+                <div class="panel panel-body">
 
-                    <h3 class="content-box-header bg-blue">
+                    <h3 class="content-box-header">
                         {% trans "Resource Usage" %} <img ng-hide="domainLoading" src="/static/images/loading.gif">
                     </h3>
 
@@ -33,7 +33,7 @@
                         <div class="row">
 
                             <div class="col-md-6">
-                                <table class="table table-bordered">
+                                <table class="table">
                                     <thead>
                                     <tr>
                                         <th>{% trans "Resource" %}</th>
@@ -43,35 +43,31 @@
                                     </thead>
                                     <tbody>
                                     <tr>
-                                        <td><code>{% trans "FTP" %}</code></td>
-                                        <td><span class="bs-badge badge-success">{{ ftpUsed }}</span></td>
-                                        <td><span class="bs-badge badge-success">{{ ftpTotal }}</span></td>
+                                        <td class="row-title">{% trans "FTP" %}</td>
+                                        <td><span class="text-success h4">{{ ftpUsed }}</span></td>
+                                        <td><span class="text-success h4">{{ ftpTotal }}</span></td>
                                     </tr>
                                     <tr>
-                                        <td><code>{% trans "Databases" %}</code></td>
-                                        <td><span class="bs-badge badge-success">{{ databasesUsed }}</span></td>
-                                        <td><span class="bs-badge badge-success">{{ databasesTotal }}</span></td>
-                                    </tr>
-
-
-                                    <tr>
-                                        <td><code>{% trans "Disk Usage" %}</code></td>
-                                        <td><span class="bs-badge badge-success">{{ diskInMB }} (MB)</span></td>
-                                        <td><span class="bs-badge badge-success">{{ diskInMBTotal }} (MB)</span></td>
+                                        <td class="row-title">{% trans "Databases" %}</td>
+                                        <td><span class="text-success h4">{{ databasesUsed }}</span></td>
+                                        <td><span class="text-success h4">{{ databasesTotal }}</span></td>
                                     </tr>
                                     <tr>
-                                        <td><code>{% trans "Bandwidth Usage" %}</code></td>
-                                        <td><span class="bs-badge badge-success">{{ bwInMB }} (MB)</span></td>
-                                        <td><span class="bs-badge badge-success">{{ bwInMBTotal }} (MB)</span></td>
+                                        <td class="row-title">{% trans "Disk Usage" %}</td>
+                                        <td><span class="text-success h4">{{ diskInMB }} (MB)</span></td>
+                                        <td><span class="text-success h4">{{ diskInMBTotal }} (MB)</span></td>
                                     </tr>
-
-
+                                    <tr>
+                                        <td class="row-title">{% trans "Bandwidth Usage" %}</td>
+                                        <td><span class="text-success h4">{{ bwInMB }} (MB)</span></td>
+                                        <td><span class="text-success h4">{{ bwInMBTotal }} (MB)</span></td>
+                                    </tr>
                                     </tbody>
                                 </table>
                             </div>
 
                             <div class="col-md-6">
-                                <div class="panel">
+                                <div class="content-box mt-5 mx-10">
                                     <div class="panel-body">
                                         <div class="example-box-wrapper">
                                             <h3 class="title-hero">
@@ -83,8 +79,6 @@
                                                     <div class="progress-label">{{ diskUsage }}%</div>
                                                 </div>
                                             </div>
-
-
                                             <h3 class="title-hero">
                                                 {% trans "Bandwidth Usage" %}
                                             </h3>
@@ -94,81 +88,59 @@
                                                     <div class="progress-label">{{ bwUsage }}%</div>
                                                 </div>
                                             </div>
-
-
                                         </div>
-
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
-
-
                 </div>
             </div>
 
-
-            <div class="example-box-wrapper">
-
-                <div style="border-radius: 25px;border-color:#3498db" class="content-box">
-                    <h3 class="content-box-header bg-blue">
+            <div class="example-box-wrapper my-10">
+                <div class="panel panel-body">
+                    <h3 class="content-box-header">
                         {% trans "Logs" %} <img ng-hide="logFileLoading" src="/static/images/loading.gif">
                     </h3>
 
                     <div class="content-box-wrapper">
-                        <div class="row">
-
-                            <div class="col-md-6" style="margin-bottom: 2%;">
+                        <div class="row mt-5 mx-10">
+                            <div class="col-md-6 panel-body">
                                 <a ng-click="fetchLogs(1)" href="" title="{% trans 'Load Access Logs' %}">
-                                    <img src="{% static 'images/icons/log-file-format.png' %}">
+                                    <img src="{% static 'images/icons/log-file-format.png' %}" width="65">
                                 </a>
+                                &nbsp;
                                 <a ng-click="fetchLogs(1)" href="" title="{% trans 'Load Access Logs' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Access Logs" %}</span>
-                                </a>
-
-                            </div>
-
-
-                            <div class="col-md-6" style="margin-bottom: 2%;">
-                                <a ng-click="fetchErrorLogs(1)" href="" title="{% trans 'Load Error Logs' %}">
-                                    <img src="{% static 'images/icons/warning.png' %}">
-                                </a>
-                                <a ng-click="fetchErrorLogs(1)" href="" title="{% trans 'Load Error Logs' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Error Logs" %}</span>
-                                </a>
+                                    <span class="h4">{% trans "Access Logs" %}</span>
                                 </a>
                             </div>
-
+                            <div class="col-md-6 panel-body">
+                                <a ng-click="fetchErrorLogs(1)" href="" title="{% trans 'Load Error Logs' %}">
+                                    <img src="{% static 'images/icons/warning.png' %}" width="65" class="mr-10">
+                                </a>
+                                &nbsp;
+                                <a ng-click="fetchErrorLogs(1)" href="" title="{% trans 'Load Error Logs' %}">
+                                    <span class="h4">{% trans "Error Logs" %}</span>
+                                </a>
+                            </div>
 
                             <div class="col-md-12">
-
                                 <form ng-hide="hideLogs" class="form-horizontal bordered-row">
-
                                     <div ng-hide="logsFeteched" class="alert alert-success">
                                         <p>{% trans "Logs Fetched" %}</p>
                                     </div>
-
-
                                     <div ng-hide="couldNotFetchLogs" class="alert alert-danger">
                                         <p>{% trans "Could not fetch logs, see the logs file through command line. Error message:" %}
                                             {$ errorMessage $}</p>
                                     </div>
-
-
                                     <div ng-hide="couldNotConnect" class="alert alert-danger">
                                         <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                     </div>
-
-
-                                    <div ng-hide="fetchedData" class="form-group">
-
+                                    <div ng-hide="fetchedData" class="mx-10">
                                         <div class="col-sm-3">
                                             <input placeholder="Search..." ng-model="logSearch" name="dom" type="text"
                                                    class="form-control" ng-model="domainNameCreate" required>
                                         </div>
-
                                         <div class="col-sm-2">
                                             <input placeholder="Page Number" type="number" class="form-control"
                                                    ng-model="pageNumber" required>
@@ -176,13 +148,16 @@
 
                                         <div class="col-sm-6">
                                             <button ng-click="fetchLogs(3)" type="button"
-                                                    class="btn ra-100 btn-purple">{% trans "Next" %}</button>
+                                                    class="btn ra-50 btn-primary mx-5">{% trans "Next" %}</button>
                                             <button ng-click="fetchLogs(4)" type="button"
-                                                    class="btn ra-100 btn-purple">{% trans "Previous" %}</button>
+                                                    class="btn ra-50 btn-primary mx-5">{% trans "Previous" %}</button>
                                         </div>
 
                                         <div style="margin-bottom: 1%;" class=" col-sm-1">
-                                            <a ng-click="hidelogsbtn()" href=""><img src="/static/images/close-32.png"></a>
+                                            <a ng-click="hidelogsbtn()" href="">
+                                                <!--img src="/static/images/close-32.png"-->
+                                                <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                            </a>
                                         </div>
                                         <div class="col-sm-12">
                                             <table class="table">
@@ -209,7 +184,7 @@
                                     </div>
 
 
-                                    <div ng-hide="hideErrorLogs" class="form-group">
+                                    <div ng-hide="hideErrorLogs" class="">
 
                                         <div class="col-sm-2">
                                             <input placeholder="Page Number" type="number" class="form-control"
@@ -218,101 +193,85 @@
 
                                         <div class="col-sm-9">
                                             <button ng-click="fetchErrorLogs(3)" type="button"
-                                                    class="btn ra-100 btn-purple">{% trans "Next" %}</button>
+                                                    class="btn btn-sm ra-50 btn-primary mx-5">{% trans "Next" %}</button>
                                             <button ng-click="fetchErrorLogs(4)" type="button"
-                                                    class="btn ra-100 btn-purple">{% trans "Previous" %}</button>
+                                                    class="btn btn-sm ra-50 btn-primary mx-5">{% trans "Previous" %}</button>
                                         </div>
 
                                         <div style="margin-bottom: 1%;" class=" col-sm-1">
-                                            <a ng-click="hideErrorLogsbtn()" href=""><img
-                                                    src="/static/images/close-32.png"></a>
+                                            <a ng-click="hideErrorLogsbtn()" href="">
+                                                <!--img src="/static/images/close-32.png"-->
+                                                <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                            </a>
                                         </div>
-
                                         <div class="col-sm-12">
                                             <textarea ng-model="errorLogsData" rows="25"
                                                       class="form-control"></textarea>
                                         </div>
                                     </div>
-
-
                                 </form>
-
-
                             </div>
-
-
                         </div>
                     </div>
                 </div>
             </div>
 
-
-            <div class="example-box-wrapper">
-                <div style="border-radius: 25px;border-color:#3498db" class="content-box">
-
-                    <h3 class="content-box-header bg-blue">
+            <div class="example-box-wrapper my-10">
+                <div class="panel panel-body">
+                    <h3 class="content-box-header">
                         {% trans "Domains" %} <img ng-hide="domainLoading" src="/static/images/loading.gif">
                     </h3>
-
                     <div class="content-box-wrapper">
-
-                        <div class="row">
-
-                            <div class="col-md-3" style="margin-bottom: 2%;">
+                        <div class="row mx-10">
+                            <div class="col-md-3 panel-body">
                                 <a href="" ng-click="showCreateDomainForm()" title="{% trans 'Add Domains' %}" href="">
-                                    <img src="{% static 'images/icons/domains.png' %}">
+                                    <img src="{% static 'images/icons/domains.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a ng-click="showCreateDomainForm()" title="{% trans 'Add Domains' %}" href=""
                                    title="{% trans 'Add Domains' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Add Domains" %}</span>
+                                    <span class="h4">{% trans "Add Domains" %}</span>
                                 </a>
-
                             </div>
 
-
-                            <div class="col-md-3" style="margin-bottom: 2%;">
+                            <div class="col-md-3 panel-body">
                                 <a href="" ng-click="showListDomains()" title="{% trans 'List Domains' %}" href=""
                                    title="{% trans 'List Domains' %}">
-                                    <img src="{% static 'images/icons/sort.png' %}">
+                                    <img src="{% static 'images/icons/sort.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a ng-click="showListDomains()" title="{% trans 'List Domains' %}" href=""
                                    title="{% trans 'List Domains' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "List Domains" %}</span>
+                                    <span class="h4">{% trans "List Domains" %}</span>
                                 </a>
-
                             </div>
 
-                            <div class="col-md-3" style="margin-bottom: 2%;">
+                            <div class="col-md-3 panel-body">
                                 <a href="{$ domainAliasURL $}" target="_blank" title="{% trans 'Domain Alias' %}"
                                    href="" title="{% trans 'Domain Alias' %}">
-                                    <img src="{% static 'images/icons/web-domain.png' %}">
+                                    <img src="{% static 'images/icons/web-domain.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a href="{$ domainAliasURL $}" target="_blank" title="{% trans 'Domain Alias' %}"
                                    href="" title="{% trans 'Domain Alias' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Domain Alias" %}</span>
+                                    <span class="h4">{% trans "Domain Alias" %}</span>
                                 </a>
-
                             </div>
 
-
-                            <div class="col-md-3" style="margin-bottom: 2%;">
+                            <div class="col-md-3 panel-body">
                                 <a href="{% url 'listCron' %}" target="_blank" title="{% trans 'Add new Cron Job' %}"
                                    href="" title="{% trans 'List Domains' %}">
-                                    <img src="{% static 'images/icons/repeat.png' %}">
+                                    <img src="{% static 'images/icons/repeat.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a href="{% url 'listCron' %}" target="_blank" title="{% trans 'List Domains' %}"
                                    title="{% trans 'Add new Cron Job' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Cron Jobs" %}</span>
+                                    <span class="h4">{% trans "Cron Jobs" %}</span>
                                 </a>
 
                             </div>
 
 
                             <!---------- HTML For creating domains --------------->
-                            <div class="col-md-12">
+                            <div class="col-md-12 mx-10">
                                 <form id="domainCreationForm" name="websiteCreationForm" action="/"
                                       class="form-horizontal bordered-row">
-
 
                                     <div ng-hide="installationDetailsForm" class="form-group">
                                         <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
@@ -321,8 +280,9 @@
                                                    ng-model="domainNameCreate" required>
                                         </div>
                                         <div style="margin-bottom: 1%;" class=" col-sm-1">
-                                            <a title="{% trans 'Cancel' %}" ng-click="hideDomainCreationForm()" href=""><img
-                                                    src="/static/images/close-32.png"></a>
+                                            <a title="{% trans 'Cancel' %}" ng-click="hideDomainCreationForm()" href="">
+                                                <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                            </a>
                                         </div>
                                     </div>
 
@@ -385,7 +345,7 @@
                                         <label class="col-sm-3 control-label"></label>
                                         <div class="col-sm-4">
                                             <button type="button" ng-click="createDomain()"
-                                                    class="btn btn-primary btn-lg btn-block">{% trans "Create Domain" %}</button>
+                                                    class="btn btn-primary btn-lg">{% trans "Create Domain" %}</button>
 
                                         </div>
                                     </div>
@@ -428,7 +388,7 @@
                                         <label class="col-sm-3 control-label"></label>
                                         <div class="col-sm-4">
                                             <button type="button" ng-disabled="goBackDisable" ng-click="goBack()"
-                                                    class="btn btn-primary btn-lg btn-block">{% trans "Go Back" %}</button>
+                                                    class="btn btn-primary btn-lg">{% trans "Go Back" %}</button>
                                         </div>
                                     </div>
 
@@ -440,7 +400,7 @@
 
                             <!---------- HTML For Listing domains --------------->
 
-                            <div id="listDomains" class="col-md-12">
+                            <div id="listDomains" class="col-md-12 mx-10">
 
                                 <form ng-hide="" class="form-horizontal bordered-row">
 
@@ -481,8 +441,9 @@
                                         </div>
 
                                         <div style="margin-bottom: 1%;" class=" col-sm-1">
-                                            <a title="{% trans 'Close' %}" ng-click="hideListDomains()" href=""><img
-                                                    src="/static/images/close-32.png"></a>
+                                            <a title="{% trans 'Close' %}" ng-click="hideListDomains()" href="">
+                                                <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                                </a>
                                         </div>
 
 
@@ -525,12 +486,12 @@
                                                     <td>
                                                         <button type="button"
                                                                 ng-click="issueSSL(record.childDomain,record.path)"
-                                                                class="btn ra-100 btn-purple">{% trans "Issue" %}</button>
+                                                                class="btn ra-50 btn-primary">{% trans "Issue" %}</button>
                                                     </td>
                                                     <td>
                                                         <button type="button"
                                                                 ng-click="deleteChildDomain(record.childDomain)"
-                                                                class="btn ra-100 btn-purple">{% trans "Delete" %}</button>
+                                                                class="btn ra-50 btn-primary">{% trans "Delete" %}</button>
                                                     </td>
                                                 </tr>
                                                 </tbody>
@@ -550,67 +511,51 @@
                 </div>
             </div>
 
-
-            <div class="example-box-wrapper">
-
-                <div style="border-radius: 25px;border-color:#3498db" class="content-box" style="margin-bottom: 2%;">
-                    <h3 class="content-box-header bg-blue">
+            <div class="example-box-wrapper my-10">
+                <div class="panel panel-body">
+                    <h3 class="content-box-header">
                         {% trans "Configurations" %} <img ng-hide="configFileLoading" src="/static/images/loading.gif">
                     </h3>
-
-
                     <div class="content-box-wrapper">
-                        <div class="row">
-
-                            <div class="col-md-3" style="margin-bottom: 2%;">
-
+                        <div class="row mx-10">
+                            <div class="col-md-3 panel-body">
                                 <a ng-click="fetchConfigurations()" href=""
                                    title="{% trans 'Edit vHost Main Configurations' %}">
-                                    <img src="{% static 'images/icons/file.png' %}">
+                                    <img src="{% static 'images/icons/file.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a ng-click="fetchConfigurations()" href=""
                                    title="{% trans 'Edit vHost Main Configurations' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "vHost Conf" %}</span>
+                                    <span class="h4">{% trans "vHost Conf" %}</span>
                                 </a>
-
                             </div>
 
-
-                            <div class="col-md-3" style="margin-bottom: 2%;">
-
+                            <div class="col-md-3 panel-body">
                                 <a ng-click="fetchRewriteFules()" href=""
                                    title="{% trans 'Add Rewrite Rules (.htaccess)' %}">
-                                    <img src="{% static 'images/icons/pencilcase.png' %}">
+                                    <img src="{% static 'images/icons/pencilcase.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a ng-click="fetchRewriteFules()" href=""
                                    title="{% trans 'Rewrite Rules (.htaccess)' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Rewrite Rules" %}</span>
+                                    <span class="h4">{% trans "Rewrite Rules" %}</span>
                                 </a>
-
                             </div>
 
-
-                            <div class="col-md-3" style="margin-bottom: 2%;">
-
+                            <div class="col-md-3 panel-body">
                                 <a ng-click="addSSL()" href="" title="{% trans 'Add Your Own SSL' %}">
-                                    <img src="{% static 'images/icons/locked.png' %}">
+                                    <img src="{% static 'images/icons/locked.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a ng-click="addSSL()" href="" title="{% trans 'Add Your Own SSL' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Add SSL" %}</span>
+                                    <span class="h4">{% trans "Add SSL" %}</span>
                                 </a>
-
                             </div>
 
-
-                            <div class="col-md-3" style="margin-bottom: 2%;">
-
+                            <div class="col-md-3 panel-body">
                                 <a ng-click="changePHPMaster()" href="" title="{% trans 'Change PHP Version' %}">
-                                    <img src="{% static 'images/icons/laptop.png' %}">
+                                    <img src="{% static 'images/icons/laptop.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a ng-click="changePHPMaster()" href="" title="{% trans 'Change PHP Version' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Change PHP" %}</span>
+                                    <span class="h4">{% trans "Change PHP" %}</span>
                                 </a>
-
                             </div>
 
                             <!---- HTML for main ssl file ---->
@@ -653,15 +598,10 @@
                                         <label class="col-sm-3 control-label"></label>
                                         <div class="col-sm-4">
                                             <button type="button" ng-click="saveSSL()"
-                                                    class="btn btn-primary btn-lg btn-block">{% trans "Save" %}</button>
-
+                                                    class="btn btn-primary btn-lg">{% trans "Save" %}</button>
                                         </div>
                                     </div>
-
-
                                 </form>
-
-
                             </div>
 
 
@@ -671,19 +611,15 @@
                             <!---- HTML for main conf file ---->
 
                             <div class="col-md-12">
-
                                 <form ng-hide="configurationsBox" class="form-horizontal bordered-row">
-
                                     <div ng-hide="configsFetched" class="alert alert-success">
                                         <p>{% trans "Current configuration in the file fetched." %}</p>
                                     </div>
-
 
                                     <div ng-hide="couldNotFetchConfigs" class="alert alert-danger">
                                         <p>{% trans "Could not fetch current configuration. Error message:" %} {$
                                             errorMessage $}</p>
                                     </div>
-
 
                                     <div ng-hide="couldNotConnect" class="alert alert-danger">
                                         <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
@@ -697,7 +633,6 @@
                                         <p>{% trans "Could not fetch current configuration. Error message:" %} {$
                                             errorMessage $}</p>
                                     </div>
-
 
                                     <div ng-hide="fetchedConfigsData" class="form-group">
                                         <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
@@ -713,23 +648,16 @@
                                         <label class="col-sm-3 control-label"></label>
                                         <div class="col-sm-4">
                                             <button type="button" ng-click="saveCongiruations()"
-                                                    class="btn btn-primary btn-lg btn-block">{% trans "Save" %}</button>
-
+                                                    class="btn btn-primary btn-lg">{% trans "Save" %}</button>
                                         </div>
                                     </div>
-
-
                                 </form>
-
                             </div>
 
                             <!-- HTML For rewrite rules-->
 
                             <div class="col-md-12">
-
                                 <form ng-hide="configurationsBoxRewrite" class="form-horizontal bordered-row">
-
-
                                     <div ng-hide="rewriteRulesFetched" class="alert alert-success">
                                         <p>{% trans "Current rewrite rules in the file fetched." %} <a target="_blank"
                                                                                                        href="http://go.cyberpanel.net/cyber9bed2">Click</a>
@@ -738,12 +666,10 @@
                                                 rules</a> from v1.7 onwards.</p>
                                     </div>
 
-
                                     <div ng-hide="couldNotFetchRewriteRules" class="alert alert-danger">
                                         <p>{% trans "Could not fetch current rewrite rules. Error message:" %} {$
                                             errorMessage $}</p>
                                     </div>
-
 
                                     <div ng-hide="couldNotConnect" class="alert alert-danger">
                                         <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
@@ -757,7 +683,6 @@
                                         <p>{% trans "Could not save rewrite rules. Error message:" %} {$ errorMessage
                                             $}</p>
                                     </div>
-
 
                                     <div ng-hide="fetchedRewriteRules" class="form-group">
                                         <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
@@ -773,11 +698,9 @@
                                         <label class="col-sm-3 control-label"></label>
                                         <div class="col-sm-4">
                                             <button type="button" ng-click="saveRewriteRules()"
-                                                    class="btn btn-primary btn-lg btn-block">{% trans "Save Rewrite Rules" %}</button>
-
+                                                    class="btn btn-primary btn-lg">{% trans "Save Rewrite Rules" %}</button>
                                         </div>
                                     </div>
-
 
                                 </form>
 
@@ -802,7 +725,7 @@
 
                                         <div style="margin-bottom: 1%;" class=" col-sm-1">
                                             <a title="{% trans 'Cancel' %}" ng-click="hideChangePHPMaster()"
-                                               href=""><img src="/static/images/close-32.png"></a>
+                                               href=""><h3 class="glyph-icon icon-close text-danger mt-5"></h3></a>
                                         </div>
 
                                     </div>
@@ -812,7 +735,7 @@
                                         <label class="col-sm-3 control-label"></label>
                                         <div class="col-sm-4">
                                             <button type="button" ng-click="changePHPVersionMaster()"
-                                                    class="btn btn-primary btn-lg btn-block">{% trans "Change PHP" %}</button>
+                                                    class="btn btn-primary btn-lg">{% trans "Change PHP" %}</button>
                                         </div>
                                     </div>
 
@@ -835,10 +758,7 @@
                                                 <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                                             </div>
                                         </div>
-
-
                                     </div>
-
 
                                 </form>
                             </div>
@@ -849,68 +769,53 @@
             </div>
 
 
-            <div class="example-box-wrapper">
-                <div style="border-radius: 25px;border-color:#3498db" class="content-box">
-                    <h3 class="content-box-header bg-blue">
+            <div class="example-box-wrapper my-10">
+                <div class="panel panel-body">
+                    <h3 class="content-box-header">
                         {% trans "Files" %}
                     </h3>
-
                     <div class="content-box-wrapper">
-                        <div class="row">
-
-                            <div class="col-md-3" style="margin-bottom: 2%;">
-
+                        <div class="row mx-10">
+                            <div class="col-md-3 panel-body">
                                 <a href="{$ fileManagerURL $}" target="_blank" title="{% trans 'File Manager' %}">
-                                    <img src="{% static 'images/icons/office-material.png' %}">
+                                    <img src="{% static 'images/icons/office-material.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a href="{$ fileManagerURL $}" target="_blank" title="{% trans 'File Manager' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "File Manager" %}</span>
+                                    <span class="h4">{% trans "File Manager" %}</span>
                                 </a>
-
                             </div>
 
-                            <div class="col-md-3" style="margin-bottom: 2%;">
-
+                            <div class="col-md-3 panel-body">
                                 <a ng-click="openBaseDirView()" href="" title="{% trans 'open_basedir Protection' %}">
-                                    <img src="{% static 'images/icons/open_basedir.png' %}">
+                                    <img src="{% static 'images/icons/open_basedir.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a ng-click="openBaseDirView()" href="" title="{% trans 'open_basedir Protection' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "open_basedir" %}</span>
+                                    <span class="h4">{% trans "open_basedir" %}</span>
                                 </a>
-
                             </div>
 
-
-                            <div class="col-md-3" style="margin-bottom: 2%;">
-
+                            <div class="col-md-3 panel-body">
                                 <a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}">
-                                    <img src="{% static 'images/icons/ftp-upload.png' %}">
+                                    <img src="{% static 'images/icons/ftp-upload.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Create FTP Acct" %}</span>
+                                    <span class="h4">{% trans "Create FTP Acct" %}</span>
                                 </a>
-
                             </div>
 
-
-                            <div class="col-md-3" style="margin-bottom: 2%;">
-
+                            <div class="col-md-3 panel-body">
                                 <a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}">
-                                    <img src="{% static 'images/icons/delete-ftp.png' %}">
+                                    <img src="{% static 'images/icons/delete-ftp.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Delete FTP Acct" %}</span>
+                                    <span class="h4">{% trans "Delete FTP Acct" %}</span>
                                 </a>
-
                             </div>
-
 
                             <!--- HTML To change open_basedir --->
 
                             <div ng-hide="openBaseDirBox" class="col-md-12">
-
                                 <form action="/" class="form-horizontal bordered-row">
-
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">{% trans "open_basedir Protection" %}</label>
                                         <div class="col-sm-6">
@@ -924,11 +829,10 @@
                                             <img src="{% static 'images/loading.gif' %}">
                                         </div>
 
-                                        <div style="margin-bottom: 2%;" class=" col-sm-1">
+                                        <div style="margin-bottom: 2%;" class="col-sm-1">
                                             <a title="{% trans 'Cancel' %}" ng-click="hideOpenBasedir()" href=""><img
                                                     src="/static/images/close-32.png"></a>
                                         </div>
-
                                     </div>
 
 
@@ -936,7 +840,7 @@
                                         <label class="col-sm-3 control-label"></label>
                                         <div class="col-sm-4">
                                             <button type="button" ng-click="applyOpenBasedirChanges()"
-                                                    class="btn btn-primary btn-lg btn-block">{% trans "Apply Changes" %}</button>
+                                                    class="btn btn-primary btn-lg">{% trans "Apply Changes" %}</button>
                                         </div>
                                     </div>
                                     <div class="form-group">
@@ -972,68 +876,57 @@
 
             {% if marketingStatus %}
 
-                <div class="example-box-wrapper">
-                    <div style="border-radius: 25px;border-color:#3498db" class="content-box">
-                        <h3 class="content-box-header bg-blue">
+                <div class="example-box-wrapper my-10">
+                    <div class="panel panel-body">
+                        <h3 class="content-box-header">
                             {% trans "Email Marketing" %}
                         </h3>
 
                         <div class="content-box-wrapper">
-                            <div class="row">
-
-                                <div class="col-md-3" style="margin-bottom: 2%;">
-
+                            <div class="row mx-10">
+                                <div class="col-md-3 panel-body">
                                     <a id="emailLists" target="_blank" title="{% trans 'Create Lists' %}">
-                                        <img src="{% static 'emailMarketing/mailing.png' %}">
+                                        <img src="{% static 'emailMarketing/mailing.png' %}" width="65" class="mr-10">
                                     </a>
                                     <a id="emailListsChild" target="_blank" title="{% trans 'Create Lists' %}">
-                                        <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Create Lists" %}</span>
+                                        <span class="h4">{% trans "Create Lists" %}</span>
                                     </a>
-
                                 </div>
 
-                                <div class="col-md-3" style="margin-bottom: 2%;">
-
+                                <div  class="col-md-3 panel-body">
                                     <a id="manageLists" target="_blank" title="{% trans 'Manage Lists' %}">
-                                        <img src="{% static 'emailMarketing/checklist.png' %}">
+                                        <img src="{% static 'emailMarketing/checklist.png' %}" width="65" class="mr-10">
                                     </a>
                                     <a id="manageListsChild" target="_blank" title="{% trans 'Manage Lists' %}">
-                                        <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Manage Lists" %}</span>
+                                        <span class="h4">{% trans "Manage Lists" %}</span>
                                     </a>
-
                                 </div>
 
-                                <div class="col-md-3" style="margin-bottom: 2%;">
-
+                                <div  class="col-md-3 panel-body">
                                     <a id="manageSMTPHosts" target="_blank" title="{% trans 'SMTP Hosts' %}">
-                                        <img src="{% static 'emailMarketing/post-office.png' %}">
+                                        <img src="{% static 'emailMarketing/post-office.png' %}" width="65" class="mr-10">
                                     </a>
                                     <a id="manageSMTPHostsChild" target="_blank" title="{% trans 'SMTP Hosts' %}">
-                                        <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "SMTP Hosts" %}</span>
+                                        <span class="h4">{% trans "SMTP Hosts" %}</span>
                                     </a>
-
                                 </div>
 
-                                <div class="col-md-3" style="margin-bottom: 2%;">
-
+                                <div  class="col-md-3 panel-body">
                                     <a id="composeEmails" target="_blank" title="{% trans 'Compose Message' %}">
-                                        <img src="{% static 'emailMarketing/compose.png' %}">
+                                        <img src="{% static 'emailMarketing/compose.png' %}" width="65" class="mr-10">
                                     </a>
                                     <a id="composeEmailsChild" target="_blank" title="{% trans 'Compose Message' %}">
-                                        <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Compose" %}</span>
+                                        <span class="h4">{% trans "Compose" %}</span>
                                     </a>
-
                                 </div>
 
-                                <div class="col-md-3" style="margin-bottom: 2%;">
-
+                                <div  class="col-md-3 panel-body">
                                     <a id="sendEmailsPage" target="_blank" title="{% trans 'Send Emails' %}">
-                                        <img src="{% static 'emailMarketing/paper-plane.png' %}">
+                                        <img src="{% static 'emailMarketing/paper-plane.png' %}" width="65" class="mr-10">
                                     </a>
                                     <a id="sendEmailsPageChild" target="_blank" title="{% trans 'Send Emails' %}">
-                                        <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Send Emails" %}</span>
+                                        <span class="h4">{% trans "Send Emails" %}</span>
                                     </a>
-
                                 </div>
 
                             </div>
@@ -1043,73 +936,58 @@
 
             {% endif %}
 
-            <div class="example-box-wrapper">
-
-                <div style="border-radius: 25px;border-color:#3498db" class="content-box">
-                    <h3 class="content-box-header bg-blue">
+            <div class="example-box-wrapper my-10">
+                <div class="panel panel-body">
+                    <h3 class="content-box-header">
                         {% trans "Application Installer" %} <img ng-hide="applicationInstallerLoading"
                                                                  src="/static/images/loading.gif">
                     </h3>
 
                     <div class="content-box-wrapper">
-                        <div class="row">
-
-
-                            <div class="col-md-4" style="margin-bottom: 2%;">
-
+                        <div class="row mx-10">
+                            <div class="col-md-3 panel-body">
                                 <a href="{$ wordPressInstallURL $}" target="_blank"
                                    title="{% trans 'Install wordpress with LSCache' %}">
-                                    <img src="{% static 'images/icons/wordpress.png' %}">
+                                    <img src="{% static 'images/icons/wordpress.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a href="{$ wordPressInstallURL $}" target="_blank"
                                    title="{% trans 'Install wordpress with LSCache' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Wordpress with LSCache" %}</span>
+                                    <span class="h4">{% trans "WP + LSCache" %}</span>
                                 </a>
-
                             </div>
 
-
-                            <div class="col-md-4" style="margin-bottom: 2%;">
-
+                            <div class="col-md-3 panel-body">
                                 <a href="{$ joomlaInstallURL $}" target="_blank"
                                    title="{% trans 'Install Joomla with LSCache' %}">
-                                    <img src="{% static 'images/icons/joomla-logo.png' %}">
+                                    <img src="{% static 'images/icons/joomla-logo.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a href="{$ joomlaInstallURL $}" target="_blank"
                                    title="{% trans 'Install Joomla with LSCache' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Joomla" %}</span>
+                                    <span class="h4">{% trans "Joomla" %}</span>
                                 </a>
-
                             </div>
 
-
-                            <div class="col-md-4" style="margin-bottom: 2%;">
-
+                            <div class="col-md-3 panel-body">
                                 <a href="{$ setupGit $}" target="_blank"
                                    title="{% trans 'Attach Git with this website!' %}">
-                                    <img src="{% static 'images/icons/git-logo.png' %}">
+                                    <img src="{% static 'images/icons/git-logo.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a href="{$ setupGit $}" target="_blank"
                                    title="{% trans 'Attach Git with this website!' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Git" %}</span>
+                                    <span class="h4">{% trans "Git" %}</span>
                                 </a>
-
                             </div>
 
-
-                            <div class="col-md-4" style="margin-bottom: 2%;">
-
+                            <div class="col-md-3 panel-body">
                                 <a href="{$ installPrestaURL $}" target="_blank"
                                    title="{% trans 'Install Prestashop' %}">
-                                    <img src="{% static 'images/icons/prestashop.png' %}">
+                                    <img src="{% static 'images/icons/prestashop.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a href="{$ installPrestaURL $}" target="_blank"
                                    title="{% trans 'Install Prestashop' %}">
-                                    <span style='font-size: 21px;font-family: "Times New Roman", Times, serif; padding-left: 2%'>{% trans "Prestashop" %}</span>
+                                    <span class="h4">{% trans "Prestashop" %}</span>
                                 </a>
-
                             </div>
-
 
                         </div>
                     </div>
