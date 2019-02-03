@@ -6,16 +6,17 @@ import json
 from django.http import HttpResponse
 from loginSystem.views import loadLoginPage
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from plogical.acl import ACLManager
 
 def preDockerRun(function):
     def wrap(request, *args, **kwargs):
         
         try:        
-            val = request.session['userID']
+           userID = request.session['userID']
         except KeyError:
             return redirect(loadLoginPage)
         
-        admin = Administrator.objects.get(pk=val)
+        currentACL = ACLManager.loadedACL(userID)
         
         if request.method == "POST":
             isPost = True
@@ -30,7 +31,7 @@ def preDockerRun(function):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
-                return render(request, 'dockerManager/install.html', {'status':admin.type, 'conErr':0})
+                return render(request, 'dockerManager/install.html', {'status':currentACL['admin'], 'conErr':0})
             
         # Check if docker is running and we are able to connect
                 
@@ -44,7 +45,7 @@ def preDockerRun(function):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
-                return render(request, 'dockerManager/install.html', {'status':admin.type, 'conErr':1})
+                return render(request, 'dockerManager/install.html', {'status':currentACL['admin'], 'conErr':1})
         
         return function(request, *args, **kwargs)
 
