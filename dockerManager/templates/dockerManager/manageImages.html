@@ -27,7 +27,7 @@
         <h4 class="modal-title">Image history</h4>
       </div>
       <div class="modal-body">
-        <table cellpadding="0" cellspacing="0" border="0" class="table table-responsive table-striped table-bordered" id="datatable-example">
+        <table cellpadding="0" cellspacing="0" border="0" class="table table-responsive table-striped" id="datatable-example" style="padding:0px;">
             <thead>
             <tr>
                 <th>ID</th>
@@ -45,7 +45,7 @@
                 <th ng-bind="history.Created"></th>
                 <th ng-bind="history.Comment"></th>
                 <th ng-bind="history.Size"></th>
-                
+
             </tr>
 
             </tbody>
@@ -57,29 +57,28 @@
     </div>
 
   </div>
-</div>        
-    
+</div>
+
 <div class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Images" %}
             {% trans "Images" %} <img id="imageLoading" src="/static/images/loading.gif" style="display: none;">
         <button class="btn btn-warning pull-right" ng-click="rmImage(0)" title="{% trans 'Delete unused images' %}">Prune</button>
         </h3><br>
-        
-        <div class="row">
-            <div class="col-sm-2"></div>
-            <label class="col-sm-2 control-label">Search Image</label>
+
+        <div class="row mx-10">
+            <label class="col-sm-2 control-label text-right">Search Image</label>
             <div class="col-sm-6">
                 <input type="text" ng-change="searchImages()" ng-model="searchString" class="form-control">
             </div>
             <div class="col-sm-2"></div>
         </div>
         <br>
-        
-        <div class="example-box-wrapper">
-            
-            <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="searchResult">
+
+        <div class="example-box-wrapper table-responsive">
+
+            <table cellpadding="0" cellspacing="0" border="0" class="table table-striped " id="searchResult" style="padding:0px;">
                 <thead>
                 <tr>
                     <th>Name (search)</th>
@@ -88,28 +87,28 @@
                 </tr>
                 </thead>
                 <tbody>
-                    
-                                  
+
+
                 <tr ng-repeat="image in images track by $index">
                     <td>
                         <span ng-bind="image.name"></span>
-                        <span ng-show="image.is_official == true"><i class="fa fa-check-circle" title="{% trans 'Official image' %}"></i></span>
-                        <span><i class="fa fa-exclamation-circle" ng-attr-title="{$ image.description $}"></i></span>
-                        
+                        <span ng-show="image.is_official == true"><i class="fa fa-check-circle btn-icon" title="{% trans 'Official image' %}"></i></span>
+                        <!--<span><i class="fa fa-exclamation-circle" ng-attr-title="{$ image.description $}"></i></span>-->
+
                     </td>
                     <td>
-                        <select ng-focus="loadTags($event)" ng-click="selectTag()" ng-model="imageTag[image.name2]" ng-options="tag for tag in tagList[image.name2]" ng-attr-id="{$ image.name2 $}" data-pageloaded='0' class="form-control ng-pristine ng-valid ng-empty ng-touched">                      
+                        <select ng-focus="loadTags($event)" ng-click="selectTag()" ng-model="imageTag[image.name2]" ng-options="tag for tag in tagList[image.name2]" ng-attr-id="{$ image.name2 $}" data-pageloaded='0' class="form-control ng-pristine ng-valid ng-empty ng-touched">
                         </select>
                     </td>
                     <td>
                         <a ng-click="pullImage(image.name, imageTag[image.name2])" class="btn btn-primary">{% trans "Pull" %}</a>
                     </td>
-                </tr>                 
+                </tr>
 
                 </tbody>
                 </table>
-            
-                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="imageList">
+
+                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped " id="imageList" style="padding:0px;">
                 <thead>
                 <tr>
                     <th>Name (Locally Available)</th>
@@ -118,27 +117,27 @@
                 </tr>
                 </thead>
                 <tbody>
-                    
 
-            {% for name, image in images.items %}                    
-                    
+
+            {% for name, image in images.items %}
+
                     <tr>
                         <td>{{image.name}}</td>
                         <td>
-                            <select class="form-control tagList" id="{{forloop.counter}}">              
+                            <select class="form-control tagList" id="{{forloop.counter}}">
                                 {% for tag in image.tags%}
                                 <option>{{tag}}</option>
                                 {% endfor %}
                             </select>
                         </td>
                         <td>
-                            <button class="btn btn-primary" title="History" ng-click="getHistory({{forloop.counter}})"><i class="fa fa-history"></i></button>
-                            <button class="btn btn-primary" title="Delete" ng-click="rmImage({{forloop.counter}})"><i class="fa fa-trash"></i></button>
+                            <button class="btn btn-primary" title="History" ng-click="getHistory({{forloop.counter}})"><i class="fa fa-history btn-icon"></i></button>
+                            <button class="btn btn-primary" title="Delete" ng-click="rmImage({{forloop.counter}})"><i class="fa fa-trash btn-icon"></i></button>
                         </td>
                     </tr>
-                    
-            {% endfor %}                    
-                                  
+
+            {% endfor %}
+
                 </tbody>
                 </table>
 

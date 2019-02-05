@@ -19,12 +19,12 @@
 
 <div class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Containers" %} <img id="imageLoading" src="/static/images/loading.gif" style="display: none;">
         </h3>
-        <div ng-controller="listContainers" class="example-box-wrapper">
+        <div ng-controller="listContainers" class="example-box-wrapper table-responsive">
 
-                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="datatable-example">
+                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped" id="datatable-example" style="padding:0px;">
                 <thead>
                 <tr>
                     <th>Name</th>
@@ -39,25 +39,25 @@
 
                 <tr ng-repeat="web in ContainerList track by $index">
                     <td ng-bind="web.name"></td>
-                    <td><a href="/docker/view/{$ web.name $}"><img width="30px" height="30" class="center-block" src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"></a></td>
+                    <td><a href="/docker/view/{$ web.name $}"><img width="30px" height="30" class="" src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"></a></td>
                     <td ng-bind="web.admin"></td>
                     <td ng-bind="web.image"></td>
                     <td ng-bind="web.tag"></td>
                     <td>
-                        <button class="btn btn-primary" ng-click="delContainer(web.name)"><i class="fa fa-trash"></i></button>
-                        <button class="btn btn-primary" ng-click="showLog(web.name)"><i class="fa fa-file"></i></button>
+                        <button class="btn btn-primary" ng-click="delContainer(web.name)"><i class="fa fa-trash btn-icon"></i></button>
+                        <button class="btn btn-primary" ng-click="showLog(web.name)"><i class="fa fa-file btn-icon"></i></button>
                     </td>
                 </tr>
 
                 </tbody>
                 </table>
-                                
+
 
         <div id="listFail" class="alert alert-danger">
             <p>{% trans "Error message:" %} {$ errorMessage $}</p>
         </div>
 
-            <div class="row">
+            <div class="row text-center">
 
                             <div class="col-sm-4 col-sm-offset-8">
 
@@ -79,12 +79,12 @@
 
 
                         </div>
-            
+
             {% if showUnlistedContainer %}
             <h3 class="title-hero">
                 {% trans "Unlisted Containers" %} <i class="fa fa-question-circle" title="{% trans "Containers listed below were either not created through panel or were not saved to database properly" %}"></i>
             </h3>
-            
+
             <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="datatable-example">
                 <thead>
                 <tr>
@@ -94,8 +94,8 @@
                 </tr>
                 </thead>
                 <tbody>
-                    
-                {% for container in unlistedContainers %}    
+
+                {% for container in unlistedContainers %}
                     <tr>
                         <td>{{container.name}}</td>
                         <td>{{container.status}}</td>
@@ -109,7 +109,7 @@
 
                 </tbody>
                 </table>
-            
+
             {% endif %}
 
 <div id="logs" class="modal fade" role="dialog">
@@ -131,8 +131,8 @@
     </div>
 
   </div>
-</div>             
-                    
+</div>
+
 <div id="assign" class="modal fade" role="dialog">
   <div class="modal-dialog">
 
@@ -163,14 +163,14 @@
     </div>
 
   </div>
-</div>   
+</div>
 
         </div>
     </div>
 </div>
-    
-    
-    
+
+
+
 
 
 

@@ -747,6 +747,31 @@ WantedBy=multi-user.target"""
             pass
 
     @staticmethod
+    def manageServiceMigrations():
+        try:
+            connection, cursor = Upgrade.setupConnection('cyberpanel')
+
+            query = """CREATE TABLE `manageServices_pdnsstatus` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `serverStatus` int(11) NOT NULL,
+  `type` varchar(6) NOT NULL,
+  `allow_axfr_ips` varchar(500) NOT NULL,
+  `also_notify` varchar(500) NOT NULL,
+  PRIMARY KEY (`id`)
+)"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            try:
+                connection.close()
+            except:
+                pass
+        except:
+            pass
+
+    @staticmethod
     def enableServices():
         try:
             servicePath = '/home/cyberpanel/powerdns'
@@ -1038,6 +1063,7 @@ WantedBy=multi-user.target"""
         Upgrade.applyLoginSystemMigrations()
         Upgrade.s3BackupMigrations()
         Upgrade.containerMigrations()
+        Upgrade.manageServiceMigrations()
         Upgrade.enableServices()
 
         Upgrade.installPHP73()

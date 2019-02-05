@@ -7,8 +7,8 @@ class ServiceManager:
     def __init__(self, extraArgs):
         self.extraArgs = extraArgs
 
-
     def managePDNS(self):
+        return 0
         type = self.extraArgs['type']
         path = '/etc/pdns/pdns.conf'
 

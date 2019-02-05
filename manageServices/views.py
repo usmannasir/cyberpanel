@@ -99,7 +99,7 @@ def fetchStatus(request):
                         data_ret['slaveIPData'] = pdns.also_notify
                     except:
                         PDNSStatus(serverStatus=1).save()
-                        data_ret['installCheck'] = 0
+                        data_ret['installCheck'] = 1
                         data_ret['slaveIPData'] = ''
 
                     json_data = json.dumps(data_ret)
@@ -173,10 +173,10 @@ def saveStatus(request):
                         sm = ServiceManager(extraArgs)
                         sm.managePDNS()
 
-                        command = 'sudo systemctl start pdns'
+                        command = 'sudo systemctl enable pdns'
                         subprocess.call(shlex.split(command))
 
-                        command = 'sudo systemctl enable pdns'
+                        command = 'sudo systemctl restart pdns'
                         subprocess.call(shlex.split(command))
 
                     else:
