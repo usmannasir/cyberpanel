@@ -569,12 +569,12 @@ app.controller('viewContainer', function ($scope, $http) {
                 $('#actionLoading').hide();
             }
         })
-    }
+    };
 
     $scope.addEnvField = function () {
         var countEnv = Object.keys($scope.envList).length;
         $scope.envList[countEnv + 1] = {'name': '', 'value': ''};
-    }
+    };
 
     $scope.showTop = function () {
         $scope.topHead = [];
@@ -615,7 +615,7 @@ app.controller('viewContainer', function ($scope, $http) {
             $scope.loadingTop = false;
         }
 
-    }
+    };
 
     $scope.cRemove = function () {
         (new PNotify({
@@ -672,7 +672,7 @@ app.controller('viewContainer', function ($scope, $http) {
                 $('#actionLoading').hide();
             }
         })
-    }
+    };
 
     $scope.refreshStatus = function () {
         url = "/docker/getContainerStatus";
@@ -784,7 +784,7 @@ app.controller('viewContainer', function ($scope, $http) {
             $scope.rPolicy = "No";
         }
 
-    }
+    };
 
     $scope.cAction = function (action) {
         $('#actionLoading').show();
@@ -831,7 +831,7 @@ app.controller('viewContainer', function ($scope, $http) {
             $('#actionLoading').hide();
         }
 
-    }
+    };
 
     $scope.loadLogs = function (name) {
         $scope.logs = "Loading...";
@@ -865,7 +865,7 @@ app.controller('viewContainer', function ($scope, $http) {
             console.log("not good");
             $scope.logs = "Error loading log";
         }
-    }
+    };
 
 });
 

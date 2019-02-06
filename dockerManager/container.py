@@ -1005,6 +1005,8 @@ class ContainerManager(multi.Thread):
 
                 volumes = {}
                 for index, volume in volList.iteritems():
+                    if volume['src'] == '' or volume['dest'] == '':
+                        continue
                     volumes[volume['src']] = {'bind': volume['dest'],
                                               'mode': 'rw'}
                 # Prepare data for recreate function
