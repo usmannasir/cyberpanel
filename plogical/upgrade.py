@@ -848,6 +848,11 @@ WantedBy=multi-user.target"""
                 if items.find('containerization') > -1:
                     containerization = 0
 
+            manageServices = 1
+            for items in data:
+                if items.find('manageServices') > -1:
+                    manageServices = 0
+
 
             Upgrade.stdOut('Restoring settings file!')
 
@@ -870,6 +875,9 @@ WantedBy=multi-user.target"""
 
                     if containerization == 1:
                         writeToFile.writelines("    'containerization',\n")
+
+                    if manageServices == 1:
+                        writeToFile.writelines("    'manageServices',\n")
 
                 else:
                     writeToFile.writelines(items)

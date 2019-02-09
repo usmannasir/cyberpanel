@@ -96,7 +96,7 @@ class S3Backups(multi.Thread):
         tempPath = '/home/cyberpanel/' + str(randint(10000, 99999))
 
         writeToFile = open(tempPath, 'w')
-        writeToFile.write('* * * * * /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/s3Backups/s3Backups.py > /home/cyberpanel/error-logs.txt 2>&1\n')
+        writeToFile.write('0 0 * * * /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/s3Backups/s3Backups.py > /home/cyberpanel/error-logs.txt 2>&1\n')
         writeToFile.close()
 
         command = 'sudo crontab -u cyberpanel ' + tempPath

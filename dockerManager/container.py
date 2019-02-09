@@ -1029,7 +1029,7 @@ class ContainerManager(multi.Thread):
 
                 con.env = json.dumps(envDict)
                 con.volumes = json.dumps(volumes)
-                con.save()
+            con.save()
 
             data_ret = {'saveSettingsStatus': 1, 'error_message': 'None'}
             json_data = json.dumps(data_ret)

@@ -40,18 +40,21 @@ class FileManager:
 
             counter = 0
             for items in output:
-                currentFile = items.split(' ')
-                currentFile = filter(lambda a: a != '', currentFile)
-                if currentFile[-1] == '.' or currentFile[-1] == '..' or currentFile[0] == 'total':
-                    continue
-                dirCheck = 0
-                if currentFile[0][0] == 'd':
-                    dirCheck = 1
+                try:
+                    currentFile = items.split(' ')
+                    currentFile = filter(lambda a: a != '', currentFile)
+                    if currentFile[-1] == '.' or currentFile[-1] == '..' or currentFile[0] == 'total':
+                        continue
+                    dirCheck = 0
+                    if currentFile[0][0] == 'd':
+                        dirCheck = 1
 
-                size = str(int(int(currentFile[4])/float(1024)))
-                lastModified = currentFile[5] + ' ' + currentFile[6] + ' ' + currentFile[7]
-                finalData[str(counter)] = [currentFile[-1], currentFile[-1], lastModified, size, currentFile[0], dirCheck]
-                counter = counter + 1
+                    size = str(int(int(currentFile[4])/float(1024)))
+                    lastModified = currentFile[5] + ' ' + currentFile[6] + ' ' + currentFile[7]
+                    finalData[str(counter)] = [currentFile[-1], currentFile[-1], lastModified, size, currentFile[0], dirCheck]
+                    counter = counter + 1
+                except:
+                    continue
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -69,18 +72,21 @@ class FileManager:
 
             counter = 0
             for items in output:
-                currentFile = items.split(' ')
-                currentFile = filter(lambda a: a != '', currentFile)
+                try:
+                    currentFile = items.split(' ')
+                    currentFile = filter(lambda a: a != '', currentFile)
 
-                if currentFile[-1] == '.' or currentFile[-1] == '..' or currentFile[0] == 'total':
+                    if currentFile[-1] == '.' or currentFile[-1] == '..' or currentFile[0] == 'total':
+                        continue
+
+                    dirCheck = False
+                    if currentFile[0][0] == 'd':
+                        dirCheck = True
+
+                    finalData[str(counter)] = [currentFile[-1], self.data['completeStartingPath'] + '/' + currentFile[-1], dirCheck]
+                    counter = counter + 1
+                except:
                     continue
-
-                dirCheck = False
-                if currentFile[0][0] == 'd':
-                    dirCheck = True
-
-                finalData[str(counter)] = [currentFile[-1], self.data['completeStartingPath'] + '/' + currentFile[-1], dirCheck]
-                counter = counter + 1
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
