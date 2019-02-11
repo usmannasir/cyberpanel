@@ -135,6 +135,8 @@ def controller(request):
             return fm.extract()
         elif method == 'compress':
             return fm.compress()
+        elif method == 'changePermissions':
+            return fm.changePermissions()
 
 
     except BaseException, msg:

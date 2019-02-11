@@ -319,3 +319,25 @@ class FileManager:
 
         except BaseException, msg:
             return self.ajaxPre(0, str(msg))
+
+    def changePermissions(self):
+        try:
+
+            finalData = {}
+            finalData['status'] = 1
+
+            if self.data['recursive'] == 1:
+                command = 'sudo chmod -R ' + self.data['newPermissions'] + ' ' + self.returnPathEnclosed(
+                    self.data['basePath'] + '/' + self.data['permissionsPath'])
+            else:
+                command = 'sudo chmod ' + self.data['newPermissions'] + ' ' + self.returnPathEnclosed(
+                    self.data['basePath'] + '/' + self.data['permissionsPath'])
+
+
+            ProcessUtilities.executioner(command)
+
+            json_data = json.dumps(finalData)
+            return HttpResponse(json_data)
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))

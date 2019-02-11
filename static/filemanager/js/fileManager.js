@@ -1551,7 +1551,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             $scope.changePermissionsLoading = true;
             $('#showPermissions').modal('hide');
 
-            if (response.data.permissionsChanged === 1) {
+            if (response.data.status === 1) {
                 var notification = alertify.notify('Permissions Successfully Changed!', 'success', 5, function () {
                 });
                 $scope.fetchForTableSecondary(null, 'refresh');
