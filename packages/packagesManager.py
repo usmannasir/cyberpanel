@@ -62,7 +62,7 @@ class PackagesManager:
                 return ACLManager.loadErrorJson('saveStatus', 0)
 
             data = json.loads(self.request.body)
-            packageName = data['packageName']
+            packageName = data['packageName'].replace(' ', '')
             packageSpace = int(data['diskSpace'])
             packageBandwidth = int(data['bandwidth'])
             packageDatabases = int(data['dataBases'])
