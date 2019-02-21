@@ -578,6 +578,7 @@ class ApplicationInstaller(multi.Thread):
 
             try:
                 command = 'sudo GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --depth 1 --no-single-branch git@' + defaultProvider +'.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
+                logging.writeToFile(command)
                 subprocess.check_output(shlex.split(command))
             except subprocess.CalledProcessError, msg:
                 statusFile = open(tempStatusPath, 'w')

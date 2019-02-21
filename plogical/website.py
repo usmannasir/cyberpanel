@@ -1766,6 +1766,8 @@ class WebsiteManager:
 
                 configContent = """Host github.com
     IdentityFile /root/.ssh/git
+Host gitlab.com
+    IdentityFile /root/.ssh/git
 """
 
                 path = "/home/cyberpanel/config"
