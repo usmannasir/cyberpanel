@@ -1758,10 +1758,28 @@ class WebsiteManager:
                 return render(request, 'websiteFunctions/setupGit.html',
                               {'domainName': self.domain, 'installed': 1, 'webhookURL': webhookURL})
             else:
-                command = "sudo ssh-keygen -f /root/.ssh/" + self.domain + " -t rsa -N ''"
+
+                command = "sudo ssh-keygen -f /root/.ssh/git -t rsa -N ''"
                 ProcessUtilities.executioner(command)
 
-                command = 'sudo cat /root/.ssh/' + self.domain + '.pub'
+                ###
+
+                configContent = """Host github.com
+    IdentityFile /root/.ssh/git
+"""
+
+                path = "/home/cyberpanel/config"
+                writeToFile = open(path, 'w')
+                writeToFile.writelines(configContent)
+                writeToFile.close()
+
+                command = 'sudo mv ' + path + ' /root/.ssh/config'
+                ProcessUtilities.executioner(command)
+
+                command = 'sudo chown root:root /root/.ssh/config'
+                ProcessUtilities.executioner(command)
+
+                command = 'sudo cat /root/.ssh/git.pub'
                 deploymentKey = subprocess.check_output(shlex.split(command)).strip('\n')
 
             return render(request, 'websiteFunctions/setupGit.html',

@@ -13,6 +13,8 @@ class secMiddleware:
                 #logging.writeToFile(request.body)
                 data = json.loads(request.body)
                 for key, value in data.iteritems():
+                    if request.path.find('gitNotify') > -1:
+                        break
                     if type(value) == str or type(value) == unicode:
                         pass
                     else:

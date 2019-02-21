@@ -547,6 +547,8 @@ class ApplicationInstaller(multi.Thread):
                 externalApp = website.externalApp
                 finalPath = "/home/" + domainName + "/public_html/"
 
+
+
             ## Security Check
 
             if finalPath.find("..") > -1:
@@ -575,8 +577,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             try:
-
-                command = 'sudo git clone https://' + defaultProvider +'.com/' + username + '/' + reponame + ' -b ' + branch + ' ' + finalPath
+                command = 'sudo git clone --depth 1 --no-single-branch git@' + defaultProvider +'.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
                 subprocess.check_output(shlex.split(command))
             except subprocess.CalledProcessError, msg:
                 statusFile = open(tempStatusPath, 'w')
@@ -870,7 +871,6 @@ class ApplicationInstaller(multi.Thread):
             githubBranch = self.extraArgs['githubBranch']
             admin = self.extraArgs['admin']
 
-
             try:
                 website = Websites.objects.get(domain=domainName)
                 finalPath = "/home/" + domainName + "/public_html/"
@@ -879,18 +879,16 @@ class ApplicationInstaller(multi.Thread):
                 finalPath = childDomain.path
 
             try:
-                command = 'sudo GIT_SSH_COMMAND="ssh -i /root/.ssh/cyberpanel  -o StrictHostKeyChecking=no" git -C ' + finalPath + '  checkout -b ' + githubBranch
+                command = 'sudo git --git-dir=' + finalPath + '/.git  checkout -b ' + githubBranch
                 subprocess.check_output(shlex.split(command))
-
-            except subprocess.CalledProcessError, msg:
-                logging.writeToFile('Failed to change branch: ' +  str(msg))
-                return 0
-
-            ##
-
-
+            except:
+                try:
+                    command = 'sudo git --git-dir=' + finalPath + '/.git  checkout ' + githubBranch
+                    subprocess.check_output(shlex.split(command))
+                except subprocess.CalledProcessError, msg:
+                    logging.writeToFile('Failed to change branch: ' +  str(msg))
+                    return 0
             return 0
-
-
         except BaseException, msg:
+            logging.writeToFile('Failed to change branch: ' + str(msg))
             return 0
