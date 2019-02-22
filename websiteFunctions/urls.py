@@ -17,6 +17,7 @@ urlpatterns = [
     url(r'^submitWebsiteCreation$', views.submitWebsiteCreation, name='submitWebsiteCreation'),
     url(r'^submitWebsiteDeletion$', views.submitWebsiteDeletion, name='submitWebsiteDeletion'),
     url(r'^submitWebsiteListing$', views.getFurtherAccounts, name='submitWebsiteListing'),
+    url(r'^searchWebsites$', views.searchWebsites, name='searchWebsites'),
     url(r'^submitWebsiteModification$', views.deleteWebsite, name='submitWebsiteModification'),
     url(r'^submitWebsiteStatus$', views.submitWebsiteStatus, name='submitWebsiteStatus'),
 

@@ -338,6 +338,60 @@ app.controller('listWebsites', function ($scope, $http) {
 
 
     };
+
+    $scope.cyberPanelLoading = true;
+
+    $scope.searchWebsites = function () {
+
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            patternAdded: $scope.patternAdded
+        };
+
+        dataurl = "/websites/searchWebsites";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.listWebSiteStatus === 1) {
+
+                var finalData = JSON.parse(response.data.data);
+                $scope.WebSitesList = finalData;
+                $("#listFail").hide();
+            }
+            else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                    title: 'Operation Failed!',
+                    text: 'Connect disrupted, refresh the page.',
+                    type: 'error'
+                });
+        }
+
+
+    };
+
+
+
 });
 
 /* Java script code to list accounts ends here */

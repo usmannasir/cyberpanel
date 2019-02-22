@@ -249,6 +249,19 @@ class WebsiteManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
+    def searchWebsites(self, userID = None, data = None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            json_data = self.searchWebsitesJson(userID, data['patternAdded'])
+            pagination = self.websitePagination(currentACL, userID)
+            final_dic = {'status': 1, 'listWebSiteStatus': 1, 'error_message': "None", "data": json_data, 'pagination': pagination}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+        except BaseException, msg:
+            dic = {'status': 1, 'listWebSiteStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
+
     def getFurtherAccounts(self, userID = None, data = None):
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -2018,6 +2031,40 @@ Host gitlab.com
             data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+    def searchWebsitesJson(self, userID, searchTerm):
+
+        websites = ACLManager.searchWebsiteObjects(userID, searchTerm)
+
+        json_data = "["
+        checker = 0
+
+        try:
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile("Failed to read machine IP, error:" + str(msg))
+            ipAddress = "192.168.100.1"
+
+        for items in websites:
+            if items.state == 0:
+                state = "Suspended"
+            else:
+                state = "Active"
+            dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
+                   'admin': items.admin.userName, 'package': items.package.packageName, 'state': state}
+
+            if checker == 0:
+                json_data = json_data + json.dumps(dic)
+                checker = 1
+            else:
+                json_data = json_data + ',' + json.dumps(dic)
+
+        json_data = json_data + ']'
+
+        return json_data
 
     def findWebsitesJson(self, currentACL, userID, pageNumber):
         finalPageNumber = ((pageNumber * 10)) - 10

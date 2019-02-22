@@ -17,8 +17,13 @@
 
     <div id="page-title">
         <h2 id="domainNamePage">{% trans "List Websites" %}</h2> <img ng-hide="cyberPanelLoading"
-                                                       src="{% static 'images/loading.gif' %}">
+                                                                      src="{% static 'images/loading.gif' %}">
         <p>{% trans "On this page you can launch, list, modify and delete websites from your server." %}</p>
+    </div>
+
+    <div class="col-sm-12" style="padding: 0px; box-shadow: 0px 0px 1px 0px #888888; margin-bottom: 2%">
+        <input ng-change="searchWebsites()" placeholder="Search..." ng-model="patternAdded" name="dom" type="text"
+               class="form-control" required>
     </div>
 
     <div ng-repeat="web in WebSitesList track by $index" class="panel col-md-12"

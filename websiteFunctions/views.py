@@ -108,6 +108,14 @@ def fetchDomains(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def searchWebsites(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.searchWebsites(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def getFurtherAccounts(request):
     try:
         userID = request.session['userID']

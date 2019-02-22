@@ -365,6 +365,11 @@ class ACLManager:
         return websiteNames
 
     @staticmethod
+    def searchWebsiteObjects(userID, searchTerm):
+        admin = Administrator.objects.get(pk=userID)
+        return Websites.objects.filter(admin=admin, domain__istartswith=searchTerm)
+
+    @staticmethod
     def findWebsiteObjects(currentACL, userID):
 
         if currentACL['admin'] == 1:
