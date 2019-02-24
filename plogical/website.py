@@ -252,7 +252,13 @@ class WebsiteManager:
     def searchWebsites(self, userID = None, data = None):
         try:
             currentACL = ACLManager.loadedACL(userID)
-            json_data = self.searchWebsitesJson(userID, data['patternAdded'])
+            try:
+                json_data = self.searchWebsitesJson(currentACL, userID, data['patternAdded'])
+            except BaseException, msg:
+                tempData = {}
+                tempData['page'] = 1
+                return self.getFurtherAccounts(userID, tempData)
+
             pagination = self.websitePagination(currentACL, userID)
             final_dic = {'status': 1, 'listWebSiteStatus': 1, 'error_message': "None", "data": json_data, 'pagination': pagination}
             final_json = json.dumps(final_dic)
@@ -2032,9 +2038,9 @@ Host gitlab.com
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def searchWebsitesJson(self, userID, searchTerm):
+    def searchWebsitesJson(self, currentlACL, userID, searchTerm):
 
-        websites = ACLManager.searchWebsiteObjects(userID, searchTerm)
+        websites = ACLManager.searchWebsiteObjects(currentlACL, userID, searchTerm)
 
         json_data = "["
         checker = 0

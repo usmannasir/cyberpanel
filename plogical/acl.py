@@ -365,13 +365,29 @@ class ACLManager:
         return websiteNames
 
     @staticmethod
-    def searchWebsiteObjects(userID, searchTerm):
-        admin = Administrator.objects.get(pk=userID)
-        return Websites.objects.filter(admin=admin, domain__istartswith=searchTerm)
+    def searchWebsiteObjects(currentACL, userID, searchTerm):
+        if currentACL['admin'] == 1:
+            return Websites.objects.filter(domain__istartswith=searchTerm)
+        else:
+            websiteList = []
+            admin = Administrator.objects.get(pk=userID)
+
+            websites = admin.websites_set.filter(domain__istartswith=searchTerm)
+
+            for items in websites:
+                websiteList.append(items)
+
+            admins = Administrator.objects.filter(owner=admin.pk)
+
+            for items in admins:
+                webs = items.websites_set.filter(domain__istartswith=searchTerm)
+                for web in webs:
+                    websiteList.append(web)
+
+            return websiteList
 
     @staticmethod
     def findWebsiteObjects(currentACL, userID):
-
         if currentACL['admin'] == 1:
             return Websites.objects.all()
         else:
