@@ -123,8 +123,8 @@ extprocessor {externalApp} {
   respBuffer              0
   autoStart               1
   path                    /usr/local/lsws/lsphp{php}/bin/lsphp
-  extUser                 {externalApp}
-  extGroup                {externalApp}
+  extUser                 {externalAppMaster}
+  extGroup                {externalAppMaster}
   memSoftLimit            2047M
   memHardLimit            2047M
   procSoftLimit           400

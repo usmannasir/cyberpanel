@@ -734,6 +734,7 @@ class vhost:
                 currentConf = currentConf.replace('{masterDomain}', masterDomain)
                 currentConf = currentConf.replace('{adminEmails}', administratorEmail)
                 currentConf = currentConf.replace('{externalApp}', externalApp)
+                currentConf = currentConf.replace('{externalAppMaster}', virtualHostUser)
                 currentConf = currentConf.replace('{php}', php)
                 currentConf = currentConf.replace('{adminEmails}', administratorEmail)
                 currentConf = currentConf.replace('{php}', php)
