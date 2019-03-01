@@ -29,7 +29,6 @@ class remoteBackup:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [getKey]")
             return [0,"Not able to fetch key from remote server, Error Message:" + str(msg)]
 
-
     @staticmethod
     def startRestore(backupDir,backupLogPath,dir):
         try:

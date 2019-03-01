@@ -639,15 +639,26 @@ class backupUtilities:
     def sendKey(IPAddress, password,port):
         try:
 
+            expectation = []
+            expectation.append("password:")
+            expectation.append("Password:")
+            expectation.append("Permission denied")
+
             command = "sudo scp -o StrictHostKeyChecking=no -P "+ port +" /root/.ssh/cyberpanel.pub root@" + IPAddress + ":/root/.ssh/authorized_keys"
+            setupKeys = pexpect.spawn(command, timeout=3)
 
-            sendKeyProc = pexpect.spawn(command,timeout=3)
-            sendKeyProc.expect("password:")
+            index = setupKeys.expect(expectation)
 
-            sendKeyProc.sendline(password)
-            sendKeyProc.expect("100%")
+            ## on first login attempt send password
 
-            sendKeyProc.wait()
+            if index == 0:
+                setupKeys.sendline(password)
+            elif index == 1:
+                setupKeys.sendline(password)
+            elif index == 2:
+                return [0, 'Please enable password authentication on your remote server.']
+            else:
+                raise BaseException
 
             return [1, "None"]
 
@@ -671,15 +682,18 @@ class backupUtilities:
             if backupUtilities.checkIfHostIsUp(IPAddress) == 1:
                 pass
             else:
-                return [0,"Host is Down."]
+                logging.CyberCPLogFileWriter.writeToFile("Host is Down.")
+                #return [0,"Host is Down."]
 
             expectation = []
             expectation.append("password:")
+            expectation.append("Password:")
             expectation.append("Permission denied")
 
             command = "sudo ssh -o StrictHostKeyChecking=no -p "+ port +" root@"+IPAddress+" mkdir /root/.ssh"
+            logging.CyberCPLogFileWriter.writeToFile(command)
 
-            setupKeys = pexpect.spawn(command,timeout=3)
+            setupKeys = pexpect.spawn(command, timeout=3)
 
             index = setupKeys.expect(expectation)
 
@@ -688,6 +702,8 @@ class backupUtilities:
             if index == 0:
                 setupKeys.sendline(password)
             elif index == 1:
+                setupKeys.sendline(password)
+            elif index == 2:
                 return [0, 'Please enable password authentication on your remote server.']
             else:
                 raise BaseException
@@ -705,7 +721,7 @@ class backupUtilities:
             elif index == 1:
                 setupKeys.wait()
 
-                sendKey = backupUtilities.sendKey(IPAddress,password,port)
+                sendKey = backupUtilities.sendKey(IPAddress, password, port)
 
                 if sendKey[0] == 1:
                     return [1, "None"]
