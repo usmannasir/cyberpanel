@@ -644,7 +644,7 @@ class backupUtilities:
             expectation.append("Password:")
             expectation.append("Permission denied")
 
-            command = "sudo scp -o StrictHostKeyChecking=no -P "+ port +" /root/.ssh/cyberpanel.pub root@" + IPAddress + ":/root/.ssh/authorized_keys"
+            command = "scp -o StrictHostKeyChecking=no -P "+ port +" /root/.ssh/cyberpanel.pub root@" + IPAddress + ":/root/.ssh/authorized_keys"
             setupKeys = pexpect.spawn(command, timeout=3)
 
             index = setupKeys.expect(expectation)
@@ -653,8 +653,12 @@ class backupUtilities:
 
             if index == 0:
                 setupKeys.sendline(password)
+                setupKeys.expect("100%")
+                setupKeys.wait()
             elif index == 1:
                 setupKeys.sendline(password)
+                setupKeys.expect("100%")
+                setupKeys.wait()
             elif index == 2:
                 return [0, 'Please enable password authentication on your remote server.']
             else:
@@ -690,8 +694,7 @@ class backupUtilities:
             expectation.append("Password:")
             expectation.append("Permission denied")
 
-            command = "sudo ssh -o StrictHostKeyChecking=no -p "+ port +" root@"+IPAddress+" mkdir /root/.ssh"
-            logging.CyberCPLogFileWriter.writeToFile(command)
+            command = "ssh -o StrictHostKeyChecking=no -p "+ port +" root@"+IPAddress+" mkdir /root/.ssh"
 
             setupKeys = pexpect.spawn(command, timeout=3)
 
@@ -712,6 +715,7 @@ class backupUtilities:
 
             expectation = []
             expectation.append("please try again.")
+            expectation.append("Password:")
             expectation.append(pexpect.EOF)
 
             index = setupKeys.expect(expectation)
@@ -719,6 +723,8 @@ class backupUtilities:
             if index == 0:
                 return [0,"Wrong Password!"]
             elif index == 1:
+                return [0, "Wrong Password!"]
+            elif index == 2:
                 setupKeys.wait()
 
                 sendKey = backupUtilities.sendKey(IPAddress, password, port)
@@ -730,10 +736,8 @@ class backupUtilities:
 
 
         except pexpect.TIMEOUT, msg:
-            logging.CyberCPLogFileWriter.writeToFile(setupKeys.before + " " + str(msg) + " [setupSSHKeys]")
             return [0, str(msg) + " [TIMEOUT setupSSHKeys]"]
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(setupKeys.before + " " + str(msg) + " [setupSSHKeys]")
             return [0, str(msg) + " [setupSSHKeys]"]
 
     @staticmethod
@@ -759,6 +763,7 @@ class backupUtilities:
 
             expectation = []
             expectation.append("password:")
+            expectation.append("Password:")
             expectation.append("Last login")
             expectation.append(pexpect.EOF)
             expectation.append(pexpect.TIMEOUT)
@@ -772,8 +777,13 @@ class backupUtilities:
                 return [0,"Remote Server is not able to authenticate for transfer to initiate."]
             elif index == 1:
                 subprocess.call(['kill', str(checkConn.pid)])
+                logging.CyberCPLogFileWriter.writeToFile(
+                    "Remote Server is not able to authenticate for transfer to initiate, IP Address:" + IPAddress)
+                return [0, "Remote Server is not able to authenticate for transfer to initiate."]
+            elif index == 2:
+                subprocess.call(['kill', str(checkConn.pid)])
                 return [1, "None"]
-            elif index == 3:
+            elif index == 4:
                 subprocess.call(['kill', str(checkConn.pid)])
                 return [1, "None"]
             else:
@@ -968,6 +978,28 @@ def submitRestore(backupFile,dir):
             str(msg) + "  [cancelBackupCreation]")
         print "0,"+str(msg)
 
+def submitDestinationCreation(ipAddress, password, port):
+    setupKeys = backupUtilities.setupSSHKeys(ipAddress, password, port)
+
+    if setupKeys[0] == 1:
+        backupUtilities.createBackupDir(ipAddress, port)
+        print "1,None"
+    else:
+        print setupKeys[1]
+
+
+def getConnectionStatus(ipAddress):
+    try:
+        checkCon = backupUtilities.checkConnection(ipAddress)
+
+        if checkCon[0] == 1:
+            print "1,None"
+        else:
+            print checkCon[1]
+
+    except BaseException, msg:
+        print str(msg)
+
 def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -977,6 +1009,12 @@ def main():
     parser.add_argument('--backupPath', help='')
     parser.add_argument('--backupDomain', help='')
     parser.add_argument('--metaPath', help='')
+
+    ## Destination Creation
+
+    parser.add_argument('--ipAddress', help='')
+    parser.add_argument('--password', help='')
+    parser.add_argument('--port', help='')
 
     ## backup cancellation arguments
 
@@ -999,6 +1037,10 @@ def main():
         cancelBackupCreation(args.backupCancellationDomain,args.fileName)
     elif args.function == "submitRestore":
         submitRestore(args.backupFile,args.dir)
+    elif args.function == "submitDestinationCreation":
+        submitDestinationCreation(args.ipAddress, args.password, args.port)
+    elif args.function == "getConnectionStatus":
+        getConnectionStatus(args.ipAddress)
 
 if __name__ == "__main__":
     main()

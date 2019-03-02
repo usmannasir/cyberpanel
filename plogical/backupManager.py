@@ -386,12 +386,6 @@ class BackupManager:
 
             ipAddress = data['IPAddress']
             password = data['password']
-            port = "22"
-
-            try:
-                port = data['backupSSHPort']
-            except:
-                pass
 
             if dest.objects.all().count() == 2:
                 final_dic = {'destStatus': 0,
@@ -404,10 +398,19 @@ class BackupManager:
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
             except:
-                setupKeys = backupUtil.backupUtilities.setupSSHKeys(ipAddress, password, port)
 
-                if setupKeys[0] == 1:
-                    backupUtil.backupUtilities.createBackupDir(ipAddress, port)
+                try:
+                    port = data['backupSSHPort']
+                except:
+                    port = "22"
+
+                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+                execPath = execPath + " submitDestinationCreation --ipAddress " + ipAddress + " --password " \
+                           + password + " --port " + port
+
+                output = subprocess.check_output(shlex.split(execPath))
+
+                if output.find('1,') > -1:
                     try:
                         writeToFile = open(destinations, "w")
                         writeToFile.writelines(ipAddress + "\n")
@@ -423,11 +426,11 @@ class BackupManager:
                         newDest = dest(destLoc=ipAddress)
                         newDest.save()
 
-                    final_dic = {'destStatus': 1, 'error_message': "None"}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
+                        final_dic = {'destStatus': 1, 'error_message': "None"}
+                        final_json = json.dumps(final_dic)
+                        return HttpResponse(final_json)
                 else:
-                    final_dic = {'destStatus': 0, 'error_message': setupKeys[1]}
+                    final_dic = {'destStatus': 0, 'error_message': output}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
 
@@ -480,16 +483,20 @@ class BackupManager:
 
             ipAddress = data['IPAddress']
 
-            checkCon = backupUtil.backupUtilities.checkConnection(ipAddress)
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = execPath + " getConnectionStatus --ipAddress " + ipAddress
 
-            if checkCon[0] == 1:
+            output = subprocess.check_output(shlex.split(execPath))
+
+            if output.find('1,') > -1:
                 final_dic = {'connStatus': 1, 'error_message': "None"}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
             else:
-                final_dic = {'connStatus': 0, 'error_message': checkCon[1]}
+                final_dic = {'connStatus': 0, 'error_message': output}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
+
         except BaseException, msg:
             final_dic = {'connStatus': 1, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
