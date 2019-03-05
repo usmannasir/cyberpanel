@@ -694,8 +694,8 @@ class backupUtilities:
             expectation.append("Password:")
             expectation.append("Permission denied")
 
-            command = "ssh -o StrictHostKeyChecking=no -p "+ port +" root@"+IPAddress+" mkdir /root/.ssh"
-
+            command = "ssh -o StrictHostKeyChecking=no -p "+ port +" root@"+IPAddress+' "mkdir /root/.ssh || rm -f /root/.ssh/temp && rm -f /root/.ssh/authorized_temp && cp /root/.ssh/authorized_keys /root/.ssh/temp"'
+            logging.CyberCPLogFileWriter.writeToFile(command)
             setupKeys = pexpect.spawn(command, timeout=3)
 
             index = setupKeys.expect(expectation)
@@ -873,6 +873,13 @@ class backupUtilities:
         try:
             command = "sudo ssh -o StrictHostKeyChecking=no -p "+ port +" -i /root/.ssh/cyberpanel root@"+IPAddress+" mkdir /home/backup"
             subprocess.call(shlex.split(command))
+
+            command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel root@" + IPAddress + ' "cat /root/.ssh/authorized_keys /root/.ssh/temp > /root/.ssh/authorized_temp"'
+            subprocess.call(shlex.split(command))
+
+            command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel root@" + IPAddress + ' "cat /root/.ssh/authorized_temp > /root/.ssh/authorized_keys"'
+            subprocess.call(shlex.split(command))
+
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createBackupDir]")
             return 0
