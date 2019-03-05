@@ -695,7 +695,6 @@ class backupUtilities:
             expectation.append("Permission denied")
 
             command = "ssh -o StrictHostKeyChecking=no -p "+ port +" root@"+IPAddress+' "mkdir /root/.ssh || rm -f /root/.ssh/temp && rm -f /root/.ssh/authorized_temp && cp /root/.ssh/authorized_keys /root/.ssh/temp"'
-            logging.CyberCPLogFileWriter.writeToFile(command)
             setupKeys = pexpect.spawn(command, timeout=3)
 
             index = setupKeys.expect(expectation)

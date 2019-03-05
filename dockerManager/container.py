@@ -832,13 +832,16 @@ class ContainerManager(multi.Thread):
             names = []
 
             for image in imageList:
-                name = image.attrs['RepoTags'][0].split(":")[0]
-                if name in names:
-                    images[name]['tags'].extend(image.tags)
-                else:
-                    names.append(name)
-                    images[name] = {"name": name,
-                                    "tags": image.tags}
+                try:
+                    name = image.attrs['RepoTags'][0].split(":")[0]
+                    if name in names:
+                        images[name]['tags'].extend(image.tags)
+                    else:
+                        names.append(name)
+                        images[name] = {"name": name,
+                                        "tags": image.tags}
+                except:
+                    continue
 
             return render(request, 'dockerManager/manageImages.html', {"images": images})
 
