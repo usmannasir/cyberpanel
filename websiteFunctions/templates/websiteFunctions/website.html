@@ -443,7 +443,7 @@
                                         <div style="margin-bottom: 1%;" class=" col-sm-1">
                                             <a title="{% trans 'Close' %}" ng-click="hideListDomains()" href="">
                                                 <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
-                                                </a>
+                                            </a>
                                         </div>
 
 
@@ -659,12 +659,28 @@
                             <div class="col-md-12">
                                 <form ng-hide="configurationsBoxRewrite" class="form-horizontal bordered-row">
                                     <div ng-hide="rewriteRulesFetched" class="alert alert-success">
-                                        <p>{% trans "Current rewrite rules in the file fetched." %} <a target="_blank"
-                                                                                                       href="http://go.cyberpanel.net/cyber9bed2">Click</a>
+                                        <p>{% trans "It is not required to modify rules if you are using OpenLiteSpeed." %}
+                                            <a target="_blank"
+                                               href="http://go.cyberpanel.net/cyber9bed2">Click</a>
                                             to read more about whats changed in <a target="_blank"
                                                                                    href="http://go.cyberpanel.net/rewrite">rewrite
-                                                rules</a> from v1.7 onwards.</p>
+                                                rules</a> from v1.8 onwards.</p>
                                     </div>
+
+                                    <form name="websiteCreationForm" action="/" id="createPackages"
+                                          class="form-horizontal bordered-row panel-body">
+
+                                        <div ng-hide="fetchedRewriteRules" class="form-group">
+                                            <label class="col-sm-3 control-label">{% trans "Select Template" %}</label>
+                                            <div class="col-sm-6">
+                                                <select ng-change="applyRewriteTemplate()" ng-model="rewriteTemplate" class="form-control">
+                                                    <option>Force HTTP -> HTTPS</option>
+                                                    <option>Force NON-WWW -> WWW</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                    </form>
 
                                     <div ng-hide="couldNotFetchRewriteRules" class="alert alert-danger">
                                         <p>{% trans "Could not fetch current rewrite rules. Error message:" %} {$
@@ -697,7 +713,7 @@
                                     <div ng-hide="saveRewriteRulesBTN" class="form-group">
                                         <label class="col-sm-3 control-label"></label>
                                         <div class="col-sm-4">
-                                            <button type="button" ng-click="saveRewriteRules()"
+                                            <button style="margin-top: 5%" type="button" ng-click="saveRewriteRules()"
                                                     class="btn btn-primary btn-lg">{% trans "Save Rewrite Rules" %}</button>
                                         </div>
                                     </div>
@@ -893,7 +909,7 @@
                                     </a>
                                 </div>
 
-                                <div  class="col-md-3 panel-body">
+                                <div class="col-md-3 panel-body">
                                     <a id="manageLists" target="_blank" title="{% trans 'Manage Lists' %}">
                                         <img src="{% static 'emailMarketing/checklist.png' %}" width="65" class="mr-10">
                                     </a>
@@ -902,16 +918,17 @@
                                     </a>
                                 </div>
 
-                                <div  class="col-md-3 panel-body">
+                                <div class="col-md-3 panel-body">
                                     <a id="manageSMTPHosts" target="_blank" title="{% trans 'SMTP Hosts' %}">
-                                        <img src="{% static 'emailMarketing/post-office.png' %}" width="65" class="mr-10">
+                                        <img src="{% static 'emailMarketing/post-office.png' %}" width="65"
+                                             class="mr-10">
                                     </a>
                                     <a id="manageSMTPHostsChild" target="_blank" title="{% trans 'SMTP Hosts' %}">
                                         <span class="h4">{% trans "SMTP Hosts" %}</span>
                                     </a>
                                 </div>
 
-                                <div  class="col-md-3 panel-body">
+                                <div class="col-md-3 panel-body">
                                     <a id="composeEmails" target="_blank" title="{% trans 'Compose Message' %}">
                                         <img src="{% static 'emailMarketing/compose.png' %}" width="65" class="mr-10">
                                     </a>
@@ -920,9 +937,10 @@
                                     </a>
                                 </div>
 
-                                <div  class="col-md-3 panel-body">
+                                <div class="col-md-3 panel-body">
                                     <a id="sendEmailsPage" target="_blank" title="{% trans 'Send Emails' %}">
-                                        <img src="{% static 'emailMarketing/paper-plane.png' %}" width="65" class="mr-10">
+                                        <img src="{% static 'emailMarketing/paper-plane.png' %}" width="65"
+                                             class="mr-10">
                                     </a>
                                     <a id="sendEmailsPageChild" target="_blank" title="{% trans 'Send Emails' %}">
                                         <span class="h4">{% trans "Send Emails" %}</span>

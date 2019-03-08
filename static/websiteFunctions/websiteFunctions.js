@@ -2389,6 +2389,38 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
     }
 
 
+    // REWRITE Template
+
+    const httpToHTTPS = `### Rewrite Rules Added by CyberPanel Rewrite Rule Generator
+
+RewriteEngine On
+RewriteCond %{HTTPS}  !=on
+RewriteRule ^/?(.*) https://%{SERVER_NAME}/$1 [R,L]
+
+### End CyberPanel Generated Rules.
+
+`;
+
+    const nonWWWToWWW = `### Rewrite Rules Added by CyberPanel Rewrite Rule Generator
+
+RewriteEngine On
+RewriteCond %{HTTP_HOST} !^www\. [NC]
+RewriteRule ^(.*)$ http://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+### End CyberPanel Generated Rules.
+
+`;
+
+    $scope.applyRewriteTemplate = function () {
+
+      if($scope.rewriteTemplate === "Force HTTP -> HTTPS"){
+          $scope.rewriteRules = httpToHTTPS + $scope.rewriteRules;
+      }else if($scope.rewriteTemplate === "Force NON-WWW -> WWW"){
+          $scope.rewriteRules = nonWWWToWWW + $scope.rewriteRules;
+      }
+    };
+
+
 });
 
 /* Java script code to create account ends here */

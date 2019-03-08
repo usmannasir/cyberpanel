@@ -786,29 +786,31 @@ class ContainerManager(multi.Thread):
             names = []
 
             for image in imageList:
-                name = image.attrs['RepoTags'][0].split(":")[0]
-                if "/" in name:
-                    name2 = ""
-                    for item in name.split("/"):
-                        name2 += ":" + item
-                else:
-                    name2 = name
+                try:
+                    name = image.attrs['RepoTags'][0].split(":")[0]
+                    if "/" in name:
+                        name2 = ""
+                        for item in name.split("/"):
+                            name2 += ":" + item
+                    else:
+                        name2 = name
 
-                tags = []
-                for tag in image.tags:
-                    getTag = tag.split(":")
-                    if len(getTag) == 2:
-                        tags.append(getTag[1])
-                print tags
-                if name in names:
-                    images[name]['tags'].extend(tags)
-                else:
-                    names.append(name)
-                    images[name] = {"name": name,
-                                    "name2": name2,
-                                    "tags": tags}
-            print "======"
-            print images
+                    tags = []
+                    for tag in image.tags:
+                        getTag = tag.split(":")
+                        if len(getTag) == 2:
+                            tags.append(getTag[1])
+                    print tags
+                    if name in names:
+                        images[name]['tags'].extend(tags)
+                    else:
+                        names.append(name)
+                        images[name] = {"name": name,
+                                        "name2": name2,
+                                        "tags": tags}
+                except:
+                    continue
+
             return render(request, 'dockerManager/images.html', {"images": images, "test": ''})
 
         except BaseException, msg:

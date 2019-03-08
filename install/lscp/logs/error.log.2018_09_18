@@ -1,0 +1,2 @@
+2018-09-18 06:38:39.581194 [WARN] Can not listen on address[/tmp/lscpd/cgid/cgid.sock.*]: No such file or directory, please clean up manually!
+2018-09-18 06:38:39.581328 [ERROR] Cannot create a valid unix domain socket for CGI daemon.

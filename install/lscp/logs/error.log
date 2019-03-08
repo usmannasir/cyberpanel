@@ -1,0 +1,10 @@
+2018-09-18 06:38:39.581642 [NOTICE] Loading LiteSpeed/0.1.0 Open ...
+2018-09-18 06:38:39.581657 [NOTICE] Using [OpenSSL 1.1.0i  14 Aug 2018]
+2018-09-18 06:38:39.585545 [NOTICE] [AutoRestarter] new child process with pid=12238 is forked!
+2018-09-18 06:38:39.589894 [NOTICE] [child: 12238] Successfully change current user to lscpd
+2018-09-18 06:38:39.589931 [NOTICE] Child: 12238] Core dump is disabled.
+2018-09-18 06:38:39.589989 [NOTICE] [Child: 12238] Setup swapping space...
+2018-09-18 06:38:39.590167 [NOTICE] [Child: 12238] LiteSpeed/0.1.0 Open starts successfully!
+2018-09-18 06:38:40.000485 [NOTICE] [PID: 12236]: forked cgid: 12241
+2018-09-18 06:39:39.062994 [INFO] checkStatusFile() called with uid 994 randoffset -1.
+2018-09-18 06:39:39.063978 [INFO] checkStatusFile() return 0.

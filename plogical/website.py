@@ -144,7 +144,7 @@ class WebsiteManager:
             if ACLManager.currentContextPermission(currentACL, 'createWebsite') == 0:
                 return ACLManager.loadErrorJson('createWebSiteStatus', 0)
 
-            domain = data['domainName']
+            domain = data['domainName'].lstrip('http://').lstrip('https://').rstrip('/')
             adminEmail = data['adminEmail']
             phpSelection = data['phpSelection']
             packageName = data['package']
@@ -159,7 +159,7 @@ class WebsiteManager:
 
             ## Create Configurations
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " createVirtualHost --virtualHostName " + domain + \
                        " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + \
                        "' --virtualHostUser " + externalApp + " --ssl " + str(data['ssl']) + " --dkimCheck " \
@@ -186,7 +186,7 @@ class WebsiteManager:
             admin = Administrator.objects.get(pk=userID)
 
             masterDomain = data['masterDomain']
-            domain = data['domainName']
+            domain = data['domainName'].lstrip('http://').lstrip('https://').rstrip('/')
             phpSelection = data['phpSelection']
             path = data['path']
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
