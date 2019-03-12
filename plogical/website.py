@@ -144,7 +144,8 @@ class WebsiteManager:
             if ACLManager.currentContextPermission(currentACL, 'createWebsite') == 0:
                 return ACLManager.loadErrorJson('createWebSiteStatus', 0)
 
-            domain = data['domainName'].lstrip('http://').lstrip('https://').rstrip('/')
+            domain = data['domainName']
+            #logging.CyberCPLogFileWriter.writeToFile(domain)
             adminEmail = data['adminEmail']
             phpSelection = data['phpSelection']
             packageName = data['package']
@@ -186,7 +187,7 @@ class WebsiteManager:
             admin = Administrator.objects.get(pk=userID)
 
             masterDomain = data['masterDomain']
-            domain = data['domainName'].lstrip('http://').lstrip('https://').rstrip('/')
+            domain = data['domainName']
             phpSelection = data['phpSelection']
             path = data['path']
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))

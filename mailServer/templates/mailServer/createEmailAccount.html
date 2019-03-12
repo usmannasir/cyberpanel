@@ -69,6 +69,22 @@
                                 <div class="col-sm-6">
                                     <input type="password" class="form-control" ng-model="emailPassword" required>
                                 </div>
+                                <div class="col-sm-3">
+                                    <button type="button" ng-click="generatePassword()"
+                                            class="btn btn-primary">{% trans "Generate" %}</button>
+                                </div>
+                            </div>
+
+                            <div ng-hide="generatedPasswordView" class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Generated Password" %}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" name="email" class="form-control" ng-model="emailPassword"
+                                           required>
+                                </div>
+                                <div class="col-sm-3">
+                                    <button type="button" ng-click="usePassword()"
+                                            class="btn btn-primary">{% trans "Use" %}</button>
+                                </div>
                             </div>
 
 

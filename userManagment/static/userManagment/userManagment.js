@@ -108,13 +108,25 @@ app.controller('createUserCtr', function($scope,$http) {
 
     };
 
-
     $scope.hideSomeThings = function(){
 
         $scope.userCreated = true;
 
 
 
+    };
+
+    ///
+
+    $scope.generatedPasswordView = true;
+
+    $scope.generatePassword = function () {
+      $scope.generatedPasswordView = false;
+      $scope.password = randomPassword(12);
+    };
+
+    $scope.usePassword = function () {
+        $scope.generatedPasswordView = true;
     };
 
 });
@@ -333,7 +345,6 @@ app.controller('modifyUser', function($scope,$http) {
 
     };
 
-
     $scope.showLimitsBox = function () {
 
         if ($scope.accountType == "Normal User"){
@@ -351,6 +362,19 @@ app.controller('modifyUser', function($scope,$http) {
         }
 
 
+    };
+
+    ///
+
+    $scope.generatedPasswordView = true;
+
+    $scope.generatePassword = function () {
+      $scope.generatedPasswordView = false;
+      $scope.password = randomPassword(12);
+    };
+
+    $scope.usePassword = function () {
+        $scope.generatedPasswordView = true;
     };
 
 });

@@ -23,8 +23,6 @@ app.controller('createFTPAccount', function($scope,$http) {
 
     };
 
-
-
     $scope.createFTPAccount = function(){
 
                 $scope.ftpLoading = false;
@@ -116,6 +114,19 @@ app.controller('createFTPAccount', function($scope,$http) {
 
     };
 
+    ///
+
+    $scope.generatedPasswordView = true;
+
+    $scope.generatePassword = function () {
+      $scope.generatedPasswordView = false;
+      $scope.ftpPassword = randomPassword(12);
+    };
+
+    $scope.usePassword = function () {
+        $scope.generatedPasswordView = true;
+    };
+
 });
 /* Java script code to create account ends here */
 
@@ -140,8 +151,6 @@ app.controller('deleteFTPAccount', function($scope,$http) {
         $scope.deleteSuccess = true;
         $scope.couldNotConnect = true;
         $scope.deleteFTPButtonInit = true;
-
-
 
 
         var url = "/ftp/fetchFTPAccounts";
@@ -382,8 +391,6 @@ app.controller('listFTPAccounts', function($scope,$http) {
 
            };
 
-
-
     function populateCurrentRecords(){
                         $scope.recordsFetched = true;
                         $scope.passwordChanged = true;
@@ -459,6 +466,19 @@ app.controller('listFTPAccounts', function($scope,$http) {
 
                 }
 
-           };
+           }
+
+    ////
+
+    $scope.generatedPasswordView = true;
+
+    $scope.generatePassword = function () {
+      $scope.generatedPasswordView = false;
+      $scope.ftpPassword = randomPassword(12);
+    };
+
+    $scope.usePassword = function () {
+        $scope.generatedPasswordView = true;
+    };
 
 });

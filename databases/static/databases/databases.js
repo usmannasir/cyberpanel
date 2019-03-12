@@ -11,12 +11,12 @@ app.controller('createDatabase', function($scope,$http) {
     $scope.databaseCreationFailed = true;
     $scope.databaseCreated = true;
     $scope.couldNotConnect = true;
+    $scope.generatedPasswordView = true;
 
 
     $scope.showDetailsBoxes = function(){
         $scope.dbDetails = false;
     };
-
 
     $scope.createDatabase = function(){
 
@@ -106,6 +106,15 @@ app.controller('createDatabase', function($scope,$http) {
 
 
 
+    };
+
+    $scope.generatePassword = function () {
+      $scope.generatedPasswordView = false;
+      $scope.dbPassword = randomPassword(12);
+    };
+
+    $scope.usePassword = function () {
+        $scope.generatedPasswordView = true;
     };
 
 });
@@ -365,8 +374,6 @@ app.controller('listDBs', function($scope,$http) {
 
            };
 
-
-
     function populateCurrentRecords(){
                         $scope.recordsFetched = true;
                         $scope.passwordChanged = true;
@@ -442,7 +449,20 @@ app.controller('listDBs', function($scope,$http) {
 
                 }
 
-           };
+           }
+
+    ////
+
+    $scope.generatedPasswordView = true;
+
+    $scope.generatePassword = function () {
+      $scope.generatedPasswordView = false;
+      $scope.dbPassword = randomPassword(12);
+    };
+
+    $scope.usePassword = function () {
+        $scope.generatedPasswordView = true;
+    };
 
 });
 

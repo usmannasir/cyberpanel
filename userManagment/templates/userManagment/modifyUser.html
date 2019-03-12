@@ -3,26 +3,27 @@
 {% block title %}{% trans "Modify User - CyberPanel" %}{% endblock %}
 {% block content %}
 
-{% load static %}
-{% get_current_language as LANGUAGE_CODE %}
-<!-- Current language: {{ LANGUAGE_CODE }} -->
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
 
-<div class="container">
-<div id="page-title">
-   <h2>{% trans "Modify User" %}</h2>
-   <p>{% trans "Modify existing user settings on this page." %}</p>
-</div>
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Modify User" %}</h2>
+            <p>{% trans "Modify existing user settings on this page." %}</p>
+        </div>
 
-<div class="panel">
-    <div ng-controller="modifyUser" class="panel-body">
-        <h3 class="content-box-header">
-            {% trans "Details" %} <img ng-hide="userModificationLoading" src="{% static 'images/loading.gif' %}">
-        </h3>
-        <div  class="example-box-wrapper">
+        <div class="panel">
+            <div ng-controller="modifyUser" class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Details" %} <img ng-hide="userModificationLoading"
+                                               src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
 
-            <form  action="/" class="form-horizontal bordered-row panel-body">
+                    <form action="/" class="form-horizontal bordered-row panel-body">
 
-                <div class="form-group">
+                        <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Select Account" %}</label>
                             <div class="col-sm-6">
                                 <select ng-change="fetchUserDetails()" ng-model="accountUsername" class="form-control">
@@ -31,96 +32,106 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                </div>
+                        </div>
 
 
-                <div ng-hide="acctDetailsFetched" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "First Name" %}</label>
-                    <div class="col-sm-6">
-                        <input type="text" class="form-control" ng-model="firstName" required>
-                    </div>
-                </div>
+                        <div ng-hide="acctDetailsFetched" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "First Name" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="firstName" required>
+                            </div>
+                        </div>
 
-                <div ng-hide="acctDetailsFetched" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Last Name" %}</label>
-                    <div class="col-sm-6">
-                        <input  type="text" class="form-control" ng-model="lastName" required>
-                    </div>
-                </div>
-
-
-                <div ng-hide="acctDetailsFetched" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Email" %}</label>
-                    <div class="col-sm-6">
-                        <input  type="email" class="form-control" ng-model="email" required>
-                    </div>
-                </div>
+                        <div ng-hide="acctDetailsFetched" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Last Name" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="lastName" required>
+                            </div>
+                        </div>
 
 
-                <div ng-hide="acctDetailsFetched" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Password" %}</label>
-                    <div class="col-sm-6">
-                        <input  type="password" class="form-control" ng-model="password" required>
-                    </div>
-                </div>
+                        <div ng-hide="acctDetailsFetched" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Email" %}</label>
+                            <div class="col-sm-6">
+                                <input type="email" class="form-control" ng-model="email" required>
+                            </div>
+                        </div>
 
 
+                        <div ng-hide="acctDetailsFetched" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                            <div class="col-sm-6">
+                                <input type="password" class="form-control" ng-model="password" required>
+                            </div>
+                            <div class="col-sm-3">
+                                <button type="button" ng-click="generatePassword()"
+                                        class="btn btn-primary">{% trans "Generate" %}</button>
+                            </div>
+                        </div>
 
-                <div ng-hide="acctDetailsFetched" class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                         <button type="button" ng-click="modifyUser()" class="btn btn-primary btn-lg">{% trans "Modify User" %}</button>
+                        <div ng-hide="generatedPasswordView" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Generated Password" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" name="email" class="form-control" ng-model="password" required>
+                            </div>
+                            <div class="col-sm-3">
+                                <button type="button" ng-click="usePassword()"
+                                        class="btn btn-primary">{% trans "Use" %}</button>
+                            </div>
+                        </div>
 
-                    </div>
-                </div>
+
+                        <div ng-hide="acctDetailsFetched" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="modifyUser()"
+                                        class="btn btn-primary btn-lg">{% trans "Modify User" %}</button>
+
+                            </div>
+                        </div>
 
 
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-6">
+                                <div ng-hide="userModified" class="alert alert-success">
+                                    <p>{% trans "Account with username:" %} <strong>{$ userName
+                                        $}</strong>{% trans " is successfully modified." %}</p>
+                                </div>
 
-                <div class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-6">
-                            <div ng-hide="userModified" class="alert alert-success">
-                                <p>{% trans "Account with username:" %} <strong>{$ userName $}</strong>{% trans " is successfully modified." %}</p>
+                                <div ng-hide="canotModifyUser" class="alert alert-danger">
+                                    <p>{% trans "Cannot modify user. Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+
+
+                                <div ng-hide="canotFetchDetails" class="alert alert-danger">
+                                    <p>{% trans "Cannot fetch details. Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+                                <div ng-hide="detailsFetched" class="alert alert-success">
+                                    <p>{% trans "Details fetched." %}</p>
+                                </div>
+
+
                             </div>
 
-                            <div ng-hide="canotModifyUser" class="alert alert-danger">
-                                <p>{% trans "Cannot modify user. Error message:" %} {$ errorMessage $}</p>
-                            </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                            </div>
+                        </div>
 
 
-                            <div ng-hide="canotFetchDetails" class="alert alert-danger">
-                                <p>{% trans "Cannot fetch details. Error message:" %} {$ errorMessage $}</p>
-                            </div>
-
-                            <div ng-hide="detailsFetched" class="alert alert-success">
-                                <p>{% trans "Details fetched." %}</p>
-                            </div>
-
-
-
-                    </div>
-
+                    </form>
 
 
                 </div>
-
-
-            </form>
-
-
-
-
+            </div>
         </div>
+
+
     </div>
-</div>
-
-
-
-</div>
 
 
 {% endblock %}

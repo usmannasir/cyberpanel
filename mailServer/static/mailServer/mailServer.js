@@ -26,8 +26,6 @@ app.controller('createEmailAccount', function($scope,$http) {
 
     };
 
-
-
     $scope.createEmailAccount = function(){
 
                 $scope.emailDetails = false;
@@ -117,9 +115,19 @@ app.controller('createEmailAccount', function($scope,$http) {
 
     };
 
+    $scope.generatedPasswordView = true;
+
+    $scope.generatePassword = function () {
+      $scope.generatedPasswordView = false;
+      $scope.emailPassword = randomPassword(12);
+    };
+
+    $scope.usePassword = function () {
+        $scope.generatedPasswordView = true;
+    };
+
 });
 /* Java script code to create account ends here */
-
 
 
 /* Java script code to create account */
@@ -318,7 +326,6 @@ app.controller('deleteEmailAccount', function($scope,$http) {
 /* Java script code to create account ends here */
 
 
-
 /* Java script code to create account */
 app.controller('changeEmailPassword', function($scope,$http) {
 
@@ -408,7 +415,6 @@ app.controller('changeEmailPassword', function($scope,$http) {
 
     };
 
-
     $scope.changePassword = function(){
 
         $scope.emailLoading = false;
@@ -493,8 +499,6 @@ app.controller('changeEmailPassword', function($scope,$http) {
 
     };
 
-
-
     $scope.deleteEmailAccount = function(){
 
         var domain = $scope.selectedEmail;
@@ -504,6 +508,21 @@ app.controller('changeEmailPassword', function($scope,$http) {
         }
 
     };
+
+    ///
+
+    $scope.generatedPasswordView = true;
+
+    $scope.generatePassword = function () {
+      $scope.generatedPasswordView = false;
+      $scope.emailPassword = randomPassword(12);
+    };
+
+    $scope.usePassword = function () {
+        $scope.generatedPasswordView = true;
+    };
+
+
 
 });
 /* Java script code to create account ends here */

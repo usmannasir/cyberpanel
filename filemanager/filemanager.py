@@ -24,6 +24,10 @@ class FileManager:
     def changeOwner(self,  path):
         domainName = self.data['domainName']
         website = Websites.objects.get(domain=domainName)
+
+        if path.find('..') > -1:
+            return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+
         command = "sudo chown -R " + website.externalApp + ':' + website.externalApp + ' ' + self.returnPathEnclosed(path)
         ProcessUtilities.executioner(command)
 
@@ -98,6 +102,9 @@ class FileManager:
         try:
             finalData = {}
             finalData['status'] = 1
+
+            if self.data['fileName'].find('..') > -1:
+                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
             command = "sudo touch " + self.returnPathEnclosed(self.data['fileName'])
             ProcessUtilities.executioner(command)
@@ -194,6 +201,9 @@ class FileManager:
 
             finalData = {}
             finalData['status'] = 1
+
+            if self.data['newFileName'].find('..') > -1:
+                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
 
             command = 'sudo mv ' + self.returnPathEnclosed(self.data['basePath'] + '/' + self.data['existingName']) + ' ' + self.returnPathEnclosed(self.data['basePath'] + '/' + self.data['newFileName'])
