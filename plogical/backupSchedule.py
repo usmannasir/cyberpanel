@@ -49,6 +49,7 @@ class backupSchedule:
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+            return 0, "None"
 
     @staticmethod
     def createBackup(virtualHost, ipAddress, backupLogPath , port):
@@ -147,20 +148,22 @@ class backupSchedule:
             ipAddressLocal = ipData.split('\n', 1)[0]
 
 
-            if backupUtilities.checkIfHostIsUp(ipAddress) == 1:
-                checkConn = backupUtilities.checkConnection(ipAddress)
-                if checkConn[0] == 0:
-                    backupSchedule.remoteBackupLogging(backupLogPath, "Connection to: " + ipAddress+ " Failed, please resetup this destination from CyberPanel, aborting.")
-                    return 0
-                else:
-                    ## Create backup dir on remote server
+            if backupUtilities.checkIfHostIsUp(ipAddress) != 1:
+                backupSchedule.remoteBackupLogging(backupLogPath, "Ping for : " + ipAddress + " does not seems to work, however we will continue.")
 
-                    command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel root@" + ipAddress + " mkdir -p /home/backup/"+ ipAddressLocal + "/" + time.strftime("%a-%b")
-                    subprocess.call(shlex.split(command))
-                    pass
-            else:
-                backupSchedule.remoteBackupLogging(backupLogPath, "Host: " + ipAddress + " is down, aborting.")
+
+            checkConn = backupUtilities.checkConnection(ipAddress)
+            if checkConn[0] == 0:
+                backupSchedule.remoteBackupLogging(backupLogPath,
+                                                   "Connection to: " + ipAddress + " Failed, please resetup this destination from CyberPanel, aborting.")
                 return 0
+            else:
+                ## Create backup dir on remote server
+
+                command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel root@" + ipAddress + " mkdir -p /home/backup/" + ipAddressLocal + "/" + time.strftime(
+                    "%a-%b")
+                subprocess.call(shlex.split(command))
+                pass
 
             for virtualHost in os.listdir("/home"):
                 if match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', virtualHost, M | I):

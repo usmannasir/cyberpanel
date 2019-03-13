@@ -181,19 +181,23 @@ class BackupManager:
 
                 if status.find("Completed") > -1:
 
-                    backupOb = Backups.objects.get(fileName=fileName)
-                    backupOb.status = 1
+                    backupObs = Backups.objects.filter(fileName=fileName)
 
                     ## adding backup data to database.
                     try:
-                        backupOb.size = str(int(float(
-                            os.path.getsize("/home/" + backupDomain + "/backup/" + fileName + ".tar.gz")) / (
-                                                    1024.0 * 1024.0))) + "MB"
-                        backupOb.save()
+                        for items in backupObs:
+                            items.status = 1
+                            items.size = str(int(float(
+                                os.path.getsize("/home/" + backupDomain + "/backup/" + fileName + ".tar.gz")) / (
+                                                        1024.0 * 1024.0))) + "MB"
+                            items.save()
                     except:
-                        backupOb.size = str(
-                            int(os.path.getsize("/home/" + backupDomain + "/backup/" + fileName + ".tar.gz")))
-                        backupOb.save()
+                        for items in backupObs:
+                            items.status = 1
+                            items.size = str(int(float(
+                                os.path.getsize("/home/" + backupDomain + "/backup/" + fileName + ".tar.gz")) / (
+                                                        1024.0 * 1024.0))) + "MB"
+                            items.save()
 
                     ### Removing Files
 

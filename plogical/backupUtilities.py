@@ -541,7 +541,7 @@ class backupUtilities:
 
                             if os.path.exists(sslStoragePath):
                                 sslHome = '/etc/letsencrypt/live/' + domain
-                                
+
                                 try:
                                     if not os.path.exists(sslHome):
                                         os.mkdir(sslHome)
