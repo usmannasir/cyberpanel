@@ -125,6 +125,7 @@ class backupUtilities:
             ## DNS Records XML
 
             try:
+
                 dnsRecordsXML = Element("dnsrecords")
                 dnsRecords = DNS.getDNSRecords(backupDomain)
 
@@ -144,8 +145,8 @@ class backupUtilities:
 
                 metaFileXML.append(dnsRecordsXML)
 
-            except BaseException, msg:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            except:
+                pass
 
             ## Email accounts XML
 
@@ -166,8 +167,8 @@ class backupUtilities:
 
                 metaFileXML.append(emailRecordsXML)
 
-            except BaseException, msg:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            except:
+                pass
 
             ## Email meta generated!
 
@@ -309,8 +310,8 @@ class backupUtilities:
             except:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
-            status = open(os.path.join(backupPath,'status'), "w")
-            logging.CyberCPLogFileWriter.statusWriter(status, "Aborted, please check CyberPanel main log file. [5009]")
+            status = os.path.join(backupPath,'status'), "w"
+            logging.CyberCPLogFileWriter.statusWriter(status, "Aborted, "+ str(msg) + ". [5009]")
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
     @staticmethod
@@ -624,6 +625,7 @@ class backupUtilities:
             subprocess.call(cmd)
 
         except BaseException, msg:
+            status = os.path.join(completPath, 'status')
             logging.CyberCPLogFileWriter.statusWriter(status, str(msg) + " [5009]")
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
 

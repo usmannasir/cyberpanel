@@ -207,10 +207,12 @@ class BackupManager:
                     try:
                         command = 'sudo rm -f ' + status
                         cmd = shlex.split(command)
-                        res = subprocess.call(cmd)
+                        subprocess.call(cmd)
 
-                        backupOb = Backups.objects.get(fileName=fileName)
-                        backupOb.delete()
+                        backupObs = Backups.objects.filter(fileName=fileName)
+                        for items in backupObs:
+                            items.delete()
+
                     except BaseException, msg:
                         logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupStatus]")
 

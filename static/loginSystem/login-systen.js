@@ -39,9 +39,6 @@ application.config(['$interpolateProvider',
     }
 ]);
 
-
-
-
 application.controller('loginSystem', function($scope,$http,$window) {
 
 
@@ -98,4 +95,3 @@ application.controller('loginSystem', function($scope,$http,$window) {
 
 
 /* Java script code to to Check Login status ends here */
-

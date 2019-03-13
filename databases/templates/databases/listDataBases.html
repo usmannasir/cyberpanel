@@ -74,12 +74,12 @@
                                             class="btn btn-primary">{% trans "Generate" %}</button>
                             </div>
 
-                            <label style="margin-top: 1%" class="col-sm-3 control-label">{% trans "Generated Password" %}</label>
-                            <div style="margin-top: 1%" class="col-sm-6">
+                            <label ng-hide="generatedPasswordView" style="margin-top: 1%" class="col-sm-3 control-label">{% trans "Generated Password" %}</label>
+                            <div ng-hide="generatedPasswordView" style="margin-top: 1%" class="col-sm-6">
                                 <input name="dom" type="text" class="form-control" ng-model="dbPassword" required>
                             </div>
 
-                            <div style="margin-top: 1%" class="col-sm-3">
+                            <div ng-hide="generatedPasswordView" style="margin-top: 1%" class="col-sm-3">
                                     <button type="button" ng-click="usePassword()"
                                             class="btn btn-primary">{% trans "Use" %}</button>
                             </div>

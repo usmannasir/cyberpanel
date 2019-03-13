@@ -93,7 +93,7 @@ class backupSchedule:
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
 
         except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createBackup]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupSchedule.createBackup]")
 
     @staticmethod
     def sendBackup(backupPath, IPAddress, backupLogPath , port):
