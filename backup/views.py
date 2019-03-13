@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import redirect
 # Create your views here.
 import json
-from loginSystem.views import loadLoginPage
-from plogical.backupManager import BackupManager
+
+from django.shortcuts import redirect
+
+from backup.backupManager import BackupManager
 from backup.pluginManager import pluginManager
+from loginSystem.views import loadLoginPage
 
 
 def loadBackupHome(request):

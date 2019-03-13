@@ -1,30 +1,33 @@
-from loginSystem.models import Administrator
-from django.shortcuts import HttpResponse
 import json
-from plogical.website import WebsiteManager
-from plogical.acl import ACLManager
-from plogical.virtualHostUtilities import virtualHostUtilities
-from websiteFunctions.models import Websites
-import subprocess, shlex
+import os
+import shlex
+import subprocess
+from random import randint
+
+from django.shortcuts import HttpResponse
+
+import userManagment.views as um
+from backup.backupManager import BackupManager
 from databases.databaseManager import DatabaseManager
 from dns.dnsManager import DNSManager
-from mailServer.mailserverManager import MailServerManager
-from ftp.ftpManager import FTPManager
-from manageSSL.views import issueSSL, obtainHostNameSSL, obtainMailServerSSL
-from plogical.backupManager import BackupManager
-import userManagment.views as um
-from packages.packagesManager import PackagesManager
-from plogical.processUtilities import ProcessUtilities
 from firewall.firewallManager import FirewallManager
-from serverLogs.views import getLogsFromFile
-from random import randint
+from ftp.ftpManager import FTPManager
 from highAvailability.haManager import HAManager
+from loginSystem.models import Administrator
+from mailServer.mailserverManager import MailServerManager
+from manageSSL.views import issueSSL, obtainHostNameSSL, obtainMailServerSSL
+from packages.packagesManager import PackagesManager
+from plogical.acl import ACLManager
 from plogical.httpProc import httpProc
-from s3Backups.s3Backups import S3Backups
-import os
-from serverStatus.views import topProcessesStatus, killProcess
 from plogical.mysqlUtilities import mysqlUtilities
-from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from plogical.processUtilities import ProcessUtilities
+from plogical.virtualHostUtilities import virtualHostUtilities
+from plogical.website import WebsiteManager
+from s3Backups.s3Backups import S3Backups
+from serverLogs.views import getLogsFromFile
+from serverStatus.views import topProcessesStatus, killProcess
+from websiteFunctions.models import Websites
+
 
 class CloudManager:
     def __init__(self, data=None, admin = None):

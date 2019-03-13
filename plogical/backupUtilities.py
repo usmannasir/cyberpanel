@@ -230,6 +230,7 @@ class backupUtilities:
             ## Saving original vhost conf file
 
             completPathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + domainName + '/vhost.conf'
+
             if os.path.exists(backupUtilities.licenseKey):
                 copy(completPathToConf, tempStoragePath + '/vhost.conf')
 
@@ -243,7 +244,12 @@ class backupUtilities:
             sslStoragePath = '/etc/letsencrypt/live/' + domainName
 
             if os.path.exists(sslStoragePath):
-                make_archive(os.path.join(tempStoragePath, "sslData-" + domainName), 'gztar', sslStoragePath)
+                try:
+                    copy(os.path.join(sslStoragePath, "cert.pem"), os.path.join(tempStoragePath, domainName + ".cert.pem"))
+                    copy(os.path.join(sslStoragePath, "fullchain.pem"), os.path.join(tempStoragePath, domainName + ".fullchain.pem"))
+                    copy(os.path.join(sslStoragePath, "privkey.pem"), os.path.join(tempStoragePath, domainName + ".privkey.pem"))
+                except:
+                    pass
 
             ## backup email accounts
 
@@ -281,10 +287,23 @@ class backupUtilities:
                         completPathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + actualChildDomain + '/vhost.conf'
                         copy(completPathToConf, tempStoragePath + '/' + actualChildDomain + '.vhost.conf')
 
+                        ### Storing SSL for child domainsa
+
                     sslStoragePath = '/etc/letsencrypt/live/' + actualChildDomain
 
                     if os.path.exists(sslStoragePath):
-                        make_archive(os.path.join(tempStoragePath, "sslData-" + actualChildDomain), 'gztar', sslStoragePath)
+                        try:
+                            copy(os.path.join(sslStoragePath, "cert.pem"),
+                                 os.path.join(tempStoragePath, actualChildDomain + ".cert.pem"))
+                            copy(os.path.join(sslStoragePath, "fullchain.pem"),
+                                 os.path.join(tempStoragePath, actualChildDomain + ".fullchain.pem"))
+                            copy(os.path.join(sslStoragePath, "privkey.pem"),
+                                 os.path.join(tempStoragePath, actualChildDomain + ".privkey.pem"))
+                            make_archive(os.path.join(tempStoragePath, "sslData-" + domainName), 'gztar',
+                                         sslStoragePath)
+                        except:
+                            pass
+
             except BaseException, msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
@@ -295,9 +314,7 @@ class backupUtilities:
             make_archive(os.path.join(backupPath,backupName), 'gztar', tempStoragePath)
             rmtree(tempStoragePath)
 
-
             logging.CyberCPLogFileWriter.statusWriter(status, "Completed\n")
-
 
         except BaseException,msg:
             try:
@@ -464,14 +481,22 @@ class backupUtilities:
             if result[0] == 1:
                 ## Let us try to restore SSL.
 
-                sslStoragePath = completPath + "/sslData-" + masterDomain + '.tar.gz'
+                sslStoragePath = completPath + "/" + masterDomain + ".cert.pem"
 
                 if os.path.exists(sslStoragePath):
                     sslHome = '/etc/letsencrypt/live/' + masterDomain
-                    tar = tarfile.open(sslStoragePath)
-                    tar.extractall(sslHome)
-                    tar.close()
-                    sslUtilities.installSSLForDomain(masterDomain)
+
+                    try:
+                        if not os.path.exists(sslHome):
+                            os.mkdir(sslHome)
+
+                        copy(completPath + "/" + masterDomain + ".cert.pem", sslHome + "/cert.pem")
+                        copy(completPath + "/" + masterDomain + ".privkey.pem", sslHome + "/privkey.pem")
+                        copy(completPath + "/" + masterDomain + ".fullchain.pem", sslHome + "/fullchain.pem")
+
+                        sslUtilities.installSSLForDomain(masterDomain)
+                    except:
+                        pass
 
             else:
                 logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + result[1] + ". Not able to create Account, Databases and DNS Records, aborting. [5009]")
@@ -512,14 +537,23 @@ class backupUtilities:
                                     completPathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + domain + '/vhost.conf'
                                     copy(completPath + '/' + domain + '.vhost.conf', completPathToConf)
 
-                            sslStoragePath = completPath + "/sslData-" + domain + '.tar.gz'
+                            sslStoragePath = completPath + "/" + domain + ".cert.pem"
 
                             if os.path.exists(sslStoragePath):
                                 sslHome = '/etc/letsencrypt/live/' + domain
-                                tar = tarfile.open(sslStoragePath)
-                                tar.extractall(sslHome)
-                                tar.close()
-                                sslUtilities.installSSLForDomain(domain)
+                                
+                                try:
+                                    if not os.path.exists(sslHome):
+                                        os.mkdir(sslHome)
+
+                                    copy(completPath + "/" + domain + ".cert.pem", sslHome + "/cert.pem")
+                                    copy(completPath + "/" + domain + ".privkey.pem", sslHome + "/privkey.pem")
+                                    copy(completPath + "/" + domain + ".fullchain.pem",
+                                         sslHome + "/fullchain.pem")
+
+                                    sslUtilities.installSSLForDomain(domain)
+                                except:
+                                    pass
                         except:
                             logging.CyberCPLogFileWriter.writeToFile('While restoring backup we had minor issues for rebuilding vhost conf for: ' + domain + '. However this will be auto healed.')
 
