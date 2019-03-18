@@ -395,8 +395,8 @@ class EmailMarketingManager:
                 defaultHost.save()
 
             try:
-                verifyLogin = smtplib.SMTP(smtpHost, int(smtpPort))
-                verifyLogin.login(smtpUserName, smtpPassword)
+                verifyLogin = smtplib.SMTP(str(smtpHost), int(smtpPort))
+                verifyLogin.login(str(smtpUserName), str(smtpPassword))
 
                 admin = Administrator.objects.get(pk=userID)
 
@@ -496,8 +496,8 @@ class EmailMarketingManager:
             else:
                 try:
                     verifyHost = SMTPHosts.objects.get(id=id)
-                    verifyLogin = smtplib.SMTP(verifyHost.host, int(verifyHost.port))
-                    verifyLogin.login(verifyHost.userName, verifyHost.password)
+                    verifyLogin = smtplib.SMTP(str(verifyHost.host), int(verifyHost.port))
+                    verifyLogin.login(str(verifyHost.userName), str(verifyHost.password))
 
                     data_ret = {"status": 1, 'message': 'Login successful.'}
                     json_data = json.dumps(data_ret)

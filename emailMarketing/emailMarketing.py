@@ -154,8 +154,8 @@ class emailMarketing(multi.Thread):
                     smtpServer = smtplib.SMTP('127.0.0.1')
                 else:
                     verifyHost = SMTPHosts.objects.get(host=self.extraArgs['host'])
-                    smtpServer = smtplib.SMTP(verifyHost.host, int(verifyHost.port))
-                    smtpServer.login(verifyHost.userName, verifyHost.password)
+                    smtpServer = smtplib.SMTP(str(verifyHost.host), int(verifyHost.port))
+                    smtpServer.login(str(verifyHost.userName), str(verifyHost.password))
             except smtplib.SMTPHeloError:
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                           'The server didnt reply properly to the HELO greeting.')

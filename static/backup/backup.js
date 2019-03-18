@@ -4,235 +4,233 @@
 
 //*** Backup site ****//
 
-app.controller('backupWebsiteControl', function($scope,$http,$timeout) {
+app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
 
-                $scope.destination = true;
-                $scope.backupButton = true;
+    $scope.destination = true;
+    $scope.backupButton = true;
+    $scope.backupLoading = true;
+    $scope.runningBackup = true;
+    $scope.cancelButton = true;
+
+    populateCurrentRecords();
+
+    $scope.cancelBackup = function () {
+
+        var backupCancellationDomain = $scope.websiteToBeBacked;
+
+        url = "/backup/cancelBackupCreation";
+
+        var data = {
+            backupCancellationDomain: backupCancellationDomain,
+            fileName: $scope.fileName,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+    };
+
+    $scope.fetchDetails = function () {
+        getBackupStatus();
+        populateCurrentRecords();
+        $scope.destination = false;
+        $scope.runningBackup = true;
+
+    };
+
+
+    function getBackupStatus() {
+
+        $scope.backupLoadingBottom = false;
+
+        var websiteToBeBacked = $scope.websiteToBeBacked;
+
+        url = "/backup/backupStatus";
+
+        var data = {
+            websiteToBeBacked: websiteToBeBacked,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.backupStatus === 1) {
+
+                if (response.data.abort === 1) {
+                    $timeout.cancel();
+                    $scope.backupLoadingBottom = true;
+                    $scope.destination = false;
+                    $scope.runningBackup = false;
+                    $scope.cancelButton = true;
+                    $scope.backupButton = false;
+                    $scope.backupLoading = true;
+                    $scope.fileName = response.data.fileName;
+                    $scope.status = response.data.status;
+                    populateCurrentRecords();
+                    return;
+                }
+                else {
+                    $scope.destination = true;
+                    $scope.backupButton = true;
+                    $scope.runningBackup = false;
+                    $scope.cancelButton = false;
+
+                    $scope.fileName = response.data.fileName;
+                    $scope.status = response.data.status;
+                    $timeout(getBackupStatus, 2000);
+
+                }
+            }
+            else {
+                $timeout.cancel();
+                $scope.backupLoadingBottom = true;
                 $scope.backupLoading = true;
-                $scope.runningBackup = true;
                 $scope.cancelButton = true;
+                $scope.backupButton = false;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+        }
+
+    };
+
+
+    $scope.destinationSelection = function () {
+        $scope.backupButton = false;
+    };
+
+
+    function populateCurrentRecords() {
+
+        var websiteToBeBacked = $scope.websiteToBeBacked;
+
+        url = "/backup/getCurrentBackups";
+
+        var data = {
+            websiteToBeBacked: websiteToBeBacked,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.fetchStatus == 1) {
+                $scope.records = JSON.parse(response.data.data);
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+        }
+
+    };
+
+
+    $scope.createBackup = function () {
+
+        var websiteToBeBacked = $scope.websiteToBeBacked;
+        $scope.backupLoading = false;
+
+
+        url = "/backup/submitBackupCreation";
+
+        var data = {
+            websiteToBeBacked: websiteToBeBacked,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.metaStatus === 1) {
+                getBackupStatus();
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+        }
+
+    };
+
+
+    $scope.deleteBackup = function (id) {
+
+
+        url = "/backup/deleteBackup";
+
+        var data = {
+            backupID: id,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.deleteStatus == 1) {
 
                 populateCurrentRecords();
 
-                $scope.cancelBackup = function () {
 
-                    var backupCancellationDomain = $scope.websiteToBeBacked;
+            }
+            else {
 
-                        url = "/backup/cancelBackupCreation";
+            }
 
-                        var data = {
-                            backupCancellationDomain:backupCancellationDomain,
-                            fileName:$scope.fileName,
-                        };
+        }
 
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
+        function cantLoadInitialDatas(response) {
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
 
-                };
+        }
 
-                $scope.fetchDetails = function () {
-                  getBackupStatus();
-                  populateCurrentRecords();
-                  $scope.destination = false;
-                  $scope.runningBackup = true;
 
-                };
-
-
-                function getBackupStatus(){
-
-                        $scope.backupLoadingBottom = false;
-
-                        var websiteToBeBacked = $scope.websiteToBeBacked;
-
-                        url = "/backup/backupStatus";
-
-                        var data = {
-                            websiteToBeBacked:websiteToBeBacked,
-                        };
-
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
-
-
-                    if(response.data.backupStatus === 1){
-
-                        if(response.data.abort === 1){
-                            $timeout.cancel();
-                            $scope.backupLoadingBottom = true;
-                            $scope.destination = false;
-                            $scope.runningBackup = false;
-                            $scope.cancelButton = true;
-                            $scope.backupButton = false;
-                            $scope.backupLoading = true;
-                            $scope.fileName = response.data.fileName;
-                            $scope.status = response.data.status;
-                            populateCurrentRecords();
-                            return;
-                        }
-                        else{
-                                $scope.destination = true;
-                                $scope.backupButton = true;
-                                $scope.runningBackup = false;
-                                $scope.cancelButton = false;
-
-                                $scope.fileName = response.data.fileName;
-                                $scope.status = response.data.status;
-                                $timeout(getBackupStatus, 2000);
-
-                        }
-                    }
-                    else{
-                        $timeout.cancel();
-                        $scope.backupLoadingBottom = true;
-                        $scope.backupLoading = true;
-                        $scope.cancelButton = true;
-                        $scope.backupButton = false;
-                    }
-
-                }
-                function cantLoadInitialDatas(response) {}
-
-           };
-
-
-                $scope.destinationSelection = function () {
-                    $scope.backupButton = false;
-                };
-
-
-                function populateCurrentRecords(){
-
-                        var websiteToBeBacked = $scope.websiteToBeBacked;
-
-                        url = "/backup/getCurrentBackups";
-
-                        var data = {
-                            websiteToBeBacked:websiteToBeBacked,
-                        };
-
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
-
-
-                    if(response.data.fetchStatus == 1){
-                        $scope.records = JSON.parse(response.data.data);
-                    }
-
-
-                }
-                function cantLoadInitialDatas(response) {}
-
-           };
-
-
-
-                $scope.createBackup = function(){
-
-                 var websiteToBeBacked = $scope.websiteToBeBacked;
-                 $scope.backupLoading = false;
-
-
-
-                url = "/backup/submitBackupCreation";
-
-                    var data = {
-                        websiteToBeBacked:websiteToBeBacked,
-                    };
-
-                    var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
-
-
-                    if(response.data.metaStatus === 1){
-                        getBackupStatus();
-                    }
-
-                }
-                function cantLoadInitialDatas(response) {}
-
-           };
-
-
-                $scope.deleteBackup = function (id) {
-
-
-                url = "/backup/deleteBackup";
-
-                    var data = {
-                        backupID:id,
-                    };
-
-                    var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
-
-
-                    if(response.data.deleteStatus == 1){
-
-                        populateCurrentRecords();
-
-
-                    }
-                    else{
-
-                    }
-
-                }
-                function cantLoadInitialDatas(response) {
-
-
-                }
-
-
-
-            };
-
-
+    };
 
 
 });
@@ -240,15 +238,14 @@ app.controller('backupWebsiteControl', function($scope,$http,$timeout) {
 ///** Backup site ends **///
 
 
-
 ///** Restore site ***//
 
 
-app.controller('restoreWebsiteControl', function($scope,$http,$timeout) {
+app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
 
     $scope.restoreLoading = true;
     $scope.runningRestore = true;
-    $scope.restoreButton=true;
+    $scope.restoreButton = true;
     $scope.restoreFinished = false;
     $scope.couldNotConnect = true;
     $scope.backupError = true;
@@ -260,163 +257,160 @@ app.controller('restoreWebsiteControl', function($scope,$http,$timeout) {
 
 
     $scope.fetchDetails = function () {
-                  $scope.restoreLoading = false;
-                  getRestoreStatus();
-                };
+        $scope.restoreLoading = false;
+        getRestoreStatus();
+    };
 
 
-    function getRestoreStatus(){
+    function getRestoreStatus() {
 
-                var backupFile = $scope.backupFile;
-
-                url = "/backup/restoreStatus";
-
-                var data = {
-                        backupFile:backupFile,
-                };
-
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
-
-
-                    if(response.data.restoreStatus === 1){
-
-                        if(response.data.abort === 1){
-                            $scope.running = response.data.running;
-                            $scope.fileName = $scope.backupFile;
-                            $scope.restoreLoading = true;
-                            $scope.status = response.data.status;
-                            $scope.runningRestore = false;
-                            $scope.restoreButton=false;
-                            $scope.restoreFinished = true;
-                            $timeout.cancel();
-                            return;
-                        }
-                        else{
-                            $scope.running = response.data.running;
-                            $scope.fileName = $scope.backupFile;
-                            $scope.restoreLoading = false;
-                            $scope.status = response.data.status;
-                            $scope.runningRestore = false;
-                            $scope.restoreButton = true;
-                            $timeout(getRestoreStatus, 2000);
-                        }
-                    }
-
-                }
-                function cantLoadInitialDatas(response) {
-                        $scope.couldNotConnect = false;
-
-
-                }
-
-           };
-
-
-    $scope.restoreBackup = function(){
         var backupFile = $scope.backupFile;
-        $scope.running = "Lets start.."
 
-                url = "/backup/submitRestore";
+        url = "/backup/restoreStatus";
 
-                var data = {
-                        backupFile:backupFile,
-                };
+        var data = {
+            backupFile: backupFile,
+        };
 
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
-
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                function ListInitialDatas(response) {
+        function ListInitialDatas(response) {
 
+
+            if (response.data.restoreStatus === 1) {
+
+                if (response.data.abort === 1) {
+                    $scope.running = response.data.running;
+                    $scope.fileName = $scope.backupFile;
                     $scope.restoreLoading = true;
-                    if(response.data.restoreStatus == 1){
-                        $scope.runningRestore = false;
-                        $scope.running = "Running";
-                        $scope.fileName = $scope.backupFile;
-                        $scope.status = "Just Started..";
-
-                        getRestoreStatus();
-                    }
-                    else{
-                            $scope.backupError = false;
-                            $scope.errorMessage = response.data.error_message;
-                    }
-
+                    $scope.status = response.data.status;
+                    $scope.runningRestore = false;
+                    $scope.restoreButton = false;
+                    $scope.restoreFinished = true;
+                    $timeout.cancel();
+                    return;
                 }
-                function cantLoadInitialDatas(response) {
-                    $scope.couldNotConnect = false;
-
+                else {
+                    $scope.running = response.data.running;
+                    $scope.fileName = $scope.backupFile;
+                    $scope.restoreLoading = false;
+                    $scope.status = response.data.status;
+                    $scope.runningRestore = false;
+                    $scope.restoreButton = true;
+                    $timeout(getRestoreStatus, 2000);
                 }
+            }
 
-           };
+        }
 
-
-    function createWebsite(){
-
-                var backupFile = $scope.backupFile;
-
-                url = "/websites/CreateWebsiteFromBackup";
-
-                var data = {
-                    backupFile:backupFile,
-                };
-
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        function cantLoadInitialDatas(response) {
+            $scope.couldNotConnect = false;
 
 
-                function ListInitialDatas(response) {
-
-                    if(response.data.createWebSiteStatus == 1){
-                        getRestoreStatus();
-                    }
-                    else if(response.data.existsStatus == 1){
-                        $scope.backupError = false;
-                        $scope.errorMessage = response.data.error_message;
-                        $scope.restoreButton = true;
-                        $scope.runningRestore = true;
-                    }
-                    else{
-                        $scope.websiteDomain = domainName;
-                        $scope.backupError = false;
-                        $scope.errorMessage = response.data.error_message;
-                    }
-
-
-                }
-                function cantLoadInitialDatas(response) {
-                            $scope.couldNotConnect = false;
-                }
-
-
-
-
+        }
 
     };
 
+
+    $scope.restoreBackup = function () {
+        var backupFile = $scope.backupFile;
+        $scope.running = "Lets start.."
+
+        url = "/backup/submitRestore";
+
+        var data = {
+            backupFile: backupFile,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            $scope.restoreLoading = true;
+            if (response.data.restoreStatus == 1) {
+                $scope.runningRestore = false;
+                $scope.running = "Running";
+                $scope.fileName = $scope.backupFile;
+                $scope.status = "Just Started..";
+
+                getRestoreStatus();
+            }
+            else {
+                $scope.backupError = false;
+                $scope.errorMessage = response.data.error_message;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.couldNotConnect = false;
+
+        }
+
+    };
+
+
+    function createWebsite() {
+
+        var backupFile = $scope.backupFile;
+
+        url = "/websites/CreateWebsiteFromBackup";
+
+        var data = {
+            backupFile: backupFile,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.createWebSiteStatus == 1) {
+                getRestoreStatus();
+            }
+            else if (response.data.existsStatus == 1) {
+                $scope.backupError = false;
+                $scope.errorMessage = response.data.error_message;
+                $scope.restoreButton = true;
+                $scope.runningRestore = true;
+            }
+            else {
+                $scope.websiteDomain = domainName;
+                $scope.backupError = false;
+                $scope.errorMessage = response.data.error_message;
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.couldNotConnect = false;
+        }
+
+
+    };
 
 
 });
@@ -425,11 +419,10 @@ app.controller('restoreWebsiteControl', function($scope,$http,$timeout) {
 //*** Resotre site ends here ***///
 
 
-
 ///** Backup Destination ***//
 
 
-app.controller('backupDestinations', function($scope,$http,$timeout) {
+app.controller('backupDestinations', function ($scope, $http, $timeout) {
 
     $scope.destinationLoading = true;
     $scope.connectionFailed = true;
@@ -452,59 +445,59 @@ app.controller('backupDestinations', function($scope,$http,$timeout) {
         url = "/backup/submitDestinationCreation";
 
 
-                        var data = {
-                            IPAddress : $scope.IPAddress,
-                            password : $scope.password,
-                            backupSSHPort:$scope.backupSSHPort,
-                        };
+        var data = {
+            IPAddress: $scope.IPAddress,
+            password: $scope.password,
+            backupSSHPort: $scope.backupSSHPort,
+        };
 
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
-                function ListInitialDatas(response) {
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    if(response.data.destStatus == 1){
+        function ListInitialDatas(response) {
 
-                        $scope.destinationLoading = true;
-                        $scope.connectionFailed = true;
-                        $scope.connectionSuccess = true;
-                        $scope.canNotAddDestination = true;
-                        $scope.destinationAdded = false;
-                        $scope.couldNotConnect = true;
 
-                        populateCurrentRecords();
+            if (response.data.destStatus == 1) {
 
-                    }
-                    else {
-                            $scope.destinationLoading = true;
-                            $scope.connectionFailed = true;
-                            $scope.connectionSuccess = true;
-                            $scope.canNotAddDestination = false;
-                            $scope.destinationAdded = true;
-                            $scope.couldNotConnect = true;
+                $scope.destinationLoading = true;
+                $scope.connectionFailed = true;
+                $scope.connectionSuccess = true;
+                $scope.canNotAddDestination = true;
+                $scope.destinationAdded = false;
+                $scope.couldNotConnect = true;
 
-                            $scope.errorMessage = response.data.error_message;
-                    }
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.destinationLoading = true;
-                    $scope.connectionFailed = true;
-                    $scope.connectionSuccess = true;
-                    $scope.canNotAddDestination = true;
-                    $scope.destinationAdded = true;
-                    $scope.couldNotConnect = false;
-                }
+                populateCurrentRecords();
 
-           };
+            }
+            else {
+                $scope.destinationLoading = true;
+                $scope.connectionFailed = true;
+                $scope.connectionSuccess = true;
+                $scope.canNotAddDestination = false;
+                $scope.destinationAdded = true;
+                $scope.couldNotConnect = true;
+
+                $scope.errorMessage = response.data.error_message;
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.destinationLoading = true;
+            $scope.connectionFailed = true;
+            $scope.connectionSuccess = true;
+            $scope.canNotAddDestination = true;
+            $scope.destinationAdded = true;
+            $scope.couldNotConnect = false;
+        }
+
+    };
 
     $scope.checkConn = function (ip) {
 
@@ -518,58 +511,58 @@ app.controller('backupDestinations', function($scope,$http,$timeout) {
         url = "/backup/getConnectionStatus";
 
 
-                        var data = {
-                            IPAddress : ip,
-                        };
+        var data = {
+            IPAddress: ip,
+        };
 
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
-                function ListInitialDatas(response) {
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    if(response.data.connStatus == 1){
+        function ListInitialDatas(response) {
 
-                        $scope.destinationLoading = true;
-                        $scope.connectionFailed = true;
-                        $scope.connectionSuccess = false;
-                        $scope.canNotAddDestination = true;
-                        $scope.destinationAdded = true;
-                        $scope.couldNotConnect = true;
 
-                        $scope.IPAddress = ip;
+            if (response.data.connStatus == 1) {
 
-                    }
-                    else {
-                            $scope.destinationLoading = true;
-                            $scope.connectionFailed = false;
-                            $scope.connectionSuccess = true;
-                            $scope.canNotAddDestination = true;
-                            $scope.destinationAdded = true;
-                            $scope.couldNotConnect = true;
+                $scope.destinationLoading = true;
+                $scope.connectionFailed = true;
+                $scope.connectionSuccess = false;
+                $scope.canNotAddDestination = true;
+                $scope.destinationAdded = true;
+                $scope.couldNotConnect = true;
 
-                            $scope.errorMessage = response.data.error_message;
-                            $scope.IPAddress = ip;
-                    }
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.destinationLoading = true;
-                    $scope.connectionFailed = true;
-                    $scope.connectionSuccess = true;
-                    $scope.canNotAddDestination = true;
-                    $scope.destinationAdded = true;
-                    $scope.couldNotConnect = false;
-                }
+                $scope.IPAddress = ip;
 
-           };
+            }
+            else {
+                $scope.destinationLoading = true;
+                $scope.connectionFailed = false;
+                $scope.connectionSuccess = true;
+                $scope.canNotAddDestination = true;
+                $scope.destinationAdded = true;
+                $scope.couldNotConnect = true;
+
+                $scope.errorMessage = response.data.error_message;
+                $scope.IPAddress = ip;
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.destinationLoading = true;
+            $scope.connectionFailed = true;
+            $scope.connectionSuccess = true;
+            $scope.canNotAddDestination = true;
+            $scope.destinationAdded = true;
+            $scope.couldNotConnect = false;
+        }
+
+    };
 
     $scope.delDest = function (ip) {
 
@@ -583,94 +576,92 @@ app.controller('backupDestinations', function($scope,$http,$timeout) {
         url = "/backup/deleteDestination";
 
 
-                        var data = {
-                            IPAddress : ip,
-                        };
+        var data = {
+            IPAddress: ip,
+        };
 
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
-                function ListInitialDatas(response) {
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    if(response.data.delStatus == 1){
-
-                        $scope.destinationLoading = true;
-                        $scope.connectionFailed = true;
-                        $scope.connectionSuccess = true;
-                        $scope.canNotAddDestination = true;
-                        $scope.destinationAdded = true;
-                        $scope.couldNotConnect = true;
-                        populateCurrentRecords();
-
-                        $scope.IPAddress = ip;
-
-                    }
-                    else {
-                            $scope.destinationLoading = true;
-                            $scope.connectionFailed = true;
-                            $scope.connectionSuccess = true;
-                            $scope.canNotAddDestination = true;
-                            $scope.destinationAdded = true;
-                            $scope.couldNotConnect = true;
-
-                            $scope.errorMessage = response.data.error_message;
-                            $scope.IPAddress = ip;
-                    }
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.destinationLoading = true;
-                    $scope.connectionFailed = true;
-                    $scope.connectionSuccess = true;
-                    $scope.canNotAddDestination = true;
-                    $scope.destinationAdded = true;
-                    $scope.couldNotConnect = false;
-                }
-
-           };
+        function ListInitialDatas(response) {
 
 
+            if (response.data.delStatus == 1) {
 
-    function populateCurrentRecords(){
+                $scope.destinationLoading = true;
+                $scope.connectionFailed = true;
+                $scope.connectionSuccess = true;
+                $scope.canNotAddDestination = true;
+                $scope.destinationAdded = true;
+                $scope.couldNotConnect = true;
+                populateCurrentRecords();
 
-                        url = "/backup/getCurrentBackupDestinations";
+                $scope.IPAddress = ip;
 
-                        var data = {
-                        };
+            }
+            else {
+                $scope.destinationLoading = true;
+                $scope.connectionFailed = true;
+                $scope.connectionSuccess = true;
+                $scope.canNotAddDestination = true;
+                $scope.destinationAdded = true;
+                $scope.couldNotConnect = true;
 
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
+                $scope.errorMessage = response.data.error_message;
+                $scope.IPAddress = ip;
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.destinationLoading = true;
+            $scope.connectionFailed = true;
+            $scope.connectionSuccess = true;
+            $scope.canNotAddDestination = true;
+            $scope.destinationAdded = true;
+            $scope.couldNotConnect = false;
+        }
+
+    };
 
 
+    function populateCurrentRecords() {
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        url = "/backup/getCurrentBackupDestinations";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
-                function ListInitialDatas(response) {
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    if(response.data.fetchStatus == 1){
+        function ListInitialDatas(response) {
 
-                        $scope.records = JSON.parse(response.data.data);
 
-                    }
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.couldNotConnect = false;
-                }
+            if (response.data.fetchStatus == 1) {
 
-           };
+                $scope.records = JSON.parse(response.data.data);
+
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.couldNotConnect = false;
+        }
+
+    };
 
 });
 
@@ -681,7 +672,7 @@ app.controller('backupDestinations', function($scope,$http,$timeout) {
 ///** Schedule Backup ***//
 
 
-app.controller('scheduleBackup', function($scope,$http,$timeout) {
+app.controller('scheduleBackup', function ($scope, $http, $timeout) {
 
     $scope.scheduleBackupLoading = true;
     $scope.canNotAddSchedule = true;
@@ -722,67 +713,65 @@ app.controller('scheduleBackup', function($scope,$http,$timeout) {
         $scope.scheduleBtn = false;
 
 
-
         url = "/backup/submitBackupSchedule";
 
 
-                        var data = {
-                            backupDest : $scope.backupDest,
-                            backupFreq : $scope.backupFreq,
-                        };
+        var data = {
+            backupDest: $scope.backupDest,
+            backupFreq: $scope.backupFreq,
+        };
 
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
-                function ListInitialDatas(response) {
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    if(response.data.scheduleStatus == 1){
-
-                        $scope.scheduleBackupLoading = true;
-                        $scope.canNotAddSchedule = true;
-                        $scope.scheduleAdded = false;
-                        $scope.couldNotConnect = true;
-                        $scope.scheduleFreq = true;
-                        $scope.scheduleBtn = true;
+        function ListInitialDatas(response) {
 
 
+            if (response.data.scheduleStatus == 1) {
 
-                        populateCurrentRecords();
+                $scope.scheduleBackupLoading = true;
+                $scope.canNotAddSchedule = true;
+                $scope.scheduleAdded = false;
+                $scope.couldNotConnect = true;
+                $scope.scheduleFreq = true;
+                $scope.scheduleBtn = true;
 
-                    }
-                    else {
 
-                            $scope.scheduleBackupLoading = true;
-                            $scope.canNotAddSchedule = false;
-                            $scope.scheduleAdded = true;
-                            $scope.couldNotConnect = true;
-                            $scope.scheduleFreq = false;
-                            $scope.scheduleBtn = false;
+                populateCurrentRecords();
 
-                            $scope.errorMessage = response.data.error_message;
-                    }
-                }
-                function cantLoadInitialDatas(response) {
+            }
+            else {
 
-                            $scope.scheduleBackupLoading = true;
-                            $scope.canNotAddSchedule = true;
-                            $scope.scheduleAdded = true;
-                            $scope.couldNotConnect = false;
-                            $scope.scheduleFreq = false;
-                            $scope.scheduleBtn = false;
+                $scope.scheduleBackupLoading = true;
+                $scope.canNotAddSchedule = false;
+                $scope.scheduleAdded = true;
+                $scope.couldNotConnect = true;
+                $scope.scheduleFreq = false;
+                $scope.scheduleBtn = false;
 
-                }
+                $scope.errorMessage = response.data.error_message;
+            }
+        }
 
-           };
+        function cantLoadInitialDatas(response) {
+
+            $scope.scheduleBackupLoading = true;
+            $scope.canNotAddSchedule = true;
+            $scope.scheduleAdded = true;
+            $scope.couldNotConnect = false;
+            $scope.scheduleFreq = false;
+            $scope.scheduleBtn = false;
+
+        }
+
+    };
 
     $scope.checkConn = function (ip) {
 
@@ -796,60 +785,60 @@ app.controller('scheduleBackup', function($scope,$http,$timeout) {
         url = "/backup/getConnectionStatus";
 
 
-                        var data = {
-                            IPAddress : ip,
-                        };
+        var data = {
+            IPAddress: ip,
+        };
 
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
-                function ListInitialDatas(response) {
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    if(response.data.connStatus == 1){
+        function ListInitialDatas(response) {
 
-                        $scope.destinationLoading = true;
-                        $scope.connectionFailed = true;
-                        $scope.connectionSuccess = false;
-                        $scope.canNotAddDestination = true;
-                        $scope.destinationAdded = true;
-                        $scope.couldNotConnect = true;
 
-                        $scope.IPAddress = ip;
+            if (response.data.connStatus == 1) {
 
-                    }
-                    else {
-                            $scope.destinationLoading = true;
-                            $scope.connectionFailed = false;
-                            $scope.connectionSuccess = true;
-                            $scope.canNotAddDestination = true;
-                            $scope.destinationAdded = true;
-                            $scope.couldNotConnect = true;
+                $scope.destinationLoading = true;
+                $scope.connectionFailed = true;
+                $scope.connectionSuccess = false;
+                $scope.canNotAddDestination = true;
+                $scope.destinationAdded = true;
+                $scope.couldNotConnect = true;
 
-                            $scope.errorMessage = response.data.error_message;
-                            $scope.IPAddress = ip;
-                    }
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.destinationLoading = true;
-                    $scope.connectionFailed = true;
-                    $scope.connectionSuccess = true;
-                    $scope.canNotAddDestination = true;
-                    $scope.destinationAdded = true;
-                    $scope.couldNotConnect = false;
-                }
+                $scope.IPAddress = ip;
 
-           };
+            }
+            else {
+                $scope.destinationLoading = true;
+                $scope.connectionFailed = false;
+                $scope.connectionSuccess = true;
+                $scope.canNotAddDestination = true;
+                $scope.destinationAdded = true;
+                $scope.couldNotConnect = true;
 
-    $scope.delSchedule = function (destLoc,frequency) {
+                $scope.errorMessage = response.data.error_message;
+                $scope.IPAddress = ip;
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.destinationLoading = true;
+            $scope.connectionFailed = true;
+            $scope.connectionSuccess = true;
+            $scope.canNotAddDestination = true;
+            $scope.destinationAdded = true;
+            $scope.couldNotConnect = false;
+        }
+
+    };
+
+    $scope.delSchedule = function (destLoc, frequency) {
 
         $scope.scheduleBackupLoading = false;
         $scope.canNotAddSchedule = true;
@@ -862,96 +851,94 @@ app.controller('scheduleBackup', function($scope,$http,$timeout) {
         url = "/backup/scheduleDelete";
 
 
-                        var data = {
-                            destLoc : destLoc,
-                            frequency: frequency,
-                        };
+        var data = {
+            destLoc: destLoc,
+            frequency: frequency,
+        };
 
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
-                function ListInitialDatas(response) {
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    if(response.data.delStatus == 1){
-
-                        $scope.scheduleBackupLoading = true;
-                        $scope.canNotAddSchedule = true;
-                        $scope.scheduleAdded = true;
-                        $scope.couldNotConnect = true;
-                        $scope.scheduleFreq = true;
-                        $scope.scheduleBtn = true;
+        function ListInitialDatas(response) {
 
 
-                        populateCurrentRecords();
+            if (response.data.delStatus == 1) {
+
+                $scope.scheduleBackupLoading = true;
+                $scope.canNotAddSchedule = true;
+                $scope.scheduleAdded = true;
+                $scope.couldNotConnect = true;
+                $scope.scheduleFreq = true;
+                $scope.scheduleBtn = true;
 
 
-                    }
-                    else {
-
-                            $scope.scheduleBackupLoading = true;
-                            $scope.canNotAddSchedule = true;
-                            $scope.scheduleAdded = true;
-                            $scope.couldNotConnect = true;
-                            $scope.scheduleFreq = true;
-                            $scope.scheduleBtn = true;
-                            $scope.errorMessage = response.data.error_message;
-                    }
-                }
-                function cantLoadInitialDatas(response) {
-
-                    $scope.scheduleBackupLoading = true;
-                    $scope.canNotAddSchedule = true;
-                    $scope.scheduleAdded = true;
-                    $scope.couldNotConnect = false;
-                    $scope.scheduleFreq = true;
-                    $scope.scheduleBtn = true;
-                }
-
-           };
+                populateCurrentRecords();
 
 
+            }
+            else {
 
-    function populateCurrentRecords(){
+                $scope.scheduleBackupLoading = true;
+                $scope.canNotAddSchedule = true;
+                $scope.scheduleAdded = true;
+                $scope.couldNotConnect = true;
+                $scope.scheduleFreq = true;
+                $scope.scheduleBtn = true;
+                $scope.errorMessage = response.data.error_message;
+            }
+        }
 
-                        url = "/backup/getCurrentBackupSchedules";
+        function cantLoadInitialDatas(response) {
 
-                        var data = {
-                        };
+            $scope.scheduleBackupLoading = true;
+            $scope.canNotAddSchedule = true;
+            $scope.scheduleAdded = true;
+            $scope.couldNotConnect = false;
+            $scope.scheduleFreq = true;
+            $scope.scheduleBtn = true;
+        }
 
-                        var config = {
-                            headers : {
-                                'X-CSRFToken': getCookie('csrftoken')
-                                }
-                            };
-
-
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+    };
 
 
-                function ListInitialDatas(response) {
+    function populateCurrentRecords() {
+
+        url = "/backup/getCurrentBackupSchedules";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
-                    if(response.data.fetchStatus == 1){
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
-                        $scope.records = JSON.parse(response.data.data);
 
-                    }
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.couldNotConnect = false;
-                }
+        function ListInitialDatas(response) {
 
-           };
+
+            if (response.data.fetchStatus == 1) {
+
+                $scope.records = JSON.parse(response.data.data);
+
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.couldNotConnect = false;
+        }
+
+    };
 
 });
 
@@ -960,7 +947,7 @@ app.controller('scheduleBackup', function($scope,$http,$timeout) {
 
 
 //*** Remote Backup site ****//
-app.controller('remoteBackupControl', function($scope, $http, $timeout) {
+app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
 
     $scope.backupButton = true;
     $scope.backupLoading = true;
@@ -993,47 +980,46 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
     var index = 0;
     var tempTransferDir = "";
 
-    $scope.passwordEnter = function() {
+    $scope.passwordEnter = function () {
         $scope.backupButton = false;
     };
 
-    $scope.addRemoveWebsite = function (website,websiteStatus) {
+    $scope.addRemoveWebsite = function (website, websiteStatus) {
 
-        if(websiteStatus === true)
-        {
+        if (websiteStatus === true) {
             var check = 1;
-            for(var j = 0; j < websitesToBeBacked.length; j++){
-                    if (websitesToBeBacked[j] == website){
-                        check = 0;
-                        break;
-                    }
+            for (var j = 0; j < websitesToBeBacked.length; j++) {
+                if (websitesToBeBacked[j] == website) {
+                    check = 0;
+                    break;
                 }
-            if(check == 1) {
+            }
+            if (check == 1) {
                 websitesToBeBacked.push(website);
             }
 
         }
-        else{
+        else {
 
             var tempArray = [];
 
-            for(var j = 0; j < websitesToBeBacked.length; j++){
-                    if (websitesToBeBacked[j] != website){
-                        tempArray.push(websitesToBeBacked[j]);
-                    }
+            for (var j = 0; j < websitesToBeBacked.length; j++) {
+                if (websitesToBeBacked[j] != website) {
+                    tempArray.push(websitesToBeBacked[j]);
                 }
+            }
             websitesToBeBacked = tempArray;
         }
     };
 
     $scope.allChecked = function (webSiteStatus) {
 
-        if(webSiteStatus === true) {
+        if (webSiteStatus === true) {
 
             websitesToBeBacked = websitesToBeBackedTemp;
             $scope.webSiteStatus = true;
         }
-        else{
+        else {
             websitesToBeBacked = [];
             $scope.webSiteStatus = false;
         }
@@ -1076,7 +1062,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
                 $scope.records = JSON.parse(response.data.data);
                 var parsed = JSON.parse(response.data.data);
 
-                for(var j = 0; j < parsed.length; j++){
+                for (var j = 0; j < parsed.length; j++) {
                     websitesToBeBackedTemp.push(parsed[j].website);
                 }
 
@@ -1138,8 +1124,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
         $scope.backupCancelled = true;
 
 
-
-        if(websitesToBeBacked.length === 0){
+        if (websitesToBeBacked.length === 0) {
             alert("No websites selected for transfer.");
             return;
         }
@@ -1157,7 +1142,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
         var data = {
             ipAddress: IPAddress,
             password: password,
-            accountsToTransfer:websitesToBeBacked,
+            accountsToTransfer: websitesToBeBacked,
         };
 
         var config = {
@@ -1172,28 +1157,28 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
         function ListInitialDatas(response) {
 
             if (response.data.remoteTransferStatus === 1) {
-                    tempTransferDir = response.data.dir;
-                    $scope.accountsInRemoteServerTable = true;
+                tempTransferDir = response.data.dir;
+                $scope.accountsInRemoteServerTable = true;
 
-                    // notifications boxes
-                    $scope.notificationsBox = false;
-                    $scope.errorMessage = true;
-                    $scope.couldNotConnect = true;
-                    $scope.accountsFetched = true;
-                    $scope.backupProcessStarted = false;
-                    $scope.backupCancelled = true;
+                // notifications boxes
+                $scope.notificationsBox = false;
+                $scope.errorMessage = true;
+                $scope.couldNotConnect = true;
+                $scope.accountsFetched = true;
+                $scope.backupProcessStarted = false;
+                $scope.backupCancelled = true;
 
-                    // disable transfer button
+                // disable transfer button
 
-                    $scope.startTransferbtn = true;
-
-
-                    // enable cancel button
-
-                    $scope.stopTransferbtn = false;
+                $scope.startTransferbtn = true;
 
 
-                    getBackupStatus();
+                // enable cancel button
+
+                $scope.stopTransferbtn = false;
+
+
+                getBackupStatus();
 
 
             }
@@ -1218,15 +1203,15 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
 
         function cantLoadInitialDatas(response) {
 
-                // Notifications box settings
+            // Notifications box settings
 
-                // notifications boxes
-                $scope.notificationsBox = false;
-                $scope.errorMessage = true;
-                $scope.couldNotConnect = false;
-                $scope.accountsFetched = true;
-                $scope.backupProcessStarted = true;
-                $scope.backupCancelled = true;
+            // notifications boxes
+            $scope.notificationsBox = false;
+            $scope.errorMessage = true;
+            $scope.couldNotConnect = false;
+            $scope.accountsFetched = true;
+            $scope.backupProcessStarted = true;
+            $scope.backupCancelled = true;
 
         }
 
@@ -1237,7 +1222,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
         url = "/backup/getRemoteTransferStatus";
 
         var data = {
-            password : $scope.password,
+            password: $scope.password,
             ipAddress: $scope.IPAddress,
             dir: tempTransferDir
         };
@@ -1255,12 +1240,12 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
 
             if (response.data.remoteTransferStatus === 1) {
 
-                if(response.data.backupsSent === 0){
+                if (response.data.backupsSent === 0) {
                     $scope.backupStatus = false;
                     $scope.requestData = response.data.status;
                     $timeout(getBackupStatus, 2000);
                 }
-                else{
+                else {
                     $scope.requestData = response.data.status;
                     $timeout.cancel();
 
@@ -1269,7 +1254,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
                     remoteBackupRestore();
                 }
             }
-            else{
+            else {
 
                 $scope.error_message = response.data.error_message;
                 $scope.backupLoading = true;
@@ -1288,16 +1273,16 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
         }
 
         function cantLoadInitialDatas(response) {
-                 // Notifications box settings
+            // Notifications box settings
 
-                $scope.couldNotConnect = false;
-                $scope.errorMessage = true;
-                $scope.accountsFetched = true;
-                $scope.notificationsBox = false;
+            $scope.couldNotConnect = false;
+            $scope.errorMessage = true;
+            $scope.accountsFetched = true;
+            $scope.notificationsBox = false;
         }
     };
 
-    function remoteBackupRestore(){
+    function remoteBackupRestore() {
         url = "/backup/remoteBackupRestore";
 
         var data = {
@@ -1316,18 +1301,18 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
         function ListInitialDatas(response) {
 
             if (response.data.remoteRestoreStatus === 1) {
-                    localRestoreStatus();
+                localRestoreStatus();
             }
         }
 
         function cantLoadInitialDatas(response) {
-                 // Notifications box settings
+            // Notifications box settings
 
-                $scope.couldNotConnect = false;
-                $scope.errorMessage = true;
-                $scope.accountsFetched = true;
-                $scope.notificationsBox = false;
-                $scope.backupLoading = true;
+            $scope.couldNotConnect = false;
+            $scope.errorMessage = true;
+            $scope.accountsFetched = true;
+            $scope.notificationsBox = false;
+            $scope.backupLoading = true;
         }
 
         ///////////////
@@ -1335,7 +1320,6 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
     };
 
     function localRestoreStatus(password) {
-
 
 
         url = "/backup/localRestoreStatus";
@@ -1357,19 +1341,19 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
 
             if (response.data.remoteTransferStatus === 1) {
 
-                if(response.data.complete === 0){
+                if (response.data.complete === 0) {
                     $scope.backupStatus = false;
                     $scope.restoreData = response.data.status;
                     $timeout(localRestoreStatus, 2000);
                 }
-                else{
+                else {
                     $scope.restoreData = response.data.status;
                     $timeout.cancel();
                     $scope.backupLoading = true;
                     $scope.startTransferbtn = false;
                 }
             }
-            else{
+            else {
 
                 $scope.error_message = response.data.error_message;
                 $scope.backupLoading = true;
@@ -1387,12 +1371,12 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
         }
 
         function cantLoadInitialDatas(response) {
-                 // Notifications box settings
+            // Notifications box settings
 
-                $scope.couldNotConnect = false;
-                $scope.errorMessage = true;
-                $scope.accountsFetched = true;
-                $scope.notificationsBox = false;
+            $scope.couldNotConnect = false;
+            $scope.errorMessage = true;
+            $scope.accountsFetched = true;
+            $scope.notificationsBox = false;
         }
     };
 
@@ -1402,7 +1386,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
         url = "/backup/getRemoteTransferStatus";
 
         var data = {
-            password : $scope.password,
+            password: $scope.password,
             ipAddress: $scope.IPAddress,
             dir: tempTransferDir,
         };
@@ -1420,12 +1404,12 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
 
             if (response.data.remoteTransferStatus == 1) {
 
-                if(response.data.backupsSent == 0){
+                if (response.data.backupsSent == 0) {
                     $scope.backupStatus = false;
                     $scope.requestData = response.data.status;
                     $timeout(getBackupStatus, 2000);
                 }
-                else{
+                else {
                     $timeout.cancel();
                 }
             }
@@ -1433,12 +1417,12 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
         }
 
         function cantLoadInitialDatas(response) {
-                 // Notifications box settings
+            // Notifications box settings
 
-                $scope.couldNotConnect = false;
-                $scope.errorMessage = true;
-                $scope.accountsFetched = true;
-                $scope.notificationsBox = false;
+            $scope.couldNotConnect = false;
+            $scope.errorMessage = true;
+            $scope.accountsFetched = true;
+            $scope.notificationsBox = false;
         }
     };
 
@@ -1463,7 +1447,7 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
         var data = {
             ipAddress: IPAddress,
             password: password,
-            dir:tempTransferDir,
+            dir: tempTransferDir,
         };
 
         var config = {
@@ -1478,35 +1462,35 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
         function ListInitialDatas(response) {
 
             if (response.data.cancelStatus == 1) {
-                    $scope.backupLoading = true;
+                $scope.backupLoading = true;
 
-                    // notifications boxes
-                    $scope.notificationsBox = false;
-                    $scope.errorMessage = true;
-                    $scope.couldNotConnect = true;
-                    $scope.accountsFetched = true;
-                    $scope.backupProcessStarted = true;
-                    $scope.backupCancelled = false;
+                // notifications boxes
+                $scope.notificationsBox = false;
+                $scope.errorMessage = true;
+                $scope.couldNotConnect = true;
+                $scope.accountsFetched = true;
+                $scope.backupProcessStarted = true;
+                $scope.backupCancelled = false;
 
-                    // enable transfer button
+                // enable transfer button
 
-                    $scope.startTransferbtn = false;
+                $scope.startTransferbtn = false;
 
-                    //disable cancel button
+                //disable cancel button
 
-                    $scope.stopTransferbtn = true;
+                $scope.stopTransferbtn = true;
 
-                    // hide status box
+                // hide status box
 
-                    $scope.backupStatus = true;
+                $scope.backupStatus = true;
 
-                    // bring back websites table
+                // bring back websites table
 
-                    $scope.accountsInRemoteServerTable = false;
+                $scope.accountsInRemoteServerTable = false;
 
-                    // enable fetch button
+                // enable fetch button
 
-                    $scope.fetchAccountsBtn = false;
+                $scope.fetchAccountsBtn = false;
 
 
             }
@@ -1525,21 +1509,20 @@ app.controller('remoteBackupControl', function($scope, $http, $timeout) {
                 $scope.backupCancelled = true;
 
 
-
             }
 
         }
 
         function cantLoadInitialDatas(response) {
 
-                // notifications boxes
+            // notifications boxes
 
-                $scope.notificationsBox = false;
-                $scope.errorMessage = true;
-                $scope.couldNotConnect = false;
-                $scope.accountsFetched = true;
-                $scope.backupProcessStarted = true;
-                $scope.backupCancelled = true;
+            $scope.notificationsBox = false;
+            $scope.errorMessage = true;
+            $scope.couldNotConnect = false;
+            $scope.accountsFetched = true;
+            $scope.backupProcessStarted = true;
+            $scope.backupCancelled = true;
 
         }
 
