@@ -326,7 +326,7 @@ class DNS:
 
             path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
             command = "sudo cat " + path
-            output = subprocess.check_output(shlex.split(command))
+            output = ProcessUtilities.outputExecutioner(shlex.split(command))
             leftIndex = output.index('(') + 2
             rightIndex = output.rindex(')') - 1
 

@@ -21,6 +21,7 @@ from plogical.acl import ACLManager
 from firewall.models import FirewallRules
 from s3Backups.s3Backups import S3Backups
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
 
@@ -119,8 +120,6 @@ def changeUserPassAPI(request):
             websiteOwn = Administrator.objects.get(userName=websiteOwner)
             websiteOwn.password = hashPassword.hash_password(ownerPassword)
             websiteOwn.save()
-
-
 
             data_ret = {'changeStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
@@ -260,7 +259,7 @@ def fetchSSHkey(request):
 
                 pubKey = os.path.join("/root",".ssh",'cyberpanel.pub')
                 execPath = "sudo cat " + pubKey
-                data = subprocess.check_output(shlex.split(execPath))
+                data = ProcessUtilities.outputExecutioner(execPath)
 
                 data_ret = {
                             'status': 1,
@@ -313,7 +312,7 @@ def remoteTransfer(request):
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
                 execPath = execPath + " remoteTransfer --ipAddress " + ipAddress + " --dir " + dir + " --accountsToTransfer " + path
-                subprocess.Popen(shlex.split(execPath))
+                ProcessUtilities.popenExecutioner(execPath)
 
                 return HttpResponse(json.dumps({"transferStatus": 1, "dir": dir}))
 
@@ -381,8 +380,8 @@ def FetchRemoteTransferStatus(request):
             dir = "/home/backup/transfer-"+str(data['dir'])+"/backup_log"
 
             try:
-                command = "sudo cat "+ dir
-                status = subprocess.check_output(shlex.split(command))
+                execPath = "sudo cat "+ dir
+                status = ProcessUtilities.outputExecutioner(execPath)
 
                 admin = Administrator.objects.get(userName=username)
                 if hashPassword.check_password(admin.password, password):
@@ -418,14 +417,14 @@ def cancelRemoteTransfer(request):
 
                 path = dir + "/pid"
 
-                command = "sudo cat " + path
-                pid = subprocess.check_output(shlex.split(command))
+                execPath = "sudo cat " + path
+                pid = ProcessUtilities.outputExecutioner(execPath)
 
-                command = "sudo kill -KILL " + pid
-                subprocess.call(shlex.split(command))
+                execPath = "sudo kill -KILL " + pid
+                ProcessUtilities.executioner(execPath)
 
-                command = "sudo rm -rf " + dir
-                subprocess.call(shlex.split(command))
+                execPath = "sudo rm -rf " + dir
+                ProcessUtilities.executioner(execPath)
 
                 data = {'cancelStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data)
@@ -525,9 +524,8 @@ def putSSHkey(request):
 
                 ##
 
-                command = "sudo chmod g-w /home/cyberpanel"
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+                execPath = "sudo chmod g-w /home/cyberpanel"
+                ProcessUtilities.executioner(execPath)
 
                 os.chmod(keyPath,0700)
                 os.chmod(authorized_keys, 0600)
@@ -588,30 +586,6 @@ def changeAdminPassword(request):
                 newFWRule.save()
 
                 newFWRule = FirewallRules(name="ftp", proto="tcp", port="21")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="smtp", proto="tcp", port="25")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="smtps", proto="tcp", port="587")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="ssmtp", proto="tcp", port="465")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="pop3", proto="tcp", port="110")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="imap", proto="tcp", port="143")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="simap", proto="tcp", port="993")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="dns", proto="udp", port="53")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="dnstcp", proto="tcp", port="53")
                 newFWRule.save()
 
                 newFWRule = FirewallRules(name="ftptls", proto="tcp", port="40110-40210")

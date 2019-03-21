@@ -20,6 +20,7 @@ from random import randint
 import time
 import plogical.backupUtilities as backupUtil
 import requests
+from plogical.processUtilities import ProcessUtilities
 
 class BackupManager:
     def __init__(self, domain = None, childDomain = None):
@@ -61,7 +62,7 @@ class BackupManager:
                 ext = ".tar.gz"
 
                 command = 'sudo chown -R  cyberpanel:cyberpanel ' + path
-                ACLManager.executeCall(command)
+                ProcessUtilities.executioner(command)
 
                 files = os.listdir(path)
                 for filename in files:
@@ -144,7 +145,7 @@ class BackupManager:
             execPath = execPath + " submitBackupCreation --tempStoragePath " + tempStoragePath + " --backupName " \
                        + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain
 
-            subprocess.Popen(shlex.split(execPath))
+            ProcessUtilities.popenExecutioner(execPath)
 
             time.sleep(2)
 
@@ -168,16 +169,16 @@ class BackupManager:
             ## read file name
 
             try:
-                command = "sudo cat " + backupFileNamePath
-                fileName = subprocess.check_output(shlex.split(command))
+                execPath = "sudo cat " + backupFileNamePath
+                fileName = ProcessUtilities.outputExecutioner(execPath)
             except:
                 fileName = "Fetching.."
 
             ## file name read ends
 
             if os.path.exists(status):
-                command = "sudo cat " + status
-                status = subprocess.check_output(shlex.split(command))
+                execPath = "sudo cat " + status
+                status = ProcessUtilities.outputExecutioner(execPath)
 
                 if status.find("Completed") > -1:
 
@@ -201,14 +202,14 @@ class BackupManager:
 
                     ### Removing Files
 
-                    command = 'sudo rm -f ' + status
-                    subprocess.call(shlex.split(command))
+                    execPath = 'sudo rm -f ' + status
+                    ProcessUtilities.executioner(execPath)
 
-                    command = 'sudo rm -f ' + backupFileNamePath
-                    subprocess.call(shlex.split(command))
+                    execPath = 'sudo rm -f ' + backupFileNamePath
+                    ProcessUtilities.executioner(execPath)
 
-                    command = 'sudo rm -f ' + pid
-                    subprocess.call(shlex.split(command))
+                    execPath = 'sudo rm -f ' + pid
+                    ProcessUtilities.executioner(execPath)
 
                     final_json = json.dumps(
                         {'backupStatus': 1, 'error_message': "None", "status": status, "abort": 1,
@@ -218,14 +219,14 @@ class BackupManager:
                 elif status.find("[5009]") > -1:
                     ## removing status file, so that backup can re-run
                     try:
-                        command = 'sudo rm -f ' + status
-                        subprocess.call(shlex.split(command))
+                        execPath = 'sudo rm -f ' + status
+                        ProcessUtilities.executioner(execPath)
 
-                        command = 'sudo rm -f ' + backupFileNamePath
-                        subprocess.call(shlex.split(command))
+                        execPath = 'sudo rm -f ' + backupFileNamePath
+                        ProcessUtilities.executioner(execPath)
 
-                        command = 'sudo rm -f ' + pid
-                        subprocess.call(shlex.split(command))
+                        execPath = 'sudo rm -f ' + pid
+                        ProcessUtilities.executioner(execPath)
 
                         backupObs = Backups.objects.filter(fileName=fileName)
                         for items in backupObs:
@@ -260,10 +261,9 @@ class BackupManager:
             fileName = data['fileName']
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-
             execPath = execPath + " cancelBackupCreation --backupCancellationDomain " + backupCancellationDomain + " --fileName " + fileName
 
-            subprocess.call(shlex.split(execPath))
+            ProcessUtilities.executioner(execPath)
 
             try:
                 backupOb = Backups.objects.get(fileName=fileName)
@@ -287,8 +287,8 @@ class BackupManager:
             domainName = backup.website.domain
 
             path = "/home/" + domainName + "/backup/" + backup.fileName + ".tar.gz"
-            command = 'sudo rm -f ' + path
-            ACLManager.executeCall(command)
+            execPath = 'sudo rm -f ' + path
+            ProcessUtilities.executioner(execPath)
 
             backup.delete()
 
@@ -312,7 +312,7 @@ class BackupManager:
 
             execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
-            subprocess.Popen(shlex.split(execPath))
+            ProcessUtilities.popenExecutioner(execPath)
             time.sleep(4)
 
             final_dic = {'restoreStatus': 1, 'error_message': "None"}
@@ -340,12 +340,12 @@ class BackupManager:
             if os.path.exists(path):
                 try:
                     execPath = "sudo cat " + path + "/status"
-                    status = subprocess.check_output(shlex.split(execPath))
+                    status = ProcessUtilities.outputExecutioner(execPath)
 
                     if status.find("Done") > -1:
 
-                        command = "sudo rm -rf " + path
-                        subprocess.call(shlex.split(command))
+                        execPath = "sudo rm -rf " + path
+                        ProcessUtilities.executioner(execPath)
 
                         final_json = json.dumps(
                             {'restoreStatus': 1, 'error_message': "None", "status": status, 'abort': 1,
@@ -353,8 +353,8 @@ class BackupManager:
                         return HttpResponse(final_json)
                     elif status.find("[5009]") > -1:
                         ## removing temporarily generated files while restoring
-                        command = "sudo rm -rf " + path
-                        subprocess.call(shlex.split(command))
+                        execPath = "sudo rm -rf " + path
+                        ProcessUtilities.executioner(execPath)
                         final_json = json.dumps({'restoreStatus': 1, 'error_message': "None",
                                                  "status": status, 'abort': 1, 'alreadyRunning': 0,
                                                  'running': 'Error'})
@@ -428,7 +428,7 @@ class BackupManager:
                 execPath = execPath + " submitDestinationCreation --ipAddress " + ipAddress + " --password " \
                            + password + " --port " + port
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find('1,') > -1:
                     try:
@@ -506,7 +506,7 @@ class BackupManager:
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " getConnectionStatus --ipAddress " + ipAddress
 
-            output = subprocess.check_output(shlex.split(execPath))
+            output = ProcessUtilities.outputExecutioner(execPath)
 
             if output.find('1,') > -1:
                 final_dic = {'connStatus': 1, 'error_message': "None"}
@@ -664,9 +664,8 @@ class BackupManager:
 
                         virtualHostUtilities.leaveControl(path)
 
-                        command = "sudo systemctl restart crond"
-
-                        subprocess.call(shlex.split(command))
+                        execPath = "sudo systemctl restart crond"
+                        ProcessUtilities.executioner(execPath)
 
                         destination = dest.objects.get(destLoc=backupDest)
                         newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
@@ -686,9 +685,9 @@ class BackupManager:
 
                         virtualHostUtilities.leaveControl(path)
 
-                        command = "sudo systemctl restart crond"
+                        execPath = "sudo systemctl restart crond"
 
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(execPath)
 
                         destination = dest.objects.get(destLoc=backupDest)
                         newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
@@ -708,9 +707,9 @@ class BackupManager:
 
                         virtualHostUtilities.leaveControl(path)
 
-                        command = "sudo systemctl restart crond"
+                        execPath = "sudo systemctl restart crond"
 
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(execPath)
 
                         destination = dest.objects.get(destLoc=backupDest)
                         newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
@@ -730,9 +729,8 @@ class BackupManager:
 
                         virtualHostUtilities.leaveControl(path)
 
-                        command = "sudo systemctl restart crond"
-
-                        subprocess.call(shlex.split(command))
+                        execPath = "sudo systemctl restart crond"
+                        ProcessUtilities.executioner(execPath)
 
                         destination = dest.objects.get(destLoc=backupDest)
                         newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
@@ -752,9 +750,8 @@ class BackupManager:
 
                     virtualHostUtilities.leaveControl(path)
 
-                    command = "sudo systemctl restart crond"
-
-                    subprocess.call(shlex.split(command))
+                    execPath = "sudo systemctl restart crond"
+                    ProcessUtilities.executioner(execPath)
 
                     destination = dest.objects.get(destLoc=backupDest)
                     newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
@@ -774,9 +771,8 @@ class BackupManager:
 
                     virtualHostUtilities.leaveControl(path)
 
-                    command = "sudo systemctl restart crond"
-
-                    subprocess.call(shlex.split(command))
+                    execPath = "sudo systemctl restart crond"
+                    ProcessUtilities.executioner(execPath)
 
                     destination = dest.objects.get(destLoc=backupDest)
                     newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
@@ -796,9 +792,9 @@ class BackupManager:
 
                     virtualHostUtilities.leaveControl(path)
 
-                    command = "sudo systemctl restart crond"
+                    execPath = "sudo systemctl restart crond"
 
-                    subprocess.call(shlex.split(command))
+                    ProcessUtilities.executioner(execPath)
 
                     destination = dest.objects.get(destLoc=backupDest)
                     newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
@@ -818,9 +814,9 @@ class BackupManager:
 
                     virtualHostUtilities.leaveControl(path)
 
-                    command = "sudo systemctl restart crond"
+                    execPath = "sudo systemctl restart crond"
 
-                    subprocess.call(shlex.split(command))
+                    ProcessUtilities.executioner(execPath)
 
                     destination = dest.objects.get(destLoc=backupDest)
                     newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
@@ -862,9 +858,9 @@ class BackupManager:
 
                 virtualHostUtilities.leaveControl(path)
 
-                command = "sudo systemctl restart crond"
+                execPath = "sudo systemctl restart crond"
 
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(execPath)
 
                 destination = dest.objects.get(destLoc=backupDest)
                 newSchedule = backupSchedules.objects.get(dest=destination, frequency=backupFreq)
@@ -890,9 +886,9 @@ class BackupManager:
 
                 virtualHostUtilities.leaveControl(path)
 
-                command = "sudo systemctl restart crond"
+                execPath = "sudo systemctl restart crond"
 
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(execPath)
 
                 destination = dest.objects.get(destLoc=backupDest)
                 newSchedule = backupSchedules.objects.get(dest=destination, frequency=backupFreq)
@@ -918,9 +914,9 @@ class BackupManager:
 
                 virtualHostUtilities.leaveControl(path)
 
-                command = "sudo systemctl restart crond"
+                execPath = "sudo systemctl restart crond"
 
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(execPath)
 
                 destination = dest.objects.get(destLoc=backupDest)
                 newSchedule = backupSchedules.objects.get(dest=destination, frequency=backupFreq)
@@ -946,9 +942,9 @@ class BackupManager:
 
                 virtualHostUtilities.leaveControl(path)
 
-                command = "sudo systemctl restart crond"
+                execPath = "sudo systemctl restart crond"
 
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(execPath)
 
                 destination = dest.objects.get(destLoc=backupDest)
                 newSchedule = backupSchedules.objects.get(dest=destination, frequency=backupFreq)
@@ -1054,7 +1050,7 @@ class BackupManager:
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
             execPath = execPath + " writeAuthKey --pathToKey " + pathToKey
-            output = subprocess.check_output(shlex.split(execPath))
+            output = ProcessUtilities.outputExecutioner(execPath)
 
             if output.find("1,None") > -1:
                 pass
@@ -1129,8 +1125,8 @@ class BackupManager:
                     localBackupDir = os.path.join("/home", "backup")
 
                     if not os.path.exists(localBackupDir):
-                        command = "sudo mkdir " + localBackupDir
-                        subprocess.call(shlex.split(command))
+                        execPath = "sudo mkdir " + localBackupDir
+                        ProcessUtilities.executioner(execPath)
 
                     ## create local directory that will host backups
 
@@ -1138,8 +1134,8 @@ class BackupManager:
 
                     ## making local storage directory for backups
 
-                    command = "sudo mkdir " + localStoragePath
-                    subprocess.call(shlex.split(command))
+                    execPath = "sudo mkdir " + localStoragePath
+                    ProcessUtilities.executioner(execPath)
 
                     final_json = json.dumps(
                         {'remoteTransferStatus': 1, 'error_message': "None", "dir": data['dir']})
@@ -1223,7 +1219,7 @@ class BackupManager:
             execPath = execPath + " remoteBackupRestore --backupDirComplete " + backupDirComplete + " --backupDir " + str(
                 backupDir)
 
-            subprocess.Popen(shlex.split(execPath))
+            ProcessUtilities.popenExecutioner(execPath)
 
             time.sleep(3)
 
@@ -1253,18 +1249,18 @@ class BackupManager:
             time.sleep(3)
 
             if os.path.isfile(backupLogPath):
-                command = "sudo cat " + backupLogPath
-                status = subprocess.check_output(shlex.split(command))
+                execPath = "sudo cat " + backupLogPath
+                status = ProcessUtilities.outputExecutioner(execPath)
 
                 if status.find("completed[success]") > -1:
                     command = "sudo rm -rf " + removalPath
-                    # subprocess.call(shlex.split(command))
+                    # ProcessUtilities.executioner(shlex.split(command))
                     data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 1}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
                 elif status.find("[5010]") > -1:
                     command = "sudo rm -rf " + removalPath
-                    # subprocess.call(shlex.split(command))
+                    # ProcessUtilities.executioner(shlex.split(command))
                     data = {'remoteTransferStatus': 0, 'error_message': status,
                             "status": "None", "complete": 0}
                     json_data = json.dumps(data)
@@ -1311,14 +1307,14 @@ class BackupManager:
             path = "/home/backup/transfer-" + str(dir)
             pathpid = path + "/pid"
 
-            command = "sudo cat " + pathpid
-            pid = subprocess.check_output(shlex.split(command))
+            execPath = "sudo cat " + pathpid
+            pid = ProcessUtilities.outputExecutioner(execPath)
 
-            command = "sudo kill -KILL " + pid
-            subprocess.call(shlex.split(command))
+            execPath = "sudo kill -KILL " + pid
+            ProcessUtilities.executioner(execPath)
 
-            command = "sudo rm -rf " + path
-            subprocess.call(shlex.split(command))
+            execPath = "sudo rm -rf " + path
+            ProcessUtilities.executioner(execPath)
 
             data = {'cancelStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data)

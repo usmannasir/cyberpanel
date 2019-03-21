@@ -9,6 +9,7 @@ import tarfile
 import shutil
 from mailUtilities import mailUtilities
 import threading as multi
+from plogical.processUtilities import ProcessUtilities
 
 class CSF(multi.Thread):
     installLogPath = "/home/cyberpanel/csfInstallLog"
@@ -140,7 +141,7 @@ class CSF(multi.Thread):
             currentSettings = {}
 
             command = 'sudo cat /etc/csf/csf.conf'
-            output = subprocess.check_output(shlex.split(command)).splitlines()
+            output = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
             for items in output:
                 if items.find('TESTING') > -1 and items.find('=') > -1 and (items[0]!= '#') and items.find('TESTING_INTERVAL') == -1:
@@ -166,7 +167,7 @@ class CSF(multi.Thread):
             currentSettings['firewallStatus'] = 0
 
             command = 'sudo iptables -nv -L'
-            output = subprocess.check_output(shlex.split(command))
+            output = ProcessUtilities.outputExecutioner(shlex.split(command))
 
             if output.find('0.0.0.0/0') > -1:
                 currentSettings['firewallStatus'] = 1
@@ -258,10 +259,10 @@ class CSF(multi.Thread):
     def allowIP(ipAddress):
         try:
             command = 'sudo csf -dr ' + ipAddress
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
 
             command = 'sudo csf -a ' + ipAddress
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[allowIP]")
@@ -271,10 +272,10 @@ class CSF(multi.Thread):
         try:
 
             command = 'sudo csf -tr ' + ipAddress
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
 
             command = 'sudo csf -d ' + ipAddress
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[blockIP]")

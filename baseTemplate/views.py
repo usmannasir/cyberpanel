@@ -15,6 +15,7 @@ import shlex
 import os
 import plogical.CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
+from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
 
@@ -110,7 +111,7 @@ def upgrade(request):
 
         cmd = shlex.split(command)
 
-        res = subprocess.call(cmd)
+        res = ProcessUtilities.executioner(cmd)
 
         vers = version.objects.get(pk=1)
 

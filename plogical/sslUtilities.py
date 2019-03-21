@@ -236,14 +236,14 @@ class sslUtilities:
 
             if not os.path.exists(acmePath):
                 command = 'wget -O -  https://get.acme.sh | sh'
-                subprocess.call(command, shell=True)
+                ProcessUtilities.executioner(command, shell=True)
 
             if aliasDomain == None:
 
                 existingCertPath = '/etc/letsencrypt/live/' + virtualHostName
                 if not os.path.exists(existingCertPath):
                     command = 'mkdir -p ' + existingCertPath
-                    subprocess.call(shlex.split(command))
+                    ProcessUtilities.executioner(shlex.split(command))
 
                 try:
                     logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName)
@@ -252,7 +252,7 @@ class sslUtilities:
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                               + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
 
-                    output = subprocess.check_output(shlex.split(command))
+                    output = ProcessUtilities.outputExecutioner(shlex.split(command))
                     logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName)
 
 
@@ -265,7 +265,7 @@ class sslUtilities:
                         command = acmePath + " --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
                                   + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                                   + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
-                        output = subprocess.check_output(shlex.split(command))
+                        output = ProcessUtilities.outputExecutioner(shlex.split(command))
                         logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName)
                     except subprocess.CalledProcessError:
                         logging.CyberCPLogFileWriter.writeToFile('Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName)
@@ -275,7 +275,7 @@ class sslUtilities:
                 existingCertPath = '/etc/letsencrypt/live/' + virtualHostName
                 if not os.path.exists(existingCertPath):
                     command = 'mkdir -p ' + existingCertPath
-                    subprocess.call(shlex.split(command))
+                    ProcessUtilities.executioner(shlex.split(command))
 
                 try:
                     logging.CyberCPLogFileWriter.writeToFile(
@@ -286,7 +286,7 @@ class sslUtilities:
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                               + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
 
-                    output = subprocess.check_output(shlex.split(command))
+                    output = ProcessUtilities.outputExecutioner(shlex.split(command))
                     logging.CyberCPLogFileWriter.writeToFile(
                         "Successfully obtained SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasDomain + "and www." + aliasDomain + ",")
 

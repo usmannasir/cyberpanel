@@ -296,7 +296,7 @@ class WebsiteManager:
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName
-            subprocess.check_output(shlex.split(execPath))
+            ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
             data_ret = {'status': 1, 'websiteDeleteStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
@@ -321,7 +321,7 @@ class WebsiteManager:
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " deleteDomain --virtualHostName " + websiteName
-            subprocess.check_output(shlex.split(execPath))
+            ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
             data_ret = {'status': 1, 'websiteDeleteStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
@@ -346,18 +346,18 @@ class WebsiteManager:
             if state == "Suspend":
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
                 command = "sudo mv " + confPath + " " + confPath + "-suspended"
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(shlex.split(command))
                 installUtilities.reStartLiteSpeed()
                 website.state = 0
             else:
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
 
                 command = "sudo mv " + confPath + "-suspended" + " " + confPath
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(shlex.split(command))
 
                 command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + confPath
                 cmd = shlex.split(command)
-                subprocess.call(cmd)
+                ProcessUtilities.executioner(cmd)
 
                 installUtilities.reStartLiteSpeed()
                 website.state = 1
@@ -506,7 +506,7 @@ class WebsiteManager:
 
             execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
 
-            output = subprocess.check_output(shlex.split(execPath))
+            output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
             if output.find("1,None") > -1:
                 pass
@@ -574,7 +574,7 @@ class WebsiteManager:
                 execPath = execPath + " findDomainBW --virtualHostName " + self.domain + " --bandwidth " + str(
                     website.package.bandwidth)
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
                 bwData = output.split(",")
             except BaseException, msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -639,7 +639,7 @@ class WebsiteManager:
                 execPath = execPath + " findDomainBW --virtualHostName " + self.domain + " --bandwidth " + str(
                     website.package.bandwidth)
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
                 bwData = output.split(",")
             except BaseException, msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -695,7 +695,7 @@ class WebsiteManager:
 
         execPath = execPath + " getAccessLogs --path " + fileName + " --page " + str(page)
 
-        output = subprocess.check_output(shlex.split(execPath))
+        output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
         if output.find("1,None") > -1:
             final_json = json.dumps(
@@ -757,7 +757,7 @@ class WebsiteManager:
 
         execPath = execPath + " getErrorLogs --path " + fileName + " --page " + str(page)
 
-        output = subprocess.check_output(shlex.split(execPath))
+        output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
         if output.find("1,None") > -1:
             final_json = json.dumps(
@@ -783,7 +783,7 @@ class WebsiteManager:
         filePath = installUtilities.Server_root_path + "/conf/vhosts/" + self.domain + "/vhost.conf"
 
         command = 'sudo cat ' + filePath
-        configData = subprocess.check_output(shlex.split(command))
+        configData = ProcessUtilities.outputExecutioner(shlex.split(command))
 
         if len(configData) == 0:
             status = {'status': 0, "configstatus": 0, "error_message": "Configuration file is currently empty!"}
@@ -825,7 +825,7 @@ class WebsiteManager:
 
         execPath = execPath + " saveVHostConfigs --path " + filePath + " --tempPath " + tempPath
 
-        output = subprocess.check_output(shlex.split(execPath))
+        output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
         if output.find("1,None") > -1:
             status = {"configstatus": 1}
@@ -908,7 +908,7 @@ class WebsiteManager:
 
         execPath = execPath + " saveRewriteRules --virtualHostName " + self.domain + " --path " + filePath + " --tempPath " + tempPath
 
-        output = subprocess.check_output(shlex.split(execPath))
+        output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
         if output.find("1,None") > -1:
             status = {"rewriteStatus": 1, 'error_message': output}
@@ -953,7 +953,7 @@ class WebsiteManager:
 
         execPath = execPath + " saveSSL --virtualHostName " + self.domain + " --tempKeyPath " + tempKeyPath + " --tempCertPath " + tempCertPath
 
-        output = subprocess.check_output(shlex.split(execPath))
+        output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
         if output.find("1,None") > -1:
             data_ret = {'sslStatus': 1, 'error_message': "None"}
@@ -986,7 +986,7 @@ class WebsiteManager:
 
         execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
 
-        output = subprocess.check_output(shlex.split(execPath))
+        output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
         if output.find("1,None") > -1:
             pass
@@ -1036,8 +1036,8 @@ class WebsiteManager:
             crons = []
 
             try:
-                # f = subprocess.check_output(["sudo", "cat", cronPath])
-                f = subprocess.check_output(["sudo", "crontab", "-u", website.externalApp, "-l"])
+                # f = ProcessUtilities.outputExecutioner(["sudo", "cat", cronPath])
+                f = ProcessUtilities.outputExecutioner(["sudo", "crontab", "-u", website.externalApp, "-l"])
             except subprocess.CalledProcessError as error:
                 dic = {'getWebsiteCron': 0, 'error_message': 'Unable to access Cron file'}
                 json_data = json.dumps(dic)
@@ -1093,8 +1093,8 @@ class WebsiteManager:
             crons = []
 
             try:
-                # f = subprocess.check_output(["sudo", "cat", cronPath])
-                f = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
+                # f = ProcessUtilities.outputExecutioner(["sudo", "cat", cronPath])
+                f = ProcessUtilities.outputExecutioner(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
                 print f
             except subprocess.CalledProcessError as error:
                 dic = {'getWebsiteCron': 0, 'error_message': 'Unable to access Cron file'}
@@ -1161,7 +1161,7 @@ class WebsiteManager:
 
             finalCron = "%s %s %s %s %s %s" % (minute, hour, monthday, month, weekday, command)
 
-            output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
+            output = ProcessUtilities.outputExecutioner(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
 
             if "no crontab for" in output:
                 data_ret = {'addNewCron': 0, 'error_message': 'crontab file does not exists for user'}
@@ -1172,7 +1172,7 @@ class WebsiteManager:
                 file.write(output)
 
             # Confirming that directory is read/writable
-            o = subprocess.call(['sudo', 'chown', 'cyberpanel:cyberpanel', tempPath])
+            o = ProcessUtilities.executioner(['sudo', 'chown', 'cyberpanel:cyberpanel', tempPath])
             if o is not 0:
                 data_ret = {'addNewCron': 0, 'error_message': 'Error Changing Permissions'}
                 final_json = json.dumps(data_ret)
@@ -1186,7 +1186,7 @@ class WebsiteManager:
             with open(tempPath, 'w') as file:
                 file.writelines(data)
 
-            output = subprocess.call(["sudo", "/usr/bin/crontab", "-u", website.externalApp, tempPath])
+            output = ProcessUtilities.executioner(["sudo", "/usr/bin/crontab", "-u", website.externalApp, tempPath])
 
             os.remove(tempPath)
             if output != 0:
@@ -1222,7 +1222,7 @@ class WebsiteManager:
             line -= 1
             website = Websites.objects.get(domain=self.domain)
 
-            output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
+            output = ProcessUtilities.outputExecutioner(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
 
             if "no crontab for" in output:
                 data_ret = {'addNewCron': 0, 'error_message': 'No Cron exists for this user'}
@@ -1235,7 +1235,7 @@ class WebsiteManager:
                 file.write(output)
 
             # Confirming that directory is read/writable
-            o = subprocess.call(['sudo', 'chown', 'cyberpanel:cyberpanel', tempPath])
+            o = ProcessUtilities.executioner(['sudo', 'chown', 'cyberpanel:cyberpanel', tempPath])
             if o is not 0:
                 data_ret = {'addNewCron': 0, 'error_message': 'Error Changing Permissions'}
                 final_json = json.dumps(data_ret)
@@ -1249,7 +1249,7 @@ class WebsiteManager:
             with open(tempPath, 'w') as file:
                 file.writelines(data)
 
-            output = subprocess.call(["sudo", "/usr/bin/crontab", "-u", website.externalApp, tempPath])
+            output = ProcessUtilities.executioner(["sudo", "/usr/bin/crontab", "-u", website.externalApp, tempPath])
 
             os.remove(tempPath)
             if output != 0:
@@ -1291,23 +1291,23 @@ class WebsiteManager:
             website = Websites.objects.get(domain=self.domain)
 
             try:
-                output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
+                output = ProcessUtilities.outputExecutioner(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
             except:
                 try:
-                    subprocess.call(('sudo', 'crontab', '-u', website.externalApp, '-'))
+                    ProcessUtilities.executioner(('sudo', 'crontab', '-u', website.externalApp, '-'))
                 except:
                     data_ret = {'addNewCron': 0, 'error_message': 'Unable to initialise crontab file for user'}
                     final_json = json.dumps(data_ret)
                     return HttpResponse(final_json)
 
-            output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
+            output = ProcessUtilities.outputExecutioner(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
 
             if "no crontab for" in output:
                 echo = subprocess.Popen((['cat', '/dev/null']), stdout=subprocess.PIPE)
-                subprocess.call(('sudo', 'crontab', '-u', website.externalApp, '-'), stdin=echo.stdout)
+                ProcessUtilities.executioner(('sudo', 'crontab', '-u', website.externalApp, '-'), stdin=echo.stdout)
                 echo.wait()
                 echo.stdout.close()
-                output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
+                output = ProcessUtilities.outputExecutioner(["sudo", "/usr/bin/crontab", "-u", website.externalApp, "-l"])
                 if "no crontab for" in output:
                     data_ret = {'addNewCron': 0, 'error_message': 'Unable to initialise crontab file for user'}
                     final_json = json.dumps(data_ret)
@@ -1320,7 +1320,7 @@ class WebsiteManager:
             with open(tempPath, "a") as file:
                 file.write(output + finalCron + "\n")
 
-            output = subprocess.call(["sudo", "/usr/bin/crontab", "-u", website.externalApp, tempPath])
+            output = ProcessUtilities.executioner(["sudo", "/usr/bin/crontab", "-u", website.externalApp, tempPath])
 
             os.remove(tempPath)
             if output != 0:
@@ -1363,7 +1363,7 @@ class WebsiteManager:
             execPath = execPath + " createAlias --masterDomain " + self.domain + " --aliasDomain " + aliasDomain + " --ssl " + str(
                 ssl) + " --sslPath " + sslpath + " --administratorEmail " + admin.email + ' --websiteOwner ' + admin.userName
 
-            output = subprocess.check_output(shlex.split(execPath))
+            output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
             if output.find("1,None") > -1:
                 pass
@@ -1408,7 +1408,7 @@ class WebsiteManager:
 
             execPath = execPath + " issueAliasSSL --masterDomain " + self.domain + " --aliasDomain " + aliasDomain + " --sslPath " + sslpath + " --administratorEmail " + admin.email
 
-            output = subprocess.check_output(shlex.split(execPath))
+            output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
             if output.find("1,None") > -1:
                 data_ret = {'sslStatus': 1, 'error_message': "None", "existsStatus": 0}
@@ -1444,7 +1444,7 @@ class WebsiteManager:
 
             execPath = execPath + " deleteAlias --masterDomain " + self.domain + " --aliasDomain " + aliasDomain
 
-            output = subprocess.check_output(shlex.split(execPath))
+            output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
             if output.find("1,None") > -1:
                 data_ret = {'deleteAlias': 1, 'error_message': "None", "existsStatus": 0}
@@ -1478,7 +1478,7 @@ class WebsiteManager:
 
             execPath = execPath + " changeOpenBasedir --virtualHostName '" + self.domain + "' --openBasedirValue " + openBasedirValue
 
-            output = subprocess.check_output(shlex.split(execPath))
+            output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
             if output.find("1,None") > -1:
                 pass
@@ -1566,7 +1566,7 @@ class WebsiteManager:
 
             if lastLine.find('[200]') > -1:
                 command = 'sudo rm -f ' + statusFile
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(shlex.split(command))
                 data_ret = {'abort': 1, 'installStatus': 1, 'installationProgress': "100",
                             'currentStatus': 'Successfully Installed.'}
                 json_data = json.dumps(data_ret)
@@ -1802,7 +1802,7 @@ Host gitlab.com
                 ProcessUtilities.executioner(command)
 
                 command = 'sudo cat /root/.ssh/git.pub'
-                deploymentKey = subprocess.check_output(shlex.split(command)).strip('\n')
+                deploymentKey = ProcessUtilities.outputExecutioner(shlex.split(command)).strip('\n')
 
             return render(request, 'websiteFunctions/setupGit.html',
                           {'domainName': self.domain, 'deploymentKey': deploymentKey, 'installed': 0})

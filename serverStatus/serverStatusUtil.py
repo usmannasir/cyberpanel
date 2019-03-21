@@ -24,7 +24,7 @@ class ServerStatusUtil:
     @staticmethod
     def executioner(command, statusFile):
         try:
-            res = subprocess.call(shlex.split(command), stdout=statusFile, stderr=statusFile)
+            res = ProcessUtilities.executioner(shlex.split(command), stdout=statusFile, stderr=statusFile)
             if res == 1:
                 return 0
             else:
@@ -94,7 +94,7 @@ class ServerStatusUtil:
 
             try:
                 command = 'chown -R lsadm:lsadm ' + confPath
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(shlex.split(command))
             except:
                 pass
 
@@ -172,7 +172,7 @@ class ServerStatusUtil:
             FNULL = open(os.devnull, 'w')
             command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
             cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -209,7 +209,7 @@ class ServerStatusUtil:
             FNULL = open(os.devnull, 'w')
             command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
             cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))

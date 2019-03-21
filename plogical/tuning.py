@@ -15,7 +15,7 @@ class tuning:
             try:
                 dataToReturn = {}
                 command = "sudo cat /usr/local/lsws/conf/httpd_config.conf"
-                datas = subprocess.check_output(shlex.split(command)).split("\n")
+                datas = ProcessUtilities.outputExecutioner(shlex.split(command)).split("\n")
 
                 for items in datas:
                     if items.find("maxConnections")>-1:
@@ -58,7 +58,7 @@ class tuning:
                 dataToReturn = {}
 
                 command = "sudo cat /usr/local/lsws/conf/httpd_config.xml"
-                datas = subprocess.check_output(shlex.split(command))
+                datas = ProcessUtilities.outputExecutioner(shlex.split(command))
                 comTree = ElementTree.fromstring(datas)
                 tuningData = comTree.find('tuning')
 
@@ -187,7 +187,7 @@ class tuning:
                 path = installUtilities.Server_root_path + "/conf/vhosts/"+virtualHost+"/vhost.conf"
 
                 command = "sudo cat "+path
-                datas = subprocess.check_output(shlex.split(command)).split("\n")
+                datas = ProcessUtilities.outputExecutioner(shlex.split(command)).split("\n")
 
                 dataToReturn = {}
 
@@ -230,7 +230,7 @@ class tuning:
         else:
             try:
                 command = "sudo cat /usr/local/lsws/conf/httpd_config.xml"
-                datas = subprocess.check_output(shlex.split(command))
+                datas = ProcessUtilities.outputExecutioner(shlex.split(command))
                 comTree = ElementTree.fromstring(datas)
                 extProcessorList = comTree.findall('extProcessorList/extProcessor')
 

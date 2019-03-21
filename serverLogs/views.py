@@ -139,7 +139,7 @@ def getLogsFromFile(request):
 
         try:
             command = "sudo tail -50 " + fileName
-            fewLinesOfLogFile = subprocess.check_output(shlex.split(command))
+            fewLinesOfLogFile = ProcessUtilities.outputExecutioner(shlex.split(command))
             status = {"status": 1, "logstatus": 1, "logsdata": fewLinesOfLogFile}
             final_json = json.dumps(status)
             return HttpResponse(final_json)
@@ -175,7 +175,7 @@ def clearLogFile(request):
 
                 execPath = execPath + " cleanLogFile --fileName " + fileName
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     data_ret = {'cleanStatus': 1, 'error_message': "None"}

@@ -55,7 +55,7 @@ class HAManager(multi.Thread):
 
             for command in commands:
                 try:
-                    result = subprocess.call(command, shell=True)
+                    result = ProcessUtilities.executioner(command, shell=True)
                     if result != 0:
                         logging.writeToFile(command +  ' Failed.')
                 except BaseException:
@@ -99,14 +99,14 @@ class HAManager(multi.Thread):
             workerToken = ''
 
             command = "sudo docker swarm join-token manager"
-            output = subprocess.check_output(shlex.split(command)).splitlines()
+            output = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
             for items in output:
                 if items.find('--token') > -1:
                     managerToken = items.split(' ')[-2]
 
             command = "sudo docker swarm join-token worker"
-            output = subprocess.check_output(shlex.split(command)).splitlines()
+            output = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
             for items in output:
                 if items.find('--token') > -1:
@@ -160,7 +160,7 @@ class HAManager(multi.Thread):
 
             for command in commands:
                 try:
-                    result = subprocess.call(command, shell=True)
+                    result = ProcessUtilities.executioner(command, shell=True)
                     if result != 0:
                         logging.writeToFile(command +  ' Failed.')
                 except BaseException, msg:

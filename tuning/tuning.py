@@ -121,7 +121,7 @@ class tuningManager:
 
                 execPath = execPath + " saveTuningDetails --maxConn " + maxConn + " --maxSSLConn " + maxSSLConn + " --connTime " + connTime + " --keepAlive " + keepAlive + " --inMemCache '" + inMemCache + "' --gzipCompression " + gzipCompression
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     data_ret = {'fetch_status': 1, 'error_message': "None", 'tuneStatus': 1}
@@ -166,7 +166,7 @@ class tuningManager:
 
                 execPath = execPath + " tunePHP --virtualHost " + domainSelection + " --initTimeout " + initTimeout + " --maxConns " + maxConns + " --memSoftLimit " + memSoftLimit + " --memHardLimit '" + memHardLimit + "' --procSoftLimit " + procSoftLimit + " --procHardLimit " + procHardLimit + " --persistConn " + persistConn
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     data_ret = {'tuneStatus': 1, 'fetch_status': 0, 'error_message': "None"}

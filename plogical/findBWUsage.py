@@ -127,7 +127,7 @@ class findBWUsage:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
 
             if res == 1:
                 logging.CyberCPLogFileWriter.writeToFile("1440 [setup_cron]")

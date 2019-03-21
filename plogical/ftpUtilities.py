@@ -32,7 +32,7 @@ class FTPUtilities:
             cmd.append("ftpuser:2001")
             cmd.append(path)
 
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
             if res == 1:
                 print "Permissions not changed."
             else:
@@ -58,7 +58,7 @@ class FTPUtilities:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
 
             if res == 1:
                 print "Permissions not changed."
@@ -72,7 +72,7 @@ class FTPUtilities:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
 
             if res == 1:
                 return 0
@@ -96,7 +96,7 @@ class FTPUtilities:
 
             command = "chown " + externalApp + ":" + externalApp + " " + path
             cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             return 1,'None'
 

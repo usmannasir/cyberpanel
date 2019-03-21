@@ -54,7 +54,7 @@ def fetchPolicyServerStatus(request):
             if request.method == 'POST':
 
                 command = 'sudo cat /etc/postfix/main.cf'
-                output = subprocess.check_output(shlex.split(command)).split('\n')
+                output = ProcessUtilities.outputExecutioner(shlex.split(command)).split('\n')
 
                 installCheck = 0
 
@@ -107,7 +107,7 @@ def savePolicyServerStatus(request):
 
                 execPath = execPath + " savePolicyServerStatus --install " + install
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     data_ret = {'status': 1, 'error_message': "None"}
@@ -148,7 +148,7 @@ def listDomains(request):
             ## Check if Policy Server is installed.
 
             command = 'sudo cat /etc/postfix/main.cf'
-            output = subprocess.check_output(shlex.split(command)).split('\n')
+            output = ProcessUtilities.outputExecutioner(shlex.split(command)).split('\n')
 
             installCheck = 0
 
@@ -806,7 +806,7 @@ def installStatusSpamAssassin(request):
             if request.method == 'POST':
 
                 command = "sudo cat " + mailUtilities.spamassassinInstallLogPath
-                installStatus = subprocess.check_output(shlex.split(command))
+                installStatus = ProcessUtilities.outputExecutioner(shlex.split(command))
 
                 if installStatus.find("[200]")>-1:
 
@@ -814,7 +814,7 @@ def installStatusSpamAssassin(request):
 
                     execPath = execPath + " configureSpamAssassin"
 
-                    output = subprocess.check_output(shlex.split(execPath))
+                    output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                     if output.find("1,None") > -1:
                         pass
@@ -884,7 +884,7 @@ def fetchSpamAssassinSettings(request):
 
                     command = "sudo cat " + confPath
 
-                    data = subprocess.check_output(shlex.split(command)).splitlines()
+                    data = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
                     for items in data:
                         if items.find('report_safe ') > -1:
@@ -987,7 +987,7 @@ def saveSpamAssassinConfigurations(request):
 
                 execPath = execPath + " saveSpamAssassinConfigs --tempConfigPath " + tempConfigPath
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     data_ret = {'saveStatus': 1, 'error_message': "None"}

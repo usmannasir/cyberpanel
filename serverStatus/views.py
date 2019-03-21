@@ -46,7 +46,7 @@ def litespeedStatus(request):
             OLS = 1
         try:
 
-            versionInformation = subprocess.check_output(["/usr/local/lsws/bin/lshttpd", "-v"]).split("\n")
+            versionInformation = ProcessUtilities.outputExecutioner(["/usr/local/lsws/bin/lshttpd", "-v"]).split("\n")
             lsversion = versionInformation[0]
             modules = versionInformation[1]
 
@@ -193,7 +193,7 @@ def servicesStatus(request):
         mailStatus = []
         dockerStatus = []
 
-        processlist = subprocess.check_output(['ps', '-A'])
+        processlist = ProcessUtilities.outputExecutioner(['ps', '-A'])
 
         def getServiceStats(service):
             if service in processlist:
@@ -309,7 +309,7 @@ def servicesAction(request):
 
                     command = 'sudo systemctl %s %s' % (action, service)
                     cmd = shlex.split(command)
-                    res = subprocess.call(cmd)
+                    res = ProcessUtilities.executioner(cmd)
 
                     p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
                     result = p.communicate()[0]
@@ -366,7 +366,7 @@ def switchTOLSWSStatus(request):
     try:
 
         command = 'sudo cat ' + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
-        output = subprocess.check_output(shlex.split(command))
+        output = ProcessUtilities.outputExecutioner(shlex.split(command))
 
         if output.find('[404]') > -1:
             data_ret = {'abort': 1, 'requestStatus': output, 'installed': 0}
@@ -400,10 +400,10 @@ def licenseStatus(request):
                 return ACLManager.loadErrorJson('status', 0)
 
             command = 'sudo cat /usr/local/lsws/conf/serial.no'
-            serial = subprocess.check_output(shlex.split(command))
+            serial = ProcessUtilities.outputExecutioner(shlex.split(command))
 
             command = 'sudo /usr/local/lsws/bin/lshttpd -V'
-            expiration = subprocess.check_output(shlex.split(command))
+            expiration = ProcessUtilities.outputExecutioner(shlex.split(command))
 
             final_dic = {'status': 1, "erroMessage": 0, 'lsSerial': serial, 'lsexpiration': expiration}
             final_json = json.dumps(final_dic)
@@ -435,7 +435,7 @@ def changeLicense(request):
             newKey = data['newKey']
 
             command = 'sudo chown -R cyberpanel:cyberpanel /usr/local/lsws/conf'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
 
             serialPath = '/usr/local/lsws/conf/serial.no'
             serialFile = open(serialPath, 'w')
@@ -443,13 +443,13 @@ def changeLicense(request):
             serialFile.close()
 
             command = 'sudo chown -R lsadm:lsadm /usr/local/lsws/conf'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
 
             command = 'sudo /usr/local/lsws/bin/lshttpd -r'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
 
             command = 'sudo /usr/local/lsws/bin/lswsctrl restart'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
 
             final_dic = {'status': 1, "erroMessage": 'None'}
             final_json = json.dumps(final_dic)
@@ -488,7 +488,7 @@ def topProcessesStatus(request):
     try:
 
         with open("/home/cyberpanel/top", "w") as outfile:
-            subprocess.call("sudo top -n1 -b", shell=True, stdout=outfile)
+            ProcessUtilities.executioner("sudo top -n1 -b", shell=True, stdout=outfile)
 
         data = open('/home/cyberpanel/top', 'r').readlines()
 
@@ -574,7 +574,7 @@ def topProcessesStatus(request):
         ## CPU Details
 
         command = 'sudo cat /proc/cpuinfo'
-        output = subprocess.check_output(shlex.split(command)).splitlines()
+        output = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
         import psutil
 

@@ -116,7 +116,7 @@ class mysqlUtilities:
             cmd = shlex.split(command)
 
             with open(tempStoragePath+"/"+databaseName+'.sql', 'w') as f:
-                res = subprocess.call(cmd,stdout=f)
+                res = ProcessUtilities.executioner(cmd,stdout=f)
 
             if res == 1:
                 logging.CyberCPLogFileWriter.writeToFile("Database: "+databaseName + "could not be backed! [createDatabaseBackup]")
@@ -143,7 +143,7 @@ class mysqlUtilities:
 
 
             with open(tempStoragePath + "/" + databaseName + '.sql', 'r') as f:
-                res = subprocess.call(cmd, stdin=f)
+                res = ProcessUtilities.executioner(cmd, stdin=f)
 
             if res == 1:
                 logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " +databaseName +"! [restoreDatabaseBackup]")
@@ -347,7 +347,7 @@ class mysqlUtilities:
                 command = 'sudo mv /etc/my.cnf.bak /etc/my.cnf'
             else:
                 command = 'sudo mv /etc/mysql/my.cnf.bak /etc/mysql//my.cnf'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0, str(msg)
 
@@ -383,7 +383,7 @@ class mysqlUtilities:
 
         except BaseException, msg:
             command = 'sudo mv /etc/my.cnf.bak /etc/my.cnf'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0, str(msg)
 

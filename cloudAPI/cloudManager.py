@@ -108,7 +108,7 @@ class CloudManager:
                     'domainName'] + " --bandwidth " + str(
                     website.package.bandwidth)
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(execPath)
                 bwData = output.split(",")
             except BaseException:
                 bwData = [0, 0]
@@ -319,8 +319,8 @@ class CloudManager:
             lastLine = statusData[-1]
 
             if lastLine.find('[200]') > -1:
-                command = 'sudo rm -f ' + statusFile
-                subprocess.call(shlex.split(command))
+                execPath = 'sudo rm -f ' + statusFile
+                ProcessUtilities.outputExecutioner(execPath)
                 data_ret = {'status': 1, 'abort': 1, 'installationProgress': "100", 'currentStatus': lastLine}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -794,7 +794,7 @@ class CloudManager:
         try:
             pubKey = os.path.join("/root", ".ssh", 'cyberpanel.pub')
             execPath = "sudo cat " + pubKey
-            data = subprocess.check_output(shlex.split(execPath))
+            data = ProcessUtilities.outputExecutioner(execPath)
 
             data_ret = {
                 'status': 1,
@@ -1053,9 +1053,11 @@ class CloudManager:
 
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                finalData['conf'] = subprocess.check_output(shlex.split('sudo cat /etc/my.cnf'))
+                execPath = 'sudo cat /etc/my.cnf'
+                finalData['conf'] = ProcessUtilities.outputExecutioner(execPath)
             else:
-                finalData['conf'] = subprocess.check_output(shlex.split('sudo cat /etc/mysql/my.cnf'))
+                execPath = 'sudo cat /etc/mysql/my.cnf'
+                finalData['conf'] = ProcessUtilities.outputExecutioner(execPath)
 
             finalData['status'] = 1
 

@@ -76,7 +76,7 @@ def issueSSL(request):
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
                 execPath = execPath + " issueSSL --virtualHostName " + virtualHost + " --administratorEmail " + adminEmail + " --path " + path
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     pass
@@ -151,7 +151,7 @@ def obtainHostNameSSL(request):
 
                 execPath = execPath + " issueSSLForHostName --virtualHostName " + virtualHost + " --path " + path
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     data_ret = {"status": 1, "SSL": 1,
@@ -221,7 +221,7 @@ def obtainMailServerSSL(request):
 
                 execPath = execPath + " issueSSLForMailServer --virtualHostName " + virtualHost + " --path " + path
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     data_ret = {"status": 1, "SSL": 1,

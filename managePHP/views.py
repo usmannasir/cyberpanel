@@ -1320,7 +1320,7 @@ def getRequestStatus(request):
                 requestStatusSize = len(requestStatus)
 
                 if requestStatus.find("PHP Extension Installed") > -1:
-                    if subprocess.check_output(checkCommand).find(extensionName) > -1:
+                    if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
                         ext = installedPackages.objects.get(extensionName=extensionName)
                         ext.status = 1
                         ext.save()
@@ -1337,7 +1337,7 @@ def getRequestStatus(request):
                     return HttpResponse(final_json)
                 elif requestStatus.find("Can not be installed") > -1:
 
-                    if subprocess.check_output(checkCommand).find(extensionName) > -1:
+                    if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
                         ext = installedPackages.objects.get(extensionName=extensionName)
                         ext.status = 1
                         ext.save()
@@ -1354,7 +1354,7 @@ def getRequestStatus(request):
                     return HttpResponse(final_json)
                 elif requestStatus.find("Can not un-install Extension") > -1:
 
-                    if subprocess.check_output(checkCommand).find(extensionName) > -1:
+                    if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
                         ext = installedPackages.objects.get(extensionName=extensionName)
                         ext.status = 1
                         ext.save()
@@ -1552,7 +1552,7 @@ def savePHPConfigBasic(request):
 
                 execPath = execPath + " savePHPConfigBasic --phpVers " + phpVers + " --allow_url_fopen '" + allow_url_fopen + "' --display_errors '" + display_errors + "' --file_uploads '" + file_uploads + "' --allow_url_include '" + allow_url_include + "' --memory_limit " + memory_limit + " --max_execution_time " + max_execution_time + " --upload_max_filesize " + upload_max_filesize + " --max_input_time " + max_input_time + " --post_max_size " + post_max_size
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     data_ret = {'saveStatus': 1}
@@ -1650,7 +1650,7 @@ def savePHPConfigAdvance(request):
 
                 execPath = execPath + " savePHPConfigAdvance --phpVers " + path + " --tempPath " + tempPath
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     status = {"saveStatus": 1, "configData": data['configData']}

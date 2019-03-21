@@ -14,6 +14,7 @@ import plogical.CyberCPLogFileWriter as logging
 from plogical.mysqlUtilities import mysqlUtilities
 from websiteFunctions.models import Websites
 from databases.models import Databases
+from plogical.processUtilities import ProcessUtilities
 
 class DatabaseManager:
 
@@ -174,7 +175,7 @@ class DatabaseManager:
 
             command = 'sudo mysql -u root -p' + password + ' -e "' + passwordCMD + '"'
             cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
 
             if res == 1:
                 data_ret = {'status': 0, 'changePasswordStatus': 0,'error_message': "Please see CyberPanel main log file."}

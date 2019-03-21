@@ -64,7 +64,7 @@ class ContainerManager(multi.Thread):
     @staticmethod
     def executioner(command, statusFile):
         try:
-            res = subprocess.call(shlex.split(command), stdout=statusFile, stderr=statusFile)
+            res = ProcessUtilities.executioner(shlex.split(command), stdout=statusFile, stderr=statusFile)
             if res == 1:
                 return 0
             else:

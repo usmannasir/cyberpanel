@@ -27,7 +27,7 @@ class phpUtilities:
 
             try:
                 with open(phpUtilities.installLogPath, 'w') as f:
-                    subprocess.call(cmd, stdout=f)
+                    ProcessUtilities.executioner(cmd, stdout=f)
 
                 writeToFile = open(phpUtilities.installLogPath, 'a')
                 writeToFile.writelines("PHP Extension Installed.\n")
@@ -59,7 +59,7 @@ class phpUtilities:
             try:
 
                 with open(phpUtilities.installLogPath, 'w') as f:
-                    subprocess.call(cmd, stdout=f)
+                    ProcessUtilities.executioner(cmd, stdout=f)
 
                 writeToFile = open(phpUtilities.installLogPath, 'a')
                 writeToFile.writelines("PHP Extension Removed.\n")

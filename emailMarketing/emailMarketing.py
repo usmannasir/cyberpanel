@@ -12,6 +12,7 @@ import socket, smtplib
 import DNS
 from random import randint
 import subprocess, shlex
+from plogical.processUtilities import ProcessUtilities
 
 
 class emailMarketing(multi.Thread):
@@ -212,7 +213,7 @@ class emailMarketing(multi.Thread):
                                 messageFile.close()
 
                                 command = "sudo sed -i 's/{{ unsubscribeCheck }}/" + removalLink + "/g' " + tempPath
-                                subprocess.call(shlex.split(command))
+                                ProcessUtilities.executioner(shlex.split(command))
 
                                 messageFile = open(tempPath, 'r')
                                 finalMessage = messageFile.read()

@@ -163,7 +163,7 @@ class FirewallManager:
 
             command = 'sudo firewall-cmd --reload'
             cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
 
             if res == 0:
                 final_dic = {'reload_status': 1, 'error_message': "None"}
@@ -194,7 +194,7 @@ class FirewallManager:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
 
             if res == 0:
                 final_dic = {'start_status': 1, 'error_message': "None"}
@@ -223,7 +223,7 @@ class FirewallManager:
 
             command = 'sudo systemctl stop firewalld'
             cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
 
             if res == 0:
                 final_dic = {'stop_status': 1, 'error_message': "None"}
@@ -252,7 +252,7 @@ class FirewallManager:
 
             command = 'sudo systemctl status firewalld'
 
-            status = subprocess.check_output(shlex.split(command))
+            status = ProcessUtilities.outputExecutioner(shlex.split(command))
 
             if status.find("active") > -1:
                 final_dic = {'status': 1, 'error_message': "none", 'firewallStatus': 1}
@@ -301,7 +301,7 @@ class FirewallManager:
 
                 cmd = shlex.split(command)
 
-                res = subprocess.call(cmd)
+                res = ProcessUtilities.executioner(cmd)
 
                 pathToSSH = "/etc/ssh/sshd_config"
 
@@ -324,7 +324,7 @@ class FirewallManager:
 
                 cmd = shlex.split(command)
 
-                res = subprocess.call(cmd)
+                res = ProcessUtilities.executioner(cmd)
 
                 final_dic = {'status': 1, 'permitRootLogin': permitRootLogin, 'sshPort': sshPort}
                 final_json = json.dumps(final_dic)
@@ -337,7 +337,7 @@ class FirewallManager:
 
                 cmd = shlex.split(command)
 
-                res = subprocess.call(cmd)
+                res = ProcessUtilities.executioner(cmd)
 
                 pathToKeyFile = "/root/.ssh/authorized_keys"
 
@@ -378,7 +378,7 @@ class FirewallManager:
 
                 command = 'sudo chown -R  root:root /root'
                 cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+                res = ProcessUtilities.executioner(cmd)
 
                 final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
                 return HttpResponse(final_json)
@@ -406,7 +406,7 @@ class FirewallManager:
 
                 command = 'sudo semanage port -a -t ssh_port_t -p tcp ' + sshPort
                 cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+                res = ProcessUtilities.executioner(cmd)
 
                 FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
 
@@ -428,7 +428,7 @@ class FirewallManager:
 
                 cmd = shlex.split(command)
 
-                res = subprocess.call(cmd)
+                res = ProcessUtilities.executioner(cmd)
 
                 ##
 
@@ -461,7 +461,7 @@ class FirewallManager:
 
                 cmd = shlex.split(command)
 
-                res = subprocess.call(cmd)
+                res = ProcessUtilities.executioner(cmd)
 
                 ## changin back permissions
 
@@ -469,7 +469,7 @@ class FirewallManager:
 
                 cmd = shlex.split(command)
 
-                res = subprocess.call(cmd)
+                res = ProcessUtilities.executioner(cmd)
 
                 ##
 
@@ -499,7 +499,7 @@ class FirewallManager:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
 
             ##
 
@@ -524,7 +524,7 @@ class FirewallManager:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
 
             ##
 
@@ -554,7 +554,7 @@ class FirewallManager:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
 
             ##
 
@@ -597,7 +597,7 @@ class FirewallManager:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
 
             ##
 
@@ -624,7 +624,7 @@ class FirewallManager:
                 confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
                 command = "sudo cat " + confPath
-                httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+                httpdConfig = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
                 modSecInstalled = 0
 
@@ -669,7 +669,7 @@ class FirewallManager:
 
                 execPath = execPath + " installModSecConfigs"
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     pass
@@ -738,7 +738,7 @@ class FirewallManager:
 
                 if os.path.exists(modSecPath):
                     command = "sudo cat " + confPath
-                    data = subprocess.check_output(shlex.split(command)).splitlines()
+                    data = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
                     for items in data:
 
@@ -803,7 +803,7 @@ class FirewallManager:
 
                 command = "sudo cat " + confPath
 
-                data = subprocess.check_output(shlex.split(command)).splitlines()
+                data = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
                 for items in data:
                     if items.find('SecAuditEngine ') > -1:
@@ -917,7 +917,7 @@ class FirewallManager:
 
                 execPath = execPath + " saveModSecConfigs --tempConfigPath " + tempConfigPath
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     installUtilities.reStartLiteSpeed()
@@ -973,7 +973,7 @@ class FirewallManager:
 
                 execPath = execPath + " saveModSecConfigs --tempConfigPath " + tempConfigPath
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     installUtilities.reStartLiteSpeed()
@@ -1004,7 +1004,7 @@ class FirewallManager:
                 confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
                 command = "sudo cat " + confPath
-                httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+                httpdConfig = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
                 modSecInstalled = 0
 
@@ -1034,7 +1034,7 @@ class FirewallManager:
                 confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
                 command = "sudo cat " + confPath
-                httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+                httpdConfig = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
                 modSecInstalled = 0
 
@@ -1047,7 +1047,7 @@ class FirewallManager:
 
                 if modSecInstalled:
                     command = "sudo cat " + rulesPath
-                    currentModSecRules = subprocess.check_output(shlex.split(command))
+                    currentModSecRules = ProcessUtilities.outputExecutioner(shlex.split(command))
 
                     final_dic = {'modSecInstalled': 1,
                                  'currentModSecRules': currentModSecRules}
@@ -1063,7 +1063,7 @@ class FirewallManager:
                 rulesPath = os.path.join(virtualHostUtilities.Server_root + "/conf/rules.conf")
 
                 command = "sudo cat " + rulesPath
-                currentModSecRules = subprocess.check_output(shlex.split(command))
+                currentModSecRules = ProcessUtilities.outputExecutioner(shlex.split(command))
 
                 final_dic = {'modSecInstalled': 1,
                              'currentModSecRules': currentModSecRules}
@@ -1098,7 +1098,7 @@ class FirewallManager:
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
             execPath = execPath + " saveModSecRules"
-            output = subprocess.check_output(shlex.split(execPath))
+            output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
             if output.find("1,None") > -1:
                 installUtilities.reStartLiteSpeed()
@@ -1130,7 +1130,7 @@ class FirewallManager:
                 confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
                 command = "sudo cat " + confPath
-                httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+                httpdConfig = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
                 modSecInstalled = 0
 
@@ -1160,7 +1160,7 @@ class FirewallManager:
                 confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
                 command = "sudo cat " + confPath
-                httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+                httpdConfig = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
                 modSecInstalled = 0
 
@@ -1174,7 +1174,7 @@ class FirewallManager:
 
                 if modSecInstalled:
                     command = "sudo cat " + confPath
-                    httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+                    httpdConfig = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
                     for items in httpdConfig:
 
@@ -1205,7 +1205,7 @@ class FirewallManager:
 
                 try:
                     command = 'sudo cat /usr/local/lsws/conf/comodo_litespeed/rules.conf.main'
-                    res = subprocess.call(shlex.split(command))
+                    res = ProcessUtilities.executioner(shlex.split(command))
 
                     if res == 0:
                         comodoInstalled = 1
@@ -1242,7 +1242,7 @@ class FirewallManager:
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
                 execPath = execPath + " " + packName
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     installUtilities.reStartLiteSpeed()
@@ -1260,7 +1260,7 @@ class FirewallManager:
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
                 execPath = execPath + " " + packName
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     installUtilities.reStartLiteSpeed()
@@ -1292,7 +1292,7 @@ class FirewallManager:
                 confPath = os.path.join(virtualHostUtilities.Server_root, 'conf/httpd_config.conf')
 
                 command = "sudo cat " + confPath
-                httpdConfig = subprocess.check_output(shlex.split(command)).splitlines()
+                httpdConfig = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
                 json_data = "["
                 checker = 0
@@ -1334,7 +1334,7 @@ class FirewallManager:
 
                 comodoPath = '/usr/local/lsws/conf/comodo_litespeed'
                 command = 'sudo chown -R cyberpanel:cyberpanel /usr/local/lsws/conf'
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(shlex.split(command))
 
                 json_data = "["
 
@@ -1370,7 +1370,7 @@ class FirewallManager:
                         json_data = json_data + ',' + json.dumps(dic)
 
                 command = 'sudo chown -R lsadm:lsadm /usr/local/lsws/conf'
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(shlex.split(command))
 
                 json_data = json_data + ']'
                 final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
@@ -1403,7 +1403,7 @@ class FirewallManager:
 
             execPath = execPath + " " + functionName + ' --packName ' + packName + ' --fileName ' + fileName
 
-            output = subprocess.check_output(shlex.split(execPath))
+            output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
             if output.find("1,None") > -1:
                 installUtilities.reStartLiteSpeed()
@@ -1433,7 +1433,7 @@ class FirewallManager:
             csfInstalled = 1
             try:
                 command = 'sudo csf -h'
-                res = subprocess.call(shlex.split(command))
+                res = ProcessUtilities.executioner(shlex.split(command))
                 if res == 1:
                     csfInstalled = 0
             except subprocess.CalledProcessError:
@@ -1454,7 +1454,7 @@ class FirewallManager:
 
             execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " installCSF"
-            subprocess.Popen(shlex.split(execPath))
+            ProcessUtilities.popenExecutioner(shlex.split(execPath))
 
             time.sleep(2)
 
@@ -1477,7 +1477,7 @@ class FirewallManager:
             if installStatus.find("[200]")>-1:
 
                 command = 'sudo rm -f ' + CSF.installLogPath
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(shlex.split(command))
 
                 final_json = json.dumps({
                                          'error_message': "None",
@@ -1488,7 +1488,7 @@ class FirewallManager:
                 return HttpResponse(final_json)
             elif installStatus.find("[404]") > -1:
                 command = 'sudo rm -f ' + CSF.installLogPath
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(shlex.split(command))
                 final_json = json.dumps({
                                          'abort':1,
                                          'installed':0,
@@ -1522,7 +1522,7 @@ class FirewallManager:
 
             execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " removeCSF"
-            subprocess.Popen(shlex.split(execPath))
+            ProcessUtilities.popenExecutioner(shlex.split(execPath))
 
             time.sleep(2)
 
@@ -1581,7 +1581,7 @@ class FirewallManager:
 
             execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " changeStatus --controller " + controller + " --status " + status
-            output = subprocess.check_output(shlex.split(execPath))
+            output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
             if output.find("1,None") > -1:
                 data_ret = {"status": 1}
@@ -1615,7 +1615,7 @@ class FirewallManager:
 
             execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " modifyPorts --protocol " + protocol + " --ports " + ports
-            output = subprocess.check_output(shlex.split(execPath))
+            output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
             if output.find("1,None") > -1:
                 data_ret = {"status": 1}

@@ -638,7 +638,7 @@ class backupUtilities:
                 ## Change permissions
 
                 command = "chmod -r vmail:vmail " + emailHome
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(shlex.split(command))
 
             except:
                 pass
@@ -656,7 +656,7 @@ class backupUtilities:
 
             command = "chown -R " + externalApp + ":" + externalApp + " " + websiteHome
             cmd = shlex.split(command)
-            subprocess.call(cmd)
+            ProcessUtilities.executioner(cmd)
 
         except BaseException, msg:
             status = os.path.join(completPath, 'status')
@@ -778,7 +778,7 @@ class backupUtilities:
     @staticmethod
     def checkIfHostIsUp(IPAddress):
         try:
-            if subprocess.check_output(['ping', IPAddress, '-c 1']).find("0% packet loss") > -1:
+            if ProcessUtilities.outputExecutioner(['ping', IPAddress, '-c 1']).find("0% packet loss") > -1:
                 return 1
             else:
                 return 0
@@ -807,22 +807,22 @@ class backupUtilities:
             index = checkConn.expect(expectation)
 
             if index == 0:
-                subprocess.call(['kill', str(checkConn.pid)])
+                ProcessUtilities.executioner(['kill', str(checkConn.pid)])
                 logging.CyberCPLogFileWriter.writeToFile("Remote Server is not able to authenticate for transfer to initiate, IP Address:" + IPAddress)
                 return [0,"Remote Server is not able to authenticate for transfer to initiate."]
             elif index == 1:
-                subprocess.call(['kill', str(checkConn.pid)])
+                ProcessUtilities.executioner(['kill', str(checkConn.pid)])
                 logging.CyberCPLogFileWriter.writeToFile(
                     "Remote Server is not able to authenticate for transfer to initiate, IP Address:" + IPAddress)
                 return [0, "Remote Server is not able to authenticate for transfer to initiate."]
             elif index == 2:
-                subprocess.call(['kill', str(checkConn.pid)])
+                ProcessUtilities.executioner(['kill', str(checkConn.pid)])
                 return [1, "None"]
             elif index == 4:
-                subprocess.call(['kill', str(checkConn.pid)])
+                ProcessUtilities.executioner(['kill', str(checkConn.pid)])
                 return [1, "None"]
             else:
-                subprocess.call(['kill', str(checkConn.pid)])
+                ProcessUtilities.executioner(['kill', str(checkConn.pid)])
                 return [1, "None"]
 
         except pexpect.TIMEOUT, msg:
@@ -907,13 +907,13 @@ class backupUtilities:
 
         try:
             command = "sudo ssh -o StrictHostKeyChecking=no -p "+ port +" -i /root/.ssh/cyberpanel root@"+IPAddress+" mkdir /home/backup"
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
 
             command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel root@" + IPAddress + ' "cat /root/.ssh/authorized_keys /root/.ssh/temp > /root/.ssh/authorized_temp"'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
 
             command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel root@" + IPAddress + ' "cat /root/.ssh/authorized_temp > /root/.ssh/authorized_keys"'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createBackupDir]")
@@ -923,7 +923,7 @@ class backupUtilities:
     def host_key_verification(IPAddress):
         try:
             command = 'sudo ssh-keygen -R ' + IPAddress
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
             return 1
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [host_key_verification]")

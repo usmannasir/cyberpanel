@@ -44,7 +44,7 @@ class unInstallCyberPanel:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
 
             shutil.rmtree("/etc/postfix")
             shutil.rmtree("etc/dovecot")
@@ -66,7 +66,7 @@ class unInstallCyberPanel:
 
             cmd = shlex.split(command)
 
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
 
             shutil.rmtree("/var/lib/mysql")
             os.remove("/etc/my.cnf")
@@ -88,7 +88,7 @@ class unInstallCyberPanel:
 
            cmd = shlex.split(command)
 
-           res = subprocess.call(cmd)
+           res = ProcessUtilities.executioner(cmd)
 
            shutil.rmtree("/usr/local/lsws")
 
@@ -122,7 +122,7 @@ class unInstallCyberPanel:
 
            cmd = shlex.split(command)
 
-           res = subprocess.call(cmd)
+           res = ProcessUtilities.executioner(cmd)
 
            shutil.rmtree("/etc/pure-ftpd")
 
@@ -141,7 +141,7 @@ class unInstallCyberPanel:
 
            cmd = shlex.split(command)
 
-           res = subprocess.call(cmd)
+           res = ProcessUtilities.executioner(cmd)
 
            shutil.rmtree("/etc/pdns")
 
@@ -160,7 +160,7 @@ class unInstallCyberPanel:
 
            cmd = shlex.split(command)
 
-           res = subprocess.call(cmd)
+           res = ProcessUtilities.executioner(cmd)
 
            shutil.rmtree("/etc/pdns")
 

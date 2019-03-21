@@ -174,10 +174,10 @@ def saveStatus(request):
                         sm.managePDNS()
 
                         command = 'sudo systemctl enable pdns'
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(shlex.split(command))
 
                         command = 'sudo systemctl restart pdns'
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(shlex.split(command))
 
                     else:
 
@@ -186,10 +186,10 @@ def saveStatus(request):
                         pdns.save()
 
                         command = 'sudo systemctl stop pdns'
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(shlex.split(command))
 
                         command = 'sudo systemctl disable pdns'
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(shlex.split(command))
 
 
                 elif service == 'postfix':
@@ -199,13 +199,13 @@ def saveStatus(request):
                         writeToFile = open(servicePath, 'w+')
                         writeToFile.close()
                         command = 'sudo systemctl start postfix'
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(shlex.split(command))
                     else:
                         command = 'sudo systemctl stop postfix'
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(shlex.split(command))
 
                         command = 'sudo systemctl disable postfix'
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(shlex.split(command))
 
                         try:
                             os.remove(servicePath)
@@ -223,13 +223,13 @@ def saveStatus(request):
                         writeToFile = open(servicePath, 'w+')
                         writeToFile.close()
                         command = 'sudo systemctl start ' + serviceName
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(shlex.split(command))
                     else:
                         command = 'sudo systemctl stop ' + serviceName
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(shlex.split(command))
 
                         command = 'sudo systemctl disable ' + serviceName
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(shlex.split(command))
 
                         try:
                             os.remove(servicePath)

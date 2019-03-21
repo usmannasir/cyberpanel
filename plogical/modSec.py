@@ -29,7 +29,7 @@ class modSec:
             cmd = shlex.split(command)
 
             with open(modSec.installLogPath, 'w') as f:
-                res = subprocess.call(cmd, stdout=f)
+                res = ProcessUtilities.executioner(cmd, stdout=f)
 
             if res == 1:
                 writeToFile = open(modSec.installLogPath, 'a')
@@ -230,7 +230,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                     os.remove('comodo.tar.gz')
 
                 command = "wget https://" + modSec.mirrorPath + "/modsec/comodo.tar.gz"
-                result = subprocess.call(shlex.split(command))
+                result = ProcessUtilities.executioner(shlex.split(command))
 
                 if result == 1:
                     return 0
@@ -250,13 +250,13 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                     os.remove('cpanel_litespeed_vendor')
 
                 command = "wget https://waf.comodo.com/api/cpanel_litespeed_vendor"
-                result = subprocess.call(shlex.split(command))
+                result = ProcessUtilities.executioner(shlex.split(command))
 
                 if result == 1:
                     return 0
 
                 command = "unzip cpanel_litespeed_vendor -d " + extractLocation
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(shlex.split(command))
 
                 return 1
 
@@ -334,16 +334,16 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                     os.remove('cpanel_litespeed_vendor')
 
                 command = "wget https://waf.comodo.com/api/cpanel_litespeed_vendor"
-                result = subprocess.call(shlex.split(command))
+                result = ProcessUtilities.executioner(shlex.split(command))
 
                 if result == 1:
                     return 0
 
                 command = "unzip cpanel_litespeed_vendor -d " + extractLocation
-                result = subprocess.call(shlex.split(command))
+                result = ProcessUtilities.executioner(shlex.split(command))
 
                 command = 'sudo chown -R lsadm:lsadm /usr/local/lsws/conf'
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(shlex.split(command))
 
                 print "1,None"
                 return
@@ -398,7 +398,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                 os.remove('owasp.tar.gz')
 
             command = "wget https://" + modSec.mirrorPath + "/modsec/owasp.tar.gz"
-            result = subprocess.call(shlex.split(command))
+            result = ProcessUtilities.executioner(shlex.split(command))
 
             if result == 1:
                 return 0

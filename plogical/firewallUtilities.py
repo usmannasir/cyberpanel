@@ -19,7 +19,7 @@ class FirewallUtilities:
     def doCommand(command):
         try:
             cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
             if FirewallUtilities.resFailed(res):
                 logging.CyberCPLogFileWriter.writeToFile("Failed to apply rule: " + command + " Error #" + str(res))
                 return 0

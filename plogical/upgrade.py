@@ -35,7 +35,7 @@ class Upgrade:
         try:
             count = 0
             while True:
-                res = subprocess.call(shlex.split(command))
+                res = ProcessUtilities.executioner(shlex.split(command))
                 if res != 0:
                     count = count + 1
                     Upgrade.stdOut(component + ' failed, trying again, try number: ' + str(count), 0)
@@ -89,7 +89,7 @@ class Upgrade:
             ##
 
             env_path = '/usr/local/CyberCP'
-            subprocess.call(['virtualenv', env_path])
+            ProcessUtilities.executioner(['virtualenv', env_path])
             activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
             execfile(activate_this, dict(__file__=activate_this))
 

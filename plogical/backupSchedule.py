@@ -111,7 +111,7 @@ class backupSchedule:
 
             writeToFile = open(backupLogPath, "a")
             command = "sudo scp -o StrictHostKeyChecking=no -P "+port+" -i /root/.ssh/cyberpanel " + backupPath + " root@"+IPAddress+":/home/backup/" + ipAddressLocal + "/" + time.strftime("%a-%b") + "/"
-            subprocess.call(shlex.split(command), stdout=writeToFile)
+            ProcessUtilities.executioner(shlex.split(command), stdout=writeToFile)
 
             ## Remove backups already sent to remote destinations
 
@@ -162,7 +162,7 @@ class backupSchedule:
 
                 command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel root@" + ipAddress + " mkdir -p /home/backup/" + ipAddressLocal + "/" + time.strftime(
                     "%a-%b")
-                subprocess.call(shlex.split(command))
+                ProcessUtilities.executioner(shlex.split(command))
                 pass
 
             for virtualHost in os.listdir("/home"):

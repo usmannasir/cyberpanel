@@ -337,7 +337,7 @@ class InstallCyberPanel:
 
             while (1):
                 command = "systemctl start mysqld@1"
-                res = subprocess.call(shlex.split(command))
+                res = ProcessUtilities.executioner(shlex.split(command))
 
                 if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
@@ -357,7 +357,7 @@ class InstallCyberPanel:
 
             while (1):
                 command = "systemctl enable mysqld@1"
-                res = subprocess.call(shlex.split(command))
+                res = ProcessUtilities.executioner(shlex.split(command))
 
                 if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
@@ -546,7 +546,7 @@ class InstallCyberPanel:
                     shutil.copy(ftpdPath + "/pureftpd-mysql.conf", '/etc/pure-ftpd/db/mysql.conf')
 
                 command = 'echo 1 > /etc/pure-ftpd/conf/TLS'
-                subprocess.call(command, shell=True)
+                ProcessUtilities.executioner(command, shell=True)
 
                 command = 'systemctl restart pure-ftpd-mysql.service'
                 install.preFlightsChecks.call(command, self.distro, '[installPureFTPDConfigurations]',
@@ -565,12 +565,12 @@ class InstallCyberPanel:
 
             if self.distro == ubuntu:
                 command = 'systemctl stop systemd-resolved'
-                res = subprocess.call(shlex.split(command))
+                res = ProcessUtilities.executioner(shlex.split(command))
                 if res != 0:
                     InstallCyberPanel.stdOut('Unable to stop systemd.resolved, prohits install of PowerDNS, error #' +
                                              str(res), 1, 1, os.EX_OSERR)
                 command = 'systemctl disable systemd-resolved.service'
-                res = subprocess.call(shlex.split(command))
+                res = ProcessUtilities.executioner(shlex.split(command))
                 if res != 0:
                     InstallCyberPanel.stdOut(
                         'Unable to disable systemd.resolved, prohits install of PowerDNS, error #' +

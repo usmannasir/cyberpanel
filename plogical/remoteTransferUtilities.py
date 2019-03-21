@@ -213,7 +213,7 @@ class remoteTransferUtilities:
             ## complete path is a path to the file need to send
 
             command = "sudo scp -o StrictHostKeyChecking=no -i /root/.ssh/cyberpanel " + completedPathToSend + " root@" + IPAddress + ":/home/backup/transfer-" + folderNumber + "/"
-            subprocess.call(shlex.split(command), stdout=writeToFile)
+            ProcessUtilities.executioner(shlex.split(command), stdout=writeToFile)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")

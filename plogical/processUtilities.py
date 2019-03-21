@@ -39,7 +39,7 @@ class ProcessUtilities:
                 command = "sudo /usr/local/lsws/bin/lswsctrl restart"
 
             cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
 
             if res == 0:
                 return 1
@@ -58,7 +58,7 @@ class ProcessUtilities:
                 command = "sudo /usr/local/lsws/bin/lswsctrl stop"
 
             cmd = shlex.split(command)
-            res = subprocess.call(cmd)
+            res = ProcessUtilities.executioner(cmd)
 
             if res == 0:
                 return 1
@@ -67,17 +67,6 @@ class ProcessUtilities:
 
         except subprocess.CalledProcessError, msg:
             logging.writeToFile(str(msg) + "[stopLitespeed]")
-
-    @staticmethod
-    def executioner(command):
-        try:
-            res = subprocess.call(shlex.split(command))
-            if res == 0:
-                return 1
-            else:
-                return 0
-        except BaseException, msg:
-            return 0
 
     @staticmethod
     def killLiteSpeed():
@@ -118,13 +107,32 @@ class ProcessUtilities:
     def containerCheck():
         try:
             command = 'sudo cat /etc/cgrules.conf'
-            result = subprocess.call(shlex.split(command))
+            result = ProcessUtilities.executioner(shlex.split(command))
             if result == 1:
                 return 0
             else:
                 return 1
         except BaseException:
             return 0
+
+    @staticmethod
+    def executioner(command):
+        try:
+            res = subprocess.call(shlex.split(command))
+            if res == 0:
+                return 1
+            else:
+                return 0
+        except BaseException, msg:
+            return 0
+
+    @staticmethod
+    def outputExecutioner(command):
+        return subprocess.check_output(shlex.split(command))
+
+    @staticmethod
+    def popenExecutioner(command):
+        return subprocess.Popen(shlex.split(command))
 
 
 

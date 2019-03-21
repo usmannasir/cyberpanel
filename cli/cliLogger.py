@@ -1,6 +1,6 @@
 import subprocess
 import time
-
+from plogical.processUtilities import ProcessUtilities
 class cliLogger:
     fileName = "/home/cyberpanel/error-logs.txt"
 
@@ -20,7 +20,7 @@ class cliLogger:
     def readLastNFiles(numberOfLines,fileName):
         try:
 
-            lastFewLines = subprocess.check_output(["tail", "-n",str(numberOfLines),fileName])
+            lastFewLines = ProcessUtilities.outputExecutioner(["tail", "-n",str(numberOfLines),fileName])
 
             return lastFewLines
 

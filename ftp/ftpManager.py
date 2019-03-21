@@ -85,7 +85,7 @@ class FTPManager:
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/ftpUtilities.py"
             execPath = execPath + " submitFTPCreation --domainName " + domainName + " --userName " + userName \
                        + " --password " + password + " --path " + path + " --owner " + admin.userName  + ' --api ' + api
-            output = subprocess.check_output(shlex.split(execPath))
+            output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
             if output.find("1,None") > -1:
                 data_ret = {'status': 1, 'creatFTPStatus': 1, 'error_message': 'None'}
                 json_data = json.dumps(data_ret)

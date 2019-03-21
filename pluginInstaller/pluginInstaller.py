@@ -26,7 +26,7 @@ class pluginInstaller:
     def extractPlugin(pluginName):
         pathToPlugin = pluginName + '.zip'
         command = 'unzip ' + pathToPlugin + ' -d /usr/local/CyberCP'
-        subprocess.call(shlex.split(command))
+        ProcessUtilities.executioner(shlex.split(command))
 
     @staticmethod
     def upgradingSettingsFile(pluginName):
@@ -65,7 +65,7 @@ class pluginInstaller:
 
         pluginFile = pluginPath + '/' + pluginName
         command = 'touch ' + pluginFile
-        subprocess.call(shlex.split(command))
+        ProcessUtilities.executioner(shlex.split(command))
 
     @staticmethod
     def addInterfaceLink(pluginName):
@@ -87,15 +87,15 @@ class pluginInstaller:
         currentDir = os.getcwd()
 
         command = "rm -rf /usr/local/lscp/cyberpanel/static"
-        subprocess.call(shlex.split(command))
+        ProcessUtilities.executioner(shlex.split(command))
 
         os.chdir('/usr/local/CyberCP')
 
         command = "python manage.py collectstatic --noinput"
-        subprocess.call(shlex.split(command))
+        ProcessUtilities.executioner(shlex.split(command))
 
         command = "mv /usr/local/CyberCP/static /usr/local/lscp/cyberpanel"
-        subprocess.call(shlex.split(command))
+        ProcessUtilities.executioner(shlex.split(command))
 
 
         os.chdir(currentDir)
@@ -106,10 +106,10 @@ class pluginInstaller:
 
         if os.path.exists(pluginHome + '/pre_install'):
             command = 'chmod +x ' + pluginHome + '/pre_install'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
 
             command = pluginHome + '/pre_install'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
 
     @staticmethod
     def postScript(pluginName):
@@ -117,10 +117,10 @@ class pluginInstaller:
 
         if os.path.exists(pluginHome + '/post_install'):
             command = 'chmod +x ' + pluginHome + '/post_install'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
 
             command = pluginHome + '/post_install'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(shlex.split(command))
 
 
     @staticmethod
@@ -286,7 +286,7 @@ class pluginInstaller:
     @staticmethod
     def restartGunicorn():
         command = 'systemctl restart gunicorn.socket'
-        subprocess.call(shlex.split(command))
+        ProcessUtilities.executioner(shlex.split(command))
 
 
 

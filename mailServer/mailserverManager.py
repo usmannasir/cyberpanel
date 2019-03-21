@@ -76,7 +76,7 @@ class MailServerManager:
             execPath = execPath + " createEmailAccount --domain " + domainName + " --userName " \
                        + userName + " --password " + password
 
-            output = subprocess.check_output(shlex.split(execPath))
+            output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
             if output.find("1,None") > -1:
                 data_ret = {'status': 1, 'createEmailStatus': 1, 'error_message': "None"}
@@ -391,13 +391,13 @@ class MailServerManager:
             try:
                 path = "/etc/opendkim/keys/" + domainName + "/default.txt"
                 command = "sudo cat " + path
-                output = subprocess.check_output(shlex.split(command))
+                output = ProcessUtilities.outputExecutioner(shlex.split(command))
                 leftIndex = output.index('(') + 2
                 rightIndex = output.rindex(')') - 1
 
                 path = "/etc/opendkim/keys/" + domainName + "/default.private"
                 command = "sudo cat " + path
-                privateKey = subprocess.check_output(shlex.split(command))
+                privateKey = ProcessUtilities.outputExecutioner(shlex.split(command))
 
                 data_ret = {'status': 1, 'fetchStatus': 1, 'keysAvailable': 1, 'publicKey': output[leftIndex:rightIndex],
                             'privateKey': privateKey, 'dkimSuccessMessage': 'Keys successfully fetched!',
@@ -428,7 +428,7 @@ class MailServerManager:
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
             execPath = execPath + " generateKeys --domain " + domainName
-            output = subprocess.check_output(shlex.split(execPath))
+            output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
             admin = Administrator.objects.get(pk=userID)
             DNS.dnsTemplate(domainName, admin)
@@ -444,7 +444,7 @@ class MailServerManager:
 
                 path = "/etc/opendkim/keys/" + domainName + "/default.txt"
                 command = "sudo cat " + path
-                output = subprocess.check_output(shlex.split(command))
+                output = ProcessUtilities.outputExecutioner(shlex.split(command))
                 leftIndex = output.index('(') + 2
                 rightIndex = output.rindex(')') - 1
 
@@ -492,7 +492,7 @@ class MailServerManager:
     def installStatusOpenDKIM(self):
         try:
             command = "sudo cat " + mailUtilities.installLogPath
-            installStatus = subprocess.check_output(shlex.split(command))
+            installStatus = ProcessUtilities.outputExecutioner(shlex.split(command))
 
             if installStatus.find("[200]") > -1:
 
@@ -500,7 +500,7 @@ class MailServerManager:
 
                 execPath = execPath + " configureOpenDKIM"
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
 
                 if output.find("1,None") > -1:
                     pass

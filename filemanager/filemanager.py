@@ -40,7 +40,7 @@ class FileManager:
                 return self.ajaxPre(0, 'Not allowed to browse this path, going back home!')
 
             command = "sudo ls -la --group-directories-first " + self.returnPathEnclosed(self.data['completeStartingPath'])
-            output = subprocess.check_output(shlex.split(command)).splitlines()
+            output = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
             counter = 0
             for items in output:
@@ -72,7 +72,7 @@ class FileManager:
             finalData['status'] = 1
 
             command = "sudo ls -la --group-directories-first " + self.returnPathEnclosed(self.data['completeStartingPath'])
-            output = subprocess.check_output(shlex.split(command)).splitlines()
+            output = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
 
             counter = 0
             for items in output:
@@ -225,7 +225,7 @@ class FileManager:
 
             command = 'sudo cat ' + self.returnPathEnclosed(self.data['fileName'])
             ProcessUtilities.executioner(command)
-            finalData['fileContents'] = subprocess.check_output(shlex.split(command))
+            finalData['fileContents'] = ProcessUtilities.outputExecutioner(shlex.split(command))
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)

@@ -9,7 +9,7 @@ def installCertBot():
     cmd.append("install")
     cmd.append("certbot")
 
-    res = subprocess.call(cmd)
+    res = ProcessUtilities.executioner(cmd)
 
 
 installCertBot()
