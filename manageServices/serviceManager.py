@@ -12,7 +12,7 @@ class ServiceManager:
         type = self.extraArgs['type']
         path = '/etc/pdns/pdns.conf'
 
-        data = ProcessUtilities.outputExecutioner(shlex.split('sudo cat ' + path)).splitlines()
+        data = subprocess.check_output(shlex.split('sudo cat ' + path)).splitlines()
 
         if type == 'MASTER':
             counter = 0

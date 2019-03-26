@@ -181,6 +181,30 @@ def loadLoginPage(request):
             newFWRule = FirewallRules(name="ftp", proto="tcp", port="21")
             newFWRule.save()
 
+            newFWRule = FirewallRules(name="smtp", proto="tcp", port="25")
+            newFWRule.save()
+
+            newFWRule = FirewallRules(name="smtps", proto="tcp", port="587")
+            newFWRule.save()
+
+            newFWRule = FirewallRules(name="ssmtp", proto="tcp", port="465")
+            newFWRule.save()
+
+            newFWRule = FirewallRules(name="pop3", proto="tcp", port="110")
+            newFWRule.save()
+
+            newFWRule = FirewallRules(name="imap", proto="tcp", port="143")
+            newFWRule.save()
+
+            newFWRule = FirewallRules(name="simap", proto="tcp", port="993")
+            newFWRule.save()
+
+            newFWRule = FirewallRules(name="dns", proto="udp", port="53")
+            newFWRule.save()
+
+            newFWRule = FirewallRules(name="dnstcp", proto="tcp", port="53")
+            newFWRule.save()
+
             newFWRule = FirewallRules(name="ftptls", proto="tcp", port="40110-40210")
             newFWRule.save()
 

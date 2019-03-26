@@ -35,7 +35,7 @@ class Upgrade:
         try:
             count = 0
             while True:
-                res = ProcessUtilities.executioner(shlex.split(command))
+                res = subprocess.call(shlex.split(command))
                 if res != 0:
                     count = count + 1
                     Upgrade.stdOut(component + ' failed, trying again, try number: ' + str(count), 0)
@@ -89,7 +89,7 @@ class Upgrade:
             ##
 
             env_path = '/usr/local/CyberCP'
-            ProcessUtilities.executioner(['virtualenv', env_path])
+            subprocess.call(['virtualenv', env_path])
             activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
             execfile(activate_this, dict(__file__=activate_this))
 
@@ -990,11 +990,17 @@ WantedBy=multi-user.target"""
 
             Upgrade.stdOut("Fixing permissions..")
 
-            command = 'chown -R cyberpanel:cyberpanel /usr/local/CyberCP'
+            command = "find /usr/local/CyberCP -type d -exec chmod 0755 {} \;"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            command = 'chown -R cyberpanel:cyberpanel /usr/local/lscp'
-            Upgrade.executioner(command, 'chown lscp', 0)
+            command = "find /usr/local/CyberCP -type f -exec chmod 0644 {} \;"
+            Upgrade.executioner(command, 'chown core code', 0)
+
+            command = "chmod -R 755 /usr/local/CyberCP/bin"
+            Upgrade.executioner(command, 'chown core code', 0)
+
+            command = "chown -R root:root /usr/local/CyberCP"
+            Upgrade.executioner(command, 'chown core code', 0)
 
             command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel'
             Upgrade.executioner(command, 'chown static content', 0)

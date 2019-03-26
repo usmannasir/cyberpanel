@@ -19,7 +19,7 @@ class mysqlUtilities:
 
             command = 'mysql -u root -p' + password + ' -e "' + createDB + '"'
             cmd = shlex.split(command)
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             if res == 1:
                 return 0
@@ -29,7 +29,7 @@ class mysqlUtilities:
             command = 'mysql -u root -p' + password + ' -e "' + createUser + '"'
 
             cmd = shlex.split(command)
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             if res == 1:
                 return 0
@@ -37,7 +37,7 @@ class mysqlUtilities:
                 dropDB = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'localhost'"
                 command = 'mysql -u root -p' + password + ' -e "' + dropDB + '"'
                 cmd = shlex.split(command)
-                res = ProcessUtilities.executioner(cmd)
+                res = subprocess.call(cmd)
 
                 if res == 1:
                     return 0

@@ -11,6 +11,7 @@ import subprocess
 import shlex
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.acl import ACLManager
+from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
 
@@ -139,7 +140,7 @@ def getLogsFromFile(request):
 
         try:
             command = "sudo tail -50 " + fileName
-            fewLinesOfLogFile = ProcessUtilities.outputExecutioner(shlex.split(command))
+            fewLinesOfLogFile = ProcessUtilities.outputExecutioner(command)
             status = {"status": 1, "logstatus": 1, "logsdata": fewLinesOfLogFile}
             final_json = json.dumps(status)
             return HttpResponse(final_json)
@@ -172,10 +173,9 @@ def clearLogFile(request):
                 fileName = data['fileName']
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/serverLogs.py"
-
                 execPath = execPath + " cleanLogFile --fileName " + fileName
 
-                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:
                     data_ret = {'cleanStatus': 1, 'error_message': "None"}

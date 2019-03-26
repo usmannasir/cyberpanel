@@ -166,10 +166,10 @@ class virtualHostUtilities:
     def getAccessLogs(fileName, page):
         try:
 
-            numberOfTotalLines = int(ProcessUtilities.outputExecutioner(["wc", "-l", fileName]).split(" ")[0])
+            numberOfTotalLines = int(subprocess.check_output(["wc", "-l", fileName]).split(" ")[0])
 
             if numberOfTotalLines < 25:
-                data = ProcessUtilities.outputExecutioner(["cat", fileName])
+                data = subprocess.check_output(["cat", fileName])
             else:
                 if page == 1:
                     end = numberOfTotalLines
@@ -199,10 +199,10 @@ class virtualHostUtilities:
     def getErrorLogs(fileName, page):
         try:
 
-            numberOfTotalLines = int(ProcessUtilities.outputExecutioner(["wc", "-l", fileName]).split(" ")[0])
+            numberOfTotalLines = int(subprocess.check_output(["wc", "-l", fileName]).split(" ")[0])
 
             if numberOfTotalLines < 25:
-                data = ProcessUtilities.outputExecutioner(["cat", fileName])
+                data = subprocess.check_output(["cat", fileName])
             else:
                 if page == 1:
                     end = numberOfTotalLines
@@ -303,13 +303,13 @@ class virtualHostUtilities:
             if not os.path.exists("latest.tar.gz"):
                 command = 'wget --no-check-certificate http://wordpress.org/latest.tar.gz -O latest.tar.gz'
                 cmd = shlex.split(command)
-                res = ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             command = 'tar -xzvf latest.tar.gz -C ' + finalPath
 
             cmd = shlex.split(command)
 
-            res = ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             ## Get plugin
 
@@ -318,13 +318,13 @@ class virtualHostUtilities:
 
                 cmd = shlex.split(command)
 
-                res = ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             command = 'unzip litespeed-cache.1.1.5.1.zip -d ' + finalPath
 
             cmd = shlex.split(command)
 
-            res = ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             root = finalPath
 
@@ -368,7 +368,7 @@ class virtualHostUtilities:
 
             cmd = shlex.split(command)
 
-            res = ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             vhost.addRewriteRules(domainName)
 
@@ -392,7 +392,7 @@ class virtualHostUtilities:
                 os.mkdir(homeDir)
                 command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + homeDir
                 cmd = shlex.split(command)
-                res = ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             print "0," + str(msg)
             return
@@ -454,7 +454,7 @@ class virtualHostUtilities:
 
             command = 'systemctl restart lscpd'
             cmd = shlex.split(command)
-            ProcessUtilities.executioner(cmd)
+            subprocess.call(cmd)
 
             print "1,None"
             return 1,'None'
@@ -838,7 +838,7 @@ class virtualHostUtilities:
             pathToStoreSSL = '/etc/letsencrypt/live/' + virtualHost
 
             command = 'mkdir -p ' + pathToStoreSSL
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
             pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
             pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
@@ -863,7 +863,7 @@ class virtualHostUtilities:
 
             command = "chown " + "lsadm" + ":" + "lsadm" + " " + pathToStoreSSL
             cmd = shlex.split(command)
-            ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             print "1,None"
 
@@ -1002,7 +1002,7 @@ class virtualHostUtilities:
     def getDiskUsage(path, totalAllowed):
         try:
 
-            totalUsageInMB = ProcessUtilities.outputExecutioner(["sudo", "du", "-hs", path, "--block-size=1M"]).split()[0]
+            totalUsageInMB = subprocess.check_output(["sudo", "du", "-hs", path, "--block-size=1M"]).split()[0]
 
             percentage = float(100) / float(totalAllowed)
 
@@ -1021,7 +1021,7 @@ class virtualHostUtilities:
 
             cmd = shlex.split(command)
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -1033,7 +1033,7 @@ class virtualHostUtilities:
 
             cmd = shlex.split(command)
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))

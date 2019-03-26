@@ -11,7 +11,7 @@ class UpgradeCritical:
         try:
             FNULL = open(os.devnull, 'w')
 
-            res = ProcessUtilities.executioner(shlex.split(command), stdout=FNULL)
+            res = subprocess.call(shlex.split(command), stdout=FNULL)
             if res == 0:
                 return 1
             else:
@@ -26,7 +26,6 @@ class UpgradeCritical:
             command = "DEBIAN_FRONTEND=noninteractive apt-get install --only-upgrade pdns-server pdns-backend-mysql install dovecot-imapd dovecot-pop3d postfix-mysql pure-ftpd postfix dovecot-mysql  -y"
             UpgradeCritical.executioner(command)
         else:
-
             command = "yum update"
             UpgradeCritical.executioner(command)
 

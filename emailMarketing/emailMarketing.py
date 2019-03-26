@@ -14,7 +14,6 @@ from random import randint
 import subprocess, shlex
 from plogical.processUtilities import ProcessUtilities
 
-
 class emailMarketing(multi.Thread):
     def __init__(self, function, extraArgs):
         multi.Thread.__init__(self)
@@ -213,7 +212,7 @@ class emailMarketing(multi.Thread):
                                 messageFile.close()
 
                                 command = "sudo sed -i 's/{{ unsubscribeCheck }}/" + removalLink + "/g' " + tempPath
-                                ProcessUtilities.executioner(shlex.split(command))
+                                ProcessUtilities.executioner(command)
 
                                 messageFile = open(tempPath, 'r')
                                 finalMessage = messageFile.read()

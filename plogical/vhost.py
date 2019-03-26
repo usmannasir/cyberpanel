@@ -39,15 +39,15 @@ class vhost:
                 command = "adduser " + virtualHostUser + " -M -d " + path
 
             cmd = shlex.split(command)
-            ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             command = "groupadd " + virtualHostUser
             cmd = shlex.split(command)
-            ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             command = "usermod -a -G " + virtualHostUser + " " + virtualHostUser
             cmd = shlex.split(command)
-            ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [addingUsers]")
@@ -60,7 +60,7 @@ class vhost:
             try:
                 command = 'chmod 711 /home'
                 cmd = shlex.split(command)
-                ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
             except:
                 pass
 
@@ -69,11 +69,11 @@ class vhost:
 
                 command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + path
                 cmd = shlex.split(command)
-                ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
                 command = "chmod 711 " + path
                 cmd = shlex.split(command)
-                ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             except OSError, msg:
                 logging.CyberCPLogFileWriter.writeToFile(
@@ -85,7 +85,7 @@ class vhost:
 
                 command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + pathHTML
                 cmd = shlex.split(command)
-                ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             except OSError, msg:
                 logging.CyberCPLogFileWriter.writeToFile(
@@ -97,7 +97,7 @@ class vhost:
 
                 command = "chown " + "lscpd" + ":" + "lscpd" + " " + pathLogs
                 cmd = shlex.split(command)
-                ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
 
                 if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
@@ -106,7 +106,7 @@ class vhost:
                     command = "chmod -R 755 " + pathLogs
 
                 cmd = shlex.split(command)
-                ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             except OSError, msg:
                 logging.CyberCPLogFileWriter.writeToFile(
@@ -127,7 +127,7 @@ class vhost:
 
                 command = "chown " + "lsadm" + ":" + "lsadm" + " " + completePathToConfigFile
                 cmd = shlex.split(command)
-                ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             except IOError, msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectories]]")
@@ -149,13 +149,13 @@ class vhost:
 
             command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + "/home/" + virtualHostName + "/public_html/index.html"
             cmd = shlex.split(command)
-            ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             vhostPath = vhost.Server_root + "/conf/vhosts"
 
             command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
             cmd = shlex.split(command)
-            ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [finalizeVhostCreation]")
@@ -332,7 +332,7 @@ class vhost:
                 ## Delete mail accounts
 
                 command = "sudo rm -rf /home/vmail/" + virtualHostName
-                ProcessUtilities.executioner(shlex.split(command))
+                subprocess.call(shlex.split(command))
             except BaseException, msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
                 return 0
@@ -368,7 +368,7 @@ class vhost:
                 ## Delete mail accounts
 
                 command = "sudo rm -rf /home/vmail/" + virtualHostName
-                ProcessUtilities.executioner(shlex.split(command))
+                subprocess.call(shlex.split(command))
             except BaseException, msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
@@ -596,7 +596,7 @@ class vhost:
         try:
             command = 'sudo chown -R  cyberpanel:cyberpanel ' + path
             cmd = shlex.split(command)
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
@@ -607,7 +607,7 @@ class vhost:
 
             cmd = shlex.split(command)
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -673,12 +673,12 @@ class vhost:
 
             command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + path + "/index.html"
             cmd = shlex.split(command)
-            ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             vhostPath = vhost.Server_root + "/conf/vhosts"
             command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
             cmd = shlex.split(command)
-            ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [finalizeDomainCreation]")
@@ -696,7 +696,7 @@ class vhost:
             os.makedirs(path)
             command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + path
             cmd = shlex.split(command)
-            ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
         except OSError, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "329 [Not able to create directories for virtual host [createDirectoryForDomain]]")

@@ -60,7 +60,7 @@ def litespeedStatus(request):
                 else:
                     loadedModules.append(items)
 
-        except subprocess.CalledProcessError, msg:
+        except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
             return render(request, "serverStatus/litespeedStatus.html", {"processList": processList,
                                                                          "liteSpeedVersionStatus": "For some reaons not able to load version details, see CyberCP main log file.",
@@ -143,6 +143,7 @@ def getFurtherDataFromLogFile(request):
             return ACLManager.loadErrorJson('logstatus', 0)
 
         fewLinesOfLogFile = logging.CyberCPLogFileWriter.readLastNFiles(50, logging.CyberCPLogFileWriter.fileName)
+
         fewLinesOfLogFile = str(fewLinesOfLogFile)
         status = {"logstatus": 1, "logsdata": fewLinesOfLogFile}
         final_json = json.dumps(status)
@@ -193,7 +194,7 @@ def servicesStatus(request):
         mailStatus = []
         dockerStatus = []
 
-        processlist = ProcessUtilities.outputExecutioner(['ps', '-A'])
+        processlist = subprocess.check_output(['ps', '-A'])
 
         def getServiceStats(service):
             if service in processlist:
@@ -308,20 +309,8 @@ def servicesAction(request):
                             service = 'pure-ftpd'
 
                     command = 'sudo systemctl %s %s' % (action, service)
-                    cmd = shlex.split(command)
-                    res = ProcessUtilities.executioner(cmd)
+                    ProcessUtilities.executioner(command)
 
-                    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-                    result = p.communicate()[0]
-
-                    if res != 0:
-                        final_dic = {'serviceAction': 0, "error_message": "Error while performing action"}
-                        final_json = json.dumps(final_dic)
-                        return HttpResponse(final_json)
-                    else:
-                        final_dic = {'serviceAction': 1, "error_message": 0}
-                        final_json = json.dumps(final_dic)
-                        return HttpResponse(final_json)
 
         except BaseException, msg:
             final_dic = {'serviceAction': 0, 'error_message': str(msg)}
@@ -349,7 +338,7 @@ def switchTOLSWS(request):
         execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/serverStatus/serverStatusUtil.py"
         execPath = execPath + " switchTOLSWS --licenseKey " + data['licenseKey']
 
-        subprocess.Popen(shlex.split(execPath))
+        ProcessUtilities.popenExecutioner(execPath)
         time.sleep(2)
 
         data_ret = {'status': 1, 'error_message': "None", }
@@ -366,7 +355,7 @@ def switchTOLSWSStatus(request):
     try:
 
         command = 'sudo cat ' + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
-        output = ProcessUtilities.outputExecutioner(shlex.split(command))
+        output = ProcessUtilities.outputExecutioner(command)
 
         if output.find('[404]') > -1:
             data_ret = {'abort': 1, 'requestStatus': output, 'installed': 0}
@@ -400,10 +389,10 @@ def licenseStatus(request):
                 return ACLManager.loadErrorJson('status', 0)
 
             command = 'sudo cat /usr/local/lsws/conf/serial.no'
-            serial = ProcessUtilities.outputExecutioner(shlex.split(command))
+            serial = ProcessUtilities.outputExecutioner(command)
 
             command = 'sudo /usr/local/lsws/bin/lshttpd -V'
-            expiration = ProcessUtilities.outputExecutioner(shlex.split(command))
+            expiration = ProcessUtilities.outputExecutioner(command)
 
             final_dic = {'status': 1, "erroMessage": 0, 'lsSerial': serial, 'lsexpiration': expiration}
             final_json = json.dumps(final_dic)
@@ -435,7 +424,7 @@ def changeLicense(request):
             newKey = data['newKey']
 
             command = 'sudo chown -R cyberpanel:cyberpanel /usr/local/lsws/conf'
-            ProcessUtilities.executioner(shlex.split(command))
+            ProcessUtilities.executioner(command)
 
             serialPath = '/usr/local/lsws/conf/serial.no'
             serialFile = open(serialPath, 'w')
@@ -443,13 +432,13 @@ def changeLicense(request):
             serialFile.close()
 
             command = 'sudo chown -R lsadm:lsadm /usr/local/lsws/conf'
-            ProcessUtilities.executioner(shlex.split(command))
+            ProcessUtilities.executioner(command)
 
             command = 'sudo /usr/local/lsws/bin/lshttpd -r'
-            ProcessUtilities.executioner(shlex.split(command))
+            ProcessUtilities.executioner(command)
 
             command = 'sudo /usr/local/lsws/bin/lswsctrl restart'
-            ProcessUtilities.executioner(shlex.split(command))
+            ProcessUtilities.executioner(command)
 
             final_dic = {'status': 1, "erroMessage": 'None'}
             final_json = json.dumps(final_dic)
@@ -488,7 +477,7 @@ def topProcessesStatus(request):
     try:
 
         with open("/home/cyberpanel/top", "w") as outfile:
-            ProcessUtilities.executioner("sudo top -n1 -b", shell=True, stdout=outfile)
+            subprocess.call("top -n1 -b", shell=True, stdout=outfile)
 
         data = open('/home/cyberpanel/top', 'r').readlines()
 
@@ -574,7 +563,7 @@ def topProcessesStatus(request):
         ## CPU Details
 
         command = 'sudo cat /proc/cpuinfo'
-        output = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
+        output = subprocess.check_output(shlex.split(command)).splitlines()
 
         import psutil
 

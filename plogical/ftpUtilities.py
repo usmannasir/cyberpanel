@@ -21,7 +21,6 @@ from datetime import datetime
 
 class FTPUtilities:
 
-
     @staticmethod
     def createNewFTPAccount(udb,upass,username,password,path):
         try:
@@ -32,7 +31,7 @@ class FTPUtilities:
             cmd.append("ftpuser:2001")
             cmd.append(path)
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
             if res == 1:
                 print "Permissions not changed."
             else:
@@ -58,7 +57,7 @@ class FTPUtilities:
 
             cmd = shlex.split(command)
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             if res == 1:
                 print "Permissions not changed."
@@ -72,7 +71,7 @@ class FTPUtilities:
 
             cmd = shlex.split(command)
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             if res == 1:
                 return 0
@@ -96,7 +95,7 @@ class FTPUtilities:
 
             command = "chown " + externalApp + ":" + externalApp + " " + path
             cmd = shlex.split(command)
-            ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
             return 1,'None'
 

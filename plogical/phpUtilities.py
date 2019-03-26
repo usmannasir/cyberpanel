@@ -27,7 +27,7 @@ class phpUtilities:
 
             try:
                 with open(phpUtilities.installLogPath, 'w') as f:
-                    ProcessUtilities.executioner(cmd, stdout=f)
+                    subprocess.call(cmd, stdout=f)
 
                 writeToFile = open(phpUtilities.installLogPath, 'a')
                 writeToFile.writelines("PHP Extension Installed.\n")
@@ -59,7 +59,7 @@ class phpUtilities:
             try:
 
                 with open(phpUtilities.installLogPath, 'w') as f:
-                    ProcessUtilities.executioner(cmd, stdout=f)
+                    subprocess.call(cmd, stdout=f)
 
                 writeToFile = open(phpUtilities.installLogPath, 'a')
                 writeToFile.writelines("PHP Extension Removed.\n")
@@ -178,6 +178,7 @@ def main():
     parser.add_argument("--upload_max_filesize", help="Process Soft Limit for PHP!")
     parser.add_argument("--max_input_time", help="Process Hard Limit for PHP!")
     parser.add_argument("--post_max_size", help="Process Hard Limit for PHP!")
+    parser.add_argument("--extension", help="Process Hard Limit for PHP!")
 
     ## Litespeed Tuning Arguments
 
@@ -191,6 +192,12 @@ def main():
                                         args.max_execution_time, args.upload_max_filesize, args.max_input_time, args.post_max_size)
     elif args.function == "savePHPConfigAdvance":
         phpUtilities.savePHPConfigAdvance(args.phpVers, args.tempPath)
+
+    elif args.function == "installPHPExtension":
+        phpUtilities.installPHPExtension(args.extension, args.extension)
+
+    elif args.function == "unInstallPHPExtension":
+        phpUtilities.unInstallPHPExtension(args.extension, args.extension)
 
 
 

@@ -19,7 +19,7 @@ class installUtilities:
             cmd.append("-y")
             cmd.append("install")
             cmd.append("epel-release")
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             if res == 1:
                 print("###############################################")
@@ -47,7 +47,7 @@ class installUtilities:
             cmd.append("rpm")
             cmd.append("-ivh")
             cmd.append("http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm")
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
             if res == 1:
                 print("###############################################")
                 print("         Could not add Litespeed repo         " )
@@ -78,7 +78,7 @@ class installUtilities:
             cmd.append("install")
             cmd.append("openlitespeed-1.4.26")
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
 
             if res == 1:
@@ -111,7 +111,7 @@ class installUtilities:
             cmd.append("/usr/local/lsws/bin/lswsctrl")
             cmd.append("start")
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             if res == 1:
                 print("###############################################")
@@ -136,15 +136,13 @@ class installUtilities:
     @staticmethod
     def reStartLiteSpeed():
         try:
-            FNULL = open(os.devnull, 'w')
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 command = "sudo systemctl restart lsws"
             else:
                 command = "sudo /usr/local/lsws/bin/lswsctrl restart"
 
-            cmd = shlex.split(command)
-            ProcessUtilities.executioner(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            ProcessUtilities.executioner(command)
 
         except OSError, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")
@@ -165,7 +163,7 @@ class installUtilities:
                 command = "sudo /usr/local/lsws/bin/lswsctrl restart"
 
             cmd = shlex.split(command)
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             if res == 1:
                 print("###############################################")
@@ -216,7 +214,7 @@ class installUtilities:
             cmd.append("groupinstall")
             cmd.append("lsphp-all")
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             if res == 1:
                 print("###############################################")
@@ -310,7 +308,7 @@ class installUtilities:
             cmd.append("remove")
             cmd.append("openlitespeed-1.4.26")
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             if res == 1:
                 print("###############################################")
@@ -338,7 +336,7 @@ class installUtilities:
             cmd.append("remove")
             cmd.append("lsphp*")
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             if res == 1:
                 print("###############################################")
@@ -380,7 +378,7 @@ class installUtilities:
             cmd.append("start")
             cmd.append("mariadb")
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             if res == 1:
                 print("###############################################")
@@ -416,7 +414,7 @@ class installUtilities:
             cmd.append("install")
             cmd.append("mariadb-server")
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             if res == 1:
                 print("###############################################")
@@ -456,7 +454,7 @@ class installUtilities:
             cmd.append("enable")
             cmd.append("mariadb")
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             if res == 1:
                 print("###############################################")

@@ -12,6 +12,7 @@ import shlex
 import subprocess
 from plogical.acl import ACLManager
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
 
@@ -76,7 +77,7 @@ def issueSSL(request):
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
                 execPath = execPath + " issueSSL --virtualHostName " + virtualHost + " --administratorEmail " + adminEmail + " --path " + path
-                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:
                     pass
@@ -148,10 +149,8 @@ def obtainHostNameSSL(request):
                 ## ssl issue
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-
                 execPath = execPath + " issueSSLForHostName --virtualHostName " + virtualHost + " --path " + path
-
-                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:
                     data_ret = {"status": 1, "SSL": 1,
@@ -218,10 +217,8 @@ def obtainMailServerSSL(request):
                 ## ssl issue
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-
                 execPath = execPath + " issueSSLForMailServer --virtualHostName " + virtualHost + " --path " + path
-
-                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:
                     data_ret = {"status": 1, "SSL": 1,

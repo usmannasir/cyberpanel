@@ -64,7 +64,7 @@ class ContainerManager(multi.Thread):
     @staticmethod
     def executioner(command, statusFile):
         try:
-            res = ProcessUtilities.executioner(shlex.split(command), stdout=statusFile, stderr=statusFile)
+            res = subprocess.call(shlex.split(command), stdout=statusFile, stderr=statusFile)
             if res == 1:
                 return 0
             else:
@@ -80,49 +80,11 @@ class ContainerManager(multi.Thread):
             if ACLManager.currentContextPermission(currentACL, 'createContainer') == 0:
                 return ACLManager.loadError()
 
+            writeToFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+            writeToFile.close()
 
-            mailUtilities.checkHome()
-
-            statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
-
-            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "Starting Docker Installation..\n", 1)
-
-            command = "sudo adduser docker"
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'sudo groupadd docker'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'sudo usermod -aG docker docker'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'sudo usermod -aG docker cyberpanel'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                command = 'sudo yum install -y docker'
-            else:
-                command = 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io'
-
-            if not ServerStatusUtil.executioner(command, statusFile):
-                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                          "Failed to install Docker. [404]\n", 1)
-                return 0
-
-            command = 'sudo systemctl enable docker'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'sudo systemctl start docker'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "Docker successfully installed.[200]\n", 1)
-
-            time.sleep(2)
-
-            cm = ContainerManager(self.name, 'restartGunicorn')
-            cm.start()
+            execPath = "sudo python /usr/local/CyberCP/dockerManager/dockerInstall.py"
+            ProcessUtilities.executioner(execPath)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)

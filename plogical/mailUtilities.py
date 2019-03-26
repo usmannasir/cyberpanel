@@ -80,13 +80,13 @@ class mailUtilities:
 
             cmd = shlex.split(command)
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_'
 
             cmd = shlex.split(command)
 
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             ## After effects ends
 
@@ -159,18 +159,18 @@ class mailUtilities:
             FNULL = open(os.devnull, 'w')
 
             command = "opendkim-genkey -D /etc/opendkim/keys/" + virtualHostName + " -d " + virtualHostName + " -s default"
-            ProcessUtilities.executioner(shlex.split(command),stdout=FNULL, stderr=subprocess.STDOUT)
+            subprocess.call(shlex.split(command),stdout=FNULL, stderr=subprocess.STDOUT)
 
             ## Fix permissions
 
             command = "chown -R root:opendkim /etc/opendkim/keys/" + virtualHostName
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
             command = "chmod 640 /etc/opendkim/keys/" + virtualHostName + "/default.private"
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
             command = "chmod 644 /etc/opendkim/keys/" + virtualHostName + "/default.txt"
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
             ## Edit key file
 
@@ -202,10 +202,10 @@ class mailUtilities:
             ## Restart postfix and OpenDKIM
 
             command = "systemctl restart opendkim"
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
             command = "systemctl restart postfix"
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
             return 1, "None"
 
@@ -221,7 +221,7 @@ class mailUtilities:
             path = "/etc/opendkim.conf"
 
             command = "sudo cat " + path
-            res = ProcessUtilities.executioner(shlex.split(command))
+            res = subprocess.call(shlex.split(command))
 
             if res == 1:
                 return 0
@@ -285,15 +285,15 @@ milter_default_action = accept
                 #### Restarting Postfix and OpenDKIM
 
                 command = "systemctl start opendkim"
-                ProcessUtilities.executioner(shlex.split(command))
+                subprocess.call(shlex.split(command))
 
                 command = "systemctl enable opendkim"
-                ProcessUtilities.executioner(shlex.split(command))
+                subprocess.call(shlex.split(command))
 
                 ##
 
                 command = "systemctl start postfix"
-                ProcessUtilities.executioner(shlex.split(command))
+                subprocess.call(shlex.split(command))
 
                 print "1,None"
                 return
@@ -316,14 +316,14 @@ milter_default_action = accept
                 FNULL = open(os.devnull, 'w')
 
                 command = "sudo mkdir " + mailUtilities.cyberPanelHome
-                ProcessUtilities.executioner(shlex.split(command), stdout=FNULL)
+                subprocess.call(shlex.split(command), stdout=FNULL)
 
                 command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
-                ProcessUtilities.executioner(shlex.split(command), stdout=FNULL)
+                subprocess.call(shlex.split(command), stdout=FNULL)
             except:
                 FNULL = open(os.devnull, 'w')
                 command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
-                ProcessUtilities.executioner(shlex.split(command), stdout=FNULL)
+                subprocess.call(shlex.split(command), stdout=FNULL)
 
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [checkHome]")
@@ -339,7 +339,7 @@ milter_default_action = accept
             cmd = shlex.split(command)
 
             with open(mailUtilities.installLogPath, 'w') as f:
-                res = ProcessUtilities.executioner(cmd, stdout=f)
+                res = subprocess.call(cmd, stdout=f)
 
             if res == 1:
                 writeToFile = open(mailUtilities.installLogPath, 'a')
@@ -363,10 +363,10 @@ milter_default_action = accept
     def restartServices():
         try:
             command = 'systemctl restart postfix'
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
             command = 'systemctl restart dovecot'
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [restartServices]")
 
@@ -384,7 +384,7 @@ milter_default_action = accept
             cmd = shlex.split(command)
 
             with open(mailUtilities.spamassassinInstallLogPath, 'w') as f:
-                res = ProcessUtilities.executioner(cmd, stdout=f)
+                res = subprocess.call(cmd, stdout=f)
 
             if res == 1:
                 writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
@@ -411,7 +411,7 @@ milter_default_action = accept
             path = "/etc/mail/spamassassin/local.cf"
 
             command = "sudo cat " + path
-            res = ProcessUtilities.executioner(shlex.split(command))
+            res = subprocess.call(shlex.split(command))
 
             if res == 1:
                 return 0
@@ -443,21 +443,21 @@ milter_default_action = accept
 
 
             command = "groupadd spamd"
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
             command = "useradd -g spamd -s /bin/false -d /var/log/spamassassin spamd"
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
             ##
 
             command = "chown spamd:spamd /var/log/spamassassin"
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
             command = "systemctl enable spamassassin"
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
             command = "systemctl start spamassassin"
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
             ## Configuration to postfix
 
@@ -478,7 +478,7 @@ milter_default_action = accept
             writeToFile.close()
 
             command = 'systemctl restart postfix'
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
 
             print "1,None"
@@ -531,7 +531,7 @@ milter_default_action = accept
             conf.close()
 
             command = 'systemctl restart spamassassin'
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
             print "1,None"
             return
@@ -552,10 +552,10 @@ milter_default_action = accept
                     shutil.copy("/usr/local/CyberCP/postfixSenderPolicy/cpecs.service", "/etc/systemd/system/cpecs.service")
 
                 command = 'systemctl enable cpecs'
-                ProcessUtilities.executioner(shlex.split(command))
+                subprocess.call(shlex.split(command))
 
                 command = 'systemctl start cpecs'
-                ProcessUtilities.executioner(shlex.split(command))
+                subprocess.call(shlex.split(command))
 
                 writeToFile = open(postfixPath, 'a')
                 writeToFile.writelines('smtpd_data_restrictions = check_policy_service unix:/var/log/policyServerSocket\n')
@@ -563,7 +563,7 @@ milter_default_action = accept
                 writeToFile.close()
 
                 command = 'systemctl restart postfix'
-                ProcessUtilities.executioner(shlex.split(command))
+                subprocess.call(shlex.split(command))
             else:
 
                 data = open(postfixPath, 'r').readlines()
@@ -580,10 +580,10 @@ milter_default_action = accept
                 writeToFile.close()
 
                 command = 'systemctl stop cpecs'
-                ProcessUtilities.executioner(shlex.split(command))
+                subprocess.call(shlex.split(command))
 
                 command = 'systemctl restart postfix'
-                ProcessUtilities.executioner(shlex.split(command))
+                subprocess.call(shlex.split(command))
 
             print "1,None"
             return

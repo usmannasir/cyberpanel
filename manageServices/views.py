@@ -12,6 +12,7 @@ import subprocess, shlex
 from plogical.acl import ACLManager
 from models import PDNSStatus
 from .serviceManager import ServiceManager
+from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
 
@@ -174,10 +175,10 @@ def saveStatus(request):
                         sm.managePDNS()
 
                         command = 'sudo systemctl enable pdns'
-                        ProcessUtilities.executioner(shlex.split(command))
+                        ProcessUtilities.executioner(command)
 
                         command = 'sudo systemctl restart pdns'
-                        ProcessUtilities.executioner(shlex.split(command))
+                        ProcessUtilities.executioner(command)
 
                     else:
 
@@ -186,10 +187,10 @@ def saveStatus(request):
                         pdns.save()
 
                         command = 'sudo systemctl stop pdns'
-                        ProcessUtilities.executioner(shlex.split(command))
+                        ProcessUtilities.executioner(command)
 
                         command = 'sudo systemctl disable pdns'
-                        ProcessUtilities.executioner(shlex.split(command))
+                        ProcessUtilities.executioner(command)
 
 
                 elif service == 'postfix':
@@ -199,13 +200,13 @@ def saveStatus(request):
                         writeToFile = open(servicePath, 'w+')
                         writeToFile.close()
                         command = 'sudo systemctl start postfix'
-                        ProcessUtilities.executioner(shlex.split(command))
+                        ProcessUtilities.executioner(command)
                     else:
                         command = 'sudo systemctl stop postfix'
-                        ProcessUtilities.executioner(shlex.split(command))
+                        ProcessUtilities.executioner(command)
 
                         command = 'sudo systemctl disable postfix'
-                        ProcessUtilities.executioner(shlex.split(command))
+                        ProcessUtilities.executioner(command)
 
                         try:
                             os.remove(servicePath)
@@ -223,13 +224,13 @@ def saveStatus(request):
                         writeToFile = open(servicePath, 'w+')
                         writeToFile.close()
                         command = 'sudo systemctl start ' + serviceName
-                        ProcessUtilities.executioner(shlex.split(command))
+                        ProcessUtilities.executioner(command)
                     else:
                         command = 'sudo systemctl stop ' + serviceName
-                        ProcessUtilities.executioner(shlex.split(command))
+                        ProcessUtilities.executioner(command)
 
                         command = 'sudo systemctl disable ' + serviceName
-                        ProcessUtilities.executioner(shlex.split(command))
+                        ProcessUtilities.executioner(command)
 
                         try:
                             os.remove(servicePath)

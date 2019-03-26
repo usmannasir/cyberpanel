@@ -8,7 +8,7 @@ class FirewallUtilities:
         import install as inst
         try:
             cmd = shlex.split(command)
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
             if inst.preFlightsChecks.resFailed(inst.get_distro(), res):
                 inst.preFlightsChecks.stdOut("Failed to apply rule: " + command + " Error #" + str(res), 1)
                 return 0

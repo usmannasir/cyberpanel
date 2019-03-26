@@ -1,7 +1,5 @@
 import json
 import os
-import shlex
-import subprocess
 from random import randint
 
 from django.shortcuts import HttpResponse
@@ -319,8 +317,8 @@ class CloudManager:
             lastLine = statusData[-1]
 
             if lastLine.find('[200]') > -1:
-                execPath = 'sudo rm -f ' + statusFile
-                ProcessUtilities.outputExecutioner(execPath)
+                command = 'sudo rm -f ' + statusFile
+                ProcessUtilities.executioner(command)
                 data_ret = {'status': 1, 'abort': 1, 'installationProgress': "100", 'currentStatus': lastLine}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -1053,11 +1051,9 @@ class CloudManager:
 
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                execPath = 'sudo cat /etc/my.cnf'
-                finalData['conf'] = ProcessUtilities.outputExecutioner(execPath)
+                finalData['conf'] = ProcessUtilities.outputExecutioner('sudo cat /etc/my.cnf')
             else:
-                execPath = 'sudo cat /etc/mysql/my.cnf'
-                finalData['conf'] = ProcessUtilities.outputExecutioner(execPath)
+                finalData['conf'] = ProcessUtilities.outputExecutioner('sudo cat /etc/mysql/my.cnf')
 
             finalData['status'] = 1
 

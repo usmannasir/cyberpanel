@@ -10,13 +10,13 @@ from mailUtilities import mailUtilities
 from processUtilities import ProcessUtilities
 
 class modSec:
+
     installLogPath = "/home/cyberpanel/modSecInstallLog"
     tempRulesFile = "/home/cyberpanel/tempModSecRules"
     mirrorPath = "cyberpanel.net"
 
-
     @staticmethod
-    def installModSec(install, modSecInstall):
+    def installModSec():
         try:
 
             mailUtilities.checkHome()
@@ -29,7 +29,7 @@ class modSec:
             cmd = shlex.split(command)
 
             with open(modSec.installLogPath, 'w') as f:
-                res = ProcessUtilities.executioner(cmd, stdout=f)
+                res = subprocess.call(cmd, stdout=f)
 
             if res == 1:
                 writeToFile = open(modSec.installLogPath, 'a')
@@ -215,7 +215,6 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                 str(msg) + "  [saveModSecRules]")
             print "0," + str(msg)
 
-
     @staticmethod
     def setupComodoRules():
         try:
@@ -230,7 +229,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                     os.remove('comodo.tar.gz')
 
                 command = "wget https://" + modSec.mirrorPath + "/modsec/comodo.tar.gz"
-                result = ProcessUtilities.executioner(shlex.split(command))
+                result = subprocess.call(shlex.split(command))
 
                 if result == 1:
                     return 0
@@ -250,13 +249,13 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                     os.remove('cpanel_litespeed_vendor')
 
                 command = "wget https://waf.comodo.com/api/cpanel_litespeed_vendor"
-                result = ProcessUtilities.executioner(shlex.split(command))
+                result = subprocess.call(shlex.split(command))
 
                 if result == 1:
                     return 0
 
                 command = "unzip cpanel_litespeed_vendor -d " + extractLocation
-                ProcessUtilities.executioner(shlex.split(command))
+                subprocess.call(shlex.split(command))
 
                 return 1
 
@@ -334,16 +333,16 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                     os.remove('cpanel_litespeed_vendor')
 
                 command = "wget https://waf.comodo.com/api/cpanel_litespeed_vendor"
-                result = ProcessUtilities.executioner(shlex.split(command))
+                result = subprocess.call(shlex.split(command))
 
                 if result == 1:
                     return 0
 
                 command = "unzip cpanel_litespeed_vendor -d " + extractLocation
-                result = ProcessUtilities.executioner(shlex.split(command))
+                result = subprocess.call(shlex.split(command))
 
                 command = 'sudo chown -R lsadm:lsadm /usr/local/lsws/conf'
-                ProcessUtilities.executioner(shlex.split(command))
+                subprocess.call(shlex.split(command))
 
                 print "1,None"
                 return
@@ -398,7 +397,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                 os.remove('owasp.tar.gz')
 
             command = "wget https://" + modSec.mirrorPath + "/modsec/owasp.tar.gz"
-            result = ProcessUtilities.executioner(shlex.split(command))
+            result = subprocess.call(shlex.split(command))
 
             if result == 1:
                 return 0
@@ -573,6 +572,8 @@ def main():
 
     if args.function == "installModSecConfigs":
         modSec.installModSecConfigs()
+    elif args.function == "installModSec":
+        modSec.installModSec()
     elif args.function == "saveModSecConfigs":
         modSec.saveModSecConfigs(args.tempConfigPath)
     elif args.function == "saveModSecRules":

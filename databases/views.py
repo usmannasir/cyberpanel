@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import redirect
+from django.shortcuts import redirect, HttpResponse
 from loginSystem.views import loadLoginPage
 from databaseManager import DatabaseManager
 from pluginManager import pluginManager
 import json
+from plogical.processUtilities import ProcessUtilities
+from loginSystem.models import Administrator
+import CyberCP.settings as settings
 # Create your views here.
 
 def loadDatabaseHome(request):
@@ -116,3 +119,39 @@ def changePassword(request):
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+
+def phpMyAdmin(request):
+    try:
+        userID = request.session['userID']
+        dm = DatabaseManager()
+        return dm.phpMyAdmin(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def setupPHPMYAdminSession(request):
+    try:
+
+        userID = request.session['userID']
+        admin = Administrator.objects.get(id = userID)
+
+        execPath = "sudo python /usr/local/CyberCP/databases/databaseManager.py"
+        execPath = execPath + " generatePHPMYAdminData --userID " + str(userID)
+
+        output = ProcessUtilities.outputExecutioner(execPath)
+
+        if output.find("1,") > -1:
+            request.session['PMA_single_signon_user'] = admin.userName
+            request.session['PMA_single_signon_password'] = output.split(',')[1]
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        else:
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    except BaseException, msg:
+        data_ret = {'status': 0, 'createDBStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)

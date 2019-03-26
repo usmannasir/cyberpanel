@@ -72,14 +72,50 @@ class mysqlUtilities:
                 return 0
 
             cursor.execute("CREATE DATABASE " + dbname)
-            cursor.execute("CREATE USER '" +dbuser+ "'@'localhost' IDENTIFIED BY '"+dbpassword+"'")
-            cursor.execute("GRANT ALL PRIVILEGES ON " +dbname+ ".* TO '" +dbuser+ "'@'localhost'")
+            cursor.execute("CREATE USER '" + dbuser + "'@'localhost' IDENTIFIED BY '"+dbpassword+"'")
+            cursor.execute("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'localhost'")
             connection.close()
 
             return 1
 
         except BaseException, msg:
             mysqlUtilities.deleteDatabase(dbname, dbuser)
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabase]")
+            return 0
+
+    @staticmethod
+    def createDBUser(dbuser, dbpassword):
+        try:
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+
+            cursor.execute("CREATE DATABASE " + dbuser)
+            cursor.execute("CREATE USER '" + dbuser + "'@'localhost' IDENTIFIED BY '" + dbpassword + "'")
+
+            return 1
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDBUser]")
+            return 0
+
+    @staticmethod
+    def allowGlobalUserAccess(globalUser, dbName):
+        try:
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+
+            cursor.execute("GRANT ALL PRIVILEGES ON " + dbName + ".* TO '" + globalUser + "'@'localhost'")
+            connection.close()
+
+            return 1
+
+        except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabase]")
             return 0
 
@@ -116,7 +152,7 @@ class mysqlUtilities:
             cmd = shlex.split(command)
 
             with open(tempStoragePath+"/"+databaseName+'.sql', 'w') as f:
-                res = ProcessUtilities.executioner(cmd,stdout=f)
+                res = subprocess.call(cmd,stdout=f)
 
             if res == 1:
                 logging.CyberCPLogFileWriter.writeToFile("Database: "+databaseName + "could not be backed! [createDatabaseBackup]")
@@ -143,7 +179,7 @@ class mysqlUtilities:
 
 
             with open(tempStoragePath + "/" + databaseName + '.sql', 'r') as f:
-                res = ProcessUtilities.executioner(cmd, stdin=f)
+                res = subprocess.call(cmd, stdin=f)
 
             if res == 1:
                 logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " +databaseName +"! [restoreDatabaseBackup]")
@@ -347,7 +383,7 @@ class mysqlUtilities:
                 command = 'sudo mv /etc/my.cnf.bak /etc/my.cnf'
             else:
                 command = 'sudo mv /etc/mysql/my.cnf.bak /etc/mysql//my.cnf'
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0, str(msg)
 
@@ -383,7 +419,7 @@ class mysqlUtilities:
 
         except BaseException, msg:
             command = 'sudo mv /etc/my.cnf.bak /etc/my.cnf'
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0, str(msg)
 
@@ -608,4 +644,23 @@ class mysqlUtilities:
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[showStatus]")
+            return 0
+
+    @staticmethod
+    def changePassword(userName, dbPassword):
+        try:
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+
+            cursor.execute("use mysql")
+            cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "')")
+            connection.close()
+
+            return 1
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.changePassword]")
             return 0

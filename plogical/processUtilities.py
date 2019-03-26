@@ -39,7 +39,7 @@ class ProcessUtilities:
                 command = "sudo /usr/local/lsws/bin/lswsctrl restart"
 
             cmd = shlex.split(command)
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             if res == 0:
                 return 1
@@ -58,7 +58,7 @@ class ProcessUtilities:
                 command = "sudo /usr/local/lsws/bin/lswsctrl stop"
 
             cmd = shlex.split(command)
-            res = ProcessUtilities.executioner(cmd)
+            res = subprocess.call(cmd)
 
             if res == 0:
                 return 1
@@ -67,6 +67,17 @@ class ProcessUtilities:
 
         except subprocess.CalledProcessError, msg:
             logging.writeToFile(str(msg) + "[stopLitespeed]")
+
+    @staticmethod
+    def normalExecutioner(command):
+        try:
+            res = subprocess.call(shlex.split(command))
+            if res == 0:
+                return 1
+            else:
+                return 0
+        except BaseException, msg:
+            return 0
 
     @staticmethod
     def killLiteSpeed():
@@ -107,7 +118,7 @@ class ProcessUtilities:
     def containerCheck():
         try:
             command = 'sudo cat /etc/cgrules.conf'
-            result = ProcessUtilities.executioner(shlex.split(command))
+            result = subprocess.call(shlex.split(command))
             if result == 1:
                 return 0
             else:
@@ -118,6 +129,7 @@ class ProcessUtilities:
     @staticmethod
     def executioner(command):
         try:
+            logging.writeToFile(command)
             res = subprocess.call(shlex.split(command))
             if res == 0:
                 return 1
@@ -128,11 +140,23 @@ class ProcessUtilities:
 
     @staticmethod
     def outputExecutioner(command):
-        return subprocess.check_output(shlex.split(command))
+        if type(command) == str or type(command) == unicode:
+            logging.writeToFile(command)
+            return subprocess.check_output(shlex.split(command))
+        else:
+            command = " ".join(command)
+            logging.writeToFile(command + " join")
+            return subprocess.check_output(shlex.split(command))
 
     @staticmethod
     def popenExecutioner(command):
-        return subprocess.Popen(shlex.split(command))
+        if type(command) == str or type(command) == unicode:
+            logging.writeToFile(command)
+            return subprocess.Popen(shlex.split(command))
+        else:
+            command = " ".join(command)
+            logging.writeToFile(command)
+            return subprocess.Popen(shlex.split(command))
 
 
 

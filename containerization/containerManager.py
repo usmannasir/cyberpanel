@@ -2,10 +2,10 @@ from django.shortcuts import render
 from plogical.processUtilities import ProcessUtilities
 import threading as multi
 from plogical.acl import ACLManager
-from plogical.mailUtilities import mailUtilities
 import plogical.CyberCPLogFileWriter as logging
 from serverStatus.serverStatusUtil import ServerStatusUtil
 import os, stat
+from plogical.virtualHostUtilities import virtualHostUtilities
 
 
 class ContainerManager(multi.Thread):
@@ -125,24 +125,9 @@ class ContainerManager(multi.Thread):
                                                           1)
                 return 0
 
-            mailUtilities.checkHome()
-
-            statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
-
-            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "Starting Packages Installation..\n", 1)
-
-            command = 'sudo yum install -y libcgroup-tools'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'sudo systemctl enable cgconfig'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'sudo systemctl enable cgred'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "Packages successfully installed.[200]\n", 1)
+            execPath = "sudo python /usr/local/CyberCP/containerization/container.py"
+            execPath = execPath + " --function submitContainerInstall"
+            ProcessUtilities.outputExecutioner(execPath)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)

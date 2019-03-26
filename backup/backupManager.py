@@ -62,7 +62,7 @@ class BackupManager:
                 ext = ".tar.gz"
 
                 command = 'sudo chown -R  cyberpanel:cyberpanel ' + path
-                ProcessUtilities.executioner(command)
+                ACLManager.executeCall(command)
 
                 files = os.listdir(path)
                 for filename in files:
@@ -169,16 +169,16 @@ class BackupManager:
             ## read file name
 
             try:
-                execPath = "sudo cat " + backupFileNamePath
-                fileName = ProcessUtilities.outputExecutioner(execPath)
+                command = "sudo cat " + backupFileNamePath
+                fileName = subprocess.check_output(shlex.split(command))
             except:
                 fileName = "Fetching.."
 
             ## file name read ends
 
             if os.path.exists(status):
-                execPath = "sudo cat " + status
-                status = ProcessUtilities.outputExecutioner(execPath)
+                command = "sudo cat " + status
+                status = subprocess.check_output(shlex.split(command))
 
                 if status.find("Completed") > -1:
 
@@ -202,14 +202,14 @@ class BackupManager:
 
                     ### Removing Files
 
-                    execPath = 'sudo rm -f ' + status
-                    ProcessUtilities.executioner(execPath)
+                    command = 'sudo rm -f ' + status
+                    subprocess.call(shlex.split(command))
 
-                    execPath = 'sudo rm -f ' + backupFileNamePath
-                    ProcessUtilities.executioner(execPath)
+                    command = 'sudo rm -f ' + backupFileNamePath
+                    subprocess.call(shlex.split(command))
 
-                    execPath = 'sudo rm -f ' + pid
-                    ProcessUtilities.executioner(execPath)
+                    command = 'sudo rm -f ' + pid
+                    subprocess.call(shlex.split(command))
 
                     final_json = json.dumps(
                         {'backupStatus': 1, 'error_message': "None", "status": status, "abort": 1,
@@ -219,14 +219,14 @@ class BackupManager:
                 elif status.find("[5009]") > -1:
                     ## removing status file, so that backup can re-run
                     try:
-                        execPath = 'sudo rm -f ' + status
-                        ProcessUtilities.executioner(execPath)
+                        command = 'sudo rm -f ' + status
+                        subprocess.call(shlex.split(command))
 
-                        execPath = 'sudo rm -f ' + backupFileNamePath
-                        ProcessUtilities.executioner(execPath)
+                        command = 'sudo rm -f ' + backupFileNamePath
+                        subprocess.call(shlex.split(command))
 
-                        execPath = 'sudo rm -f ' + pid
-                        ProcessUtilities.executioner(execPath)
+                        command = 'sudo rm -f ' + pid
+                        subprocess.call(shlex.split(command))
 
                         backupObs = Backups.objects.filter(fileName=fileName)
                         for items in backupObs:
@@ -261,9 +261,10 @@ class BackupManager:
             fileName = data['fileName']
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+
             execPath = execPath + " cancelBackupCreation --backupCancellationDomain " + backupCancellationDomain + " --fileName " + fileName
 
-            ProcessUtilities.executioner(execPath)
+            subprocess.call(shlex.split(execPath))
 
             try:
                 backupOb = Backups.objects.get(fileName=fileName)
@@ -287,8 +288,8 @@ class BackupManager:
             domainName = backup.website.domain
 
             path = "/home/" + domainName + "/backup/" + backup.fileName + ".tar.gz"
-            execPath = 'sudo rm -f ' + path
-            ProcessUtilities.executioner(execPath)
+            command = 'sudo rm -f ' + path
+            ACLManager.executeCall(command)
 
             backup.delete()
 
@@ -340,12 +341,12 @@ class BackupManager:
             if os.path.exists(path):
                 try:
                     execPath = "sudo cat " + path + "/status"
-                    status = ProcessUtilities.outputExecutioner(execPath)
+                    status = subprocess.check_output(shlex.split(execPath))
 
                     if status.find("Done") > -1:
 
-                        execPath = "sudo rm -rf " + path
-                        ProcessUtilities.executioner(execPath)
+                        command = "sudo rm -rf " + path
+                        subprocess.call(shlex.split(command))
 
                         final_json = json.dumps(
                             {'restoreStatus': 1, 'error_message': "None", "status": status, 'abort': 1,
@@ -353,8 +354,8 @@ class BackupManager:
                         return HttpResponse(final_json)
                     elif status.find("[5009]") > -1:
                         ## removing temporarily generated files while restoring
-                        execPath = "sudo rm -rf " + path
-                        ProcessUtilities.executioner(execPath)
+                        command = "sudo rm -rf " + path
+                        subprocess.call(shlex.split(command))
                         final_json = json.dumps({'restoreStatus': 1, 'error_message': "None",
                                                  "status": status, 'abort': 1, 'alreadyRunning': 0,
                                                  'running': 'Error'})
@@ -506,7 +507,7 @@ class BackupManager:
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " getConnectionStatus --ipAddress " + ipAddress
 
-            output = ProcessUtilities.outputExecutioner(execPath)
+            output = subprocess.check_output(shlex.split(execPath))
 
             if output.find('1,') > -1:
                 final_dic = {'connStatus': 1, 'error_message': "None"}
@@ -648,6 +649,7 @@ class BackupManager:
             ## check if already exists
             try:
                 schedule = backupSchedules.objects.get(frequency=backupFreq)
+
                 if schedule.dest.destLoc == backupDest:
                     final_json = json.dumps(
                         {'scheduleStatus': 0, 'error_message': "This schedule already exists"})
@@ -655,175 +657,68 @@ class BackupManager:
                 else:
                     if backupDest == "Home" and backupFreq == "Daily":
                         cronJob = "0 3 * * 0-6 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
-
-                        virtualHostUtilities.permissionControl(path)
-
-                        writeToFile = open(path, 'a')
-                        writeToFile.writelines(cronJob + "\n")
-                        writeToFile.close()
-
-                        virtualHostUtilities.leaveControl(path)
-
-                        execPath = "sudo systemctl restart crond"
-                        ProcessUtilities.executioner(execPath)
-
-                        destination = dest.objects.get(destLoc=backupDest)
-                        newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
-                        newSchedule.save()
-
-                        final_json = json.dumps({'scheduleStatus': 1, 'error_message': "None"})
-                        return HttpResponse(final_json)
-
                     elif backupDest == "Home" and backupFreq == "Weekly":
                         cronJob = "0 3 * * 3 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py "
-
-                        virtualHostUtilities.permissionControl(path)
-
-                        writeToFile = open(path, 'a')
-                        writeToFile.writelines(cronJob + "\n")
-                        writeToFile.close()
-
-                        virtualHostUtilities.leaveControl(path)
-
-                        execPath = "sudo systemctl restart crond"
-
-                        ProcessUtilities.executioner(execPath)
-
-                        destination = dest.objects.get(destLoc=backupDest)
-                        newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
-                        newSchedule.save()
-
-                        final_json = json.dumps({'scheduleStatus': 1, 'error_message': "None"})
-                        return HttpResponse(final_json)
-
                     elif backupDest != "Home" and backupFreq == "Daily":
                         cronJob = "0 3 * * 0-6 root python /usr/local/CyberCP/plogical/backupSchedule.py"
-
-                        virtualHostUtilities.permissionControl(path)
-
-                        writeToFile = open(path, 'a')
-                        writeToFile.writelines(cronJob + "\n")
-                        writeToFile.close()
-
-                        virtualHostUtilities.leaveControl(path)
-
-                        execPath = "sudo systemctl restart crond"
-
-                        ProcessUtilities.executioner(execPath)
-
-                        destination = dest.objects.get(destLoc=backupDest)
-                        newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
-                        newSchedule.save()
-
-                        final_json = json.dumps({'scheduleStatus': 1, 'error_message': "None"})
-                        return HttpResponse(final_json)
-
                     elif backupDest != "Home" and backupFreq == "Weekly":
                         cronJob = "0 3 * * 3 root python /usr/local/CyberCP/plogical/backupSchedule.py "
 
-                        virtualHostUtilities.permissionControl(path)
+                    command = "cat " + path
+                    output = ProcessUtilities.outputExecutioner(command)
 
-                        writeToFile = open(path, 'a')
-                        writeToFile.writelines(cronJob + "\n")
-                        writeToFile.close()
+                    finalCronJob = output + cronJob
+                    tempCronPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-                        virtualHostUtilities.leaveControl(path)
+                    writeToFile = open(tempCronPath, 'a')
+                    writeToFile.writelines(finalCronJob + "\n")
+                    writeToFile.close()
 
-                        execPath = "sudo systemctl restart crond"
-                        ProcessUtilities.executioner(execPath)
+                    command = "sudo mv " + tempCronPath + " " + path
+                    ProcessUtilities.executioner(command)
 
-                        destination = dest.objects.get(destLoc=backupDest)
-                        newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
-                        newSchedule.save()
+                    command = "sudo systemctl restart crond"
+                    ProcessUtilities.executioner(command)
 
-                        final_json = json.dumps({'scheduleStatus': 1, 'error_message': "None"})
-                        return HttpResponse(final_json)
+                    destination = dest.objects.get(destLoc=backupDest)
+                    newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
+                    newSchedule.save()
+
+                    final_json = json.dumps({'scheduleStatus': 1, 'error_message': "None"})
+                    return HttpResponse(final_json)
             except:
                 if backupDest == "Home" and backupFreq == "Daily":
                     cronJob = "0 3 * * 0-6 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
-
-                    virtualHostUtilities.permissionControl(path)
-
-                    writeToFile = open(path, 'a')
-                    writeToFile.writelines(cronJob + "\n")
-                    writeToFile.close()
-
-                    virtualHostUtilities.leaveControl(path)
-
-                    execPath = "sudo systemctl restart crond"
-                    ProcessUtilities.executioner(execPath)
-
-                    destination = dest.objects.get(destLoc=backupDest)
-                    newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
-                    newSchedule.save()
-
-                    final_json = json.dumps({'scheduleStatus': 1, 'error_message': "None"})
-                    return HttpResponse(final_json)
-
                 elif backupDest == "Home" and backupFreq == "Weekly":
-                    cronJob = "0 3 * * 3 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py "
-
-                    virtualHostUtilities.permissionControl(path)
-
-                    writeToFile = open(path, 'a')
-                    writeToFile.writelines(cronJob + "\n")
-                    writeToFile.close()
-
-                    virtualHostUtilities.leaveControl(path)
-
-                    execPath = "sudo systemctl restart crond"
-                    ProcessUtilities.executioner(execPath)
-
-                    destination = dest.objects.get(destLoc=backupDest)
-                    newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
-                    newSchedule.save()
-
-                    final_json = json.dumps({'scheduleStatus': 1, 'error_message': "None"})
-                    return HttpResponse(final_json)
-
+                    cronJob = "0 3 * * 3 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
                 elif backupDest != "Home" and backupFreq == "Daily":
                     cronJob = "0 3 * * 0-6 root python /usr/local/CyberCP/plogical/backupSchedule.py"
 
-                    virtualHostUtilities.permissionControl(path)
-
-                    writeToFile = open(path, 'a')
-                    writeToFile.writelines(cronJob + "\n")
-                    writeToFile.close()
-
-                    virtualHostUtilities.leaveControl(path)
-
-                    execPath = "sudo systemctl restart crond"
-
-                    ProcessUtilities.executioner(execPath)
-
-                    destination = dest.objects.get(destLoc=backupDest)
-                    newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
-                    newSchedule.save()
-
-                    final_json = json.dumps({'scheduleStatus': 1, 'error_message': "None"})
-                    return HttpResponse(final_json)
-
                 elif backupDest != "Home" and backupFreq == "Weekly":
-                    cronJob = "0 3 * * 3 root python /usr/local/CyberCP/plogical/backupSchedule.py "
+                    cronJob = "0 3 * * 3 root python /usr/local/CyberCP/plogical/backupSchedule.py"
 
-                    virtualHostUtilities.permissionControl(path)
+                command = "cat " + path
+                output = ProcessUtilities.outputExecutioner(command)
 
-                    writeToFile = open(path, 'a')
-                    writeToFile.writelines(cronJob + "\n")
-                    writeToFile.close()
+                finalCronJob = output + cronJob
+                tempCronPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-                    virtualHostUtilities.leaveControl(path)
+                writeToFile = open(tempCronPath, 'a')
+                writeToFile.writelines(finalCronJob + "\n")
+                writeToFile.close()
 
-                    execPath = "sudo systemctl restart crond"
+                command = "sudo mv " + tempCronPath + " " + path
+                ProcessUtilities.executioner(command)
 
-                    ProcessUtilities.executioner(execPath)
+                command = "sudo systemctl restart crond"
+                ProcessUtilities.executioner(command)
 
-                    destination = dest.objects.get(destLoc=backupDest)
-                    newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
-                    newSchedule.save()
+                destination = dest.objects.get(destLoc=backupDest)
+                newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
+                newSchedule.save()
 
-                    final_json = json.dumps({'scheduleStatus': 1, 'error_message': "None"})
-                    return HttpResponse(final_json)
+                final_json = json.dumps({'scheduleStatus': 1, 'error_message': "None"})
+                return HttpResponse(final_json)
 
         except BaseException, msg:
             final_json = json.dumps({'scheduleStatus': 0, 'error_message': str(msg)})
@@ -838,120 +733,48 @@ class BackupManager:
 
             backupDest = data['destLoc']
             backupFreq = data['frequency']
+            findTxt = ""
+
+            if backupDest == "Home" and backupFreq == "Daily":
+                findTxt = "0-6"
+            elif backupDest == "Home" and backupFreq == "Weekly":
+                findTxt = "* 3"
+            elif backupDest != "Home" and backupFreq == "Daily":
+                findTxt = "0-6"
+            elif backupDest != "Home" and backupFreq == "Weekly":
+                findTxt = "* 3"
+
+            ###
 
             path = "/etc/crontab"
 
-            if backupDest == "Home" and backupFreq == "Daily":
+            command = "cat " + path
+            output = ProcessUtilities.outputExecutioner(command).split('\n')
+            tempCronPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-                virtualHostUtilities.permissionControl(path)
+            writeToFile = open(tempCronPath, 'w')
 
-                data = open(path, "r").readlines()
-                writeToFile = open(path, 'w')
+            for items in output:
+                if items.find(findTxt) > -1 and items.find("backupScheduleLocal.py") > -1:
+                    continue
+                else:
+                    writeToFile.writelines(items + '\n')
 
-                for items in data:
-                    if items.find("0-6") > -1 and items.find("backupScheduleLocal.py") > -1:
-                        continue
-                    else:
-                        writeToFile.writelines(items)
+            writeToFile.close()
 
-                writeToFile.close()
+            command = "sudo mv " + tempCronPath + " " + path
+            ProcessUtilities.executioner(command)
 
-                virtualHostUtilities.leaveControl(path)
+            command = "sudo systemctl restart crond"
 
-                execPath = "sudo systemctl restart crond"
+            subprocess.call(shlex.split(command))
 
-                ProcessUtilities.executioner(execPath)
+            destination = dest.objects.get(destLoc=backupDest)
+            newSchedule = backupSchedules.objects.get(dest=destination, frequency=backupFreq)
+            newSchedule.delete()
 
-                destination = dest.objects.get(destLoc=backupDest)
-                newSchedule = backupSchedules.objects.get(dest=destination, frequency=backupFreq)
-                newSchedule.delete()
-
-                final_json = json.dumps({'delStatus': 1, 'error_message': "None"})
-                return HttpResponse(final_json)
-
-            elif backupDest == "Home" and backupFreq == "Weekly":
-
-                virtualHostUtilities.permissionControl(path)
-
-                data = open(path, "r").readlines()
-                writeToFile = open(path, 'w')
-
-                for items in data:
-                    if items.find("* 3") > -1 and items.find("backupScheduleLocal.py") > -1:
-                        continue
-                    else:
-                        writeToFile.writelines(items)
-
-                writeToFile.close()
-
-                virtualHostUtilities.leaveControl(path)
-
-                execPath = "sudo systemctl restart crond"
-
-                ProcessUtilities.executioner(execPath)
-
-                destination = dest.objects.get(destLoc=backupDest)
-                newSchedule = backupSchedules.objects.get(dest=destination, frequency=backupFreq)
-                newSchedule.delete()
-
-                final_json = json.dumps({'delStatus': 1, 'error_message': "None"})
-                return HttpResponse(final_json)
-
-            elif backupDest != "Home" and backupFreq == "Daily":
-
-                virtualHostUtilities.permissionControl(path)
-
-                data = open(path, "r").readlines()
-                writeToFile = open(path, 'w')
-
-                for items in data:
-                    if items.find("0-6") > -1 and items.find("backupSchedule.py") > -1:
-                        continue
-                    else:
-                        writeToFile.writelines(items)
-
-                writeToFile.close()
-
-                virtualHostUtilities.leaveControl(path)
-
-                execPath = "sudo systemctl restart crond"
-
-                ProcessUtilities.executioner(execPath)
-
-                destination = dest.objects.get(destLoc=backupDest)
-                newSchedule = backupSchedules.objects.get(dest=destination, frequency=backupFreq)
-                newSchedule.delete()
-
-                final_json = json.dumps({'delStatus': 1, 'error_message': "None"})
-                return HttpResponse(final_json)
-
-            elif backupDest != "Home" and backupFreq == "Weekly":
-
-                virtualHostUtilities.permissionControl(path)
-
-                data = open(path, "r").readlines()
-                writeToFile = open(path, 'w')
-
-                for items in data:
-                    if items.find("* 3") > -1 and items.find("backupSchedule.py") > -1:
-                        continue
-                    else:
-                        writeToFile.writelines(items)
-
-                writeToFile.close()
-
-                virtualHostUtilities.leaveControl(path)
-
-                execPath = "sudo systemctl restart crond"
-
-                ProcessUtilities.executioner(execPath)
-
-                destination = dest.objects.get(destLoc=backupDest)
-                newSchedule = backupSchedules.objects.get(dest=destination, frequency=backupFreq)
-                newSchedule.delete()
-
-                final_json = json.dumps({'delStatus': 1, 'error_message': "None"})
-                return HttpResponse(final_json)
+            final_json = json.dumps({'delStatus': 1, 'error_message': "None"})
+            return HttpResponse(final_json)
 
         except BaseException, msg:
             final_json = json.dumps({'delStatus': 0, 'error_message': str(msg)})
@@ -1125,8 +948,8 @@ class BackupManager:
                     localBackupDir = os.path.join("/home", "backup")
 
                     if not os.path.exists(localBackupDir):
-                        execPath = "sudo mkdir " + localBackupDir
-                        ProcessUtilities.executioner(execPath)
+                        command = "sudo mkdir " + localBackupDir
+                        subprocess.call(shlex.split(command))
 
                     ## create local directory that will host backups
 
@@ -1134,8 +957,8 @@ class BackupManager:
 
                     ## making local storage directory for backups
 
-                    execPath = "sudo mkdir " + localStoragePath
-                    ProcessUtilities.executioner(execPath)
+                    command = "sudo mkdir " + localStoragePath
+                    subprocess.call(shlex.split(command))
 
                     final_json = json.dumps(
                         {'remoteTransferStatus': 1, 'error_message': "None", "dir": data['dir']})
@@ -1249,18 +1072,18 @@ class BackupManager:
             time.sleep(3)
 
             if os.path.isfile(backupLogPath):
-                execPath = "sudo cat " + backupLogPath
-                status = ProcessUtilities.outputExecutioner(execPath)
+                command = "sudo cat " + backupLogPath
+                status = ProcessUtilities.outputExecutioner(command)
 
                 if status.find("completed[success]") > -1:
                     command = "sudo rm -rf " + removalPath
-                    # ProcessUtilities.executioner(shlex.split(command))
+                    # subprocess.call(shlex.split(command))
                     data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 1}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
                 elif status.find("[5010]") > -1:
                     command = "sudo rm -rf " + removalPath
-                    # ProcessUtilities.executioner(shlex.split(command))
+                    # subprocess.call(shlex.split(command))
                     data = {'remoteTransferStatus': 0, 'error_message': status,
                             "status": "None", "complete": 0}
                     json_data = json.dumps(data)
@@ -1307,14 +1130,14 @@ class BackupManager:
             path = "/home/backup/transfer-" + str(dir)
             pathpid = path + "/pid"
 
-            execPath = "sudo cat " + pathpid
-            pid = ProcessUtilities.outputExecutioner(execPath)
+            command = "sudo cat " + pathpid
+            pid = ProcessUtilities.outputExecutioner(command)
 
-            execPath = "sudo kill -KILL " + pid
-            ProcessUtilities.executioner(execPath)
+            command = "sudo kill -KILL " + pid
+            ProcessUtilities.executioner(command)
 
-            execPath = "sudo rm -rf " + path
-            ProcessUtilities.executioner(execPath)
+            command = "sudo rm -rf " + path
+            ProcessUtilities.executioner(command)
 
             data = {'cancelStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data)

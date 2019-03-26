@@ -31,7 +31,7 @@ class CyberCPLogFileWriter:
     def readLastNFiles(numberOfLines,fileName):
         try:
 
-            lastFewLines = ProcessUtilities.outputExecutioner(["tail", "-n",str(numberOfLines),fileName])
+            lastFewLines = subprocess.check_output(["tail", "-n",str(numberOfLines),fileName])
 
             return lastFewLines
 

@@ -20,7 +20,7 @@ import shlex
 from plogical.virtualHostUtilities import virtualHostUtilities
 from random import randint
 from plogical.acl import ACLManager
-
+from plogical.processUtilities import ProcessUtilities
 
 # Create your views here.
 
@@ -54,7 +54,7 @@ def fetchPolicyServerStatus(request):
             if request.method == 'POST':
 
                 command = 'sudo cat /etc/postfix/main.cf'
-                output = ProcessUtilities.outputExecutioner(shlex.split(command)).split('\n')
+                output = ProcessUtilities.outputExecutioner(command).split('\n')
 
                 installCheck = 0
 
@@ -104,10 +104,8 @@ def savePolicyServerStatus(request):
                 ## save configuration data
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
-
                 execPath = execPath + " savePolicyServerStatus --install " + install
-
-                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:
                     data_ret = {'status': 1, 'error_message': "None"}
@@ -148,7 +146,7 @@ def listDomains(request):
             ## Check if Policy Server is installed.
 
             command = 'sudo cat /etc/postfix/main.cf'
-            output = ProcessUtilities.outputExecutioner(shlex.split(command)).split('\n')
+            output = ProcessUtilities.outputExecutioner(command).split('\n')
 
             installCheck = 0
 
@@ -806,15 +804,13 @@ def installStatusSpamAssassin(request):
             if request.method == 'POST':
 
                 command = "sudo cat " + mailUtilities.spamassassinInstallLogPath
-                installStatus = ProcessUtilities.outputExecutioner(shlex.split(command))
+                installStatus = ProcessUtilities.outputExecutioner(command)
 
                 if installStatus.find("[200]")>-1:
 
                     execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
-
                     execPath = execPath + " configureSpamAssassin"
-
-                    output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
+                    output = ProcessUtilities.outputExecutioner(execPath)
 
                     if output.find("1,None") > -1:
                         pass
@@ -884,7 +880,7 @@ def fetchSpamAssassinSettings(request):
 
                     command = "sudo cat " + confPath
 
-                    data = ProcessUtilities.outputExecutioner(shlex.split(command)).splitlines()
+                    data = ProcessUtilities.outputExecutioner(command).splitlines()
 
                     for items in data:
                         if items.find('report_safe ') > -1:
@@ -984,10 +980,8 @@ def saveSpamAssassinConfigurations(request):
                 ## save configuration data
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
-
                 execPath = execPath + " saveSpamAssassinConfigs --tempConfigPath " + tempConfigPath
-
-                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:
                     data_ret = {'saveStatus': 1, 'error_message': "None"}

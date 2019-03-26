@@ -1273,10 +1273,13 @@ def submitExtensionRequest(request):
                 type = data['type']
 
                 if type == "install":
-                    phpUtilities.initiateInstall(extensionName)
-
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+                    execPath = execPath + " installPHPExtension --extension " + extensionName
                 else:
-                    phpUtilities.initiateRemoval(extensionName)
+                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+                    execPath = execPath + " unInstallPHPExtension --extension " + extensionName
+
+                ProcessUtilities.popenExecutioner(execPath)
 
                 final_json = json.dumps({'extensionRequestStatus': 1, 'error_message': "None"})
                 return HttpResponse(final_json)
@@ -1448,7 +1451,8 @@ def getCurrentPHPConfig(request):
                 upload_max_filesize = ""
                 max_input_time = ""
 
-                data = open(path, 'r').readlines()
+                command = "sudo cat " + path
+                data = ProcessUtilities.outputExecutioner(command).split('\n')
 
                 for items in data:
                     if items.find("allow_url_fopen") > -1 and items.find("=") > -1:
@@ -1549,10 +1553,9 @@ def savePHPConfigBasic(request):
                 ##
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
-
                 execPath = execPath + " savePHPConfigBasic --phpVers " + phpVers + " --allow_url_fopen '" + allow_url_fopen + "' --display_errors '" + display_errors + "' --file_uploads '" + file_uploads + "' --allow_url_include '" + allow_url_include + "' --memory_limit " + memory_limit + " --max_execution_time " + max_execution_time + " --upload_max_filesize " + upload_max_filesize + " --max_input_time " + max_input_time + " --post_max_size " + post_max_size
 
-                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:
                     data_ret = {'saveStatus': 1}
@@ -1598,7 +1601,8 @@ def getCurrentAdvancedPHPConfig(request):
                     completeName = str(initial) + '.' + str(final)
                     path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
 
-                configData = open(path, "r").read()
+                command = "sudo cat " + path
+                configData = ProcessUtilities.outputExecutioner(command)
 
                 status = {"fetchStatus": 1, "configData": configData}
                 final_json = json.dumps(status)
@@ -1641,16 +1645,13 @@ def savePHPConfigAdvance(request):
                 tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
                 vhost = open(tempPath, "w")
-
                 vhost.write(data['configData'])
-
                 vhost.close()
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
-
                 execPath = execPath + " savePHPConfigAdvance --phpVers " + path + " --tempPath " + tempPath
 
-                output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:
                     status = {"saveStatus": 1, "configData": data['configData']}

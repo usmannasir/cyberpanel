@@ -13,12 +13,11 @@ from loginSystem.models import Administrator
 import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 from websiteFunctions.models import Websites
-import subprocess
 from plogical.virtualHostUtilities import virtualHostUtilities
-import shlex
 from plogical.ftpUtilities import FTPUtilities
 import os
 from plogical.acl import ACLManager
+from plogical.processUtilities import ProcessUtilities
 
 class FTPManager:
     def __init__(self, request):
@@ -85,7 +84,9 @@ class FTPManager:
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/ftpUtilities.py"
             execPath = execPath + " submitFTPCreation --domainName " + domainName + " --userName " + userName \
                        + " --password " + password + " --path " + path + " --owner " + admin.userName  + ' --api ' + api
-            output = ProcessUtilities.outputExecutioner(shlex.split(execPath))
+            output = ProcessUtilities.outputExecutioner(execPath)
+
+
             if output.find("1,None") > -1:
                 data_ret = {'status': 1, 'creatFTPStatus': 1, 'error_message': 'None'}
                 json_data = json.dumps(data_ret)

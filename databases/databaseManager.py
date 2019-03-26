@@ -9,18 +9,25 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 import json
 from plogical.acl import ACLManager
-import subprocess, shlex
 import plogical.CyberCPLogFileWriter as logging
 from plogical.mysqlUtilities import mysqlUtilities
 from websiteFunctions.models import Websites
 from databases.models import Databases
-from plogical.processUtilities import ProcessUtilities
+import argparse
+from loginSystem.models import Administrator
+import plogical.randomPassword as randomPassword
 
 class DatabaseManager:
 
     def loadDatabaseHome(self, request = None, userID = None):
         try:
             return render(request, 'databases/index.html')
+        except BaseException, msg:
+            return HttpResponse(str(msg))
+
+    def phpMyAdmin(self, request = None, userID = None):
+        try:
+            return render(request, 'databases/phpMyAdmin.html')
         except BaseException, msg:
             return HttpResponse(str(msg))
 
@@ -165,19 +172,10 @@ class DatabaseManager:
             userName = data['dbUserName']
             dbPassword = data['dbPassword']
 
-            passFile = "/etc/cyberpanel/mysqlPassword"
 
-            f = open(passFile)
-            data = f.read()
-            password = data.split('\n', 1)[0]
+            res = mysqlUtilities.changePassword(userName, dbPassword)
 
-            passwordCMD = "use mysql;SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "');FLUSH PRIVILEGES;"
-
-            command = 'sudo mysql -u root -p' + password + ' -e "' + passwordCMD + '"'
-            cmd = shlex.split(command)
-            res = ProcessUtilities.executioner(cmd)
-
-            if res == 1:
+            if res == 0:
                 data_ret = {'status': 0, 'changePasswordStatus': 0,'error_message': "Please see CyberPanel main log file."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -190,3 +188,48 @@ class DatabaseManager:
             data_ret = {'status': 0, 'changePasswordStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+    @staticmethod
+    def generatePHPMYAdminData(userID):
+        try:
+
+            admin = Administrator.objects.get(id=userID)
+            path = '/etc/cyberpanel/' + admin.userName
+
+
+            currentACL = ACLManager.loadedACL(userID)
+            websiteOBJs = ACLManager.findWebsiteObjects(currentACL, userID)
+            finalUserPassword = randomPassword.generate_pass()
+
+            writeToFile = open(path, 'w')
+            writeToFile.write(finalUserPassword)
+            writeToFile.close()
+
+            mysqlUtilities.createDBUser(admin.userName, finalUserPassword)
+            mysqlUtilities.changePassword(admin.userName, finalUserPassword)
+
+            for webs in websiteOBJs:
+                for db in webs.databases_set.all():
+                    mysqlUtilities.allowGlobalUserAccess(admin.userName, db.dbName)
+
+            print "1," + finalUserPassword
+
+        except BaseException, msg:
+            print "0," + str(msg)
+
+def main():
+
+    parser = argparse.ArgumentParser(description='CyberPanel Installer')
+    parser.add_argument('function', help='Specific a function to call!')
+
+    parser.add_argument('--userID', help='Logged in user ID')
+
+
+    args = parser.parse_args()
+
+    if args.function == "generatePHPMYAdminData":
+        DatabaseManager.generatePHPMYAdminData(int(args.userID))
+
+
+if __name__ == "__main__":
+    main()

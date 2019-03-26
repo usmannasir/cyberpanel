@@ -18,12 +18,13 @@ class InstallCyberPanel:
     mysql_Root_password = ""
     mysqlPassword = ""
 
-    def __init__(self, rootPath, cwd, distro, ent, serial = None):
+    def __init__(self, rootPath, cwd, distro, ent, serial = None, port = None):
         self.server_root_path = rootPath
         self.cwd = cwd
         self.distro = distro
         self.ent = ent
         self.serial = serial
+        self.port = port
 
     @staticmethod
     def stdOut(message, log=0, exit=0, code=os.EX_OK):
@@ -337,7 +338,7 @@ class InstallCyberPanel:
 
             while (1):
                 command = "systemctl start mysqld@1"
-                res = ProcessUtilities.executioner(shlex.split(command))
+                res = subprocess.call(shlex.split(command))
 
                 if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
@@ -357,7 +358,7 @@ class InstallCyberPanel:
 
             while (1):
                 command = "systemctl enable mysqld@1"
-                res = ProcessUtilities.executioner(shlex.split(command))
+                res = subprocess.call(shlex.split(command))
 
                 if install.preFlightsChecks.resFailed(self.distro, res):
                     count = count + 1
@@ -546,7 +547,7 @@ class InstallCyberPanel:
                     shutil.copy(ftpdPath + "/pureftpd-mysql.conf", '/etc/pure-ftpd/db/mysql.conf')
 
                 command = 'echo 1 > /etc/pure-ftpd/conf/TLS'
-                ProcessUtilities.executioner(command, shell=True)
+                subprocess.call(command, shell=True)
 
                 command = 'systemctl restart pure-ftpd-mysql.service'
                 install.preFlightsChecks.call(command, self.distro, '[installPureFTPDConfigurations]',
@@ -565,12 +566,12 @@ class InstallCyberPanel:
 
             if self.distro == ubuntu:
                 command = 'systemctl stop systemd-resolved'
-                res = ProcessUtilities.executioner(shlex.split(command))
+                res = subprocess.call(shlex.split(command))
                 if res != 0:
                     InstallCyberPanel.stdOut('Unable to stop systemd.resolved, prohits install of PowerDNS, error #' +
                                              str(res), 1, 1, os.EX_OSERR)
                 command = 'systemctl disable systemd-resolved.service'
-                res = ProcessUtilities.executioner(shlex.split(command))
+                res = subprocess.call(shlex.split(command))
                 if res != 0:
                     InstallCyberPanel.stdOut(
                         'Unable to disable systemd.resolved, prohits install of PowerDNS, error #' +
@@ -684,83 +685,6 @@ class InstallCyberPanel:
         except BaseException, msg:
             logging.InstallLog.writeToFile(str(msg) + " [startPowerDNS]")
 
-    def installLSCPD(self):
-        try:
-
-            InstallCyberPanel.stdOut("Starting LSCPD installation..", 1)
-
-            os.chdir(self.cwd)
-
-            if self.distro == ubuntu:
-                command = "apt-get -y install gcc g++ make autoconf rcs"
-            else:
-                command = 'yum -y install gcc gcc-c++ make autoconf glibc rcs'
-
-            install.preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                          'Install LSCPD',
-                                          1, 1, os.EX_OSERR)
-
-            if self.distro == ubuntu:
-                command = "apt-get -y install libpcre3 libpcre3-dev openssl libexpat1 libexpat1-dev libgeoip-dev" \
-                          " zlib1g zlib1g-dev libudns-dev whichman curl"
-            else:
-                command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel' \
-                          ' which curl'
-            install.preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                          'Install LSCPD',
-                                          1, 1, os.EX_OSERR)
-
-
-            command = 'tar zxf lscp.tar.gz -C /usr/local/'
-            install.preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                          'Install LSCPD',
-                                          1, 1, os.EX_OSERR)
-
-
-            command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /usr/local/lscp/key.pem -out /usr/local/lscp/cert.pem'
-            install.preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                          'Install LSCPD',
-                                          1, 1, os.EX_OSERR)
-
-            try:
-                os.remove("/usr/local/lscp/fcgi-bin/lsphp")
-                shutil.copy("/usr/local/lsws/lsphp70/bin/lsphp","/usr/local/lscp/fcgi-bin/lsphp")
-            except:
-                pass
-
-            if self.distro == centos:
-                command = 'adduser lscpd -M -d /usr/local/lscp'
-            else:
-                command = 'useradd lscpd -M -d /usr/local/lscp'
-
-            install.preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                          'Install LSCPD',
-                                          1, 0, os.EX_OSERR)
-
-            if self.distro == centos:
-                command = 'groupadd lscpd'
-                install.preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                              'Install LSCPD',
-                                              1, 0, os.EX_OSERR)
-                # Added group in useradd for Ubuntu
-
-            command = 'usermod -a -G lscpd lscpd'
-            install.preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                          'Install LSCPD',
-                                          1, 0, os.EX_OSERR)
-
-            command = 'usermod -a -G lsadm lscpd'
-            install.preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                          'Install LSCPD',
-                                          1, 0, os.EX_OSERR)
-
-            os.mkdir('/usr/local/lscp/cyberpanel')
-
-            InstallCyberPanel.stdOut("LSCPD successfully installed!", 1)
-
-        except BaseException, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [startPowerDNS]")
-
 
 def Main(cwd, mysql, distro, ent, serial = None):
 
@@ -810,5 +734,3 @@ def Main(cwd, mysql, distro, ent, serial = None):
     installer.installPowerDNS()
     installer.installPowerDNSConfigurations(InstallCyberPanel.mysqlPassword, mysql)
     installer.startPowerDNS()
-
-    installer.installLSCPD()

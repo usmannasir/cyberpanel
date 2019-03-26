@@ -54,10 +54,10 @@ def changePermissions(request):
             externalApp = website.externalApp
 
             command = "sudo chown -R " + externalApp + ":" + externalApp +" /home/"+domainName
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
             command = "sudo chown -R lscpd:lscpd /home/" + domainName+"/logs"
-            ProcessUtilities.executioner(shlex.split(command))
+            subprocess.call(shlex.split(command))
 
             data_ret = {'permissionsChanged': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)

@@ -12,8 +12,6 @@ from random import randint
 from websiteFunctions.models import Websites
 import os
 from baseTemplate.models import version
-import subprocess
-import shlex
 from plogical.mailUtilities import mailUtilities
 from plogical.website import WebsiteManager
 from loginSystem.models import ACL
@@ -120,6 +118,8 @@ def changeUserPassAPI(request):
             websiteOwn = Administrator.objects.get(userName=websiteOwner)
             websiteOwn.password = hashPassword.hash_password(ownerPassword)
             websiteOwn.save()
+
+
 
             data_ret = {'changeStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
@@ -380,8 +380,8 @@ def FetchRemoteTransferStatus(request):
             dir = "/home/backup/transfer-"+str(data['dir'])+"/backup_log"
 
             try:
-                execPath = "sudo cat "+ dir
-                status = ProcessUtilities.outputExecutioner(execPath)
+                command = "sudo cat "+ dir
+                status = ProcessUtilities.outputExecutioner(command)
 
                 admin = Administrator.objects.get(userName=username)
                 if hashPassword.check_password(admin.password, password):
@@ -417,14 +417,14 @@ def cancelRemoteTransfer(request):
 
                 path = dir + "/pid"
 
-                execPath = "sudo cat " + path
-                pid = ProcessUtilities.outputExecutioner(execPath)
+                command = "sudo cat " + path
+                pid = ProcessUtilities.outputExecutioner(command)
 
-                execPath = "sudo kill -KILL " + pid
-                ProcessUtilities.executioner(execPath)
+                command = "sudo kill -KILL " + pid
+                ProcessUtilities.executioner(command)
 
-                execPath = "sudo rm -rf " + dir
-                ProcessUtilities.executioner(execPath)
+                command = "sudo rm -rf " + dir
+                ProcessUtilities.executioner(command)
 
                 data = {'cancelStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data)
@@ -524,8 +524,8 @@ def putSSHkey(request):
 
                 ##
 
-                execPath = "sudo chmod g-w /home/cyberpanel"
-                ProcessUtilities.executioner(execPath)
+                command = "sudo chmod g-w /home/cyberpanel"
+                ProcessUtilities.executioner(command)
 
                 os.chmod(keyPath,0700)
                 os.chmod(authorized_keys, 0600)
@@ -586,6 +586,30 @@ def changeAdminPassword(request):
                 newFWRule.save()
 
                 newFWRule = FirewallRules(name="ftp", proto="tcp", port="21")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="smtp", proto="tcp", port="25")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="smtps", proto="tcp", port="587")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="ssmtp", proto="tcp", port="465")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="pop3", proto="tcp", port="110")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="imap", proto="tcp", port="143")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="simap", proto="tcp", port="993")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="dns", proto="udp", port="53")
+                newFWRule.save()
+
+                newFWRule = FirewallRules(name="dnstcp", proto="tcp", port="53")
                 newFWRule.save()
 
                 newFWRule = FirewallRules(name="ftptls", proto="tcp", port="40110-40210")

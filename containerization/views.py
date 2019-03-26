@@ -162,7 +162,7 @@ def saveWebsiteLimits(request):
                 cgrules = '/etc/cgrules.conf'
                 enforceString = '{}  cpu,memory,blkio,net_cls  {}/\n'.format(website.externalApp, website.externalApp)
 
-                cgrulesData = ProcessUtilities.outputExecutioner(shlex.split('sudo cat /etc/cgrules.conf')).splitlines()
+                cgrulesData = ProcessUtilities.outputExecutioner('sudo cat /etc/cgrules.conf').splitlines()
 
                 writeToFile = open(cgrulesTemp, 'w')
 
@@ -219,7 +219,7 @@ def saveWebsiteLimits(request):
             cgrulesTemp = "/home/cyberpanel/" + str(randint(1000, 9999))
             cgrules = '/etc/cgrules.conf'
 
-            cgrulesData = ProcessUtilities.outputExecutioner(shlex.split('sudo cat /etc/cgrules.conf')).splitlines()
+            cgrulesData = ProcessUtilities.outputExecutioner('sudo cat /etc/cgrules.conf').splitlines()
 
             writeToFile = open(cgrulesTemp, 'w')
 
@@ -293,7 +293,7 @@ def getUsageData(request):
                 if type == 'memory':
 
                     command = 'sudo cat /sys/fs/cgroup/memory/' + website.externalApp + '/memory.usage_in_bytes'
-                    output = str(ProcessUtilities.outputExecutioner(command, shell=True))
+                    output = str(ProcessUtilities.outputExecutioner(command))
                     finalData['memory'] = int(float(output)/float(1024 * 1024))
 
                 elif type == 'io':
@@ -305,7 +305,7 @@ def getUsageData(request):
                         os.mkdir(path)
 
                     command = 'sudo cat /sys/fs/cgroup/blkio/' + website.externalApp + '/blkio.throttle.io_service_bytes'
-                    output = ProcessUtilities.outputExecutioner(command, shell=True).splitlines()
+                    output = ProcessUtilities.outputExecutioner(command).splitlines()
 
                     readCurrent = output[0].split(' ')[2]
                     writeCurrent = output[1].split(' ')[2]
@@ -332,8 +332,8 @@ def getUsageData(request):
                 finalData['readRate'] = 0
                 finalData['writeRate'] = 0
         except:
-            command = "sudo top -b -n 1 -u " + website.externalApp + " | awk 'NR>7 { sum += $9; } END { print sum; }'"
-            output = str(ProcessUtilities.outputExecutioner(command, shell=True))
+            command = "top -b -n 1 -u " + website.externalApp + " | awk 'NR>7 { sum += $9; } END { print sum; }'"
+            output = str(subprocess.check_output(command, shell=True))
 
             finalData = {}
             if len(output) == 0:
