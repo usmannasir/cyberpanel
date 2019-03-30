@@ -2,13 +2,29 @@ from CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import os
+import socket
+import threading as multi
 
-class ProcessUtilities:
+class ProcessUtilities(multi.Thread):
     litespeedProcess = "litespeed"
     ent = 1
     OLS = 0
     centos = 1
     ubuntu = 0
+    server_address = '/usr/local/lscpd/admin/comm.sock'
+    token = "2dboNyhseD7ro8rRUsJGy9AlLxJtSjHI"
+
+    def __init__(self, function, extraArgs):
+        multi.Thread.__init__(self)
+        self.function = function
+        self.extraArgs = extraArgs
+
+    def run(self):
+        try:
+            if self.function == 'popen':
+                self.customPoen()
+        except BaseException, msg:
+            logging.writeToFile( str(msg) + ' [ApplicationInstaller.run]')
 
     @staticmethod
     def getLitespeedProcessNumber():
@@ -127,36 +143,90 @@ class ProcessUtilities:
             return 0
 
     @staticmethod
+    def setupUDSConnection():
+        try:
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sock.connect(ProcessUtilities.server_address)
+            return [sock, "None"]
+        except BaseException, msg:
+            logging.writeToFile(str(msg) + ". [setupUDSConnection:138]")
+            return [-1, str(msg)]
+
+    @staticmethod
+    def sendCommand(command):
+        try:
+            ret = ProcessUtilities.setupUDSConnection()
+
+            if ret[0] == -1:
+                return ret[0]
+
+            token = os.environ.get('TOKEN')
+
+            sock = ret[0]
+            sock.sendall(token + command)
+            data = ""
+
+            while (1):
+                currentData = sock.recv(32)
+                if len(currentData) == 0 or currentData == None:
+                    break
+                data = data + currentData
+
+            sock.close()
+            logging.writeToFile(data)
+            return data
+        except BaseException, msg:
+            logging.writeToFile(str(msg) + " [sendCommand]")
+            return "0" + str(msg)
+
+
+    @staticmethod
     def executioner(command):
         try:
             logging.writeToFile(command)
-            res = subprocess.call(shlex.split(command))
-            if res == 0:
-                return 1
-            else:
-                return 0
+            ProcessUtilities.sendCommand(command)
+            return 1
         except BaseException, msg:
+            logging.writeToFile(str(msg) + " [executioner]")
             return 0
 
     @staticmethod
     def outputExecutioner(command):
-        if type(command) == str or type(command) == unicode:
-            logging.writeToFile(command)
-            return subprocess.check_output(shlex.split(command))
-        else:
-            command = " ".join(command)
-            logging.writeToFile(command + " join")
-            return subprocess.check_output(shlex.split(command))
+        try:
+            if type(command) == str or type(command) == unicode:
+                logging.writeToFile(command)
+            else:
+                command = " ".join(command)
+                logging.writeToFile(command)
+
+            return ProcessUtilities.sendCommand(command)
+        except BaseException, msg:
+            logging.writeToFile(str(msg) + "[outputExecutioner:188]")
+
+    def customPoen(self):
+        try:
+            if type(self.extraArgs['command']) == str or type(self.extraArgs['command']) == unicode:
+                command = self.extraArgs['command']
+                logging.writeToFile(self.extraArgs['command'])
+            else:
+                command = " ".join(self.extraArgs['command'])
+                logging.writeToFile(command)
+
+            ProcessUtilities.sendCommand(command)
+
+            return 1
+        except BaseException, msg:
+            logging.writeToFile(str(msg) + " [customPoen]")
 
     @staticmethod
     def popenExecutioner(command):
-        if type(command) == str or type(command) == unicode:
-            logging.writeToFile(command)
-            return subprocess.Popen(shlex.split(command))
-        else:
-            command = " ".join(command)
-            logging.writeToFile(command)
-            return subprocess.Popen(shlex.split(command))
+        try:
+            extraArgs = {}
+            extraArgs['command'] = command
+            pu = ProcessUtilities("popen", extraArgs)
+            pu.start()
+        except BaseException, msg:
+            logging.writeToFile(str(msg) + " [popenExecutioner]")
 
 
 

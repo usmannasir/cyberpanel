@@ -1420,3 +1420,78 @@ app.controller('resellerCenterCTRL', function($scope,$http) {
 
 });
 /* Java script code for reseller center acl */
+
+
+/* Java script code for api access */
+app.controller('apiAccessCTRL', function($scope,$http) {
+
+
+    $scope.apiAccessDropDown = true;
+    $scope.cyberpanelLoading = true;
+
+    $scope.showApiAccessDropDown = function () {
+        $scope.apiAccessDropDown = false;
+    };
+
+    $scope.saveChanges = function(){
+
+                $scope.cyberpanelLoading = false;
+
+                var url = "/users/saveChangesAPIAccess";
+
+                var data = {
+                    accountUsername:$scope.accountUsername,
+                    access:$scope.access,
+                };
+
+                var config = {
+                    headers : {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                };
+
+                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+                function ListInitialDatas(response) {
+                    $scope.cyberpanelLoading = true;
+
+                    if (response.data.status === 1)
+                    {
+                        $scope.apiAccessDropDown = true;
+                        new PNotify({
+                            title: 'Success!',
+                            text: 'Changes successfully applied!',
+                            type:'success'
+                          });
+
+                    }
+                    else{
+                        new PNotify({
+                            title: 'Error!',
+                            text: response.data.error_message,
+                            type:'error'
+                          });
+                    }
+
+
+                }
+                function cantLoadInitialDatas(response) {
+                    $scope.cyberpanelLoading = true;
+                    new PNotify({
+                            title: 'Error!',
+                            text: 'Could not connect to server, please refresh this page.',
+                            type:'error'
+                          });
+                }
+
+
+
+
+
+    };
+
+
+
+});
+/* Java script code for api access */

@@ -68,6 +68,54 @@ def createUser(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         return redirect(loadLoginPage)
 
+def apiAccess(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            adminNames = ACLManager.loadDeletionUsers(userID, currentACL)
+            adminNames.append("admin")
+            return render(request, 'userManagment/apiAccess.html', {'acctNames': adminNames})
+        else:
+            return ACLManager.loadError()
+
+    except BaseException, msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg))
+        return redirect(loadLoginPage)
+
+
+def saveChangesAPIAccess(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        data = json.loads(request.body)
+
+        if currentACL['admin'] != 1:
+            finalResponse = {'status': 0, "error_message": "Only administrators are allowed to perform this task."}
+            json_data = json.dumps(finalResponse)
+            return HttpResponse(json_data)
+        else:
+            accountUsername = data['accountUsername']
+            access = data['access']
+
+            userAcct = Administrator.objects.get(userName=accountUsername)
+
+            if access == "Enable":
+                userAcct.api = 1
+            else:
+                userAcct.api = 0
+
+            userAcct.save()
+
+            finalResponse = {'status': 1}
+            json_data = json.dumps(finalResponse)
+            return HttpResponse(json_data)
+    except BaseException, msg:
+        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
+        json_data = json.dumps(finalResponse)
+        return HttpResponse(json_data)
+
 
 def submitUserCreation(request):
     try:

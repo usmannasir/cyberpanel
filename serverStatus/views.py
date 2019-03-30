@@ -310,6 +310,9 @@ def servicesAction(request):
 
                     command = 'sudo systemctl %s %s' % (action, service)
                     ProcessUtilities.executioner(command)
+                    final_dic = {'serviceAction': 1, "error_message": 0}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
 
         except BaseException, msg:
@@ -358,10 +361,14 @@ def switchTOLSWSStatus(request):
         output = ProcessUtilities.outputExecutioner(command)
 
         if output.find('[404]') > -1:
+            command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
+            ProcessUtilities.popenExecutioner(command)
             data_ret = {'abort': 1, 'requestStatus': output, 'installed': 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
         elif output.find('[200]') > -1:
+            command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
+            ProcessUtilities.popenExecutioner(command)
             data_ret = {'abort': 1, 'requestStatus': output, 'installed': 1}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -371,6 +378,8 @@ def switchTOLSWSStatus(request):
             return HttpResponse(json_data)
 
     except BaseException, msg:
+        command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
+        ProcessUtilities.popenExecutioner(command)
         data_ret = {'abort': 1, 'requestStatus': str(msg), 'installed': 0}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -563,7 +572,7 @@ def topProcessesStatus(request):
         ## CPU Details
 
         command = 'sudo cat /proc/cpuinfo'
-        output = subprocess.check_output(shlex.split(command)).splitlines()
+        output = ProcessUtilities.outputExecutioner(command).splitlines()
 
         import psutil
 

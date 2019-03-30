@@ -2,7 +2,6 @@
 import sys
 sys.path.append('/usr/local/CyberCP')
 import plogical.CyberCPLogFileWriter as logging
-from plogical.mailUtilities import mailUtilities
 from serverStatus.serverStatusUtil import ServerStatusUtil
 from plogical.processUtilities import ProcessUtilities
 import time
@@ -13,8 +12,6 @@ class DockerInstall:
     @staticmethod
     def submitInstallDocker():
         try:
-
-            mailUtilities.checkHome()
 
             statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
 

@@ -17,6 +17,9 @@ def router(request):
 
         cm = CloudManager(data, admin)
 
+        if admin.api == 0:
+            return cm.ajaxPre(0, 'API Access Disabled.')
+
         if controller == 'statusFunc':
             pass
         else:

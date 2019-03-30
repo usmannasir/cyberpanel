@@ -28,4 +28,6 @@ urlpatterns = [
     url(r'^changeACLFunc$',views.changeACLFunc,name="changeACLFunc"),
     url(r'^resellerCenter$',views.resellerCenter,name="resellerCenter"),
     url(r'^saveResellerChanges$',views.saveResellerChanges,name="saveResellerChanges"),
+    url(r'^apiAccess$', views.apiAccess, name="apiAccess"),
+    url(r'^saveChangesAPIAccess$', views.saveChangesAPIAccess, name="saveChangesAPIAccess"),
 ]

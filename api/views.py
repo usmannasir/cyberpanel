@@ -33,6 +33,11 @@ def verifyConn(request):
 
             admin = Administrator.objects.get(userName=adminUser)
 
+            if admin.api == 0:
+                data_ret = {"verifyConn": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             if hashPassword.check_password(admin.password, adminPass):
                 data_ret = {"verifyConn": 1}
                 json_data = json.dumps(data_ret)
@@ -48,6 +53,16 @@ def verifyConn(request):
         return HttpResponse(json_data)
 
 def createWebsite(request):
+    data = json.loads(request.body)
+    adminUser = data['adminUser']
+    admin = Administrator.objects.get(userName=adminUser)
+
+    if admin.api == 0:
+        data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
+                    'error_message': "API Access Disabled."}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
     wm = WebsiteManager()
     return wm.createWebsiteAPI(json.loads(request.body))
 
@@ -62,6 +77,11 @@ def getUserInfo(request):
             username = data['username']
 
             admin = Administrator.objects.get(userName=adminUser)
+
+            if admin.api == 0:
+                data_ret = {"status": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             if hashPassword.check_password(admin.password, adminPass):
                 pass
@@ -106,6 +126,11 @@ def changeUserPassAPI(request):
 
             admin = Administrator.objects.get(userName=adminUser)
 
+            if admin.api == 0:
+                data_ret = {"changeStatus": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             if hashPassword.check_password(admin.password, adminPass):
                 pass
             else:
@@ -143,6 +168,11 @@ def changePackageAPI(request):
 
             admin = Administrator.objects.get(userName=adminUser)
 
+            if admin.api == 0:
+                data_ret = {"changePackage": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             if hashPassword.check_password(admin.password, adminPass):
                 pass
             else:
@@ -173,11 +203,18 @@ def deleteWebsite(request):
     try:
         if request.method == 'POST':
             data = json.loads(request.body)
-            data['websiteName'] = data['domainName']
+
             adminUser = data['adminUser']
             adminPass = data['adminPass']
 
             admin = Administrator.objects.get(userName=adminUser)
+
+            if admin.api == 0:
+                data_ret = {"websiteDeleteStatus": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            data['websiteName'] = data['domainName']
 
             if hashPassword.check_password(admin.password, adminPass):
                 pass
@@ -212,6 +249,11 @@ def submitWebsiteStatus(request):
 
             admin = Administrator.objects.get(userName=adminUser)
 
+            if admin.api == 0:
+                data_ret = {"websiteStatus": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             if hashPassword.check_password(admin.password, adminPass):
                 pass
             else:
@@ -235,6 +277,11 @@ def loginAPI(request):
 
         admin = Administrator.objects.get(userName=username)
 
+        if admin.api == 0:
+            data_ret = {"userID": 0, 'error_message': "API Access Disabled."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
         if hashPassword.check_password(admin.password, password):
             request.session['userID'] = admin.pk
             return redirect(renderBase)
@@ -254,6 +301,11 @@ def fetchSSHkey(request):
             password = data['password']
 
             admin = Administrator.objects.get(userName=username)
+
+            if admin.api == 0:
+                data_ret = {"status": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             if hashPassword.check_password(admin.password, password):
 
@@ -290,10 +342,17 @@ def remoteTransfer(request):
             data = json.loads(request.body)
             username = data['username']
             password = data['password']
-            ipAddress = data['ipAddress']
-            accountsToTransfer = data['accountsToTransfer']
+
 
             admin = Administrator.objects.get(userName=username)
+
+            if admin.api == 0:
+                data_ret = {"transferStatus": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            ipAddress = data['ipAddress']
+            accountsToTransfer = data['accountsToTransfer']
 
             if hashPassword.check_password(admin.password, password):
                 dir = str(randint(1000, 9999))
@@ -335,6 +394,12 @@ def fetchAccountsFromRemoteServer(request):
             password = data['password']
 
             admin = Administrator.objects.get(userName=username)
+
+            if admin.api == 0:
+                data_ret = {"fetchStatus": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             if hashPassword.check_password(admin.password, password):
 
                 records = Websites.objects.all()
@@ -377,13 +442,20 @@ def FetchRemoteTransferStatus(request):
             username = data['username']
             password = data['password']
 
+            admin = Administrator.objects.get(userName=username)
+
+            if admin.api == 0:
+                data_ret = {"fetchStatus": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             dir = "/home/backup/transfer-"+str(data['dir'])+"/backup_log"
 
             try:
                 command = "sudo cat "+ dir
                 status = ProcessUtilities.outputExecutioner(command)
 
-                admin = Administrator.objects.get(userName=username)
+
                 if hashPassword.check_password(admin.password, password):
 
                     final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "status": status})
@@ -409,9 +481,17 @@ def cancelRemoteTransfer(request):
             data = json.loads(request.body)
             username = data['username']
             password = data['password']
-            dir = "/home/backup/transfer-"+str(data['dir'])
 
             admin = Administrator.objects.get(userName=username)
+
+            if admin.api == 0:
+                data_ret = {"cancelStatus": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            dir = "/home/backup/transfer-"+str(data['dir'])
+
+
 
             if hashPassword.check_password(admin.password, password):
 
@@ -453,6 +533,11 @@ def cyberPanelVersion(request):
 
             admin = Administrator.objects.get(userName=adminUser)
 
+            if admin.api == 0:
+                data_ret = {"getVersion": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             if hashPassword.check_password(admin.password, adminPass):
 
                 Version = version.objects.get(pk=1)
@@ -479,167 +564,6 @@ def cyberPanelVersion(request):
                     "getVersion": 0,
                     'error_message': str(msg)
                     }
-        json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
-
-def putSSHkey(request):
-    try:
-        if request.method == 'POST':
-
-            data = json.loads(request.body)
-
-            adminUser = data['username']
-            adminPass = data['password']
-            pubKey = data['putSSHKey']
-
-
-            admin = Administrator.objects.get(userName=adminUser)
-
-            if hashPassword.check_password(admin.password, adminPass):
-                keyPath = "/home/cyberpanel/.ssh"
-
-                if not os.path.exists(keyPath):
-                    os.makedirs(keyPath)
-
-
-                ## writeKey
-
-                authorized_keys = keyPath+"/authorized_keys"
-                presenseCheck = 0
-                try:
-                    data = open(authorized_keys, "r").readlines()
-                    for items in data:
-                        if items.find(pubKey) > -1:
-                            presenseCheck = 1
-                except:
-                    pass
-
-                if presenseCheck == 0:
-                    writeToFile = open(authorized_keys, 'a')
-                    writeToFile.writelines("#Added by CyberPanel\n")
-                    writeToFile.writelines("\n")
-                    writeToFile.writelines(pubKey)
-                    writeToFile.writelines("\n")
-                    writeToFile.close()
-
-                ##
-
-                command = "sudo chmod g-w /home/cyberpanel"
-                ProcessUtilities.executioner(command)
-
-                os.chmod(keyPath,0700)
-                os.chmod(authorized_keys, 0600)
-
-
-                data_ret = {"putSSHKey": 1,
-                            'error_message': "None",}
-
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            else:
-                data_ret = {"putSSHKey": 0,
-                            'error_message': "Could not authorize access to API"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-    except BaseException, msg:
-        data_ret = {"putSSHKey": 0,
-                    'error_message': str(msg)}
-        json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
-
-def changeAdminPassword(request):
-    try:
-
-        data = json.loads(request.body)
-
-        adminPass = data['password']
-        randomFile = data['randomFile']
-
-        if os.path.exists(randomFile):
-            numberOfAdministrator = Administrator.objects.count()
-            if numberOfAdministrator == 0:
-                ACLManager.createDefaultACLs()
-                acl = ACL.objects.get(name='admin')
-                token = hashPassword.generateToken('admin', '1234567')
-
-                email = 'usman@cyberpersons.com'
-                admin = Administrator(userName="admin", password=hashPassword.hash_password(adminPass), type=1, email=email,
-                                      firstName="Cyber", lastName="Panel", acl=acl, token=token)
-                admin.save()
-
-                vers = version(currentVersion="1.8", build=1)
-                vers.save()
-
-                package = Package(admin=admin, packageName="Default", diskSpace=1000,
-                                  bandwidth=1000, ftpAccounts=1000, dataBases=1000,
-                                  emailAccounts=1000, allowedDomains=20)
-                package.save()
-
-                newFWRule = FirewallRules(name="panel", proto="tcp", port="8090")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="http", proto="tcp", port="80")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="https", proto="tcp", port="443")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="ftp", proto="tcp", port="21")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="smtp", proto="tcp", port="25")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="smtps", proto="tcp", port="587")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="ssmtp", proto="tcp", port="465")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="pop3", proto="tcp", port="110")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="imap", proto="tcp", port="143")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="simap", proto="tcp", port="993")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="dns", proto="udp", port="53")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="dnstcp", proto="tcp", port="53")
-                newFWRule.save()
-
-                newFWRule = FirewallRules(name="ftptls", proto="tcp", port="40110-40210")
-                newFWRule.save()
-
-                data_ret = {"changed": 1,
-                            'error_message': "None"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            os.remove(randomFile)
-            token = hashPassword.generateToken('admin', adminPass)
-            admin = Administrator.objects.get(userName="admin")
-            admin.password = hashPassword.hash_password(adminPass)
-            admin.token = token
-            admin.save()
-            data_ret = {"changed": 1,
-                        'error_message': "None"}
-
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-        else:
-            data_ret = {"changed": 0,
-                        'error_message': "Failed to authorize access to change password!"}
-
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-    except BaseException, msg:
-        data_ret = {"changed": 0,
-                    'error_message': str(msg)}
-
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 

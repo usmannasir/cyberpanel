@@ -21,11 +21,7 @@ urlpatterns = [
 
     url(r'^cancelRemoteTransfer', views.cancelRemoteTransfer, name='cancelRemoteTransfer'),
 
-
     url(r'^cyberPanelVersion', views.cyberPanelVersion, name='cyberPanelVersion'),
-    url(r'^putSSHkey', views.putSSHkey, name='putSSHkey'),
-
-    url(r'^changeAdminPassword', views.changeAdminPassword, name='changeAdminPassword'),
     url(r'^runAWSBackups$', views.runAWSBackups, name='runAWSBackups'),
 
 ]

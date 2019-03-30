@@ -248,8 +248,8 @@ class FirewallManager:
             command = 'sudo systemctl status firewalld'
             status = ProcessUtilities.outputExecutioner(command)
 
-            if status.find("active") > -1:
-                final_dic = {'status': 1, 'error_message': "none", 'firewallStatus': 1}
+            if status.find("dead") > -1:
+                final_dic = {'status': 1, 'error_message': "none", 'firewallStatus': 0}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
             else:
@@ -552,8 +552,6 @@ class FirewallManager:
                     })
                     return HttpResponse(final_json)
 
-                installUtilities.reStartLiteSpeed()
-
                 final_json = json.dumps({
                     'error_message': "None",
                     'requestStatus': installStatus,
@@ -790,7 +788,6 @@ class FirewallManager:
                 output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:
-                    installUtilities.reStartLiteSpeed()
                     data_ret = {'saveStatus': 1, 'error_message': "None"}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
@@ -846,7 +843,6 @@ class FirewallManager:
                 output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:
-                    installUtilities.reStartLiteSpeed()
                     data_ret = {'saveStatus': 1, 'error_message': "None"}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
@@ -971,7 +967,6 @@ class FirewallManager:
             output = ProcessUtilities.outputExecutioner(execPath).split('\n')
 
             if output.find("1,None") > -1:
-                installUtilities.reStartLiteSpeed()
                 data_ret = {'saveStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -1115,7 +1110,6 @@ class FirewallManager:
                 output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:
-                    installUtilities.reStartLiteSpeed()
                     data_ret = {'installStatus': 1, 'error_message': "None"}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
@@ -1133,7 +1127,6 @@ class FirewallManager:
                 output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:
-                    installUtilities.reStartLiteSpeed()
                     data_ret = {'installStatus': 1, 'error_message': "None"}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
@@ -1276,7 +1269,6 @@ class FirewallManager:
             output = ProcessUtilities.outputExecutioner(execPath)
 
             if output.find("1,None") > -1:
-                installUtilities.reStartLiteSpeed()
                 data_ret = {'saveStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)

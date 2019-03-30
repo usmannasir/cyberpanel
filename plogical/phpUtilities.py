@@ -33,12 +33,15 @@ class phpUtilities:
                 writeToFile.writelines("PHP Extension Installed.\n")
                 writeToFile.close()
 
+                installUtilities.installUtilities.reStartLiteSpeed()
+
                 return 1
             except:
                 writeToFile = open(phpUtilities.installLogPath, 'a')
                 writeToFile.writelines("Can not be installed.\n")
                 writeToFile.close()
                 logging.CyberCPLogFileWriter.writeToFile("[Could not Install]")
+                installUtilities.installUtilities.reStartLiteSpeed()
                 return 0
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installPHPExtension]")
@@ -64,12 +67,14 @@ class phpUtilities:
                 writeToFile = open(phpUtilities.installLogPath, 'a')
                 writeToFile.writelines("PHP Extension Removed.\n")
                 writeToFile.close()
+                installUtilities.installUtilities.reStartLiteSpeed()
                 return 1
             except:
                 writeToFile = open(phpUtilities.installLogPath, 'a')
                 writeToFile.writelines("Can not un-install Extension.\n")
                 writeToFile.close()
                 logging.CyberCPLogFileWriter.writeToFile("[Could not Install]")
+                installUtilities.installUtilities.reStartLiteSpeed()
                 return 0
 
         except BaseException, msg:

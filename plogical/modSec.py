@@ -8,6 +8,7 @@ import tarfile
 import shutil
 from mailUtilities import mailUtilities
 from processUtilities import ProcessUtilities
+from plogical.installUtilities import installUtilities
 
 class modSec:
 
@@ -149,6 +150,8 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
 
                 conf.close()
 
+                installUtilities.reStartLiteSpeed()
+
                 print "1,None"
                 return
             else:
@@ -181,6 +184,8 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
 
                 conf.close()
 
+                installUtilities.reStartLiteSpeed()
+
                 print "1,None"
                 return
 
@@ -205,7 +210,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             rulesFile.write(data)
             rulesFile.close()
 
-            print data
+            installUtilities.reStartLiteSpeed()
 
             print "1,None"
             return
@@ -321,6 +326,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
 
                 conf.close()
 
+                installUtilities.reStartLiteSpeed()
                 print "1,None"
                 return
             else:
@@ -344,6 +350,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                 command = 'sudo chown -R lsadm:lsadm /usr/local/lsws/conf'
                 subprocess.call(shlex.split(command))
 
+                installUtilities.reStartLiteSpeed()
                 print "1,None"
                 return
 
@@ -368,6 +375,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                         conf.writelines(items)
 
                 conf.close()
+                installUtilities.reStartLiteSpeed()
 
                 print "1,None"
 
@@ -376,6 +384,8 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                     shutil.rmtree('/usr/local/lsws/conf/comodo_litespeed')
                 except BaseException, msg:
                     logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [disableComodo]')
+
+                installUtilities.reStartLiteSpeed()
                 print "1,None"
 
 
@@ -520,6 +530,8 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCL
                 command = 'mv ' + completePath + ' ' + completePathBak
                 ProcessUtilities.executioner(command)
 
+            installUtilities.reStartLiteSpeed()
+
             print "1,None"
 
         except BaseException, msg:
@@ -550,6 +562,8 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCL
 
                 command = 'mv ' + completePathBak + ' ' + completePath
                 ProcessUtilities.executioner(command)
+
+            installUtilities.reStartLiteSpeed()
 
             print "1,None"
 

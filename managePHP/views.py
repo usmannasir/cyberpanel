@@ -1332,7 +1332,6 @@ def getRequestStatus(request):
                         ext.status = 0
                         ext.save()
 
-                    installUtilities.reStartLiteSpeed()
                     final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
                                              'error_message': "None",
                                              'requestStatus': requestStatus,
@@ -1349,7 +1348,6 @@ def getRequestStatus(request):
                         ext.status = 0
                         ext.save()
 
-                    installUtilities.reStartLiteSpeed()
                     final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
                                              'error_message': "None",
                                              'requestStatus': requestStatus,
@@ -1366,7 +1364,6 @@ def getRequestStatus(request):
                         ext.status = 0
                         ext.save()
 
-                    installUtilities.reStartLiteSpeed()
                     final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
                                              'error_message': "None",
                                              'requestStatus': requestStatus,
@@ -1378,7 +1375,6 @@ def getRequestStatus(request):
                     ext.status = 0
                     ext.save()
 
-                    installUtilities.reStartLiteSpeed()
                     final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
                                              'error_message': "None",
                                              'requestStatus': requestStatus,

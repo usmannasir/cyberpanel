@@ -86,6 +86,8 @@ class ContainerManager(multi.Thread):
             execPath = "sudo python /usr/local/CyberCP/dockerManager/dockerInstall.py"
             ProcessUtilities.executioner(execPath)
 
+            time.sleep(2)
+
         except BaseException, msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
 

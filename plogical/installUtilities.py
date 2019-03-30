@@ -142,7 +142,7 @@ class installUtilities:
             else:
                 command = "sudo /usr/local/lsws/bin/lswsctrl restart"
 
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.normalExecutioner(command)
 
         except OSError, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")

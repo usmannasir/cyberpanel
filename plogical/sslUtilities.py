@@ -231,12 +231,8 @@ class sslUtilities:
         try:
             acmePath = '/root/.acme.sh/acme.sh'
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
-                acmePath = '/home/cyberpanel/.acme.sh/acme.sh'
-
-            if not os.path.exists(acmePath):
-                command = 'wget -O -  https://get.acme.sh | sh'
-                subprocess.call(command, shell=True)
+            # if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            #     acmePath = '/home/cyberpanel/.acme.sh/acme.sh'
 
             if aliasDomain == None:
 

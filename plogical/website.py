@@ -564,7 +564,7 @@ class WebsiteManager:
                 execPath = execPath + " findDomainBW --virtualHostName " + self.domain + " --bandwidth " + str(
                     website.package.bandwidth)
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(execPath)
                 bwData = output.split(",")
             except BaseException, msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -629,7 +629,7 @@ class WebsiteManager:
                 execPath = execPath + " findDomainBW --virtualHostName " + self.domain + " --bandwidth " + str(
                     website.package.bandwidth)
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(execPath)
                 bwData = output.split(",")
             except BaseException, msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
