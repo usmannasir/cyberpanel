@@ -10,6 +10,8 @@ import requests
 import subprocess
 import shlex
 from shutil import move
+from plogical.virtualHostUtilities import virtualHostUtilities
+from plogical.processUtilities import ProcessUtilities
 
 class remoteTransferUtilities:
 
@@ -282,56 +284,56 @@ class remoteTransferUtilities:
                         "%I-%M-%S-%a-%b-%Y") + "]" + " Starting restore for: " + backup + ".\n")
                     writeToFile.close()
 
-                    finalData = json.dumps({'backupFile': backup, "dir": dir})
-                    r = requests.post("http://localhost:5003/backup/submitRestore", data=finalData, verify=False)
-                    data = json.loads(r.text)
+                    backupFile = backup
+                    execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+                    execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
+                    subprocess.Popen(shlex.split(execPath))
+                    time.sleep(4)
 
-                    if data['restoreStatus'] == 1:
-                        while (1):
-                            time.sleep(1)
-                            finalData = json.dumps({'backupFile': backup, "dir": dir})
-                            r = requests.post("http://localhost:5003/backup/restoreStatus", data=finalData,
-                                              verify=False)
-                            data = json.loads(r.text)
+                    while (1):
+                        time.sleep(1)
 
-                            if data['abort'] == 1 and data['running'] == "Error":
-                                writeToFile = open(backupLogPath, "a")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " Restore aborted for: " + backup + ". Error message: " +
-                                                       data['status'] + "\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " #########################################\n")
-                                writeToFile.close()
-                                break
-                            elif data['abort'] == 1 and data['running'] == "Completed":
-                                writeToFile = open(backupLogPath, "a")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " Restore Completed for: " + backup + ".\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " #########################################\n")
-                                writeToFile.close()
-                                break
-                            else:
-                                writeToFile = open(backupLogPath, "a")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " Waiting for restore to complete.\n")
-                                writeToFile.close()
-                                time.sleep(3)
-                                pass
-                    else:
-                        logging.CyberCPLogFileWriter.writeToFile("Could not start restore process for: " + backup)
-                        writeToFile = open(backupLogPath, "a")
-                        writeToFile.writelines("\n")
-                        writeToFile.writelines("\n")
-                        writeToFile.writelines("[" + time.strftime(
-                            "%I-%M-%S-%a-%b-%Y") + "]" + "Could not start restore process for: " + backup + "\n")
-                        writeToFile.close()
+                        backupFile = backup.strip(".tar.gz")
+                        path = "/home/backup/transfer-" + str(dir) + "/" + backupFile
+                        status = open(path + "/status", 'r').read()
+
+                        if status.find("Done") > -1:
+                            command = "sudo rm -rf " + path
+                            ProcessUtilities.normalExecutioner(command)
+
+                            writeToFile = open(backupLogPath, "a")
+                            writeToFile.writelines("\n")
+                            writeToFile.writelines("\n")
+                            writeToFile.writelines("[" + time.strftime(
+                                "%I-%M-%S-%a-%b-%Y") + "]" + " Restore Completed for: " + backup + ".\n")
+                            writeToFile.writelines("[" + time.strftime(
+                                "%I-%M-%S-%a-%b-%Y") + "]" + " #########################################\n")
+                            writeToFile.close()
+                            break
+                        elif status.find("[5009]") > -1:
+                            ## removing temporarily generated files while restoring
+                            command = "sudo rm -rf " + path
+                            ProcessUtilities.normalExecutioner(command)
+
+                            writeToFile = open(backupLogPath, "a")
+                            writeToFile.writelines("\n")
+                            writeToFile.writelines("\n")
+                            writeToFile.writelines("[" + time.strftime(
+                                "%I-%M-%S-%a-%b-%Y") + "]" + " Restore aborted for: " + backup + ". Error message: " +
+                                                   status + "\n")
+                            writeToFile.writelines("[" + time.strftime(
+                                "%I-%M-%S-%a-%b-%Y") + "]" + " #########################################\n")
+                            writeToFile.close()
+                            break
+                        else:
+                            writeToFile = open(backupLogPath, "a")
+                            writeToFile.writelines("\n")
+                            writeToFile.writelines("\n")
+                            writeToFile.writelines("[" + time.strftime(
+                                "%I-%M-%S-%a-%b-%Y") + "]" + " Waiting for restore to complete.\n")
+                            writeToFile.close()
+                            time.sleep(3)
+                            pass
 
             writeToFile = open(backupLogPath, "a")
 

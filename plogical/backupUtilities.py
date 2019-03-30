@@ -314,6 +314,28 @@ class backupUtilities:
             make_archive(os.path.join(backupPath,backupName), 'gztar', tempStoragePath)
             rmtree(tempStoragePath)
 
+            ###
+
+            fileName = open(backupFileNamePath, 'r').read()
+
+            backupObs = Backups.objects.filter(fileName=fileName)
+
+            ## adding backup data to database.
+            try:
+                for items in backupObs:
+                    items.status = 1
+                    items.size = str(int(float(
+                        os.path.getsize(os.path.join(backupPath,backupName+".tar.gz"))) / (
+                                             1024.0 * 1024.0))) + "MB"
+                    items.save()
+            except:
+                for items in backupObs:
+                    items.status = 1
+                    items.size = str(int(float(
+                        os.path.getsize(os.path.join(backupPath,backupName+".tar.gz"))) / (
+                                             1024.0 * 1024.0))) + "MB"
+                    items.save()
+
             logging.CyberCPLogFileWriter.statusWriter(status, "Completed\n")
 
         except BaseException,msg:
@@ -327,7 +349,7 @@ class backupUtilities:
             except:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
-            status = os.path.join(backupPath,'status'), "w"
+            status = os.path.join(backupPath, 'status')
             logging.CyberCPLogFileWriter.statusWriter(status, "Aborted, "+ str(msg) + ". [5009]")
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 

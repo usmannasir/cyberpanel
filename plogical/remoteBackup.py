@@ -361,4 +361,3 @@ class remoteBackup:
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransfer]")
             return [0, msg]
-

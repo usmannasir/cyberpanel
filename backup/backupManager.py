@@ -170,7 +170,7 @@ class BackupManager:
 
             try:
                 command = "sudo cat " + backupFileNamePath
-                fileName = subprocess.check_output(shlex.split(command))
+                fileName = ProcessUtilities.outputExecutioner(command)
             except:
                 fileName = "Fetching.."
 
@@ -178,38 +178,20 @@ class BackupManager:
 
             if os.path.exists(status):
                 command = "sudo cat " + status
-                status = subprocess.check_output(shlex.split(command))
+                status = ProcessUtilities.outputExecutioner(command)
 
                 if status.find("Completed") > -1:
-
-                    backupObs = Backups.objects.filter(fileName=fileName)
-
-                    ## adding backup data to database.
-                    try:
-                        for items in backupObs:
-                            items.status = 1
-                            items.size = str(int(float(
-                                os.path.getsize("/home/" + backupDomain + "/backup/" + fileName + ".tar.gz")) / (
-                                                        1024.0 * 1024.0))) + "MB"
-                            items.save()
-                    except:
-                        for items in backupObs:
-                            items.status = 1
-                            items.size = str(int(float(
-                                os.path.getsize("/home/" + backupDomain + "/backup/" + fileName + ".tar.gz")) / (
-                                                        1024.0 * 1024.0))) + "MB"
-                            items.save()
 
                     ### Removing Files
 
                     command = 'sudo rm -f ' + status
-                    subprocess.call(shlex.split(command))
+                    ProcessUtilities.executioner(command)
 
                     command = 'sudo rm -f ' + backupFileNamePath
-                    subprocess.call(shlex.split(command))
+                    ProcessUtilities.executioner(command)
 
                     command = 'sudo rm -f ' + pid
-                    subprocess.call(shlex.split(command))
+                    ProcessUtilities.executioner(command)
 
                     final_json = json.dumps(
                         {'backupStatus': 1, 'error_message': "None", "status": status, "abort": 1,
@@ -220,13 +202,13 @@ class BackupManager:
                     ## removing status file, so that backup can re-run
                     try:
                         command = 'sudo rm -f ' + status
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(command)
 
                         command = 'sudo rm -f ' + backupFileNamePath
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(command)
 
                         command = 'sudo rm -f ' + pid
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(command)
 
                         backupObs = Backups.objects.filter(fileName=fileName)
                         for items in backupObs:
@@ -289,7 +271,7 @@ class BackupManager:
 
             path = "/home/" + domainName + "/backup/" + backup.fileName + ".tar.gz"
             command = 'sudo rm -f ' + path
-            ACLManager.executeCall(command)
+            ProcessUtilities.executioner(command)
 
             backup.delete()
 
@@ -341,12 +323,12 @@ class BackupManager:
             if os.path.exists(path):
                 try:
                     execPath = "sudo cat " + path + "/status"
-                    status = subprocess.check_output(shlex.split(execPath))
+                    status = ProcessUtilities.outputExecutioner(execPath)
 
                     if status.find("Done") > -1:
 
                         command = "sudo rm -rf " + path
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(command)
 
                         final_json = json.dumps(
                             {'restoreStatus': 1, 'error_message': "None", "status": status, 'abort': 1,
@@ -355,7 +337,7 @@ class BackupManager:
                     elif status.find("[5009]") > -1:
                         ## removing temporarily generated files while restoring
                         command = "sudo rm -rf " + path
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(command)
                         final_json = json.dumps({'restoreStatus': 1, 'error_message': "None",
                                                  "status": status, 'abort': 1, 'alreadyRunning': 0,
                                                  'running': 'Error'})
@@ -507,7 +489,7 @@ class BackupManager:
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " getConnectionStatus --ipAddress " + ipAddress
 
-            output = subprocess.check_output(shlex.split(execPath))
+            output = ProcessUtilities.executioner(execPath)
 
             if output.find('1,') > -1:
                 final_dic = {'connStatus': 1, 'error_message': "None"}
@@ -767,7 +749,7 @@ class BackupManager:
 
             command = "sudo systemctl restart crond"
 
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(command)
 
             destination = dest.objects.get(destLoc=backupDest)
             newSchedule = backupSchedules.objects.get(dest=destination, frequency=backupFreq)
@@ -949,7 +931,7 @@ class BackupManager:
 
                     if not os.path.exists(localBackupDir):
                         command = "sudo mkdir " + localBackupDir
-                        subprocess.call(shlex.split(command))
+                        ProcessUtilities.executioner(command)
 
                     ## create local directory that will host backups
 
@@ -958,7 +940,7 @@ class BackupManager:
                     ## making local storage directory for backups
 
                     command = "sudo mkdir " + localStoragePath
-                    subprocess.call(shlex.split(command))
+                    ProcessUtilities.executioner(command)
 
                     final_json = json.dumps(
                         {'remoteTransferStatus': 1, 'error_message': "None", "dir": data['dir']})

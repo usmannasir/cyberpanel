@@ -1,12 +1,20 @@
+#!/usr/local/CyberCP/bin/python2
+import os.path
+import sys
+import django
+sys.path.append('/usr/local/CyberCP')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+django.setup()
 import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import os
-import requests
-import json
 import time
 from backupUtilities import backupUtilities
 from re import match,I,M
+from websiteFunctions.models import Websites, Backups
+from plogical.virtualHostUtilities import virtualHostUtilities
+from plogical.processUtilities import ProcessUtilities
 
 class backupSchedule:
 
@@ -24,29 +32,84 @@ class backupSchedule:
         try:
 
             backupSchedule.remoteBackupLogging(backupLogPath, "Starting local backup for: " + virtualHost)
+            website = Websites.objects.get(domain=virtualHost)
+            # defining paths
 
-            finalData = json.dumps({'websiteToBeBacked': virtualHost})
-            r = requests.post("http://localhost:5003/backup/submitBackupCreation", data=finalData)
+            ## /home/example.com/backup
+            backupPath = os.path.join("/home", virtualHost, "backup/")
+            domainUser = website.externalApp
+            backupName = 'backup-' + domainUser + "-" + time.strftime("%I-%M-%S-%a-%b-%Y")
 
-            data = json.loads(r.text)
-            backupPath = data['tempStorage']
+            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018
+            tempStoragePath = os.path.join(backupPath, backupName)
+
+            execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = execPath + " submitBackupCreation --tempStoragePath " + tempStoragePath + " --backupName " \
+                       + backupName + " --backupPath " + backupPath + ' --backupDomain ' + virtualHost
+
+            subprocess.Popen(shlex.split(execPath))
+
+            time.sleep(2)
 
             backupSchedule.remoteBackupLogging(backupLogPath, "Waiting for backup to complete.. ")
 
 
             while (1):
-                r = requests.post("http://localhost:5003/backup/backupStatus", data=finalData)
-                time.sleep(2)
-                data = json.loads(r.text)
 
-                if data['backupStatus'] == 0:
-                    backupSchedule.remoteBackupLogging(backupLogPath, "An error occurred, Error message: " + data[
-                                               'error_message'])
-                    return 0, backupPath
-                elif data['abort'] == 1:
-                    backupSchedule.remoteBackupLogging(backupLogPath, "Backup Completed for: " + virtualHost)
-                    return 1, backupPath
+                backupDomain = virtualHost
+                status = os.path.join("/home", backupDomain, "backup/status")
+                backupFileNamePath = os.path.join("/home", backupDomain, "backup/backupFileName")
+                pid = os.path.join("/home", backupDomain, "backup/pid")
+                ## read file name
 
+                try:
+                    fileName = open(backupFileNamePath, 'r').read()
+                except:
+                    fileName = "Fetching.."
+
+                ## file name read ends
+
+                if os.path.exists(status):
+                    status = open(status, 'r').read()
+
+                    if status.find("Completed") > -1:
+
+                        ### Removing Files
+
+                        command = 'sudo rm -f ' + status
+                        ProcessUtilities.normalExecutioner(command)
+
+                        command = 'sudo rm -f ' + backupFileNamePath
+                        ProcessUtilities.normalExecutioner(command)
+
+                        command = 'sudo rm -f ' + pid
+                        ProcessUtilities.normalExecutioner(command)
+
+                        backupSchedule.remoteBackupLogging(backupLogPath, "Backup Completed for: " + virtualHost)
+                        return 1, tempStoragePath
+
+
+                    elif status.find("[5009]") > -1:
+                        ## removing status file, so that backup can re-run
+                        try:
+                            command = 'sudo rm -f ' + status
+                            ProcessUtilities.normalExecutioner(command)
+
+                            command = 'sudo rm -f ' + backupFileNamePath
+                            ProcessUtilities.normalExecutioner(command)
+
+                            command = 'sudo rm -f ' + pid
+                            ProcessUtilities.normalExecutioner(command)
+
+                            backupObs = Backups.objects.filter(fileName=fileName)
+                            for items in backupObs:
+                                items.delete()
+
+                        except:
+                            pass
+
+                        backupSchedule.remoteBackupLogging(backupLogPath, "An error occurred, Error message: " + status)
+                        return 0, tempStoragePath
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
             return 0, "None"

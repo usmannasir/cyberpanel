@@ -83,7 +83,7 @@ class FTPManager:
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/ftpUtilities.py"
             execPath = execPath + " submitFTPCreation --domainName " + domainName + " --userName " + userName \
-                       + " --password " + password + " --path " + path + " --owner " + admin.userName  + ' --api ' + api
+                       + " --password '" + password + "' --path " + path + " --owner " + admin.userName  + ' --api ' + api
             output = ProcessUtilities.outputExecutioner(execPath)
 
 

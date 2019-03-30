@@ -68,25 +68,16 @@ class mailUtilities:
 
             path = "/usr/local/CyberCP/install/rainloop/cyberpanel.net.ini"
 
-            if not os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/"):
-                os.makedirs("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/")
+            if not os.path.exists("/usr/local/CyberCP/public/rainloop/data/_data_/_default_/domains/"):
+                os.makedirs("/usr/local/CyberCP/public/rainloop/data/_data_/_default_/domains/")
 
-            finalPath = "/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/" + domain + ".ini"
+            finalPath = "/usr/local/CyberCP/public/rainloop/data/_data_/_default_/domains/" + domain + ".ini"
 
             if not os.path.exists(finalPath):
                 shutil.copy(path, finalPath)
 
-            command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop'
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd)
-
-            command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_'
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd)
+            command = 'chown -R lscpd:lscpd /usr/local/CyberCP/public/rainloop/data/'
+            ProcessUtilities.normalExecutioner(command)
 
             ## After effects ends
 
@@ -221,12 +212,7 @@ class mailUtilities:
             path = "/etc/opendkim.conf"
 
             command = "sudo cat " + path
-            res = subprocess.call(shlex.split(command))
-
-            if res == 1:
-                return 0
-            else:
-                return 1
+            return ProcessUtilities.executioner(command)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(

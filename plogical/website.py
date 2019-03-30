@@ -347,7 +347,7 @@ class WebsiteManager:
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
                 command = "sudo mv " + confPath + " " + confPath + "-suspended"
                 ProcessUtilities.popenExecutioner(command)
-                installUtilities.reStartLiteSpeed()
+                installUtilities.reStartLiteSpeedSocket()
                 website.state = 0
             else:
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
@@ -358,7 +358,7 @@ class WebsiteManager:
                 command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + confPath
                 ProcessUtilities.popenExecutioner(command)
 
-                installUtilities.reStartLiteSpeed()
+                installUtilities.reStartLiteSpeedSocket()
                 website.state = 1
 
             website.save()

@@ -224,8 +224,7 @@ class FileManager:
             finalData['status'] = 1
 
             command = 'sudo cat ' + self.returnPathEnclosed(self.data['fileName'])
-            ProcessUtilities.executioner(command)
-            finalData['fileContents'] = subprocess.check_output(shlex.split(command))
+            finalData['fileContents'] = ProcessUtilities.outputExecutioner(command)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)

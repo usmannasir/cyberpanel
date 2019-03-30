@@ -75,7 +75,7 @@ class MailServerManager:
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
 
             execPath = execPath + " createEmailAccount --domain " + domainName + " --userName " \
-                       + userName + " --password " + password
+                       + userName + " --password '" + password + "'"
 
             output = ProcessUtilities.outputExecutioner(execPath)
 

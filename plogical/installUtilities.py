@@ -152,6 +152,25 @@ class installUtilities:
             return 0
         return 1
 
+    @staticmethod
+    def reStartLiteSpeedSocket():
+        try:
+
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                command = "sudo systemctl restart lsws"
+            else:
+                command = "sudo /usr/local/lsws/bin/lswsctrl restart"
+
+            ProcessUtilities.executioner(command)
+
+        except OSError, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")
+            return 0
+        except ValueError, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")
+            return 0
+        return 1
+
 
     @staticmethod
     def reStartOpenLiteSpeed(restart,orestart):

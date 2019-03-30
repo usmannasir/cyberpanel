@@ -173,7 +173,6 @@ class ProcessUtilities(multi.Thread):
                 data = data + currentData
 
             sock.close()
-            logging.writeToFile(data)
             return data
         except BaseException, msg:
             logging.writeToFile(str(msg) + " [sendCommand]")
@@ -184,7 +183,8 @@ class ProcessUtilities(multi.Thread):
     def executioner(command):
         try:
             logging.writeToFile(command)
-            ProcessUtilities.sendCommand(command)
+            ret = ProcessUtilities.sendCommand(command)
+
             return 1
         except BaseException, msg:
             logging.writeToFile(str(msg) + " [executioner]")
