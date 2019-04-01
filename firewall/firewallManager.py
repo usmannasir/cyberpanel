@@ -253,7 +253,7 @@ class FirewallManager:
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
             else:
-                final_dic = {'status': 1, 'error_message': "none", 'firewallStatus': 0}
+                final_dic = {'status': 1, 'error_message': "none", 'firewallStatus': 1}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
@@ -511,13 +511,12 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('installModSec', 0)
 
-            writeToFile = open(modSec.installLogPath, "w")
-            writeToFile.close()
-
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
             execPath = execPath + " installModSec"
 
             ProcessUtilities.popenExecutioner(execPath)
+
+            time.sleep(3)
 
             final_json = json.dumps({'installModSec': 1, 'error_message': "None"})
             return HttpResponse(final_json)
@@ -539,7 +538,7 @@ class FirewallManager:
 
                 execPath = execPath + " installModSecConfigs"
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:
                     pass
@@ -964,7 +963,7 @@ class FirewallManager:
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
             execPath = execPath + " saveModSecRules"
-            output = ProcessUtilities.outputExecutioner(execPath).split('\n')
+            output = ProcessUtilities.outputExecutioner(execPath)
 
             if output.find("1,None") > -1:
                 data_ret = {'saveStatus': 1, 'error_message': "None"}
@@ -1295,8 +1294,8 @@ class FirewallManager:
             csfInstalled = 1
             try:
                 command = 'sudo csf -h'
-                res = ProcessUtilities.executioner(command)
-                if res == 0:
+                output = ProcessUtilities.outputExecutioner(command)
+                if output.find("command not found") > -1:
                     csfInstalled = 0
             except subprocess.CalledProcessError:
                 csfInstalled = 0
@@ -1316,6 +1315,7 @@ class FirewallManager:
 
             execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " installCSF"
+
             ProcessUtilities.popenExecutioner(execPath)
 
             time.sleep(2)
@@ -1334,7 +1334,7 @@ class FirewallManager:
             userID = self.request.session['userID']
             currentACL = ACLManager.loadedACL(userID)
 
-            installStatus = unicode(open(CSF.installLogPath, "r").read())
+            installStatus = ProcessUtilities.outputExecutioner("sudo cat " + CSF.installLogPath)
 
             if installStatus.find("[200]")>-1:
 

@@ -79,13 +79,9 @@ class virtualHostUtilities:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
                 return 0, "This domain exists as Alias."
 
-            if dkimCheck == 1:
-                if mailUtilities.checkIfDKIMInstalled() == 0:
-                    raise BaseException("OpenDKIM is not installed, install OpenDKIM from DKIM Manager.")
-
-                retValues = mailUtilities.setupDKIM(virtualHostName)
-                if retValues[0] == 0:
-                    raise BaseException(retValues[1])
+            retValues = mailUtilities.setupDKIM(virtualHostName)
+            if retValues[0] == 0:
+                raise BaseException(retValues[1])
 
             retValues = vhost.createDirectoryForVirtualHost(virtualHostName, administratorEmail,
                                                                            virtualHostUser, phpVersion, openBasedir)
@@ -921,13 +917,9 @@ class virtualHostUtilities:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'DKIM Setup..,30')
 
-            if dkimCheck == 1:
-                if mailUtilities.checkIfDKIMInstalled() == 0:
-                    raise BaseException("OpenDKIM is not installed, install OpenDKIM from DKIM Manager.")
-
-                retValues = mailUtilities.setupDKIM(virtualHostName)
-                if retValues[0] == 0:
-                    raise BaseException(retValues[1])
+            retValues = mailUtilities.setupDKIM(virtualHostName)
+            if retValues[0] == 0:
+                raise BaseException(retValues[1])
 
             FNULL = open(os.devnull, 'w')
 

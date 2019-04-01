@@ -29,35 +29,35 @@ class CSF(multi.Thread):
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [CSF.run]')
 
-    def installCSF(self):
+    @staticmethod
+    def installCSF():
         try:
             ##
 
-            command = 'wget ' + CSF.csfURL
-            cmd = shlex.split(command)
+            logging.CyberCPLogFileWriter.statusWriter(CSF.installLogPath, 'Downloading CSF..\n', 1)
 
-            with open(CSF.installLogPath, 'a') as f:
-                subprocess.call(cmd, stdout=f)
+            command = 'wget ' + CSF.csfURL
+            ProcessUtilities.normalExecutioner(command)
 
             ##
+
+            logging.CyberCPLogFileWriter.statusWriter(CSF.installLogPath, 'Extracting CSF..\n', 1)
 
             command = 'tar -xzf csf.tgz'
-            cmd = shlex.split(command)
-
-            with open(CSF.installLogPath, 'a') as f:
-                res = subprocess.call(cmd, stdout=f)
+            ProcessUtilities.normalExecutioner(command)
 
             ##
+
+            logging.CyberCPLogFileWriter.statusWriter(CSF.installLogPath, 'Installing CSF..\n', 1)
 
             os.chdir('csf')
 
-            command = './install.sh'
-            cmd = shlex.split(command)
+            command = "chmod +x install.sh"
+            ProcessUtilities.normalExecutioner(command)
 
-            with open(CSF.installLogPath, 'a') as f:
-                res = subprocess.call(cmd, stdout=f)
+            command = 'bash install.sh'
+            ProcessUtilities.normalExecutioner(command)
 
-            os.chdir('/usr/local/CyberCP')
 
             ## Some initial configurations
 
@@ -80,23 +80,23 @@ class CSF(multi.Thread):
             ##
 
             command = 'csf -s'
-            cmd = shlex.split(command)
+            ProcessUtilities.normalExecutioner(command)
 
-            with open(CSF.installLogPath, 'a') as f:
-                subprocess.call(cmd, stdout=f)
+            logging.CyberCPLogFileWriter.statusWriter(CSF.installLogPath, 'CSF successfully Installed.[200]\n', 1)
 
-
-            writeToFile = open(CSF.installLogPath, 'a')
-            writeToFile.writelines("CSF successfully Installed.[200]\n")
-            writeToFile.close()
-
-            os.remove('csf.tgz')
-            os.removedirs('csf')
+            try:
+                os.remove('csf.tgz')
+                os.removedirs('csf')
+            except:
+                pass
 
             return 1
         except BaseException, msg:
-            os.remove('csf.tgz')
-            os.removedirs('csf')
+            try:
+                os.remove('csf.tgz')
+                os.removedirs('csf')
+            except:
+                pass
             writeToFile = open(CSF.installLogPath, 'a')
             writeToFile.writelines(str(msg) + " [404]")
             writeToFile.close()
@@ -294,8 +294,7 @@ def main():
     args = parser.parse_args()
 
     if args.function == "installCSF":
-       controller = CSF(args.function, {})
-       controller.run()
+       CSF.installCSF()
     elif args.function == 'removeCSF':
         controller = CSF(args.function, {})
         controller.run()

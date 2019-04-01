@@ -12,7 +12,7 @@ class ProcessUtilities(multi.Thread):
     centos = 1
     ubuntu = 0
     server_address = '/usr/local/lscpd/admin/comm.sock'
-    token = "2dboNyhseD7ro8rRUsJGy9AlLxJtSjHI"
+    token = "unset"
 
     def __init__(self, function, extraArgs):
         multi.Thread.__init__(self)
@@ -99,7 +99,7 @@ class ProcessUtilities(multi.Thread):
     def killLiteSpeed():
         try:
             command = 'sudo systemctl stop lsws'
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.normalExecutioner(command)
         except:
             pass
 
@@ -108,7 +108,7 @@ class ProcessUtilities(multi.Thread):
             for items in pids:
                 try:
                     command = 'sudo kill -9 ' + str(items)
-                    ProcessUtilities.executioner(command)
+                    ProcessUtilities.normalExecutioner(command)
                 except:
                     pass
 
@@ -155,15 +155,20 @@ class ProcessUtilities(multi.Thread):
     @staticmethod
     def sendCommand(command):
         try:
+            logging.writeToFile(command)
+
             ret = ProcessUtilities.setupUDSConnection()
 
             if ret[0] == -1:
                 return ret[0]
 
-            token = os.environ.get('TOKEN')
+            if ProcessUtilities.token == "unset":
+                ProcessUtilities.token = os.environ.get('TOKEN')
+                del os.environ['TOKEN']
 
             sock = ret[0]
-            sock.sendall(token + command)
+
+            sock.sendall(ProcessUtilities.token + command)
             data = ""
 
             while (1):
@@ -178,14 +183,21 @@ class ProcessUtilities(multi.Thread):
             logging.writeToFile(str(msg) + " [sendCommand]")
             return "0" + str(msg)
 
-
     @staticmethod
     def executioner(command):
         try:
-            logging.writeToFile(command)
             ret = ProcessUtilities.sendCommand(command)
 
-            return 1
+            exitCode = ret[len(ret) -1]
+            exitCode = int(exitCode.encode('hex'), 16)
+
+            if exitCode == 0:
+                #logging.writeToFile("Command: " + command + ", resturn code: " + str(exitCode) + ".")
+                return 1
+            else:
+                #logging.writeToFile("Command: " + command + ", resturn code: " + str(exitCode) + ".")
+                return 0
+
         except BaseException, msg:
             logging.writeToFile(str(msg) + " [executioner]")
             return 0
@@ -194,12 +206,11 @@ class ProcessUtilities(multi.Thread):
     def outputExecutioner(command):
         try:
             if type(command) == str or type(command) == unicode:
-                logging.writeToFile(command)
+                pass
             else:
                 command = " ".join(command)
-                logging.writeToFile(command)
 
-            return ProcessUtilities.sendCommand(command)
+            return ProcessUtilities.sendCommand(command)[:-1]
         except BaseException, msg:
             logging.writeToFile(str(msg) + "[outputExecutioner:188]")
 
@@ -207,10 +218,8 @@ class ProcessUtilities(multi.Thread):
         try:
             if type(self.extraArgs['command']) == str or type(self.extraArgs['command']) == unicode:
                 command = self.extraArgs['command']
-                logging.writeToFile(self.extraArgs['command'])
             else:
                 command = " ".join(self.extraArgs['command'])
-                logging.writeToFile(command)
 
             ProcessUtilities.sendCommand(command)
 

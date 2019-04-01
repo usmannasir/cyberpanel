@@ -362,18 +362,12 @@ class MailServerManager:
             if ACLManager.currentContextPermission(currentACL, 'dkimManager') == 0:
                 return ACLManager.loadError()
 
-            openDKIMInstalled = 0
+            openDKIMInstalled = 1
 
-            if mailUtilities.checkIfDKIMInstalled() == 1:
-                openDKIMInstalled = 1
-
-                websitesName = ACLManager.findAllSites(currentACL, userID)
-
-                return render(self.request, 'mailServer/dkimManager.html',
-                              {'websiteList': websitesName, 'openDKIMInstalled': openDKIMInstalled})
+            websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(self.request, 'mailServer/dkimManager.html',
-                          {'openDKIMInstalled': openDKIMInstalled})
+                          {'websiteList': websitesName, 'openDKIMInstalled': openDKIMInstalled})
 
         except BaseException, msg:
             return HttpResponse(str(msg))

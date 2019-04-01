@@ -158,9 +158,9 @@ class ApplicationInstaller(multi.Thread):
 
             try:
                 command = 'sudo wp --info'
-                res = ProcessUtilities.executioner(command)
+                outout = ProcessUtilities.outputExecutioner(command)
 
-                if res == 0:
+                if not outout.find('WP-CLI root dir:') > -1:
                     self.installWPCLI()
             except subprocess.CalledProcessError:
                 self.installWPCLI()
