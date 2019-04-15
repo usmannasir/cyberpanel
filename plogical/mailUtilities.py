@@ -68,15 +68,15 @@ class mailUtilities:
 
             path = "/usr/local/CyberCP/install/rainloop/cyberpanel.net.ini"
 
-            if not os.path.exists("/usr/local/CyberCP/public/rainloop/data/_data_/_default_/domains/"):
-                os.makedirs("/usr/local/CyberCP/public/rainloop/data/_data_/_default_/domains/")
+            if not os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/"):
+                os.makedirs("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/")
 
-            finalPath = "/usr/local/CyberCP/public/rainloop/data/_data_/_default_/domains/" + domain + ".ini"
+            finalPath = "/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/" + domain + ".ini"
 
             if not os.path.exists(finalPath):
                 shutil.copy(path, finalPath)
 
-            command = 'chown -R lscpd:lscpd /usr/local/CyberCP/public/rainloop/data/'
+            command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/'
             ProcessUtilities.normalExecutioner(command)
 
             ## After effects ends
@@ -360,8 +360,6 @@ milter_default_action = accept
     def installSpamAssassin(install, SpamAssassin):
         try:
 
-            mailUtilities.checkHome()
-
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                 command = 'sudo yum install spamassassin -y'
             else:
@@ -397,9 +395,9 @@ milter_default_action = accept
             path = "/etc/mail/spamassassin/local.cf"
 
             command = "sudo cat " + path
-            res = subprocess.call(shlex.split(command))
+            output = ProcessUtilities.outputExecutioner(command)
 
-            if res == 1:
+            if output.find('No such') > -1:
                 return 0
             else:
                 return 1
@@ -606,6 +604,8 @@ def main():
         mailUtilities.saveSpamAssassinConfigs(args.tempConfigPath)
     elif args.function == 'savePolicyServerStatus':
         mailUtilities.savePolicyServerStatus(args.install)
+    elif args.function == 'installSpamAssassin':
+        mailUtilities.installSpamAssassin("install", "SpamAssassin")
 
 if __name__ == "__main__":
     main()

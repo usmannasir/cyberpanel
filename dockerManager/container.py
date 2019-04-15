@@ -25,7 +25,6 @@ import requests
 from plogical.processUtilities import ProcessUtilities
 from serverStatus.serverStatusUtil import ServerStatusUtil
 import threading as multi
-from plogical.mailUtilities import mailUtilities
 
 
 # Use default socket to connect

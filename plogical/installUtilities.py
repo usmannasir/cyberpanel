@@ -161,7 +161,7 @@ class installUtilities:
             else:
                 command = "sudo /usr/local/lsws/bin/lswsctrl restart"
 
-            ProcessUtilities.executioner(command)
+            return ProcessUtilities.executioner(command)
 
         except OSError, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")
@@ -169,7 +169,24 @@ class installUtilities:
         except ValueError, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")
             return 0
-        return 1
+
+    @staticmethod
+    def stopLiteSpeedSocket():
+        try:
+
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                command = "sudo systemctl stop lsws"
+            else:
+                command = "sudo /usr/local/lsws/bin/lswsctrl stop"
+
+            return ProcessUtilities.executioner(command)
+
+        except OSError, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")
+            return 0
+        except ValueError, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")
+            return 0
 
 
     @staticmethod

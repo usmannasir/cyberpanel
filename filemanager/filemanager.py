@@ -39,7 +39,8 @@ class FileManager:
             if not self.data['completeStartingPath'].find(self.data['home']) > -1:
                 return self.ajaxPre(0, 'Not allowed to browse this path, going back home!')
 
-            command = "sudo ls -la --group-directories-first " + self.returnPathEnclosed(self.data['completeStartingPath'])
+            command = "sudo ls -la --group-directories-first " + self.returnPathEnclosed(
+                self.data['completeStartingPath'])
             output = ProcessUtilities.outputExecutioner(command).splitlines()
 
             counter = 0
@@ -49,16 +50,22 @@ class FileManager:
                     currentFile = filter(lambda a: a != '', currentFile)
                     if currentFile[-1] == '.' or currentFile[-1] == '..' or currentFile[0] == 'total':
                         continue
+
+                    if len(currentFile) > 9:
+                        fileName = currentFile[8:]
+                        currentFile[-1] = " ".join(fileName)
+
                     dirCheck = 0
                     if currentFile[0][0] == 'd':
                         dirCheck = 1
 
-                    size = str(int(int(currentFile[4])/float(1024)))
+                    size = str(int(int(currentFile[4]) / float(1024)))
                     lastModified = currentFile[5] + ' ' + currentFile[6] + ' ' + currentFile[7]
-                    finalData[str(counter)] = [currentFile[-1], currentFile[-1], lastModified, size, currentFile[0], dirCheck]
+                    finalData[str(counter)] = [currentFile[-1], currentFile[-1], lastModified, size, currentFile[0],
+                                               dirCheck]
                     counter = counter + 1
-                except:
-                    continue
+                except BaseException, msg:
+                    logging.writeToFile(str(msg))
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -71,7 +78,8 @@ class FileManager:
             finalData = {}
             finalData['status'] = 1
 
-            command = "sudo ls -la --group-directories-first " + self.returnPathEnclosed(self.data['completeStartingPath'])
+            command = "sudo ls -la --group-directories-first " + self.returnPathEnclosed(
+                self.data['completeStartingPath'])
             output = ProcessUtilities.outputExecutioner(command).splitlines()
 
             counter = 0
@@ -83,11 +91,16 @@ class FileManager:
                     if currentFile[-1] == '.' or currentFile[-1] == '..' or currentFile[0] == 'total':
                         continue
 
+                    if len(currentFile) > 9:
+                        fileName = currentFile[8:]
+                        currentFile[-1] = " ".join(fileName)
+
                     dirCheck = False
                     if currentFile[0][0] == 'd':
                         dirCheck = True
 
-                    finalData[str(counter)] = [currentFile[-1], self.data['completeStartingPath'] + '/' + currentFile[-1], dirCheck]
+                    finalData[str(counter)] = [currentFile[-1],
+                                               self.data['completeStartingPath'] + '/' + currentFile[-1], dirCheck]
                     counter = counter + 1
                 except:
                     continue
@@ -106,10 +119,11 @@ class FileManager:
             if self.data['fileName'].find('..') > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
+
             command = "sudo touch " + self.returnPathEnclosed(self.data['fileName'])
             ProcessUtilities.executioner(command)
 
-            self.changeOwner(self.data['fileName'])
+            self.changeOwner(self.returnPathEnclosed(self.data['fileName']))
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -125,7 +139,7 @@ class FileManager:
             command = "sudo mkdir " + self.returnPathEnclosed(self.data['folderName'])
             ProcessUtilities.executioner(command)
 
-            self.changeOwner(self.data['folderName'])
+            self.changeOwner(self.returnPathEnclosed(self.data['folderName']))
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)

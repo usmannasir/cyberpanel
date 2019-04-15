@@ -4,6 +4,7 @@ import shlex
 import os
 import socket
 import threading as multi
+import time
 
 class ProcessUtilities(multi.Thread):
     litespeedProcess = "litespeed"
@@ -144,18 +145,25 @@ class ProcessUtilities(multi.Thread):
 
     @staticmethod
     def setupUDSConnection():
-        try:
-            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            sock.connect(ProcessUtilities.server_address)
-            return [sock, "None"]
-        except BaseException, msg:
-            logging.writeToFile(str(msg) + ". [setupUDSConnection:138]")
-            return [-1, str(msg)]
+        count = 0
+        while 1:
+            try:
+                sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                sock.connect(ProcessUtilities.server_address)
+                return [sock, "None"]
+            except BaseException, msg:
+                if count == 3:
+                    logging.writeToFile("Failed to connect to LSCPD socket, run 'systemctl restart lscpd' on command line to fix this issue.")
+                    return [-1, str(msg)]
+                else:
+                    count = count + 1
+
+                logging.writeToFile("Failed to connect to LSCPD UDS, error message:" + str(msg) + ". Attempt " + str(count) + ", we will attempt again in 2 seconds. [setupUDSConnection:138]")
+                time.sleep(2)
 
     @staticmethod
     def sendCommand(command):
         try:
-            logging.writeToFile(command)
 
             ret = ProcessUtilities.setupUDSConnection()
 

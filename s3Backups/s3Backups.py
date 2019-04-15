@@ -18,6 +18,8 @@ try:
     from random import randint
     import subprocess, shlex
     from plogical.processUtilities import ProcessUtilities
+    from websiteFunctions.models import Websites, Backups
+    from plogical.virtualHostUtilities import virtualHostUtilities
 except:
     import threading as multi
     from random import randint
@@ -93,18 +95,41 @@ class S3Backups(multi.Thread):
         return json_data
 
     def setupCron(self):
-        tempPath = '/home/cyberpanel/' + str(randint(10000, 99999))
-
-        writeToFile = open(tempPath, 'w')
-        writeToFile.write('0 0 * * * /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/s3Backups/s3Backups.py > /home/cyberpanel/error-logs.txt 2>&1\n')
-        writeToFile.close()
-
-        command = 'sudo crontab -u cyberpanel ' + tempPath
-        ProcessUtilities.executioner(command)
         try:
-            os.remove(tempPath)
-        except:
-            pass
+
+            command = "sudo cat /etc/crontab"
+            crons = ProcessUtilities.outputExecutioner(command).splitlines()
+
+            cronCheck = 1
+
+            for items in crons:
+                if items.find('s3Backups.py') > -1:
+                    cronCheck = 0
+
+            tempPath = '/home/cyberpanel/' + str(randint(10000, 99999))
+
+            writeToFile = open(tempPath, "w")
+
+            for items in crons:
+                writeToFile.writelines(items + "\n")
+
+            if cronCheck:
+                writeToFile.writelines("0 0 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/s3Backups/s3Backups.py > /home/cyberpanel/error-logs.txt 2>&1\n")
+
+            writeToFile.close()
+
+            command = 'sudo mv ' + tempPath + " /etc/crontab"
+            ProcessUtilities.executioner(command)
+
+            command = 'chown root:root /etc/crontab'
+            ProcessUtilities.executioner(command)
+
+            try:
+                os.remove(tempPath)
+            except:
+                pass
+        except BaseException, msg:
+            logging.writeToFile(str(msg) + " [S3Backups.setupCron]")
 
     def connectAccount(self):
         try:
@@ -389,25 +414,64 @@ class S3Backups(multi.Thread):
             return proc.ajaxPre(0, str(msg))
 
     def createBackup(self, virtualHost):
-        finalData = json.dumps({'websiteToBeBacked': virtualHost})
 
-        r = requests.post("http://localhost:5003/backup/submitBackupCreation", data=finalData)
+        website = Websites.objects.get(domain=virtualHost)
+        # defining paths
 
-        data = json.loads(r.text)
-        try:
-            backupPath = data['tempStorage']
-        except:
-            pass
+        ## /home/example.com/backup
+        backupPath = os.path.join("/home", virtualHost, "backup/")
+        domainUser = website.externalApp
+        backupName = 'backup-' + domainUser + "-" + time.strftime("%I-%M-%S-%a-%b-%Y")
+
+        ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018
+        tempStoragePath = os.path.join(backupPath, backupName)
+
+        execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+        execPath = execPath + " submitBackupCreation --tempStoragePath " + tempStoragePath + " --backupName " \
+                   + backupName + " --backupPath " + backupPath + ' --backupDomain ' + virtualHost
+
+        ProcessUtilities.popenExecutioner(execPath)
+
+        time.sleep(2)
 
         while (1):
-            r = requests.post("http://localhost:5003/backup/backupStatus", data=finalData)
-            time.sleep(2)
-            data = json.loads(r.text)
 
-            if data['backupStatus'] == 0:
-                return 0, data['error_message']
-            elif data['abort'] == 1:
-                return 1, backupPath
+            backupDomain = virtualHost
+            status = os.path.join("/home", backupDomain, "backup/status")
+            backupFileNamePath = os.path.join("/home", backupDomain, "backup/backupFileName")
+            pid = os.path.join("/home", backupDomain, "backup/pid")
+            ## read file name
+
+            try:
+                fileName = open(backupFileNamePath, 'r').read()
+            except:
+                fileName = "Fetching.."
+
+            ## file name read ends
+
+            if os.path.exists(status):
+                status = open(status, 'r').read()
+
+                if status.find("Completed") > -1:
+
+                    ### Removing Files
+
+                    command = 'sudo rm -f ' + status
+                    ProcessUtilities.normalExecutioner(command)
+
+                    command = 'sudo rm -f ' + backupFileNamePath
+                    ProcessUtilities.normalExecutioner(command)
+
+                    command = 'sudo rm -f ' + pid
+                    ProcessUtilities.normalExecutioner(command)
+
+                    return 1, tempStoragePath
+
+                elif status.find("[5009]") > -1:
+                    backupObs = Backups.objects.filter(fileName=fileName)
+                    for items in backupObs:
+                        items.delete()
+                    return 0, status
 
     def forceRunAWSBackup(self):
         try:
@@ -1310,7 +1374,7 @@ def main():
     file.close()
 
     finalData = json.dumps({'randomFile': pathToFile})
-    requests.post("http://localhost:5003/api/runAWSBackups", data=finalData, verify=False)
+    requests.post("https://localhost:8090/api/runAWSBackups", data=finalData, verify=False)
 
 
 if __name__ == "__main__":

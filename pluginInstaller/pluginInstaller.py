@@ -1,10 +1,12 @@
+import sys
+sys.path.append('/usr/local/CyberCP')
 import subprocess
 import shlex
 import argparse
 import os
-import tarfile
 import shutil
 import time
+from plogical.processUtilities import ProcessUtilities
 
 class pluginInstaller:
     installLogPath = "/home/cyberpanel/modSecInstallLog"
@@ -285,8 +287,9 @@ class pluginInstaller:
 
     @staticmethod
     def restartGunicorn():
-        command = 'systemctl restart gunicorn.socket'
-        subprocess.call(shlex.split(command))
+        command = 'systemctl restart lscpd'
+        ProcessUtilities.normalExecutioner(command)
+
 
 
 

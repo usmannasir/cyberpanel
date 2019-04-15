@@ -37,8 +37,6 @@ class ServerStatusUtil:
     def installLiteSpeed(licenseKey, statusFile):
         try:
 
-            logging.CyberCPLogFileWriter.writeToFile(os.environ.get('TERM'))
-
             cwd = os.getcwd()
             try:
 

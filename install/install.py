@@ -246,7 +246,7 @@ class preFlightsChecks:
                 #     self.stdOut("Error in fixing sudoers file: " + str(err), 1, 1, os.EX_OSERR)
 
                 self.stdOut("Add Cyberpanel user")
-                command = "adduser --disabled-login cyberpanel"
+                command = 'adduser --disabled-login --gecos "" cyberpanel'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
                 if res != 0 and res != 9:
@@ -287,6 +287,36 @@ class preFlightsChecks:
             # writeToFile.close()
 
             ###############################
+
+            ### Docker User/group
+
+            if self.distro == ubuntu:
+                command = 'adduser --disabled-login --gecos "" docker'
+            else:
+                command = "adduser docker"
+
+
+            preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
+                                  'add user cyberpanel',
+                                  1, 0, os.EX_OSERR)
+
+            command = 'groupadd docker'
+            preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
+                                  'add user cyberpanel',
+                                  1, 0, os.EX_OSERR)
+
+            command = 'usermod -aG docker docker'
+            preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
+                                  'add user cyberpanel',
+                                  1, 0, os.EX_OSERR)
+
+            command = 'usermod -aG docker cyberpanel'
+            preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
+                                  'add user cyberpanel',
+                                  1, 0, os.EX_OSERR)
+
+
+            ###
 
             command = "mkdir -p /etc/letsencrypt/live/"
             preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
@@ -884,8 +914,8 @@ class preFlightsChecks:
 
         os.chdir(self.path)
 
-        #command = "wget http://cyberpanel.sh/CyberPanel.1.8.1.tar.gz"
-        command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
+        command = "wget http://cyberpanel.sh/CyberPanel.1.8.2.tar.gz"
+        #command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'CyberPanel Download',
                                       1, 1, os.EX_OSERR)
@@ -893,8 +923,8 @@ class preFlightsChecks:
         ##
 
         count = 0
-        #command = "tar zxf CyberPanel.1.8.1.tar.gz"
-        command = "tar zxf CyberPanelTemp.tar.gz"
+        command = "tar zxf CyberPanel.1.8.2.tar.gz"
+        #command = "tar zxf CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'Extract CyberPanel',1, 1, os.EX_OSERR)
 
@@ -976,8 +1006,26 @@ class preFlightsChecks:
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'Move static content', 1, 1, os.EX_OSERR)
 
+        try:
+            path = "/usr/local/CyberCP/version.txt"
+            writeToFile = open(path, 'w')
+            writeToFile.writelines('1.8\n')
+            writeToFile.writelines('2')
+            writeToFile.close()
+        except:
+            pass
+
     def fixCyberPanelPermissions(self):
+
         ###### fix Core CyberPanel permissions
+
+        command = "usermod -G lscpd,lsadm,nobody lscpd"
+        preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
+                              'add lscpd to important groups', 0, 0, os.EX_OSERR)
+
+        command = "usermod -G lscpd,lsadm,nogroup lscpd"
+        preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
+                              'add lscpd to important groups', 0, 0, os.EX_OSERR)
 
         command = "find /usr/local/CyberCP -type d -exec chmod 0755 {} \;"
         preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
@@ -1015,9 +1063,9 @@ class preFlightsChecks:
         preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
                               'fix permissions /usr/local/CyberCP', 1, 0, os.EX_OSERR)
 
-        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/rainloop/data"
+        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin/tmp"
         preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
-                              'fix permissions /usr/local/CyberCP', 1, 0, os.EX_OSERR)
+                              'fix permissions /usr/local/CyberCP/public/phpmyadmin/tmp', 1, 0, os.EX_OSERR)
 
         ## change owner
 
@@ -1025,6 +1073,25 @@ class preFlightsChecks:
         preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
                               'change owner /usr/local/CyberCP', 1, 0, os.EX_OSERR)
 
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+        preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
+                              'change owner /usr/local/CyberCP', 1, 0, os.EX_OSERR)
+
+        command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
+        preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
+                              'Change permissions for CLI.', 1, 0, os.EX_OSERR)
+
+        command = "chmod 700 /usr/local/CyberCP/plogical/upgradeCritical.py"
+        preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
+                              'Change permissions for upgrade.', 1, 0, os.EX_OSERR)
+
+        command = "chmod 700 /usr/local/CyberCP/postfixSenderPolicy/client.py"
+        preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
+                              'Change permissions for client.', 1, 0, os.EX_OSERR)
+
+        command = "chmod 600 /usr/local/CyberCP/CyberCP/settings.py"
+        preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
+                              'Change permissions for client.', 1, 0, os.EX_OSERR)
 
     def install_unzip(self):
         self.stdOut("Install unzip")
@@ -2055,9 +2122,11 @@ class preFlightsChecks:
         try:
             #######
 
-
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
+
+            if os.path.exists("/usr/local/CyberCP/public/rainloop"):
+                return 0
 
             os.chdir("/usr/local/CyberCP/public")
 
@@ -2155,6 +2224,27 @@ class preFlightsChecks:
                     preFlightsChecks.stdOut("Rainloop permissions changed!")
                     break
             ######
+
+            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data"
+            preFlightsChecks.call(command, self.distro, '[downoad_and_install_rainloop]',
+                                  'rainlooop data folder',
+                                  1, 0, os.EX_OSERR)
+
+            path = "/usr/local/CyberCP/public/rainloop/rainloop/v/1.12.1/include.php"
+
+            data = open(path, 'r').readlines()
+            writeToFile = open(path, 'w')
+
+            for items in data:
+                if items.find("$sCustomDataPath = '';") > -1:
+                    writeToFile.writelines(
+                        "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+
+
 
 
         except OSError, msg:
@@ -2323,7 +2413,7 @@ class preFlightsChecks:
                                           1, 1, os.EX_OSERR)
 
 
-            command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /usr/local/lscp/key.pem -out /usr/local/lscp/cert.pem'
+            command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem'
             preFlightsChecks.call(command, self.distro, '[installLSCPD]',
                                           'Install LSCPD',
                                           1, 1, os.EX_OSERR)
@@ -2359,11 +2449,16 @@ class preFlightsChecks:
             preFlightsChecks.call(command, self.distro, '[installLSCPD]',
                                           'Install LSCPD',
                                           1, 0, os.EX_OSERR)
+            try:
+                os.mkdir('/usr/local/lscp/cyberpanel')
+            except:
+                pass
+            try:
+                os.mkdir('/usr/local/lscp/cyberpanel/logs')
+            except:
+                pass
 
-            os.mkdir('/usr/local/lscp/cyberpanel')
-            os.mkdir('/usr/local/lscp/cyberpanel/logs')
-
-            self.setupComodoRules()
+            #self.setupComodoRules()
             self.setupPort()
             self.setupPythonWSGI()
 
@@ -2405,6 +2500,7 @@ class preFlightsChecks:
 
             modsecConfig = """
         module mod_security {
+        ls_enabled 0
         modsecurity  on
         modsecurity_rules `
         SecDebugLogLevel 0
@@ -3509,8 +3605,9 @@ def main():
     checks.setup_gunicorn()
 
     import installCyberPanel
+    
     if ent == 0:
-        installCyberPanel.Main(cwd, mysql, distro, ent, port)
+        installCyberPanel.Main(cwd, mysql, distro, ent, None, port)
     else:
         installCyberPanel.Main(cwd, mysql, distro, ent, serial, port)
 

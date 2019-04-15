@@ -227,8 +227,11 @@ def deleteWebsite(request):
             website = Websites.objects.get(domain=data['websiteName'])
             websiteOwner = website.admin
 
-            if admin.websites_set.all().count() == 0:
-                websiteOwner.delete()
+            try:
+                if admin.websites_set.all().count() == 0:
+                    websiteOwner.delete()
+            except:
+                pass
 
             ## Deleting master domain
 

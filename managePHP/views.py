@@ -1319,10 +1319,19 @@ def getRequestStatus(request):
                     checkCommand = 'dpkg --list'
                     checkCommand = shlex.split(checkCommand)
 
-                requestStatus = unicode(open(phpUtilities.installLogPath, "r").read())
+                command = "sudo cat " + phpUtilities.installLogPath
+                requestStatus = ProcessUtilities.outputExecutioner(command)
+
+                if requestStatus.find('No such') > -1:
+                    requestStatus = ""
+
                 requestStatusSize = len(requestStatus)
 
                 if requestStatus.find("PHP Extension Installed") > -1:
+
+                    command = "sudo rm -f " + phpUtilities.installLogPath
+                    ProcessUtilities.executioner(command)
+
                     if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
                         ext = installedPackages.objects.get(extensionName=extensionName)
                         ext.status = 1
@@ -1339,10 +1348,14 @@ def getRequestStatus(request):
                     return HttpResponse(final_json)
                 elif requestStatus.find("Can not be installed") > -1:
 
+                    command = "sudo rm -f " + phpUtilities.installLogPath
+                    ProcessUtilities.executioner(command)
+
                     if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
                         ext = installedPackages.objects.get(extensionName=extensionName)
                         ext.status = 1
                         ext.save()
+
                     else:
                         ext = installedPackages.objects.get(extensionName=extensionName)
                         ext.status = 0
@@ -1355,10 +1368,14 @@ def getRequestStatus(request):
                     return HttpResponse(final_json)
                 elif requestStatus.find("Can not un-install Extension") > -1:
 
+                    command = "sudo rm -f " + phpUtilities.installLogPath
+                    ProcessUtilities.executioner(command)
+
                     if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
                         ext = installedPackages.objects.get(extensionName=extensionName)
                         ext.status = 1
                         ext.save()
+
                     else:
                         ext = installedPackages.objects.get(extensionName=extensionName)
                         ext.status = 0
@@ -1370,6 +1387,9 @@ def getRequestStatus(request):
                                              'size': requestStatusSize})
                     return HttpResponse(final_json)
                 elif requestStatus.find("PHP Extension Removed") > -1:
+
+                    command = "sudo rm -f " + phpUtilities.installLogPath
+                    ProcessUtilities.executioner(command)
 
                     ext = installedPackages.objects.get(extensionName=extensionName)
                     ext.status = 0

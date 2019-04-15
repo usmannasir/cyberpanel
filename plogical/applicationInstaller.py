@@ -507,9 +507,9 @@ class ApplicationInstaller(multi.Thread):
 
             try:
                 command = 'sudo git --help'
-                res = ProcessUtilities.executioner(command)
+                output = ProcessUtilities.outputExecutioner(command)
 
-                if res == 0:
+                if output.find('command not found') > -1:
                     statusFile = open(tempStatusPath, 'w')
                     statusFile.writelines('Installing GIT..,0')
                     statusFile.close()
@@ -721,7 +721,7 @@ class ApplicationInstaller(multi.Thread):
 
             if not os.path.exists("staging.zip"):
                 command = 'wget --no-check-certificate https://github.com/joomla/joomla-cms/archive/staging.zip -P ' + finalPath
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.normalExecutioner(command)
             else:
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines("File already exists." + " [404]")
@@ -729,12 +729,12 @@ class ApplicationInstaller(multi.Thread):
                 return 0
 
             command = 'unzip ' + finalPath + 'staging.zip -d ' + finalPath
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.normalExecutioner(command)
 
             os.remove(finalPath + 'staging.zip')
 
             command = 'cp -r ' + finalPath + 'joomla-cms-staging/. ' + finalPath
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.normalExecutioner(command)
 
             shutil.rmtree(finalPath + "joomla-cms-staging")
             os.rename(finalPath + "installation/configuration.php-dist", finalPath + "configuration.php")
@@ -820,7 +820,7 @@ class ApplicationInstaller(multi.Thread):
             shutil.rmtree(finalPath + "installation")
 
             command = "sudo chown -R " + virtualHostUser + ":" + virtualHostUser + " " + finalPath
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.normalExecutioner(command)
 
             vhost.addRewriteRules(domainName)
 

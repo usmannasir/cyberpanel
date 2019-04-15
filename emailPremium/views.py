@@ -15,8 +15,6 @@ from math import ceil
 from postfixSenderPolicy.client import cacheClient
 import thread
 from plogical.mailUtilities import mailUtilities
-import subprocess
-import shlex
 from plogical.virtualHostUtilities import virtualHostUtilities
 from random import randint
 from plogical.acl import ACLManager
@@ -785,7 +783,11 @@ def installSpamAssassin(request):
         else:
             return ACLManager.loadErrorJson()
         try:
-            thread.start_new_thread(mailUtilities.installSpamAssassin, ('Install','SpamAssassin'))
+
+            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+            execPath = execPath + " installSpamAssassin"
+            ProcessUtilities.popenExecutioner(execPath)
+
             final_json = json.dumps({'status': 1, 'error_message': "None"})
             return HttpResponse(final_json)
         except BaseException,msg:

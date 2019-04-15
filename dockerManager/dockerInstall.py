@@ -18,18 +18,6 @@ class DockerInstall:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "Starting Docker Installation..\n", 1)
 
-            command = "sudo adduser docker"
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'sudo groupadd docker'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'sudo usermod -aG docker docker'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'sudo usermod -aG docker cyberpanel'
-            ServerStatusUtil.executioner(command, statusFile)
-
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                 command = 'sudo yum install -y docker'
             else:
@@ -50,9 +38,6 @@ class DockerInstall:
                                                       "Docker successfully installed.[200]\n", 1)
 
             time.sleep(2)
-
-            command = 'sudo systemctl restart gunicorn.socket'
-            ProcessUtilities.executioner(command)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)

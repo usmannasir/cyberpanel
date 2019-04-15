@@ -1437,7 +1437,7 @@ class WebsiteManager:
         try:
             statusFile = data['statusFile']
 
-            statusData = open(statusFile, 'r').readlines()
+            statusData = ProcessUtilities.outputExecutioner("sudo cat " + statusFile).splitlines()
 
             lastLine = statusData[-1]
 
@@ -1617,7 +1617,7 @@ class WebsiteManager:
             # return execPath
 
 
-            output = subprocess.Popen(shlex.split(execPath))
+            ProcessUtilities.popenExecutioner(execPath)
 
             data_ret = {'status': 1, "installStatus": 1, 'tempStatusPath': tempStatusPath}
             json_data = json.dumps(data_ret)

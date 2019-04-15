@@ -422,8 +422,8 @@ class virtualHostUtilities:
     def issueSSLForHostName(virtualHost, path):
         try:
 
-            destPrivKey = "/usr/local/lscp/key.pem"
-            destCert = "/usr/local/lscp/cert.pem"
+            destPrivKey = "/usr/local/lscp/conf/key.pem"
+            destCert = "/usr/local/lscp/conf/cert.pem"
 
             pathToStoreSSLFullChain = '/etc/letsencrypt/live/' + virtualHost + '/fullchain.pem'
             pathToStoreSSLPrivKey = '/etc/letsencrypt/live/' + virtualHost + '/privkey.pem'
@@ -433,8 +433,6 @@ class virtualHostUtilities:
                 os.remove(destPrivKey)
             if os.path.exists(destCert):
                 os.remove(destCert)
-
-
 
             adminEmail = "email@" + virtualHost
 
@@ -1002,9 +1000,8 @@ class virtualHostUtilities:
 
             data = [int(totalUsageInMB), int(percentage)]
             return data
-        except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [getDiskUsage]")
-            return [int(0), int(0)]
+        except BaseException:
+            return [int(totalUsageInMB), int(0)]
 
     @staticmethod
     def permissionControl(path):

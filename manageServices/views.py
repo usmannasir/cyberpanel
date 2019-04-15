@@ -8,7 +8,6 @@ from loginSystem.views import loadLoginPage
 import os
 import json
 from plogical.mailUtilities import mailUtilities
-import subprocess, shlex
 from plogical.acl import ACLManager
 from models import PDNSStatus
 from .serviceManager import ServiceManager

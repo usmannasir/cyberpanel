@@ -14,6 +14,8 @@ import time
 from baseTemplate.models import version
 import MySQLdb as mysql
 from CyberCP import settings
+import random
+import string
 
 class Upgrade:
     logPath = "/usr/local/lscp/logs/upgradeLog"
@@ -50,6 +52,316 @@ class Upgrade:
             return 0
 
     @staticmethod
+    def mountTemp():
+        try:
+
+            if os.path.exists("/usr/.tempdisk"):
+                return 0
+
+            command = "dd if=/dev/zero of=/usr/.tempdisk bs=100M count=15"
+            Upgrade.executioner(command, 'mountTemp', 0)
+
+            command = "mkfs.ext4 -F /usr/.tempdisk"
+            Upgrade.executioner(command, 'mountTemp', 0)
+
+            command = "mkdir -p /usr/.tmpbak/"
+            Upgrade.executioner(command, 'mountTemp', 0)
+
+            command = "cp -pr /tmp/* /usr/.tmpbak/"
+            subprocess.call(command, shell=True)
+
+            command = "mount -o loop,rw,nodev,nosuid,noexec,nofail /usr/.tempdisk /tmp"
+            Upgrade.executioner(command, 'mountTemp', 0)
+
+            command = "chmod 1777 /tmp"
+            Upgrade.executioner(command, 'mountTemp', 0)
+
+            command = "cp -pr /usr/.tmpbak/* /tmp/"
+            subprocess.call(command, shell=True)
+
+            command = "rm -rf /usr/.tmpbak"
+            Upgrade.executioner(command, 'mountTemp', 0)
+
+            command = "mount --bind /tmp /var/tmp"
+            Upgrade.executioner(command, 'mountTemp', 0)
+
+
+            tmp = "/usr/.tempdisk /tmp ext4 loop,rw,noexec,nosuid,nodev,nofail 0 0\n"
+            varTmp = "/tmp /var/tmp none bind 0 0\n"
+
+            fstab = "/etc/fstab"
+            writeToFile = open(fstab, "a")
+            writeToFile.writelines(tmp)
+            writeToFile.writelines(varTmp)
+            writeToFile.close()
+
+        except BaseException, msg:
+            Upgrade.stdOut(str(msg) + " [mountTemp]", 0)
+
+    @staticmethod
+    def setupPythonWSGI():
+        try:
+
+            cwd = os.getcwd()
+
+            command = "wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-1.4.tgz"
+            Upgrade.executioner(command, 0)
+
+            command = "tar xf wsgi-lsapi-1.4.tgz"
+            Upgrade.executioner(command, 0)
+
+            os.chdir("wsgi-lsapi-1.4")
+
+            command = "python ./configure.py"
+            Upgrade.executioner(command, 0)
+
+            command = "make"
+            Upgrade.executioner(command, 0)
+
+            command = "cp lswsgi /usr/local/CyberCP/bin/"
+            Upgrade.executioner(command, 0)
+
+            os.chdir(cwd)
+
+        except:
+            return 0
+
+    @staticmethod
+    def dockerUsers():
+        ### Docker User/group
+
+        command = "adduser docker"
+        Upgrade.executioner(command, 'adduser docker', 0)
+
+        command = 'groupadd docker'
+        Upgrade.executioner(command, 'adduser docker', 0)
+
+        command = 'usermod -aG docker docker'
+        Upgrade.executioner(command, 'adduser docker', 0)
+
+        command = 'usermod -aG docker cyberpanel'
+        Upgrade.executioner(command, 'adduser docker', 0)
+
+        ###
+
+    @staticmethod
+    def fixSudoers():
+        try:
+            distroPath = '/etc/lsb-release'
+
+            if os.path.exists(distroPath):
+                fileName = '/etc/sudoers'
+                data = open(fileName, 'r').readlines()
+
+                writeDataToFile = open(fileName, 'w')
+                for line in data:
+                    if line.find("%sudo ALL=(ALL:ALL)") > -1:
+                        continue
+                    else:
+                        writeDataToFile.write(line)
+                writeDataToFile.close()
+
+            else:
+                try:
+                    path = "/etc/sudoers"
+
+                    data = open(path, 'r').readlines()
+
+                    writeToFile = open(path, 'w')
+
+                    for items in data:
+                        if items.find("wheel") > -1 and items.find("ALL=(ALL)"):
+                            continue
+                        else:
+                            writeToFile.writelines(items)
+
+                    writeToFile.close()
+                except:
+                    pass
+
+            command = "chsh -s /bin/false cyberpanel"
+            Upgrade.executioner(command, 0)
+        except IOError as err:
+            pass
+
+    @staticmethod
+    def download_install_phpmyadmin():
+        try:
+            cwd = os.getcwd()
+
+            if not os.path.exists("/usr/local/CyberCP/public"):
+                os.mkdir("/usr/local/CyberCP/public")
+
+            try:
+                shutil.rmtree("/usr/local/CyberCP/public/phpmyadmin")
+            except:
+                pass
+
+            os.chdir("/usr/local/CyberCP/public")
+
+            command = '/usr/local/lsws/lsphp70/bin/php /usr/bin/composer create-project phpmyadmin/phpmyadmin'
+            Upgrade.executioner(command, 0)
+
+            ## Write secret phrase
+
+            rString = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])
+
+            data = open('phpmyadmin/config.sample.inc.php', 'r').readlines()
+
+            writeToFile = open('phpmyadmin/config.inc.php', 'w')
+
+            for items in data:
+                if items.find('blowfish_secret') > -1:
+                    writeToFile.writelines(
+                        "$cfg['blowfish_secret'] = '" + rString + "'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */\n")
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.writelines("$cfg['TempDir'] = '/usr/local/CyberCP/public/phpmyadmin/tmp';\n")
+
+            writeToFile.close()
+
+            os.mkdir('/usr/local/CyberCP/public/phpmyadmin/tmp')
+
+            os.chdir(cwd)
+
+        except BaseException, msg:
+            Upgrade.stdOut(str(msg) + " [download_install_phpmyadmin]", 0)
+
+    @staticmethod
+    def setupComposer():
+        command = "wget https://cyberpanel.sh/composer.sh"
+        Upgrade.executioner(command, 0)
+
+        command = "chmod +x composer.sh"
+        Upgrade.executioner(command, 0)
+
+        command = "./composer.sh"
+        Upgrade.executioner(command, 0)
+
+    @staticmethod
+    def downoad_and_install_raindloop():
+        try:
+            #######
+
+            if os.path.exists("/usr/local/CyberCP/public/rainloop"):
+
+                if os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data"):
+                    pass
+                else:
+                    command = "mv /usr/local/CyberCP/public/rainloop/data /usr/local/lscp/cyberpanel/rainloop/data"
+                    Upgrade.executioner(command, 0)
+
+                    command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+                    Upgrade.executioner(command, 0)
+
+                path = "/usr/local/CyberCP/public/rainloop/rainloop/v/1.12.1/include.php"
+
+                data = open(path, 'r').readlines()
+                writeToFile = open(path, 'w')
+
+                for items in data:
+                    if items.find("$sCustomDataPath = '';") > -1:
+                        writeToFile.writelines(
+                            "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
+                    else:
+                        writeToFile.writelines(items)
+
+                writeToFile.close()
+                return 0
+
+            cwd = os.getcwd()
+
+            if not os.path.exists("/usr/local/CyberCP/public"):
+                os.mkdir("/usr/local/CyberCP/public")
+
+            os.chdir("/usr/local/CyberCP/public")
+
+            count = 1
+
+            while (1):
+                command = 'wget https://www.rainloop.net/repository/webmail/rainloop-community-latest.zip'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+                if res != 0:
+                    count = count + 1
+                    if count == 3:
+                        break
+                else:
+                    break
+
+            #############
+
+            count = 0
+
+            while (1):
+                command = 'unzip rainloop-community-latest.zip -d /usr/local/CyberCP/public/rainloop'
+
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+                if res != 0:
+                    count = count + 1
+                    if count == 3:
+                        break
+                else:
+                    break
+
+            os.remove("rainloop-community-latest.zip")
+
+            #######
+
+            os.chdir("/usr/local/CyberCP/public/rainloop")
+
+            count = 0
+
+            while (1):
+                command = 'find . -type d -exec chmod 755 {} \;'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+                if res != 0:
+                    count = count + 1
+                    if count == 3:
+                        break
+                else:
+                    break
+
+            #############
+
+            count = 0
+
+            while (1):
+
+                command = 'find . -type f -exec chmod 644 {} \;'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
+                if res != 0:
+                    count = count + 1
+                    if count == 3:
+                        break
+                else:
+                    break
+            ######
+
+            path = "/usr/local/CyberCP/public/rainloop/rainloop/v/1.12.1/include.php"
+
+            data = open(path, 'r').readlines()
+            writeToFile = open(path, 'w')
+
+            for items in data:
+                if items.find("$sCustomDataPath = '';") > -1:
+                    writeToFile.writelines(
+                        "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
+                else:
+                    writeToFile.writelines(items)
+
+            os.chdir(cwd)
+
+        except BaseException, msg:
+            Upgrade.stdOut(str(msg) + " [downoad_and_install_raindloop]", 0)
+
+        return 1
+
+    @staticmethod
     def downloadLink():
         try:
             url = "https://cyberpanel.net/version.txt"
@@ -57,6 +369,16 @@ class Upgrade:
             data = json.loads(r.text)
             version_number = str(data['version'])
             version_build = str(data['build'])
+
+            try:
+                path = "/usr/local/CyberCP/version.txt"
+                writeToFile = open(path, 'w')
+                writeToFile.writelines(version_number + '\n')
+                writeToFile.writelines(version_build)
+                writeToFile.close()
+            except:
+                pass
+
             return (version_number + "." + version_build + ".tar.gz")
         except BaseException, msg:
             Upgrade.stdOut(str(msg) + ' [downloadLink]')
@@ -98,56 +420,12 @@ class Upgrade:
             command = "pip install --ignore-installed -r /usr/local/CyberCP/requirments.txt"
             Upgrade.executioner(command, 'CyberPanel requirements', 1)
 
-            command = "systemctl stop gunicorn.socket"
-            Upgrade.executioner(command, '', 0)
-
             command = "virtualenv --system-site-packages /usr/local/CyberCP"
             Upgrade.executioner(command, 'Setting up VirtualEnv [Two]', 1)
 
             Upgrade.stdOut('Virtual enviroment for CyberPanel successfully installed.')
         except OSError, msg:
             Upgrade.stdOut(str(msg) + " [setupVirtualEnv]", 0)
-
-    @staticmethod
-    def updateGunicornConf():
-        try:
-            path = '/etc/systemd/system/gunicorn.service'
-
-            cont = """[Unit]
-Description=gunicorn daemon
-Requires=gunicorn.socket
-After=network.target
-
-[Service]
-PIDFile=/run/gunicorn/pid
-User=cyberpanel
-Group=cyberpanel
-RuntimeDirectory=gunicorn
-WorkingDirectory=/usr/local/CyberCP
-ExecStart=/usr/local/CyberCP/bin/gunicorn --pid /run/gunicorn/gucpid --timeout 2000 --workers 2   \
-          --bind 127.0.0.1:5003 CyberCP.wsgi
-ExecReload=/bin/kill -s HUP $MAINPID
-ExecStop=/bin/kill -s TERM $MAINPID
-PrivateTmp=true
-
-[Install]
-WantedBy=multi-user.target"""
-
-            writeToFile = open(path, 'w')
-            writeToFile.write(cont)
-            writeToFile.close()
-
-            ##
-
-            command = 'systemctl daemon-reload'
-            Upgrade.executioner(command, 'daemon-reload', 0)
-
-            ##
-
-            command = 'systemctl restart gunicorn.socket'
-            Upgrade.executioner(command, 'restart gunicorn.socket', 0)
-        except BaseException, msg:
-            Upgrade.stdOut(str(msg) + " [updateGunicornConf]")
 
     @staticmethod
     def fileManager():
@@ -186,13 +464,16 @@ WantedBy=multi-user.target"""
     @staticmethod
     def staticContent():
 
-        command = "rm -rf /usr/local/lscp/cyberpanel/static"
+        command = "rm -rf /usr/local/CyberCP/public/static"
         Upgrade.executioner(command, 'Remove old static content', 0)
 
         ##
 
-        command = "mv /usr/local/CyberCP/static /usr/local/lscp/cyberpanel"
-        Upgrade.executioner(command, 'Update new static content', 0)
+        if not os.path.exists("/usr/local/CyberCP/public"):
+            os.mkdir("/usr/local/CyberCP/public")
+
+
+        shutil.move("/usr/local/CyberCP/static", "/usr/local/CyberCP/public/")
 
     @staticmethod
     def upgradeVersion():
@@ -255,6 +536,13 @@ WantedBy=multi-user.target"""
                 cursor.execute('ALTER TABLE loginSystem_administrator ADD token varchar(500)')
             except:
                 pass
+
+
+            try:
+                cursor.execute('ALTER TABLE loginSystem_administrator ADD api integer')
+            except:
+                pass
+
             try:
                 cursor.execute('ALTER TABLE loginSystem_administrator ADD acl_id integer')
             except:
@@ -968,9 +1256,6 @@ WantedBy=multi-user.target"""
             command = 'usermod -a -G lsadm lscpd'
             Upgrade.executioner(command, 'Add group LSCPD', 0)
 
-            command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel'
-            Upgrade.executioner(command, 'chown cyberpanel', 0)
-
             command = 'systemctl daemon-reload'
             Upgrade.executioner(command, 'daemon-reload LSCPD', 0)
 
@@ -990,6 +1275,15 @@ WantedBy=multi-user.target"""
 
             Upgrade.stdOut("Fixing permissions..")
 
+
+            command = "usermod -G lscpd,lsadm,nobody lscpd"
+            Upgrade.executioner(command, 'chown core code', 0)
+
+            command = "usermod -G lscpd,lsadm,nogroup lscpd"
+            Upgrade.executioner(command, 'chown core code', 0)
+
+            ###### fix Core CyberPanel permissions
+
             command = "find /usr/local/CyberCP -type d -exec chmod 0755 {} \;"
             Upgrade.executioner(command, 'chown core code', 0)
 
@@ -999,11 +1293,50 @@ WantedBy=multi-user.target"""
             command = "chmod -R 755 /usr/local/CyberCP/bin"
             Upgrade.executioner(command, 'chown core code', 0)
 
+            ## change owner
+
             command = "chown -R root:root /usr/local/CyberCP"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel'
-            Upgrade.executioner(command, 'chown static content', 0)
+            ########### Fix LSCPD
+
+            command = "find /usr/local/lscp -type d -exec chmod 0755 {} \;"
+            Upgrade.executioner(command, 'chown core code', 0)
+
+            command = "find /usr/local/lscp -type f -exec chmod 0644 {} \;"
+            Upgrade.executioner(command, 'chown core code', 0)
+
+            command = "chmod -R 755 /usr/local/lscp/bin"
+            Upgrade.executioner(command, 'chown core code', 0)
+
+            command = "chmod -R 755 /usr/local/lscp/fcgi-bin"
+            Upgrade.executioner(command, 'chown core code', 0)
+
+            command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin/tmp"
+            Upgrade.executioner(command, 'chown core code', 0)
+
+            ## change owner
+
+            command = "chown -R root:root /usr/local/lscp"
+            Upgrade.executioner(command, 'chown core code', 0)
+
+            command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem'
+            Upgrade.executioner(command, 'generate cyberpanel ssl', 0)
+
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+            Upgrade.executioner(command, 'chown core code', 0)
+
+            command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
+            Upgrade.executioner(command, 'chown core code', 0)
+
+            command = "chmod 700 /usr/local/CyberCP/plogical/upgradeCritical.py"
+            Upgrade.executioner(command, 'chown core code', 0)
+
+            command = "chmod 700 /usr/local/CyberCP/postfixSenderPolicy/client.py"
+            Upgrade.executioner(command, 'chown core code', 0)
+
+            command = "chmod 600 /usr/local/CyberCP/CyberCP/settings.py"
+            Upgrade.executioner(command, 'chown core code', 0)
 
             Upgrade.stdOut("Permissions updated.")
 
@@ -1026,7 +1359,18 @@ WantedBy=multi-user.target"""
             Upgrade.executioner(command, 'Install PHP 73, 0')
 
     @staticmethod
+    def someDirectories():
+        command = "mkdir -p /usr/local/lscpd/admin/"
+        Upgrade.executioner(command, 0)
+
+        command = "mkdir -p /usr/local/lscp/cyberpanel/logs"
+        Upgrade.executioner(command, 0)
+
+    @staticmethod
     def upgrade():
+
+        #Upgrade.stdOut("Upgrades are currently disabled")
+        #return 0
 
         os.chdir("/usr/local")
 
@@ -1034,11 +1378,13 @@ WantedBy=multi-user.target"""
 
         Version = version.objects.get(pk=1)
 
-        command = "systemctl stop gunicorn.socket"
-        Upgrade.executioner(command, 'stop gunicorn', 0)
-
         command = "systemctl stop lscpd"
         Upgrade.executioner(command, 'stop lscpd', 0)
+
+        Upgrade.fixSudoers()
+        Upgrade.mountTemp()
+        Upgrade.dockerUsers()
+        Upgrade.setupComposer()
 
         ##
 
@@ -1056,6 +1402,8 @@ WantedBy=multi-user.target"""
 
         Upgrade.installPYDNS()
         Upgrade.downloadAndUpgrade(versionNumbring)
+        Upgrade.download_install_phpmyadmin()
+        Upgrade.downoad_and_install_raindloop()
 
         ##
 
@@ -1070,7 +1418,6 @@ WantedBy=multi-user.target"""
         ##
 
         Upgrade.setupVirtualEnv()
-        Upgrade.updateGunicornConf()
 
         ##
 
@@ -1082,6 +1429,8 @@ WantedBy=multi-user.target"""
 
         Upgrade.installPHP73()
         Upgrade.setupCLI()
+        Upgrade.setupPythonWSGI()
+        Upgrade.someDirectories()
         Upgrade.installLSCPD()
         Upgrade.fixPermissions()
         time.sleep(3)

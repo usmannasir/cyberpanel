@@ -686,7 +686,7 @@ class InstallCyberPanel:
             logging.InstallLog.writeToFile(str(msg) + " [startPowerDNS]")
 
 
-def Main(cwd, mysql, distro, ent, serial = None):
+def Main(cwd, mysql, distro, ent, serial = None, port = "8090"):
 
     InstallCyberPanel.mysqlPassword = randomPassword.generate_pass()
     InstallCyberPanel.mysql_Root_password = randomPassword.generate_pass()
@@ -706,7 +706,7 @@ def Main(cwd, mysql, distro, ent, serial = None):
     else:
         InstallCyberPanel.mysqlPassword = InstallCyberPanel.mysql_Root_password
 
-    installer = InstallCyberPanel("/usr/local/lsws/",cwd, distro, ent, serial)
+    installer = InstallCyberPanel("/usr/local/lsws/",cwd, distro, ent, serial, port)
 
     installer.installLiteSpeed()
     if ent == 0:

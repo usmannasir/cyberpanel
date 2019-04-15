@@ -87,7 +87,6 @@ class phpUtilities:
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateInstall]")
 
-
     @staticmethod
     def initiateRemoval(extension):
         try:

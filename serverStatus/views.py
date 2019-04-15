@@ -8,7 +8,6 @@ from loginSystem.views import loadLoginPage
 import json
 import subprocess
 import psutil
-import shlex
 import socket
 from plogical.acl import ACLManager
 import os
@@ -17,6 +16,7 @@ import time
 import serverStatusUtil
 from plogical.processUtilities import ProcessUtilities
 from plogical.httpProc import httpProc
+from plogical.installUtilities import installUtilities
 
 
 # Create your views here.
@@ -96,12 +96,12 @@ def stopOrRestartLitespeed(request):
         reboot = data['reboot']
 
         if reboot == 1:
-            if ProcessUtilities.restartLitespeed() == 1:
+            if installUtilities.reStartLiteSpeedSocket() == 1:
                 status = {"reboot": 1, "shutdown": 0}
             else:
                 status = {"reboot": 0, "shutdown": 0, "error_message": "Please see CyberCP main log file."}
         else:
-            if ProcessUtilities.stopLitespeed() == 1:
+            if installUtilities.stopLiteSpeedSocket() == 1:
                 status = {"reboot": 0, "shutdown": 1}
             else:
                 status = {"reboot": 0, "shutdown": 0, "error_message": "Please see CyberCP main log file."}
