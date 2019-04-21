@@ -1089,7 +1089,11 @@ class preFlightsChecks:
         preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
                               'Change permissions for client.', 1, 0, os.EX_OSERR)
 
-        command = "chmod 600 /usr/local/CyberCP/CyberCP/settings.py"
+        command = "chmod 640 /usr/local/CyberCP/CyberCP/settings.py"
+        preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
+                              'Change permissions for client.', 1, 0, os.EX_OSERR)
+
+        command = "chown root:cyberpanel /usr/local/CyberCP/CyberCP/settings.py"
         preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
                               'Change permissions for client.', 1, 0, os.EX_OSERR)
 

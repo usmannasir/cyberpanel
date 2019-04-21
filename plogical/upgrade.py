@@ -1244,6 +1244,9 @@ class Upgrade:
             except:
                 pass
 
+            command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem'
+            Upgrade.executioner(command, 'generate cyberpanel ssl', 0)
+
             command = 'adduser lscpd -M -d /usr/local/lscp'
             Upgrade.executioner(command, 'Add user LSCPD', 0)
 
@@ -1320,9 +1323,6 @@ class Upgrade:
             command = "chown -R root:root /usr/local/lscp"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem'
-            Upgrade.executioner(command, 'generate cyberpanel ssl', 0)
-
             command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
             Upgrade.executioner(command, 'chown core code', 0)
 
@@ -1335,7 +1335,10 @@ class Upgrade:
             command = "chmod 700 /usr/local/CyberCP/postfixSenderPolicy/client.py"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            command = "chmod 600 /usr/local/CyberCP/CyberCP/settings.py"
+            command = "chmod 640 /usr/local/CyberCP/CyberCP/settings.py"
+            Upgrade.executioner(command, 'chown core code', 0)
+
+            command = "chown root:cyberpanel /usr/local/CyberCP/CyberCP/settings.py"
             Upgrade.executioner(command, 'chown core code', 0)
 
             Upgrade.stdOut("Permissions updated.")

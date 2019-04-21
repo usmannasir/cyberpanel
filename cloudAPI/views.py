@@ -266,6 +266,8 @@ def router(request):
             return cm.fetchBackupLogsMINIO(request)
         elif controller == 'deleteDomainFromPlanMINIO':
             return cm.deleteDomainFromPlanMINIO(request)
+        elif controller == 'submitWebsiteStatus':
+            return cm.submitWebsiteStatus(request)
         else:
             return cm.ajaxPre(0, 'This function is not available in your version of CyberPanel.')
 

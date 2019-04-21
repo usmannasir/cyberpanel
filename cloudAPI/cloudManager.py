@@ -25,6 +25,9 @@ from s3Backups.s3Backups import S3Backups
 from serverLogs.views import getLogsFromFile
 from serverStatus.views import topProcessesStatus, killProcess
 from websiteFunctions.models import Websites
+from plogical import hashPassword
+from loginSystem.models import ACL
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 
 class CloudManager:
@@ -64,6 +67,37 @@ class CloudManager:
 
     def submitWebsiteCreation(self):
         try:
+
+            try:
+                selectedACL = ACL.objects.get(name='user')
+                UserAccountName = self.data['UserAccountName']
+                UserPassword = self.data['UserPassword']
+                FullName = self.data['FullName']
+                token = hashPassword.generateToken(UserAccountName, UserPassword)
+                password = hashPassword.hash_password(UserPassword)
+
+                try:
+                    newAdmin = Administrator(firstName=FullName,
+                                             lastName="",
+                                             email=self.data['adminEmail'],
+                                             type=3,
+                                             userName=UserAccountName,
+                                             password=password,
+                                             initWebsitesLimit=10,
+                                             owner=1,
+                                             acl=selectedACL,
+                                             token=token
+                                             )
+                    newAdmin.save()
+                except BaseException, msg:
+                    logging.writeToFile(str(msg))
+                    admin = Administrator.objects.get(userName=UserAccountName)
+                    admin.token = token
+                    admin.password = password
+                    admin.save()
+            except BaseException, msg:
+                logging.writeToFile(str(msg))
+
             wm = WebsiteManager()
             return wm.submitWebsiteCreation(self.admin.pk, self.data)
         except BaseException, msg:
@@ -636,6 +670,7 @@ class CloudManager:
 
     def submitPackageDelete(self, request):
         try:
+            request.session['userID'] = self.admin.pk
             pm = PackagesManager(request)
             return pm.submitDelete()
         except BaseException, msg:
@@ -643,6 +678,7 @@ class CloudManager:
 
     def submitPackageModify(self, request):
         try:
+            request.session['userID'] = self.admin.pk
             pm = PackagesManager(request)
             return pm.saveChanges()
         except BaseException, msg:
@@ -1257,5 +1293,13 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'deleteDomainFromPlanMINIO')
             return s3.deleteDomainFromPlanMINIO()
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def submitWebsiteStatus(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            wm = WebsiteManager()
+            return wm.submitWebsiteStatus(self.admin.pk, self.data)
         except BaseException, msg:
             return self.ajaxPre(0, str(msg))

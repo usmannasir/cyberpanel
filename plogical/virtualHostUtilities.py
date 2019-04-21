@@ -1001,7 +1001,10 @@ class virtualHostUtilities:
             data = [int(totalUsageInMB), int(percentage)]
             return data
         except BaseException:
-            return [int(totalUsageInMB), int(0)]
+            try:
+                return [int(totalUsageInMB), int(0)]
+            except:
+                return [int(0), int(0)]
 
     @staticmethod
     def permissionControl(path):
