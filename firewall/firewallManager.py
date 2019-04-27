@@ -1068,11 +1068,14 @@ class FirewallManager:
                 owaspInstalled = 0
 
                 try:
-                    command = 'sudo cat /usr/local/lsws/conf/comodo_litespeed/rules.conf.main'
-                    res = ProcessUtilities.executioner(command)
+                    command = 'sudo ls /usr/local/lsws/conf/comodo_litespeed/'
+                    output = ProcessUtilities.outputExecutioner(command)
 
-                    if res == 1:
+                    if output.find('No such') > -1:
+                        comodoInstalled = 0
+                    else:
                         comodoInstalled = 1
+
                 except subprocess.CalledProcessError:
                     pass
 

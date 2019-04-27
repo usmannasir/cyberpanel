@@ -356,7 +356,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + "  [installOWASP]")
+                str(msg) + "  [installComodo]")
             print "0," + str(msg)
 
     @staticmethod
@@ -474,6 +474,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCL
                     conf.writelines(items)
 
             conf.close()
+            installUtilities.reStartLiteSpeed()
 
             print "1,None"
 
@@ -497,6 +498,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCL
                     conf.writelines(items)
 
             conf.close()
+            installUtilities.reStartLiteSpeed()
 
             print "1,None"
 

@@ -135,8 +135,8 @@ class ProcessUtilities(multi.Thread):
     def containerCheck():
         try:
             command = 'sudo cat /etc/cgrules.conf'
-            result = subprocess.call(shlex.split(command))
-            if result == 1:
+            output = ProcessUtilities.outputExecutioner(command)
+            if output.find('No such') > -1:
                 return 0
             else:
                 return 1

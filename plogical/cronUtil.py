@@ -24,18 +24,18 @@ class CronUtil:
             output = os.popen(cmd).read()
 
             if "Exists" not in output:
-                print  "0,Not Exists"
+                print  "0,CyberPanel,Not Exists"
                 return 1
 
             try:
                 f = subprocess.check_output(["sudo", "crontab", "-u", externalApp, "-l"])
                 print f
             except BaseException, msg:
-                print "0," + str(msg)
+                print "0,CyberPanel," + str(msg)
                 return 1
 
         except BaseException, msg:
-            print "0," + str(msg)
+            print "0,CyberPanel," + str(msg)
 
     @staticmethod
     def saveCronChanges(externalApp, finalCron, line):

@@ -1005,7 +1005,7 @@ class WebsiteManager:
 
             f = ProcessUtilities.outputExecutioner(execPath)
 
-            if f.find("0,") > -1:
+            if f.find("0,CyberPanel,") > -1:
                 data_ret = {'getWebsiteCron': 0, "user": website.externalApp, "crons": {}}
                 final_json = json.dumps(data_ret)
                 return HttpResponse(final_json)
@@ -1028,7 +1028,7 @@ class WebsiteManager:
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
         except BaseException, msg:
-            print msg
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
             dic = {'getWebsiteCron': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
