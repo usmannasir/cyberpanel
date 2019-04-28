@@ -6,6 +6,7 @@ from plogical.processUtilities import ProcessUtilities
 from websiteFunctions.models import Websites
 from random import randint
 from django.core.files.storage import FileSystemStorage
+import HTMLParser
 
 class FileManager:
     def __init__(self, request, data):
@@ -19,6 +20,8 @@ class FileManager:
         return HttpResponse(final_json)
 
     def returnPathEnclosed(self, path):
+        htmlParser = HTMLParser.HTMLParser()
+        path = htmlParser.unescape(path)
         return "'" + path + "'"
 
     def changeOwner(self,  path):

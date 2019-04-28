@@ -19,6 +19,9 @@ class secMiddleware:
                         pass
                     else:
                         continue
+
+                    if request.build_absolute_uri().find('filemanager') > -1:
+                        continue
                     if key == 'emailMessage' or key == 'configData' or key == 'rewriteRules' or key == 'modSecRules' or key == 'recordContentTXT' or key == 'SecAuditLogRelevantStatus' or key == 'fileContent':
                         continue
                     if value.find(';') > -1 or value.find('&&') > -1 or value.find('|') > -1 or value.find('...') > -1:
