@@ -268,6 +268,40 @@ def router(request):
             return cm.deleteDomainFromPlanMINIO(request)
         elif controller == 'submitWebsiteStatus':
             return cm.submitWebsiteStatus(request)
+        elif controller == 'submitChangePHP':
+            return cm.submitChangePHP(request)
+        elif controller == 'getSwitchStatus':
+            return cm.getSwitchStatus(request)
+        elif controller == 'switchServer':
+            return cm.switchServer(request)
+        elif controller == 'tuneSettings':
+            return cm.tuneSettings(request)
+        elif controller == 'getCurrentPHPConfig':
+            return cm.getCurrentPHPConfig(request)
+        elif controller == 'savePHPConfigBasic':
+            return cm.savePHPConfigBasic(request)
+        elif controller == 'fetchPHPSettingsAdvance':
+            return cm.fetchPHPSettingsAdvance(request)
+        elif controller == 'savePHPConfigAdvance':
+            return cm.savePHPConfigAdvance(request)
+        elif controller == 'fetchPHPExtensions':
+            return cm.fetchPHPExtensions(request)
+        elif controller == 'submitExtensionRequest':
+            return cm.submitExtensionRequest(request)
+        elif controller == 'getRequestStatus':
+            return cm.getRequestStatus(request)
+        elif controller == 'getContainerizationStatus':
+            return cm.getContainerizationStatus(request)
+        elif controller == 'submitContainerInstall':
+            return cm.submitContainerInstall(request)
+        elif controller == 'switchTOLSWSStatus':
+            return cm.switchTOLSWSStatus(request)
+        elif controller == 'fetchWebsiteLimits':
+            return cm.fetchWebsiteLimits(request)
+        elif controller == 'saveWebsiteLimits':
+            return cm.saveWebsiteLimits(request)
+        elif controller == 'getUsageData':
+            return cm.getUsageData(request)
         else:
             return cm.ajaxPre(0, 'This function is not available in your version of CyberPanel.')
 

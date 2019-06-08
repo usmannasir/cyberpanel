@@ -14,7 +14,7 @@ import os
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.acl import ACLManager
 from .filemanager import FileManager as FM
-
+from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
 
@@ -54,10 +54,16 @@ def changePermissions(request):
             externalApp = website.externalApp
 
             command = "sudo chown -R " + externalApp + ":" + externalApp +" /home/"+domainName
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.popenExecutioner(command)
 
             command = "sudo chown -R lscpd:lscpd /home/" + domainName+"/logs"
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.popenExecutioner(command)
+
+            command = "sudo find %s -type d -exec chmod 0755 {} \;" % ("/home/" + domainName + "/public_html")
+            ProcessUtilities.popenExecutioner(command)
+
+            command = "sudo find %s -type f -exec chmod 0644 {} \;" % ("/home/" + domainName + "/public_html")
+            ProcessUtilities.popenExecutioner(command)
 
             data_ret = {'permissionsChanged': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)

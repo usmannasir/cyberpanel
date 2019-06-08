@@ -544,7 +544,7 @@ class S3Backups(multi.Thread):
                     )
 
                     command = 'rm -f ' + result[1] + ".tar.gz"
-                    ProcessUtilities.normalExecutioner(command)
+                    ProcessUtilities.executioner(command)
 
                     BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
                                msg='Backup successful for ' + items.domain + '.').save()
@@ -925,7 +925,7 @@ class S3Backups(multi.Thread):
                         Config=config,
                     )
                     command = 'rm -f ' + result[1] + ".tar.gz"
-                    ProcessUtilities.normalExecutioner(command)
+                    ProcessUtilities.executioner(command)
                     BackupLogsDO(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
                                  msg='Backup successful for ' + items.domain + '.').save()
 
@@ -1195,7 +1195,7 @@ class S3Backups(multi.Thread):
                         Config=config,
                     )
                     command = 'rm -f ' + result[1] + ".tar.gz"
-                    ProcessUtilities.normalExecutioner(command)
+                    ProcessUtilities.executioner(command)
                     BackupLogsMINIO(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
                                     msg='Backup successful for ' + items.domain + '.').save()
                 else:

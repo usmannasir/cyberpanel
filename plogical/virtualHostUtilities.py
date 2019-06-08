@@ -26,17 +26,23 @@ from vhost import vhost
 from applicationInstaller import ApplicationInstaller
 from acl import ACLManager
 from processUtilities import ProcessUtilities
+from ApachController.ApacheController import ApacheController
+from ApachController.ApacheVhosts import ApacheVhost
+from managePHP.phpManager import PHPManager
 
 ## If you want justice, you have come to the wrong place.
 
 
 class virtualHostUtilities:
+    apache = 1
+    ols = 2
+    lsws = 3
 
     Server_root = "/usr/local/lsws"
     cyberPanel = "/usr/local/CyberCP"
     @staticmethod
     def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHostUser, ssl,
-                          dkimCheck, openBasedir, websiteOwner, packageName, tempStatusPath = '/home/cyberpanel/fakePath'):
+                          dkimCheck, openBasedir, websiteOwner, packageName, apache, tempStatusPath = '/home/cyberpanel/fakePath'):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -118,6 +124,29 @@ class virtualHostUtilities:
 
             vhost.finalizeVhostCreation(virtualHostName, virtualHostUser)
 
+            ## Check If Apache is requested
+
+            confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
+            completePathToConfigFile = confPath + "/vhost.conf"
+
+            if apache:
+                if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                    if ApacheController.checkIfApacheInstalled() == 0:
+                        result = ApacheController.setupApache(tempStatusPath)
+                        if result[0] == 0:
+                            raise BaseException(result[1])
+
+                    result = ApacheVhost.setupApacheVhost(administratorEmail, virtualHostUser, virtualHostUser,
+                                                              phpVersion, virtualHostName)
+                    if result[0] == 0:
+                        raise BaseException(result[1])
+                    else:
+                        ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, administratorEmail)
+                        installUtilities.installUtilities.reStartLiteSpeed()
+                        php = PHPManager.getPHPString(phpVersion)
+                        command = "systemctl restart php%s-php-fpm" % (php)
+                        ProcessUtilities.normalExecutioner(command)
+
             ## Create Configurations ends here
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'DKIM Setup..,90')
@@ -127,6 +156,7 @@ class virtualHostUtilities:
 
             if dkimCheck == 1:
                 DNS.createDKIMRecords(virtualHostName)
+
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Website successfully created. [200]')
 
@@ -867,7 +897,7 @@ class virtualHostUtilities:
             print "0," + str(msg)
 
     @staticmethod
-    def createDomain(masterDomain, virtualHostName, phpVersion, path, ssl, dkimCheck, openBasedir, owner, tempStatusPath = '/home/cyberpanel/fakePath'):
+    def createDomain(masterDomain, virtualHostName, phpVersion, path, ssl, dkimCheck, openBasedir, owner, apache, tempStatusPath = '/home/cyberpanel/fakePath'):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -952,6 +982,29 @@ class virtualHostUtilities:
 
             vhost.finalizeDomainCreation(master.externalApp, path)
 
+            ## Apache Settings
+
+            confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
+            completePathToConfigFile = confPath + "/vhost.conf"
+
+            if apache:
+                if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                    if ApacheController.checkIfApacheInstalled() == 0:
+                        result = ApacheController.setupApache(tempStatusPath)
+                        if result[0] == 0:
+                            raise BaseException(result[1])
+
+                    result = ApacheVhost.setupApacheVhostChild(master.adminEmail, master.externalApp,
+                                                                   master.externalApp, phpVersion, virtualHostName, path)
+                    if result[0] == 0:
+                        raise BaseException(result[1])
+                    else:
+                        ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, master.adminEmail)
+                        installUtilities.installUtilities.reStartLiteSpeed()
+                        php = PHPManager.getPHPString(phpVersion)
+                        command = "systemctl restart php%s-php-fpm" % (php)
+                        ProcessUtilities.normalExecutioner(command)
+
             ## DKIM Check
 
             if dkimCheck == 1:
@@ -987,6 +1040,66 @@ class virtualHostUtilities:
                 str(msg) + "  [deleteDomain]")
             print "0," + str(msg)
             return 0,str(msg)
+
+    @staticmethod
+    def switchServer(virtualHostName, phpVersion, server, tempStatusPath):
+        try:
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Starting Conversion..,0')
+            child = 0
+            try:
+                website = Websites.objects.get(domain=virtualHostName)
+            except:
+                website = ChildDomains.objects.get(domain=virtualHostName)
+                child = 1
+
+            confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
+            completePathToConfigFile = confPath + "/vhost.conf"
+
+            if server == virtualHostUtilities.apache:
+
+                if os.path.exists(completePathToConfigFile):
+                    os.remove(completePathToConfigFile)
+
+                if ApacheController.checkIfApacheInstalled() == 0:
+                    result = ApacheController.setupApache(tempStatusPath)
+                    if result[0] == 0:
+                        raise BaseException(result[1])
+
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating apache configurations..,90')
+                if child:
+                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, website.master.adminEmail)
+                else:
+                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, website.adminEmail)
+
+                if child:
+                    ApacheVhost.setupApacheVhostChild(website.master.adminEmail, website.master.externalApp, website.master.externalApp,
+                                                      phpVersion, virtualHostName, website.path)
+                else:
+                    ApacheVhost.setupApacheVhost(website.adminEmail, website.externalApp, website.externalApp, phpVersion, virtualHostName)
+
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Restarting servers and phps..,90')
+
+                php = PHPManager.getPHPString(phpVersion)
+                command = "systemctl restart php%s-php-fpm" % (php)
+                ProcessUtilities.normalExecutioner(command)
+                installUtilities.installUtilities.reStartLiteSpeed()
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Successfully converted.[200]')
+            else:
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Starting Conversion..,0')
+                ApacheVhost.DeleteApacheVhost(virtualHostName)
+
+                if child:
+                    vhost.perHostDomainConf(website.path, website.master.domain, virtualHostName, completePathToConfigFile,
+                                            website.master.adminEmail, phpVersion, website.master.externalApp, 0)
+                else:
+                    vhost.perHostVirtualConf(completePathToConfigFile, website.adminEmail, website.externalApp, phpVersion, virtualHostName, 0)
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Restarting server..,90')
+                installUtilities.installUtilities.reStartLiteSpeed()
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Successfully converted. [200]')
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, '%s[404]' % str(msg))
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [switchServer]")
 
     @staticmethod
     def getDiskUsage(path, totalAllowed):
@@ -1046,6 +1159,7 @@ def main():
     parser.add_argument('--websiteOwner', help='Website Owner Name')
     parser.add_argument('--package', help='Website package')
     parser.add_argument('--restore', help='Restore Check.')
+    parser.add_argument('--apache', help='Enable/Disable Apache as backend')
 
 
     ## arguments for creation child domains
@@ -1094,6 +1208,10 @@ def main():
     parser.add_argument('--openBasedirValue', help='open_base dir protection value!')
     parser.add_argument('--tempStatusPath', help='Temporary Status file path.')
 
+    ## Switch Server
+
+    parser.add_argument('--server', help='Switch server parameter.')
+
     args = parser.parse_args()
 
     if args.function == "createVirtualHost":
@@ -1108,11 +1226,16 @@ def main():
             openBasedir = 0
 
         try:
+            apache = int(args.apache)
+        except:
+            apache = 0
+
+        try:
             tempStatusPath = args.tempStatusPath
         except:
             tempStatusPath = '/home/cyberpanel/fakePath'
 
-        virtualHostUtilities.createVirtualHost(args.virtualHostName, args.administratorEmail, args.phpVersion, args.virtualHostUser, int(args.ssl), dkimCheck, openBasedir, args.websiteOwner, args.package, tempStatusPath)
+        virtualHostUtilities.createVirtualHost(args.virtualHostName, args.administratorEmail, args.phpVersion, args.virtualHostUser, int(args.ssl), dkimCheck, openBasedir, args.websiteOwner, args.package, apache, tempStatusPath)
     elif args.function == "deleteVirtualHostConfigurations":
         vhost.deleteVirtualHostConfigurations(args.virtualHostName)
     elif args.function == "createDomain":
@@ -1127,11 +1250,16 @@ def main():
             openBasedir = 0
 
         try:
+            apache = int(args.apache)
+        except:
+            apache = 0
+
+        try:
             tempStatusPath = args.tempStatusPath
         except:
             tempStatusPath = '/home/cyberpanel/fakePath'
 
-        virtualHostUtilities.createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path, int(args.ssl), dkimCheck, openBasedir, args.websiteOwner, tempStatusPath)
+        virtualHostUtilities.createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path, int(args.ssl), dkimCheck, openBasedir, args.websiteOwner, apache, tempStatusPath)
     elif args.function == "issueSSL":
         virtualHostUtilities.issueSSL(args.virtualHostName,args.path,args.administratorEmail)
     elif args.function == "changePHP":
@@ -1166,6 +1294,8 @@ def main():
         virtualHostUtilities.changeOpenBasedir(args.virtualHostName, args.openBasedirValue)
     elif args.function == 'deleteDomain':
         virtualHostUtilities.deleteDomain(args.virtualHostName)
+    elif args.function == 'switchServer':
+        virtualHostUtilities.switchServer(args.virtualHostName, args.phpVersion, int(args.server), args.tempStatusPath)
 
 if __name__ == "__main__":
     main()

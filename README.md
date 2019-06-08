@@ -11,7 +11,7 @@ Webhosting control panel that uses OpenLiteSpeed as web server.
 * PHPMYAdmin.
 * Email Support (Rainloop).
 * FileManager.
-* PHP Management.
+* PHP Managment.
 * Firewall.
 * One click Backup and Restore.
 

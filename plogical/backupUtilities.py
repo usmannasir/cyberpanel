@@ -406,7 +406,7 @@ class backupUtilities:
             ## Create Configurations
 
             result = virtualHostUtilities.createVirtualHost(domain, admin.email, phpSelection, externalApp, 0, 1, 0,
-                                                            admin.userName, 'Default')
+                                                            admin.userName, 'Default', 0)
 
             if result[0] == 0:
                 raise BaseException(result[1])
@@ -544,7 +544,7 @@ class backupUtilities:
                     phpSelection = childDomain.find('phpSelection').text
                     path = childDomain.find('path').text
 
-                    retValues = virtualHostUtilities.createDomain(masterDomain, domain, phpSelection, path, 0, 0, 0, 'admin')
+                    retValues = virtualHostUtilities.createDomain(masterDomain, domain, phpSelection, path, 0, 0, 0, 'admin', 0)
 
                     if retValues[0] == 1:
                         if os.path.exists(websiteHome):

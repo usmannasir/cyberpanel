@@ -49,6 +49,7 @@ class MailServerManager:
                 return render(self.request, "mailServer/createEmailAccount.html", {"status": 0})
 
             websitesName = ACLManager.findAllSites(currentACL, userID)
+            websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
             return render(self.request, 'mailServer/createEmailAccount.html',
                           {'websiteList': websitesName, "status": 1})
@@ -107,6 +108,7 @@ class MailServerManager:
                 return render(self.request, "mailServer/deleteEmailAccount.html", {"status": 0})
 
             websitesName = ACLManager.findAllSites(currentACL, userID)
+            websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
             return render(self.request, 'mailServer/deleteEmailAccount.html',
                           {'websiteList': websitesName, "status": 1})
@@ -197,6 +199,7 @@ class MailServerManager:
                 return render(self.request, "mailServer/emailForwarding.html", {"status": 0})
 
             websitesName = ACLManager.findAllSites(currentACL, userID)
+            websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
             return render(self.request, 'mailServer/emailForwarding.html', {'websiteList': websitesName, "status": 1})
         except BaseException, msg:
@@ -257,8 +260,8 @@ class MailServerManager:
             destination = data['destination']
             source = data['source']
 
-            forwarding = Forwardings.objects.get(destination=destination, source=source)
-            forwarding.delete()
+            for items in Forwardings.objects.filter(destination=destination, source=source):
+                items.delete()
 
             data_ret = {'status': 1, 'deleteForwardingStatus': 1, 'error_message': "None",
                         'successMessage': 'Successfully deleted!'}
@@ -317,6 +320,7 @@ class MailServerManager:
                 return render(self.request, "mailServer/changeEmailPassword.html", {"status": 0})
 
             websitesName = ACLManager.findAllSites(currentACL, userID)
+            websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
             return render(self.request, 'mailServer/changeEmailPassword.html',
                           {'websiteList': websitesName, "status": 1})
@@ -365,6 +369,7 @@ class MailServerManager:
             openDKIMInstalled = 1
 
             websitesName = ACLManager.findAllSites(currentACL, userID)
+            websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
             return render(self.request, 'mailServer/dkimManager.html',
                           {'websiteList': websitesName, 'openDKIMInstalled': openDKIMInstalled})

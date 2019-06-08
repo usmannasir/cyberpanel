@@ -187,7 +187,10 @@ class sslUtilities:
 
                 confFile = open(completePathToConfigFile, 'a')
 
-                doNotModify = '\n\n# Do not modify this file, this is auto-generated file.\n\n'
+                cacheRoot = """    <IfModule LiteSpeed>
+        CacheRoot lscache
+    </IfModule>
+"""
 
                 VirtualHost = '<VirtualHost *:443>\n\n'
                 ServerName = '    ServerName ' + virtualHostName + '\n'
@@ -196,7 +199,6 @@ class sslUtilities:
                 SeexecUserGroup = '    SuexecUserGroup ' + externalApp + ' ' + externalApp + '\n'
                 CustomLogCombined = '    CustomLog /home/' + virtualHostName + '/logs/' + virtualHostName + '.access_log combined\n'
 
-                confFile.writelines(doNotModify)
                 confFile.writelines(VirtualHost)
                 confFile.writelines(ServerName)
                 confFile.writelines(ServerAlias)
@@ -204,6 +206,7 @@ class sslUtilities:
                 confFile.writelines(SeexecUserGroup)
                 confFile.writelines(DocumentRoot)
                 confFile.writelines(CustomLogCombined)
+                confFile.writelines(cacheRoot)
 
                 SSLEngine = '    SSLEngine on\n'
                 SSLVerifyClient = '    SSLVerifyClient none\n'

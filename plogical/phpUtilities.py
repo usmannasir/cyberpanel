@@ -107,6 +107,8 @@ class phpUtilities:
                 completeName = str(initial) + '.' + str(final)
                 path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
 
+            logging.CyberCPLogFileWriter.writeToFile(path)
+
             data = open(path, 'r').readlines()
 
             writeToFile = open(path, 'w')

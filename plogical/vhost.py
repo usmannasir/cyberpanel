@@ -19,7 +19,7 @@ from random import randint
 from processUtilities import ProcessUtilities
 from managePHP.phpManager import PHPManager
 from vhostConfs import vhostConfs
-
+from ApachController.ApacheVhosts import ApacheVhost
 ## If you want justice, you have come to the wrong place.
 
 
@@ -417,6 +417,11 @@ class vhost:
                             writeDataToFile.writelines(items)
                         if (items.find("}") > -1 and check == 0):
                             check = 1
+
+                ## Delete Apache Conf
+
+                ApacheVhost.DeleteApacheVhost(virtualHostName)
+
             except BaseException, msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
@@ -466,27 +471,32 @@ class vhost:
     def changePHP(vhFile, phpVersion):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
-                data = open(vhFile, "r").readlines()
+                if ApacheVhost.changePHP(phpVersion, vhFile) == 0:
+                    data = open(vhFile, "r").readlines()
 
-                php = PHPManager.getPHPString(phpVersion)
+                    php = PHPManager.getPHPString(phpVersion)
 
-                if not os.path.exists("/usr/local/lsws/lsphp" + str(php) + "/bin/lsphp"):
-                    print 0, 'This PHP version is not available on your CyberPanel.'
-                    return [0, "[This PHP version is not available on your CyberPanel. [changePHP]"]
+                    if not os.path.exists("/usr/local/lsws/lsphp" + str(php) + "/bin/lsphp"):
+                        print 0, 'This PHP version is not available on your CyberPanel.'
+                        return [0, "[This PHP version is not available on your CyberPanel. [changePHP]"]
 
-                writeDataToFile = open(vhFile, "w")
+                    writeDataToFile = open(vhFile, "w")
 
-                path = "  path                    /usr/local/lsws/lsphp" + str(php) + "/bin/lsphp\n"
+                    path = "  path                    /usr/local/lsws/lsphp" + str(php) + "/bin/lsphp\n"
 
-                for items in data:
-                    if items.find("/usr/local/lsws/lsphp") > -1 and items.find("path") > -1:
-                        writeDataToFile.writelines(path)
-                    else:
-                        writeDataToFile.writelines(items)
+                    for items in data:
+                        if items.find("/usr/local/lsws/lsphp") > -1 and items.find("path") > -1:
+                            writeDataToFile.writelines(path)
+                        else:
+                            writeDataToFile.writelines(items)
 
-                writeDataToFile.close()
+                    writeDataToFile.close()
 
-                installUtilities.installUtilities.reStartLiteSpeed()
+                    installUtilities.installUtilities.reStartLiteSpeed()
+                else:
+                    php = PHPManager.getPHPString(phpVersion)
+                    command = "systemctl restart php%s-php-fpm" % (php)
+                    ProcessUtilities.normalExecutioner(command)
 
                 print "1,None"
                 return 1,'None'

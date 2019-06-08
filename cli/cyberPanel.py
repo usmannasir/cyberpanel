@@ -43,7 +43,7 @@ class cyberPanel:
             phpSelection = 'PHP ' + php
 
             result = virtualHostUtilities.createVirtualHost(domainName, email, phpSelection, externalApp, ssl, dkim,
-                              openBasedir, owner, package)
+                              openBasedir, owner, package, 0)
 
             if result[0] == 1:
                 self.printStatus(1,'None')
@@ -60,7 +60,7 @@ class cyberPanel:
             path = '/home/' + masterDomain + '/public_html/' + domainName
             phpSelection = 'PHP ' + php
 
-            result = virtualHostUtilities.createDomain(masterDomain, domainName, phpSelection, path, ssl, dkim, openBasedir, owner)
+            result = virtualHostUtilities.createDomain(masterDomain, domainName, phpSelection, path, ssl, dkim, openBasedir, owner, 0)
 
             if result[0] == 1:
                 self.printStatus(1,'None')

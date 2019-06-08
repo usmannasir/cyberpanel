@@ -23,11 +23,15 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.website import WebsiteManager
 from s3Backups.s3Backups import S3Backups
 from serverLogs.views import getLogsFromFile
-from serverStatus.views import topProcessesStatus, killProcess
+from serverStatus.views import topProcessesStatus, killProcess, switchTOLSWSStatus
 from websiteFunctions.models import Websites
 from plogical import hashPassword
 from loginSystem.models import ACL
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from managePHP.phpManager import PHPManager
+from managePHP.views import submitExtensionRequest, getRequestStatusApache
+from containerization.containerManager import ContainerManager
+from containerization.views import *
 
 
 class CloudManager:
@@ -1301,5 +1305,153 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             wm = WebsiteManager()
             return wm.submitWebsiteStatus(self.admin.pk, self.data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def submitChangePHP(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            wm = WebsiteManager()
+            return wm.changePHP(self.admin.pk, self.data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def getSwitchStatus(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            wm = WebsiteManager()
+            return wm.getSwitchStatus(self.admin.pk, self.data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+
+    def switchServer(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            wm = WebsiteManager()
+            return wm.switchServer(self.admin.pk, self.data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def tuneSettings(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            wm = WebsiteManager()
+            return wm.tuneSettings(self.admin.pk, self.data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def getCurrentPHPConfig(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            return PHPManager.getCurrentPHPConfig(self.data['phpSelection'])
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def savePHPConfigBasic(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            return PHPManager.savePHPConfigBasic(self.data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchPHPSettingsAdvance(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            return PHPManager.fetchPHPSettingsAdvance(self.data['phpSelection'])
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def savePHPConfigAdvance(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            return PHPManager.savePHPConfigAdvance(self.data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchPHPExtensions(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            return PHPManager.fetchPHPExtensions(self.data)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def submitExtensionRequest(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            submitExtensionRequest(request)
+            return self.ajaxPre(1, 'None')
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def getRequestStatus(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            return getRequestStatusApache(request)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def getContainerizationStatus(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+
+            finalData = {}
+            finalData['status'] = 1
+
+            if not ProcessUtilities.containerCheck():
+                finalData['notInstalled'] = 1
+            else:
+                finalData['notInstalled'] = 0
+
+            finalData = json.dumps(finalData)
+            return HttpResponse(finalData)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def submitContainerInstall(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            currentACL = ACLManager.loadedACL(self.admin.pk)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            c = ContainerManager(request, None, 'submitContainerInstall')
+            c.start()
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def switchTOLSWSStatus(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            return switchTOLSWSStatus(request)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchWebsiteLimits(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            return fetchWebsiteLimits(request)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def saveWebsiteLimits(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            return saveWebsiteLimits(request)
+        except BaseException, msg:
+            return self.ajaxPre(0, str(msg))
+
+    def getUsageData(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            return getUsageData(request)
         except BaseException, msg:
             return self.ajaxPre(0, str(msg))

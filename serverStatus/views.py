@@ -363,24 +363,24 @@ def switchTOLSWSStatus(request):
         if output.find('[404]') > -1:
             command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
             ProcessUtilities.popenExecutioner(command)
-            data_ret = {'abort': 1, 'requestStatus': output, 'installed': 0}
+            data_ret = {'status': 1, 'abort': 1, 'requestStatus': output, 'installed': 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
         elif output.find('[200]') > -1:
             command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
             ProcessUtilities.popenExecutioner(command)
-            data_ret = {'abort': 1, 'requestStatus': output, 'installed': 1}
+            data_ret = {'status': 1, 'abort': 1, 'requestStatus': output, 'installed': 1}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
         else:
-            data_ret = {'abort': 0, 'requestStatus': output, 'installed': 0}
+            data_ret = {'status': 1, 'abort': 0, 'requestStatus': output, 'installed': 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
     except BaseException, msg:
         command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
         ProcessUtilities.popenExecutioner(command)
-        data_ret = {'abort': 1, 'requestStatus': str(msg), 'installed': 0}
+        data_ret = {'status': 0,'abort': 1, 'requestStatus': str(msg), 'installed': 0}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 

@@ -2,6 +2,7 @@ import os
 import os.path
 import sys
 import django
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -17,11 +18,12 @@ from CyberCP import settings
 import random
 import string
 
+
 class Upgrade:
     logPath = "/usr/local/lscp/logs/upgradeLog"
 
     @staticmethod
-    def stdOut(message, do_exit = 0):
+    def stdOut(message, do_exit=0):
         print("\n\n")
         print ("[" + time.strftime(
             "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
@@ -33,7 +35,7 @@ class Upgrade:
             os._exit(0)
 
     @staticmethod
-    def executioner(command, component, do_exit = 0):
+    def executioner(command, component, do_exit=0):
         try:
             count = 0
             while True:
@@ -84,7 +86,6 @@ class Upgrade:
 
             command = "mount --bind /tmp /var/tmp"
             Upgrade.executioner(command, 'mountTemp', 0)
-
 
             tmp = "/usr/.tempdisk /tmp ext4 loop,rw,noexec,nosuid,nodev,nofail 0 0\n"
             varTmp = "/tmp /var/tmp none bind 0 0\n"
@@ -396,7 +397,6 @@ class Upgrade:
             command = "yum install -y libattr-devel xz-devel gpgme-devel curl-devel"
             Upgrade.executioner(command, 'VirtualEnv Pre-reqs', 0)
 
-
             ##
 
             command = "pip install virtualenv"
@@ -406,7 +406,6 @@ class Upgrade:
 
             command = "virtualenv --system-site-packages /usr/local/CyberCP"
             Upgrade.executioner(command, 'Setting up VirtualEnv [One]', 1)
-
 
             ##
 
@@ -441,7 +440,6 @@ class Upgrade:
             command = "mv /usr/local/CyberCP/install/FileManager /usr/local/lsws"
             Upgrade.executioner(command, 'Setup new Filemanager', 0)
 
-
         ##
 
         command = "chmod -R 777 /usr/local/lsws/Example/html/FileManager"
@@ -472,7 +470,6 @@ class Upgrade:
         if not os.path.exists("/usr/local/CyberCP/public"):
             os.mkdir("/usr/local/CyberCP/public")
 
-
         shutil.move("/usr/local/CyberCP/static", "/usr/local/CyberCP/public/")
 
     @staticmethod
@@ -488,7 +485,7 @@ class Upgrade:
             pass
 
     @staticmethod
-    def setupConnection(db = None):
+    def setupConnection(db=None):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
 
@@ -503,7 +500,7 @@ class Upgrade:
                     conn = mysql.connect(db=db, user='root', passwd=password)
                 except:
                     try:
-                        conn = mysql.connect(host = '127.0.0.1', port = 3307 , db=db, user='root', passwd=password)
+                        conn = mysql.connect(host='127.0.0.1', port=3307, db=db, user='root', passwd=password)
                     except:
                         dbUser = settings.DATABASES['default']['USER']
                         password = settings.DATABASES['default']['PASSWORD']
@@ -529,14 +526,14 @@ class Upgrade:
             connection, cursor = Upgrade.setupConnection('cyberpanel')
 
             try:
-                cursor.execute('CREATE TABLE `loginSystem_acl` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `name` varchar(50) NOT NULL UNIQUE, `adminStatus` integer NOT NULL DEFAULT 0, `versionManagement` integer NOT NULL DEFAULT 0, `createNewUser` integer NOT NULL DEFAULT 0, `deleteUser` integer NOT NULL DEFAULT 0, `resellerCenter` integer NOT NULL DEFAULT 0, `changeUserACL` integer NOT NULL DEFAULT 0, `createWebsite` integer NOT NULL DEFAULT 0, `modifyWebsite` integer NOT NULL DEFAULT 0, `suspendWebsite` integer NOT NULL DEFAULT 0, `deleteWebsite` integer NOT NULL DEFAULT 0, `createPackage` integer NOT NULL DEFAULT 0, `deletePackage` integer NOT NULL DEFAULT 0, `modifyPackage` integer NOT NULL DEFAULT 0, `createDatabase` integer NOT NULL DEFAULT 0, `deleteDatabase` integer NOT NULL DEFAULT 0, `listDatabases` integer NOT NULL DEFAULT 0, `createNameServer` integer NOT NULL DEFAULT 0, `createDNSZone` integer NOT NULL DEFAULT 0, `deleteZone` integer NOT NULL DEFAULT 0, `addDeleteRecords` integer NOT NULL DEFAULT 0, `createEmail` integer NOT NULL DEFAULT 0, `deleteEmail` integer NOT NULL DEFAULT 0, `emailForwarding` integer NOT NULL DEFAULT 0, `changeEmailPassword` integer NOT NULL DEFAULT 0, `dkimManager` integer NOT NULL DEFAULT 0, `createFTPAccount` integer NOT NULL DEFAULT 0, `deleteFTPAccount` integer NOT NULL DEFAULT 0, `listFTPAccounts` integer NOT NULL DEFAULT 0, `createBackup` integer NOT NULL DEFAULT 0, `restoreBackup` integer NOT NULL DEFAULT 0, `addDeleteDestinations` integer NOT NULL DEFAULT 0, `scheDuleBackups` integer NOT NULL DEFAULT 0, `remoteBackups` integer NOT NULL DEFAULT 0, `manageSSL` integer NOT NULL DEFAULT 0, `hostnameSSL` integer NOT NULL DEFAULT 0, `mailServerSSL` integer NOT NULL DEFAULT 0)')
+                cursor.execute(
+                    'CREATE TABLE `loginSystem_acl` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `name` varchar(50) NOT NULL UNIQUE, `adminStatus` integer NOT NULL DEFAULT 0, `versionManagement` integer NOT NULL DEFAULT 0, `createNewUser` integer NOT NULL DEFAULT 0, `deleteUser` integer NOT NULL DEFAULT 0, `resellerCenter` integer NOT NULL DEFAULT 0, `changeUserACL` integer NOT NULL DEFAULT 0, `createWebsite` integer NOT NULL DEFAULT 0, `modifyWebsite` integer NOT NULL DEFAULT 0, `suspendWebsite` integer NOT NULL DEFAULT 0, `deleteWebsite` integer NOT NULL DEFAULT 0, `createPackage` integer NOT NULL DEFAULT 0, `deletePackage` integer NOT NULL DEFAULT 0, `modifyPackage` integer NOT NULL DEFAULT 0, `createDatabase` integer NOT NULL DEFAULT 0, `deleteDatabase` integer NOT NULL DEFAULT 0, `listDatabases` integer NOT NULL DEFAULT 0, `createNameServer` integer NOT NULL DEFAULT 0, `createDNSZone` integer NOT NULL DEFAULT 0, `deleteZone` integer NOT NULL DEFAULT 0, `addDeleteRecords` integer NOT NULL DEFAULT 0, `createEmail` integer NOT NULL DEFAULT 0, `deleteEmail` integer NOT NULL DEFAULT 0, `emailForwarding` integer NOT NULL DEFAULT 0, `changeEmailPassword` integer NOT NULL DEFAULT 0, `dkimManager` integer NOT NULL DEFAULT 0, `createFTPAccount` integer NOT NULL DEFAULT 0, `deleteFTPAccount` integer NOT NULL DEFAULT 0, `listFTPAccounts` integer NOT NULL DEFAULT 0, `createBackup` integer NOT NULL DEFAULT 0, `restoreBackup` integer NOT NULL DEFAULT 0, `addDeleteDestinations` integer NOT NULL DEFAULT 0, `scheDuleBackups` integer NOT NULL DEFAULT 0, `remoteBackups` integer NOT NULL DEFAULT 0, `manageSSL` integer NOT NULL DEFAULT 0, `hostnameSSL` integer NOT NULL DEFAULT 0, `mailServerSSL` integer NOT NULL DEFAULT 0)')
             except:
                 pass
             try:
                 cursor.execute('ALTER TABLE loginSystem_administrator ADD token varchar(500)')
             except:
                 pass
-
 
             try:
                 cursor.execute('ALTER TABLE loginSystem_administrator ADD api integer')
@@ -548,7 +545,8 @@ class Upgrade:
             except:
                 pass
             try:
-                cursor.execute('ALTER TABLE loginSystem_administrator ADD FOREIGN KEY (acl_id) REFERENCES loginSystem_acl(id)')
+                cursor.execute(
+                    'ALTER TABLE loginSystem_administrator ADD FOREIGN KEY (acl_id) REFERENCES loginSystem_acl(id)')
             except:
                 pass
 
@@ -558,11 +556,13 @@ class Upgrade:
                 pass
 
             try:
-                cursor.execute("insert into loginSystem_acl (id, name, adminStatus, createNewUser, deleteUser, createWebsite, resellerCenter, modifyWebsite, suspendWebsite, deleteWebsite, createPackage, deletePackage, modifyPackage, createNameServer, restoreBackup) values (2,'reseller',0,1,1,1,1,1,1,1,1,1,1,1,1)")
+                cursor.execute(
+                    "insert into loginSystem_acl (id, name, adminStatus, createNewUser, deleteUser, createWebsite, resellerCenter, modifyWebsite, suspendWebsite, deleteWebsite, createPackage, deletePackage, modifyPackage, createNameServer, restoreBackup) values (2,'reseller',0,1,1,1,1,1,1,1,1,1,1,1,1)")
             except:
                 pass
             try:
-                cursor.execute("insert into loginSystem_acl (id, name, createDatabase, deleteDatabase, listDatabases, createDNSZone, deleteZone, addDeleteRecords, createEmail, deleteEmail, emailForwarding, changeEmailPassword, dkimManager, createFTPAccount, deleteFTPAccount, listFTPAccounts, createBackup, manageSSL) values (3,'user', 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)")
+                cursor.execute(
+                    "insert into loginSystem_acl (id, name, createDatabase, deleteDatabase, listDatabases, createDNSZone, deleteZone, addDeleteRecords, createEmail, deleteEmail, emailForwarding, changeEmailPassword, dkimManager, createFTPAccount, deleteFTPAccount, listFTPAccounts, createBackup, manageSSL) values (3,'user', 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)")
             except:
                 pass
 
@@ -582,7 +582,8 @@ class Upgrade:
                 pass
 
             try:
-                cursor.execute("CREATE TABLE `websiteFunctions_aliasdomains` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `aliasDomain` varchar(75) NOT NULL)")
+                cursor.execute(
+                    "CREATE TABLE `websiteFunctions_aliasdomains` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `aliasDomain` varchar(75) NOT NULL)")
             except:
                 pass
             try:
@@ -590,7 +591,8 @@ class Upgrade:
             except:
                 pass
             try:
-                cursor.execute("ALTER TABLE `websiteFunctions_aliasdomains` ADD CONSTRAINT `websiteFunctions_ali_master_id_726c433d_fk_websiteFu` FOREIGN KEY (`master_id`) REFERENCES `websiteFunctions_websites` (`id`)")
+                cursor.execute(
+                    "ALTER TABLE `websiteFunctions_aliasdomains` ADD CONSTRAINT `websiteFunctions_ali_master_id_726c433d_fk_websiteFu` FOREIGN KEY (`master_id`) REFERENCES `websiteFunctions_websites` (`id`)")
             except:
                 pass
 
@@ -794,7 +796,8 @@ class Upgrade:
             connection, cursor = Upgrade.setupConnection('cyberpanel')
 
             try:
-                cursor.execute('ALTER TABLE e_forwardings DROP PRIMARY KEY;ALTER TABLE e_forwardings ADD id INT AUTO_INCREMENT PRIMARY KEY')
+                cursor.execute(
+                    'ALTER TABLE e_forwardings DROP PRIMARY KEY;ALTER TABLE e_forwardings ADD id INT AUTO_INCREMENT PRIMARY KEY')
             except:
                 pass
 
@@ -969,7 +972,6 @@ class Upgrade:
         try:
             connection, cursor = Upgrade.setupConnection('cyberpanel')
 
-
             query = """CREATE TABLE `dockerManager_containers` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL,
@@ -1060,6 +1062,24 @@ class Upgrade:
             pass
 
     @staticmethod
+    def GeneralMigrations():
+        try:
+
+            cwd = os.getcwd()
+            os.chdir('/usr/local/CyberCP')
+
+            command = 'python manage.py makemigrations'
+            Upgrade.executioner(command, 'python manage.py makemigrations', 0)
+
+            command = 'python manage.py makemigrations'
+            Upgrade.executioner(command, 'python manage.py migrate', 0)
+
+            os.chdir(cwd)
+
+        except:
+            pass
+
+    @staticmethod
     def enableServices():
         try:
             servicePath = '/home/cyberpanel/powerdns'
@@ -1141,9 +1161,7 @@ class Upgrade:
                 if items.find('manageServices') > -1:
                     manageServices = 0
 
-
             Upgrade.stdOut('Restoring settings file!')
-
 
             writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
 
@@ -1240,7 +1258,7 @@ class Upgrade:
 
             try:
                 os.remove("/usr/local/lscp/fcgi-bin/lsphp")
-                shutil.copy("/usr/local/lsws/lsphp70/bin/lsphp","/usr/local/lscp/fcgi-bin/lsphp")
+                shutil.copy("/usr/local/lsws/lsphp70/bin/lsphp", "/usr/local/lscp/fcgi-bin/lsphp")
             except:
                 pass
 
@@ -1277,7 +1295,6 @@ class Upgrade:
         try:
 
             Upgrade.stdOut("Fixing permissions..")
-
 
             command = "usermod -G lscpd,lsadm,nobody lscpd"
             Upgrade.executioner(command, 'chown core code', 0)
@@ -1372,8 +1389,8 @@ class Upgrade:
     @staticmethod
     def upgrade():
 
-        #Upgrade.stdOut("Upgrades are currently disabled")
-        #return 0
+        # Upgrade.stdOut("Upgrades are currently disabled")
+        # return 0
 
         os.chdir("/usr/local")
 
@@ -1392,7 +1409,6 @@ class Upgrade:
         ##
 
         versionNumbring = Upgrade.downloadLink()
-
 
         if os.path.exists('/usr/local/CyberPanel.' + versionNumbring):
             os.remove('/usr/local/CyberPanel.' + versionNumbring)
@@ -1436,6 +1452,7 @@ class Upgrade:
         Upgrade.someDirectories()
         Upgrade.installLSCPD()
         Upgrade.fixPermissions()
+        Upgrade.GeneralMigrations()
         time.sleep(3)
 
         ## Upgrade version
@@ -1450,8 +1467,10 @@ class Upgrade:
 
         Upgrade.stdOut("Upgrade Completed.")
 
+
 def main():
     Upgrade.upgrade()
+
 
 if __name__ == "__main__":
     main()

@@ -189,6 +189,7 @@ def sslForMailServer(request):
             return ACLManager.loadError()
 
         websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
         return render(request, 'manageSSL/sslForMailServer.html',{'websiteList':websitesName})
     except KeyError:

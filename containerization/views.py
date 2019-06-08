@@ -288,6 +288,7 @@ def getUsageData(request):
         try:
             type = data['type']
             finalData = {}
+            finalData['status'] = 1
 
             try:
                 if type == 'memory':
@@ -336,6 +337,7 @@ def getUsageData(request):
             output = str(subprocess.check_output(command, shell=True))
 
             finalData = {}
+            finalData['status'] = 1
             if len(output) == 0:
                 finalData['cpu'] = '0'
             else:

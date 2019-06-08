@@ -11,9 +11,10 @@ import argparse
 import shlex
 from mailServer.models import Domains,EUsers
 from emailPremium.models import DomainLimits, EmailLimits
-from websiteFunctions.models import Websites
+from websiteFunctions.models import Websites, ChildDomains
 from processUtilities import ProcessUtilities
-
+import os, getpass
+import hashlib
 
 class mailUtilities:
 
@@ -34,33 +35,55 @@ class mailUtilities:
 
             ## Check for email limits.
 
-            website = Websites.objects.get(domain=domain)
+            ChildCheck = 0
+            try:
+                website = Websites.objects.get(domain=domain)
+            except:
+                website = ChildDomains.objects.get(domain=domain)
+                ChildCheck = 1
 
             try:
 
                 if not Domains.objects.filter(domain=domain).exists():
-                    newEmailDomain = Domains(domainOwner=website, domain=domain)
+                    if ChildCheck == 0:
+                        newEmailDomain = Domains(domainOwner=website, domain=domain)
+                    else:
+                        newEmailDomain = Domains(childOwner=website, domain=domain)
+
                     newEmailDomain.save()
 
                 if not DomainLimits.objects.filter(domain=newEmailDomain).exists():
                     domainLimits = DomainLimits(domain=newEmailDomain)
                     domainLimits.save()
 
-                if website.package.emailAccounts == 0 or (
-                            newEmailDomain.eusers_set.all().count() < website.package.emailAccounts):
-                    pass
+                if ChildCheck == 0:
+                    if website.package.emailAccounts == 0 or (
+                                newEmailDomain.eusers_set.all().count() < website.package.emailAccounts):
+                        pass
+                    else:
+                        raise BaseException("Exceeded maximum amount of email accounts allowed for the package.")
                 else:
-                    raise BaseException("Exceeded maximum amount of email accounts allowed for the package.")
+                    if website.master.package.emailAccounts == 0 or (
+                                newEmailDomain.eusers_set.all().count() < website.master.package.emailAccounts):
+                        pass
+                    else:
+                        raise BaseException("Exceeded maximum amount of email accounts allowed for the package.")
 
             except:
 
                 emailDomain = Domains.objects.get(domain=domain)
-
-                if website.package.emailAccounts == 0 or (
-                            emailDomain.eusers_set.all().count() < website.package.emailAccounts):
-                    pass
+                if ChildCheck == 0:
+                    if website.package.emailAccounts == 0 or (
+                                emailDomain.eusers_set.all().count() < website.package.emailAccounts):
+                        pass
+                    else:
+                        raise BaseException("Exceeded maximum amount of email accounts allowed for the package.")
                 else:
-                    raise BaseException("Exceeded maximum amount of email accounts allowed for the package.")
+                    if website.master.package.emailAccounts == 0 or (
+                                emailDomain.eusers_set.all().count() < website.master.package.emailAccounts):
+                        pass
+                    else:
+                        raise BaseException("Exceeded maximum amount of email accounts allowed for the package.")
 
 
             ## After effects
@@ -83,6 +106,10 @@ class mailUtilities:
 
             emailDomain = Domains.objects.get(domain=domain)
 
+            hash = hashlib.md5()
+            hash.update(password)
+
+            #emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=hash.hexdigest())
             emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
             emailAcct.save()
 
@@ -301,11 +328,18 @@ milter_default_action = accept
             try:
                 FNULL = open(os.devnull, 'w')
 
-                command = "sudo mkdir " + mailUtilities.cyberPanelHome
-                subprocess.call(shlex.split(command), stdout=FNULL)
+                if getpass.getuser() == 'root':
+                    command = "sudo mkdir " + mailUtilities.cyberPanelHome
+                    subprocess.call(shlex.split(command), stdout=FNULL)
 
-                command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
-                subprocess.call(shlex.split(command), stdout=FNULL)
+                    command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
+                    subprocess.call(shlex.split(command), stdout=FNULL)
+                else:
+                    command = "sudo mkdir " + mailUtilities.cyberPanelHome
+                    ProcessUtilities.executioner(command)
+
+                    command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
+                    ProcessUtilities.executioner(command)
             except:
                 FNULL = open(os.devnull, 'w')
                 command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome

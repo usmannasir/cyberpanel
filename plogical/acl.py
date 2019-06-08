@@ -537,6 +537,17 @@ class ACLManager:
 
             return containerList
 
+    @staticmethod
+    def findChildDomains(websiteNames):
+        childDomains = []
+
+        for items in websiteNames:
+            website = Websites.objects.get(domain = items)
+            for childDomain in website.childdomains_set.all():
+                childDomains.append(childDomain.domain)
+
+        return childDomains
+
 
 
 
