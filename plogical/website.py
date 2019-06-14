@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+createWebsiteAPI#!/usr/local/CyberCP/bin/python2
 import os
 import os.path
 import sys
@@ -1912,7 +1912,7 @@ Host gitlab.com
                     websiteOwn = Administrator(userName=websiteOwner,
                                                password=hashPassword.hash_password(ownerPassword),
                                                email=adminEmail, type=3, owner=admin.pk,
-                                               initWebsitesLimit=1, acl=acl)
+                                               initWebsitesLimit=1, acl=acl, api=1)
                     websiteOwn.save()
                 except BaseException:
                     pass
