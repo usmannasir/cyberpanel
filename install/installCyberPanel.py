@@ -18,13 +18,15 @@ class InstallCyberPanel:
     mysql_Root_password = ""
     mysqlPassword = ""
 
-    def __init__(self, rootPath, cwd, distro, ent, serial = None, port = None):
+    def __init__(self, rootPath, cwd, distro, ent, serial = None, port = None, ftp = None, dns = None):
         self.server_root_path = rootPath
         self.cwd = cwd
         self.distro = distro
         self.ent = ent
         self.serial = serial
         self.port = port
+        self.ftp = None
+        self.dns = dns
 
     @staticmethod
     def stdOut(message, log=0, exit=0, code=os.EX_OK):
@@ -686,7 +688,7 @@ class InstallCyberPanel:
             logging.InstallLog.writeToFile(str(msg) + " [startPowerDNS]")
 
 
-def Main(cwd, mysql, distro, ent, serial = None, port = "8090"):
+def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns = None):
 
     InstallCyberPanel.mysqlPassword = randomPassword.generate_pass()
     InstallCyberPanel.mysql_Root_password = randomPassword.generate_pass()
@@ -706,7 +708,7 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090"):
     else:
         InstallCyberPanel.mysqlPassword = InstallCyberPanel.mysql_Root_password
 
-    installer = InstallCyberPanel("/usr/local/lsws/",cwd, distro, ent, serial, port)
+    installer = InstallCyberPanel("/usr/local/lsws/",cwd, distro, ent, serial, port, ftp, dns)
 
     installer.installLiteSpeed()
     if ent == 0:
@@ -727,10 +729,22 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090"):
 
     mysqlUtilities.createDatabase("cyberpanel","cyberpanel",InstallCyberPanel.mysqlPassword)
 
-    installer.installPureFTPD()
-    installer.installPureFTPDConfigurations(mysql)
-    installer.startPureFTPD()
+    if ftp == None:
+        installer.installPureFTPD()
+        installer.installPureFTPDConfigurations(mysql)
+        installer.startPureFTPD()
+    else:
+        if ftp == 'On':
+            installer.installPureFTPD()
+            installer.installPureFTPDConfigurations(mysql)
+            installer.startPureFTPD()
 
-    installer.installPowerDNS()
-    installer.installPowerDNSConfigurations(InstallCyberPanel.mysqlPassword, mysql)
-    installer.startPowerDNS()
+    if dns == None:
+        installer.installPowerDNS()
+        installer.installPowerDNSConfigurations(InstallCyberPanel.mysqlPassword, mysql)
+        installer.startPowerDNS()
+    else:
+        if dns == 'On':
+            installer.installPowerDNS()
+            installer.installPowerDNSConfigurations(InstallCyberPanel.mysqlPassword, mysql)
+            installer.startPowerDNS()

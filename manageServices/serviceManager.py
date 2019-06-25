@@ -1,6 +1,8 @@
 import subprocess, shlex
 from random import randint
 from plogical.processUtilities import ProcessUtilities
+from dns.models import Supermasters
+from manageServices.models import SlaveServers
 
 class ServiceManager:
 
@@ -8,17 +10,27 @@ class ServiceManager:
         self.extraArgs = extraArgs
 
     def managePDNS(self):
-        return 0
         type = self.extraArgs['type']
         path = '/etc/pdns/pdns.conf'
 
-        data = subprocess.check_output(shlex.split('sudo cat ' + path)).splitlines()
+        data = ProcessUtilities.outputExecutioner('sudo cat ' + path).splitlines()
+        #data = subprocess.check_output(shlex.split('sudo cat ' + path)).splitlines()
+
 
         if type == 'MASTER':
             counter = 0
 
-            slaveIPData = self.extraArgs['slaveIPData']
-            ipsString = slaveIPData.replace(',', '/32,')
+            ipsString = ''
+            ipStringNoSubnet = ''
+
+            for items in SlaveServers.objects.all():
+                ipsString = ipsString + '%s/32 ' % (items.slaveServerIP)
+                ipStringNoSubnet = ipStringNoSubnet + '%s ' % (items.slaveServerIP)
+
+            ipsString = ipsString.rstrip(' ')
+            ipStringNoSubnet = ipStringNoSubnet.rstrip(' ')
+
+
 
 
             for items in data:
@@ -46,7 +58,7 @@ class ServiceManager:
                 writeToFile.writelines(items + '\n')
 
             writeToFile.writelines('allow-axfr-ips=' + ipsString + '\n')
-            writeToFile.writelines('also-notify=' + slaveIPData + '\n')
+            writeToFile.writelines('also-notify=' + ipStringNoSubnet + '\n')
             writeToFile.writelines('daemon=no\n')
             writeToFile.writelines('disable-axfr=no\n')
             writeToFile.writelines('master=yes\n')
@@ -82,6 +94,12 @@ class ServiceManager:
             writeToFile.writelines('daemon=no\n')
             writeToFile.close()
 
+            for items in Supermasters.objects.all():
+                items.delete()
+
+            Supermasters(ip=self.extraArgs['masterServerIP'], nameserver=self.extraArgs['slaveServerNS'], account='').save()
+
         command = 'sudo mv ' + tempPath + ' ' + path
+        #subprocess.call(shlex.split(command))
         ProcessUtilities.executioner(command)
 

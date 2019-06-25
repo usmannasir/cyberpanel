@@ -9,7 +9,7 @@ import os
 import json
 from plogical.mailUtilities import mailUtilities
 from plogical.acl import ACLManager
-from models import PDNSStatus
+from models import PDNSStatus, SlaveServers
 from .serviceManager import ServiceManager
 from plogical.processUtilities import ProcessUtilities
 # Create your views here.
@@ -96,11 +96,11 @@ def fetchStatus(request):
                     try:
                         pdns = PDNSStatus.objects.get(pk=1)
                         data_ret['installCheck'] = pdns.serverStatus
-                        data_ret['slaveIPData'] = pdns.also_notify
+                        #data_ret['slaveIPData'] = pdns.also_notify
                     except:
                         PDNSStatus(serverStatus=1).save()
                         data_ret['installCheck'] = 1
-                        data_ret['slaveIPData'] = ''
+                        #data_ret['slaveIPData'] = ''
 
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
@@ -161,16 +161,41 @@ def saveStatus(request):
 
                         pdns = PDNSStatus.objects.get(pk=1)
                         pdns.serverStatus = 1
-                        pdns.allow_axfr_ips = data['slaveIPData'].replace(',', '/32,')
-                        pdns.also_notify = data['slaveIPData']
                         pdns.type = data['dnsMode']
-                        pdns.save()
 
-                        extraArgs = {}
-                        extraArgs['type'] = data['dnsMode']
-                        extraArgs['slaveIPData'] = data['slaveIPData']
 
-                        sm = ServiceManager(extraArgs)
+                        if data['dnsMode'] == 'SLAVE':
+                            pdns.masterServer = data['slaveServerNS']
+                            pdns.masterIP = data['masterServerIP']
+                            pdns.save()
+                        else:
+                            pdns.masterServer = 'NONE'
+                            pdns.masterIP = 'NONE'
+                            pdns.save()
+
+                            for items in SlaveServers.objects.all():
+                                items.delete()
+
+                            slaveServer = SlaveServers(slaveServer=data['slaveServer'],
+                                                       slaveServerIP=data['slaveServerIP'])
+                            slaveServer.save()
+
+                            try:
+                                slaveServer = SlaveServers(slaveServer=data['slaveServer2'], slaveServerIP=data['slaveServerIP2'])
+                                slaveServer.save()
+                            except:
+                                pass
+
+                            try:
+                                slaveServer = SlaveServers(slaveServer=data['slaveServer3'], slaveServerIP=data['slaveServerIP3'])
+                                slaveServer.save()
+                            except:
+                                pass
+
+
+                        data['type'] = data['dnsMode']
+
+                        sm = ServiceManager(data)
                         sm.managePDNS()
 
                         command = 'sudo systemctl enable pdns'

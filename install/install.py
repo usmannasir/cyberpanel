@@ -3611,17 +3611,24 @@ def main():
     import installCyberPanel
     
     if ent == 0:
-        installCyberPanel.Main(cwd, mysql, distro, ent, None, port)
+        installCyberPanel.Main(cwd, mysql, distro, ent, None, port, args.ftp, args.powerdns)
     else:
-        installCyberPanel.Main(cwd, mysql, distro, ent, serial, port)
+        installCyberPanel.Main(cwd, mysql, distro, ent, serial, port, args.ftp, args.powerdns)
 
 
     checks.setupPHPAndComposer()
     checks.fix_selinux_issue()
     checks.install_psmisc()
-    checks.install_postfix_davecot()
-    checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
-    checks.setup_postfix_davecot_config(mysql)
+
+    if args.postfix != None:
+        checks.install_postfix_davecot()
+        checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
+        checks.setup_postfix_davecot_config(mysql)
+    else:
+        if args.postfix == 'On':
+            checks.install_postfix_davecot()
+            checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
+            checks.setup_postfix_davecot_config(mysql)
 
     checks.install_unzip()
     checks.install_zip()

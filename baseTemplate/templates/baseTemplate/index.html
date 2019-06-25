@@ -475,7 +475,7 @@
                         </div><!-- .sidebar-submenu -->
                     </li>
 
-                    <li>
+                    <li class="dnsAsWhole">
                         <a title="{% trans 'DNS' %}">
                             <i class="glyph-icon icon-sitemap"></i>
                             <span>{% trans "DNS" %}</span>
@@ -500,7 +500,7 @@
                         </div><!-- .sidebar-submenu -->
                     </li>
 
-                    <li>
+                    <li class="emailAsWhole">
                         <a href="{% url 'loadEmailHome' %}" title="{% trans 'Email' %}">
                             <i class="glyph-icon icon-paper-plane"></i>
                             <span>{% trans "Email" %}</span>
@@ -531,7 +531,7 @@
                         </div><!-- .sidebar-submenu -->
                     </li>
 
-                    <li>
+                    <li class="ftpAsWhole">
                         <a href="{% url 'packagesHome' %}" title="{% trans 'FTP' %}">
                             <i class="glyph-icon icon-cloud-upload"></i>
                             <span>{% trans "FTP" %}</span>
@@ -761,7 +761,7 @@
                         </div><!-- .sidebar-submenu -->
                     </li>
 
-                    <li class="serverACL">
+                    <li class="emailAsWhole" class="serverACL">
                         <a href="#" title="{% trans 'Mail Settings' %}">
                             <i class="glyph-icon icon-envelope"></i>
                             <span>{% trans "Mail Settings" %}</span>

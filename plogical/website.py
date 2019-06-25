@@ -1,4 +1,4 @@
-createWebsiteAPI#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python2
 import os
 import os.path
 import sys

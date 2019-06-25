@@ -15,6 +15,7 @@ import shlex
 import os
 import plogical.CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
+from manageServices.models import PDNSStatus
 # Create your views here.
 
 
@@ -40,6 +41,26 @@ def getAdminStatus(request):
     try:
         val = request.session['userID']
         currentACL = ACLManager.loadedACL(val)
+
+        if os.path.exists('/home/cyberpanel/postfix'):
+            currentACL['emailAsWhole'] = 1
+        else:
+            currentACL['emailAsWhole'] = 0
+
+        if os.path.exists('/home/cyberpanel/pureftpd'):
+            currentACL['ftpAsWhole'] = 1
+        else:
+            currentACL['ftpAsWhole'] = 0
+
+        try:
+            pdns = PDNSStatus.objects.get(pk=1)
+            currentACL['dnsAsWhole'] = pdns.serverStatus
+        except:
+            if os.path.exists('/etc/pdns'):
+                PDNSStatus(serverStatus=1).save()
+                currentACL['dnsAsWhole'] = 1
+            else:
+                currentACL['dnsAsWhole'] = 0
 
         json_data = json.dumps(currentACL)
         return HttpResponse(json_data)

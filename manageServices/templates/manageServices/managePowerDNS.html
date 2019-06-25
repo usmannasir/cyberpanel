@@ -49,10 +49,59 @@
                                         <div class="current-pack">{% trans 'Default is Slave Mode' %}</div>
                                     </div>
 
-                                    <div ng-hide="slaveIPs" class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Slave IPs" %}</label>
+                                    <div ng-hide="masterServerHD" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Slave Server" %}</label>
                                         <div class="col-sm-6">
-                                            <input placeholder="Comma separated listed of Slave Server IPs." type="text" class="form-control" ng-model="slaveIPData" required>
+                                            <input type="text" class="form-control" ng-model="slaveServerNS" required>
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="masterServerHD" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Master Server IP" %}</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control" ng-model="masterServerIP" required>
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="slaveIPs" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Slave Server 1" %}</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control" ng-model="slaveServer" required>
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="slaveIPs" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Slave Server IP" %}</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control" ng-model="slaveServerIP" required>
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="slaveIPs" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Slave Server 2 (Optional)" %}</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control" ng-model="slaveServer2" required>
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="slaveIPs" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Slave Server IP 2 (Optional)" %}</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control" ng-model="slaveServerIP2" required>
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="slaveIPs" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Slave Server 3 (Optional)" %}</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control" ng-model="slaveServer3" required>
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="slaveIPs" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Slave Server IP 3 (Optional)" %}</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control" ng-model="slaveIPData" required>
                                         </div>
                                     </div>
 

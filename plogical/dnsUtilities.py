@@ -9,7 +9,7 @@ import subprocess
 import shlex
 from dns.models import Domains,Records
 from processUtilities import ProcessUtilities
-from manageServices.models import PDNSStatus
+from manageServices.models import PDNSStatus, SlaveServers
 
 class DNS:
 
@@ -48,6 +48,39 @@ class DNS:
 
 
                     zone.save()
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=topLevelDomain,
+                                     type="NS",
+                                     content='hostmaster.%s' % (topLevelDomain),
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=topLevelDomain,
+                                     type="NS",
+                                     content='ns1.%s' % (topLevelDomain),
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=topLevelDomain,
+                                     type="NS",
+                                     content='ns2.%s' % (topLevelDomain),
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
 
                     content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
 
