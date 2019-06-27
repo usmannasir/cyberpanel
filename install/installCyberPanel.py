@@ -604,8 +604,8 @@ class InstallCyberPanel:
                                               'Install PowerDNS',
                                               1, 1, os.EX_OSERR)
 
-                command = 'curl -o /etc/yum.repos.d/powerdns-auth-master.repo ' \
-                          'https://repo.powerdns.com/repo-files/centos-auth-master.repo'
+                command = 'curl -o /etc/yum.repos.d/powerdns-auth-42.repo ' \
+                          'https://repo.powerdns.com/repo-files/centos-auth-42.repo'
                 install.preFlightsChecks.call(command, self.distro, '[installPowerDNS]',
                                               'Install PowerDNS',
                                               1, 1, os.EX_OSERR)

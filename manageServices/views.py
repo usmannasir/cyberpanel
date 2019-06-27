@@ -168,7 +168,7 @@ def saveStatus(request):
                             pdns.masterServer = data['slaveServerNS']
                             pdns.masterIP = data['masterServerIP']
                             pdns.save()
-                        else:
+                        elif data['dnsMode'] == 'MASTER':
                             pdns.masterServer = 'NONE'
                             pdns.masterIP = 'NONE'
                             pdns.save()
@@ -192,11 +192,11 @@ def saveStatus(request):
                             except:
                                 pass
 
+                        if data['dnsMode'] != 'Default':
+                            data['type'] = data['dnsMode']
 
-                        data['type'] = data['dnsMode']
-
-                        sm = ServiceManager(data)
-                        sm.managePDNS()
+                            sm = ServiceManager(data)
+                            sm.managePDNS()
 
                         command = 'sudo systemctl enable pdns'
                         ProcessUtilities.executioner(command)

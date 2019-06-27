@@ -12,6 +12,7 @@ app.controller('powerDNS', function ($scope, $http, $timeout, $window) {
     $scope.couldNotConnect = true;
     $scope.changesApplied = true;
     $scope.slaveIPs = true;
+    $scope.masterServerHD  = true;
 
     var pdnsStatus = false;
 
@@ -90,7 +91,14 @@ app.controller('powerDNS', function ($scope, $http, $timeout, $window) {
                 status: pdnsStatus,
                 service: service,
                 dnsMode: $scope.dnsMode,
-                slaveIPData: $scope.slaveIPData
+                slaveServerNS: $scope.slaveServerNS,
+                masterServerIP: $scope.masterServerIP,
+                slaveServer: $scope.slaveServer,
+                slaveServerIP: $scope.slaveServerIP,
+                slaveServer2: $scope.slaveServer2,
+                slaveServerIP2: $scope.slaveServerIP2,
+                slaveServer3: $scope.slaveServer3,
+                slaveServerIP3: $scope.slaveServerIP3,
             };
         }else {
             var data = {
@@ -142,9 +150,14 @@ app.controller('powerDNS', function ($scope, $http, $timeout, $window) {
     $scope.modeChange = function () {
         if ($scope.dnsMode === 'MASTER') {
             $scope.slaveIPs = false;
+            $scope.masterServerHD  = true;
 
-        } else {
+        } else if($scope.dnsMode == 'SLAVE') {
             $scope.slaveIPs = true;
+            $scope.masterServerHD  = false;
+        }else{
+            $scope.slaveIPs = true;
+            $scope.masterServerHD  = true;
         }
     }
 

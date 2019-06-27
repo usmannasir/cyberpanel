@@ -41,6 +41,20 @@ class DNS:
                         pdns = PDNSStatus.objects.get(pk=1)
                         if pdns.type == 'MASTER':
                             zone = Domains(admin=admin, name=topLevelDomain, type="MASTER")
+                            zone.save()
+
+                            for items in SlaveServers.objects.all():
+                                record = Records(domainOwner=zone,
+                                                 domain_id=zone.id,
+                                                 name=topLevelDomain,
+                                                 type="NS",
+                                                 content=items.slaveServer,
+                                                 ttl=3600,
+                                                 prio=0,
+                                                 disabled=0,
+                                                 auth=1)
+                                record.save()
+
                         else:
                             zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
                     except:
@@ -49,38 +63,40 @@ class DNS:
 
                     zone.save()
 
-                    record = Records(domainOwner=zone,
-                                     domain_id=zone.id,
-                                     name=topLevelDomain,
-                                     type="NS",
-                                     content='hostmaster.%s' % (topLevelDomain),
-                                     ttl=3600,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
+                    if zone.type == 'NATIVE':
 
-                    record = Records(domainOwner=zone,
-                                     domain_id=zone.id,
-                                     name=topLevelDomain,
-                                     type="NS",
-                                     content='ns1.%s' % (topLevelDomain),
-                                     ttl=3600,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
+                        record = Records(domainOwner=zone,
+                                         domain_id=zone.id,
+                                         name=topLevelDomain,
+                                         type="NS",
+                                         content='hostmaster.%s' % (topLevelDomain),
+                                         ttl=3600,
+                                         prio=0,
+                                         disabled=0,
+                                         auth=1)
+                        record.save()
 
-                    record = Records(domainOwner=zone,
-                                     domain_id=zone.id,
-                                     name=topLevelDomain,
-                                     type="NS",
-                                     content='ns2.%s' % (topLevelDomain),
-                                     ttl=3600,
-                                     prio=0,
-                                     disabled=0,
-                                     auth=1)
-                    record.save()
+                        record = Records(domainOwner=zone,
+                                         domain_id=zone.id,
+                                         name=topLevelDomain,
+                                         type="NS",
+                                         content='ns1.%s' % (topLevelDomain),
+                                         ttl=3600,
+                                         prio=0,
+                                         disabled=0,
+                                         auth=1)
+                        record.save()
+
+                        record = Records(domainOwner=zone,
+                                         domain_id=zone.id,
+                                         name=topLevelDomain,
+                                         type="NS",
+                                         content='ns2.%s' % (topLevelDomain),
+                                         ttl=3600,
+                                         prio=0,
+                                         disabled=0,
+                                         auth=1)
+                        record.save()
 
                     content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
 
@@ -392,6 +408,16 @@ class DNS:
     @staticmethod
     def createDNSRecord(zone, name, type, value, priority, ttl):
         try:
+
+            if zone.type == 'MASTER':
+                getSOA = Records.objects.get(domainOwner=zone, type='SOA')
+                soaContent = getSOA.content.split(' ')
+                soaContent[2] = str(int(soaContent[2]) + 1)
+                getSOA.content = " ".join(soaContent)
+                getSOA.save()
+
+
+
             if type == 'NS':
                 if Records.objects.filter(name=name, type=type, content=value).count() == 0:
                     record = Records(domainOwner=zone,

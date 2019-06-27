@@ -182,6 +182,10 @@ app.controller('adminController', function($scope,$http,$timeout) {
 
               // DNS Management
 
+                 if(!Boolean(response.data.dnsAsWhole)){
+                     $('.dnsAsWhole').hide();
+                 }
+
                if(!Boolean(response.data.createNameServer)){
                      $('.createNameServer').hide();
                  }
@@ -199,6 +203,10 @@ app.controller('adminController', function($scope,$http,$timeout) {
                }
 
              // Email Management
+
+               if(!Boolean(response.data.emailAsWhole)){
+                     $('.emailAsWhole').hide();
+                 }
 
                if(!Boolean(response.data.createEmail)){
                      $('.createEmail').hide();
@@ -222,6 +230,10 @@ app.controller('adminController', function($scope,$http,$timeout) {
 
 
               // FTP Management
+
+                 if(!Boolean(response.data.ftpAsWhole)){
+                     $('.ftpAsWhole').hide();
+                 }
 
                if(!Boolean(response.data.createFTPAccount)){
                      $('.createFTPAccount').hide();
@@ -273,7 +285,20 @@ app.controller('adminController', function($scope,$http,$timeout) {
                 }
 
 
-            }
+            }else{
+
+               if(!Boolean(response.data.emailAsWhole)){
+                     $('.emailAsWhole').hide();
+                 }
+
+               if(!Boolean(response.data.ftpAsWhole)){
+                     $('.ftpAsWhole').hide();
+                 }
+
+               if(!Boolean(response.data.dnsAsWhole)){
+                     $('.dnsAsWhole').hide();
+                 }
+             }
         }
 
         function cantLoadInitialData(response) {}

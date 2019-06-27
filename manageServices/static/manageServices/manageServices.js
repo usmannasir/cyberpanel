@@ -152,9 +152,12 @@ app.controller('powerDNS', function ($scope, $http, $timeout, $window) {
             $scope.slaveIPs = false;
             $scope.masterServerHD  = true;
 
-        } else {
+        } else if($scope.dnsMode == 'SLAVE') {
             $scope.slaveIPs = true;
             $scope.masterServerHD  = false;
+        }else{
+            $scope.slaveIPs = true;
+            $scope.masterServerHD  = true;
         }
     }
 

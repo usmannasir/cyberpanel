@@ -35,19 +35,19 @@ class ServiceManager:
 
             for items in data:
                 if items.find('allow-axfr-ips') > -1:
-                    data[counter] = '#' + data[counter]
+                    continue
 
                 if items.find('also-notify') > -1:
-                    data[counter] = '#' + data[counter]
+                    continue
 
                 if items.find('daemon=') > -1:
-                    data[counter] = '#' + data[counter]
+                    continue
 
                 if items.find('disable-axfr') > -1:
-                    data[counter] = '#' + data[counter]
+                    continue
 
                 if items.find('slave') > -1:
-                    data[counter] = '#' + data[counter]
+                    continue
 
                 counter = counter + 1
 
@@ -68,19 +68,19 @@ class ServiceManager:
 
             for items in data:
                 if items.find('allow-axfr-ips') > -1:
-                    data[counter] = '#' + data[counter]
+                    continue
 
                 if items.find('also-notify') > -1:
-                    data[counter] = '#' + data[counter]
+                    continue
 
                 if items.find('daemon=') > -1:
-                    data[counter] = '#' + data[counter]
+                    continue
 
                 if items.find('disable-axfr') > -1:
-                    data[counter] = '#' + data[counter]
+                    continue
 
                 if items.find('slave') > -1:
-                    data[counter] = '#' + data[counter]
+                    continue
 
                 counter = counter + 1
 
@@ -90,8 +90,20 @@ class ServiceManager:
             for items in data:
                 writeToFile.writelines(items  + '\n')
 
-            writeToFile.writelines('slave=yes\n')
-            writeToFile.writelines('daemon=no\n')
+            slaveData = """slave=yes
+daemon=yes
+disable-axfr=yes
+guardian=yes
+local-address=0.0.0.0
+local-port=53
+master=no
+slave-cycle-interval=60
+setgid=pdns
+setuid=pdns
+superslave=yes        
+"""
+
+            writeToFile.writelines(slaveData)
             writeToFile.close()
 
             for items in Supermasters.objects.all():

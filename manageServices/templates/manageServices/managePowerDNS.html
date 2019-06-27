@@ -42,11 +42,11 @@
                                         <label class="col-sm-3 control-label">{% trans "Select Function Mode" %}</label>
                                         <div class="col-sm-6">
                                             <select ng-change="modeChange()" ng-model="dnsMode" class="form-control">
+                                                <option>Default</option>
                                                 <option>MASTER</option>
                                                 <option>SLAVE</option>
                                             </select>
                                         </div>
-                                        <div class="current-pack">{% trans 'Default is Slave Mode' %}</div>
                                     </div>
 
                                     <div ng-hide="masterServerHD" class="form-group">

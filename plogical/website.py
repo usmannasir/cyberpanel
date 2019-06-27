@@ -609,6 +609,19 @@ class WebsiteManager:
 
             Data['phps'] = PHPManager.findPHPVersions()
 
+            servicePath = '/home/cyberpanel/postfix'
+            if os.path.exists(servicePath):
+                Data['email'] = 1
+            else:
+                Data['email'] = 0
+
+            servicePath = '/home/cyberpanel/pureftpd'
+            if os.path.exists(servicePath):
+                Data['ftp'] = 1
+            else:
+                Data['ftp'] = 0
+
+
             return render(request, 'websiteFunctions/website.html', Data)
 
         else:
@@ -673,6 +686,18 @@ class WebsiteManager:
                 Data['diskInMBTotal'] = website.package.diskSpace
 
             Data['phps'] = PHPManager.findPHPVersions()
+
+            servicePath = '/home/cyberpanel/postfix'
+            if os.path.exists(servicePath):
+                Data['email'] = 1
+            else:
+                Data['email'] = 0
+
+            servicePath = '/home/cyberpanel/pureftpd'
+            if os.path.exists(servicePath):
+                Data['ftp'] = 1
+            else:
+                Data['ftp'] = 0
 
             return render(request, 'websiteFunctions/launchChild.html', Data)
         else:

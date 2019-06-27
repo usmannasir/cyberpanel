@@ -175,7 +175,8 @@
                                         </div>
 
                                         <div style="margin-bottom: 1%;" class=" col-sm-1">
-                                            <a ng-click="hidelogsbtn()" href=""><h3 class="glyph-icon icon-close text-danger mt-5"></h3></a>
+                                            <a ng-click="hidelogsbtn()" href=""><h3
+                                                    class="glyph-icon icon-close text-danger mt-5"></h3></a>
                                         </div>
                                         <div class="col-sm-12">
                                             <table class="table">
@@ -205,7 +206,8 @@
                                     <div ng-hide="hideErrorLogs" class="form-group">
 
                                         <div class="col-sm-2">
-                                            <input placeholder="Page Number" type="number" class="form-control" ng-model="errorPageNumber" required>
+                                            <input placeholder="Page Number" type="number" class="form-control"
+                                                   ng-model="errorPageNumber" required>
                                         </div>
 
                                         <div class="col-sm-9">
@@ -217,7 +219,7 @@
 
                                         <div style="margin-bottom: 1%;" class=" col-sm-1">
                                             <a ng-click="hideErrorLogsbtn()" href="">
-                                                <h3 class="glyph-icon icon-close text-danger mt-5"></h3> </a>
+                                                <h3 class="glyph-icon icon-close text-danger mt-5"></h3></a>
                                         </div>
 
                                         <div class="col-sm-12">
@@ -275,7 +277,8 @@
 
                             <div class="col-md-3 panel-body">
 
-                                <a ng-click="addSSL()" href="" title="{% trans 'Add Your Own SSL' %}" width="65" class="mr-10">
+                                <a ng-click="addSSL()" href="" title="{% trans 'Add Your Own SSL' %}" width="65"
+                                   class="mr-10">
                                     <img src="{% static 'images/icons/locked.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a ng-click="addSSL()" href="" title="{% trans 'Add Your Own SSL' %}">
@@ -286,7 +289,8 @@
 
                             <div class="col-md-3 panel-body">
 
-                                <a ng-click="changePHPMaster()" href="" title="{% trans 'Change PHP Version' %}" width="65" class="mr-10">
+                                <a ng-click="changePHPMaster()" href="" title="{% trans 'Change PHP Version' %}"
+                                   width="65" class="mr-10">
                                     <img src="{% static 'images/icons/laptop.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a ng-click="changePHPMaster()" href="" title="{% trans 'Change PHP Version' %}">
@@ -318,7 +322,8 @@
 
                                     <div ng-hide="" class="form-group">
                                         <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
-                                            <a ng-click="hidesslbtn()" href=""><h3 class="glyph-icon icon-close text-danger mt-5"></h3></a>
+                                            <a ng-click="hidesslbtn()" href=""><h3
+                                                    class="glyph-icon icon-close text-danger mt-5"></h3></a>
                                         </div>
                                         <div class="col-sm-6">
                                             <textarea placeholder="Paste Your Cert" ng-model="cert" rows="10"
@@ -382,7 +387,8 @@
 
                                     <div ng-hide="fetchedConfigsData" class="form-group">
                                         <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
-                                            <a ng-click="hideconfigbtn()" href=""><h3 class="glyph-icon icon-close text-danger mt-5"></h3></a>
+                                            <a ng-click="hideconfigbtn()" href=""><h3
+                                                    class="glyph-icon icon-close text-danger mt-5"></h3></a>
                                         </div>
                                         <div class="col-sm-12">
                                             <textarea ng-model="configData" rows="20" class="form-control"></textarea>
@@ -437,7 +443,8 @@
 
                                     <div ng-hide="fetchedRewriteRules" class="form-group">
                                         <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
-                                            <a ng-click="hideRewriteRulesbtn()" href=""><h3 class="glyph-icon icon-close text-danger mt-5"></h3></a>
+                                            <a ng-click="hideRewriteRulesbtn()" href=""><h3
+                                                    class="glyph-icon icon-close text-danger mt-5"></h3></a>
                                         </div>
                                         <div class="col-sm-12">
                                             <textarea ng-model="rewriteRules" rows="10" class="form-control"></textarea>
@@ -555,29 +562,32 @@
 
                             </div>
 
+                            {% if ftp %}
 
-                            <div class="col-md-3 panel-body">
+                                <div class="col-md-3 panel-body">
 
-                                <a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}">
-                                    <img src="{% static 'images/icons/ftp-upload.png' %}" width="65" class="mr-10">
-                                </a>
-                                <a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}">
-                                    <span class="h4">{% trans "Create FTP Acct" %}</span>
-                                </a>
+                                    <a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}">
+                                        <img src="{% static 'images/icons/ftp-upload.png' %}" width="65" class="mr-10">
+                                    </a>
+                                    <a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}">
+                                        <span class="h4">{% trans "Create FTP Acct" %}</span>
+                                    </a>
 
-                            </div>
+                                </div>
 
 
-                            <div class="col-md-3 panel-body">
+                                <div class="col-md-3 panel-body">
 
-                                <a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}">
-                                    <img src="{% static 'images/icons/delete-ftp.png' %}" width="65" class="mr-10">
-                                </a>
-                                <a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}">
-                                    <span class="h4">{% trans "Delete FTP Acct" %}</span>
-                                </a>
+                                    <a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}">
+                                        <img src="{% static 'images/icons/delete-ftp.png' %}" width="65" class="mr-10">
+                                    </a>
+                                    <a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}">
+                                        <span class="h4">{% trans "Delete FTP Acct" %}</span>
+                                    </a>
 
-                            </div>
+                                </div>
+
+                            {% endif %}
 
 
                             <!--- HTML To change open_basedir --->
@@ -600,7 +610,8 @@
                                         </div>
 
                                         <div style="margin-bottom: 2%;" class=" col-sm-1">
-                                            <a title="{% trans 'Cancel' %}" ng-click="hideOpenBasedir()" href=""><h3 class="glyph-icon icon-close text-danger mt-5"></h3></a>
+                                            <a title="{% trans 'Cancel' %}" ng-click="hideOpenBasedir()" href=""><h3
+                                                    class="glyph-icon icon-close text-danger mt-5"></h3></a>
                                         </div>
 
                                     </div>
