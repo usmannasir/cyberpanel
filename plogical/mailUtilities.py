@@ -110,8 +110,19 @@ class mailUtilities:
             hash.update(password)
 
             #emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=hash.hexdigest())
-            emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
-            emailAcct.save()
+
+            CentOSPath = '/etc/redhat-release'
+
+            if os.path.exists(CentOSPath):
+                command = 'doveadm pw -p %s' % (password)
+                password = subprocess.check_output(shlex.split(command)).strip('\n')
+                emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
+                emailAcct.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (domain, userName)
+                emailAcct.save()
+            else:
+                emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
+                emailAcct.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (domain, userName)
+                emailAcct.save()
 
             emailLimits = EmailLimits(email=emailAcct)
             emailLimits.save()
@@ -150,8 +161,14 @@ class mailUtilities:
     @staticmethod
     def changeEmailPassword(email, newPassword):
         try:
+            CentOSPath = '/etc/redhat-release'
             changePass = EUsers.objects.get(email=email)
-            changePass.password = newPassword
+            if os.path.exists(CentOSPath):
+                command = 'doveadm pw -p %s' % (newPassword)
+                password = subprocess.check_output(shlex.split(command)).strip('\n')
+                changePass.password = password
+            else:
+                changePass.password = newPassword
             changePass.save()
             return 0,'None'
         except BaseException, msg:

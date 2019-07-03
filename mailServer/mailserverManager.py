@@ -335,17 +335,21 @@ class MailServerManager:
                 return ACLManager.loadErrorJson('passChangeStatus', 0)
 
             data = json.loads(self.request.body)
-            domain = data['domain']
             email = data['email']
             password = data['password']
 
             emailDB = EUsers.objects.get(email=email)
-            emailDB.delete()
 
-            dom = Domains(domain=domain)
+            CentOSPath = '/etc/redhat-release'
+            if os.path.exists(CentOSPath):
+                command = 'doveadm pw -p %s' % (password)
+                password = ProcessUtilities.outputExecutioner(command).strip('\n')
+                emailDB.password = password
+            else:
+                emailDB.password = password
 
-            emailAcct = EUsers(emailOwner=dom, email=email, password=password)
-            emailAcct.save()
+            emailDB.save()
+
 
             data_ret = {'status': 1, 'passChangeStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)

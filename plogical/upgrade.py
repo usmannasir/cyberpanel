@@ -17,6 +17,7 @@ import MySQLdb as mysql
 from CyberCP import settings
 import random
 import string
+from mailServer.models import EUsers
 
 
 class Upgrade:
@@ -797,6 +798,18 @@ class Upgrade:
 
             try:
                 cursor.execute(
+                    'ALTER TABLE `e_domains` ADD COLUMN `childOwner_id` integer')
+            except:
+                pass
+
+            try:
+                cursor.execute(
+                    'ALTER TABLE e_users ADD mail varchar(200)')
+            except:
+                pass
+
+            try:
+                cursor.execute(
                     'ALTER TABLE e_forwardings DROP PRIMARY KEY;ALTER TABLE e_forwardings ADD id INT AUTO_INCREMENT PRIMARY KEY')
             except:
                 pass
@@ -1387,6 +1400,59 @@ class Upgrade:
         Upgrade.executioner(command, 0)
 
     @staticmethod
+    def upgradePDNS():
+        command = "yum install epel-release yum-plugin-priorities && curl -o /etc/yum.repos.d/powerdns-auth-42.repo https://repo.powerdns.com/repo-files/centos-auth-42.repo && yum --enablerepo=epel install pdns"
+        subprocess.call(command, shell=True)
+
+    @staticmethod
+    def upgradeDovecot():
+        CentOSPath = '/etc/redhat-release'
+
+        if os.path.exists(CentOSPath):
+            path = '/etc/yum.repos.d/dovecot.repo'
+            content = """[dovecot-2.3-latest]
+name=Dovecot 2.3 CentOS $releasever - $basearch
+baseurl=http://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch
+gpgkey=https://repo.dovecot.org/DOVECOT-REPO-GPG
+gpgcheck=1
+enabled=1"""
+            writeToFile = open(path, 'w')
+            writeToFile.write(content)
+            writeToFile.close()
+
+            command = "yum makecache -y"
+            Upgrade.executioner(command, 0)
+
+            command = "yum update -y"
+            Upgrade.executioner(command, 0)
+
+            ## Remove Default Password Scheme
+
+            path = '/etc/dovecot/dovecot-sql.conf.ext'
+
+            data = open(path, 'r').readlines()
+
+            writeToFile = open(path, 'w')
+            for items in data:
+                if items.find('default_pass_scheme') > -1:
+                    continue
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+
+
+            for items in EUsers.objects.all():
+                command = 'doveadm pw -p %s' % (items.password)
+                items.password = subprocess.check_output(shlex.split(command)).strip('\n')
+                items.save()
+
+            command = "systemctl restart dovecot"
+            Upgrade.executioner(command, 0)
+
+
+
+    @staticmethod
     def upgrade():
 
         # Upgrade.stdOut("Upgrades are currently disabled")
@@ -1453,6 +1519,7 @@ class Upgrade:
         Upgrade.installLSCPD()
         Upgrade.fixPermissions()
         Upgrade.GeneralMigrations()
+        Upgrade.upgradeDovecot()
         time.sleep(3)
 
         ## Upgrade version

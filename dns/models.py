@@ -5,7 +5,7 @@ from loginSystem.models import Administrator
 
 
 class Domains(models.Model):
-    admin = models.ForeignKey(Administrator,on_delete=models.CASCADE, null=True)
+    admin = models.ForeignKey(Administrator,on_delete=models.CASCADE, default=1, null=True)
     name = models.CharField(unique=True, max_length=255)
     master = models.CharField(max_length=128, blank=True, null=True)
     last_check = models.IntegerField(blank=True, null=True)

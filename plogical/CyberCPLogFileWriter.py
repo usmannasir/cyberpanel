@@ -45,8 +45,10 @@ class CyberCPLogFileWriter:
                 statusFile = open(tempStatusPath, 'w')
             else:
                 statusFile = open(tempStatusPath, 'a')
-            statusFile.writelines(mesg)
+            statusFile.writelines(mesg + '\n')
             statusFile.close()
+            print(mesg + '\n')
         except BaseException, msg:
             CyberCPLogFileWriter.writeToFile(str(msg) + ' [statusWriter]')
+            print str(msg)
 

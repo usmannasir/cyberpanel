@@ -23,6 +23,8 @@ class EUsers(models.Model):
     emailOwner = models.ForeignKey(Domains, on_delete=models.CASCADE)
     email = models.CharField(primary_key=True, max_length=80)
     password = models.CharField(max_length=200)
+    mail = models.CharField(max_length=200, default='')
+
 
     class Meta:
         db_table = 'e_users'

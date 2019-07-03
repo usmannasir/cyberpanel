@@ -914,7 +914,7 @@ class preFlightsChecks:
 
         os.chdir(self.path)
 
-        command = "wget http://cyberpanel.sh/CyberPanel.1.8.4.tar.gz"
+        command = "wget http://cyberpanel.sh/CyberPanel.1.8.5.tar.gz"
         #command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'CyberPanel Download',
@@ -923,7 +923,7 @@ class preFlightsChecks:
         ##
 
         count = 0
-        command = "tar zxf CyberPanel.1.8.4.tar.gz"
+        command = "tar zxf CyberPanel.1.8.5.tar.gz"
         #command = "tar zxf CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'Extract CyberPanel',1, 1, os.EX_OSERR)
@@ -1168,6 +1168,20 @@ class preFlightsChecks:
 
     def install_postfix_davecot(self):
         self.stdOut("Install dovecot - first remove postfix")
+
+        if self.distro == centos:
+            path = '/etc/yum.repos.d/dovecot.repo'
+            content = """[dovecot-2.3-latest]
+name=Dovecot 2.3 CentOS $releasever - $basearch
+baseurl=http://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch
+gpgkey=https://repo.dovecot.org/DOVECOT-REPO-GPG
+gpgcheck=1
+enabled=1"""
+            writeToFile = open(path, 'w')
+            writeToFile.write(content)
+            writeToFile.close()
+
+
         try:
             if self.distro == centos:
                 command = 'yum remove postfix -y'
@@ -3620,7 +3634,7 @@ def main():
     checks.fix_selinux_issue()
     checks.install_psmisc()
 
-    if args.postfix != None:
+    if args.postfix == None:
         checks.install_postfix_davecot()
         checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
         checks.setup_postfix_davecot_config(mysql)

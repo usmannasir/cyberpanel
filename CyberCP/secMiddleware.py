@@ -15,6 +15,14 @@ class secMiddleware:
                 for key, value in data.iteritems():
                     if request.path.find('gitNotify') > -1:
                         break
+
+                    # if request.path.find('users') > -1 or request.path.find('firewall') > -1 or request.path.find('servicesAction') > -1 or request.path.find('sslForHostName') > -1:
+                    #     logging.writeToFile(request.body)
+                    #     final_dic = {'error_message': "Data supplied is not accepted.",
+                    #                  "errorMessage": "Data supplied is not accepted."}
+                    #     final_json = json.dumps(final_dic)
+                    #     return HttpResponse(final_json)
+
                     if type(value) == str or type(value) == unicode:
                         pass
                     else:
