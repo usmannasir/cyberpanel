@@ -4,7 +4,7 @@ import shlex
 import subprocess
 import socket
 from plogical.processUtilities import ProcessUtilities
-from websiteFunctions.models import ChildDomains, Websites
+from websiteFunctions.models import ChildDomains, Websites, aliasDomains
 
 class sslUtilities:
 
@@ -230,72 +230,47 @@ class sslUtilities:
 
 
     @staticmethod
-    def obtainSSLForADomain(virtualHostName,adminEmail,sslpath, aliasDomain = None):
+    def obtainSSLForADomain(virtualHostName,adminEmail,sslpath, aliasDomains = None):
         try:
             acmePath = '/root/.acme.sh/acme.sh'
 
             # if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
             #     acmePath = '/home/cyberpanel/.acme.sh/acme.sh'
 
-            if aliasDomain == None:
+            existingCertPath = '/etc/letsencrypt/live/' + virtualHostName
+            if not os.path.exists(existingCertPath):
+                command = 'mkdir -p ' + existingCertPath
+                subprocess.call(shlex.split(command))
 
-                existingCertPath = '/etc/letsencrypt/live/' + virtualHostName
-                if not os.path.exists(existingCertPath):
-                    command = 'mkdir -p ' + existingCertPath
-                    subprocess.call(shlex.split(command))
+            try:
+                aliasCommand = ''
+                #setup all alias domains in the one certificate
+                if sslUtilities.checkIfSSLMap(virtualHostName):
+                    aliasDomains = sslUtilities.getSSLAliasDomains(virtualHostName)
 
-                try:
-                    logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName)
-
-                    command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
-                              + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
-
-                    output = subprocess.check_output(shlex.split(command))
-                    logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName)
-
-
-                except subprocess.CalledProcessError:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        "Failed to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName)
-
-                    try:
-                        logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName)
-                        command = acmePath + " --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
-                                  + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
-                        output = subprocess.check_output(shlex.split(command))
-                        logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName)
-                    except subprocess.CalledProcessError:
-                        logging.CyberCPLogFileWriter.writeToFile('Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName)
-                        return 0
-            else:
-
-                existingCertPath = '/etc/letsencrypt/live/' + virtualHostName
-                if not os.path.exists(existingCertPath):
-                    command = 'mkdir -p ' + existingCertPath
-                    subprocess.call(shlex.split(command))
-
-                try:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        "Trying to obtain SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasDomain + " and www." + aliasDomain + ",")
-
-                    command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
-                              + ' -d ' + aliasDomain + ' -d www.' + aliasDomain\
-                              + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
-
-                    output = subprocess.check_output(shlex.split(command))
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        "Successfully obtained SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasDomain + "and www." + aliasDomain + ",")
+                if aliasDomains:
+                    for aDomain in aliasDomains :
+                        if aDomain != None:
+                            aliasCommand = aliasCommand + ' -d ' + aDomain + " -d www." + aDomain
 
 
-                except subprocess.CalledProcessError:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        "Failed to obtain SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasDomain + "and www." + aliasDomain + ",")
-                    return 0
+                logging.CyberCPLogFileWriter.writeToFile(
+                    "Trying to obtain SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasCommand + ",")
 
-            ##
+                command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
+                    + aliasCommand \
+                    + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
+                    + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
+                
+                output = subprocess.check_output(shlex.split(command))
+                logging.CyberCPLogFileWriter.writeToFile(
+                    "Successfully obtained SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasCommand + ",")
+
+            except subprocess.CalledProcessError:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    "Failed to obtain SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasCommand + ",")
+                return 0
+
 
             if output.find('Cert success') > -1:
                 return 1
@@ -305,6 +280,42 @@ class sslUtilities:
         except BaseException,msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Failed to obtain SSL. [obtainSSLForADomain]]")
             return 0
+
+
+    @staticmethod
+    def getSSLAliasDomains(masterDomain):
+
+        try:
+            confPath = sslUtilities.Server_root + "/conf/httpd_config.conf"
+
+            data = open(confPath, 'r').readlines()
+            sslCheck = 0
+            aDomains = []
+            
+
+            for items in data:
+                if (items.find("listener SSL") > -1):
+                    sslCheck = 1
+                if items.find(masterDomain) > -1 and items.find('map') > -1 and sslCheck == 1:
+                    data = filter(None, items.replace("\n", '').replace(',', '').split(" "))
+                    data.remove('map')
+                    if data[0] == masterDomain: #this is the relevant map
+                        data = list(set(data)) #only unique values
+                        data.remove(masterDomain)
+                        website = Websites.objects.get(domain=masterDomain)
+                        for aDomain in data:
+                            try:   
+                                alias = aliasDomains.objects.get(master=website.id,aliasDomain=aDomain)
+                                aDomains.append(alias.aliasDomain)
+                            except BaseException, msg:
+                                continue
+
+                        return aDomains
+            return []
+
+        except BaseException, msg:
+            print('ERROR: ', msg)
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [getSSLAliasDomains]")
 
 
 def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain = None):
