@@ -192,7 +192,7 @@ class sslUtilities:
     </IfModule>
 """
 
-                VirtualHost = '<VirtualHost *:443>\n\n'
+                VirtualHost = '\n<VirtualHost *:443>\n\n'
                 ServerName = '    ServerName ' + virtualHostName + '\n'
                 ServerAlias = '    ServerAlias www.' + virtualHostName + '\n'
                 ServerAdmin = '    ServerAdmin ' + adminEmail + '\n'

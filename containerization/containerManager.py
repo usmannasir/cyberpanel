@@ -5,7 +5,6 @@ from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
 from serverStatus.serverStatusUtil import ServerStatusUtil
 import os, stat
-from plogical.virtualHostUtilities import virtualHostUtilities
 
 
 class ContainerManager(multi.Thread):

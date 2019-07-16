@@ -29,6 +29,7 @@ from processUtilities import ProcessUtilities
 from ApachController.ApacheController import ApacheController
 from ApachController.ApacheVhosts import ApacheVhost
 from managePHP.phpManager import PHPManager
+from CLManager.models import CLPackages
 
 ## If you want justice, you have come to the wrong place.
 
@@ -37,6 +38,38 @@ class virtualHostUtilities:
     apache = 1
     ols = 2
     lsws = 3
+
+    @staticmethod
+    def EnableCloudLinux():
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            confPath = '/usr/local/lsws/conf/httpd_config.conf'
+            data = open(confPath, 'r').readlines()
+
+            writeToFile = open(confPath, 'w')
+
+            for items in data:
+                if items.find('priority') > -1:
+                    writeToFile.writelines(items)
+                    writeToFile.writelines('enableLVE                 2\n')
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+        else:
+            confPath = '/usr/local/lsws/conf/httpd_config.xml'
+            data = open(confPath, 'r').readlines()
+
+            writeToFile = open(confPath, 'w')
+
+            for items in data:
+                if items.find('<enableChroot>') > -1:
+                    writeToFile.writelines(items)
+                    writeToFile.writelines('  <enableLVE>2</enableLVE>\n')
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+
 
     Server_root = "/usr/local/lsws"
     cyberPanel = "/usr/local/CyberCP"
@@ -154,11 +187,56 @@ class virtualHostUtilities:
 
             ## DKIM Check
 
-            if dkimCheck == 1:
-                DNS.createDKIMRecords(virtualHostName)
+            postFixPath = '/home/cyberpanel/postfix'
 
+            if os.path.exists(postFixPath):
+                if dkimCheck == 1:
+                    DNS.createDKIMRecords(virtualHostName)
 
+            cageFSPath = '/home/cyberpanel/cagefs'
+
+            if os.path.exists(cageFSPath):
+                command = '/usr/sbin/cagefsctl --enable %s' % (virtualHostUser)
+                ProcessUtilities.normalExecutioner(command)
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Website successfully created. [200]')
+
+            CLPath = '/etc/sysconfig/cloudlinux'
+
+            if os.path.exists(CLPath):
+                if CLPackages.objects.count() == 0:
+                    package = Package.objects.get(packageName='Default')
+                    clPackage = CLPackages(name='Default', owner=package, speed='100%', vmem='1G', pmem='1G', io='1024',
+                                           iops='1024', ep='20', nproc='50', inodessoft='20', inodeshard='20')
+                    clPackage.save()
+
+                    writeToFile = open(CLPath, 'a')
+                    writeToFile.writelines('CUSTOM_GETPACKAGE_SCRIPT=/usr/local/CyberCP/CLManager/CLPackages.py\n')
+                    writeToFile.close()
+
+                    command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
+                    ProcessUtilities.normalExecutioner(command)
+
+                    virtualHostUtilities.EnableCloudLinux()
+                    installUtilities.installUtilities.reStartLiteSpeed()
+
+                    command = 'sudo lvectl package-set %s --speed=%s --pmem=%s --io=%s --nproc=%s --iops=%s --vmem=%s --ep=%s' % (
+                        'Default', '100%', '1G', '1024', '50', '1024', '1G', '20')
+                    ProcessUtilities.normalExecutioner(command)
+
+                    command = 'sudo lvectl apply all'
+                    ProcessUtilities.normalExecutioner(command)
+                else:
+                    try:
+                        clPackage = CLPackages.objects.get(owner=selectedPackage)
+                        command = 'sudo lvectl package-set %s --speed=%s --pmem=%s --io=%s --nproc=%s --iops=%s --vmem=%s --ep=%s' % (
+                            clPackage.name, clPackage.speed, clPackage.pmem, clPackage.io, clPackage.np, clPackage.iops, clPackage.vmem, clPackage.ep)
+                        ProcessUtilities.normalExecutioner(command)
+                        command = 'sudo lvectl apply all'
+                        ProcessUtilities.normalExecutioner(command)
+                    except:
+                        pass
+
+
 
             return 1, 'None'
 
@@ -192,6 +270,10 @@ class virtualHostUtilities:
     def getAccessLogs(fileName, page):
         try:
 
+            if os.path.islink(fileName):
+                print "0, %s file is symlinked." % (fileName)
+                return 0
+
             numberOfTotalLines = int(subprocess.check_output(["wc", "-l", fileName]).split(" ")[0])
 
             if numberOfTotalLines < 25:
@@ -224,6 +306,10 @@ class virtualHostUtilities:
     @staticmethod
     def getErrorLogs(fileName, page):
         try:
+
+            if os.path.islink(fileName):
+                print "0, %s file is symlinked." % (fileName)
+                return 0
 
             numberOfTotalLines = int(subprocess.check_output(["wc", "-l", fileName]).split(" ")[0])
 
@@ -280,16 +366,21 @@ class virtualHostUtilities:
     def saveRewriteRules(virtualHost, fileName, tempPath):
         try:
 
+            if os.path.islink(fileName):
+                print "0, .htaccess file is symlinked."
+                return 0
+
             vhost.addRewriteRules(virtualHost, fileName)
 
             vhostFile = open(fileName, "w")
             vhostFile.write(open(tempPath, "r").read())
             vhostFile.close()
 
-            if os.path.exists(tempPath):
-                os.remove(tempPath)
-
-            installUtilities.installUtilities.reStartLiteSpeed()
+            try:
+                if os.path.exists(tempPath):
+                    os.remove(tempPath)
+            except:
+                pass
 
             print "1,None"
 
@@ -1007,8 +1098,11 @@ class virtualHostUtilities:
 
             ## DKIM Check
 
-            if dkimCheck == 1:
-                DNS.createDKIMRecords(virtualHostName)
+            postFixPath = '/home/cyberpanel/postfix'
+
+            if os.path.exists(postFixPath):
+                if dkimCheck == 1:
+                    DNS.createDKIMRecords(virtualHostName)
 
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Domain successfully created. [200]')

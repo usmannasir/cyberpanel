@@ -8,6 +8,7 @@ from loginSystem.views import loadLoginPage
 import json
 from plogical.website import WebsiteManager
 from websiteFunctions.pluginManager import pluginManager
+from django.views.decorators.csrf import csrf_exempt
 
 def loadWebsitesHome(request):
     try:
@@ -565,6 +566,7 @@ def setupGitRepo(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+@csrf_exempt
 def gitNotify(request, domain):
     try:
         wm = WebsiteManager(domain)
@@ -601,5 +603,22 @@ def prestaShopInstall(request):
         userID = request.session['userID']
         wm = WebsiteManager()
         return wm.prestaShopInstall(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def sshAccess(request, domain):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        return wm.sshAccess(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def saveSSHAccessChanges(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.saveSSHAccessChanges(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)

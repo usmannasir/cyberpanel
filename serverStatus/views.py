@@ -186,6 +186,12 @@ def services(request):
 def servicesStatus(request):
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('serviceAction', 0)
 
         lsStatus = []
         sqlStatus = []
@@ -384,7 +390,6 @@ def switchTOLSWSStatus(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def licenseStatus(request):
     try:
         userID = request.session['userID']
@@ -484,6 +489,13 @@ def topProcesses(request):
 
 def topProcessesStatus(request):
     try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         with open("/home/cyberpanel/top", "w") as outfile:
             subprocess.call("top -n1 -b", shell=True, stdout=outfile)

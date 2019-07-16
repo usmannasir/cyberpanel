@@ -95,15 +95,15 @@ class vhost:
             try:
                 os.makedirs(pathLogs)
 
-                command = "chown " + "lscpd" + ":" + "lscpd" + " " + pathLogs
+                command = "chown %s:%s %s" % ('root', 'nobody', pathLogs)
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
 
                 if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                    command = "chmod -R 666 " + pathLogs
+                    command = "chmod -R 750 " + pathLogs
                 else:
-                    command = "chmod -R 755 " + pathLogs
+                    command = "chmod -R 750 " + pathLogs
 
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
@@ -126,6 +126,10 @@ class vhost:
                 file = open(completePathToConfigFile, "w+")
 
                 command = "chown " + "lsadm" + ":" + "lsadm" + " " + completePathToConfigFile
+                cmd = shlex.split(command)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+                command = 'chmod 600 %s' % (completePathToConfigFile)
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 

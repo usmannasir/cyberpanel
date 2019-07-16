@@ -235,7 +235,7 @@ class ApplicationInstaller(multi.Thread):
 
             if not os.path.exists(finalPath):
                 command = 'sudo mkdir -p ' + finalPath
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, externalApp)
 
             ## checking for directories/files
 
@@ -249,7 +249,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             command = "sudo wp core download --allow-root --path=" + finalPath
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, externalApp)
 
             ##
 
@@ -258,7 +258,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             command = "sudo wp core config --dbname=" + dbName + " --dbuser=" + dbUser + " --dbpass=" + dbPassword + " --dbhost=localhost --dbprefix=wp_ --allow-root --path=" + finalPath
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, externalApp)
 
             if home == '0':
                 path = self.extraArgs['path']
@@ -267,7 +267,7 @@ class ApplicationInstaller(multi.Thread):
                 finalURL = domainName
 
             command = 'sudo wp core install --url="http://' + finalURL + '" --title="' + blogTitle + '" --admin_user="' + adminUser + '" --admin_password="' + adminPassword + '" --admin_email="' + adminEmail + '" --allow-root --path=' + finalPath
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, externalApp)
 
             ##
 
@@ -276,20 +276,20 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             command = "sudo wp plugin install litespeed-cache --allow-root --path=" + finalPath
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, externalApp)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Activating LSCache Plugin,90')
             statusFile.close()
 
             command = "sudo wp plugin activate litespeed-cache --allow-root --path=" + finalPath
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, externalApp)
 
             ##
 
 
             command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, externalApp)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
@@ -306,7 +306,7 @@ class ApplicationInstaller(multi.Thread):
             if not os.path.exists(homeDir):
 
                 command = "sudo chown -R " + externalApp + ":" + externalApp + " " + homeDir
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, externalApp)
 
             try:
                 mysqlUtilities.deleteDatabase(dbName, dbUser)
@@ -404,7 +404,7 @@ class ApplicationInstaller(multi.Thread):
 
             if not os.path.exists(finalPath):
                 command = 'sudo mkdir -p ' + finalPath
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, externalApp)
 
             ## checking for directories/files
 
@@ -417,14 +417,14 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Downloading and extracting PrestaShop Core..,30')
             statusFile.close()
 
-            command = "sudo wget https://download.prestashop.com/download/releases/prestashop_1.7.4.2.zip"
-            ProcessUtilities.executioner(command)
+            command = "sudo wget https://download.prestashop.com/download/releases/prestashop_1.7.4.2.zip -P %s" % (finalPath)
+            ProcessUtilities.executioner(command, externalApp)
 
-            command = "sudo unzip -o prestashop_1.7.4.2.zip -d " + finalPath
-            ProcessUtilities.executioner(command)
+            command = "sudo unzip -o %sprestashop_1.7.4.2.zip -d " % (finalPath) + finalPath
+            ProcessUtilities.executioner(command, externalApp)
 
-            command = "sudo unzip -o " + finalPath + "prestashop.zip -d " + finalPath
-            ProcessUtilities.executioner(command)
+            command = "sudo unzip -o %sprestashop.zip -d " % (finalPath) + finalPath
+            ProcessUtilities.executioner(command, externalApp)
 
             ##
 
@@ -447,20 +447,20 @@ class ApplicationInstaller(multi.Thread):
                       " --db_server=localhost --db_name=" + dbName + " --db_user=" + dbUser + " --db_password=" + dbPassword \
                       + " --name='" + shopName + "' --firstname=" + firstName + " --lastname=" + lastName + \
                       " --email=" + email + " --password=" + password
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, externalApp)
 
             ##
 
             command = "sudo rm -rf " + finalPath + "install"
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, externalApp)
 
             ##
 
             command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, externalApp)
 
             command = "sudo rm -f prestashop_1.7.4.2.zip"
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, externalApp)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
@@ -475,7 +475,7 @@ class ApplicationInstaller(multi.Thread):
 
             if not os.path.exists(homeDir):
                 command = "sudo chown -R " + externalApp + ":" + externalApp + " " + homeDir
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, externalApp)
 
             try:
                 mysqlUtilities.deleteDatabase(dbName, dbUser)
@@ -552,11 +552,9 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.close()
                 return 0
 
-            FNULL = open(os.devnull, 'w')
 
-            if not os.path.exists(finalPath):
-                command = 'sudo mkdir -p ' + finalPath
-                ProcessUtilities.executioner(command)
+            command = 'sudo mkdir -p ' + finalPath
+            ProcessUtilities.executioner(command, externalApp)
 
             ## checking for directories/files
 
@@ -573,7 +571,7 @@ class ApplicationInstaller(multi.Thread):
 
             try:
                 command = 'sudo GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --depth 1 --no-single-branch git@' + defaultProvider +'.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, externalApp)
             except subprocess.CalledProcessError, msg:
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines('Failed to clone repository, make sure you deployed your key to repository. [404]')
@@ -583,7 +581,7 @@ class ApplicationInstaller(multi.Thread):
             ##
 
             command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, externalApp)
 
             vhost.addRewriteRules(domainName)
             installUtilities.reStartLiteSpeed()
@@ -615,9 +613,11 @@ class ApplicationInstaller(multi.Thread):
             try:
                 website = Websites.objects.get(domain=domain)
                 finalPath = "/home/" + domain + "/public_html/"
+                externalApp = website.externalApp
             except:
                 childDomain = ChildDomains.objects.get(domain=domain)
                 finalPath = childDomain.path
+                externalApp = website.externalApp
 
             path = '/home/cyberpanel/' + domain + '.git'
 
@@ -626,7 +626,7 @@ class ApplicationInstaller(multi.Thread):
                 return 0
 
             command = 'sudo git --git-dir=' + finalPath + '.git --work-tree=' + finalPath +'  pull'
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, externalApp)
 
             ##
 
@@ -634,7 +634,7 @@ class ApplicationInstaller(multi.Thread):
             externalApp = website.externalApp
 
             command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, externalApp)
 
             return 0
 
@@ -666,15 +666,15 @@ class ApplicationInstaller(multi.Thread):
 
 
             command = 'sudo rm -rf ' + finalPath
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, website.externalApp)
 
             command = 'sudo mkdir ' + finalPath
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, website.externalApp)
 
             ##
 
             command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, website.externalApp)
 
             gitPath = '/home/cyberpanel/' + domain + '.git'
 
@@ -702,8 +702,6 @@ class ApplicationInstaller(multi.Thread):
             prefix = self.extraArgs['prefix']
             sitename = self.extraArgs['sitename']
             tempStatusPath = self.extraArgs['tempStatusPath']
-
-
 
             FNULL = open(os.devnull, 'w')
 
@@ -850,6 +848,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
+            logging.writeToFile(str(msg))
             return 0
 
     def changeBranch(self):
@@ -861,17 +860,19 @@ class ApplicationInstaller(multi.Thread):
             try:
                 website = Websites.objects.get(domain=domainName)
                 finalPath = "/home/" + domainName + "/public_html/"
+                externalApp = website.externalApp
             except:
                 childDomain = ChildDomains.objects.get(domain=domainName)
                 finalPath = childDomain.path
+                externalApp = childDomain.master.externalApp
 
             try:
                 command = 'sudo git --git-dir=' + finalPath + '/.git  checkout -b ' + githubBranch
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, externalApp)
             except:
                 try:
                     command = 'sudo git --git-dir=' + finalPath + '/.git  checkout ' + githubBranch
-                    ProcessUtilities.executioner(command)
+                    ProcessUtilities.executioner(command, externalApp)
                 except subprocess.CalledProcessError, msg:
                     logging.writeToFile('Failed to change branch: ' +  str(msg))
                     return 0

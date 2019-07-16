@@ -14,15 +14,13 @@ import os
 from baseTemplate.models import version
 from plogical.mailUtilities import mailUtilities
 from plogical.website import WebsiteManager
-from loginSystem.models import ACL
-from plogical.acl import ACLManager
-from firewall.models import FirewallRules
 from s3Backups.s3Backups import S3Backups
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
+from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
 
-
+@csrf_exempt
 def verifyConn(request):
     try:
         if request.method == 'POST':
@@ -52,6 +50,7 @@ def verifyConn(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+@csrf_exempt
 def createWebsite(request):
     data = json.loads(request.body)
     adminUser = data['adminUser']
@@ -66,6 +65,7 @@ def createWebsite(request):
     wm = WebsiteManager()
     return wm.createWebsiteAPI(json.loads(request.body))
 
+@csrf_exempt
 def getUserInfo(request):
     try:
         if request.method == 'POST':
@@ -111,6 +111,7 @@ def getUserInfo(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+@csrf_exempt
 def changeUserPassAPI(request):
     try:
         if request.method == 'POST':
@@ -155,6 +156,7 @@ def changeUserPassAPI(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+@csrf_exempt
 def changePackageAPI(request):
     try:
         if request.method == 'POST':
@@ -199,6 +201,7 @@ def changePackageAPI(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+@csrf_exempt
 def deleteWebsite(request):
     try:
         if request.method == 'POST':
@@ -243,6 +246,7 @@ def deleteWebsite(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+@csrf_exempt
 def submitWebsiteStatus(request):
     try:
         if request.method == 'POST':
@@ -273,6 +277,7 @@ def submitWebsiteStatus(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+@csrf_exempt
 def loginAPI(request):
     try:
         username = request.POST['username']
@@ -296,6 +301,7 @@ def loginAPI(request):
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
+@csrf_exempt
 def fetchSSHkey(request):
     try:
         if request.method == "POST":
@@ -313,7 +319,7 @@ def fetchSSHkey(request):
             if hashPassword.check_password(admin.password, password):
 
                 pubKey = os.path.join("/root",".ssh",'cyberpanel.pub')
-                execPath = "sudo cat " + pubKey
+                execPath = "cat " + pubKey
                 data = ProcessUtilities.outputExecutioner(execPath)
 
                 data_ret = {
@@ -338,6 +344,7 @@ def fetchSSHkey(request):
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
+@csrf_exempt
 def remoteTransfer(request):
     try:
         if request.method == "POST":
@@ -372,7 +379,7 @@ def remoteTransfer(request):
 
                 ## Accounts to transfer is a path to file, containing accounts.
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
+                execPath = "python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
                 execPath = execPath + " remoteTransfer --ipAddress " + ipAddress + " --dir " + dir + " --accountsToTransfer " + path
                 ProcessUtilities.popenExecutioner(execPath)
 
@@ -389,6 +396,7 @@ def remoteTransfer(request):
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
+@csrf_exempt
 def fetchAccountsFromRemoteServer(request):
     try:
         if request.method == "POST":
@@ -438,6 +446,7 @@ def fetchAccountsFromRemoteServer(request):
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
+@csrf_exempt
 def FetchRemoteTransferStatus(request):
     try:
         if request.method == "POST":
@@ -455,7 +464,7 @@ def FetchRemoteTransferStatus(request):
             dir = "/home/backup/transfer-"+str(data['dir'])+"/backup_log"
 
             try:
-                command = "sudo cat "+ dir
+                command = "cat "+ dir
                 status = ProcessUtilities.outputExecutioner(command)
 
 
@@ -478,6 +487,7 @@ def FetchRemoteTransferStatus(request):
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
+@csrf_exempt
 def cancelRemoteTransfer(request):
     try:
         if request.method == "POST":
@@ -500,13 +510,13 @@ def cancelRemoteTransfer(request):
 
                 path = dir + "/pid"
 
-                command = "sudo cat " + path
+                command = "cat " + path
                 pid = ProcessUtilities.outputExecutioner(command)
 
-                command = "sudo kill -KILL " + pid
+                command = "kill -KILL " + pid
                 ProcessUtilities.executioner(command)
 
-                command = "sudo rm -rf " + dir
+                command = "rm -rf " + dir
                 ProcessUtilities.executioner(command)
 
                 data = {'cancelStatus': 1, 'error_message': "None"}
@@ -524,6 +534,7 @@ def cancelRemoteTransfer(request):
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
+@csrf_exempt
 def cyberPanelVersion(request):
     try:
         if request.method == 'POST':
@@ -570,6 +581,7 @@ def cyberPanelVersion(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+@csrf_exempt
 def runAWSBackups(request):
     try:
 

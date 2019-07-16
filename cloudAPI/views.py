@@ -5,7 +5,9 @@ from cloudManager import CloudManager
 import json
 from loginSystem.models import Administrator
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from django.views.decorators.csrf import csrf_exempt
 
+@csrf_exempt
 def router(request):
     try:
         data = json.loads(request.body)

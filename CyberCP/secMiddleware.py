@@ -8,6 +8,18 @@ class secMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        try:
+            uID = request.session['userID']
+            if request.session['ipAddr'] == request.META.get('REMOTE_ADDR'):
+                pass
+            else:
+                logging.writeToFile(request.META.get('REMOTE_ADDR'))
+                final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
+                             "errorMessage": "Session reuse detected, IPAddress logged."}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+        except:
+            pass
         if request.method == 'POST':
             try:
                 #logging.writeToFile(request.body)
@@ -28,17 +40,23 @@ class secMiddleware:
                     else:
                         continue
 
-                    if request.build_absolute_uri().find('filemanager') > -1:
+                    if request.build_absolute_uri().find('cloudAPI') > -1 or request.build_absolute_uri().find('filemanager') > -1 or request.build_absolute_uri().find('verifyLogin') > -1 or request.build_absolute_uri().find('submitUserCreation') > -1:
                         continue
-                    if key == 'emailMessage' or key == 'configData' or key == 'rewriteRules' or key == 'modSecRules' or key == 'recordContentTXT' or key == 'SecAuditLogRelevantStatus' or key == 'fileContent':
+                    if key == 'passwordByPass' or key == 'cronCommand' or key == 'emailMessage' or key == 'configData' or key == 'rewriteRules' or key == 'modSecRules' or key == 'recordContentTXT' or key == 'SecAuditLogRelevantStatus' or key == 'fileContent':
                         continue
-                    if value.find(';') > -1 or value.find('&&') > -1 or value.find('|') > -1 or value.find('...') > -1:
+                    if value.find(';') > -1 or value.find('&&') > -1 or value.find('|') > -1 or value.find('...') > -1 \
+                            or value.find("`") > -1 or value.find("$") > -1 or value.find("(") > -1 or value.find(")") > -1 \
+                            or value.find("'") > -1 or value.find("[") > -1 or value.find("]") > -1 or value.find("{") > -1 or value.find("}") > -1\
+                            or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1:
                         logging.writeToFile(request.body)
                         final_dic = {'error_message': "Data supplied is not accepted.",
                                      "errorMessage": "Data supplied is not accepted."}
                         final_json = json.dumps(final_dic)
                         return HttpResponse(final_json)
-                    if key.find(';') > -1 or key.find('&&') > -1 or key.find('|') > -1 or key.find('...') > -1:
+                    if key.find(';') > -1 or key.find('&&') > -1 or key.find('|') > -1 or key.find('...') > -1 \
+                            or key.find("`") > -1 or key.find("$") > -1 or key.find("(") > -1 or key.find(")") > -1 \
+                            or key.find("'") > -1 or key.find("[") > -1 or key.find("]") > -1 or key.find("{") > -1 or key.find("}") > -1\
+                            or key.find(":") > -1 or key.find("<") > -1 or key.find(">") > -1:
                         logging.writeToFile(request.body)
                         final_dic = {'error_message': "Data supplied is not accepted.", "errorMessage": "Data supplied is not accepted."}
                         final_json = json.dumps(final_dic)

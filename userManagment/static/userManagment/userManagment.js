@@ -1479,10 +1479,10 @@ app.controller('apiAccessCTRL', function($scope,$http) {
                 function cantLoadInitialDatas(response) {
                     $scope.cyberpanelLoading = true;
                     new PNotify({
-                            title: 'Error!',
-                            text: 'Could not connect to server, please refresh this page.',
-                            type:'error'
-                          });
+                        title: 'Error!',
+                        text: 'Could not connect to server, please refresh this page.',
+                        type: 'error'
+                    });
                 }
 
 

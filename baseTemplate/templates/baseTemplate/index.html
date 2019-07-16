@@ -607,6 +607,34 @@
                     <li class="header serverACL"><span>{% trans "Server" %}</span></li>
 
                     <li class="serverACL">
+                        <a href="#" title="{% trans 'CloudLinux' %}">
+                            <i class="glyph-icon icon-linecons-fire"></i>
+                            <span>{% trans "CloudLinux" %}</span>
+                            <span class="bs-label badge-yellow">{% trans "NEW" %}</span>
+                        </a>
+                        <div class="sidebar-submenu">
+
+                            <ul>
+                                <li><a href="{% url 'CreatePackageCL' %}"
+                                       title="{% trans 'Create Cloud Linux Package' %}"><span>{% trans "Create Package" %}</span></a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li><a href="{% url 'listPackagesCL' %}"
+                                       title="{% trans 'List Cloud Linux Package' %}"><span>{% trans "List Packages" %}</span></a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li><a href="{% url 'monitorUsage' %}"
+                                       title="{% trans 'Monitor Usage of your Websites' %}"><span>{% trans "Monitor Usage" %}</span></a>
+                                </li>
+                            </ul>
+
+                        </div><!-- .sidebar-submenu -->
+                    </li>
+
+
+                    <li class="serverACL">
                         <a href="#" title="{% trans 'Containerization' %}">
                             <i class="glyph-icon icon-linecons-fire"></i>
                             <span>{% trans "Containerization" %}</span>
@@ -756,6 +784,9 @@
                                 <li><a href="{% url 'csf' %}"
                                        title="{% trans 'ConfigServer Security & Firewall (CSF)' %}"><span>{% trans "CSF" %}</span></a>
                                 </li>
+                                <li><a href="{% url 'CageFS' %}"
+                                       title="{% trans 'CageFS Configurations' %}"><span>{% trans "CageFS" %}</span></a>
+                                </li>
                             </ul>
 
                         </div><!-- .sidebar-submenu -->
@@ -870,6 +901,7 @@
     <script src="{% static 'manageServices/manageServices.js' %}"></script>
     <script src="{% static 'dockerManager/dockerManager.js' %}"></script>
     <script src="{% static 'containerization/containerization.js' %}"></script>
+    <script src="{% static 'CLManager/CLManager.js' %}"></script>
 </div>
 </body>
 </html>

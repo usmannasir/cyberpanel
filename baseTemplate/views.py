@@ -16,9 +16,11 @@ import os
 import plogical.CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
 from manageServices.models import PDNSStatus
+from django.views.decorators.csrf import ensure_csrf_cookie
 # Create your views here.
 
 
+@ensure_csrf_cookie
 def renderBase(request):
     try:
         userID = request.session['userID']
@@ -89,6 +91,7 @@ def getLoadAverage(request):
 
     return HttpResponse(json_data)
 
+@ensure_csrf_cookie
 def versionManagment(request):
     try:
         userID = request.session['userID']

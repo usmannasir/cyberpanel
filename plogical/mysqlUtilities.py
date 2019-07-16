@@ -2,7 +2,10 @@ import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-django.setup()
+try:
+    django.setup()
+except:
+    pass
 import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
@@ -142,22 +145,43 @@ class mysqlUtilities:
     def createDatabaseBackup(databaseName,tempStoragePath):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
-
             f = open(passFile)
             data = f.read()
             password = data.split('\n', 1)[0]
 
-            command = 'sudo mysqldump -u root -p'+password+' '+databaseName
+            cnfPath = '/home/cyberpanel/.my.cnf'
 
+            if not os.path.exists(cnfPath):
+                cnfContent = """[mysqldump]
+user=root
+password=%s
+[mysql]
+user=root
+password=%s
+""" % (password, password)
+                writeToFile = open(cnfPath, 'w')
+                writeToFile.write(cnfContent)
+                writeToFile.close()
+
+                os.chmod(cnfPath, 0600)
+
+            command = 'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf --host=localhost ' + databaseName
             cmd = shlex.split(command)
 
-            with open(tempStoragePath+"/"+databaseName+'.sql', 'w') as f:
-                res = subprocess.call(cmd,stdout=f)
+            try:
+                errorPath = '/home/cyberpanel/error-logs.txt'
+                errorLog = open(errorPath, 'a')
+                with open(tempStoragePath+"/"+databaseName+'.sql', 'w') as f:
+                    res = subprocess.call(cmd,stdout=f, stderr=errorLog)
+                    if res != 0:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            "Database: " + databaseName + "could not be backed! [createDatabaseBackup]")
+                        return 0
 
-            if res == 1:
-                logging.CyberCPLogFileWriter.writeToFile("Database: "+databaseName + "could not be backed! [createDatabaseBackup]")
+            except subprocess.CalledProcessError, msg:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    "Database: " + databaseName + "could not be backed! Error: %s. [createDatabaseBackup]" % (str(msg)))
                 return 0
-
             return 1
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabaseBackup]")
@@ -172,11 +196,26 @@ class mysqlUtilities:
             data = f.read()
             password = data.split('\n', 1)[0]
 
+            cnfPath = '/home/cyberpanel/.my.cnf'
 
-            command = 'sudo mysql -u root -p' + password + ' ' + databaseName
+            if not os.path.exists(cnfPath):
+                cnfContent = """[mysqldump]
+user=root
+password=%s
+[mysql]
+user=root
+password=%s
+""" % (password, password)
+                writeToFile = open(cnfPath, 'w')
+                writeToFile.write(cnfContent)
+                writeToFile.close()
 
+                os.chmod(cnfPath, 0600)
+                command = 'chown cyberpanel:cyberpanel %s' % (cnfPath)
+                subprocess.call(shlex.split(command))
+
+            command = 'sudo mysql --defaults-extra-file=/home/cyberpanel/.my.cnf --host=localhost ' + databaseName
             cmd = shlex.split(command)
-
 
             with open(tempStoragePath + "/" + databaseName + '.sql', 'r') as f:
                 res = subprocess.call(cmd, stdin=f)

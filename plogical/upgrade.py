@@ -810,6 +810,12 @@ class Upgrade:
 
             try:
                 cursor.execute(
+                    'ALTER TABLE e_users MODIFY password varchar(200)')
+            except:
+                pass
+
+            try:
+                cursor.execute(
                     'ALTER TABLE e_forwardings DROP PRIMARY KEY;ALTER TABLE e_forwardings ADD id INT AUTO_INCREMENT PRIMARY KEY')
             except:
                 pass
@@ -1050,6 +1056,41 @@ class Upgrade:
             pass
 
     @staticmethod
+    def CLMigrations():
+        try:
+            connection, cursor = Upgrade.setupConnection('cyberpanel')
+
+            query = """CREATE TABLE `CLManager_clpackages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `speed` varchar(50) NOT NULL,
+  `vmem` varchar(50) NOT NULL,
+  `pmem` varchar(50) NOT NULL,
+  `io` varchar(50) NOT NULL,
+  `iops` varchar(50) NOT NULL,
+  `ep` varchar(50) NOT NULL,
+  `nproc` varchar(50) NOT NULL,
+  `inodessoft` varchar(50) NOT NULL,
+  `inodeshard` varchar(50) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `CLManager_clpackages_owner_id_9898c1e8_fk_packages_package_id` (`owner_id`),
+  CONSTRAINT `CLManager_clpackages_owner_id_9898c1e8_fk_packages_package_id` FOREIGN KEY (`owner_id`) REFERENCES `packages_package` (`id`)
+)"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            try:
+                connection.close()
+            except:
+                pass
+        except:
+            pass
+
+    @staticmethod
     def manageServiceMigrations():
         try:
             connection, cursor = Upgrade.setupConnection('cyberpanel')
@@ -1058,12 +1099,20 @@ class Upgrade:
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `serverStatus` int(11) NOT NULL,
   `type` varchar(6) NOT NULL,
-  `allow_axfr_ips` varchar(500) NOT NULL,
-  `also_notify` varchar(500) NOT NULL,
   PRIMARY KEY (`id`)
 )"""
             try:
                 cursor.execute(query)
+            except:
+                pass
+
+            try:
+                cursor.execute('alter table manageServices_pdnsstatus add masterServer varchar(200)')
+            except:
+                pass
+
+            try:
+                cursor.execute('alter table manageServices_pdnsstatus add masterIP varchar(200)')
             except:
                 pass
 
@@ -1139,6 +1188,11 @@ class Upgrade:
 
             data = open("/usr/local/settings.py", 'r').readlines()
 
+            csrfCheck = 1
+            for items in data:
+                if items.find('CsrfViewMiddleware') > -1:
+                    csrfCheck = 0
+
             pluginCheck = 1
             for items in data:
                 if items.find('pluginHolder') > -1:
@@ -1174,11 +1228,20 @@ class Upgrade:
                 if items.find('manageServices') > -1:
                     manageServices = 0
 
+            CLManager = 1
+            for items in data:
+                if items.find('CLManager') > -1:
+                    CLManager = 0
+
             Upgrade.stdOut('Restoring settings file!')
 
             writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
 
             for items in data:
+                if items.find("CommonMiddleware") > -1:
+                    if csrfCheck == 1:
+                        writeToFile.writelines("    'django.middleware.common.CommonMiddleware',\n")
+
                 if items.find("'filemanager',") > -1:
                     writeToFile.writelines(items)
                     if pluginCheck == 1:
@@ -1197,6 +1260,9 @@ class Upgrade:
 
                     if manageServices == 1:
                         writeToFile.writelines("    'manageServices',\n")
+
+                    if CLManager == 1:
+                        writeToFile.writelines("    'CLManager',\n")
 
                 else:
                     writeToFile.writelines(items)
@@ -1234,6 +1300,8 @@ class Upgrade:
         try:
             command = "pip install tldextract"
             Upgrade.executioner(command, 'Install tldextract', 1)
+            command = "pip install bcrypt"
+            Upgrade.executioner(command, 'Install tldextract', 1)
         except OSError, msg:
             Upgrade.stdOut(str(msg) + " [installTLDExtract]")
             return 0
@@ -1253,30 +1321,19 @@ class Upgrade:
 
             ##
 
+            lscpdPath = '/usr/local/lscp/bin/lscpd'
+
+            if os.path.exists(lscpdPath):
+                os.remove(lscpdPath)
+
+            command = 'wget  https://cyberpanel.sh/lscpd -P /usr/local/lscp/bin/'
+            Upgrade.executioner(command, 'LSCPD Download.', 0)
+
+            command = 'chmod 755 %s' % (lscpdPath)
+            Upgrade.executioner(command, 'LSCPD Download.', 0)
+
             command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel which curl'
             Upgrade.executioner(command, 'LSCPD Pre-reqs [two]', 0)
-
-            ##
-
-            if os.path.exists('/usr/local/lscp.tar.gz'):
-                os.remove('/usr/local/lscp.tar.gz')
-
-            command = 'wget https://cyberpanel.net/lscp.tar.gz'
-            Upgrade.executioner(command, 'Download LSCPD [two]', 0)
-
-            ##
-
-            command = 'tar zxf lscp.tar.gz -C /usr/local/'
-            Upgrade.executioner(command, 'Extract LSCPD [two]', 0)
-
-            try:
-                os.remove("/usr/local/lscp/fcgi-bin/lsphp")
-                shutil.copy("/usr/local/lsws/lsphp70/bin/lsphp", "/usr/local/lscp/fcgi-bin/lsphp")
-            except:
-                pass
-
-            command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem'
-            Upgrade.executioner(command, 'generate cyberpanel ssl', 0)
 
             command = 'adduser lscpd -M -d /usr/local/lscp'
             Upgrade.executioner(command, 'Add user LSCPD', 0)
@@ -1371,6 +1428,56 @@ class Upgrade:
             command = "chown root:cyberpanel /usr/local/CyberCP/CyberCP/settings.py"
             Upgrade.executioner(command, 'chown core code', 0)
 
+            command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
+            Upgrade.executioner(command, 'chmod CLPackages', 0)
+
+            files = ['/etc/yum.repos.d/MariaDB.repo', '/etc/pdns/pdns.conf', '/etc/systemd/system/lscpd.service',
+                     '/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
+                     '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
+                     '/etc/dovecot/dovecot.conf', '/usr/local/lsws/conf/httpd_config.xml',
+                     '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
+
+            for items in files:
+                command = 'chmod 644 %s' % (items)
+                Upgrade.executioner(command, 'chown core code', 0)
+
+            impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
+                       '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
+                       '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf']
+
+            for items in impFile:
+                command = 'chmod 600 %s' % (items)
+                Upgrade.executioner(command, 'chown core code', 0)
+
+            command = 'chmod 640 /etc/postfix/*.cf'
+            subprocess.call(command, shell=True)
+
+            command = 'chmod 640 /etc/dovecot/*.conf'
+            subprocess.call(command, shell=True)
+
+            command = 'chmod 640 /etc/dovecot/dovecot-sql.conf.ext'
+            subprocess.call(command, shell=True)
+
+            fileM = ['/usr/local/lsws/FileManager/', '/usr/local/CyberCP/install/FileManager',
+                     '/usr/local/CyberCP/serverStatus/litespeed/FileManager',
+                     '/usr/local/lsws/Example/html/FileManager']
+
+            for items in fileM:
+                try:
+                    shutil.rmtree(items)
+                except:
+                    pass
+
+            command = 'chmod 755 /etc/pure-ftpd/'
+            subprocess.call(command, shell=True)
+
+            command = 'chmod 644 /etc/dovecot/dovecot.conf'
+            subprocess.call(command, shell=True)
+
+            command = 'chmod 644 /etc/postfix/main.cf'
+            subprocess.call(command, shell=True)
+
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException, msg:
@@ -1432,31 +1539,36 @@ enabled=1"""
 
             data = open(path, 'r').readlines()
 
+            updatePasswords = 1
+
             writeToFile = open(path, 'w')
             for items in data:
                 if items.find('default_pass_scheme') > -1:
+                    updatePasswords = 0
                     continue
                 else:
                     writeToFile.writelines(items)
 
             writeToFile.close()
 
-
-            for items in EUsers.objects.all():
-                command = 'doveadm pw -p %s' % (items.password)
-                items.password = subprocess.check_output(shlex.split(command)).strip('\n')
-                items.save()
+            if updatePasswords:
+                for items in EUsers.objects.all():
+                    command = 'doveadm pw -p %s' % (items.password)
+                    items.password = subprocess.check_output(shlex.split(command)).strip('\n')
+                    items.save()
 
             command = "systemctl restart dovecot"
             Upgrade.executioner(command, 0)
-
-
 
     @staticmethod
     def upgrade():
 
         # Upgrade.stdOut("Upgrades are currently disabled")
         # return 0
+
+        postfixPath = '/home/cyberpanel/postfix'
+        pdns = '/home/cyberpanel/pdns'
+        pureftpd = '/home/cyberpanel/ftp'
 
         os.chdir("/usr/local")
 
@@ -1499,6 +1611,7 @@ enabled=1"""
         Upgrade.mailServerMigrations()
         Upgrade.emailMarketingMigrationsa()
         Upgrade.dockerMigrations()
+        Upgrade.CLMigrations()
 
         ##
 
@@ -1517,13 +1630,14 @@ enabled=1"""
         Upgrade.setupPythonWSGI()
         Upgrade.someDirectories()
         Upgrade.installLSCPD()
-        Upgrade.fixPermissions()
         Upgrade.GeneralMigrations()
-        Upgrade.upgradeDovecot()
+
+        if os.path.exists(postfixPath):
+            Upgrade.upgradeDovecot()
         time.sleep(3)
 
         ## Upgrade version
-
+        Upgrade.fixPermissions()
         Upgrade.upgradeVersion()
 
         try:

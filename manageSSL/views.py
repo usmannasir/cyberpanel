@@ -60,6 +60,11 @@ def issueSSL(request):
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
 
+                if ACLManager.checkOwnership(virtualHost, admin, currentACL) == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson()
+
 
                 adminEmail = ""
                 path = ""
@@ -146,6 +151,14 @@ def obtainHostNameSSL(request):
 
                 path = "/home/" + virtualHost + "/public_html"
 
+                data = json.loads(request.body)
+                virtualHost = data['virtualHost']
+                admin = Administrator.objects.get(pk=userID)
+                if ACLManager.checkOwnership(virtualHost, admin, currentACL) == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson()
+
                 ## ssl issue
 
                 execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
@@ -212,6 +225,12 @@ def obtainMailServerSSL(request):
 
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
+
+                admin = Administrator.objects.get(pk=userID)
+                if ACLManager.checkOwnership(virtualHost, admin, currentACL) == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson()
 
                 path = "/home/" + virtualHost + "/public_html"
 

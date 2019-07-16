@@ -92,6 +92,11 @@ urlpatterns = [
     url(r'^(?P<domain>(.*))/setupGit$', views.setupGit, name='setupGit'),
     url(r'^setupGitRepo$', views.setupGitRepo, name='setupGitRepo'),
 
+    ## Set up SSH Access
+    url(r'^(?P<domain>(.*))/sshAccess$', views.sshAccess, name='sshAccess'),
+    url(r'^saveSSHAccessChanges$', views.saveSSHAccessChanges, name='saveSSHAccessChanges'),
+
+
     url(r'^(?P<domain>(.*))/gitNotify$', views.gitNotify, name='gitNotify'),
     url(r'^detachRepo$', views.detachRepo, name='detachRepo'),
     url(r'^changeBranch$', views.changeBranch, name='changeBranch'),

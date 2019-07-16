@@ -20,12 +20,15 @@ try:
     from plogical.processUtilities import ProcessUtilities
     from websiteFunctions.models import Websites, Backups
     from plogical.virtualHostUtilities import virtualHostUtilities
+    from multiprocessing import Process
+    import plogical.backupUtilities as backupUtil
 except:
     import threading as multi
     from random import randint
     import json
     import requests
     import subprocess, shlex
+    from multiprocessing import Process
 
 
 class S3Backups(multi.Thread):
@@ -426,11 +429,9 @@ class S3Backups(multi.Thread):
         ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018
         tempStoragePath = os.path.join(backupPath, backupName)
 
-        execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-        execPath = execPath + " submitBackupCreation --tempStoragePath " + tempStoragePath + " --backupName " \
-                   + backupName + " --backupPath " + backupPath + ' --backupDomain ' + virtualHost
-
-        ProcessUtilities.popenExecutioner(execPath)
+        p = Process(target=backupUtil.submitBackupCreation,
+                    args=(tempStoragePath, backupName, backupPath, virtualHost))
+        p.start()
 
         time.sleep(2)
 

@@ -14,6 +14,7 @@ from django.utils.translation import LANGUAGE_SESSION_KEY
 import CyberCP.settings as settings
 from models import ACL
 from plogical.acl import ACLManager
+from django.views.decorators.csrf import ensure_csrf_cookie
 # Create your views here.
 
 def verifyLogin(request):
@@ -115,6 +116,8 @@ def verifyLogin(request):
             if hashPassword.check_password(admin.password, password):
 
                 request.session['userID'] = admin.pk
+                request.session['ipAddr'] = request.META.get('REMOTE_ADDR')
+                request.session.set_expiry(3600)
                 data = {'userID': admin.pk, 'loginStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data)
                 return HttpResponse(json_data)
@@ -129,6 +132,7 @@ def verifyLogin(request):
             json_data = json.dumps(data)
             return HttpResponse(json_data)
 
+@ensure_csrf_cookie
 def loadLoginPage(request):
     try:
         userID = request.session['userID']
@@ -202,7 +206,7 @@ def loadLoginPage(request):
                                   firstName="Cyber",lastName="Panel", acl=acl, token=token)
             admin.save()
 
-            vers = version(currentVersion="1.8", build=5)
+            vers = version(currentVersion="1.8", build=7)
             vers.save()
 
             package = Package(admin=admin, packageName="Default", diskSpace=1000,
@@ -213,6 +217,7 @@ def loadLoginPage(request):
         else:
             return render(request, 'loginSystem/login.html', {})
 
+@ensure_csrf_cookie
 def logout(request):
     try:
         del request.session['userID']

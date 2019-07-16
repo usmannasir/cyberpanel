@@ -17,6 +17,7 @@ import grp
 import hashlib
 from ftp.models import Users
 from datetime import datetime
+from plogical.processUtilities import ProcessUtilities
 
 
 class FTPUtilities:
@@ -88,14 +89,9 @@ class FTPUtilities:
     @staticmethod
     def ftpFunctions(path,externalApp):
         try:
-            FNULL = open(os.devnull, 'w')
 
-            if not os.path.exists(path):
-                os.makedirs(path)
-
-            command = "chown " + externalApp + ":" + externalApp + " " + path
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            command = 'mkdir %s' % (path)
+            ProcessUtilities.executioner(command, externalApp)
 
             return 1,'None'
 
@@ -142,6 +138,10 @@ class FTPUtilities:
 
             else:
                 path = "/home/" + domainName
+
+            if os.path.islink(path):
+                print "0, %s file is symlinked." % (path)
+                return 0
 
             hash = hashlib.md5()
             hash.update(password)

@@ -21,6 +21,7 @@ import time
 import plogical.backupUtilities as backupUtil
 import requests
 from plogical.processUtilities import ProcessUtilities
+from multiprocessing import Process
 
 class BackupManager:
     def __init__(self, domain = None, childDomain = None):
@@ -85,6 +86,11 @@ class BackupManager:
             else:
                 return ACLManager.loadErrorJson('fetchStatus', 0)
 
+            if ACLManager.checkOwnership(backupDomain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
             website = Websites.objects.get(domain=backupDomain)
 
             backups = website.backups_set.all()
@@ -141,11 +147,9 @@ class BackupManager:
             ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018
             tempStoragePath = os.path.join(backupPath, backupName)
 
-            execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " submitBackupCreation --tempStoragePath " + tempStoragePath + " --backupName " \
-                       + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain
 
-            ProcessUtilities.popenExecutioner(execPath)
+            p = Process(target=backupUtil.submitBackupCreation, args=(tempStoragePath, backupName, backupPath,backupDomain))
+            p.start()
 
             time.sleep(2)
 
@@ -166,11 +170,13 @@ class BackupManager:
             backupFileNamePath = os.path.join("/home", backupDomain, "backup/backupFileName")
             pid = os.path.join("/home", backupDomain, "backup/pid")
 
+            domain = Websites.objects.get(domain=backupDomain)
+
             ## read file name
 
             try:
                 command = "sudo cat " + backupFileNamePath
-                fileName = ProcessUtilities.outputExecutioner(command)
+                fileName = ProcessUtilities.outputExecutioner(command, domain.externalApp)
             except:
                 fileName = "Fetching.."
 
@@ -178,20 +184,20 @@ class BackupManager:
 
             if os.path.exists(status):
                 command = "sudo cat " + status
-                status = ProcessUtilities.outputExecutioner(command)
+                status = ProcessUtilities.outputExecutioner(command, domain.externalApp)
 
                 if status.find("Completed") > -1:
 
                     ### Removing Files
 
                     command = 'sudo rm -f ' + status
-                    ProcessUtilities.executioner(command)
+                    ProcessUtilities.executioner(command, domain.externalApp)
 
                     command = 'sudo rm -f ' + backupFileNamePath
-                    ProcessUtilities.executioner(command)
+                    ProcessUtilities.executioner(command, domain.externalApp)
 
                     command = 'sudo rm -f ' + pid
-                    ProcessUtilities.executioner(command)
+                    ProcessUtilities.executioner(command, domain.externalApp)
 
                     final_json = json.dumps(
                         {'backupStatus': 1, 'error_message': "None", "status": status, "abort": 1,
@@ -202,13 +208,13 @@ class BackupManager:
                     ## removing status file, so that backup can re-run
                     try:
                         command = 'sudo rm -f ' + status
-                        ProcessUtilities.executioner(command)
+                        ProcessUtilities.executioner(command, domain.externalApp)
 
                         command = 'sudo rm -f ' + backupFileNamePath
-                        ProcessUtilities.executioner(command)
+                        ProcessUtilities.executioner(command, domain.externalApp)
 
                         command = 'sudo rm -f ' + pid
-                        ProcessUtilities.executioner(command)
+                        ProcessUtilities.executioner(command, domain.externalApp)
 
                         backupObs = Backups.objects.filter(fileName=fileName)
                         for items in backupObs:
@@ -243,9 +249,7 @@ class BackupManager:
             fileName = data['fileName']
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-
             execPath = execPath + " cancelBackupCreation --backupCancellationDomain " + backupCancellationDomain + " --fileName " + fileName
-
             subprocess.call(shlex.split(execPath))
 
             try:
@@ -268,6 +272,12 @@ class BackupManager:
             backup = Backups.objects.get(id=backupID)
 
             domainName = backup.website.domain
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
 
             path = "/home/" + domainName + "/backup/" + backup.fileName + ".tar.gz"
             command = 'sudo rm -f ' + path
@@ -283,7 +293,7 @@ class BackupManager:
 
             return HttpResponse(final_json)
 
-    def submitRestore(self, data = None):
+    def submitRestore(self, data = None, userID = None):
         try:
             backupFile = data['backupFile']
             originalFile = "/home/backup/" + backupFile
@@ -292,6 +302,12 @@ class BackupManager:
                 dir = data['dir']
             else:
                 dir = "CyberPanelRestore"
+
+            currentACL = ACLManager.loadedACL(userID)
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
 
             execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir

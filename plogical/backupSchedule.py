@@ -15,6 +15,8 @@ from re import match,I,M
 from websiteFunctions.models import Websites, Backups
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.processUtilities import ProcessUtilities
+from multiprocessing import Process
+import plogical.backupUtilities as backupUtil
 
 class backupSchedule:
 
@@ -43,11 +45,9 @@ class backupSchedule:
             ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018
             tempStoragePath = os.path.join(backupPath, backupName)
 
-            execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " submitBackupCreation --tempStoragePath " + tempStoragePath + " --backupName " \
-                       + backupName + " --backupPath " + backupPath + ' --backupDomain ' + virtualHost
-
-            subprocess.Popen(shlex.split(execPath))
+            p = Process(target=backupUtil.submitBackupCreation,
+                        args=(tempStoragePath, backupName, backupPath, virtualHost))
+            p.start()
 
             time.sleep(2)
 

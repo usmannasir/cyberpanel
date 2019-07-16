@@ -212,7 +212,7 @@ class emailMarketing(multi.Thread):
                                 messageFile.close()
 
                                 command = "sudo sed -i 's/{{ unsubscribeCheck }}/" + removalLink + "/g' " + tempPath
-                                ProcessUtilities.executioner(command)
+                                ProcessUtilities.executioner(command, 'cyberpanel')
 
                                 messageFile = open(tempPath, 'r')
                                 finalMessage = messageFile.read()

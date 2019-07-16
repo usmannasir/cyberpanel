@@ -61,9 +61,16 @@ class FTPManager:
 
             data = json.loads(self.request.body)
             userName = data['ftpUserName']
-            password = data['ftpPassword']
+            password = data['passwordByPass']
 
             domainName = data['ftpDomain']
+
+            admin = Administrator.objects.get(pk=userID)
+
+            if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
 
             try:
                 api = data['api']
@@ -81,18 +88,15 @@ class FTPManager:
             except:
                 path = 'None'
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/ftpUtilities.py"
-            execPath = execPath + " submitFTPCreation --domainName " + domainName + " --userName " + userName \
-                       + " --password '" + password + "' --path " + path + " --owner " + admin.userName  + ' --api ' + api
-            output = ProcessUtilities.outputExecutioner(execPath)
 
+            result = FTPUtilities.submitFTPCreation(domainName, userName, password, path, admin.userName, api)
 
-            if output.find("1,None") > -1:
+            if result[0] == 1:
                 data_ret = {'status': 1, 'creatFTPStatus': 1, 'error_message': 'None'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
-                data_ret = {'status': 0, 'creatFTPStatus': 0, 'error_message': output}
+                data_ret = {'status': 0, 'creatFTPStatus': 0, 'error_message': result[1]}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -131,6 +135,12 @@ class FTPManager:
             data = json.loads(self.request.body)
             domain = data['ftpDomain']
 
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
             website = Websites.objects.get(domain=domain)
 
             ftpAccounts = website.users_set.all()
@@ -166,6 +176,12 @@ class FTPManager:
 
             data = json.loads(self.request.body)
             ftpUserName = data['ftpUsername']
+
+            admin = Administrator.objects.get(pk=userID)
+            ftp = Users.objects.get(user=ftpUserName)
+
+            if ftp.domain.admin != admin:
+                return ACLManager.loadErrorJson()
 
             FTPUtilities.submitFTPDeletion(ftpUserName)
 
@@ -208,6 +224,12 @@ class FTPManager:
 
             domain = Websites.objects.get(domain=selectedDomain)
 
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(selectedDomain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
             records = Users.objects.filter(domain=domain)
 
             json_data = "["
@@ -246,6 +268,14 @@ class FTPManager:
             data = json.loads(self.request.body)
             userName = data['ftpUserName']
             password = data['ftpPassword']
+
+            admin = Administrator.objects.get(pk=userID)
+            ftp = Users.objects.get(user=userName)
+
+            if currentACL['admin'] == 1:
+                pass
+            elif ftp.domain.admin != admin:
+                return ACLManager.loadErrorJson()
 
             FTPUtilities.changeFTPPassword(userName, password)
 

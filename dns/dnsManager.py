@@ -272,6 +272,12 @@ class DNSManager:
             zoneDomain = data['selectedZone']
             currentSelection = data['currentSelection']
 
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(zoneDomain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
             domain = Domains.objects.get(name=zoneDomain)
             records = Records.objects.filter(domain_id=domain.id)
 
@@ -336,10 +342,18 @@ class DNSManager:
             if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
                 return ACLManager.loadErrorJson('add_status', 0)
 
+
+
             zoneDomain = data['selectedZone']
             recordType = data['recordType']
             recordName = data['recordName']
             ttl = int(data['ttl'])
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(zoneDomain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
 
             zone = Domains.objects.get(name=zoneDomain)
             value = ""
@@ -503,6 +517,17 @@ class DNSManager:
             id = data['id']
 
             delRecord = Records.objects.get(id=id)
+
+            admin = Administrator.objects.get(pk=userID)
+            if currentACL['admin'] == 1:
+                pass
+            elif delRecord.domainOwner.admin == admin:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+
+
             delRecord.delete()
 
             final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
@@ -537,9 +562,15 @@ class DNSManager:
             zoneDomain = data['zoneDomain']
 
             currentACL = ACLManager.loadedACL(userID)
-
+            admin = Administrator.objects.get(pk=userID)
             if ACLManager.currentContextPermission(currentACL, 'deleteZone') == 0:
                 return ACLManager.loadErrorJson('delete_status', 0)
+
+
+            if ACLManager.checkOwnership(zoneDomain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
 
             delZone = Domains.objects.get(name=zoneDomain)
             admin = Administrator.objects.get(pk=userID)

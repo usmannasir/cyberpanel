@@ -237,6 +237,20 @@ def fetchUserDetails(request):
 
                 user = Administrator.objects.get(userName=accountUsername)
 
+                currentACL = ACLManager.loadedACL(val)
+                loggedUser = Administrator.objects.get(pk=val)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif user.owner == loggedUser.pk:
+                    pass
+                elif user.pk == loggedUser.pk:
+                    pass
+                else:
+                    data_ret = {'fetchStatus': 0, 'error_message': 'Un-authorized access.'}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
                 firstName = user.firstName
                 lastName = user.lastName
                 email = user.email
@@ -278,8 +292,21 @@ def saveModifications(request):
                 lastName = data['lastName']
                 email = data['email']
 
-                admin = Administrator.objects.get(pk=val)
                 user = Administrator.objects.get(userName=accountUsername)
+
+                currentACL = ACLManager.loadedACL(val)
+                loggedUser = Administrator.objects.get(pk=val)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif user.owner == loggedUser.pk:
+                    pass
+                elif user.pk == loggedUser.pk:
+                    pass
+                else:
+                    data_ret = {'fetchStatus': 0, 'error_message': 'Un-authorized access.'}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
 
                 token = hashPassword.generateToken(accountUsername, data['password'])
                 password = hashPassword.hash_password(data['password'])
@@ -323,7 +350,6 @@ def deleteUser(request):
         else:
             return ACLManager.loadError()
 
-
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -352,7 +378,7 @@ def submitUserDeletion(request):
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
                 else:
-                    data_ret = {'status': 0, 'deleteStatus': 1, 'error_message': 'Not enough privileges'}
+                    data_ret = {'status': 0, 'deleteStatus': 1, 'error_message': 'Not enough privileges.'}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
@@ -814,8 +840,18 @@ def saveResellerChanges(request):
             json_data = json.dumps(finalResponse)
             return HttpResponse(json_data)
 
+        currentACL = ACLManager.loadedACL(val)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['resellerCenter'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
         userToBeModified = Administrator.objects.get(userName=data['userToBeModified'])
         newOwner = Administrator.objects.get(userName=data['newOwner'])
+
 
         if ACLManager.websitesLimitCheck(newOwner, data['websitesLimit'], userToBeModified) == 0:
             finalResponse = {'status': 0,

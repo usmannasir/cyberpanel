@@ -1,6 +1,7 @@
 acme==0.21.1
 asn1crypto==0.24.0
 Babel==0.9.6
+bcrypt==3.1.7
 backports.ssl-match-hostname==3.5.0.1
 boto3==1.9.64
 botocore==1.12.64

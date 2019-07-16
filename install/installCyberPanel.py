@@ -697,11 +697,25 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
     if os.access(file_name, os.F_OK):
         password = open(file_name, 'r')
         InstallCyberPanel.mysql_Root_password = password.readline()
+        password.close()
     else:
         password = open(file_name, "w")
         password.writelines(InstallCyberPanel.mysql_Root_password)
+        command = 'chmod 640 %s' % (file_name)
+        password.close()
+        try:
+            install.preFlightsChecks.call(command, distro, '[chmod]',
+                                          '',
+                                          1, 0, os.EX_OSERR)
+            command = 'chown root:cyberpanel %s' % (file_name)
+            install.preFlightsChecks.call(command, distro, '[chmod]',
+                                          '',
+                                          1, 0, os.EX_OSERR)
+        except:
+            pass
 
-    password.close()
+
+
 
     if distro == centos:
         InstallCyberPanel.mysqlPassword = randomPassword.generate_pass()

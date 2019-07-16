@@ -70,6 +70,13 @@ class tuningManager:
     def tuneLitespeed(self, userID, data):
         try:
 
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
             status = data['status']
             if status == "fetch":
 
@@ -137,6 +144,14 @@ class tuningManager:
 
     def tunePHP(self, userID, data):
         try:
+
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
             status = data['status']
             domainSelection = str(data['domainSelection'])
 

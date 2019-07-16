@@ -5,6 +5,7 @@ import os
 import socket
 import threading as multi
 import time
+from pipes import quote
 
 class ProcessUtilities(multi.Thread):
     litespeedProcess = "litespeed"
@@ -162,7 +163,7 @@ class ProcessUtilities(multi.Thread):
                 time.sleep(2)
 
     @staticmethod
-    def sendCommand(command):
+    def sendCommand(command, user=None):
         try:
 
             ret = ProcessUtilities.setupUDSConnection()
@@ -176,7 +177,29 @@ class ProcessUtilities(multi.Thread):
 
             sock = ret[0]
 
-            sock.sendall(ProcessUtilities.token + command)
+            # SplittedCommand = command.split(' ')
+            # if SplittedCommand[0] == 'sudo':
+            #     finalCommand = SplittedCommand[1:]
+            # else:
+            #     finalCommand = SplittedCommand
+            #
+            # CommandArgs = finalCommand[1:]
+            #
+            # finalCommand = finalCommand[0]
+            #
+            # for items in CommandArgs:
+            #     finalCommand = '%s %s' % (finalCommand, items)
+
+
+            if user == None:
+                sock.sendall(ProcessUtilities.token + command)
+            else:
+                command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
+                command = command.replace('sudo', '')
+                sock.sendall(command)
+
+            #logging.writeToFile(command)
+
             data = ""
 
             while (1):
@@ -192,9 +215,9 @@ class ProcessUtilities(multi.Thread):
             return "0" + str(msg)
 
     @staticmethod
-    def executioner(command):
+    def executioner(command, user=None):
         try:
-            ret = ProcessUtilities.sendCommand(command)
+            ret = ProcessUtilities.sendCommand(command, user)
 
             exitCode = ret[len(ret) -1]
             exitCode = int(exitCode.encode('hex'), 16)
@@ -211,14 +234,14 @@ class ProcessUtilities(multi.Thread):
             return 0
 
     @staticmethod
-    def outputExecutioner(command):
+    def outputExecutioner(command, user=None):
         try:
             if type(command) == str or type(command) == unicode:
                 pass
             else:
                 command = " ".join(command)
 
-            return ProcessUtilities.sendCommand(command)[:-1]
+            return ProcessUtilities.sendCommand(command, user)[:-1]
         except BaseException, msg:
             logging.writeToFile(str(msg) + "[outputExecutioner:188]")
 
@@ -229,17 +252,18 @@ class ProcessUtilities(multi.Thread):
             else:
                 command = " ".join(self.extraArgs['command'])
 
-            ProcessUtilities.sendCommand(command)
+            ProcessUtilities.sendCommand(command, self.extraArgs['user'])
 
             return 1
         except BaseException, msg:
             logging.writeToFile(str(msg) + " [customPoen]")
 
     @staticmethod
-    def popenExecutioner(command):
+    def popenExecutioner(command, user=None):
         try:
             extraArgs = {}
             extraArgs['command'] = command
+            extraArgs['user'] = user
             pu = ProcessUtilities("popen", extraArgs)
             pu.start()
         except BaseException, msg:

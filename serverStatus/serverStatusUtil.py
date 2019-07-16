@@ -103,6 +103,13 @@ class ServerStatusUtil:
             except:
                 pass
 
+
+            files = ['/usr/local/lsws/conf/httpd_config.xml', '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
+            for items in files:
+                command = 'chmod 644 %s' % (items)
+                ServerStatusUtil.executioner(command, statusFile)
+
+
             return 1
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -310,10 +317,10 @@ class ServerStatusUtil:
                                                       "LiteSpeed Enterprise Web Server installed.\n", 1)
 
 
-            if ServerStatusUtil.setupFileManager(statusFile) == 0:
-                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to set up File Manager. [404]", 1)
-                ServerStatusUtil.recover()
-                return 0
+            # if ServerStatusUtil.setupFileManager(statusFile) == 0:
+            #     logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to set up File Manager. [404]", 1)
+            #     ServerStatusUtil.recover()
+            #     return 0
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "Rebuilding vhost conf..\n", 1)

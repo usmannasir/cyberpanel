@@ -47,6 +47,7 @@ class DatabaseManager:
         try:
 
             currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
             if ACLManager.currentContextPermission(currentACL, 'createDatabase') == 0:
                 return ACLManager.loadErrorJson('createDBStatus', 0)
 
@@ -55,6 +56,11 @@ class DatabaseManager:
             dbUsername = data['dbUsername']
             dbPassword = data['dbPassword']
             webUsername = data['webUserName']
+
+            if ACLManager.checkOwnership(databaseWebsite, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
 
             if rAPI == None:
                 dbName = webUsername + "_" + dbName
@@ -98,6 +104,12 @@ class DatabaseManager:
 
             databaseWebsite = data['databaseWebsite']
 
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(databaseWebsite, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
             website = Websites.objects.get(domain=databaseWebsite)
             databases = Databases.objects.filter(website=website)
 
@@ -128,11 +140,17 @@ class DatabaseManager:
     def submitDatabaseDeletion(self, userID = None, data = None):
         try:
             currentACL = ACLManager.loadedACL(userID)
-
+            admin = Administrator.objects.get(pk=userID)
             if ACLManager.currentContextPermission(currentACL, 'deleteDatabase') == 0:
                 return ACLManager.loadErrorJson('deleteStatus', 0)
 
             dbName = data['dbName']
+            db = Databases.objects.get(dbName=dbName)
+
+            if ACLManager.checkOwnership(db.website.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
 
             result = mysqlUtilities.submitDBDeletion(dbName)
 
@@ -171,6 +189,14 @@ class DatabaseManager:
 
             userName = data['dbUserName']
             dbPassword = data['dbPassword']
+
+            db = Databases.objects.get(dbName=userName)
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(db.website.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
 
 
             res = mysqlUtilities.changePassword(userName, dbPassword)

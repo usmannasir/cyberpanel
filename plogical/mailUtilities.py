@@ -15,12 +15,28 @@ from websiteFunctions.models import Websites, ChildDomains
 from processUtilities import ProcessUtilities
 import os, getpass
 import hashlib
+import bcrypt
 
 class mailUtilities:
 
     installLogPath = "/home/cyberpanel/openDKIMInstallLog"
     spamassassinInstallLogPath = "/home/cyberpanel/spamassassinInstallLogPath"
     cyberPanelHome = "/home/cyberpanel"
+
+    @staticmethod
+    def AfterEffects(domain):
+        path = "/usr/local/CyberCP/install/rainloop/cyberpanel.net.ini"
+
+        if not os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/"):
+            os.makedirs("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/")
+
+        finalPath = "/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/" + domain + ".ini"
+
+        if not os.path.exists(finalPath):
+            shutil.copy(path, finalPath)
+
+        command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/'
+        ProcessUtilities.normalExecutioner(command)
 
     @staticmethod
     def createEmailAccount(domain, userName, password):
@@ -88,19 +104,9 @@ class mailUtilities:
 
             ## After effects
 
-
-            path = "/usr/local/CyberCP/install/rainloop/cyberpanel.net.ini"
-
-            if not os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/"):
-                os.makedirs("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/")
-
-            finalPath = "/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/" + domain + ".ini"
-
-            if not os.path.exists(finalPath):
-                shutil.copy(path, finalPath)
-
-            command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/'
-            ProcessUtilities.normalExecutioner(command)
+            execPath = "sudo python /usr/local/CyberCP/plogical/mailUtilities.py"
+            execPath = execPath + " AfterEffects --domain " + domain
+            ProcessUtilities.executioner(execPath, 'lscpd')
 
             ## After effects ends
 
@@ -114,8 +120,8 @@ class mailUtilities:
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-                command = 'doveadm pw -p %s' % (password)
-                password = subprocess.check_output(shlex.split(command)).strip('\n')
+                password = bcrypt.hashpw(str(password), bcrypt.gensalt())
+                password = '{CRYPT}%s' % (password)
                 emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
                 emailAcct.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (domain, userName)
                 emailAcct.save()
@@ -164,8 +170,8 @@ class mailUtilities:
             CentOSPath = '/etc/redhat-release'
             changePass = EUsers.objects.get(email=email)
             if os.path.exists(CentOSPath):
-                command = 'doveadm pw -p %s' % (newPassword)
-                password = subprocess.check_output(shlex.split(command)).strip('\n')
+                password = bcrypt.hashpw(str(newPassword), bcrypt.gensalt())
+                password = '{CRYPT}%s' % (password)
                 changePass.password = password
             else:
                 changePass.password = newPassword
@@ -657,6 +663,8 @@ def main():
         mailUtilities.savePolicyServerStatus(args.install)
     elif args.function == 'installSpamAssassin':
         mailUtilities.installSpamAssassin("install", "SpamAssassin")
+    elif args.function == 'AfterEffects':
+        mailUtilities.AfterEffects(args.domain)
 
 if __name__ == "__main__":
     main()
