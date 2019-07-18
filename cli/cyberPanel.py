@@ -23,6 +23,7 @@ from plogical.mailUtilities import mailUtilities
 from plogical.ftpUtilities import FTPUtilities
 from plogical.sslUtilities import sslUtilities
 from plogical.processUtilities import ProcessUtilities
+from plogical.backupSchedule import backupSchedule
 
 # All that we see or seem is but a dream within a dream.
 
@@ -323,37 +324,11 @@ class cyberPanel:
 
     def createBackup(self, virtualHostName):
         try:
-            website = Websites.objects.get(domain=virtualHostName)
+            backupLogPath = "/usr/local/lscp/logs/backup_log."+time.strftime("%I-%M-%S-%a-%b-%Y")
 
-            ## defining paths
+            print 'Backup logs to be generated in %s' % (backupLogPath)
 
-            ## /home/example.com/backup
-            backupPath = os.path.join("/home", virtualHostName, "backup/")
-            domainUser = website.externalApp
-            backupName = 'backup-' + domainUser + "-" + time.strftime("%I-%M-%S-%a-%b-%Y")
-
-            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018
-            tempStoragePath = os.path.join(backupPath, backupName)
-
-            backupUtilities.submitBackupCreation(tempStoragePath, backupName, backupPath, virtualHostName)
-
-            finalData = json.dumps({'websiteToBeBacked': virtualHostName})
-
-            while (1):
-                r = requests.post("http://localhost:5003/backup/backupStatus", data=finalData)
-                time.sleep(2)
-                data = json.loads(r.text)
-
-                if data['backupStatus'] == 0:
-                    print 'Failed to generate backup, Error message : ' + data['error_message'] + '\n'
-                    break
-                elif data['abort'] == 1:
-                    print 'Backup successfully generated.\n'
-                    print 'File Location: ' + tempStoragePath + ".tar.gz\n"
-                    break
-                else:
-                    print 'Waiting for backup to complete. Current status: ' + data['status']
-
+            backupSchedule.createLocalBackup(virtualHostName, backupLogPath)
 
         except BaseException, msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])

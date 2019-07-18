@@ -5,7 +5,10 @@ import sys
 import django
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-django.setup()
+try:
+    django.setup()
+except:
+    pass
 import shutil
 import argparse
 import installUtilities
@@ -14,9 +17,6 @@ from os.path import join
 from os import listdir, rmdir
 from shutil import move
 from multiprocessing import Process
-from websiteFunctions.models import Websites, ChildDomains, aliasDomains
-from loginSystem.models import Administrator
-from packages.models import Package
 import subprocess
 import shlex
 from plogical.mailUtilities import mailUtilities
@@ -29,7 +29,14 @@ from processUtilities import ProcessUtilities
 from ApachController.ApacheController import ApacheController
 from ApachController.ApacheVhosts import ApacheVhost
 from managePHP.phpManager import PHPManager
-from CLManager.models import CLPackages
+
+try:
+    from websiteFunctions.models import Websites, ChildDomains, aliasDomains
+    from loginSystem.models import Administrator
+    from packages.models import Package
+    from CLManager.models import CLPackages
+except:
+    pass
 
 ## If you want justice, you have come to the wrong place.
 

@@ -3,13 +3,19 @@ import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-django.setup()
+try:
+    django.setup()
+except:
+    pass
 import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
-from dns.models import Domains,Records
-from processUtilities import ProcessUtilities
-from manageServices.models import PDNSStatus, SlaveServers
+try:
+    from dns.models import Domains,Records
+    from processUtilities import ProcessUtilities
+    from manageServices.models import PDNSStatus, SlaveServers
+except:
+    pass
 
 class DNS:
 

@@ -4,7 +4,10 @@ import shlex
 import subprocess
 import socket
 from plogical.processUtilities import ProcessUtilities
-from websiteFunctions.models import ChildDomains, Websites
+try:
+    from websiteFunctions.models import ChildDomains, Websites
+except:
+    pass
 
 class sslUtilities:
 

@@ -9,7 +9,10 @@ from django.shortcuts import redirect
 from backup.backupManager import BackupManager
 from backup.pluginManager import pluginManager
 from loginSystem.views import loadLoginPage
-
+import os
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from django.shortcuts import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 
 def loadBackupHome(request):
     try:
@@ -45,7 +48,6 @@ def getCurrentBackups(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def submitBackupCreation(request):
     try:
         userID = request.session['userID']
@@ -59,8 +61,8 @@ def submitBackupCreation(request):
 
         return coreResult
 
-    except KeyError:
-        return redirect(loadLoginPage)
+    except BaseException, msg:
+        logging.writeToFile(str(msg))
 
 
 def backupStatus(request):
@@ -324,3 +326,16 @@ def cancelRemoteBackup(request):
         return wm.cancelRemoteBackup(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+
+@csrf_exempt
+def localInitiate(request):
+    try:
+        data = json.loads(request.body)
+        randomFile = data['randomFile']
+
+        if os.path.exists(randomFile):
+            wm = BackupManager()
+            return wm.submitBackupCreation(1, json.loads(request.body))
+    except BaseException, msg:
+        logging.writeToFile(str(msg))

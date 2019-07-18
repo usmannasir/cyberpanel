@@ -9,8 +9,11 @@ except:
 import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
-from websiteFunctions.models import Websites
-from databases.models import Databases
+try:
+    from websiteFunctions.models import Websites
+    from databases.models import Databases
+except:
+    pass
 import MySQLdb as mysql
 import json
 from random import randint

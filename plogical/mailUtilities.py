@@ -2,20 +2,26 @@ import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-django.setup()
+try:
+    django.setup()
+except:
+    pass
 import os.path
 import shutil
 import CyberCPLogFileWriter as logging
 import subprocess
 import argparse
 import shlex
-from mailServer.models import Domains,EUsers
-from emailPremium.models import DomainLimits, EmailLimits
-from websiteFunctions.models import Websites, ChildDomains
 from processUtilities import ProcessUtilities
 import os, getpass
 import hashlib
 import bcrypt
+try:
+    from mailServer.models import Domains, EUsers
+    from emailPremium.models import DomainLimits, EmailLimits
+    from websiteFunctions.models import Websites, ChildDomains
+except:
+    pass
 
 class mailUtilities:
 

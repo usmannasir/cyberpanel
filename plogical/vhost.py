@@ -5,14 +5,17 @@ import sys
 import django
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-django.setup()
+try:
+    django.setup()
+except:
+    pass
 import shutil
 import installUtilities
-from websiteFunctions.models import Websites, ChildDomains, aliasDomains
+
 import subprocess
 import shlex
 import CyberCPLogFileWriter as logging
-from databases.models import Databases
+
 from mysqlUtilities import mysqlUtilities
 from dnsUtilities import DNS
 from random import randint
@@ -20,6 +23,11 @@ from processUtilities import ProcessUtilities
 from managePHP.phpManager import PHPManager
 from vhostConfs import vhostConfs
 from ApachController.ApacheVhosts import ApacheVhost
+try:
+    from websiteFunctions.models import Websites, ChildDomains, aliasDomains
+    from databases.models import Databases
+except:
+    pass
 ## If you want justice, you have come to the wrong place.
 
 

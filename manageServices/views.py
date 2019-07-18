@@ -191,6 +191,8 @@ def saveStatus(request):
                                 slaveServer.save()
                             except:
                                 pass
+                        else:
+                            pdns.save()
 
                         if data['dnsMode'] != 'Default':
                             data['type'] = data['dnsMode']

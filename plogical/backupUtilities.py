@@ -17,26 +17,34 @@ from multiprocessing import Process
 import signal
 from installUtilities import installUtilities
 import argparse
-from virtualHostUtilities import virtualHostUtilities
-from sslUtilities import sslUtilities
-from websiteFunctions.models import Websites, ChildDomains, Backups
-from databases.models import Databases
-from loginSystem.models import Administrator
-from dnsUtilities import DNS
+try:
+    from virtualHostUtilities import virtualHostUtilities
+    from sslUtilities import sslUtilities
+    from plogical.mailUtilities import mailUtilities
+except:
+    pass
+
 from xml.etree.ElementTree import Element, SubElement
 from xml.etree import ElementTree
 from xml.dom import minidom
-from backup.models import DBUsers
-from mailServer.models import Domains as eDomains
 import time
-from plogical.mailUtilities import mailUtilities
 from shutil import copy
 from random import randint
 from plogical.processUtilities import ProcessUtilities
+try:
+    from websiteFunctions.models import Websites, ChildDomains, Backups
+    from databases.models import Databases
+    from loginSystem.models import Administrator
+    from dnsUtilities import DNS
+    from mailServer.models import Domains as eDomains
+    from backup.models import DBUsers
+except:
+    pass
 
 ## I am not the monster that you think I am..
 
 class backupUtilities:
+    Server_root = "/usr/local/lsws"
 
     completeKeyPath  = "/home/cyberpanel/.ssh"
     destinationsPath = "/home/cyberpanel/destinations"
@@ -45,6 +53,10 @@ class backupUtilities:
     @staticmethod
     def prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath):
         try:
+
+            status = os.path.join(backupPath, 'status')
+
+            logging.CyberCPLogFileWriter.statusWriter(status, 'Setting up meta data..')
 
             website = Websites.objects.get(domain=backupDomain)
 
@@ -194,10 +206,13 @@ class backupUtilities:
                                 size=0, status=1)
             newBackup.save()
 
+            logging.CyberCPLogFileWriter.statusWriter(status, 'Meta data us ready..')
+
             return 1,'None', metaPath
 
 
         except BaseException, msg:
+            logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)))
             return 0,str(msg)
 
     @staticmethod
@@ -206,12 +221,6 @@ class backupUtilities:
 
             ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
             ## /home/example.com/backup - backupPath
-
-            if not os.path.exists(backupPath):
-                os.mkdir(backupPath)
-
-            if not os.path.exists(tempStoragePath):
-                os.mkdir(tempStoragePath)
 
             ##### Writing the name of backup file.
 
@@ -246,7 +255,7 @@ class backupUtilities:
 
             ## Saving original vhost conf file
 
-            completPathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + domainName + '/vhost.conf'
+            completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + domainName + '/vhost.conf'
 
             if os.path.exists(backupUtilities.licenseKey):
                 copy(completPathToConf, tempStoragePath + '/vhost.conf')
@@ -279,7 +288,7 @@ class backupUtilities:
                     actualChildDomain = childDomain.find('domain').text
 
                     if os.path.exists(backupUtilities.licenseKey):
-                        completPathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + actualChildDomain + '/vhost.conf'
+                        completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + actualChildDomain + '/vhost.conf'
                         copy(completPathToConf, tempStoragePath + '/' + actualChildDomain + '.vhost.conf')
 
                         ### Storing SSL for child domainsa
@@ -299,25 +308,25 @@ class backupUtilities:
                         except:
                             pass
             except BaseException, msg:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+                pass
 
-            logging.CyberCPLogFileWriter.statusWriter(status, "Backing up databases.")
+            logging.CyberCPLogFileWriter.statusWriter(status, "Backing up databases..")
             print '1,None'
 
         except BaseException,msg:
             try:
                 os.remove(os.path.join(backupPath,backupName+".tar.gz"))
             except:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+                pass
 
             try:
                 rmtree(tempStoragePath)
             except:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+                pass
 
             status = os.path.join(backupPath, 'status')
             logging.CyberCPLogFileWriter.statusWriter(status, "Aborted, "+ str(msg) + ".[365] [5009]")
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+            print ("Aborted, "+ str(msg) + ".[365] [5009]")
 
     @staticmethod
     def BackupRoot(tempStoragePath, backupName, backupPath, metaPath=None):
@@ -331,16 +340,16 @@ class backupUtilities:
 
         if os.path.islink(status) or os.path.islink(tempStoragePath or os.path.islink(backupPath)) or os.path.islink(metaPath):
             logging.CyberCPLogFileWriter.writeToFile('symlinked.')
+            logging.CyberCPLogFileWriter.statusWriter(status, 'Symlink attack. [5009]')
             return 0
 
         ## backup email accounts
 
-        logging.CyberCPLogFileWriter.statusWriter(status, "Backing up email accounts!\n")
+        logging.CyberCPLogFileWriter.statusWriter(status, "Backing up email accounts..\n")
 
         try:
             make_archive(os.path.join(tempStoragePath, domainName), 'gztar', os.path.join("/home", "vmail", domainName))
         except BaseException, msg:
-            print str(msg)
             pass
 
 
@@ -576,7 +585,7 @@ class backupUtilities:
 
                             if os.path.exists(backupUtilities.licenseKey):
                                 if os.path.exists(completPath + '/' + domain + '.vhost.conf'):
-                                    completPathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + domain + '/vhost.conf'
+                                    completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + domain + '/vhost.conf'
                                     copy(completPath + '/' + domain + '.vhost.conf', completPathToConf)
 
                             sslStoragePath = completPath + "/" + domain + ".cert.pem"
@@ -688,7 +697,7 @@ class backupUtilities:
             ## emails extracted
 
             if os.path.exists(backupUtilities.licenseKey):
-                completPathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + masterDomain + '/vhost.conf'
+                completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + masterDomain + '/vhost.conf'
                 if os.path.exists(completPath + '/vhost.conf'):
                     copy(completPath + '/vhost.conf', completPathToConf)
 
@@ -996,20 +1005,48 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         ## /home/cyberpanel/1047.xml - metaPath
 
         status = os.path.join(backupPath, 'status')
+        website = Websites.objects.get(domain=backupDomain)
+
+        ##
+
+        command = 'mkdir -p %s' % (backupPath)
+        ProcessUtilities.executioner(command)
+
+        command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
+        ProcessUtilities.executioner(command)
+
+        ##
+
+
+        command = 'mkdir -p %s' % (tempStoragePath)
+        ProcessUtilities.executioner(command)
+
+        command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, tempStoragePath)
+        ProcessUtilities.executioner(command)
+
+        ##
+
+        command = 'chown cyberpanel:cyberpanel %s' % (status)
+        ProcessUtilities.executioner(command)
+
         result = backupUtilities.prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath)
 
-        if result[0] == 0:
-            logging.CyberCPLogFileWriter.writeToFile(result[1] + ' [5009]')
-            logging.CyberCPLogFileWriter.statusWriter(status, result[1] + ' [5009]')
-            return
 
-        website = Websites.objects.get(domain=backupDomain)
+        if result[0] == 0:
+            logging.CyberCPLogFileWriter.statusWriter(status, str(result[1]) + ' [5009]')
+            return 0
+
+        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, status)
+        ProcessUtilities.executioner(command)
 
         execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
         execPath = execPath + " startBackup --tempStoragePath " + tempStoragePath + " --backupName " \
                    + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (result[2])
 
-        ProcessUtilities.executioner(execPath, website.externalApp)
+        output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+        if output.find('[5009') > -1:
+            logging.CyberCPLogFileWriter.writeToFile(output)
+            return 0
 
         ## Backing up databases
 
@@ -1034,13 +1071,19 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         ##
 
-        if ProcessUtilities.outputExecutioner(execPath, website.externalApp).find('1,None') > -1:
+        output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+        if output.find('1,None') > -1:
             execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " BackupRoot --tempStoragePath " + tempStoragePath + " --backupName " \
                        + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (
                        result[2])
 
             ProcessUtilities.executioner(execPath, 'root')
+        else:
+            logging.CyberCPLogFileWriter.writeToFile(output)
+
+        command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
+        ProcessUtilities.executioner(command)
 
         command = 'rm -f %s' % (result[2])
         ProcessUtilities.executioner(command, 'cyberpanel')

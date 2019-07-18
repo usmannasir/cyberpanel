@@ -301,6 +301,13 @@ class ServerStatusUtil:
                     except:
                         pass
 
+            if os.path.exists('/etc/redhat-release'):
+                command = 'yum remove -y openlitespeed'
+            else:
+                command = "apt-get -y remove openlitespeed"
+
+            ServerStatusUtil.executioner(command, FNULL)
+
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "OpenLiteSpeed removed.\n", 1)
 

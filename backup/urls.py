@@ -46,6 +46,8 @@ urlpatterns = [
 
     url(r'^cancelRemoteBackup', views.cancelRemoteBackup, name='cancelRemoteBackup'),
 
+    url(r'^localInitiate$', views.localInitiate, name='localInitiate'),
+
 
 
 
