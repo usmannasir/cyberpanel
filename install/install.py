@@ -1151,7 +1151,7 @@ class preFlightsChecks:
                                   'Change permissions for client.', 1, 0, os.EX_OSERR)
 
         impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf', '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
-                 '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf']
+                 '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf', '/etc/pure-ftpd/db/mysql.conf']
 
         for items in impFile:
             command = 'chmod 600 %s' % (items)
@@ -2470,6 +2470,7 @@ enabled=1"""
             FirewallUtilities.addRule("tcp", "993")
             FirewallUtilities.addRule("udp", "53")
             FirewallUtilities.addRule("tcp", "53")
+            FirewallUtilities.addRule("udp", "443")
             FirewallUtilities.addRule("tcp", "40110-40210")
 
             logging.InstallLog.writeToFile("FirewallD installed and configured!")

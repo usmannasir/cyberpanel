@@ -1035,8 +1035,7 @@ class BackupManager:
 
             ##
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
-
+            execPath = "python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
             execPath = execPath + " remoteBackupRestore --backupDirComplete " + backupDirComplete + " --backupDir " + str(
                 backupDir)
 
@@ -1074,14 +1073,14 @@ class BackupManager:
                 status = ProcessUtilities.outputExecutioner(command)
 
                 if status.find("completed[success]") > -1:
-                    command = "sudo rm -rf " + removalPath
-                    # subprocess.call(shlex.split(command))
+                    command = "rm -rf " + removalPath
+                    ProcessUtilities.executioner(command)
                     data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 1}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
                 elif status.find("[5010]") > -1:
                     command = "sudo rm -rf " + removalPath
-                    # subprocess.call(shlex.split(command))
+                    ProcessUtilities.executioner(command)
                     data = {'remoteTransferStatus': 0, 'error_message': status,
                             "status": "None", "complete": 0}
                     json_data = json.dumps(data)

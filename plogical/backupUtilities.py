@@ -102,7 +102,13 @@ class backupUtilities:
             databasesXML = Element('Databases')
 
             for items in databases:
-                dbuser = DBUsers.objects.get(user=items.dbUser)
+                try:
+                    dbuser = DBUsers.objects.get(user=items.dbUser)
+                except:
+                    dbusers = DBUsers.objects.all().filter(user=items.dbUser)
+                    for it in dbusers:
+                        dbuser = it
+                        break
 
                 databaseXML = Element('database')
 
@@ -154,8 +160,8 @@ class backupUtilities:
 
                 metaFileXML.append(dnsRecordsXML)
 
-            except:
-                pass
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [158:prepMeta]' % (str(msg)))
 
             ## Email accounts XML
 
@@ -175,9 +181,8 @@ class backupUtilities:
                     emailRecordsXML.append(emailRecordXML)
 
                 metaFileXML.append(emailRecordsXML)
-
-            except:
-                pass
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [179:prepMeta]' % (str(msg)))
 
             ## Email meta generated!
 
@@ -1009,25 +1014,45 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         ##
 
-        command = 'mkdir -p %s' % (backupPath)
-        ProcessUtilities.executioner(command)
+        if not os.path.exists(backupPath) or not os.path.islink(backupPath):
+            command = 'mkdir -p %s' % (backupPath)
+            ProcessUtilities.executioner(command)
+        else:
+            return 0
 
-        command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
-        ProcessUtilities.executioner(command)
-
-        ##
-
-
-        command = 'mkdir -p %s' % (tempStoragePath)
-        ProcessUtilities.executioner(command)
-
-        command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, tempStoragePath)
-        ProcessUtilities.executioner(command)
+        if not os.path.exists(backupPath) or not os.path.islink(backupPath):
+            command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
+            ProcessUtilities.executioner(command)
+        else:
+            return 0
 
         ##
 
-        command = 'chown cyberpanel:cyberpanel %s' % (status)
-        ProcessUtilities.executioner(command)
+        if not os.path.exists(tempStoragePath) or not os.path.islink(tempStoragePath):
+            command = 'mkdir -p %s' % (tempStoragePath)
+            ProcessUtilities.executioner(command)
+        else:
+            return 0
+
+        if not os.path.exists(tempStoragePath) or not os.path.islink(tempStoragePath):
+            command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, tempStoragePath)
+            ProcessUtilities.executioner(command)
+        else:
+            return 0
+
+        ##
+        if not os.path.exists(status) or not os.path.islink(status):
+            command = 'touch %s' % (status)
+            ProcessUtilities.executioner(command)
+        else:
+            return 0
+
+        if not os.path.exists(status) or not os.path.islink(status):
+            command = 'chown cyberpanel:cyberpanel %s' % (status)
+            ProcessUtilities.executioner(command)
+        else:
+            return 0
+
 
         result = backupUtilities.prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath)
 
@@ -1051,11 +1076,6 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         ## Backing up databases
 
         backupMetaData = ElementTree.parse(result[2])
-
-        if os.path.islink(status) or os.path.islink(tempStoragePath or os.path.islink(backupPath)) or os.path.islink(
-                result[2]):
-            logging.CyberCPLogFileWriter.writeToFile('symlinked.')
-            return 0
 
         databases = backupMetaData.findall('Databases/database')
 

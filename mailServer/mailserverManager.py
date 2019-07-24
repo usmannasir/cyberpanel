@@ -377,7 +377,7 @@ class MailServerManager:
 
             data = json.loads(self.request.body)
             email = data['email']
-            password = data['password']
+            password = data['passwordByPass']
 
             emailDB = EUsers.objects.get(email=email)
 
@@ -393,6 +393,8 @@ class MailServerManager:
                 password = '{CRYPT}%s' % (password)
                 emailDB.password = password
             else:
+                password = bcrypt.hashpw(str(password), bcrypt.gensalt())
+                password = '{CRYPT}%s' % (password)
                 emailDB.password = password
 
             emailDB.save()

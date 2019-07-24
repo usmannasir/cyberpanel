@@ -328,7 +328,7 @@ app.controller('listFTPAccounts', function ($scope, $http) {
 
         var data = {
             ftpUserName: globalFTPUsername,
-            ftpPassword: $scope.ftpPassword,
+            passwordByPass: $scope.ftpPassword,
         };
 
         var config = {

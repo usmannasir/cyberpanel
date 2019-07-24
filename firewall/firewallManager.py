@@ -386,10 +386,14 @@ class FirewallManager:
                     FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0")
                     updateFW.port = sshPort
                     updateFW.save()
+                    FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
                 except:
                     try:
                         newFireWallRule = FirewallRules(name="SSHCustom", port=sshPort, proto="tcp")
                         newFireWallRule.save()
+                        FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
+                        command = 'firewall-cmd --permanent --remove-service=ssh'
+                        ProcessUtilities.executioner(command)
                     except BaseException, msg:
                         logging.CyberCPLogFileWriter.writeToFile(str(msg))
 

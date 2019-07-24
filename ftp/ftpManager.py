@@ -267,7 +267,7 @@ class FTPManager:
 
             data = json.loads(self.request.body)
             userName = data['ftpUserName']
-            password = data['ftpPassword']
+            password = data['passwordByPass']
 
             admin = Administrator.objects.get(pk=userID)
             ftp = Users.objects.get(user=userName)

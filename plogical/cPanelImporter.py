@@ -514,31 +514,35 @@ class cPanelImporter:
                 start = 0
 
                 for items in data:
-                    if items.find('SOA') > -1:
-                        SOACheck = 1
-                        continue
+                    try:
+                        if items.find('SOA') > -1:
+                            SOACheck = 1
+                            continue
 
-                    if SOACheck == 1 and items.find(')') > -1:
-                        SOACheck = 0
-                        start = 1
-                        continue
-                    else:
-                        pass
+                        if SOACheck == 1 and items.find(')') > -1:
+                            SOACheck = 0
+                            start = 1
+                            continue
+                        else:
+                            pass
 
-                    if start == 1:
-                        if len(items) > 3:
-                            if items.find("DKIM1") > -1:
-                                continue
-                            RecordsData = items.split('\t')
+                        if start == 1:
+                            if len(items) > 3:
+                                if items.find("DKIM1") > -1:
+                                    continue
+                                RecordsData = items.split('\t')
 
-                            if RecordsData[3] == 'A':
-                                RecordsData[4] = ipAddress
+                                if RecordsData[3] == 'A':
+                                    RecordsData[4] = ipAddress
 
-                            if RecordsData[0].find(topLevelDomain) > -1:
-                                DNS.createDNSRecord(zone, RecordsData[0].replace('.', ''), RecordsData[3], RecordsData[4], 0, RecordsData[1])
-                            else:
-                                DNS.createDNSRecord(zone, RecordsData[0] + '.' + topLevelDomain , RecordsData[3], RecordsData[4], 0,
-                                                    RecordsData[1])
+                                if RecordsData[0].find(topLevelDomain) > -1:
+                                    DNS.createDNSRecord(zone, RecordsData[0].replace('.', ''), RecordsData[3], RecordsData[4], 0, RecordsData[1])
+                                else:
+                                    DNS.createDNSRecord(zone, RecordsData[0] + '.' + topLevelDomain , RecordsData[3], RecordsData[4], 0,
+                                                        RecordsData[1])
+                    except BaseException, msg:
+                        message = 'Failed while creating DNS entry for %s, error message: %s.' % (topLevelDomain, str(msg))
+                        logging.statusWriter(self.logFile, message, 1)
 
                 message = 'DNS records successfully created for %s.' % (topLevelDomain)
                 logging.statusWriter(self.logFile, message, 1)
@@ -599,7 +603,7 @@ class cPanelImporter:
                     try:
                         cursor.execute("CREATE DATABASE " + items.replace('.sql', ''))
                     except BaseException, msg:
-                        message = 'Error while restoring database %s from backup file %s, error message: %s' % (items.replace('.sql', ''), self.backupFile, str(msg))
+                        message = 'Failed while restoring database %s from backup file %s, error message: %s' % (items.replace('.sql', ''), self.backupFile, str(msg))
                         logging.statusWriter(self.logFile, message, 1)
 
                     command = 'sudo mysql -u root -p' + password + ' ' + items.replace('.sql', '')
@@ -632,7 +636,7 @@ class cPanelImporter:
                 try:
                     cursor.execute(items)
                 except BaseException, msg:
-                    message = 'Error while restoring database %s from backup file %s, error message: %s' % (
+                    message = 'Failed while restoring database %s from backup file %s, error message: %s' % (
                     items.replace('.sql', ''), self.backupFile, str(msg))
                     logging.statusWriter(self.logFile, message, 1)
 
@@ -684,6 +688,8 @@ class cPanelImporter:
             pass
         else:
             return 0
+
+
         if self.RestoreDatabases():
             pass
         else:
@@ -811,10 +817,13 @@ def main():
     for items in os.listdir(args.path):
         if items.endswith('.tar.gz'):
             finalPath = '%s/%s' % (args.path.rstrip('/'), items)
-            cI = cPanelImporter(finalPath, LogFile)
-            if cI.MainController():
-                pass
-            else:
+            try:
+                cI = cPanelImporter(finalPath, LogFile)
+                if cI.MainController():
+                    pass
+                else:
+                    pass
+            except:
                 pass
 
 if __name__ == "__main__":

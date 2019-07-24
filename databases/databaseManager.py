@@ -190,7 +190,7 @@ class DatabaseManager:
             userName = data['dbUserName']
             dbPassword = data['dbPassword']
 
-            db = Databases.objects.get(dbName=userName)
+            db = Databases.objects.get(dbUser=userName)
 
             admin = Administrator.objects.get(pk=userID)
             if ACLManager.checkOwnership(db.website.domain, admin, currentACL) == 1:

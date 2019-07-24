@@ -321,12 +321,6 @@ class remoteTransferUtilities:
                 "%I-%M-%S-%a-%b-%Y") + "]" + " Backup Restore complete\n")
             writeToFile.writelines("completed[success]")
 
-            try:
-                shutil.rmtree("/home/backup/transfer-" + dir)
-            except:
-                pass
-
-
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.startRestore]")
 

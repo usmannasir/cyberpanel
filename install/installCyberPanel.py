@@ -599,7 +599,7 @@ class InstallCyberPanel:
                                              "/etc/resolv.conf'", 1, 1, os.EX_OSERR)
 
             if self.distro == centos:
-                command = 'yum -y install epel-release yum-plugin-priorities'
+                command = 'yum -y install epel-release'
                 install.preFlightsChecks.call(command, self.distro, '[installPowerDNS]',
                                               'Install PowerDNS',
                                               1, 1, os.EX_OSERR)

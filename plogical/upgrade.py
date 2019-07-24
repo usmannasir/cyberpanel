@@ -1443,7 +1443,7 @@ class Upgrade:
 
             impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
                        '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
-                       '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf']
+                       '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf', '/etc/pure-ftpd/db/mysql.conf']
 
             for items in impFile:
                 command = 'chmod 600 %s' % (items)
@@ -1508,7 +1508,7 @@ class Upgrade:
 
     @staticmethod
     def upgradePDNS():
-        command = "yum install epel-release yum-plugin-priorities && curl -o /etc/yum.repos.d/powerdns-auth-42.repo https://repo.powerdns.com/repo-files/centos-auth-42.repo && yum --enablerepo=epel install pdns"
+        command = "yum install epel-release && curl -o /etc/yum.repos.d/powerdns-auth-42.repo https://repo.powerdns.com/repo-files/centos-auth-42.repo && yum --enablerepo=epel install pdns"
         subprocess.call(command, shell=True)
 
     @staticmethod
@@ -1571,6 +1571,9 @@ enabled=1"""
         pureftpd = '/home/cyberpanel/ftp'
 
         os.chdir("/usr/local")
+
+        command = 'yum remove yum-plugin-priorities -y'
+        Upgrade.executioner(command, 'remove yum-plugin-priorities', 0)
 
         ## Current Version
 

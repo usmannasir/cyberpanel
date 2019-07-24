@@ -391,7 +391,7 @@ app.controller('changeEmailPassword', function ($scope, $http) {
         var data = {
             domain: domain,
             email: email,
-            password: password,
+            passwordByPass: password,
         };
 
         var config = {
