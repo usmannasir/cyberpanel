@@ -1151,7 +1151,7 @@ class preFlightsChecks:
                                   'Change permissions for client.', 1, 0, os.EX_OSERR)
 
         impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf', '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
-                 '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf', '/etc/pure-ftpd/db/mysql.conf']
+                 '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf', '/etc/pure-ftpd/db/mysql.conf', '/etc/powerdns/pdns.conf']
 
         for items in impFile:
             command = 'chmod 600 %s' % (items)

@@ -17,6 +17,7 @@ import plogical.CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
 from manageServices.models import PDNSStatus
 from django.views.decorators.csrf import ensure_csrf_cookie
+from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
 
@@ -58,7 +59,12 @@ def getAdminStatus(request):
             pdns = PDNSStatus.objects.get(pk=1)
             currentACL['dnsAsWhole'] = pdns.serverStatus
         except:
-            if os.path.exists('/etc/pdns'):
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                pdnsPath = '/etc/powerdns'
+            else:
+                pdnsPath = '/etc/pdns'
+
+            if os.path.exists(pdnsPath):
                 PDNSStatus(serverStatus=1).save()
                 currentACL['dnsAsWhole'] = 1
             else:

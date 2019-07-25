@@ -1443,7 +1443,7 @@ class Upgrade:
 
             impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
                        '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
-                       '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf', '/etc/pure-ftpd/db/mysql.conf']
+                       '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf', '/etc/pure-ftpd/db/mysql.conf', '/etc/powerdns/pdns.conf']
 
             for items in impFile:
                 command = 'chmod 600 %s' % (items)
@@ -1513,52 +1513,110 @@ class Upgrade:
 
     @staticmethod
     def upgradeDovecot():
-        CentOSPath = '/etc/redhat-release'
+        try:
+            Upgrade.stdOut("Upgrading Dovecot..")
+            CentOSPath = '/etc/redhat-release'
 
-        if os.path.exists(CentOSPath):
-            path = '/etc/yum.repos.d/dovecot.repo'
-            content = """[dovecot-2.3-latest]
-name=Dovecot 2.3 CentOS $releasever - $basearch
-baseurl=http://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch
-gpgkey=https://repo.dovecot.org/DOVECOT-REPO-GPG
-gpgcheck=1
-enabled=1"""
-            writeToFile = open(path, 'w')
-            writeToFile.write(content)
-            writeToFile.close()
+            if os.path.exists(CentOSPath):
+                path = '/etc/yum.repos.d/dovecot.repo'
+                content = """[dovecot-2.3-latest]
+    name=Dovecot 2.3 CentOS $releasever - $basearch
+    baseurl=http://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch
+    gpgkey=https://repo.dovecot.org/DOVECOT-REPO-GPG
+    gpgcheck=1
+    enabled=1"""
+                writeToFile = open(path, 'w')
+                writeToFile.write(content)
+                writeToFile.close()
 
-            command = "yum makecache -y"
-            Upgrade.executioner(command, 0)
+                command = "yum makecache -y"
+                Upgrade.executioner(command, 0)
 
-            command = "yum update -y"
-            Upgrade.executioner(command, 0)
+                command = "yum update -y"
+                Upgrade.executioner(command, 0)
 
-            ## Remove Default Password Scheme
+                ## Remove Default Password Scheme
 
-            path = '/etc/dovecot/dovecot-sql.conf.ext'
+                path = '/etc/dovecot/dovecot-sql.conf.ext'
 
-            data = open(path, 'r').readlines()
+                data = open(path, 'r').readlines()
 
-            updatePasswords = 1
+                updatePasswords = 1
 
-            writeToFile = open(path, 'w')
-            for items in data:
-                if items.find('default_pass_scheme') > -1:
-                    updatePasswords = 0
-                    continue
-                else:
-                    writeToFile.writelines(items)
+                writeToFile = open(path, 'w')
+                for items in data:
+                    if items.find('default_pass_scheme') > -1:
+                        updatePasswords = 0
+                        continue
+                    else:
+                        writeToFile.writelines(items)
 
-            writeToFile.close()
+                writeToFile.close()
 
-            if updatePasswords:
-                for items in EUsers.objects.all():
-                    command = 'doveadm pw -p %s' % (items.password)
-                    items.password = subprocess.check_output(shlex.split(command)).strip('\n')
-                    items.save()
+                if updatePasswords:
+                    for items in EUsers.objects.all():
+                        command = 'doveadm pw -p %s' % (items.password)
+                        items.password = subprocess.check_output(shlex.split(command)).strip('\n')
+                        items.save()
 
-            command = "systemctl restart dovecot"
-            Upgrade.executioner(command, 0)
+                command = "systemctl restart dovecot"
+                Upgrade.executioner(command, 0)
+            else:
+                command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
+                subprocess.call(command, shell=True)
+
+                command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
+                subprocess.call(command, shell=True)
+
+                debPath = '/etc/apt/sources.list.d/dovecot.list'
+                writeToFile = open(debPath, 'w')
+                writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
+                writeToFile.close()
+
+                try:
+                    command = 'apt update -y'
+                    Upgrade.executioner(command, 0)
+                except:
+                    pass
+
+                try:
+                    command = 'apt upgrade -y'
+                    Upgrade.executioner(command, 0)
+                except:
+                    pass
+
+                ## Remove Default Password Scheme
+
+                path = '/etc/dovecot/dovecot-sql.conf.ext'
+
+                data = open(path, 'r').readlines()
+
+                updatePasswords = 1
+
+                writeToFile = open(path, 'w')
+                for items in data:
+                    if items.find('default_pass_scheme') > -1:
+                        updatePasswords = 0
+                        continue
+                    else:
+                        writeToFile.writelines(items)
+
+                writeToFile.close()
+
+                if updatePasswords:
+                    Upgrade.stdOut("Upgrading passwords...")
+                    for items in EUsers.objects.all():
+                        command = 'doveadm pw -p %s' % (items.password)
+                        items.password = subprocess.check_output(shlex.split(command)).strip('\n')
+                        items.save()
+
+                command = "systemctl restart dovecot"
+                Upgrade.executioner(command, 0)
+
+            Upgrade.stdOut("Dovecot upgraded.")
+
+        except BaseException, msg:
+            Upgrade.stdOut(str(msg) + " [upgradeDovecot]")
 
     @staticmethod
     def upgrade():

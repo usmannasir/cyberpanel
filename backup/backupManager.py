@@ -654,13 +654,13 @@ class BackupManager:
                     return HttpResponse(final_json)
                 else:
                     if backupDest == "Home" and backupFreq == "Daily":
-                        cronJob = "0 3 * * 0-6 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
+                        cronJob = "0 3 * * * root python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
                     elif backupDest == "Home" and backupFreq == "Weekly":
-                        cronJob = "0 3 * * 3 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py "
+                        cronJob = "0 0 * * 0 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py "
                     elif backupDest != "Home" and backupFreq == "Daily":
-                        cronJob = "0 3 * * 0-6 root python /usr/local/CyberCP/plogical/backupSchedule.py"
+                        cronJob = "0 3 * * * root python /usr/local/CyberCP/plogical/backupSchedule.py"
                     elif backupDest != "Home" and backupFreq == "Weekly":
-                        cronJob = "0 3 * * 3 root python /usr/local/CyberCP/plogical/backupSchedule.py "
+                        cronJob = "0 0 * * 0 root python /usr/local/CyberCP/plogical/backupSchedule.py "
 
                     command = "cat " + path
                     output = ProcessUtilities.outputExecutioner(command)
@@ -672,10 +672,10 @@ class BackupManager:
                     writeToFile.writelines(finalCronJob + "\n")
                     writeToFile.close()
 
-                    command = "sudo mv " + tempCronPath + " " + path
+                    command = "mv " + tempCronPath + " " + path
                     ProcessUtilities.executioner(command)
 
-                    command = "sudo systemctl restart crond"
+                    command = "systemctl restart crond"
                     ProcessUtilities.executioner(command)
 
                     destination = dest.objects.get(destLoc=backupDest)
@@ -686,14 +686,13 @@ class BackupManager:
                     return HttpResponse(final_json)
             except:
                 if backupDest == "Home" and backupFreq == "Daily":
-                    cronJob = "0 3 * * 0-6 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
+                    cronJob = "0 3 * * * root python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
                 elif backupDest == "Home" and backupFreq == "Weekly":
-                    cronJob = "0 3 * * 3 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
+                    cronJob = "0 0 * * 0 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py "
                 elif backupDest != "Home" and backupFreq == "Daily":
-                    cronJob = "0 3 * * 0-6 root python /usr/local/CyberCP/plogical/backupSchedule.py"
-
+                    cronJob = "0 3 * * * root python /usr/local/CyberCP/plogical/backupSchedule.py"
                 elif backupDest != "Home" and backupFreq == "Weekly":
-                    cronJob = "0 3 * * 3 root python /usr/local/CyberCP/plogical/backupSchedule.py"
+                    cronJob = "0 0 * * 0 root python /usr/local/CyberCP/plogical/backupSchedule.py "
 
                 command = "cat " + path
                 output = ProcessUtilities.outputExecutioner(command)
