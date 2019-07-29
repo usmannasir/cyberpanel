@@ -207,7 +207,7 @@ class backupUtilities:
             ## meta generated
 
 
-            newBackup = Backups(website=website, fileName=backupName, date=time.strftime("%I-%M-%S-%a-%b-%Y"),
+            newBackup = Backups(website=website, fileName=backupName, date=time.strftime("%b-%d-%Y"),
                                 size=0, status=1)
             newBackup.save()
 
