@@ -211,7 +211,7 @@ class backupUtilities:
                                 size=0, status=1)
             newBackup.save()
 
-            logging.CyberCPLogFileWriter.statusWriter(status, 'Meta data us ready..')
+            logging.CyberCPLogFileWriter.statusWriter(status, 'Meta data is ready..')
 
             return 1,'None', metaPath
 
