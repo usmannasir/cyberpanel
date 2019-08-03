@@ -1,9 +1,3 @@
-import json
-import os
-from random import randint
-
-from django.shortcuts import HttpResponse
-
 import userManagment.views as um
 from backup.backupManager import BackupManager
 from databases.databaseManager import DatabaseManager
@@ -15,22 +9,17 @@ from loginSystem.models import Administrator
 from mailServer.mailserverManager import MailServerManager
 from manageSSL.views import issueSSL, obtainHostNameSSL, obtainMailServerSSL
 from packages.packagesManager import PackagesManager
-from plogical.acl import ACLManager
-from plogical.httpProc import httpProc
 from plogical.mysqlUtilities import mysqlUtilities
-from plogical.processUtilities import ProcessUtilities
 from plogical.virtualHostUtilities import virtualHostUtilities
-from plogical.website import WebsiteManager
+from websiteFunctions.website import WebsiteManager
 from s3Backups.s3Backups import S3Backups
 from serverLogs.views import getLogsFromFile
 from serverStatus.views import topProcessesStatus, killProcess, switchTOLSWSStatus
-from websiteFunctions.models import Websites
 from plogical import hashPassword
 from loginSystem.models import ACL
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from managePHP.phpManager import PHPManager
 from managePHP.views import submitExtensionRequest, getRequestStatusApache
-from containerization.containerManager import ContainerManager
 from containerization.views import *
 
 

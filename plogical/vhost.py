@@ -103,7 +103,12 @@ class vhost:
             try:
                 os.makedirs(pathLogs)
 
-                command = "chown %s:%s %s" % ('root', 'nobody', pathLogs)
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                    groupName = 'nobody'
+                else:
+                    groupName = 'nogroup'
+
+                command = "chown %s:%s %s" % ('root', groupName, pathLogs)
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 

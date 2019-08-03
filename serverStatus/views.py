@@ -65,7 +65,6 @@ def litespeedStatus(request):
             return render(request, "serverStatus/litespeedStatus.html", {"processList": processList,
                                                                          "liteSpeedVersionStatus": "For some reaons not able to load version details, see CyberCP main log file.",
                                                                          'OLS': OLS})
-
         if (processList != 0):
             dataForHtml = {"processList": processList, "lsversion": lsversion, "modules": modules,
                            "loadedModules": loadedModules, 'OLS': OLS}

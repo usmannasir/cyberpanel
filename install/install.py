@@ -952,7 +952,7 @@ class preFlightsChecks:
 
         os.chdir(self.path)
 
-        command = "wget http://cyberpanel.sh/CyberPanel.1.8.7.tar.gz"
+        command = "wget http://cyberpanel.sh/CyberPanel.1.8.8.tar.gz"
         #command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'CyberPanel Download',
@@ -961,7 +961,7 @@ class preFlightsChecks:
         ##
 
         count = 0
-        command = "tar zxf CyberPanel.1.8.7.tar.gz"
+        command = "tar zxf CyberPanel.1.8.8.tar.gz"
         #command = "tar zxf CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'Extract CyberPanel',1, 1, os.EX_OSERR)

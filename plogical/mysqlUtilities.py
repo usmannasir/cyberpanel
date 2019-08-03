@@ -145,7 +145,7 @@ class mysqlUtilities:
             return str(msg)
 
     @staticmethod
-    def createDatabaseBackup(databaseName,tempStoragePath):
+    def createDatabaseBackup(databaseName, tempStoragePath):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
             f = open(passFile)
@@ -191,7 +191,7 @@ password=%s
             return 0
 
     @staticmethod
-    def restoreDatabaseBackup(databaseName, tempStoragePath,dbPassword):
+    def restoreDatabaseBackup(databaseName, tempStoragePath, dbPassword, passwordCheck = None, additionalName = None):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
 
@@ -217,25 +217,33 @@ password=%s
                 command = 'chown cyberpanel:cyberpanel %s' % (cnfPath)
                 subprocess.call(shlex.split(command))
 
-            command = 'sudo mysql --defaults-extra-file=/home/cyberpanel/.my.cnf --host=localhost ' + databaseName
+            command = 'mysql --defaults-extra-file=/home/cyberpanel/.my.cnf --host=localhost ' + databaseName
             cmd = shlex.split(command)
 
-            with open(tempStoragePath + "/" + databaseName + '.sql', 'r') as f:
-                res = subprocess.call(cmd, stdin=f)
+            if additionalName == None:
+                with open(tempStoragePath + "/" + databaseName + '.sql', 'r') as f:
+                    res = subprocess.call(cmd, stdin=f)
+                if res != 0:
+                    logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " + databaseName +"! [restoreDatabaseBackup]")
+                    return 0
+            else:
+                with open(tempStoragePath + "/" + additionalName + '.sql', 'r') as f:
+                    res = subprocess.call(cmd, stdin=f)
 
-            if res == 1:
-                logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " +databaseName +"! [restoreDatabaseBackup]")
-                return 0
+                if res != 0:
+                    logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " + additionalName + "! [restoreDatabaseBackup]")
+                    return 0
 
-            connection, cursor = mysqlUtilities.setupConnection()
+            if passwordCheck == None:
+                connection, cursor = mysqlUtilities.setupConnection()
 
-            if connection == 0:
-                return 0
+                if connection == 0:
+                    return 0
 
-            passwordCMD = "use mysql;SET PASSWORD FOR '" + databaseName + "'@'localhost' = '" + dbPassword + "';FLUSH PRIVILEGES;"
+                passwordCMD = "use mysql;SET PASSWORD FOR '" + databaseName + "'@'localhost' = '" + dbPassword + "';FLUSH PRIVILEGES;"
 
-            cursor.execute(passwordCMD)
-            connection.close()
+                cursor.execute(passwordCMD)
+                connection.close()
 
             return 1
         except BaseException, msg:

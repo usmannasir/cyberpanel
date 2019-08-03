@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
 import json
-from plogical.website import WebsiteManager
+from websiteFunctions.website import WebsiteManager
 from websiteFunctions.pluginManager import pluginManager
 from django.views.decorators.csrf import csrf_exempt
 
@@ -620,5 +620,40 @@ def saveSSHAccessChanges(request):
         userID = request.session['userID']
         wm = WebsiteManager()
         return wm.saveSSHAccessChanges(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def setupStaging(request, domain):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        return wm.setupStaging(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def startCloning(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.startCloning(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def syncToMaster(request, domain, childDomain):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        return wm.syncToMaster(request, userID, None, childDomain)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def startSync(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.startSync(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)

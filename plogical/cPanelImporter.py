@@ -51,6 +51,9 @@ class cPanelImporter:
         self.mailFormat = 1
 
     def PHPDecider(self):
+
+        if self.PHPVersion == 'inherit':
+            self.PHPVersion = 'PHP 7.2'
         if self.PHPVersion.find('53') > -1:
             self.PHPVersion = 'PHP 5.3'
         elif self.PHPVersion.find('54') > -1:

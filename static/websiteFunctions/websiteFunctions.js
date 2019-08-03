@@ -447,9 +447,8 @@ app.controller('deleteWebsiteControl', function ($scope, $http) {
 
 
         function ListInitialDatas(response) {
-            console.log(response.data)
 
-            if (response.data.websiteDeleteStatus == 0) {
+            if (response.data.websiteDeleteStatus === 0) {
                 $scope.errorMessage = response.data.error_message;
                 $("#websiteDeleteFailure").fadeIn();
                 $("#websiteDeleteSuccess").hide();
@@ -471,7 +470,6 @@ app.controller('deleteWebsiteControl', function ($scope, $http) {
         }
 
         function cantLoadInitialDatas(response) {
-            console.log("not good");
         }
 
 
@@ -4943,7 +4941,6 @@ app.controller('sshAccess', function ($scope, $http, $timeout) {
             } else {
 
 
-
                 new PNotify({
                     title: 'Error!',
                     text: response.data.error_message,
@@ -4970,3 +4967,299 @@ app.controller('sshAccess', function ($scope, $http, $timeout) {
 
 
 });
+
+
+/* Java script code to cloneWebsite */
+app.controller('cloneWebsite', function ($scope, $http, $timeout, $window) {
+
+    $scope.cyberpanelLoading = true;
+    $scope.installationDetailsForm = false;
+    $scope.installationProgress = true;
+    $scope.goBackDisable = true;
+
+    var statusFile;
+
+    $scope.startCloning = function () {
+
+        $scope.cyberpanelLoading = false;
+        $scope.installationDetailsForm = true;
+        $scope.installationProgress = false;
+        $scope.goBackDisable = true;
+
+        $scope.currentStatus = "Cloning started..";
+
+        url = "/websites/startCloning";
+
+
+        var data = {
+            masterDomain: $("#domainName").text(),
+            domainName: $scope.domain
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                statusFile = response.data.tempStatusPath;
+                getCreationStatus();
+            } else {
+
+                $scope.cyberpanelLoading = true;
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.goBackDisable = false;
+
+                $scope.currentStatus = response.data.error_message;
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.cyberpanelLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.goBackDisable = false;
+
+        }
+
+    };
+    $scope.goBack = function () {
+        $scope.cyberpanelLoading = true;
+        $scope.installationDetailsForm = false;
+        $scope.installationProgress = true;
+        $scope.goBackDisable = true;
+        $("#installProgress").css("width", "0%");
+    };
+
+    function getCreationStatus() {
+
+        url = "/websites/installWordpressStatus";
+
+        var data = {
+            statusFile: statusFile
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.abort === 1) {
+
+                if (response.data.installStatus === 1) {
+
+                    $scope.cyberpanelLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.goBackDisable = false;
+
+                    $("#installProgress").css("width", "100%");
+                    $scope.installPercentage = "100";
+                    $scope.currentStatus = response.data.currentStatus;
+                    $timeout.cancel();
+
+                } else {
+
+                    $scope.cyberpanelLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.goBackDisable = false;
+
+                    $scope.currentStatus = response.data.error_message;
+
+                    $("#installProgress").css("width", "0%");
+                    $scope.installPercentage = "0";
+                    $scope.goBackDisable = false;
+
+                }
+
+            } else {
+                $("#installProgress").css("width", response.data.installationProgress + "%");
+                $scope.installPercentage = response.data.installationProgress;
+                $scope.currentStatus = response.data.currentStatus;
+                $timeout(getCreationStatus, 1000);
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.cyberpanelLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.goBackDisable = false;
+
+        }
+
+
+    }
+
+});
+/* Java script code to cloneWebsite ends here */
+
+
+/* Java script code to syncWebsite */
+app.controller('syncWebsite', function ($scope, $http, $timeout, $window) {
+
+    $scope.cyberpanelLoading = true;
+    $scope.installationDetailsForm = false;
+    $scope.installationProgress = true;
+    $scope.goBackDisable = true;
+
+    var statusFile;
+
+    $scope.startSyncing = function () {
+
+        $scope.cyberpanelLoading = false;
+        $scope.installationDetailsForm = true;
+        $scope.installationProgress = false;
+        $scope.goBackDisable = true;
+
+        $scope.currentStatus = "Cloning started..";
+
+        url = "/websites/startSync";
+
+
+        var data = {
+            childDomain: $("#childDomain").text(),
+            eraseCheck: $scope.eraseCheck,
+            dbCheck: $scope.dbCheck,
+            copyChanged: $scope.copyChanged
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                statusFile = response.data.tempStatusPath;
+                getCreationStatus();
+            } else {
+
+                $scope.cyberpanelLoading = true;
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.goBackDisable = false;
+
+                $scope.currentStatus = response.data.error_message;
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.cyberpanelLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.goBackDisable = false;
+
+        }
+
+    };
+    $scope.goBack = function () {
+        $scope.cyberpanelLoading = true;
+        $scope.installationDetailsForm = false;
+        $scope.installationProgress = true;
+        $scope.goBackDisable = true;
+        $("#installProgress").css("width", "0%");
+    };
+
+    function getCreationStatus() {
+
+        url = "/websites/installWordpressStatus";
+
+        var data = {
+            statusFile: statusFile
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.abort === 1) {
+
+                if (response.data.installStatus === 1) {
+
+                    $scope.cyberpanelLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.goBackDisable = false;
+
+                    $("#installProgress").css("width", "100%");
+                    $scope.installPercentage = "100";
+                    $scope.currentStatus = response.data.currentStatus;
+                    $timeout.cancel();
+
+                } else {
+
+                    $scope.cyberpanelLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.goBackDisable = false;
+
+                    $scope.currentStatus = response.data.error_message;
+
+                    $("#installProgress").css("width", "0%");
+                    $scope.installPercentage = "0";
+                    $scope.goBackDisable = false;
+
+                }
+
+            } else {
+                $("#installProgress").css("width", response.data.installationProgress + "%");
+                $scope.installPercentage = response.data.installationProgress;
+                $scope.currentStatus = response.data.currentStatus;
+                $timeout(getCreationStatus, 1000);
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.cyberpanelLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.goBackDisable = false;
+
+        }
+
+
+    }
+
+});
+/* Java script code to syncWebsite ends here */

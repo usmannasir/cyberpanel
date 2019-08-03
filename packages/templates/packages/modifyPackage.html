@@ -83,6 +83,19 @@
                         </div>
                     </div>
 
+                    <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="allowFullDomain" type="checkbox" value="">
+                                        Allow Creation of Fully Qualified Domain as Child-Domains
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
 
             </div>
 

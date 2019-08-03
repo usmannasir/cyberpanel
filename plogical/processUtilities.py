@@ -270,4 +270,13 @@ class ProcessUtilities(multi.Thread):
             logging.writeToFile(str(msg) + " [popenExecutioner]")
 
 
+    @staticmethod
+    def BuildCommand(path, functionName, parameters):
+        execPath = "python %s %s " % (path, functionName)
+        for key, value in parameters.iteritems():
+            execPath = execPath + ' --%s %s' % (key, value)
+
+        return execPath
+
+
 

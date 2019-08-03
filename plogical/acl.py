@@ -109,6 +109,18 @@ class ACLManager:
         return finalResponse
 
     @staticmethod
+    def checkUserOwnerShip(currentACL, owner, user):
+        if currentACL['admin'] == 1:
+            return 1
+        elif owner == user:
+            return 1
+        elif owner.pk == user.owner:
+            return 1
+        else:
+            return 0
+
+
+    @staticmethod
     def currentContextPermission(currentACL, context):
         try:
             if currentACL['admin'] == 1:

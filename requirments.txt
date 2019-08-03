@@ -35,7 +35,6 @@ MarkupSafe==0.11
 mock==2.0.0
 parsedatetime==2.4
 pbr==4.0.4
-perf==0.1
 pexpect==4.4.0
 prettytable==0.7.2
 psutil==5.4.3

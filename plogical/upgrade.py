@@ -1443,7 +1443,8 @@ class Upgrade:
 
             impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
                        '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
-                       '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf', '/etc/pure-ftpd/db/mysql.conf', '/etc/powerdns/pdns.conf']
+                       '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf', '/etc/pure-ftpd/db/mysql.conf',
+                       '/etc/powerdns/pdns.conf']
 
             for items in impFile:
                 command = 'chmod 600 %s' % (items)
@@ -1477,7 +1478,6 @@ class Upgrade:
             command = 'chmod 644 /etc/postfix/main.cf'
             subprocess.call(command, shell=True)
 
-
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException, msg:
@@ -1497,6 +1497,14 @@ class Upgrade:
                       'lsphp7?-ldap lsphp7?-mysql lsphp7?-opcache lsphp7?-pspell lsphp7?-recode ' \
                       'lsphp7?-sqlite3 lsphp7?-tidy'
             Upgrade.executioner(command, 'Install PHP 73, 0')
+
+        CentOSPath = '/etc/redhat-release'
+
+        if not os.path.exists(CentOSPath):
+            command = 'cp /usr/local/lsws/lsphp71/bin/php /usr/bin/'
+            Upgrade.executioner(command, 'Set default PHP 7.0, 0')
+
+
 
     @staticmethod
     def someDirectories():
@@ -1520,11 +1528,11 @@ class Upgrade:
             if os.path.exists(CentOSPath):
                 path = '/etc/yum.repos.d/dovecot.repo'
                 content = """[dovecot-2.3-latest]
-    name=Dovecot 2.3 CentOS $releasever - $basearch
-    baseurl=http://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch
-    gpgkey=https://repo.dovecot.org/DOVECOT-REPO-GPG
-    gpgcheck=1
-    enabled=1"""
+name=Dovecot 2.3 CentOS $releasever - $basearch
+baseurl=http://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch
+gpgkey=https://repo.dovecot.org/DOVECOT-REPO-GPG
+gpgcheck=1
+enabled=1"""
                 writeToFile = open(path, 'w')
                 writeToFile.write(content)
                 writeToFile.close()
@@ -1580,8 +1588,17 @@ class Upgrade:
                     pass
 
                 try:
-                    command = 'apt upgrade -y'
+                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                    subprocess.call(command, shell=True)
+
+                    command = 'dpkg --configure -a'
                     Upgrade.executioner(command, 0)
+
+                    command = 'apt --fix-broken install -y'
+                    Upgrade.executioner(command, 0)
+
+                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                    subprocess.call(command, shell=True)
                 except:
                     pass
 
@@ -1591,12 +1608,12 @@ class Upgrade:
 
                 data = open(path, 'r').readlines()
 
-                updatePasswords = 1
+                updatePasswords = 0
 
                 writeToFile = open(path, 'w')
                 for items in data:
                     if items.find('default_pass_scheme') > -1:
-                        updatePasswords = 0
+                        updatePasswords = 1
                         continue
                     else:
                         writeToFile.writelines(items)

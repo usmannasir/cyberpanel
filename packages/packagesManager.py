@@ -74,6 +74,12 @@ class PackagesManager:
             except:
                 api = '0'
 
+            try:
+                allowFullDomain = int(data['allowFullDomain'])
+            except:
+                allowFullDomain = 1
+
+
             if packageSpace < 0 or packageBandwidth < 0 or packageDatabases < 0 or ftpAccounts < 0 or emails < 0 or allowedDomains < 0:
                 data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
                 json_data = json.dumps(data_ret)
@@ -86,7 +92,7 @@ class PackagesManager:
 
             package = Package(admin=admin, packageName=packageName, diskSpace=packageSpace,
                               bandwidth=packageBandwidth, ftpAccounts=ftpAccounts, dataBases=packageDatabases,
-                              emailAccounts=emails, allowedDomains=allowedDomains)
+                              emailAccounts=emails, allowedDomains=allowedDomains, allowFullDomain=allowFullDomain)
 
             package.save()
 
@@ -156,9 +162,10 @@ class PackagesManager:
             dataBases = modifyPack.dataBases
             emails = modifyPack.emailAccounts
 
+
             data_ret = {'emails': emails, 'modifyStatus': 1, 'error_message': "None",
                         "diskSpace": diskSpace, "bandwidth": bandwidth, "ftpAccounts": ftpAccounts,
-                        "dataBases": dataBases, "allowedDomains": modifyPack.allowedDomains}
+                        "dataBases": dataBases, "allowedDomains": modifyPack.allowedDomains, 'allowFullDomain': modifyPack.allowFullDomain}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -194,6 +201,13 @@ class PackagesManager:
             modifyPack.dataBases = data['dataBases']
             modifyPack.emailAccounts = data['emails']
             modifyPack.allowedDomains = data['allowedDomains']
+
+            try:
+                modifyPack.allowFullDomain = int(data['allowFullDomain'])
+            except:
+                modifyPack.allowFullDomain = 1
+
+
             modifyPack.save()
 
             data_ret = {'status': 1, 'saveStatus': 1, 'error_message': "None"}

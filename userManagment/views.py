@@ -365,12 +365,10 @@ def submitUserDeletion(request):
 
                 currentACL = ACLManager.loadedACL(userID)
 
-                if accountUsername == 'admin':
-                    data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': 'You can not delete the super user.'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                currentUser = Administrator.objects.get(pk=userID)
+                userInQuestion = Administrator.objects.get(userName=accountUsername)
 
-                if currentACL['admin'] == 1:
+                if ACLManager.checkUserOwnerShip(currentACL, currentUser, userInQuestion):
                     user = Administrator.objects.get(userName=accountUsername)
                     user.delete()
 
@@ -378,7 +376,7 @@ def submitUserDeletion(request):
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
                 else:
-                    data_ret = {'status': 0, 'deleteStatus': 1, 'error_message': 'Not enough privileges.'}
+                    data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': 'Not enough privileges.'}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 

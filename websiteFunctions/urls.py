@@ -96,6 +96,13 @@ urlpatterns = [
     url(r'^(?P<domain>(.*))/sshAccess$', views.sshAccess, name='sshAccess'),
     url(r'^saveSSHAccessChanges$', views.saveSSHAccessChanges, name='saveSSHAccessChanges'),
 
+    ## Staging Enviroment
+
+    url(r'^(?P<domain>(.*))/setupStaging$', views.setupStaging, name='setupStaging'),
+    url(r'^startCloning$', views.startCloning, name='startCloning'),
+    url(r'^(?P<domain>(.*))/(?P<childDomain>(.*))/syncToMaster$', views.syncToMaster, name='syncToMaster'),
+    url(r'^startSync$', views.startSync, name='startSync'),
+
 
     url(r'^(?P<domain>(.*))/gitNotify$', views.gitNotify, name='gitNotify'),
     url(r'^detachRepo$', views.detachRepo, name='detachRepo'),

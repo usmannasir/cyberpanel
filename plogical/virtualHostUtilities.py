@@ -1019,6 +1019,15 @@ class virtualHostUtilities:
             master = Websites.objects.get(domain=masterDomain)
             domainsInPackage = master.package.allowedDomains
 
+            if master.package.allowFullDomain == 0:
+                if virtualHostName.find(masterDomain) > -1:
+                    pass
+                else:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'Fully qualified domain is not allowed in the package. [404]')
+                    return 0, "Fully qualified domain is not allowed in the package."
+
+
             if domainsInPackage == 0:
                 pass
             elif domainsInPackage > master.childdomains_set.all().count():
