@@ -11,14 +11,11 @@ from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
-import shlex
-from plogical.installUtilities import installUtilities
 from django.shortcuts import HttpResponse, render
 from random import randint
 import time
 from plogical.firewallUtilities import FirewallUtilities
 from firewall.models import FirewallRules
-import thread
 from plogical.modSec import modSec
 from plogical.csf import CSF
 from plogical.processUtilities import ProcessUtilities
@@ -1482,8 +1479,17 @@ class FirewallManager:
             protocol = data['protocol']
             ports = data['ports']
 
+            portsPath = '/tmp/ports'
+
+            if os.path.exists(portsPath):
+                os.remove(portsPath)
+
+            writeToFile = open(portsPath, 'w')
+            writeToFile.write(ports)
+            writeToFile.close()
+
             execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
-            execPath = execPath + " modifyPorts --protocol " + protocol + " --ports " + ports
+            execPath = execPath + " modifyPorts --protocol " + protocol + " --ports " + portsPath
             output = ProcessUtilities.outputExecutioner(execPath)
 
             if output.find("1,None") > -1:
