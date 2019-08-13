@@ -724,16 +724,20 @@ class cPanelImporter:
             message = 'Detecting email format from %s.' % (self.backupFile)
             logging.statusWriter(self.logFile, message, 1)
 
-            Format = open(FormatPath, 'r').read()
+            try:
 
-            if Format.find('mdbox') > -1:
-                self.mailFormat = cPanelImporter.MdBox
-                message = 'Mdbox format detected from %s.' % (self.backupFile)
-                logging.statusWriter(self.logFile, message, 1)
-            else:
+                Format = open(FormatPath, 'r').read()
+
+                if Format.find('mdbox') > -1:
+                    self.mailFormat = cPanelImporter.MdBox
+                    message = 'Mdbox format detected from %s.' % (self.backupFile)
+                    logging.statusWriter(self.logFile, message, 1)
+                else:
+                    self.mailFormat = cPanelImporter.MailDir
+                    message = 'Maildir format detected from %s.' % (self.backupFile)
+                    logging.statusWriter(self.logFile, message, 1)
+            except:
                 self.mailFormat = cPanelImporter.MailDir
-                message = 'Maildir format detected from %s.' % (self.backupFile)
-                logging.statusWriter(self.logFile, message, 1)
 
             ####
 

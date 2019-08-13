@@ -1108,3 +1108,179 @@ app.controller('emailForwarding', function ($scope, $http) {
 
 });
 /* Java script for email forwarding */
+
+
+/* Java script code for List Emails */
+
+app.controller('listEmails', function ($scope, $http) {
+
+    $scope.cyberpanelLoading = true;
+    $scope.emailsAccounts = true;
+
+    $scope.populateCurrentRecords = function () {
+        $scope.cyberpanelLoading = false;
+        $scope.emailsAccounts = true;
+
+        url = "/email/fetchEmails";
+
+        var data = {
+            selectedDomain: $scope.selectedDomain,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.status === 1) {
+                $scope.emailsAccounts = false;
+                $scope.records = JSON.parse(response.data.data);
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Emails Successfully Fetched.',
+                    type: 'success'
+                });
+
+
+            } else {
+                $scope.emailsAccounts = true;
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+                $scope.errorMessage = response.data.error_message;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            $scope.emailsAccounts = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+
+    };
+
+    $scope.deleteEmailAccountFinal = function (email) {
+
+        $scope.cyberpanelLoading = false;
+
+        var url = "/email/submitEmailDeletion";
+
+        var data = {
+            email: email,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            if (response.data.deleteEmailStatus === 1) {
+                $scope.populateCurrentRecords();
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Email Successfully deleted.',
+                    type: 'success'
+                });
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.changePasswordInitial = function (email) {
+        $scope.email = email;
+    };
+
+    $scope.changePassword = function () {
+
+        $scope.cyberpanelLoading = false;
+
+
+        var url = "/email/submitPasswordChange";
+
+        var data = {
+            domain: $scope.selectedDomain,
+            email: $scope.email,
+            passwordByPass: $scope.password,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Password Successfully changed.',
+                    type: 'success'
+                });
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+
+
+    };
+});
+
+
+/* Java script code for List Emails Ends here */

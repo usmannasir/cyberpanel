@@ -49,7 +49,7 @@ app.controller('createPackage', function ($scope, $http) {
         var dataBases = $scope.dataBases;
         var emails = $scope.emails;
 
-        if($scope.allowFullDomain === undefined){
+        if ($scope.allowFullDomain === undefined) {
             $scope.allowFullDomain = 0;
         }
 
@@ -240,7 +240,7 @@ app.controller('modifyPackages', function ($scope, $http) {
                     $scope.allowFullDomain = false;
                 }
 
-                $scope.modifyButton = "Save Details"
+                $scope.modifyButton = "Save Details";
 
                 $("#packageDetailsToBeModified").fadeIn();
 
@@ -333,3 +333,199 @@ app.controller('modifyPackages', function ($scope, $http) {
 
 
 /* Java script code to Modify Pacakge ends here */
+
+
+app.controller('listPackageTables', function ($scope, $http) {
+
+    $scope.cyberpanelLoading = true;
+
+    $scope.populateCurrentRecords = function () {
+        $scope.cyberpanelLoading = false;
+
+        url = "/packages/fetchPackagesTable";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.status === 1) {
+
+                $scope.records = JSON.parse(response.data.data);
+
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Packages successfully fetched!',
+                    type: 'success'
+                });
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+
+    };
+    $scope.populateCurrentRecords();
+
+
+    $scope.deletePackageFinal = function (packageToBeDeleted) {
+        $scope.cyberpanelLoading = false;
+
+
+        url = "/packages/submitDelete";
+
+        var data = {
+            packageName: packageToBeDeleted,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.status === 1) {
+                $scope.populateCurrentRecords();
+
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Package successfully deleted!',
+                    type: 'success'
+                });
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.editInitial = function (package, diskSpace, bandwidth,
+                                   emailAccounts, dataBases, ftpAccounts, allowedDomains, allowFullDomain) {
+        $scope.name = package;
+        $scope.diskSpace = diskSpace;
+        $scope.bandwidth = bandwidth;
+        $scope.emails = emailAccounts;
+        $scope.dataBases = dataBases;
+        $scope.ftpAccounts = ftpAccounts;
+        $scope.allowedDomains = allowedDomains;
+        $scope.allowFullDomain = allowFullDomain;
+
+        if (allowFullDomain === 1) {
+            $scope.allowFullDomain = true;
+        } else {
+            $scope.allowFullDomain = false;
+        }
+    };
+
+    $scope.saveChanges = function () {
+
+        var packageName = $scope.name;
+        var diskSpace = $scope.diskSpace;
+        var bandwidth = $scope.bandwidth;
+        var ftpAccounts = $scope.ftpAccounts;
+        var dataBases = $scope.dataBases;
+        var emails = $scope.emails;
+
+        url = "/packages/saveChanges";
+
+        var data = {
+            packageName: packageName,
+            diskSpace: diskSpace,
+            bandwidth: bandwidth,
+            ftpAccounts: ftpAccounts,
+            dataBases: dataBases,
+            emails: emails,
+            allowedDomains: $scope.allowedDomains,
+            allowFullDomain: $scope.allowFullDomain
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.saveStatus === 1) {
+                $scope.populateCurrentRecords();
+
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Package successfully updated!',
+                    type: 'success'
+                });
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+});

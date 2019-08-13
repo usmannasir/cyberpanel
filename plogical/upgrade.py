@@ -597,6 +597,22 @@ class Upgrade:
             except:
                 pass
 
+
+            try:
+                cursor.execute("ALTER TABLE loginSystem_acl ADD COLUMN listUsers INT DEFAULT 0;")
+            except:
+                pass
+
+            try:
+                cursor.execute("ALTER TABLE loginSystem_acl ADD COLUMN listEmails INT DEFAULT 1;")
+            except:
+                pass
+
+            try:
+                cursor.execute("ALTER TABLE loginSystem_acl ADD COLUMN listPackages INT DEFAULT 0;")
+            except:
+                pass
+
             try:
                 connection.close()
             except:
@@ -1078,6 +1094,12 @@ class Upgrade:
   KEY `CLManager_clpackages_owner_id_9898c1e8_fk_packages_package_id` (`owner_id`),
   CONSTRAINT `CLManager_clpackages_owner_id_9898c1e8_fk_packages_package_id` FOREIGN KEY (`owner_id`) REFERENCES `packages_package` (`id`)
 )"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = "ALTER TABLE packages_package ADD COLUMN allowFullDomain INT DEFAULT 1;"
             try:
                 cursor.execute(query)
             except:

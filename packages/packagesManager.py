@@ -218,3 +218,59 @@ class PackagesManager:
             data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+
+    def listPackages(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'listPackages') == 0:
+                return ACLManager.loadError()
+
+            packageList = ACLManager.loadPackages(userID, currentACL)
+            return render(self.request, 'packages/listPackages.html', {"packList": packageList})
+
+        except BaseException, msg:
+            return redirect(loadLoginPage)
+
+    def fetchPackagesTable(self):
+        try:
+            userID = self.request.session['userID']
+
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'listPackages') == 0:
+                return ACLManager.loadErrorJson()
+
+
+            packages = ACLManager.loadPackageObjects(userID, currentACL)
+
+            json_data = "["
+            checker = 0
+
+            for items in packages:
+
+                dic = {'package': items.packageName,
+                       'diskSpace': items.diskSpace,
+                       'bandwidth': items.bandwidth,
+                       'emailAccounts': items.emailAccounts,
+                       'dataBases': items.dataBases,
+                       'ftpAccounts': items.ftpAccounts,
+                       'allowedDomains': items.allowedDomains,
+                       'allowFullDomain': items.allowFullDomain
+                       }
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+            json_data = json_data + ']'
+
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            return HttpResponse(final_json)
+
+        except KeyError:
+            return redirect(loadLoginPage)

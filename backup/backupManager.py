@@ -675,6 +675,9 @@ class BackupManager:
                     command = "mv " + tempCronPath + " " + path
                     ProcessUtilities.executioner(command)
 
+                    command = 'chown root:root %s' % (path)
+                    ProcessUtilities.executioner(command)
+
                     command = "systemctl restart crond"
                     ProcessUtilities.executioner(command)
 
@@ -705,6 +708,9 @@ class BackupManager:
                 writeToFile.close()
 
                 command = "sudo mv " + tempCronPath + " " + path
+                ProcessUtilities.executioner(command)
+
+                command = 'chown root:root %s' % (path)
                 ProcessUtilities.executioner(command)
 
                 command = "sudo systemctl restart crond"
@@ -762,8 +768,10 @@ class BackupManager:
             command = "sudo mv " + tempCronPath + " " + path
             ProcessUtilities.executioner(command)
 
-            command = "sudo systemctl restart crond"
+            command = 'chown root:root %s' % (path)
+            ProcessUtilities.executioner(command)
 
+            command = "sudo systemctl restart crond"
             ProcessUtilities.executioner(command)
 
             destination = dest.objects.get(destLoc=backupDest)

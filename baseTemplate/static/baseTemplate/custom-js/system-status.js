@@ -126,6 +126,9 @@ app.controller('adminController', function($scope,$http,$timeout) {
                 if(!Boolean(response.data.createNewUser)){
                      $('.createNewUser').hide();
                  }
+                if(!Boolean(response.data.listUsers)){
+                     $('.listUsers').hide();
+                 }
                 if(!Boolean(response.data.resellerCenter)){
                      $('.resellerCenter').hide();
                  }
@@ -156,6 +159,10 @@ app.controller('adminController', function($scope,$http,$timeout) {
 
                if(!Boolean(response.data.createPackage)){
                      $('.createPackage').hide();
+                 }
+
+               if(!Boolean(response.data.listPackages)){
+                     $('.listPackages').hide();
                  }
 
                 if(!Boolean(response.data.deletePackage)){
@@ -206,6 +213,10 @@ app.controller('adminController', function($scope,$http,$timeout) {
 
                if(!Boolean(response.data.emailAsWhole)){
                      $('.emailAsWhole').hide();
+                 }
+
+               if(!Boolean(response.data.listEmails)){
+                     $('.listEmails').hide();
                  }
 
                if(!Boolean(response.data.createEmail)){

@@ -286,7 +286,6 @@ app.controller('listWebsites', function ($scope, $http) {
             } else {
                 $("#listFail").fadeIn();
                 $scope.errorMessage = response.data.error_message;
-                console.log(response.data);
 
             }
         }

@@ -319,7 +319,7 @@
                     </div>
                 </div>
                 <a class="header-btn" id="logout-btn" href="{% url 'logout' %}" title="{% trans 'Logout' %}">
-                    <i class="glyph-icon icon-linecons-lock"></i>
+                   <i class="glyph-icon icon-power-off"></i>
                 </a>
 
 
@@ -372,6 +372,9 @@
                                 </li>
                                 <li class="createNewUser"><a href="{% url 'createUser' %}"
                                                              title="{% trans 'Create New User' %}"><span>{% trans "Create New User" %}</span></a>
+                                </li>
+                                <li class="listUsers"><a href="{% url 'listUsers' %}"
+                                       title="{% trans 'List Users' %}"><span>{% trans "List Users" %}</span></a>
                                 </li>
                                 <li><a href="{% url 'modifyUsers' %}"
                                        title="{% trans 'Modify User' %}"><span>{% trans "Modify User" %}</span></a></li>
@@ -438,6 +441,9 @@
                             <ul>
                                 <li class="createPackage"><a href="{% url 'createPackage' %}"
                                                              title="{% trans 'Create Package' %}"><span>{% trans "Create Package" %}</span></a>
+                                </li>
+                                <li class="listPackages"><a href="{% url 'listPackages' %}"
+                                                             title="{% trans 'List Packages' %}"><span>{% trans "List Packages" %}</span></a>
                                 </li>
                                 <li class="deletePackage"><a href="{% url 'deletePackage' %}"
                                                              title="{% trans 'Delete Package' %}"><span>{% trans "Delete Package" %}</span></a>
@@ -510,6 +516,9 @@
                             <ul>
                                 <li class="createEmail"><a href="{% url 'createEmailAccount' %}"
                                                            title="{% trans 'Create Email Account' %}"><span>{% trans "Create Email" %}</span></a>
+                                </li>
+                                <li class="listEmails"><a href="{% url 'listEmails' %}"
+                                                           title="{% trans 'List Emails' %}"><span>{% trans "List Emails" %}</span></a>
                                 </li>
                                 <li class="deleteEmail"><a href="{% url 'deleteEmailAccount' %}"
                                                            title="{% trans 'Delete Email Account' %}"><span>{% trans "Delete Email" %}</span></a>

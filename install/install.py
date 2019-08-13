@@ -952,7 +952,7 @@ class preFlightsChecks:
 
         os.chdir(self.path)
 
-        command = "wget http://cyberpanel.sh/CyberPanel.1.8.8.tar.gz"
+        command = "wget http://cyberpanel.sh/CyberPanel.1.8.9.tar.gz"
         #command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'CyberPanel Download',
@@ -961,7 +961,7 @@ class preFlightsChecks:
         ##
 
         count = 0
-        command = "tar zxf CyberPanel.1.8.8.tar.gz"
+        command = "tar zxf CyberPanel.1.8.9.tar.gz"
         #command = "tar zxf CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'Extract CyberPanel',1, 1, os.EX_OSERR)
@@ -1054,7 +1054,7 @@ class preFlightsChecks:
             path = "/usr/local/CyberCP/version.txt"
             writeToFile = open(path, 'w')
             writeToFile.writelines('1.8\n')
-            writeToFile.writelines('2')
+            writeToFile.writelines('9')
             writeToFile.close()
         except:
             pass
@@ -1361,6 +1361,40 @@ enabled=1"""
                     logging.InstallLog.writeToFile("Dovecot and Dovecot-MySQL successfully installed!")
                     preFlightsChecks.stdOut("Dovecot and Dovecot-MySQL successfully installed!")
                     break
+
+
+            if self.distro != centos:
+                command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
+                subprocess.call(command, shell=True)
+
+                command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
+                subprocess.call(command, shell=True)
+
+                debPath = '/etc/apt/sources.list.d/dovecot.list'
+                writeToFile = open(debPath, 'w')
+                writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
+                writeToFile.close()
+
+                try:
+                    command = 'apt update -y'
+                    subprocess.call(command, shell=True)
+                except:
+                    pass
+
+                try:
+                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                    subprocess.call(command, shell=True)
+
+                    command = 'dpkg --configure -a'
+                    subprocess.call(command, shell=True)
+
+                    command = 'apt --fix-broken install -y'
+                    subprocess.call(command, shell=True)
+
+                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                    subprocess.call(command, shell=True)
+                except:
+                    pass
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [install_postfix_davecot]")

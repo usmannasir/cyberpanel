@@ -519,13 +519,11 @@ class DNSManager:
             delRecord = Records.objects.get(id=id)
 
             admin = Administrator.objects.get(pk=userID)
-            if currentACL['admin'] == 1:
-                pass
-            elif delRecord.domainOwner.admin == admin:
+
+            if ACLManager.checkOwnership(delRecord.domainOwner.name, admin, currentACL) == 1:
                 pass
             else:
-                return ACLManager.loadErrorJson()
-
+                return ACLManager.loadError()
 
 
             delRecord.delete()

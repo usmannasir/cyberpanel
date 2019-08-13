@@ -58,6 +58,26 @@ class MailServerManager:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
 
+
+    def listEmails(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'listEmails') == 0:
+                return ACLManager.loadError()
+
+            if not os.path.exists('/home/cyberpanel/postfix'):
+                return render(self.request, "mailServer/listEmails.html", {"status": 0})
+
+            websitesName = ACLManager.findAllSites(currentACL, userID)
+            websitesName = websitesName + ACLManager.findChildDomains(websitesName)
+
+            return render(self.request, 'mailServer/listEmails.html',
+                          {'websiteList': websitesName, "status": 1})
+        except BaseException, msg:
+            return redirect(loadLoginPage)
+
     def submitEmailCreation(self):
         try:
 
@@ -346,6 +366,53 @@ class MailServerManager:
             data_ret = {'status': 0, 'createStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+
+    def fetchEmails(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'listEmails') == 0:
+                return ACLManager.loadErrorJson('status', 0)
+
+            data = json.loads(self.request.body)
+            selectedDomain = data['selectedDomain']
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(selectedDomain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+            try:
+
+                emailDomain = Domains.objects.get(domain=selectedDomain)
+            except:
+                raise BaseException('No emails exist for this domain.')
+
+            records = emailDomain.eusers_set.all()
+
+            json_data = "["
+            checker = 0
+
+            for items in records:
+                dic = {'email': items.email,
+                       }
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+            json_data = json_data + ']'
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            return HttpResponse(final_json)
+
+        except BaseException, msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
 
     #######
 

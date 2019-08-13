@@ -91,6 +91,17 @@ application.controller('loginSystem', function($scope,$http,$window) {
 
 
         };
+
+    $scope.initiateLogin = function($event){
+    var keyCode = $event.which || $event.keyCode;
+    if (keyCode === 13) {
+        $scope.verifyLoginCredentials();
+
+    }
+
+  };
+
+
 });
 
 
