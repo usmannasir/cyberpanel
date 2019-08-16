@@ -50,146 +50,49 @@ class DNSManager:
             if ACLManager.currentContextPermission(currentACL, 'createNameServer') == 0:
                 return ACLManager.loadErrorJson('NSCreation', 0)
 
+
             domainForNS = data['domainForNS']
             ns1 = data['ns1']
             ns2 = data['ns2']
             firstNSIP = data['firstNSIP']
             secondNSIP = data['secondNSIP']
 
-            if Domains.objects.filter(name=domainForNS).count() == 0:
+            DNS.dnsTemplate(domainForNS, admin)
 
-                try:
-                    pdns = PDNSStatus.objects.get(pk=1)
-                    if pdns.type == 'MASTER':
-                        newZone = Domains(admin=admin, name=domainForNS, type="MASTER")
-                    else:
-                        newZone = Domains(admin=admin, name=domainForNS, type="NATIVE")
-                except:
-                    newZone = Domains(admin=admin, name=domainForNS, type="NATIVE")
+            newZone = Domains.objects.get(name=domainForNS)
 
-                newZone.save()
-
-                content = "ns1." + domainForNS + " hostmaster." + domainForNS + " 1 10800 3600 604800 3600"
-
-                soaRecord = Records(domainOwner=newZone,
-                                    domain_id=newZone.id,
-                                    name=domainForNS,
-                                    type="SOA",
-                                    content=content,
-                                    ttl=3600,
-                                    prio=0,
-                                    disabled=0,
-                                    auth=1)
-                soaRecord.save()
-
-                ## NS1
-
-                record = Records(domainOwner=newZone,
-                                 domain_id=newZone.id,
-                                 name=domainForNS,
-                                 type="NS",
-                                 content=ns1,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                record = Records(domainOwner=newZone,
-                                 domain_id=newZone.id,
-                                 name=ns1,
-                                 type="A",
-                                 content=firstNSIP,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                ## NS2
+            ## NS1
 
 
-                record = Records(domainOwner=newZone,
-                                 domain_id=newZone.id,
-                                 name=domainForNS,
-                                 type="NS",
-                                 content=ns2,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
+            record = Records(domainOwner=newZone,
+                             domain_id=newZone.id,
+                             name=ns1,
+                             type="A",
+                             content=firstNSIP,
+                             ttl=3600,
+                             prio=0,
+                             disabled=0,
+                             auth=1)
+            record.save()
 
-                record = Records(domainOwner=newZone,
-                                 domain_id=newZone.id,
-                                 name=ns2,
-                                 type="A",
-                                 content=secondNSIP,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
+            ## NS2
 
-                final_dic = {'NSCreation': 1, 'error_message': "None"}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-            else:
+            record = Records(domainOwner=newZone,
+                             domain_id=newZone.id,
+                             name=ns2,
+                             type="A",
+                             content=secondNSIP,
+                             ttl=3600,
+                             prio=0,
+                             disabled=0,
+                             auth=1)
+            record.save()
 
-                newZone = Domains.objects.get(name=domainForNS)
-
-                ## NS1
-
-                record = Records(domainOwner=newZone,
-                                 domain_id=newZone.id,
-                                 name=domainForNS,
-                                 type="NS",
-                                 content=ns1,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                record = Records(domainOwner=newZone,
-                                 domain_id=newZone.id,
-                                 name=ns1,
-                                 type="A",
-                                 content=firstNSIP,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                ## NS2
+            final_dic = {'NSCreation': 1, 'error_message': "None"}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
 
 
-                record = Records(domainOwner=newZone,
-                                 domain_id=newZone.id,
-                                 name=domainForNS,
-                                 type="NS",
-                                 content=ns2,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                record = Records(domainOwner=newZone,
-                                 domain_id=newZone.id,
-                                 name=ns2,
-                                 type="A",
-                                 content=secondNSIP,
-                                 ttl=3600,
-                                 prio=0,
-                                 disabled=0,
-                                 auth=1)
-                record.save()
-
-                final_dic = {'NSCreation': 1, 'error_message': "None"}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
         except BaseException, msg:
             final_dic = {'NSCreation': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -273,7 +176,7 @@ class DNSManager:
             currentSelection = data['currentSelection']
 
             admin = Administrator.objects.get(pk=userID)
-            if ACLManager.checkOwnership(zoneDomain, admin, currentACL) == 1:
+            if ACLManager.checkOwnershipZone(zoneDomain, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson()
@@ -350,10 +253,10 @@ class DNSManager:
             ttl = int(data['ttl'])
 
             admin = Administrator.objects.get(pk=userID)
-            if ACLManager.checkOwnership(zoneDomain, admin, currentACL) == 1:
+            if ACLManager.checkOwnershipZone(zoneDomain, admin, currentACL) == 1:
                 pass
             else:
-                return ACLManager.loadError()
+                return ACLManager.loadErrorJson()
 
             zone = Domains.objects.get(name=zoneDomain)
             value = ""
@@ -520,7 +423,7 @@ class DNSManager:
 
             admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnership(delRecord.domainOwner.name, admin, currentACL) == 1:
+            if ACLManager.checkOwnershipZone(delRecord.domainOwner.name, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadError()
@@ -565,7 +468,7 @@ class DNSManager:
                 return ACLManager.loadErrorJson('delete_status', 0)
 
 
-            if ACLManager.checkOwnership(zoneDomain, admin, currentACL) == 1:
+            if ACLManager.checkOwnershipZone(zoneDomain, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadError()

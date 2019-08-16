@@ -444,22 +444,22 @@ class ACLManager:
         domainsList = []
 
         if currentACL['admin'] == 1:
-            domains = Websites.objects.all()
+            domains = Domains.objects.all()
             for items in domains:
-                domainsList.append(items.domain)
+                domainsList.append(items.name)
         else:
             admin = Administrator.objects.get(pk=userID)
-            domains = admin.websites_set.all()
+            domains = admin.domains_set.all()
 
             for items in domains:
-                domainsList.append(items.domain)
+                domainsList.append(items.name)
 
             admins = Administrator.objects.filter(owner=admin.pk)
 
             for items in admins:
-                doms = items.websites_set.all()
+                doms = items.domains_set.all()
                 for dom in doms:
-                    domainsList.append(dom.domain)
+                    domainsList.append(dom.name)
 
         return domainsList
 
@@ -489,6 +489,19 @@ class ACLManager:
                     return 1
                 else:
                     return 0
+
+    @staticmethod
+    def checkOwnershipZone(domain, admin, currentACL):
+        domain = Domains.objects.get(name=domain)
+
+        if currentACL['admin'] == 1:
+            return 1
+        elif domain.admin == admin:
+            return 1
+        elif domain.admin.owner == admin.pk:
+            return 1
+        else:
+            return 0
 
     @staticmethod
     def executeCall(command):

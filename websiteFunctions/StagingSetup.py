@@ -97,6 +97,8 @@ class StagingSetup(multi.Thread):
 
             command = "sed -i 's/%s/%s/g' %s" % (masterDomain, domain, databasePath)
             ProcessUtilities.executioner(command, 'cyberpanel')
+            command = "sed -i 's/%s/%s/g' %s" % ('https', 'http', databasePath)
+            ProcessUtilities.executioner(command, 'cyberpanel')
 
             if not mysqlUtilities.restoreDatabaseBackup(dbNameRestore, '/home/cyberpanel', None, 1, dbName):
                 try:
