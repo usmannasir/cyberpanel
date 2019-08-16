@@ -18,7 +18,12 @@ def loadUserHome(request):
         val = request.session['userID']
         try:
             admin = Administrator.objects.get(pk=val)
-            return render(request, 'userManagment/index.html', {"type": admin.type})
+            currentACL = ACLManager.loadedACL(val)
+            if currentACL['admin'] == 1:
+                listUsers = 1
+            else:
+                listUsers = currentACL['listUsers']
+            return render(request, 'userManagment/index.html', {"type": admin.type, 'listUsers': listUsers})
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
