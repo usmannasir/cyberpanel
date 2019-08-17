@@ -539,10 +539,18 @@ class cPanelImporter:
                                     RecordsData[4] = ipAddress
 
                                 if RecordsData[0].find(topLevelDomain) > -1:
-                                    DNS.createDNSRecord(zone, RecordsData[0].replace('.', ''), RecordsData[3], RecordsData[4], 0, RecordsData[1])
+                                    if RecordsData[3] == 'MX':
+                                        DNS.createDNSRecord(zone, RecordsData[0].rstrip('.'), RecordsData[3],RecordsData[5].rstrip('.').rstrip('.\n'), int(RecordsData[4]), RecordsData[1])
+                                    else:
+                                        DNS.createDNSRecord(zone, RecordsData[0].rstrip('.'), RecordsData[3], RecordsData[4].rstrip('.').rstrip('.\n'), 0, RecordsData[1])
                                 else:
-                                    DNS.createDNSRecord(zone, RecordsData[0] + '.' + topLevelDomain , RecordsData[3], RecordsData[4], 0,
-                                                        RecordsData[1])
+                                    if RecordsData[3] == 'MX':
+                                        DNS.createDNSRecord(zone, RecordsData[0] + '.' + topLevelDomain, RecordsData[3],
+                                                            RecordsData[5].rstrip('.').rstrip('.\n'), RecordsData[4],
+                                                            RecordsData[1])
+                                    else:
+                                        DNS.createDNSRecord(zone, RecordsData[0] + '.' + topLevelDomain , RecordsData[3], RecordsData[4].rstrip('.').rstrip('.\n'), 0,
+                                                            RecordsData[1])
                     except BaseException, msg:
                         message = 'Failed while creating DNS entry for %s, error message: %s.' % (topLevelDomain, str(msg))
                         logging.statusWriter(self.logFile, message, 1)

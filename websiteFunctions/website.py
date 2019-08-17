@@ -2049,8 +2049,11 @@ IdentityFile /home/%s/.ssh/%s
                 state = "Suspended"
             else:
                 state = "Active"
+
+            diskUsed = "%sMB" % str(
+                virtualHostUtilities.getDiskUsage("/home/" + items.domain, items.package.diskSpace)[0])
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
-                   'admin': items.admin.userName, 'package': items.package.packageName, 'state': state}
+                   'admin': items.admin.userName, 'package': items.package.packageName, 'state': state, 'diskUsed': diskUsed}
 
             if checker == 0:
                 json_data = json_data + json.dumps(dic)
