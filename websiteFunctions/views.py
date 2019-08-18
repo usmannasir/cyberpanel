@@ -125,6 +125,14 @@ def getFurtherAccounts(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def fetchWebsitesList(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.fetchWebsitesList(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def submitWebsiteDeletion(request):
     try:
         userID = request.session['userID']

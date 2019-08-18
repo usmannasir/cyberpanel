@@ -334,6 +334,86 @@ class WebsiteManager:
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
+
+    def fetchWebsitesList(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            pageNumber = int(data['page'])
+            recordsToShow = int(data['recordsToShow'])
+
+            endPageNumber, finalPageNumber = self.recordsPointer(pageNumber, recordsToShow)
+            websites = ACLManager.findWebsiteObjects(currentACL, userID)
+            pagination = self.getPagination(len(websites), recordsToShow)
+            json_data = self.findWebsitesListJson(websites[finalPageNumber:endPageNumber])
+
+            final_dic = {'status': 1, 'listWebSiteStatus': 1, 'error_message': "None", "data": json_data,
+                         'pagination': pagination}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+        except BaseException, msg:
+            dic = {'status': 1, 'listWebSiteStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
+
+    def findWebsitesListJson(self, websites):
+
+        json_data = "["
+        checker = 0
+
+        try:
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile("Failed to read machine IP, error:" + str(msg))
+            ipAddress = "192.168.100.1"
+
+        for items in websites:
+            if items.state == 0:
+                state = "Suspended"
+            else:
+                state = "Active"
+
+            diskUsed = "%sMB" % str(virtualHostUtilities.getDiskUsage("/home/" + items.domain, items.package.diskSpace)[0])
+
+            dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
+                   'admin': items.admin.userName, 'package': items.package.packageName, 'state': state, 'diskUsed': diskUsed}
+
+            if checker == 0:
+                json_data = json_data + json.dumps(dic)
+                checker = 1
+            else:
+                json_data = json_data + ',' + json.dumps(dic)
+
+        json_data = json_data + ']'
+
+        return json_data
+
+    def recordsPointer(self, page, toShow):
+        finalPageNumber = ((page * toShow)) - toShow
+        endPageNumber = finalPageNumber + toShow
+        return endPageNumber, finalPageNumber
+
+    def getPagination(self, records, toShow):
+        pages = float(records) / float(toShow)
+
+        pagination = []
+        counter = 1
+
+        if pages <= 1.0:
+            pages = 1
+            pagination.append(counter)
+        else:
+            pages = ceil(pages)
+            finalPages = int(pages) + 1
+
+            for i in range(1, finalPages):
+                pagination.append(counter)
+                counter = counter + 1
+
+        return pagination
+
     def submitWebsiteDeletion(self, userID=None, data=None):
         try:
 
