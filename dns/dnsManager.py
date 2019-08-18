@@ -356,7 +356,7 @@ class DNSManager:
 
                 recordContentSOA = data['recordContentSOA']
 
-                DNS.createDNSRecord(zone, value, recordType, recordContentSOA, 0, ttl)
+                DNS.createDNSRecord(zone, recordName, recordType, recordContentSOA, 0, ttl)
 
             elif recordType == "NS":
 
