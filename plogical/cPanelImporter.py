@@ -269,7 +269,7 @@ class cPanelImporter:
             movePath = '%s/homedir/%s' % (
             CompletPathToExtractedArchive, self.documentRoot.replace(self.homeDir, '', 1).replace('/', ''))
 
-            shutil.copytree(movePath, nowPath)
+            shutil.copytree(movePath, nowPath, symlinks=True)
 
             command = 'chown -R %s:%s %s' % (externalApp, externalApp, nowPath)
             ProcessUtilities.normalExecutioner(command)
