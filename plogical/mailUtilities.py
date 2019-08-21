@@ -110,7 +110,7 @@ class mailUtilities:
 
             ## After effects
 
-            execPath = "sudo python /usr/local/CyberCP/plogical/mailUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/mailUtilities.py"
             execPath = execPath + " AfterEffects --domain " + domain
             ProcessUtilities.executioner(execPath, 'lscpd')
 

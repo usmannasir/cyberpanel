@@ -152,6 +152,14 @@ def submitZoneDeletion(request):
         return redirect(loadLoginPage)
 
 
+def configureDefaultNameServers(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.configureDefaultNameServers(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 
 

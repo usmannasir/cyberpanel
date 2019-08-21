@@ -489,3 +489,21 @@ class DNSManager:
             final_dic = {'delete_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+    def configureDefaultNameServers(self, request=None, userID=None):
+
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'deleteZone') == 0:
+                return ACLManager.loadError()
+
+            if not os.path.exists('/home/cyberpanel/powerdns'):
+                return render(request, 'dns/addDeleteDNSRecords.html', {"status": 0})
+
+            domainsList = ACLManager.findAllDomains(currentACL, userID)
+
+            return render(request, 'dns/configureDefaultNameServers.html', {"domainsList": domainsList, "status": 1})
+
+        except BaseException, msg:
+            return HttpResponse(str(msg))

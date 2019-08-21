@@ -21,7 +21,7 @@ import MySQLdb.cursors as cursors
 import shlex
 import subprocess
 from databases.models import Databases
-from websiteFunctions.models import Websites
+from websiteFunctions.models import Websites, ChildDomains as CDomains
 from plogical.vhost import vhost
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.mailUtilities import mailUtilities
@@ -459,6 +459,11 @@ class cPanelImporter:
             logging.statusWriter(self.logFile, message, 1)
             return 0
 
+    def createDummyChild(self, childDomain):
+        path = '/home/%s/public_html/%s' % (self.mainDomain, childDomain)
+        virtualHostUtilities.createDomain(self.mainDomain, childDomain, self.PHPVersion, path, 0, 0,
+                                                   0, 'admin', 0)
+
     def CreateDNSRecords(self):
         try:
 
@@ -717,6 +722,15 @@ class cPanelImporter:
     def DeleteSite(self):
         vhost.deleteVirtualHostConfigurations(self.mainDomain)
 
+    def checkIfExists(self, virtualHostName):
+        if Websites.objects.filter(domain=virtualHostName).count() > 0:
+            return 1
+
+        if CDomains.objects.filter(domain=virtualHostName).count() > 0:
+            return 1
+
+        return 0
+
     def RestoreEmails(self):
         try:
 
@@ -757,51 +771,59 @@ class cPanelImporter:
                         continue
                     if items.find('.') > -1:
                         for it in os.listdir(FinalMailDomainPath):
-                            mailUtilities.createEmailAccount(items, it, 'cyberpanel')
-                            finalEmailUsername = it + "@" + items
-                            message = 'Starting restore for %s.' % (finalEmailUsername)
-                            logging.statusWriter(self.logFile, message, 1)
-                            eUser = EUsers.objects.get(email=finalEmailUsername)
+                            try:
+                                if self.checkIfExists(items) == 0:
+                                    self.createDummyChild(items)
+
+                                mailUtilities.createEmailAccount(items, it, 'cyberpanel')
+                                finalEmailUsername = it + "@" + items
+                                message = 'Starting restore for %s.' % (finalEmailUsername)
+                                logging.statusWriter(self.logFile, message, 1)
+                                eUser = EUsers.objects.get(email=finalEmailUsername)
 
 
-                            if self.mailFormat == cPanelImporter.MailDir:
-                                eUser.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (items, it)
-                                MailPath = '/home/vmail/%s/%s/Maildir/' % (items, it)
+                                if self.mailFormat == cPanelImporter.MailDir:
+                                    eUser.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (items, it)
+                                    MailPath = '/home/vmail/%s/%s/Maildir/' % (items, it)
 
-                                command = 'mkdir -p %s' % (MailPath)
-                                ProcessUtilities.normalExecutioner(command)
+                                    command = 'mkdir -p %s' % (MailPath)
+                                    ProcessUtilities.normalExecutioner(command)
 
-                                MailPathInBackup = '%s/%s' % (FinalMailDomainPath, it)
+                                    MailPathInBackup = '%s/%s' % (FinalMailDomainPath, it)
 
-                                command = 'cp -R %s/* %s' % (MailPathInBackup, MailPath)
-                                subprocess.call(command, shell=True)
+                                    command = 'cp -R %s/* %s' % (MailPathInBackup, MailPath)
+                                    subprocess.call(command, shell=True)
 
-                            else:
-                                eUser.mail = 'mdbox:/home/vmail/%s/%s/Mdbox' % (items, it)
-                                MailPath = '/home/vmail/%s/%s/Mdbox/' % (items, it)
+                                else:
+                                    eUser.mail = 'mdbox:/home/vmail/%s/%s/Mdbox' % (items, it)
+                                    MailPath = '/home/vmail/%s/%s/Mdbox/' % (items, it)
 
-                                command = 'mkdir -p %s' % (MailPath)
-                                ProcessUtilities.normalExecutioner(command)
+                                    command = 'mkdir -p %s' % (MailPath)
+                                    ProcessUtilities.normalExecutioner(command)
 
-                                MailPathInBackup = '%s/%s' % (FinalMailDomainPath, it)
+                                    MailPathInBackup = '%s/%s' % (FinalMailDomainPath, it)
 
-                                command = 'cp -R %s/* %s' % (MailPathInBackup, MailPath)
-                                subprocess.call(command, shell=True)
+                                    command = 'cp -R %s/* %s' % (MailPathInBackup, MailPath)
+                                    subprocess.call(command, shell=True)
 
-                            ## Also update password
+                                ## Also update password
 
-                            PasswordPath = '%s/homedir/etc/%s/shadow' % (CompletPathToExtractedArchive, items)
-                            PasswordData = open(PasswordPath, 'r').readlines()
+                                PasswordPath = '%s/homedir/etc/%s/shadow' % (CompletPathToExtractedArchive, items)
+                                PasswordData = open(PasswordPath, 'r').readlines()
 
-                            for i in PasswordData:
-                                if i.find(it) > -1:
-                                    finalPassword = '%s%s' % ('{CRYPT}', i.split(':')[1])
-                                    eUser.password = finalPassword
+                                for i in PasswordData:
+                                    if i.find(it) > -1:
+                                        finalPassword = '%s%s' % ('{CRYPT}', i.split(':')[1])
+                                        eUser.password = finalPassword
 
-                            eUser.save()
+                                eUser.save()
 
-                            message = 'Restore completed for %s.' % (finalEmailUsername)
-                            logging.statusWriter(self.logFile, message, 1)
+                                message = 'Restore completed for %s.' % (finalEmailUsername)
+                                logging.statusWriter(self.logFile, message, 1)
+                            except BaseException, msg:
+                                message = 'Failed to restore emails from archive file %s, For domain: %s. error message: %s. [ExtractBackup]' % (
+                                    self.backupFile, items, str(msg))
+                                logging.statusWriter(self.logFile, message, 1)
 
             command = 'chown -R vmail:vmail /home/vmail'
             ProcessUtilities.normalExecutioner(command)

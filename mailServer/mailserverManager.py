@@ -449,10 +449,16 @@ class MailServerManager:
             emailDB = EUsers.objects.get(email=email)
 
             admin = Administrator.objects.get(pk=userID)
-            if ACLManager.checkOwnership(emailDB.emailOwner.domainOwner.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadErrorJson()
+            try:
+                if ACLManager.checkOwnership(emailDB.emailOwner.domainOwner.domain, admin, currentACL) == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson()
+            except:
+                if ACLManager.checkOwnership(emailDB.emailOwner.childOwner.domain, admin, currentACL) == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson()
 
             CentOSPath = '/etc/redhat-release'
             if os.path.exists(CentOSPath):
