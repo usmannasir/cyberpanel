@@ -161,6 +161,15 @@ def configureDefaultNameServers(request):
         return redirect(loadLoginPage)
 
 
+def saveNSConfigurations(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.saveNSConfigurations(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 
 
 

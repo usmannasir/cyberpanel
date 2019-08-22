@@ -99,7 +99,6 @@
     <link rel="stylesheet" type="text/css" href="https://www.jsdelivr.com/package/npm/fontawesome">
 
 
-
     <script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-core.min.js' %}"></script>
     <script type="text/javascript">
         $(window).load(function () {
@@ -319,7 +318,7 @@
                     </div>
                 </div>
                 <a class="header-btn" id="logout-btn" href="{% url 'logout' %}" title="{% trans 'Logout' %}">
-                   <i class="glyph-icon icon-power-off"></i>
+                    <i class="glyph-icon icon-power-off"></i>
                 </a>
 
 
@@ -374,7 +373,7 @@
                                                              title="{% trans 'Create New User' %}"><span>{% trans "Create New User" %}</span></a>
                                 </li>
                                 <li class="listUsers"><a href="{% url 'listUsers' %}"
-                                       title="{% trans 'List Users' %}"><span>{% trans "List Users" %}</span></a>
+                                                         title="{% trans 'List Users' %}"><span>{% trans "List Users" %}</span></a>
                                 </li>
                                 <li><a href="{% url 'modifyUsers' %}"
                                        title="{% trans 'Modify User' %}"><span>{% trans "Modify User" %}</span></a></li>
@@ -437,7 +436,7 @@
                                                              title="{% trans 'Create Package' %}"><span>{% trans "Create Package" %}</span></a>
                                 </li>
                                 <li class="listPackages"><a href="{% url 'listPackages' %}"
-                                                             title="{% trans 'List Packages' %}"><span>{% trans "List Packages" %}</span></a>
+                                                            title="{% trans 'List Packages' %}"><span>{% trans "List Packages" %}</span></a>
                                 </li>
                                 <li class="deletePackage"><a href="{% url 'deletePackage' %}"
                                                              title="{% trans 'Delete Package' %}"><span>{% trans "Delete Package" %}</span></a>
@@ -486,8 +485,8 @@
                                 <li class="createNameServer"><a href="{% url 'createNameserver' %}"
                                                                 title="{% trans 'Create Nameserver' %}"><span>{% trans "Create Nameserver" %}</span></a>
                                 </li>
-                                <!--<li class="createNameServer"><a href="{% url 'configureDefaultNameServers' %}"
-                                                                title="{% trans 'Configure Default Nameservers' %}"><span>{% trans "CConfigure Default Nameservers" %}</span></a>-->
+                                <li class="serverACL"><a href="{% url 'configureDefaultNameServers' %}"
+                                                                title="{% trans 'Configure Default Nameservers' %}"><span>{% trans "Config Default Nameservers" %}</span></a>
                                 </li>
                                 <li class="createDNSZone"><a href="{% url 'createDNSZone' %}"
                                                              title="{% trans 'Create DNS Zone' %}"><span>{% trans "Create DNS Zone" %}</span></a>
@@ -515,7 +514,7 @@
                                                            title="{% trans 'Create Email Account' %}"><span>{% trans "Create Email" %}</span></a>
                                 </li>
                                 <li class="listEmails"><a href="{% url 'listEmails' %}"
-                                                           title="{% trans 'List Emails' %}"><span>{% trans "List Emails" %}</span></a>
+                                                          title="{% trans 'List Emails' %}"><span>{% trans "List Emails" %}</span></a>
                                 </li>
                                 <li class="deleteEmail"><a href="{% url 'deleteEmailAccount' %}"
                                                            title="{% trans 'Delete Email Account' %}"><span>{% trans "Delete Email" %}</span></a>

@@ -22,6 +22,7 @@ class DNS:
     nsd_base = "/etc/nsd/nsd.conf"
     zones_base_dir = "/usr/local/lsws/conf/zones/"
     create_zone_dir = "/usr/local/lsws/conf/zones"
+    defaultNameServersPath = '/home/cyberpanel/defaultNameservers'
 
     ## DNS Functions
 
@@ -82,27 +83,42 @@ class DNS:
                                          auth=1)
                         record.save()
 
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=topLevelDomain,
-                                         type="NS",
-                                         content='ns1.%s' % (topLevelDomain),
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
+                        if os.path.exists(DNS.defaultNameServersPath):
+                            defaultNS = open(DNS.defaultNameServersPath, 'r').readlines()
 
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=topLevelDomain,
-                                         type="NS",
-                                         content='ns2.%s' % (topLevelDomain),
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
+                            for items in defaultNS:
+                                record = Records(domainOwner=zone,
+                                                 domain_id=zone.id,
+                                                 name=topLevelDomain,
+                                                 type="NS",
+                                                 content=items,
+                                                 ttl=3600,
+                                                 prio=0,
+                                                 disabled=0,
+                                                 auth=1)
+                                record.save()
+                        else:
+                            record = Records(domainOwner=zone,
+                                             domain_id=zone.id,
+                                             name=topLevelDomain,
+                                             type="NS",
+                                             content='ns1.%s' % (topLevelDomain),
+                                             ttl=3600,
+                                             prio=0,
+                                             disabled=0,
+                                             auth=1)
+                            record.save()
+
+                            record = Records(domainOwner=zone,
+                                             domain_id=zone.id,
+                                             name=topLevelDomain,
+                                             type="NS",
+                                             content='ns2.%s' % (topLevelDomain),
+                                             ttl=3600,
+                                             prio=0,
+                                             disabled=0,
+                                             auth=1)
+                            record.save()
 
                     content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
 

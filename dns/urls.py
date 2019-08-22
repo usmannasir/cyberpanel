@@ -16,4 +16,5 @@ urlpatterns = [
     url(r'^deleteDNSRecord',views.deleteDNSRecord,name='deleteDNSRecord'),
     url(r'^deleteDNSZone',views.deleteDNSZone,name='deleteDNSZone'),
     url(r'^submitZoneDeletion',views.submitZoneDeletion,name='submitZoneDeletion'),
+    url(r'^saveNSConfigurations$', views.saveNSConfigurations, name='saveNSConfigurations'),
 ]

@@ -18,6 +18,7 @@ from plogical.acl import ACLManager
 from manageServices.models import PDNSStatus
 
 class DNSManager:
+    defaultNameServersPath = '/home/cyberpanel/defaultNameservers'
 
     def loadDNSHome(self, request = None, userID = None):
         try:
@@ -495,15 +496,79 @@ class DNSManager:
         try:
             currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'deleteZone') == 0:
+            if currentACL['admin'] == 1:
+                pass
+            else:
                 return ACLManager.loadError()
 
             if not os.path.exists('/home/cyberpanel/powerdns'):
                 return render(request, 'dns/addDeleteDNSRecords.html', {"status": 0})
 
-            domainsList = ACLManager.findAllDomains(currentACL, userID)
+            data = {}
+            data['domainsList'] = ACLManager.findAllDomains(currentACL, userID)
+            data['status'] = 1
 
-            return render(request, 'dns/configureDefaultNameServers.html', {"domainsList": domainsList, "status": 1})
+            if os.path.exists(DNSManager.defaultNameServersPath):
+                nsData = open(DNSManager.defaultNameServersPath, 'r').readlines()
+                try:
+                    data['firstNS'] = nsData[0]
+                except:
+                    pass
+                try:
+                    data['secondNS'] = nsData[1]
+                except:
+                    pass
+                try:
+                    data['thirdNS'] = nsData[2]
+                except:
+                    pass
+                try:
+                    data['forthNS'] = nsData[3]
+                except:
+                    pass
+
+            return render(request, 'dns/configureDefaultNameServers.html', data)
 
         except BaseException, msg:
             return HttpResponse(str(msg))
+
+
+    def saveNSConfigurations(self, userID = None, data = None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            nsContent = ''
+
+            try:
+                nsContent = '%s\n%s\n%s\n%s\n' % (data['firstNS'], data['secondNS'], data['thirdNS'], data['forthNS'])
+            except:
+                try:
+                    nsContent = '%s\n%s\n%s\n' % (data['firstNS'], data['secondNS'], data['thirdNS'])
+                except:
+                    try:
+                        nsContent = '%s\n%s\n' % (data['firstNS'], data['secondNS'])
+                    except:
+                        try:
+                            nsContent = '%s\n' % (data['firstNS'])
+                        except:
+                            pass
+
+
+            writeToFile = open(DNSManager.defaultNameServersPath, 'w')
+            writeToFile.write(nsContent.rstrip('\n'))
+            writeToFile.close()
+
+
+            final_dic = {'status': 1, 'error_message': "None"}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException, msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
