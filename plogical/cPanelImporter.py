@@ -784,26 +784,32 @@ class cPanelImporter:
 
                                 if self.mailFormat == cPanelImporter.MailDir:
                                     eUser.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (items, it)
-                                    MailPath = '/home/vmail/%s/%s/Maildir/' % (items, it)
+                                    MailPath = '/home/vmail/%s/%s' % (items, it)
 
                                     command = 'mkdir -p %s' % (MailPath)
                                     ProcessUtilities.normalExecutioner(command)
 
+                                    command = 'rm -rf %s/Maildir' % (MailPath)
+                                    ProcessUtilities.normalExecutioner(command)
+
                                     MailPathInBackup = '%s/%s' % (FinalMailDomainPath, it)
 
-                                    command = 'cp -R %s/* %s' % (MailPathInBackup, MailPath)
+                                    command = 'mv %s %s/Maildir' % (MailPathInBackup, MailPath)
                                     subprocess.call(command, shell=True)
 
                                 else:
                                     eUser.mail = 'mdbox:/home/vmail/%s/%s/Mdbox' % (items, it)
-                                    MailPath = '/home/vmail/%s/%s/Mdbox/' % (items, it)
+                                    MailPath = '/home/vmail/%s/%s' % (items, it)
 
                                     command = 'mkdir -p %s' % (MailPath)
                                     ProcessUtilities.normalExecutioner(command)
 
+                                    command = 'rm -rf %s/Mdbox' % (MailPath)
+                                    ProcessUtilities.normalExecutioner(command)
+
                                     MailPathInBackup = '%s/%s' % (FinalMailDomainPath, it)
 
-                                    command = 'cp -R %s/* %s' % (MailPathInBackup, MailPath)
+                                    command = 'mv %s %s/Mdbox' % (MailPathInBackup, MailPath)
                                     subprocess.call(command, shell=True)
 
                                 ## Also update password

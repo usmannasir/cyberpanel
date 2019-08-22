@@ -87,7 +87,6 @@ class backupSchedule:
                             os.remove(pathToFile)
                         except:
                             pass
-                        logging.CyberCPLogFileWriter.writeToFile(tempStoragePath)
                         return 1, tempStoragePath
 
                     elif status.find("[5009]") > -1:
