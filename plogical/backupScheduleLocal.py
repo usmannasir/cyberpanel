@@ -2,8 +2,11 @@ import CyberCPLogFileWriter as logging
 import os
 import time
 from backupSchedule import backupSchedule
+from plogical.processUtilities import ProcessUtilities
+from re import match,I,M
 
 class backupScheduleLocal:
+    localBackupPath = '/home/cyberpanel/localBackupPath'
 
     @staticmethod
     def prepare():
@@ -20,7 +23,20 @@ class backupScheduleLocal:
             backupSchedule.remoteBackupLogging(backupLogPath, "")
 
             for virtualHost in os.listdir("/home"):
-                backupSchedule.createLocalBackup(virtualHost, backupLogPath)
+                if match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', virtualHost, M | I):
+                    retValues = backupSchedule.createLocalBackup(virtualHost, backupLogPath)
+
+                    if os.path.exists(backupScheduleLocal.localBackupPath):
+                        backupPath = retValues[1] + ".tar.gz"
+                        localBackupPath = '%s/%s' % (open(backupScheduleLocal.localBackupPath, 'r').read().rstrip('/'), time.strftime("%b-%d-%Y"))
+
+                        command = 'mkdir -p %s' % (localBackupPath)
+                        ProcessUtilities.normalExecutioner(command)
+
+                        command = 'mv %s %s' % (backupPath, localBackupPath)
+                        ProcessUtilities.normalExecutioner(command)
+
+
 
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
                 backupSchedule.remoteBackupLogging(backupLogPath, "")

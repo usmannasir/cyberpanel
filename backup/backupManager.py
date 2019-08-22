@@ -24,6 +24,7 @@ from plogical.processUtilities import ProcessUtilities
 from multiprocessing import Process
 
 class BackupManager:
+    localBackupPath = '/home/cyberpanel/localBackupPath'
     def __init__(self, domain = None, childDomain = None):
         self.domain = domain
         self.childDomain = childDomain
@@ -681,6 +682,12 @@ class BackupManager:
                     command = "systemctl restart crond"
                     ProcessUtilities.executioner(command)
 
+                    ## Set local path for backup
+
+                    writeToFile = open(BackupManager.localBackupPath, 'w')
+                    writeToFile.write(data['localPath'])
+                    writeToFile.close()
+
                     destination = dest.objects.get(destLoc=backupDest)
                     newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
                     newSchedule.save()
@@ -719,6 +726,12 @@ class BackupManager:
                 destination = dest.objects.get(destLoc=backupDest)
                 newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
                 newSchedule.save()
+
+                ## Set local path for backup
+
+                writeToFile = open(BackupManager.localBackupPath, 'w')
+                writeToFile.write(data['localPath'])
+                writeToFile.close()
 
                 final_json = json.dumps({'scheduleStatus': 1, 'error_message': "None"})
                 return HttpResponse(final_json)

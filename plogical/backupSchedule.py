@@ -14,12 +14,11 @@ from backupUtilities import backupUtilities
 from re import match,I,M
 from websiteFunctions.models import Websites, Backups
 from plogical.processUtilities import ProcessUtilities
-from multiprocessing import Process
-import plogical.backupUtilities as backupUtil
 from random import randint
 import json, requests
 
 class backupSchedule:
+
 
     @staticmethod
     def remoteBackupLogging(fileName, message):
@@ -88,6 +87,7 @@ class backupSchedule:
                             os.remove(pathToFile)
                         except:
                             pass
+                        logging.CyberCPLogFileWriter.writeToFile(tempStoragePath)
                         return 1, tempStoragePath
 
                     elif status.find("[5009]") > -1:
@@ -117,7 +117,7 @@ class backupSchedule:
                         return 0, tempStoragePath
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [119:startBackup]")
-            return 0, "None"
+            return 0, str(msg)
 
     @staticmethod
     def createBackup(virtualHost, ipAddress, backupLogPath , port):
