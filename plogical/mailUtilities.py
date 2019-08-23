@@ -112,7 +112,12 @@ class mailUtilities:
 
             execPath = "/usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/mailUtilities.py"
             execPath = execPath + " AfterEffects --domain " + domain
-            ProcessUtilities.executioner(execPath, 'lscpd')
+
+            if os.getlogin() == 'root':
+                ## This is the case when cPanel Importer is running and token is not present in enviroment.
+                ProcessUtilities.normalExecutioner(execPath)
+            else:
+                ProcessUtilities.executioner(execPath, 'lscpd')
 
             ## After effects ends
 
