@@ -2344,6 +2344,8 @@ enabled=1"""
 
             #############
 
+
+
             count = 0
 
             while (1):
@@ -2371,6 +2373,24 @@ enabled=1"""
                                   'rainlooop data folder',
                                   1, 0, os.EX_OSERR)
 
+
+            ### Enable sub-folders
+
+            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
+            preFlightsChecks.call(command, self.distro, '[downoad_and_install_rainloop]',
+                                  'rainlooop data folder',
+                                  1, 0, os.EX_OSERR)
+
+            labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+
+            labsData = """[labs]
+imap_folder_list_limit = 0
+"""
+
+            writeToFile = open(labsPath, 'w')
+            writeToFile.write(labsData)
+            writeToFile.close()
+
             iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
 
             path = "/usr/local/CyberCP/public/rainloop/rainloop/v/%s/include.php" % (iPath[0])
@@ -2386,8 +2406,6 @@ enabled=1"""
                     writeToFile.writelines(items)
 
             writeToFile.close()
-
-
 
 
         except OSError, msg:
