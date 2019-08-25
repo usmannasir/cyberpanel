@@ -617,6 +617,8 @@ class cPanelImporter:
             DatabasesPath = '%s/mysql' % (CompletPathToExtractedArchive)
 
             for items in os.listdir(DatabasesPath):
+                if items.find('roundcube') > -1:
+                    continue
                 if items.endswith('.sql'):
                     message = 'Restoring MySQL dump for %s.' % (items.replace('.sql', ''))
                     logging.statusWriter(self.logFile, message, 1)

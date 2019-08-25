@@ -1001,6 +1001,7 @@ def installExtensions(request):
 
             phpExtension.save()
 
+
             ## non-active packages
 
 
@@ -1063,6 +1064,13 @@ def installExtensions(request):
             phpExtension = installedPackages(phpVers=php56,
                                              extensionName="lsphp56-xcache-admin",
                                              description="XCache Administration",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-pecl-imagick",
+                                             description="Extension to create and modify images using ImageMagick",
                                              status=0)
 
             phpExtension.save()
