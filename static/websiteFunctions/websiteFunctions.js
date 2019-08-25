@@ -231,37 +231,10 @@ $("#listFail").hide();
 app.controller('listWebsites', function ($scope, $http) {
 
 
-    url = "/websites/submitWebsiteListing";
+    $scope.currentPage = 1;
+    $scope.recordsToShow = 10;
 
-    var data = {page: 1};
-
-    var config = {
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken')
-        }
-    };
-
-    $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
-
-
-    function ListInitialData(response) {
-
-        if (response.data.listWebSiteStatus === 1) {
-            var finalData = JSON.parse(response.data.data);
-            $scope.WebSitesList = finalData;
-            $scope.pagination = response.data.pagination;
-            $("#listFail").hide();
-        } else {
-            $("#listFail").fadeIn();
-            $scope.errorMessage = response.data.error_message;
-
-        }
-    }
-
-    function cantLoadInitialData(response) {
-    }
-
-    $scope.getFurtherWebsitesFromDB = function (pageNumber) {
+    $scope.getFurtherWebsitesFromDB = function () {
 
         var config = {
             headers: {
@@ -269,10 +242,13 @@ app.controller('listWebsites', function ($scope, $http) {
             }
         };
 
-        var data = {page: pageNumber};
+        var data = {
+            page: $scope.currentPage,
+            recordsToShow: $scope.recordsToShow
+        };
 
 
-        dataurl = "/websites/submitWebsiteListing";
+        dataurl = "/websites/fetchWebsitesList";
 
         $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
 
@@ -280,8 +256,9 @@ app.controller('listWebsites', function ($scope, $http) {
         function ListInitialData(response) {
             if (response.data.listWebSiteStatus === 1) {
 
-                var finalData = JSON.parse(response.data.data);
-                $scope.WebSitesList = finalData;
+                $scope.WebSitesList = JSON.parse(response.data.data);
+                $scope.pagination = response.data.pagination;
+                $scope.clients = JSON.parse(response.data.data);
                 $("#listFail").hide();
             } else {
                 $("#listFail").fadeIn();
@@ -291,11 +268,11 @@ app.controller('listWebsites', function ($scope, $http) {
         }
 
         function cantLoadInitialData(response) {
-            console.log("not good");
         }
 
 
     };
+    $scope.getFurtherWebsitesFromDB();
 
     $scope.cyberPanelLoading = true;
 

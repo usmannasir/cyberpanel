@@ -92,11 +92,13 @@ class MailServerManager:
             userName = data['username']
             password = data['passwordByPass']
 
+
             admin = Administrator.objects.get(pk=userID)
             if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson()
+
 
             ## Create email entry
 
