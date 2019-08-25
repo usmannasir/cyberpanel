@@ -1583,11 +1583,13 @@ enabled=1"""
 
                 writeToFile.close()
 
-                if updatePasswords:
-                    for items in EUsers.objects.all():
-                        command = 'doveadm pw -p %s' % (items.password)
-                        items.password = subprocess.check_output(shlex.split(command)).strip('\n')
-                        items.save()
+                Upgrade.stdOut("Upgrading passwords...")
+                for items in EUsers.objects.all():
+                    if items.password.find('CRYPT') > -1:
+                        continue
+                    command = 'doveadm pw -p %s' % (items.password)
+                    items.password = subprocess.check_output(shlex.split(command)).strip('\n')
+                    items.save()
 
                 command = "systemctl restart dovecot"
                 Upgrade.executioner(command, 0)
@@ -1642,12 +1644,14 @@ enabled=1"""
 
                 writeToFile.close()
 
-                if updatePasswords:
-                    Upgrade.stdOut("Upgrading passwords...")
-                    for items in EUsers.objects.all():
-                        command = 'doveadm pw -p %s' % (items.password)
-                        items.password = subprocess.check_output(shlex.split(command)).strip('\n')
-                        items.save()
+                Upgrade.stdOut("Upgrading passwords...")
+                for items in EUsers.objects.all():
+                    if items.password.find('CRYPT') > -1:
+                        continue
+                    command = 'doveadm pw -p %s' % (items.password)
+                    items.password = subprocess.check_output(shlex.split(command)).strip('\n')
+                    items.save()
+
 
                 command = "systemctl restart dovecot"
                 Upgrade.executioner(command, 0)
