@@ -1262,7 +1262,7 @@ class Upgrade:
             for items in data:
                 if items.find("CommonMiddleware") > -1:
                     if csrfCheck == 1:
-                        writeToFile.writelines("    'django.middleware.common.CommonMiddleware',\n")
+                        writeToFile.writelines("    'django.middleware.csrf.CsrfViewMiddleware',\n")
 
                 if items.find("'filemanager',") > -1:
                     writeToFile.writelines(items)

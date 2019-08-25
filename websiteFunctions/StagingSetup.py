@@ -9,6 +9,7 @@ from plogical.mysqlUtilities import mysqlUtilities
 from random import randint
 import os
 
+
 class StagingSetup(multi.Thread):
 
     def __init__(self, function, extraArgs):
@@ -23,7 +24,7 @@ class StagingSetup(multi.Thread):
             elif self.function == 'startSyncing':
                 self.startSyncing()
         except BaseException, msg:
-            logging.writeToFile( str(msg) + ' [StagingSetup.run]')
+            logging.writeToFile(str(msg) + ' [StagingSetup.run]')
 
     def startCloning(self):
         try:
@@ -64,7 +65,8 @@ class StagingSetup(multi.Thread):
 
             masterPath = '/home/%s/public_html' % (masterDomain)
 
-            command = 'rsync -avzh --exclude "%s" --exclude "wp-content/plugins/litespeed-cache" %s/ %s' % (domain, masterPath, path)
+            command = 'rsync -avzh --exclude "%s" --exclude "wp-content/backups" --exclude "wp-content/updraft" --exclude "wp-content/cache" --exclude "wp-content/plugins/litespeed-cache" %s/ %s' % (
+            domain, masterPath, path)
             ProcessUtilities.executioner(command, website.externalApp)
 
             logging.statusWriter(tempStatusPath, 'Data copied..,50')
