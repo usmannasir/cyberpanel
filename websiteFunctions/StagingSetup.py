@@ -129,6 +129,8 @@ class StagingSetup(multi.Thread):
                     writeToFile.write("define( 'DB_USER', '%s' );\n" % (dbUser))
                 elif items.find('DB_PASSWORD') > -1:
                     writeToFile.write("define( 'DB_PASSWORD', '%s' );\n" % (dbPassword))
+                elif items.find('WP_SITEURL') > -1:
+                    continue
                 else:
                     writeToFile.write(items)
 
