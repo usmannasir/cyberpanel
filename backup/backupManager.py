@@ -655,13 +655,13 @@ class BackupManager:
                     return HttpResponse(final_json)
                 else:
                     if backupDest == "Home" and backupFreq == "Daily":
-                        cronJob = "0 3 * * * root python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
+                        cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupScheduleLocal.py"
                     elif backupDest == "Home" and backupFreq == "Weekly":
-                        cronJob = "0 0 * * 0 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py "
+                        cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupScheduleLocal.py "
                     elif backupDest != "Home" and backupFreq == "Daily":
-                        cronJob = "0 3 * * * root python /usr/local/CyberCP/plogical/backupSchedule.py"
+                        cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupSchedule.py"
                     elif backupDest != "Home" and backupFreq == "Weekly":
-                        cronJob = "0 0 * * 0 root python /usr/local/CyberCP/plogical/backupSchedule.py "
+                        cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupSchedule.py "
 
                     command = "cat " + path
                     output = ProcessUtilities.outputExecutioner(command)
@@ -684,9 +684,10 @@ class BackupManager:
 
                     ## Set local path for backup
 
-                    writeToFile = open(BackupManager.localBackupPath, 'w')
-                    writeToFile.write(data['localPath'])
-                    writeToFile.close()
+                    if backupDest == "Home":
+                        writeToFile = open(BackupManager.localBackupPath, 'w')
+                        writeToFile.write(data['localPath'])
+                        writeToFile.close()
 
                     destination = dest.objects.get(destLoc=backupDest)
                     newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
@@ -696,13 +697,13 @@ class BackupManager:
                     return HttpResponse(final_json)
             except:
                 if backupDest == "Home" and backupFreq == "Daily":
-                    cronJob = "0 3 * * * root python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
+                    cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupScheduleLocal.py"
                 elif backupDest == "Home" and backupFreq == "Weekly":
-                    cronJob = "0 0 * * 0 root python /usr/local/CyberCP/plogical/backupScheduleLocal.py "
+                    cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupScheduleLocal.py "
                 elif backupDest != "Home" and backupFreq == "Daily":
-                    cronJob = "0 3 * * * root python /usr/local/CyberCP/plogical/backupSchedule.py"
+                    cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupSchedule.py"
                 elif backupDest != "Home" and backupFreq == "Weekly":
-                    cronJob = "0 0 * * 0 root python /usr/local/CyberCP/plogical/backupSchedule.py "
+                    cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupSchedule.py "
 
                 command = "cat " + path
                 output = ProcessUtilities.outputExecutioner(command)
@@ -729,9 +730,10 @@ class BackupManager:
 
                 ## Set local path for backup
 
-                writeToFile = open(BackupManager.localBackupPath, 'w')
-                writeToFile.write(data['localPath'])
-                writeToFile.close()
+                if backupDest == "Home":
+                    writeToFile = open(BackupManager.localBackupPath, 'w')
+                    writeToFile.write(data['localPath'])
+                    writeToFile.close()
 
                 final_json = json.dumps({'scheduleStatus': 1, 'error_message': "None"})
                 return HttpResponse(final_json)
