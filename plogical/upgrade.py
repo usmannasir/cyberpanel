@@ -568,11 +568,6 @@ class Upgrade:
                 pass
 
             try:
-                cursor.execute("UPDATE loginSystem_administrator SET  acl_id = 3")
-            except:
-                pass
-
-            try:
                 cursor.execute("UPDATE loginSystem_administrator SET  acl_id = 1 where userName = 'admin'")
             except:
                 pass
