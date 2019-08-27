@@ -1499,6 +1499,9 @@ class Upgrade:
             command = 'chmod 644 /etc/postfix/main.cf'
             subprocess.call(command, shell=True)
 
+            command = 'chmod 644 /etc/postfix/dynamicmaps.cf'
+            subprocess.call(command, shell=True)
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException, msg:

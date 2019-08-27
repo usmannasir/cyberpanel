@@ -1174,6 +1174,9 @@ class preFlightsChecks:
         command = 'chmod 640 /etc/dovecot/dovecot-sql.conf.ext'
         subprocess.call(command, shell=True)
 
+        command = 'chmod 644 /etc/postfix/dynamicmaps.cf'
+        subprocess.call(command, shell=True)
+
         fileM = ['/usr/local/lsws/FileManager/', '/usr/local/CyberCP/install/FileManager',
                  '/usr/local/CyberCP/serverStatus/litespeed/FileManager', '/usr/local/lsws/Example/html/FileManager']
 
