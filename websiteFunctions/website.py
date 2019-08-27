@@ -255,7 +255,7 @@ class WebsiteManager:
             except:
                 apacheBackend = "0"
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
                        " --phpVersion '" + phpSelection + "' --ssl " + str(data['ssl']) + " --dkimCheck " + str(
@@ -431,7 +431,7 @@ class WebsiteManager:
 
             ## Deleting master domain
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName
             ProcessUtilities.popenExecutioner(execPath)
 
@@ -456,7 +456,7 @@ class WebsiteManager:
             else:
                 return ACLManager.loadErrorJson('websiteDeleteStatus', 0)
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " deleteDomain --virtualHostName " + websiteName
             ProcessUtilities.outputExecutioner(execPath)
 
@@ -650,7 +650,7 @@ class WebsiteManager:
             confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domain
             completePathToConfigFile = confPath + "/vhost.conf"
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
             ProcessUtilities.popenExecutioner(execPath)
 
@@ -708,7 +708,7 @@ class WebsiteManager:
             ## bw usage calculation
 
             try:
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
                 execPath = execPath + " findDomainBW --virtualHostName " + self.domain + " --bandwidth " + str(
                     website.package.bandwidth)
 
@@ -785,7 +785,7 @@ class WebsiteManager:
             ## bw usage calculation
 
             try:
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
                 execPath = execPath + " findDomainBW --virtualHostName " + self.domain + " --bandwidth " + str(
                     website.package.bandwidth)
 
@@ -854,7 +854,7 @@ class WebsiteManager:
         ## get Logs
         website = Websites.objects.get(domain=self.domain)
 
-        execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+        execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
         execPath = execPath + " getAccessLogs --path " + fileName + " --page " + str(page)
         output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
@@ -914,7 +914,7 @@ class WebsiteManager:
         ## get Logs
         website = Websites.objects.get(domain=self.domain)
 
-        execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+        execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
         execPath = execPath + " getErrorLogs --path " + fileName + " --page " + str(page)
 
         output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
@@ -981,7 +981,7 @@ class WebsiteManager:
 
         ## save configuration data
 
-        execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+        execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
         execPath = execPath + " saveVHostConfigs --path " + filePath + " --tempPath " + tempPath
 
         output = ProcessUtilities.outputExecutioner(execPath)
@@ -1066,7 +1066,7 @@ class WebsiteManager:
 
         ## save configuration data
 
-        execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+        execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
         execPath = execPath + " saveRewriteRules --virtualHostName " + self.domain + " --path " + filePath + " --tempPath " + tempPath
 
         output = ProcessUtilities.outputExecutioner(execPath, externalApp)
@@ -1110,7 +1110,7 @@ class WebsiteManager:
 
         ## writing data temporary to file
 
-        execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+        execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
         execPath = execPath + " saveSSL --virtualHostName " + self.domain + " --tempKeyPath " + tempKeyPath + " --tempCertPath " + tempCertPath
         output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1140,7 +1140,7 @@ class WebsiteManager:
         confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + self.domain
         completePathToConfigFile = confPath + "/vhost.conf"
 
-        execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+        execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
         execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
         ProcessUtilities.popenExecutioner(execPath)
 
@@ -1173,7 +1173,7 @@ class WebsiteManager:
 
             crons = []
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
             execPath = execPath + " getWebsiteCron --externalApp " + website.externalApp
 
             f = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
@@ -1234,7 +1234,7 @@ class WebsiteManager:
 
             try:
                 CronUtil.CronPrem(1)
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
                 execPath = execPath + " getWebsiteCron --externalApp " + website.externalApp
 
                 f = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
@@ -1299,7 +1299,7 @@ class WebsiteManager:
 
             CronUtil.CronPrem(1)
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
             execPath = execPath + " saveCronChanges --externalApp " + website.externalApp + " --line " + str(
                 line) + " --finalCron '" + finalCron + "'"
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
@@ -1339,7 +1339,7 @@ class WebsiteManager:
 
             CronUtil.CronPrem(1)
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
             execPath = execPath + " remCronbyLine --externalApp " + website.externalApp + " --line " + str(
                 line)
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
@@ -1396,7 +1396,7 @@ class WebsiteManager:
 
             finalCron = "%s %s %s %s %s %s" % (minute, hour, monthday, month, weekday, command)
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
             execPath = execPath + " addNewCron --externalApp " + website.externalApp + " --finalCron '" + finalCron + "'"
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
@@ -1445,7 +1445,7 @@ class WebsiteManager:
 
             ## Create Configurations
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createAlias --masterDomain " + self.domain + " --aliasDomain " + aliasDomain + " --ssl " + str(
                 ssl) + " --sslPath " + sslpath + " --administratorEmail " + admin.email + ' --websiteOwner ' + admin.userName
@@ -1490,7 +1490,7 @@ class WebsiteManager:
 
             ## Create Configurations
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " issueAliasSSL --masterDomain " + self.domain + " --aliasDomain " + aliasDomain + " --sslPath " + sslpath + " --administratorEmail " + admin.email
 
             output = ProcessUtilities.outputExecutioner(execPath)
@@ -1525,7 +1525,7 @@ class WebsiteManager:
 
             ## Create Configurations
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " deleteAlias --masterDomain " + self.domain + " --aliasDomain " + aliasDomain
             output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1557,7 +1557,7 @@ class WebsiteManager:
             else:
                 return ACLManager.loadErrorJson('changeOpenBasedir', 0)
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " changeOpenBasedir --virtualHostName '" + self.domain + "' --openBasedirValue " + openBasedirValue
             output = ProcessUtilities.popenExecutioner(execPath)
 
@@ -1801,7 +1801,7 @@ class WebsiteManager:
             statusFile.writelines('Downloading Joomla Core..,20')
             statusFile.close()
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " installJoomla --virtualHostName " + domainName + \
                        " --virtualHostUser " + externalApp + " --path " + finalPath + " --dbName " + dbName + \
@@ -2285,7 +2285,7 @@ IdentityFile /home/%s/.ssh/%s
 
         tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-        execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+        execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
         execPath = execPath + " switchServer --phpVersion '" + phpVersion + "' --server " + str(
             server) + " --virtualHostName " + domainName + " --tempStatusPath " + tempStatusPath
         ProcessUtilities.popenExecutioner(execPath)

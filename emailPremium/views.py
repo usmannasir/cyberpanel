@@ -101,7 +101,7 @@ def savePolicyServerStatus(request):
 
                 ## save configuration data
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                 execPath = execPath + " savePolicyServerStatus --install " + install
                 output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -784,7 +784,7 @@ def installSpamAssassin(request):
             return ACLManager.loadErrorJson()
         try:
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
             execPath = execPath + " installSpamAssassin"
             ProcessUtilities.popenExecutioner(execPath)
 
@@ -810,7 +810,7 @@ def installStatusSpamAssassin(request):
 
                 if installStatus.find("[200]")>-1:
 
-                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                    execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                     execPath = execPath + " configureSpamAssassin"
                     output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -981,7 +981,7 @@ def saveSpamAssassinConfigurations(request):
 
                 ## save configuration data
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                 execPath = execPath + " saveSpamAssassinConfigs --tempConfigPath " + tempConfigPath
                 output = ProcessUtilities.outputExecutioner(execPath)
 

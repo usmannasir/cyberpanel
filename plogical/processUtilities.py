@@ -272,7 +272,7 @@ class ProcessUtilities(multi.Thread):
 
     @staticmethod
     def BuildCommand(path, functionName, parameters):
-        execPath = "python %s %s " % (path, functionName)
+        execPath = "/usr/local/CyberCP/bin/python2 %s %s " % (path, functionName)
         for key, value in parameters.iteritems():
             execPath = execPath + ' --%s %s' % (key, value)
 

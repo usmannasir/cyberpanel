@@ -172,7 +172,7 @@ def clearLogFile(request):
 
                 fileName = data['fileName']
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/serverLogs.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/serverLogs.py"
                 execPath = execPath + " cleanLogFile --fileName " + fileName
 
                 output = ProcessUtilities.outputExecutioner(execPath)

@@ -1064,7 +1064,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, status)
         ProcessUtilities.executioner(command)
 
-        execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+        execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
         execPath = execPath + " startBackup --tempStoragePath " + tempStoragePath + " --backupName " \
                    + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (result[2])
 
@@ -1093,7 +1093,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
         if output.find('1,None') > -1:
-            execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " BackupRoot --tempStoragePath " + tempStoragePath + " --backupName " \
                        + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (
                        result[2])

@@ -41,7 +41,7 @@ class StagingSetup(multi.Thread):
 
             logging.statusWriter(tempStatusPath, 'Creating domain for staging environment..,5')
             phpSelection = 'PHP 7.1'
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
                        " --phpVersion '" + phpSelection + "' --ssl 0 --dkimCheck 0 --openBasedir 0 --path " + path + ' --websiteOwner ' \

@@ -344,7 +344,9 @@ class Upgrade:
                     break
             ######
 
-            path = "/usr/local/CyberCP/public/rainloop/rainloop/v/1.12.1/include.php"
+            iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
+
+            path = "/usr/local/CyberCP/public/rainloop/rainloop/v/%s/include.php" % (iPath[0])
 
             data = open(path, 'r').readlines()
             writeToFile = open(path, 'w')
@@ -355,6 +357,8 @@ class Upgrade:
                         "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
                 else:
                     writeToFile.writelines(items)
+
+            writeToFile.close()
 
             os.chdir(cwd)
 
@@ -1259,7 +1263,7 @@ class Upgrade:
                     if csrfCheck == 1:
                         writeToFile.writelines("    'django.middleware.csrf.CsrfViewMiddleware',\n")
 
-                if items.find("'filemanager',") > -1:
+                elif items.find("'filemanager',") > -1:
                     writeToFile.writelines(items)
                     if pluginCheck == 1:
                         writeToFile.writelines("    'pluginHolder',\n")

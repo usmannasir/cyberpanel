@@ -249,7 +249,7 @@ class BackupManager:
             backupCancellationDomain = data['backupCancellationDomain']
             fileName = data['fileName']
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " cancelBackupCreation --backupCancellationDomain " + backupCancellationDomain + " --fileName " + fileName
             subprocess.call(shlex.split(execPath))
 
@@ -310,7 +310,7 @@ class BackupManager:
             else:
                 return ACLManager.loadErrorJson()
 
-            execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
             ProcessUtilities.popenExecutioner(execPath)
             time.sleep(4)
@@ -424,7 +424,7 @@ class BackupManager:
                 except:
                     port = "22"
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
                 execPath = execPath + " submitDestinationCreation --ipAddress " + ipAddress + " --password " \
                            + password + " --port " + port
 
@@ -503,7 +503,7 @@ class BackupManager:
 
             ipAddress = data['IPAddress']
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " getConnectionStatus --ipAddress " + ipAddress
 
             output = ProcessUtilities.executioner(execPath)
@@ -891,7 +891,7 @@ class BackupManager:
 
             ##
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
             execPath = execPath + " writeAuthKey --pathToKey " + pathToKey
             output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1057,7 +1057,7 @@ class BackupManager:
 
             ##
 
-            execPath = "python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
             execPath = execPath + " remoteBackupRestore --backupDirComplete " + backupDirComplete + " --backupDir " + str(
                 backupDir)
 

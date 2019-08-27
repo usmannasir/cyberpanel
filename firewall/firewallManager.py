@@ -371,7 +371,7 @@ class FirewallManager:
             else:
                 rootLogin = "0"
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
             execPath = execPath + " saveSSHConfigs --type " + str(type) + " --sshPort " + sshPort + " --rootLogin " + rootLogin
 
             output = ProcessUtilities.outputExecutioner(execPath)
@@ -418,7 +418,7 @@ class FirewallManager:
 
             key = data['key']
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
             execPath = execPath + " deleteSSHKey --key '" + key + "'"
 
             output = ProcessUtilities.outputExecutioner(execPath)
@@ -512,7 +512,7 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('installModSec', 0)
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
             execPath = execPath + " installModSec"
 
             ProcessUtilities.popenExecutioner(execPath)
@@ -535,7 +535,7 @@ class FirewallManager:
 
             if installStatus.find("[200]") > -1:
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
 
                 execPath = execPath + " installModSecConfigs"
 
@@ -781,7 +781,7 @@ class FirewallManager:
 
                 ## save configuration data
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
 
                 execPath = execPath + " saveModSecConfigs --tempConfigPath " + tempConfigPath
 
@@ -836,7 +836,7 @@ class FirewallManager:
 
                 ## save configuration data
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
 
                 execPath = execPath + " saveModSecConfigs --tempConfigPath " + tempConfigPath
 
@@ -962,7 +962,7 @@ class FirewallManager:
 
             ## save configuration data
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
             execPath = execPath + " saveModSecRules"
             output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1107,7 +1107,7 @@ class FirewallManager:
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
                 execPath = execPath + " " + packName
 
                 output = ProcessUtilities.outputExecutioner(execPath)
@@ -1125,7 +1125,7 @@ class FirewallManager:
                     final_json = json.dumps({'installStatus': 0, 'error_message': "OWASP will be available later.", })
                     return HttpResponse(final_json)
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
                 execPath = execPath + " " + packName
                 output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1265,7 +1265,7 @@ class FirewallManager:
             else:
                 functionName = 'enableRuleFile'
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
 
             execPath = execPath + " " + functionName + ' --packName ' + packName + ' --fileName ' + fileName
 
