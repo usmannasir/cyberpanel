@@ -386,9 +386,12 @@ class FileManager:
                 command = 'tar -czvf ' + compressedFileName + ' '
 
             for item in self.data['listOfFiles']:
-                command = command + self.returnPathEnclosed(self.data['basePath'] + '/' + item) + ' '
+                command = '%s%s ' % (command, self.returnPathEnclosed(item))
 
-            ProcessUtilities.executioner(command, website.externalApp)
+
+            finalCommand = 'cd %s && %s' % (self.data['basePath'], command)
+
+            ProcessUtilities.executioner(finalCommand, website.externalApp)
 
             self.changeOwner(self.data['compressedFileName'])
 

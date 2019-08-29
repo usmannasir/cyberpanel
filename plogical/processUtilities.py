@@ -198,7 +198,7 @@ class ProcessUtilities(multi.Thread):
                 command = command.replace('sudo', '')
                 sock.sendall(command)
 
-            #logging.writeToFile(command)
+            logging.writeToFile(command)
 
             data = ""
 
