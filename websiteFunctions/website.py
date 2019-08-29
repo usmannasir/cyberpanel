@@ -1857,6 +1857,7 @@ class WebsiteManager:
 
                 configContent = """Host github.com
 IdentityFile /home/%s/.ssh/%s
+StrictHostKeyChecking no
 """ % (self.domain, website.externalApp)
 
                 path = "/home/cyberpanel/config"

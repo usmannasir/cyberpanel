@@ -558,8 +558,6 @@ class ApplicationInstaller(multi.Thread):
 
             ## checking for directories/files
 
-            logging.writeToFile(finalPath)
-
             if self.dataLossCheck(finalPath, tempStatusPath) == 0:
                 return 0
 
@@ -570,7 +568,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             try:
-                command = 'sudo GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --depth 1 --no-single-branch git@' + defaultProvider +'.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
+                command = 'git clone --depth 1 --no-single-branch git@' + defaultProvider +'.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
                 ProcessUtilities.executioner(command, externalApp)
             except subprocess.CalledProcessError, msg:
                 statusFile = open(tempStatusPath, 'w')
