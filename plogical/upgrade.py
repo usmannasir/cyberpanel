@@ -1595,6 +1595,71 @@ enabled=1"""
 
                 command = "systemctl restart dovecot"
                 Upgrade.executioner(command, 0)
+
+
+
+                ### Postfix Upgrade
+
+                try:
+                    shutil.copy('/etc/postfix/master.cf', '/etc/master.cf')
+                except:
+                    pass
+
+                try:
+                    shutil.copy('/etc/postfix/main.cf', '/etc/main.cf')
+                except:
+                    pass
+
+                gf = '/etc/yum.repos.d/gf.repo'
+
+                gfContent = """[gf]
+name=Ghettoforge packages that won't overwrite core distro packages.
+mirrorlist=http://mirrorlist.ghettoforge.org/el/7/gf/$basearch/mirrorlist
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-gf.el7
+failovermethod=priority
+
+[gf-plus]
+name=Ghettoforge packages that will overwrite core distro packages.
+mirrorlist=http://mirrorlist.ghettoforge.org/el/7/plus/$basearch/mirrorlist
+# Please read http://ghettoforge.org/index.php/Usage *before* enabling this repository!
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-gf.el7
+failovermethod=priority
+"""
+                writeToFile = open(gf, 'w')
+                writeToFile.write(gfContent)
+                writeToFile.close()
+
+                command = 'yum remove postfix -y'
+                Upgrade.executioner(command, 0)
+
+                command = 'rpm -Uvh http://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el7.noarch.rpm'
+                Upgrade.executioner(command, 0)
+
+                command = 'yum clean all'
+                Upgrade.executioner(command, 0)
+
+                command = 'yum makecache fast'
+                Upgrade.executioner(command, 0)
+
+                command = 'yum install -y postfix3 postfix3-mysql'
+                Upgrade.executioner(command, 0)
+
+                try:
+                    shutil.move('/etc/master.cf', '/etc/postfix/master.cf')
+                except:
+                    pass
+                try:
+                    shutil.move('/etc/main.cf', '/etc/postfix/main.cf')
+                except:
+                    pass
+
+                command = 'systemctl restart postfix'
+                Upgrade.executioner(command, 0)
+
             else:
                 command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
                 subprocess.call(command, shell=True)

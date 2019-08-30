@@ -5,7 +5,6 @@ import os
 import socket
 import threading as multi
 import time
-from pipes import quote
 
 class ProcessUtilities(multi.Thread):
     litespeedProcess = "litespeed"
@@ -197,8 +196,6 @@ class ProcessUtilities(multi.Thread):
                 command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
                 command = command.replace('sudo', '')
                 sock.sendall(command)
-
-            logging.writeToFile(command)
 
             data = ""
 

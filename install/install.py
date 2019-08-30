@@ -1276,6 +1276,11 @@ enabled=1"""
 
         try:
             if self.distro == centos:
+
+                command = 'yum -y install http://cyberpanel.sh/gf-release-latest.gf.el7.noarch.rpm'
+                subprocess.call(shlex.split(command))
+
+
                 command = 'yum remove postfix -y'
             else:
                 command = 'apt-get -y remove postfix'
@@ -1286,7 +1291,7 @@ enabled=1"""
             count = 0
             while (1):
                 if self.distro == centos:
-                    command = 'yum install -y postfix'
+                    command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
                 else:
                     command = 'apt-get -y debconf-utils'
                     subprocess.call(shlex.split(command))
