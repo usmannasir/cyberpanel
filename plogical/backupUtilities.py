@@ -270,51 +270,6 @@ class backupUtilities:
 
             make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
-            ##### Saving SSL Certificates if any
-
-            sslStoragePath = '/etc/letsencrypt/live/' + domainName
-
-            if os.path.exists(sslStoragePath):
-                try:
-                    copy(os.path.join(sslStoragePath, "cert.pem"), os.path.join(tempStoragePath, domainName + ".cert.pem"))
-                    copy(os.path.join(sslStoragePath, "fullchain.pem"), os.path.join(tempStoragePath, domainName + ".fullchain.pem"))
-                    copy(os.path.join(sslStoragePath, "privkey.pem"), os.path.join(tempStoragePath, domainName + ".privkey.pem"))
-                except:
-                    pass
-
-            ## Child Domains SSL.
-
-
-            childDomains = backupMetaData.findall('ChildDomains/domain')
-
-            try:
-                for childDomain in childDomains:
-
-                    actualChildDomain = childDomain.find('domain').text
-
-                    if os.path.exists(backupUtilities.licenseKey):
-                        completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + actualChildDomain + '/vhost.conf'
-                        copy(completPathToConf, tempStoragePath + '/' + actualChildDomain + '.vhost.conf')
-
-                        ### Storing SSL for child domainsa
-
-                    sslStoragePath = '/etc/letsencrypt/live/' + actualChildDomain
-
-                    if os.path.exists(sslStoragePath):
-                        try:
-                            copy(os.path.join(sslStoragePath, "cert.pem"),
-                                 os.path.join(tempStoragePath, actualChildDomain + ".cert.pem"))
-                            copy(os.path.join(sslStoragePath, "fullchain.pem"),
-                                 os.path.join(tempStoragePath, actualChildDomain + ".fullchain.pem"))
-                            copy(os.path.join(sslStoragePath, "privkey.pem"),
-                                 os.path.join(tempStoragePath, actualChildDomain + ".privkey.pem"))
-                            make_archive(os.path.join(tempStoragePath, "sslData-" + domainName), 'gztar',
-                                         sslStoragePath)
-                        except:
-                            pass
-            except BaseException, msg:
-                pass
-
             logging.CyberCPLogFileWriter.statusWriter(status, "Backing up databases..")
             print '1,None'
 
@@ -336,11 +291,59 @@ class backupUtilities:
     @staticmethod
     def BackupRoot(tempStoragePath, backupName, backupPath, metaPath=None):
 
-        ## backup emails
-
         status = os.path.join(backupPath, 'status')
         metaPathInBackup = os.path.join(tempStoragePath, 'meta.xml')
         backupMetaData = ElementTree.parse(metaPathInBackup)
+
+        domainName = backupMetaData.find('masterDomain').text
+        ##### Saving SSL Certificates if any
+
+        sslStoragePath = '/etc/letsencrypt/live/' + domainName
+
+        if os.path.exists(sslStoragePath):
+            try:
+                copy(os.path.join(sslStoragePath, "cert.pem"), os.path.join(tempStoragePath, domainName + ".cert.pem"))
+                copy(os.path.join(sslStoragePath, "fullchain.pem"),
+                     os.path.join(tempStoragePath, domainName + ".fullchain.pem"))
+                copy(os.path.join(sslStoragePath, "privkey.pem"),
+                     os.path.join(tempStoragePath, domainName + ".privkey.pem"))
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile('%s. [283:startBackup]' % (str(msg)))
+
+        ## Child Domains SSL.
+
+        childDomains = backupMetaData.findall('ChildDomains/domain')
+
+        try:
+            for childDomain in childDomains:
+
+                actualChildDomain = childDomain.find('domain').text
+
+                if os.path.exists(backupUtilities.licenseKey):
+                    completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + actualChildDomain + '/vhost.conf'
+                    copy(completPathToConf, tempStoragePath + '/' + actualChildDomain + '.vhost.conf')
+
+                    ### Storing SSL for child domainsa
+
+                sslStoragePath = '/etc/letsencrypt/live/' + actualChildDomain
+
+                if os.path.exists(sslStoragePath):
+                    try:
+                        copy(os.path.join(sslStoragePath, "cert.pem"),
+                             os.path.join(tempStoragePath, actualChildDomain + ".cert.pem"))
+                        copy(os.path.join(sslStoragePath, "fullchain.pem"),
+                             os.path.join(tempStoragePath, actualChildDomain + ".fullchain.pem"))
+                        copy(os.path.join(sslStoragePath, "privkey.pem"),
+                             os.path.join(tempStoragePath, actualChildDomain + ".privkey.pem"))
+                        make_archive(os.path.join(tempStoragePath, "sslData-" + domainName), 'gztar',
+                                     sslStoragePath)
+                    except:
+                        pass
+        except BaseException, msg:
+            pass
+
+        ## backup emails
+
         domainName = backupMetaData.find('masterDomain').text
 
         if os.path.islink(status) or os.path.islink(tempStoragePath or os.path.islink(backupPath)) or os.path.islink(metaPath):
@@ -551,8 +554,8 @@ class backupUtilities:
                         copy(completPath + "/" + masterDomain + ".fullchain.pem", sslHome + "/fullchain.pem")
 
                         sslUtilities.installSSLForDomain(masterDomain)
-                    except:
-                        pass
+                    except BaseException, msg:
+                        logging.CyberCPLogFileWriter.writeToFile('%s. [555:startRestore]' % (str(msg)))
 
             else:
                 logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + result[1] + ". Not able to create Account, Databases and DNS Records, aborting. [5009]")
