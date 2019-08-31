@@ -499,21 +499,21 @@ milter_default_action = accept
 
 
             command = "groupadd spamd"
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.normalExecutioner(command)
 
             command = "useradd -g spamd -s /bin/false -d /var/log/spamassassin spamd"
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.normalExecutioner(command)
 
             ##
 
             command = "chown spamd:spamd /var/log/spamassassin"
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.normalExecutioner(command)
 
             command = "systemctl enable spamassassin"
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.normalExecutioner(command)
 
             command = "systemctl start spamassassin"
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.normalExecutioner(command)
 
             ## Configuration to postfix
 
@@ -534,7 +534,7 @@ milter_default_action = accept
             writeToFile.close()
 
             command = 'systemctl restart postfix'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.normalExecutioner(command)
 
 
             print "1,None"
