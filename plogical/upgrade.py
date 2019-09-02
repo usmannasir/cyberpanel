@@ -360,6 +360,19 @@ class Upgrade:
 
             writeToFile.close()
 
+            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
+            Upgrade.executioner(command, 'mkdir rainloop configs', 0)
+
+            labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+
+            labsData = """[labs]
+            imap_folder_list_limit = 0
+            """
+
+            writeToFile = open(labsPath, 'w')
+            writeToFile.write(labsData)
+            writeToFile.close()
+
             os.chdir(cwd)
 
         except BaseException, msg:

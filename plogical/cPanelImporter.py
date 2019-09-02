@@ -74,7 +74,6 @@ class cPanelImporter:
         if self.PHPVersion == '':
             self.PHPVersion = 'PHP 7.1'
 
-
     def SetupSSL(self, path, domain):
 
         data = open(path, 'r').readlines()
@@ -445,7 +444,12 @@ class cPanelImporter:
                     else:
                         movePath = '%s/homedir/%s' % (
                         CompletPathToExtractedArchive, ChildDocRoot.split('/')[-1].replace(self.documentRoot, '', 1).replace('/', ''))
-                        shutil.move(movePath, path)
+                        if os.path.exists(movePath):
+                            shutil.move(movePath, path)
+                        else:
+                            movePath = '%s/homedir/%s' % (
+                                CompletPathToExtractedArchive, items.domain)
+                            shutil.move(movePath, path)
 
                     command = 'chown -R %s:%s %s' % (externalApp, externalApp, path)
                     ProcessUtilities.normalExecutioner(command)

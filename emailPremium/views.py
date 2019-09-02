@@ -225,7 +225,24 @@ def getFurtherDomains(request):
                     else:
                         json_data = json_data +',' + json.dumps(dic)
                 except BaseException, msg:
-                    pass
+                    try:
+                        domain = Domains.objects.get(domainOwner=items)
+                    except:
+                        domain = Domains(domainOwner=items, domain=items.domain)
+                        domain.save()
+
+                    domainLimits = DomainLimits(domain=domain)
+                    domainLimits.save()
+
+                    dic = {'domain': items.domain, 'emails': domain.eusers_set.all().count(),
+                           'monthlyLimit': domainLimits.monthlyLimit, 'monthlyUsed': domainLimits.monthlyUsed,
+                           'status': domainLimits.limitStatus}
+
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
             final_dic = {'listWebSiteStatus': 1, 'error_message': "None", "data": json_data}
