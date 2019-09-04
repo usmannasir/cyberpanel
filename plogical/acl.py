@@ -464,6 +464,29 @@ class ACLManager:
         return domainsList
 
     @staticmethod
+    def findAllWebsites(currentACL, userID):
+        domainsList = []
+
+        if currentACL['admin'] == 1:
+            domains = Websites.objects.all()
+            for items in domains:
+                domainsList.append(items.domain)
+        else:
+            admin = Administrator.objects.get(pk=userID)
+            domains = admin.websites_set.all()
+
+            for items in domains:
+                domainsList.append(items.domain)
+
+            admins = Administrator.objects.filter(owner=admin.pk)
+
+            for items in admins:
+                doms = items.websites_set.all()
+                for dom in doms:
+                    domainsList.append(dom.domain)
+        return domainsList
+
+    @staticmethod
     def checkOwnership(domain, admin, currentACL):
 
         try:
@@ -496,7 +519,7 @@ class ACLManager:
 
         if currentACL['admin'] == 1:
             return 1
-        elif domain.admin == admin:
+        elif domain.admin.admin == admin:
             return 1
         elif domain.admin.owner == admin.pk:
             return 1
