@@ -519,7 +519,7 @@ class ACLManager:
 
         if currentACL['admin'] == 1:
             return 1
-        elif domain.admin.admin == admin:
+        elif domain.admin == admin:
             return 1
         elif domain.admin.owner == admin.pk:
             return 1

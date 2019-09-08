@@ -628,7 +628,7 @@ class cPanelImporter:
                     logging.statusWriter(self.logFile, message, 1)
 
                     try:
-                        cursor.execute("CREATE DATABASE " + items.replace('.sql', ''))
+                        cursor.execute("CREATE DATABASE `%s`" % (items.replace('.sql', '')))
                     except BaseException, msg:
                         message = 'Failed while restoring database %s from backup file %s, error message: %s' % (items.replace('.sql', ''), self.backupFile, str(msg))
                         logging.statusWriter(self.logFile, message, 1)
@@ -644,7 +644,26 @@ class cPanelImporter:
 
                     website = Websites.objects.get(domain=self.mainDomain)
 
-                    db = Databases(website=website, dbName=items.replace('.sql', ''), dbUser=items.replace('.sql', ''))
+                    ## Trying to figure out dbname
+
+                    CommandsPath = '%s/mysql.sql' % (CompletPathToExtractedArchive)
+
+                    data = open(CommandsPath, 'r').readlines()
+
+                    for inItems in data:
+                        if inItems.find('GRANT ALL PRIVILEGES') > -1 and inItems.find('localhost') > -1 and inItems.find('_test') == -1:
+                            cDBName = inItems.split('`')[1].replace('\\', '')
+                            logging.statusWriter(self.logFile, inItems, 1)
+                            if cDBName == items.replace('.sql', ''):
+                                cDBUser = inItems.split("'")[1]
+                                message = 'Database user for %s is %s.' % (cDBName, cDBUser)
+                                logging.statusWriter(self.logFile, message, 1)
+                                if Databases.objects.filter(dbUser=cDBUser).count() > 0:
+                                    continue
+                                break
+
+
+                    db = Databases(website=website, dbName=items.replace('.sql', ''), dbUser=cDBUser)
                     db.save()
 
                     message = 'MySQL dump successfully restored for %s.' % (items.replace('.sql', ''))

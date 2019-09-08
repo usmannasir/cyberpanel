@@ -193,11 +193,18 @@ class FileManager:
             if not self.data['newPath'].find(self.data['home']) > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
+            if len(self.data['fileAndFolders']) == 1:
+                command = 'yes| cp -Rf %s %s' % (self.returnPathEnclosed(self.data['basePath']+ '/' + self.data['fileAndFolders'][0]), self.data['newPath'])
+                ProcessUtilities.executioner(command, website.externalApp)
+                self.changeOwner(self.data['newPath'])
+                json_data = json.dumps(finalData)
+                return HttpResponse(json_data)
+
             command = 'mkdir ' + self.returnPathEnclosed(self.data['newPath'])
             ProcessUtilities.executioner(command, website.externalApp)
 
             for item in self.data['fileAndFolders']:
-                command = 'cp -R ' + self.returnPathEnclosed(self.data['basePath'] + '/' + item) + ' ' + self.returnPathEnclosed(self.data['newPath'] + '/' + item)
+                command = '%scp -Rf ' % ('yes |') + self.returnPathEnclosed(self.data['basePath'] + '/' + item) + ' ' + self.returnPathEnclosed(self.data['newPath'])
                 ProcessUtilities.executioner(command, website.externalApp)
 
             self.changeOwner(self.data['newPath'])
