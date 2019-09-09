@@ -134,7 +134,7 @@ class mysqlUtilities:
             if connection == 0:
                 return 0
 
-            cursor.execute("DROP DATABASE " + dbname)
+            cursor.execute("DROP DATABASE `%s`" % (dbname))
             cursor.execute("DROP USER '"+dbuser+"'@'localhost'")
             connection.close()
 
