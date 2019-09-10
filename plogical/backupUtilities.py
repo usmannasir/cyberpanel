@@ -104,18 +104,32 @@ class backupUtilities:
             for items in databases:
                 try:
                     dbuser = DBUsers.objects.get(user=items.dbUser)
+                    userToTry = items.dbUser
                 except:
                     dbusers = DBUsers.objects.all().filter(user=items.dbUser)
+                    userToTry = items.dbUser
                     for it in dbusers:
                         dbuser = it
                         break
+
+                    userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbUser)
+
+                    try:
+                        dbuser = DBUsers.objects.get(user=userToTry)
+                    except:
+                        dbusers = DBUsers.objects.all().filter(user=userToTry)
+                        for it in dbusers:
+                            dbuser = it
+                            break
+
+
 
                 databaseXML = Element('database')
 
                 child = SubElement(databaseXML, 'dbName')
                 child.text = items.dbName
                 child = SubElement(databaseXML, 'dbUser')
-                child.text = items.dbUser
+                child.text = userToTry
                 child = SubElement(databaseXML, 'password')
                 child.text = dbuser.password
 

@@ -12,6 +12,7 @@ import shlex
 try:
     from websiteFunctions.models import Websites
     from databases.models import Databases
+    from backup.models import DBUsers
 except:
     pass
 import MySQLdb as mysql
@@ -704,13 +705,60 @@ password=%s
 
             if connection == 0:
                 return 0
-
             cursor.execute("use mysql")
-            cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "')")
+
+
+            try:
+                dbuser = DBUsers.objects.get(user=userName)
+                cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "')")
+            except:
+                userName = mysqlUtilities.fetchuser(userName)
+                cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "')")
+
             connection.close()
 
             return 1
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.changePassword]")
+            return 0
+
+    @staticmethod
+    def fetchuser(userName):
+        try:
+            connection, cursor = mysqlUtilities.setupConnection()
+            cursor.execute("use mysql")
+
+            database = Databases.objects.get(dbUser=userName)
+            databaseName = database.dbName
+            databaseName = databaseName.replace('_', '\_')
+            query = "select user from db where db = '%s'" % (databaseName)
+
+            if connection == 0:
+                return 0
+
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            counter = 0
+
+            for row in rows:
+                if row[0].find('_') > -1:
+                    database.dbUser = row[0]
+                    database.save()
+                    try:
+                        connection.close()
+                    except:
+                        pass
+                    message = 'Detected databaser user is %s for database %s.' % (row[0], databaseName)
+                    logging.CyberCPLogFileWriter.writeToFile(message)
+                    return row[0]
+                else:
+                    counter = counter + 1
+
+            connection.close()
+
+            return 1
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.fetchuser]")
             return 0
