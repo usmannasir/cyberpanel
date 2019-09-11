@@ -21,9 +21,20 @@
         <p>{% trans "On this page you can launch, list, modify and delete websites from your server." %}</p>
     </div>
 
-    <div class="col-sm-12" style="padding: 0px; box-shadow: 0px 0px 1px 0px #888888; margin-bottom: 2%">
+    <div class="col-sm-10" style="padding: 0px; box-shadow: 0px 0px 1px 0px #888888; margin-bottom: 2%">
         <input ng-change="searchWebsites()" placeholder="Search..." ng-model="patternAdded" name="dom" type="text"
                class="form-control" required>
+    </div>
+
+    <div class="col-sm-2">
+        <div class="form-group">
+            <select ng-model="recordsToShow" ng-change="getFurtherWebsitesFromDB()"
+                    class="form-control" id="example-select">
+                <option>10</option>
+                <option>50</option>
+                <option>100</option>
+            </select>
+        </div>
     </div>
 
     <div ng-repeat="web in WebSitesList track by $index" class="panel col-md-12"
@@ -77,9 +88,9 @@
                     <div class="col-md-12">
 
                         <div class="col-md-4 content-box-header">
-                            <i class="p fa fa-envelope btn-icon text-muted" data-toggle="tooltip" data-placement="right"
-                               title="Email">&emsp;</i>
-                            <span ng-bind="web.adminEmail" style="text-transform: none"></span>
+                            <i class="p fa fa-hdd-o btn-icon text-muted" data-toggle="tooltip" data-placement="right"
+                               title="Disk Usage">&emsp;</i>
+                            <span ng-bind="web.diskUsed" style="text-transform: none"></span>
                         </div>
 
                         <div class="col-md-4 content-box-header">
@@ -124,16 +135,20 @@
             </div>
         </div>
     </div>
-    <div class="row text-center">
-        <div class="col-sm-11">
-            <nav aria-label="Page navigation">
-                <ul class="pagination">
-                    {% for items in pagination %}
-                        <li ng-click="getFurtherWebsitesFromDB({{ forloop.counter }})" id="webPages"><a
-                                href="">{{ forloop.counter }}</a></li>
-                    {% endfor %}
-                </ul>
-            </nav>
+    <div style="margin-top: 2%" class="row">
+        <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-9">
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <select ng-model="currentPage" class="form-control"
+                                ng-change="getFurtherWebsitesFromDB()">
+                            <option ng-repeat="page in pagination">{$ $index + 1 $}</option>
+                        </select>
+                    </div>
+                </div>
+            </div> <!-- end row -->
         </div>
     </div>
 

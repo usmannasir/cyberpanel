@@ -344,7 +344,9 @@ class Upgrade:
                     break
             ######
 
-            path = "/usr/local/CyberCP/public/rainloop/rainloop/v/1.12.1/include.php"
+            iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
+
+            path = "/usr/local/CyberCP/public/rainloop/rainloop/v/%s/include.php" % (iPath[0])
 
             data = open(path, 'r').readlines()
             writeToFile = open(path, 'w')
@@ -355,6 +357,21 @@ class Upgrade:
                         "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
                 else:
                     writeToFile.writelines(items)
+
+            writeToFile.close()
+
+            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
+            Upgrade.executioner(command, 'mkdir rainloop configs', 0)
+
+            labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+
+            labsData = """[labs]
+            imap_folder_list_limit = 0
+            """
+
+            writeToFile = open(labsPath, 'w')
+            writeToFile.write(labsData)
+            writeToFile.close()
 
             os.chdir(cwd)
 
@@ -568,11 +585,6 @@ class Upgrade:
                 pass
 
             try:
-                cursor.execute("UPDATE loginSystem_administrator SET  acl_id = 3")
-            except:
-                pass
-
-            try:
                 cursor.execute("UPDATE loginSystem_administrator SET  acl_id = 1 where userName = 'admin'")
             except:
                 pass
@@ -594,6 +606,22 @@ class Upgrade:
             try:
                 cursor.execute(
                     "ALTER TABLE `websiteFunctions_aliasdomains` ADD CONSTRAINT `websiteFunctions_ali_master_id_726c433d_fk_websiteFu` FOREIGN KEY (`master_id`) REFERENCES `websiteFunctions_websites` (`id`)")
+            except:
+                pass
+
+
+            try:
+                cursor.execute("ALTER TABLE loginSystem_acl ADD COLUMN listUsers INT DEFAULT 0;")
+            except:
+                pass
+
+            try:
+                cursor.execute("ALTER TABLE loginSystem_acl ADD COLUMN listEmails INT DEFAULT 1;")
+            except:
+                pass
+
+            try:
+                cursor.execute("ALTER TABLE loginSystem_acl ADD COLUMN listPackages INT DEFAULT 0;")
             except:
                 pass
 
@@ -805,6 +833,12 @@ class Upgrade:
             try:
                 cursor.execute(
                     'ALTER TABLE e_users ADD mail varchar(200)')
+            except:
+                pass
+
+            try:
+                cursor.execute(
+                    'ALTER TABLE e_users MODIFY password varchar(200)')
             except:
                 pass
 
@@ -1050,6 +1084,47 @@ class Upgrade:
             pass
 
     @staticmethod
+    def CLMigrations():
+        try:
+            connection, cursor = Upgrade.setupConnection('cyberpanel')
+
+            query = """CREATE TABLE `CLManager_clpackages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `speed` varchar(50) NOT NULL,
+  `vmem` varchar(50) NOT NULL,
+  `pmem` varchar(50) NOT NULL,
+  `io` varchar(50) NOT NULL,
+  `iops` varchar(50) NOT NULL,
+  `ep` varchar(50) NOT NULL,
+  `nproc` varchar(50) NOT NULL,
+  `inodessoft` varchar(50) NOT NULL,
+  `inodeshard` varchar(50) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `CLManager_clpackages_owner_id_9898c1e8_fk_packages_package_id` (`owner_id`),
+  CONSTRAINT `CLManager_clpackages_owner_id_9898c1e8_fk_packages_package_id` FOREIGN KEY (`owner_id`) REFERENCES `packages_package` (`id`)
+)"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = "ALTER TABLE packages_package ADD COLUMN allowFullDomain INT DEFAULT 1;"
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            try:
+                connection.close()
+            except:
+                pass
+        except:
+            pass
+
+    @staticmethod
     def manageServiceMigrations():
         try:
             connection, cursor = Upgrade.setupConnection('cyberpanel')
@@ -1058,12 +1133,20 @@ class Upgrade:
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `serverStatus` int(11) NOT NULL,
   `type` varchar(6) NOT NULL,
-  `allow_axfr_ips` varchar(500) NOT NULL,
-  `also_notify` varchar(500) NOT NULL,
   PRIMARY KEY (`id`)
 )"""
             try:
                 cursor.execute(query)
+            except:
+                pass
+
+            try:
+                cursor.execute('alter table manageServices_pdnsstatus add masterServer varchar(200)')
+            except:
+                pass
+
+            try:
+                cursor.execute('alter table manageServices_pdnsstatus add masterIP varchar(200)')
             except:
                 pass
 
@@ -1139,6 +1222,11 @@ class Upgrade:
 
             data = open("/usr/local/settings.py", 'r').readlines()
 
+            csrfCheck = 1
+            for items in data:
+                if items.find('CsrfViewMiddleware') > -1:
+                    csrfCheck = 0
+
             pluginCheck = 1
             for items in data:
                 if items.find('pluginHolder') > -1:
@@ -1174,12 +1262,21 @@ class Upgrade:
                 if items.find('manageServices') > -1:
                     manageServices = 0
 
+            CLManager = 1
+            for items in data:
+                if items.find('CLManager') > -1:
+                    CLManager = 0
+
             Upgrade.stdOut('Restoring settings file!')
 
             writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
 
             for items in data:
-                if items.find("'filemanager',") > -1:
+                if items.find("CommonMiddleware") > -1:
+                    if csrfCheck == 1:
+                        writeToFile.writelines("    'django.middleware.csrf.CsrfViewMiddleware',\n")
+
+                elif items.find("'filemanager',") > -1:
                     writeToFile.writelines(items)
                     if pluginCheck == 1:
                         writeToFile.writelines("    'pluginHolder',\n")
@@ -1197,6 +1294,9 @@ class Upgrade:
 
                     if manageServices == 1:
                         writeToFile.writelines("    'manageServices',\n")
+
+                    if CLManager == 1:
+                        writeToFile.writelines("    'CLManager',\n")
 
                 else:
                     writeToFile.writelines(items)
@@ -1234,6 +1334,8 @@ class Upgrade:
         try:
             command = "pip install tldextract"
             Upgrade.executioner(command, 'Install tldextract', 1)
+            command = "pip install bcrypt"
+            Upgrade.executioner(command, 'Install tldextract', 1)
         except OSError, msg:
             Upgrade.stdOut(str(msg) + " [installTLDExtract]")
             return 0
@@ -1253,30 +1355,19 @@ class Upgrade:
 
             ##
 
+            lscpdPath = '/usr/local/lscp/bin/lscpd'
+
+            if os.path.exists(lscpdPath):
+                os.remove(lscpdPath)
+
+            command = 'wget  https://cyberpanel.sh/lscpd -P /usr/local/lscp/bin/'
+            Upgrade.executioner(command, 'LSCPD Download.', 0)
+
+            command = 'chmod 755 %s' % (lscpdPath)
+            Upgrade.executioner(command, 'LSCPD Download.', 0)
+
             command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel which curl'
             Upgrade.executioner(command, 'LSCPD Pre-reqs [two]', 0)
-
-            ##
-
-            if os.path.exists('/usr/local/lscp.tar.gz'):
-                os.remove('/usr/local/lscp.tar.gz')
-
-            command = 'wget https://cyberpanel.net/lscp.tar.gz'
-            Upgrade.executioner(command, 'Download LSCPD [two]', 0)
-
-            ##
-
-            command = 'tar zxf lscp.tar.gz -C /usr/local/'
-            Upgrade.executioner(command, 'Extract LSCPD [two]', 0)
-
-            try:
-                os.remove("/usr/local/lscp/fcgi-bin/lsphp")
-                shutil.copy("/usr/local/lsws/lsphp70/bin/lsphp", "/usr/local/lscp/fcgi-bin/lsphp")
-            except:
-                pass
-
-            command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem'
-            Upgrade.executioner(command, 'generate cyberpanel ssl', 0)
 
             command = 'adduser lscpd -M -d /usr/local/lscp'
             Upgrade.executioner(command, 'Add user LSCPD', 0)
@@ -1371,6 +1462,59 @@ class Upgrade:
             command = "chown root:cyberpanel /usr/local/CyberCP/CyberCP/settings.py"
             Upgrade.executioner(command, 'chown core code', 0)
 
+            command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
+            Upgrade.executioner(command, 'chmod CLPackages', 0)
+
+            files = ['/etc/yum.repos.d/MariaDB.repo', '/etc/pdns/pdns.conf', '/etc/systemd/system/lscpd.service',
+                     '/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
+                     '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
+                     '/etc/dovecot/dovecot.conf', '/usr/local/lsws/conf/httpd_config.xml',
+                     '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
+
+            for items in files:
+                command = 'chmod 644 %s' % (items)
+                Upgrade.executioner(command, 'chown core code', 0)
+
+            impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
+                       '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
+                       '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf', '/etc/pure-ftpd/db/mysql.conf',
+                       '/etc/powerdns/pdns.conf']
+
+            for items in impFile:
+                command = 'chmod 600 %s' % (items)
+                Upgrade.executioner(command, 'chown core code', 0)
+
+            command = 'chmod 640 /etc/postfix/*.cf'
+            subprocess.call(command, shell=True)
+
+            command = 'chmod 640 /etc/dovecot/*.conf'
+            subprocess.call(command, shell=True)
+
+            command = 'chmod 640 /etc/dovecot/dovecot-sql.conf.ext'
+            subprocess.call(command, shell=True)
+
+            fileM = ['/usr/local/lsws/FileManager/', '/usr/local/CyberCP/install/FileManager',
+                     '/usr/local/CyberCP/serverStatus/litespeed/FileManager',
+                     '/usr/local/lsws/Example/html/FileManager']
+
+            for items in fileM:
+                try:
+                    shutil.rmtree(items)
+                except:
+                    pass
+
+            command = 'chmod 755 /etc/pure-ftpd/'
+            subprocess.call(command, shell=True)
+
+            command = 'chmod 644 /etc/dovecot/dovecot.conf'
+            subprocess.call(command, shell=True)
+
+            command = 'chmod 644 /etc/postfix/main.cf'
+            subprocess.call(command, shell=True)
+
+            command = 'chmod 644 /etc/postfix/dynamicmaps.cf'
+            subprocess.call(command, shell=True)
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException, msg:
@@ -1391,6 +1535,14 @@ class Upgrade:
                       'lsphp7?-sqlite3 lsphp7?-tidy'
             Upgrade.executioner(command, 'Install PHP 73, 0')
 
+        CentOSPath = '/etc/redhat-release'
+
+        if not os.path.exists(CentOSPath):
+            command = 'cp /usr/local/lsws/lsphp71/bin/php /usr/bin/'
+            Upgrade.executioner(command, 'Set default PHP 7.0, 0')
+
+
+
     @staticmethod
     def someDirectories():
         command = "mkdir -p /usr/local/lscpd/admin/"
@@ -1401,56 +1553,193 @@ class Upgrade:
 
     @staticmethod
     def upgradePDNS():
-        command = "yum install epel-release yum-plugin-priorities && curl -o /etc/yum.repos.d/powerdns-auth-42.repo https://repo.powerdns.com/repo-files/centos-auth-42.repo && yum --enablerepo=epel install pdns"
+        command = "yum install epel-release && curl -o /etc/yum.repos.d/powerdns-auth-42.repo https://repo.powerdns.com/repo-files/centos-auth-42.repo && yum --enablerepo=epel install pdns"
         subprocess.call(command, shell=True)
 
     @staticmethod
     def upgradeDovecot():
-        CentOSPath = '/etc/redhat-release'
+        try:
+            Upgrade.stdOut("Upgrading Dovecot..")
+            CentOSPath = '/etc/redhat-release'
 
-        if os.path.exists(CentOSPath):
-            path = '/etc/yum.repos.d/dovecot.repo'
-            content = """[dovecot-2.3-latest]
+            if os.path.exists(CentOSPath):
+                path = '/etc/yum.repos.d/dovecot.repo'
+                content = """[dovecot-2.3-latest]
 name=Dovecot 2.3 CentOS $releasever - $basearch
 baseurl=http://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch
 gpgkey=https://repo.dovecot.org/DOVECOT-REPO-GPG
 gpgcheck=1
 enabled=1"""
-            writeToFile = open(path, 'w')
-            writeToFile.write(content)
-            writeToFile.close()
+                writeToFile = open(path, 'w')
+                writeToFile.write(content)
+                writeToFile.close()
 
-            command = "yum makecache -y"
-            Upgrade.executioner(command, 0)
+                command = "yum makecache -y"
+                Upgrade.executioner(command, 0)
 
-            command = "yum update -y"
-            Upgrade.executioner(command, 0)
+                command = "yum update -y"
+                Upgrade.executioner(command, 0)
 
-            ## Remove Default Password Scheme
+                ## Remove Default Password Scheme
 
-            path = '/etc/dovecot/dovecot-sql.conf.ext'
+                path = '/etc/dovecot/dovecot-sql.conf.ext'
 
-            data = open(path, 'r').readlines()
+                data = open(path, 'r').readlines()
 
-            writeToFile = open(path, 'w')
-            for items in data:
-                if items.find('default_pass_scheme') > -1:
-                    continue
-                else:
-                    writeToFile.writelines(items)
+                updatePasswords = 1
 
-            writeToFile.close()
+                writeToFile = open(path, 'w')
+                for items in data:
+                    if items.find('default_pass_scheme') > -1:
+                        updatePasswords = 0
+                        continue
+                    else:
+                        writeToFile.writelines(items)
+
+                writeToFile.close()
+
+                Upgrade.stdOut("Upgrading passwords...")
+                for items in EUsers.objects.all():
+                    if items.password.find('CRYPT') > -1:
+                        continue
+                    command = 'doveadm pw -p %s' % (items.password)
+                    items.password = subprocess.check_output(shlex.split(command)).strip('\n')
+                    items.save()
+
+                command = "systemctl restart dovecot"
+                Upgrade.executioner(command, 0)
 
 
-            for items in EUsers.objects.all():
-                command = 'doveadm pw -p %s' % (items.password)
-                items.password = subprocess.check_output(shlex.split(command)).strip('\n')
-                items.save()
 
-            command = "systemctl restart dovecot"
-            Upgrade.executioner(command, 0)
+                ### Postfix Upgrade
+
+                try:
+                    shutil.copy('/etc/postfix/master.cf', '/etc/master.cf')
+                except:
+                    pass
+
+                try:
+                    shutil.copy('/etc/postfix/main.cf', '/etc/main.cf')
+                except:
+                    pass
+
+                gf = '/etc/yum.repos.d/gf.repo'
+
+                gfContent = """[gf]
+name=Ghettoforge packages that won't overwrite core distro packages.
+mirrorlist=http://mirrorlist.ghettoforge.org/el/7/gf/$basearch/mirrorlist
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-gf.el7
+failovermethod=priority
+
+[gf-plus]
+name=Ghettoforge packages that will overwrite core distro packages.
+mirrorlist=http://mirrorlist.ghettoforge.org/el/7/plus/$basearch/mirrorlist
+# Please read http://ghettoforge.org/index.php/Usage *before* enabling this repository!
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-gf.el7
+failovermethod=priority
+"""
+                writeToFile = open(gf, 'w')
+                writeToFile.write(gfContent)
+                writeToFile.close()
+
+                command = 'yum remove postfix -y'
+                Upgrade.executioner(command, 0)
+
+                command = 'rpm -Uvh http://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el7.noarch.rpm'
+                Upgrade.executioner(command, 0)
+
+                command = 'yum clean all'
+                Upgrade.executioner(command, 0)
+
+                command = 'yum makecache fast'
+                Upgrade.executioner(command, 0)
+
+                command = 'yum install -y postfix3 postfix3-mysql'
+                Upgrade.executioner(command, 0)
+
+                try:
+                    shutil.move('/etc/master.cf', '/etc/postfix/master.cf')
+                except:
+                    pass
+                try:
+                    shutil.move('/etc/main.cf', '/etc/postfix/main.cf')
+                except:
+                    pass
+
+                command = 'systemctl restart postfix'
+                Upgrade.executioner(command, 0)
+
+            else:
+                command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
+                subprocess.call(command, shell=True)
+
+                command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
+                subprocess.call(command, shell=True)
+
+                debPath = '/etc/apt/sources.list.d/dovecot.list'
+                writeToFile = open(debPath, 'w')
+                writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
+                writeToFile.close()
+
+                try:
+                    command = 'apt update -y'
+                    Upgrade.executioner(command, 0)
+                except:
+                    pass
+
+                try:
+                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                    subprocess.call(command, shell=True)
+
+                    command = 'dpkg --configure -a'
+                    Upgrade.executioner(command, 0)
+
+                    command = 'apt --fix-broken install -y'
+                    Upgrade.executioner(command, 0)
+
+                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                    subprocess.call(command, shell=True)
+                except:
+                    pass
+
+                ## Remove Default Password Scheme
+
+                path = '/etc/dovecot/dovecot-sql.conf.ext'
+
+                data = open(path, 'r').readlines()
+
+                updatePasswords = 0
+
+                writeToFile = open(path, 'w')
+                for items in data:
+                    if items.find('default_pass_scheme') > -1:
+                        updatePasswords = 1
+                        continue
+                    else:
+                        writeToFile.writelines(items)
+
+                writeToFile.close()
+
+                Upgrade.stdOut("Upgrading passwords...")
+                for items in EUsers.objects.all():
+                    if items.password.find('CRYPT') > -1:
+                        continue
+                    command = 'doveadm pw -p %s' % (items.password)
+                    items.password = subprocess.check_output(shlex.split(command)).strip('\n')
+                    items.save()
 
 
+                command = "systemctl restart dovecot"
+                Upgrade.executioner(command, 0)
+
+            Upgrade.stdOut("Dovecot upgraded.")
+
+        except BaseException, msg:
+            Upgrade.stdOut(str(msg) + " [upgradeDovecot]")
 
     @staticmethod
     def upgrade():
@@ -1458,7 +1747,14 @@ enabled=1"""
         # Upgrade.stdOut("Upgrades are currently disabled")
         # return 0
 
+        postfixPath = '/home/cyberpanel/postfix'
+        pdns = '/home/cyberpanel/pdns'
+        pureftpd = '/home/cyberpanel/ftp'
+
         os.chdir("/usr/local")
+
+        command = 'yum remove yum-plugin-priorities -y'
+        Upgrade.executioner(command, 'remove yum-plugin-priorities', 0)
 
         ## Current Version
 
@@ -1499,6 +1795,7 @@ enabled=1"""
         Upgrade.mailServerMigrations()
         Upgrade.emailMarketingMigrationsa()
         Upgrade.dockerMigrations()
+        Upgrade.CLMigrations()
 
         ##
 
@@ -1517,13 +1814,14 @@ enabled=1"""
         Upgrade.setupPythonWSGI()
         Upgrade.someDirectories()
         Upgrade.installLSCPD()
-        Upgrade.fixPermissions()
         Upgrade.GeneralMigrations()
-        Upgrade.upgradeDovecot()
+
+        if os.path.exists(postfixPath):
+            Upgrade.upgradeDovecot()
         time.sleep(3)
 
         ## Upgrade version
-
+        Upgrade.fixPermissions()
         Upgrade.upgradeVersion()
 
         try:

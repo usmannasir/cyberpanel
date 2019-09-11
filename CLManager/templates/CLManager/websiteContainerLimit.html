@@ -1,0 +1,52 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{{ domain }}{% trans " usage - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div ng-controller="websiteContainerLimitCL" class="container">
+
+        <div id="page-title">
+            <h2 id="domainNamePage">{% trans "Usage" %}</h2>
+            <p>{% trans "View CPU, Memory and Disk usage for " %} <span id="domain">{{ domain }}</span></p>
+        </div>
+
+        <div class="panel">
+            <div class="panel-body">
+                <h2 class="title-hero">
+                    {% trans "CPU Usage of" %} {{ domain }}
+                </h2>
+                <div class="example-box-wrapper">
+                    <div id="flot-placeholder1" style="width:auto;height:300px"></div>
+
+                </div>
+            </div>
+            <div class="panel-body">
+                <h2 class="title-hero">
+                    {% trans "Memory Usage of" %} {{ domain }}
+                </h2>
+                <div class="example-box-wrapper">
+                    <div id="memoryUsage" style="width:auto;height:300px"></div>
+
+                </div>
+            </div>
+            <div class="panel-body">
+                <h2 class="title-hero">
+                    {% trans "Disk Usage of" %} {{ domain }}
+                </h2>
+                <div class="example-box-wrapper">
+                    <div id="diskUsage" style="width:auto;height:300px"></div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+
+{% endblock %}

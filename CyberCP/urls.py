@@ -42,4 +42,5 @@ urlpatterns = [
     url(r'^cloudAPI/', include('cloudAPI.urls')),
     url(r'^docker/', include('dockerManager.urls')),
     url(r'^container/', include('containerization.urls')),
+    url(r'^CloudLinux/', include('CLManager.urls')),
 ]

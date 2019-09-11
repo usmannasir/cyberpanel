@@ -1,0 +1,164 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "List Email Accounts - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "List Email Accounts" %}</h2>
+            <p>{% trans "List Emails Accounts. Change their passwords or delete them." %}</p>
+        </div>
+        <div ng-controller="listEmails" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "List Email Accounts" %} <img ng-hide="cyberpanelLoading"
+                                                           src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    {% if not status %}
+
+                        <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                            <h3>{% trans "Postfix is disabled." %}
+                                <a href="{% url 'managePostfix' %}">
+                                    <button class="btn btn-alt btn-hover btn-blue-alt">
+                                        <span>{% trans "Enable Now" %}</span>
+                                        <i class="glyph-icon icon-arrow-right"></i>
+                                    </button>
+                                </a></h3>
+                        </div>
+
+
+                    {% else %}
+
+                        <form action="/" class="form-horizontal bordered-row">
+
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Select Domain" %}</label>
+                                <div class="col-sm-6">
+                                    <select ng-change="populateCurrentRecords()" ng-model="selectedDomain"
+                                            class="form-control">
+                                        {% for items in websiteList %}
+                                            <option>{{ items }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+
+                            <!------ List of records --------------->
+
+                            <div ng-hide="emailsAccounts" class="form-group">
+
+                                <div class="col-sm-12">
+
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>{% trans "Emails" %}</th>
+                                            <th>{% trans "Actions" %}</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr ng-repeat="record in records track by $index">
+                                            <td ng-bind="record.email"></td>
+                                            <td>
+                                                <a data-toggle="modal" data-target="#settings"
+                                                   ng-click="changePasswordInitial(record.email)"
+                                                   class="btn btn-border btn-alt border-purple btn-link font-purple"
+                                                   href="#"
+                                                   title=""><span>{% trans 'Change Password' %}</span></a>
+                                                <a ng-click="deleteEmailAccountFinal(record.email)" class="btn btn-border btn-alt border-red btn-link font-red" href="#"
+                                                   title=""><span>{% trans 'Delete' %}</span></a>
+
+                                                <!--- Modal --->
+                                                <div id="settings" class="modal fade" role="dialog">
+                                                    <div class="modal-dialog">
+
+                                                        <!-- Modal content-->
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <button type="button" class="close"
+                                                                        data-dismiss="modal">&times;
+                                                                </button>
+                                                                <h4 class="modal-title">Change Password
+                                                                    <img ng-hide="cyberpanelLoading"
+                                                                         src="{% static 'images/loading.gif' %}">
+                                                                </h4>
+                                                            </div>
+                                                            <div class="modal-body">
+
+                                                                <form name="containerSettingsForm" action="/"
+                                                                      class="form-horizontal">
+                                                                    <div ng-hide="installationDetailsForm"
+                                                                         class="form-group">
+                                                                        <label class="col-sm-3 control-label">{% trans "Email" %}</label>
+                                                                        <div class="col-sm-6">
+                                                                            <input name="name" type="text"
+                                                                                   class="form-control"
+                                                                                   ng-model="email" readonly>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <hr>
+
+                                                                    <div ng-hide="installationDetailsForm"
+                                                                         class="form-group">
+                                                                        <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                                                                        <div class="col-sm-6">
+                                                                            <input type="password"
+                                                                                   class="form-control"
+                                                                                   ng-model="$parent.password">
+                                                                        </div>
+                                                                    </div>
+
+
+                                                                </form>
+
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" ng-disabled="savingSettings"
+                                                                        class="btn btn-primary"
+                                                                        ng-click="changePassword()"
+                                                                        data-dismiss="modal">
+                                                                    Save
+                                                                </button>
+                                                                <button type="button" ng-disabled="savingSettings"
+                                                                        class="btn btn-default" data-dismiss="modal">
+                                                                    Close
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!--- Modal End--->
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!------ List of records --------------->
+
+
+                        </form>
+
+                    {% endif %}
+
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

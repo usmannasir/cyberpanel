@@ -101,7 +101,7 @@ def savePolicyServerStatus(request):
 
                 ## save configuration data
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                 execPath = execPath + " savePolicyServerStatus --install " + install
                 output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -225,7 +225,24 @@ def getFurtherDomains(request):
                     else:
                         json_data = json_data +',' + json.dumps(dic)
                 except BaseException, msg:
-                    pass
+                    try:
+                        domain = Domains.objects.get(domainOwner=items)
+                    except:
+                        domain = Domains(domainOwner=items, domain=items.domain)
+                        domain.save()
+
+                    domainLimits = DomainLimits(domain=domain)
+                    domainLimits.save()
+
+                    dic = {'domain': items.domain, 'emails': domain.eusers_set.all().count(),
+                           'monthlyLimit': domainLimits.monthlyLimit, 'monthlyUsed': domainLimits.monthlyUsed,
+                           'status': domainLimits.limitStatus}
+
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
             final_dic = {'listWebSiteStatus': 1, 'error_message': "None", "data": json_data}
@@ -784,7 +801,7 @@ def installSpamAssassin(request):
             return ACLManager.loadErrorJson()
         try:
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
             execPath = execPath + " installSpamAssassin"
             ProcessUtilities.popenExecutioner(execPath)
 
@@ -810,7 +827,7 @@ def installStatusSpamAssassin(request):
 
                 if installStatus.find("[200]")>-1:
 
-                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                    execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                     execPath = execPath + " configureSpamAssassin"
                     output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -981,7 +998,7 @@ def saveSpamAssassinConfigurations(request):
 
                 ## save configuration data
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                 execPath = execPath + " saveSpamAssassinConfigs --tempConfigPath " + tempConfigPath
                 output = ProcessUtilities.outputExecutioner(execPath)
 

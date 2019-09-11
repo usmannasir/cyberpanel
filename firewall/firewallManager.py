@@ -11,14 +11,11 @@ from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
-import shlex
-from plogical.installUtilities import installUtilities
 from django.shortcuts import HttpResponse, render
 from random import randint
 import time
 from plogical.firewallUtilities import FirewallUtilities
 from firewall.models import FirewallRules
-import thread
 from plogical.modSec import modSec
 from plogical.csf import CSF
 from plogical.processUtilities import ProcessUtilities
@@ -374,7 +371,7 @@ class FirewallManager:
             else:
                 rootLogin = "0"
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
             execPath = execPath + " saveSSHConfigs --type " + str(type) + " --sshPort " + sshPort + " --rootLogin " + rootLogin
 
             output = ProcessUtilities.outputExecutioner(execPath)
@@ -386,10 +383,14 @@ class FirewallManager:
                     FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0")
                     updateFW.port = sshPort
                     updateFW.save()
+                    FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
                 except:
                     try:
                         newFireWallRule = FirewallRules(name="SSHCustom", port=sshPort, proto="tcp")
                         newFireWallRule.save()
+                        FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
+                        command = 'firewall-cmd --permanent --remove-service=ssh'
+                        ProcessUtilities.executioner(command)
                     except BaseException, msg:
                         logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
@@ -417,7 +418,7 @@ class FirewallManager:
 
             key = data['key']
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
             execPath = execPath + " deleteSSHKey --key '" + key + "'"
 
             output = ProcessUtilities.outputExecutioner(execPath)
@@ -511,7 +512,7 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('installModSec', 0)
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
             execPath = execPath + " installModSec"
 
             ProcessUtilities.popenExecutioner(execPath)
@@ -534,7 +535,7 @@ class FirewallManager:
 
             if installStatus.find("[200]") > -1:
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
 
                 execPath = execPath + " installModSecConfigs"
 
@@ -780,7 +781,7 @@ class FirewallManager:
 
                 ## save configuration data
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
 
                 execPath = execPath + " saveModSecConfigs --tempConfigPath " + tempConfigPath
 
@@ -835,7 +836,7 @@ class FirewallManager:
 
                 ## save configuration data
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
 
                 execPath = execPath + " saveModSecConfigs --tempConfigPath " + tempConfigPath
 
@@ -961,7 +962,7 @@ class FirewallManager:
 
             ## save configuration data
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
             execPath = execPath + " saveModSecRules"
             output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1106,7 +1107,7 @@ class FirewallManager:
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
                 execPath = execPath + " " + packName
 
                 output = ProcessUtilities.outputExecutioner(execPath)
@@ -1124,7 +1125,7 @@ class FirewallManager:
                     final_json = json.dumps({'installStatus': 0, 'error_message': "OWASP will be available later.", })
                     return HttpResponse(final_json)
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
                 execPath = execPath + " " + packName
                 output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1264,7 +1265,7 @@ class FirewallManager:
             else:
                 functionName = 'enableRuleFile'
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
 
             execPath = execPath + " " + functionName + ' --packName ' + packName + ' --fileName ' + fileName
 
@@ -1478,8 +1479,17 @@ class FirewallManager:
             protocol = data['protocol']
             ports = data['ports']
 
+            portsPath = '/tmp/ports'
+
+            if os.path.exists(portsPath):
+                os.remove(portsPath)
+
+            writeToFile = open(portsPath, 'w')
+            writeToFile.write(ports)
+            writeToFile.close()
+
             execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
-            execPath = execPath + " modifyPorts --protocol " + protocol + " --ports " + ports
+            execPath = execPath + " modifyPorts --protocol " + protocol + " --ports " + portsPath
             output = ProcessUtilities.outputExecutioner(execPath)
 
             if output.find("1,None") > -1:

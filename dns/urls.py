@@ -4,6 +4,7 @@ import views
 urlpatterns = [
     url(r'^$', views.loadDNSHome, name='dnsHome'),
     url(r'^createNameserver', views.createNameserver, name='createNameserver'),
+    url(r'^configureDefaultNameServers$', views.configureDefaultNameServers, name='configureDefaultNameServers'),
     url(r'^createDNSZone', views.createDNSZone, name='createDNSZone'),
     url(r'^addDeleteDNSRecords', views.addDeleteDNSRecords, name='addDeleteDNSRecords'),
 
@@ -15,4 +16,5 @@ urlpatterns = [
     url(r'^deleteDNSRecord',views.deleteDNSRecord,name='deleteDNSRecord'),
     url(r'^deleteDNSZone',views.deleteDNSZone,name='deleteDNSZone'),
     url(r'^submitZoneDeletion',views.submitZoneDeletion,name='submitZoneDeletion'),
+    url(r'^saveNSConfigurations$', views.saveNSConfigurations, name='saveNSConfigurations'),
 ]

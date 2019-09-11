@@ -99,7 +99,6 @@
     <link rel="stylesheet" type="text/css" href="https://www.jsdelivr.com/package/npm/fontawesome">
 
 
-
     <script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-core.min.js' %}"></script>
     <script type="text/javascript">
         $(window).load(function () {
@@ -319,7 +318,7 @@
                     </div>
                 </div>
                 <a class="header-btn" id="logout-btn" href="{% url 'logout' %}" title="{% trans 'Logout' %}">
-                    <i class="glyph-icon icon-linecons-lock"></i>
+                    <i class="glyph-icon icon-power-off"></i>
                 </a>
 
 
@@ -373,16 +372,13 @@
                                 <li class="createNewUser"><a href="{% url 'createUser' %}"
                                                              title="{% trans 'Create New User' %}"><span>{% trans "Create New User" %}</span></a>
                                 </li>
+                                <li class="listUsers"><a href="{% url 'listUsers' %}"
+                                                         title="{% trans 'List Users' %}"><span>{% trans "List Users" %}</span></a>
+                                </li>
                                 <li><a href="{% url 'modifyUsers' %}"
                                        title="{% trans 'Modify User' %}"><span>{% trans "Modify User" %}</span></a></li>
-                                <li class="deleteUser"><a href="{% url 'deleteUser' %}"
-                                                          title="{% trans 'Delete User' %}"><span>{% trans "Delete User" %}</span></a>
-                                </li>
                                 <li class="resellerCenter"><a href="{% url 'resellerCenter' %}"
                                                               title="{% trans 'Reseller Center' %}"><span>{% trans "Reseller Center" %}</span></a>
-                                </li>
-                                <li class="changeUserACL"><a href="{% url 'changeUserACL' %}"
-                                                             title="{% trans 'Change User ACL' %}"><span>{% trans "Change User ACL" %}</span></a>
                                 </li>
                                 <li class="serverACL"><a href="{% url 'createNewACL' %}"
                                                          title="{% trans 'Create New ACL' %}"><span>{% trans "Create New ACL" %}</span></a>
@@ -439,6 +435,9 @@
                                 <li class="createPackage"><a href="{% url 'createPackage' %}"
                                                              title="{% trans 'Create Package' %}"><span>{% trans "Create Package" %}</span></a>
                                 </li>
+                                <li class="listPackages"><a href="{% url 'listPackages' %}"
+                                                            title="{% trans 'List Packages' %}"><span>{% trans "List Packages" %}</span></a>
+                                </li>
                                 <li class="deletePackage"><a href="{% url 'deletePackage' %}"
                                                              title="{% trans 'Delete Package' %}"><span>{% trans "Delete Package" %}</span></a>
                                 </li>
@@ -486,6 +485,9 @@
                                 <li class="createNameServer"><a href="{% url 'createNameserver' %}"
                                                                 title="{% trans 'Create Nameserver' %}"><span>{% trans "Create Nameserver" %}</span></a>
                                 </li>
+                                <li class="serverACL"><a href="{% url 'configureDefaultNameServers' %}"
+                                                                title="{% trans 'Configure Default Nameservers' %}"><span>{% trans "Config Default Nameservers" %}</span></a>
+                                </li>
                                 <li class="createDNSZone"><a href="{% url 'createDNSZone' %}"
                                                              title="{% trans 'Create DNS Zone' %}"><span>{% trans "Create DNS Zone" %}</span></a>
                                 </li>
@@ -510,6 +512,9 @@
                             <ul>
                                 <li class="createEmail"><a href="{% url 'createEmailAccount' %}"
                                                            title="{% trans 'Create Email Account' %}"><span>{% trans "Create Email" %}</span></a>
+                                </li>
+                                <li class="listEmails"><a href="{% url 'listEmails' %}"
+                                                          title="{% trans 'List Emails' %}"><span>{% trans "List Emails" %}</span></a>
                                 </li>
                                 <li class="deleteEmail"><a href="{% url 'deleteEmailAccount' %}"
                                                            title="{% trans 'Delete Email Account' %}"><span>{% trans "Delete Email" %}</span></a>
@@ -605,6 +610,34 @@
                     </li>
 
                     <li class="header serverACL"><span>{% trans "Server" %}</span></li>
+
+                    <li class="serverACL">
+                        <a href="#" title="{% trans 'CloudLinux' %}">
+                            <i class="glyph-icon icon-linecons-fire"></i>
+                            <span>{% trans "CloudLinux" %}</span>
+                            <span class="bs-label badge-yellow">{% trans "NEW" %}</span>
+                        </a>
+                        <div class="sidebar-submenu">
+
+                            <ul>
+                                <li><a href="{% url 'CreatePackageCL' %}"
+                                       title="{% trans 'Create Cloud Linux Package' %}"><span>{% trans "Create Package" %}</span></a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li><a href="{% url 'listPackagesCL' %}"
+                                       title="{% trans 'List Cloud Linux Package' %}"><span>{% trans "List Packages" %}</span></a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li><a href="{% url 'monitorUsage' %}"
+                                       title="{% trans 'Monitor Usage of your Websites' %}"><span>{% trans "Monitor Usage" %}</span></a>
+                                </li>
+                            </ul>
+
+                        </div><!-- .sidebar-submenu -->
+                    </li>
+
 
                     <li class="serverACL">
                         <a href="#" title="{% trans 'Containerization' %}">
@@ -756,6 +789,9 @@
                                 <li><a href="{% url 'csf' %}"
                                        title="{% trans 'ConfigServer Security & Firewall (CSF)' %}"><span>{% trans "CSF" %}</span></a>
                                 </li>
+                                <li><a href="{% url 'CageFS' %}"
+                                       title="{% trans 'CageFS Configurations' %}"><span>{% trans "CageFS" %}</span></a>
+                                </li>
                             </ul>
 
                         </div><!-- .sidebar-submenu -->
@@ -870,6 +906,7 @@
     <script src="{% static 'manageServices/manageServices.js' %}"></script>
     <script src="{% static 'dockerManager/dockerManager.js' %}"></script>
     <script src="{% static 'containerization/containerization.js' %}"></script>
+    <script src="{% static 'CLManager/CLManager.js' %}"></script>
 </div>
 </body>
 </html>

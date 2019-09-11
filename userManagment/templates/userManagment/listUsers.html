@@ -1,0 +1,136 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "List Users  - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "List Users" %}</h2>
+            <p>{% trans "List Users that you own." %}</p>
+        </div>
+        <div ng-controller="listTableUsers" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "List Users" %} <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <!------ List of records --------------->
+
+                    <div class="form-group">
+
+                        <div class="col-sm-12">
+
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th>{% trans "Username" %}</th>
+                                    <th>{% trans "Websites Limit" %}</th>
+                                    <th>{% trans "Disk Usage" %}</th>
+                                    <th>{% trans "ACL" %}</th>
+                                    <th>{% trans "Owner" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr ng-repeat="record in records track by $index">
+                                    <td ng-bind="record.name"></td>
+                                    <td ng-bind="record.websites"></td>
+                                    <td ng-bind="record.diskUsage"></td>
+                                    <td ng-bind="record.acl"></td>
+                                    <td ng-bind="record.owner"></td>
+                                    <td>
+                                        <a data-toggle="modal" data-target="#settings"
+                                           ng-click="editInitial(record.name)"
+                                           class="btn btn-border btn-alt border-purple btn-link font-purple" href="#"
+                                           title=""><span>{% trans 'Edit' %}</span></a>
+                                        <a ng-click="deleteUserFinal(record.name)"
+                                           class="btn btn-border btn-alt border-red btn-link font-red" href="#"
+                                           title=""><span>{% trans 'Delete' %}</span></a>
+
+                                        <!--- Modal --->
+                                        <div id="settings" class="modal fade" role="dialog">
+                                            <div class="modal-dialog">
+
+                                                <!-- Modal content-->
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal">&times;
+                                                        </button>
+                                                        <h4 class="modal-title">Edit User
+                                                            <img ng-hide="cyberpanelLoading"
+                                                                 src="{% static 'images/loading.gif' %}">
+                                                        </h4>
+                                                    </div>
+                                                    <div class="modal-body">
+
+                                                        <form name="containerSettingsForm" action="/"
+                                                              class="form-horizontal">
+                                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                                <label class="col-sm-3 control-label">{% trans "Name" %}</label>
+                                                                <div class="col-sm-6">
+                                                                    <input name="name" type="text" class="form-control"
+                                                                           ng-model="name" readonly>
+                                                                </div>
+                                                            </div>
+
+                                                            <hr>
+                                                            <div class="form-group">
+                                                                <label class="col-sm-3 control-label">{% trans "New Owner" %} </label>
+                                                                <div class="col-sm-6">
+                                                                    <select ng-change="saveResellerChanges()"
+                                                                            ng-model="$parent.newOwner"
+                                                                            class="form-control">
+                                                                        {% for items in resellerPrivUsers %}
+                                                                            <option>{{ items }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+
+                                                            <hr>
+
+                                                            <div class="form-group">
+                                                                <label class="col-sm-3 control-label">{% trans "Select ACL" %} </label>
+                                                                <div class="col-sm-6">
+                                                                    <select ng-change="changeACLFunc()"
+                                                                            ng-model="$parent.selectedACL"
+                                                                            class="form-control">
+                                                                        {% for items in aclNames %}
+                                                                            <option>{{ items }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+
+
+                                                        </form>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--- Modal End--->
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!------ List of records --------------->
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

@@ -66,7 +66,6 @@ class SetupConn:
         except BaseException, msg:
             logging.writeToFile(str(msg) + ' [SetupConn.start_listening]')
 
-
     def __del__(self):
         self.sock.close()
         logging.writeToFile('Closing open connections!')

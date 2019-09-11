@@ -14,6 +14,8 @@ from django.utils.translation import LANGUAGE_SESSION_KEY
 import CyberCP.settings as settings
 from models import ACL
 from plogical.acl import ACLManager
+from django.views.decorators.csrf import ensure_csrf_cookie
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 # Create your views here.
 
 def verifyLogin(request):
@@ -115,6 +117,16 @@ def verifyLogin(request):
             if hashPassword.check_password(admin.password, password):
 
                 request.session['userID'] = admin.pk
+
+                ipAddr = request.META.get('REMOTE_ADDR')
+
+                if ipAddr.find(':') > -1:
+                    ipAddr = ipAddr.split(':')[:3]
+                    request.session['ipAddr'] = ''.join(ipAddr)
+                else:
+                    request.session['ipAddr'] = request.META.get('REMOTE_ADDR')
+
+                request.session.set_expiry(3600)
                 data = {'userID': admin.pk, 'loginStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data)
                 return HttpResponse(json_data)
@@ -129,6 +141,7 @@ def verifyLogin(request):
             json_data = json.dumps(data)
             return HttpResponse(json_data)
 
+@ensure_csrf_cookie
 def loadLoginPage(request):
     try:
         userID = request.session['userID']
@@ -191,6 +204,9 @@ def loadLoginPage(request):
             newFWRule = FirewallRules(name="ftptls", proto="tcp", port="40110-40210")
             newFWRule.save()
 
+            newFWRule = FirewallRules(name="quic", proto="udp", port="443")
+            newFWRule.save()
+
         if numberOfAdministrator == 0:
             ACLManager.createDefaultACLs()
             acl = ACL.objects.get(name='admin')
@@ -202,7 +218,7 @@ def loadLoginPage(request):
                                   firstName="Cyber",lastName="Panel", acl=acl, token=token)
             admin.save()
 
-            vers = version(currentVersion="1.8", build=5)
+            vers = version(currentVersion="1.9", build=0)
             vers.save()
 
             package = Package(admin=admin, packageName="Default", diskSpace=1000,
@@ -213,6 +229,7 @@ def loadLoginPage(request):
         else:
             return render(request, 'loginSystem/login.html', {})
 
+@ensure_csrf_cookie
 def logout(request):
     try:
         del request.session['userID']

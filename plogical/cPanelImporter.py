@@ -21,7 +21,7 @@ import MySQLdb.cursors as cursors
 import shlex
 import subprocess
 from databases.models import Databases
-from websiteFunctions.models import Websites
+from websiteFunctions.models import Websites, ChildDomains as CDomains
 from plogical.vhost import vhost
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.mailUtilities import mailUtilities
@@ -41,7 +41,7 @@ class cPanelImporter:
 
     def __init__(self, backupFile, logFile):
         self.backupFile = backupFile
-        self.fileName = backupFile.split('/')[-1].strip('.tar.gz')
+        self.fileName = backupFile.split('/')[-1].replace('.tar.gz', '')
         self.logFile = logFile
         self.PHPVersion = ''
         self.email = ''
@@ -51,6 +51,9 @@ class cPanelImporter:
         self.mailFormat = 1
 
     def PHPDecider(self):
+
+        if self.PHPVersion == 'inherit':
+            self.PHPVersion = 'PHP 7.2'
         if self.PHPVersion.find('53') > -1:
             self.PHPVersion = 'PHP 5.3'
         elif self.PHPVersion.find('54') > -1:
@@ -67,6 +70,9 @@ class cPanelImporter:
             self.PHPVersion = 'PHP 7.2'
         elif self.PHPVersion.find('73') > -1:
             self.PHPVersion = 'PHP 7.3'
+
+        if self.PHPVersion == '':
+            self.PHPVersion = 'PHP 7.1'
 
     def SetupSSL(self, path, domain):
 
@@ -154,7 +160,7 @@ class cPanelImporter:
 
             for items in data:
                 if items.find('main_domain') > -1:
-                    DomainName = items.split(' ')[-1].strip('\n')
+                    DomainName = items.split(' ')[-1].replace('\n', '')
                     self.mainDomain = DomainName
                     break
 
@@ -169,12 +175,17 @@ class cPanelImporter:
             DomainMeta = '%s/userdata/%s' % (CompletPathToExtractedArchive, DomainName)
 
             data = open(DomainMeta, 'r').readlines()
+            phpChecker = 1
 
             for items in data:
                 if items.find('phpversion') > -1:
-                    self.PHPVersion = items.split(' ')[-1].strip('\n')
+                    self.PHPVersion = items.split(' ')[-1].replace('\n', '')
                     self.PHPDecider()
+                    phpChecker = 0
                     break
+
+            if phpChecker:
+                self.PHPDecider()
 
             message = 'PHP version of %s is %s.' % (DomainName, self.PHPVersion)
             logging.statusWriter(self.logFile, message, 1)
@@ -188,7 +199,7 @@ class cPanelImporter:
 
             for items in data:
                 if items.find('serveradmin') > -1:
-                    self.email = items.split(' ')[-1].strip('\n')
+                    self.email = items.split(' ')[-1].replace('\n', '')
                     break
 
             message = 'Server Admin email for %s is %s.' % (DomainName, self.email)
@@ -240,14 +251,14 @@ class cPanelImporter:
 
             for items in data:
                 if items.find('homedir') > -1:
-                    self.homeDir = items.split(' ')[-1].strip('\n')
+                    self.homeDir = items.split(' ')[-1].replace('\n', '')
                     break
 
             data = open(DomainMeta, 'r').readlines()
 
             for items in data:
                 if items.find('documentroot') > -1:
-                    self.documentRoot = items.split(' ')[-1].strip('\n')
+                    self.documentRoot = items.split(' ')[-1].replace('\n', '')
                     break
 
             nowPath = '/home/%s/public_html' % (DomainName)
@@ -257,7 +268,7 @@ class cPanelImporter:
             movePath = '%s/homedir/%s' % (
             CompletPathToExtractedArchive, self.documentRoot.replace(self.homeDir, '', 1).replace('/', ''))
 
-            shutil.copytree(movePath, nowPath)
+            shutil.copytree(movePath, nowPath, symlinks=True)
 
             command = 'chown -R %s:%s %s' % (externalApp, externalApp, nowPath)
             ProcessUtilities.normalExecutioner(command)
@@ -303,7 +314,7 @@ class cPanelImporter:
                         addonStatus = 0
                         continue
                     else:
-                        cDomain = items.split(':')[0].strip(' ')
+                        cDomain = items.split(':')[0].replace(' ', '')
                         if len(cDomain) < 2:
                             continue
                         Domains.append(ChildDomains(cDomain, 1))
@@ -317,7 +328,7 @@ class cPanelImporter:
 
                 existCheck = 0
                 if subDomainsStatus == 1:
-                    cDomain = items.split(' ')[-1].strip('\n')
+                    cDomain = items.split(' ')[-1].replace('\n', '')
                     for items in Domains:
                         if cDomain.find(items.domain) > -1:
                             existCheck = 1
@@ -340,56 +351,54 @@ class cPanelImporter:
 
             for items in Domains:
 
-                message = 'Creating %s.' % (items.domain)
-                logging.statusWriter(self.logFile, message, 1)
+                try:
 
-                path = '/home/' + self.mainDomain + '/public_html/' + items.domain
+                    message = 'Creating %s.' % (items.domain)
+                    logging.statusWriter(self.logFile, message, 1)
 
-                ## Find PHP Version
+                    path = '/home/' + self.mainDomain + '/public_html/' + items.domain
 
-                if items.addon == 1:
-                    DomainMeta = '%s/userdata/%s.%s' % (CompletPathToExtractedArchive, items.domain, self.mainDomain)
-                else:
-                    DomainMeta = '%s/userdata/%s' % (CompletPathToExtractedArchive, items.domain)
+                    ## Find PHP Version
 
-                data = open(DomainMeta, 'r').readlines()
+                    if items.addon == 1:
+                        DomainMeta = '%s/userdata/%s.%s' % (CompletPathToExtractedArchive, items.domain, self.mainDomain)
+                    else:
+                        DomainMeta = '%s/userdata/%s' % (CompletPathToExtractedArchive, items.domain)
 
-                for it in data:
-                    if it.find('phpversion') > -1:
-                        self.PHPVersion = it.split(' ')[-1].strip('\n')
+                    data = open(DomainMeta, 'r').readlines()
+                    phpChecker = 1
+                    for it in data:
+                        if it.find('phpversion') > -1:
+                            self.PHPVersion = it.split(' ')[-1].replace('\n', '')
+                            self.PHPDecider()
+                            phpChecker = 0
+                            break
+
+                    if phpChecker:
                         self.PHPDecider()
-                        break
 
-                message = 'Calling core to create %s.' % (items.domain)
-                logging.statusWriter(self.logFile, message, 1)
-
-                result = virtualHostUtilities.createDomain(self.mainDomain, items.domain, self.PHPVersion, path, 0, 0,
-                                                           0, 'admin', 0)
-
-                if result[0] == 1:
-                    message = 'Child domain %s created from archive file: %s' % (items.domain, self.backupFile)
-                    logging.statusWriter(self.logFile, message, 1)
-                else:
-                    message = 'Failed to create Child domain %s from archive file: %s' % (items.domain, self.backupFile)
+                    message = 'Calling core to create %s.' % (items.domain)
                     logging.statusWriter(self.logFile, message, 1)
 
+                    result = virtualHostUtilities.createDomain(self.mainDomain, items.domain, self.PHPVersion, path, 0, 0,
+                                                               0, 'admin', 0)
+
+                    if result[0] == 1:
+                        message = 'Child domain %s created from archive file: %s' % (items.domain, self.backupFile)
+                        logging.statusWriter(self.logFile, message, 1)
+                    else:
+                        message = 'Failed to create Child domain %s from archive file: %s' % (items.domain, self.backupFile)
+                        logging.statusWriter(self.logFile, message, 1)
 
 
-                ## Setup SSL
 
-                message = 'Detecting SSL for %s.' % (items.domain)
-                logging.statusWriter(self.logFile, message, 1)
+                    ## Setup SSL
 
-                SSLPath = '%s/apache_tls/%s' % (CompletPathToExtractedArchive, items.domain)
-
-                if os.path.exists(SSLPath):
-                    message = 'SSL found for %s, setting up.' % (items.domain)
+                    message = 'Detecting SSL for %s.' % (items.domain)
                     logging.statusWriter(self.logFile, message, 1)
-                    self.SetupSSL(SSLPath, items.domain)
-                    message = 'SSL set up OK for %s.' % (items.domain)
-                    logging.statusWriter(self.logFile, message, 1)
-                else:
-                    SSLPath = '%s/apache_tls/%s.%s' % (CompletPathToExtractedArchive, items.domain, self.mainDomain)
+
+                    SSLPath = '%s/apache_tls/%s' % (CompletPathToExtractedArchive, items.domain)
+
                     if os.path.exists(SSLPath):
                         message = 'SSL found for %s, setting up.' % (items.domain)
                         logging.statusWriter(self.logFile, message, 1)
@@ -397,38 +406,59 @@ class cPanelImporter:
                         message = 'SSL set up OK for %s.' % (items.domain)
                         logging.statusWriter(self.logFile, message, 1)
                     else:
-                        message = 'SSL not detected for %s, you can later issue SSL from Manage SSL in CyberPanel.' % (
-                            items.domain)
-                        logging.statusWriter(self.logFile, message, 1)
+                        SSLPath = '%s/apache_tls/%s.%s' % (CompletPathToExtractedArchive, items.domain, self.mainDomain)
+                        if os.path.exists(SSLPath):
+                            message = 'SSL found for %s, setting up.' % (items.domain)
+                            logging.statusWriter(self.logFile, message, 1)
+                            self.SetupSSL(SSLPath, items.domain)
+                            message = 'SSL set up OK for %s.' % (items.domain)
+                            logging.statusWriter(self.logFile, message, 1)
+                        else:
+                            message = 'SSL not detected for %s, you can later issue SSL from Manage SSL in CyberPanel.' % (
+                                items.domain)
+                            logging.statusWriter(self.logFile, message, 1)
 
 
-                ## Creating Document root for childs
+                    ## Creating Document root for childs
 
-                message = 'Restoring document root files for %s.' % (items.domain)
-                logging.statusWriter(self.logFile, message, 1)
+                    message = 'Restoring document root files for %s.' % (items.domain)
+                    logging.statusWriter(self.logFile, message, 1)
 
-                externalApp = "".join(re.findall("[a-zA-Z]+", self.mainDomain))[:7]
+                    externalApp = "".join(re.findall("[a-zA-Z]+", self.mainDomain))[:7]
 
-                data = open(DomainMeta, 'r').readlines()
+                    data = open(DomainMeta, 'r').readlines()
 
-                for items in data:
-                    if items.find('documentroot') > -1:
-                        ChildDocRoot = items.split(' ')[-1].strip('\n')
-                        break
+                    for items in data:
+                        if items.find('documentroot') > -1:
+                            ChildDocRoot = items.split(' ')[-1].replace('\n', '')
+                            break
 
-                if os.path.exists(path):
-                    shutil.rmtree(path)
+                    if os.path.exists(path):
+                        shutil.rmtree(path)
 
-                movePath = '%s/homedir/public_html/%s' % (
-                    CompletPathToExtractedArchive, ChildDocRoot.replace(self.documentRoot, '', 1).replace('/', ''))
+                    movePath = '%s/homedir/public_html/%s' % (
+                        CompletPathToExtractedArchive, ChildDocRoot.replace(self.documentRoot, '', 1).replace('/', ''))
 
-                shutil.move(movePath, path)
+                    if os.path.exists(movePath):
+                        shutil.move(movePath, path)
+                    else:
+                        movePath = '%s/homedir/%s' % (
+                        CompletPathToExtractedArchive, ChildDocRoot.split('/')[-1].replace(self.documentRoot, '', 1).replace('/', ''))
+                        if os.path.exists(movePath):
+                            shutil.move(movePath, path)
+                        else:
+                            movePath = '%s/homedir/%s' % (
+                                CompletPathToExtractedArchive, items.domain)
+                            shutil.move(movePath, path)
 
-                command = 'chown -R %s:%s %s' % (externalApp, externalApp, path)
-                ProcessUtilities.normalExecutioner(command)
+                    command = 'chown -R %s:%s %s' % (externalApp, externalApp, path)
+                    ProcessUtilities.normalExecutioner(command)
 
-                message = 'Successfully created child domain.'
-                logging.statusWriter(self.logFile, message, 1)
+                    message = 'Successfully created child domain.'
+                    logging.statusWriter(self.logFile, message, 1)
+                except BaseException, msg:
+                    message = 'Failed to create child domain from backup file %s, error message: %s. Moving on..' % (
+                        self.backupFile, str(msg))
 
             return 1
 
@@ -437,6 +467,11 @@ class cPanelImporter:
             self.backupFile, str(msg))
             logging.statusWriter(self.logFile, message, 1)
             return 0
+
+    def createDummyChild(self, childDomain):
+        path = '/home/%s/public_html/%s' % (self.mainDomain, childDomain)
+        virtualHostUtilities.createDomain(self.mainDomain, childDomain, self.PHPVersion, path, 0, 0,
+                                                   0, 'admin', 0)
 
     def CreateDNSRecords(self):
         try:
@@ -496,31 +531,43 @@ class cPanelImporter:
                 start = 0
 
                 for items in data:
-                    if items.find('SOA') > -1:
-                        SOACheck = 1
-                        continue
+                    try:
+                        if items.find('SOA') > -1:
+                            SOACheck = 1
+                            continue
 
-                    if SOACheck == 1 and items.find(')') > -1:
-                        SOACheck = 0
-                        start = 1
-                        continue
-                    else:
-                        pass
+                        if SOACheck == 1 and items.find(')') > -1:
+                            SOACheck = 0
+                            start = 1
+                            continue
+                        else:
+                            pass
 
-                    if start == 1:
-                        if len(items) > 3:
-                            if items.find("DKIM1") > -1:
-                                continue
-                            RecordsData = items.split('\t')
+                        if start == 1:
+                            if len(items) > 3:
+                                if items.find("DKIM1") > -1:
+                                    continue
+                                RecordsData = items.split('\t')
 
-                            if RecordsData[3] == 'A':
-                                RecordsData[4] = ipAddress
+                                if RecordsData[3] == 'A':
+                                    RecordsData[4] = ipAddress
 
-                            if RecordsData[0].find(topLevelDomain) > -1:
-                                DNS.createDNSRecord(zone, RecordsData[0].strip('.'), RecordsData[3], RecordsData[4], 0, RecordsData[1])
-                            else:
-                                DNS.createDNSRecord(zone, RecordsData[0] + '.' + topLevelDomain , RecordsData[3], RecordsData[4], 0,
-                                                    RecordsData[1])
+                                if RecordsData[0].find(topLevelDomain) > -1:
+                                    if RecordsData[3] == 'MX':
+                                        DNS.createDNSRecord(zone, RecordsData[0].rstrip('.'), RecordsData[3],RecordsData[5].rstrip('.').rstrip('.\n'), int(RecordsData[4]), RecordsData[1])
+                                    else:
+                                        DNS.createDNSRecord(zone, RecordsData[0].rstrip('.'), RecordsData[3], RecordsData[4].rstrip('.').rstrip('.\n'), 0, RecordsData[1])
+                                else:
+                                    if RecordsData[3] == 'MX':
+                                        DNS.createDNSRecord(zone, RecordsData[0] + '.' + topLevelDomain, RecordsData[3],
+                                                            RecordsData[5].rstrip('.').rstrip('.\n'), RecordsData[4],
+                                                            RecordsData[1])
+                                    else:
+                                        DNS.createDNSRecord(zone, RecordsData[0] + '.' + topLevelDomain , RecordsData[3], RecordsData[4].rstrip('.').rstrip('.\n'), 0,
+                                                            RecordsData[1])
+                    except BaseException, msg:
+                        message = 'Failed while creating DNS entry for %s, error message: %s.' % (topLevelDomain, str(msg))
+                        logging.statusWriter(self.logFile, message, 1)
 
                 message = 'DNS records successfully created for %s.' % (topLevelDomain)
                 logging.statusWriter(self.logFile, message, 1)
@@ -540,7 +587,7 @@ class cPanelImporter:
             f = open(passFile)
             data = f.read()
             password = data.split('\n', 1)[0]
-            password = password.strip('\n').strip('\r')
+            password = password.replace('\n', '').replace('\r', '')
 
             conn = mysql.connect(user='root', passwd=password, cursorclass=cursors.SSCursor)
             cursor = conn.cursor()
@@ -574,17 +621,19 @@ class cPanelImporter:
             DatabasesPath = '%s/mysql' % (CompletPathToExtractedArchive)
 
             for items in os.listdir(DatabasesPath):
+                if items.find('roundcube') > -1:
+                    continue
                 if items.endswith('.sql'):
-                    message = 'Restoring MySQL dump for %s.' % (items.strip('.sql'))
+                    message = 'Restoring MySQL dump for %s.' % (items.replace('.sql', ''))
                     logging.statusWriter(self.logFile, message, 1)
 
                     try:
-                        cursor.execute("CREATE DATABASE " + items.strip('.sql'))
+                        cursor.execute("CREATE DATABASE `%s`" % (items.replace('.sql', '')))
                     except BaseException, msg:
-                        message = 'Error while restoring database %s from backup file %s, error message: %s' % (items.strip('.sql'), self.backupFile, str(msg))
+                        message = 'Failed while restoring database %s from backup file %s, error message: %s' % (items.replace('.sql', ''), self.backupFile, str(msg))
                         logging.statusWriter(self.logFile, message, 1)
 
-                    command = 'sudo mysql -u root -p' + password + ' ' + items.strip('.sql')
+                    command = 'sudo mysql -u root -p' + password + ' ' + items.replace('.sql', '')
 
                     cmd = shlex.split(command)
 
@@ -595,10 +644,29 @@ class cPanelImporter:
 
                     website = Websites.objects.get(domain=self.mainDomain)
 
-                    db = Databases(website=website, dbName=items.strip('.sql'), dbUser=items.strip('.sql'))
+                    ## Trying to figure out dbname
+
+                    CommandsPath = '%s/mysql.sql' % (CompletPathToExtractedArchive)
+
+                    data = open(CommandsPath, 'r').readlines()
+
+                    for inItems in data:
+                        if inItems.find('GRANT ALL PRIVILEGES') > -1 and inItems.find('localhost') > -1 and inItems.find('_test') == -1:
+                            cDBName = inItems.split('`')[1].replace('\\', '')
+                            logging.statusWriter(self.logFile, inItems, 1)
+                            if cDBName == items.replace('.sql', ''):
+                                cDBUser = inItems.split("'")[1]
+                                message = 'Database user for %s is %s.' % (cDBName, cDBUser)
+                                logging.statusWriter(self.logFile, message, 1)
+                                if Databases.objects.filter(dbUser=cDBUser).count() > 0:
+                                    continue
+                                break
+
+
+                    db = Databases(website=website, dbName=items.replace('.sql', ''), dbUser=cDBUser)
                     db.save()
 
-                    message = 'MySQL dump successfully restored for %s.' % (items.strip('.sql'))
+                    message = 'MySQL dump successfully restored for %s.' % (items.replace('.sql', ''))
                     logging.statusWriter(self.logFile, message, 1)
 
             message = 'Creating Database users from backup file %s.' % (self.backupFile)
@@ -614,8 +682,8 @@ class cPanelImporter:
                 try:
                     cursor.execute(items)
                 except BaseException, msg:
-                    message = 'Error while restoring database %s from backup file %s, error message: %s' % (
-                    items.strip('.sql'), self.backupFile, str(msg))
+                    message = 'Failed while restoring database %s from backup file %s, error message: %s' % (
+                    items.replace('.sql', ''), self.backupFile, str(msg))
                     logging.statusWriter(self.logFile, message, 1)
 
             connection.close()
@@ -666,6 +734,8 @@ class cPanelImporter:
             pass
         else:
             return 0
+
+
         if self.RestoreDatabases():
             pass
         else:
@@ -682,6 +752,15 @@ class cPanelImporter:
     def DeleteSite(self):
         vhost.deleteVirtualHostConfigurations(self.mainDomain)
 
+    def checkIfExists(self, virtualHostName):
+        if Websites.objects.filter(domain=virtualHostName).count() > 0:
+            return 1
+
+        if CDomains.objects.filter(domain=virtualHostName).count() > 0:
+            return 1
+
+        return 0
+
     def RestoreEmails(self):
         try:
 
@@ -697,16 +776,20 @@ class cPanelImporter:
             message = 'Detecting email format from %s.' % (self.backupFile)
             logging.statusWriter(self.logFile, message, 1)
 
-            Format = open(FormatPath, 'r').read()
+            try:
 
-            if Format.find('mdbox') > -1:
-                self.mailFormat = cPanelImporter.MdBox
-                message = 'Mdbox format detected from %s.' % (self.backupFile)
-                logging.statusWriter(self.logFile, message, 1)
-            else:
+                Format = open(FormatPath, 'r').read()
+
+                if Format.find('mdbox') > -1:
+                    self.mailFormat = cPanelImporter.MdBox
+                    message = 'Mdbox format detected from %s.' % (self.backupFile)
+                    logging.statusWriter(self.logFile, message, 1)
+                else:
+                    self.mailFormat = cPanelImporter.MailDir
+                    message = 'Maildir format detected from %s.' % (self.backupFile)
+                    logging.statusWriter(self.logFile, message, 1)
+            except:
                 self.mailFormat = cPanelImporter.MailDir
-                message = 'Maildir format detected from %s.' % (self.backupFile)
-                logging.statusWriter(self.logFile, message, 1)
 
             ####
 
@@ -718,51 +801,65 @@ class cPanelImporter:
                         continue
                     if items.find('.') > -1:
                         for it in os.listdir(FinalMailDomainPath):
-                            mailUtilities.createEmailAccount(items, it, 'cyberpanel')
-                            finalEmailUsername = it + "@" + items
-                            message = 'Starting restore for %s.' % (finalEmailUsername)
-                            logging.statusWriter(self.logFile, message, 1)
-                            eUser = EUsers.objects.get(email=finalEmailUsername)
+                            try:
+                                if self.checkIfExists(items) == 0:
+                                    self.createDummyChild(items)
+
+                                mailUtilities.createEmailAccount(items, it, 'cyberpanel')
+                                finalEmailUsername = it + "@" + items
+                                message = 'Starting restore for %s.' % (finalEmailUsername)
+                                logging.statusWriter(self.logFile, message, 1)
+                                eUser = EUsers.objects.get(email=finalEmailUsername)
 
 
-                            if self.mailFormat == cPanelImporter.MailDir:
-                                eUser.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (items, it)
-                                MailPath = '/home/vmail/%s/%s/Maildir/' % (items, it)
+                                if self.mailFormat == cPanelImporter.MailDir:
+                                    eUser.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (items, it)
+                                    MailPath = '/home/vmail/%s/%s' % (items, it)
 
-                                command = 'mkdir -p %s' % (MailPath)
-                                ProcessUtilities.normalExecutioner(command)
+                                    command = 'mkdir -p %s' % (MailPath)
+                                    ProcessUtilities.normalExecutioner(command)
 
-                                MailPathInBackup = '%s/%s' % (FinalMailDomainPath, it)
+                                    command = 'rm -rf %s/Maildir' % (MailPath)
+                                    ProcessUtilities.normalExecutioner(command)
 
-                                command = 'cp -R %s/* %s' % (MailPathInBackup, MailPath)
-                                subprocess.call(command, shell=True)
+                                    MailPathInBackup = '%s/%s' % (FinalMailDomainPath, it)
 
-                            else:
-                                eUser.mail = 'mdbox:/home/vmail/%s/%s/Mdbox' % (items, it)
-                                MailPath = '/home/vmail/%s/%s/Mdbox/' % (items, it)
+                                    command = 'mv %s %s/Maildir' % (MailPathInBackup, MailPath)
+                                    subprocess.call(command, shell=True)
 
-                                command = 'mkdir -p %s' % (MailPath)
-                                ProcessUtilities.normalExecutioner(command)
+                                else:
+                                    eUser.mail = 'mdbox:/home/vmail/%s/%s/Mdbox' % (items, it)
+                                    MailPath = '/home/vmail/%s/%s' % (items, it)
 
-                                MailPathInBackup = '%s/%s' % (FinalMailDomainPath, it)
+                                    command = 'mkdir -p %s' % (MailPath)
+                                    ProcessUtilities.normalExecutioner(command)
 
-                                command = 'cp -R %s/* %s' % (MailPathInBackup, MailPath)
-                                subprocess.call(command, shell=True)
+                                    command = 'rm -rf %s/Mdbox' % (MailPath)
+                                    ProcessUtilities.normalExecutioner(command)
 
-                            ## Also update password
+                                    MailPathInBackup = '%s/%s' % (FinalMailDomainPath, it)
 
-                            PasswordPath = '%s/homedir/etc/%s/shadow' % (CompletPathToExtractedArchive, items)
-                            PasswordData = open(PasswordPath, 'r').readlines()
+                                    command = 'mv %s %s/Mdbox' % (MailPathInBackup, MailPath)
+                                    subprocess.call(command, shell=True)
 
-                            for i in PasswordData:
-                                if i.find(it) > -1:
-                                    finalPassword = '%s%s' % ('{CRYPT}', i.split(':')[1])
-                                    eUser.password = finalPassword
+                                ## Also update password
 
-                            eUser.save()
+                                PasswordPath = '%s/homedir/etc/%s/shadow' % (CompletPathToExtractedArchive, items)
+                                PasswordData = open(PasswordPath, 'r').readlines()
 
-                            message = 'Restore completed for %s.' % (finalEmailUsername)
-                            logging.statusWriter(self.logFile, message, 1)
+                                for i in PasswordData:
+                                    if i.find(it) > -1:
+                                        finalPassword = '%s%s' % ('{CRYPT}', i.split(':')[1])
+                                        eUser.password = finalPassword
+
+                                eUser.save()
+
+                                message = 'Restore completed for %s.' % (finalEmailUsername)
+                                logging.statusWriter(self.logFile, message, 1)
+                            except BaseException, msg:
+                                message = 'Failed to restore emails from archive file %s, For domain: %s. error message: %s. [ExtractBackup]' % (
+                                    self.backupFile, items, str(msg))
+                                logging.statusWriter(self.logFile, message, 1)
 
             command = 'chown -R vmail:vmail /home/vmail'
             ProcessUtilities.normalExecutioner(command)
@@ -791,12 +888,16 @@ def main():
     args = parser.parse_args()
 
     for items in os.listdir(args.path):
-        finalPath = '%s/%s' % (args.path, items)
-        cI = cPanelImporter(finalPath, LogFile)
-        if cI.MainController():
-            pass
-        else:
-            cI.DeleteSite()
+        if items.endswith('.tar.gz'):
+            finalPath = '%s/%s' % (args.path.rstrip('/'), items)
+            try:
+                cI = cPanelImporter(finalPath, LogFile)
+                if cI.MainController():
+                    pass
+                else:
+                    pass
+            except:
+                pass
 
 if __name__ == "__main__":
     main()

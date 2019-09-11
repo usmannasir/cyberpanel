@@ -13,16 +13,19 @@ import time
 from backupUtilities import backupUtilities
 from re import match,I,M
 from websiteFunctions.models import Websites, Backups
-from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.processUtilities import ProcessUtilities
+from random import randint
+import json, requests
 
 class backupSchedule:
+
 
     @staticmethod
     def remoteBackupLogging(fileName, message):
         try:
             file = open(fileName,'a')
             file.writelines("[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] "+ message + "\n")
+            print ("[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] "+ message + "\n")
             file.close()
         except IOError,msg:
             return "Can not write to error file."
@@ -32,30 +35,22 @@ class backupSchedule:
         try:
 
             backupSchedule.remoteBackupLogging(backupLogPath, "Starting local backup for: " + virtualHost)
-            website = Websites.objects.get(domain=virtualHost)
-            # defining paths
 
-            ## /home/example.com/backup
-            backupPath = os.path.join("/home", virtualHost, "backup/")
-            domainUser = website.externalApp
-            backupName = 'backup-' + domainUser + "-" + time.strftime("%I-%M-%S-%a-%b-%Y")
+            ###
 
-            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018
-            tempStoragePath = os.path.join(backupPath, backupName)
+            pathToFile = "/home/cyberpanel/" + str(randint(1000, 9999))
+            file = open(pathToFile, "w+")
+            file.close()
 
-            execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " submitBackupCreation --tempStoragePath " + tempStoragePath + " --backupName " \
-                       + backupName + " --backupPath " + backupPath + ' --backupDomain ' + virtualHost
+            finalData = json.dumps({'randomFile': pathToFile, 'websiteToBeBacked': virtualHost})
+            r = requests.post("https://localhost:8090/backup/localInitiate", data=finalData, verify=False)
 
-            subprocess.Popen(shlex.split(execPath))
-
-            time.sleep(2)
+            data = json.loads(r.text)
+            tempStoragePath = data['tempStorage']
 
             backupSchedule.remoteBackupLogging(backupLogPath, "Waiting for backup to complete.. ")
 
-
             while (1):
-
                 backupDomain = virtualHost
                 status = os.path.join("/home", backupDomain, "backup/status")
                 backupFileNamePath = os.path.join("/home", backupDomain, "backup/backupFileName")
@@ -71,6 +66,8 @@ class backupSchedule:
 
                 if os.path.exists(status):
                     status = open(status, 'r').read()
+                    print status
+                    time.sleep(2)
 
                     if status.find("Completed") > -1:
 
@@ -86,8 +83,11 @@ class backupSchedule:
                         ProcessUtilities.normalExecutioner(command)
 
                         backupSchedule.remoteBackupLogging(backupLogPath, "Backup Completed for: " + virtualHost)
+                        try:
+                            os.remove(pathToFile)
+                        except:
+                            pass
                         return 1, tempStoragePath
-
 
                     elif status.find("[5009]") > -1:
                         ## removing status file, so that backup can re-run
@@ -109,10 +109,14 @@ class backupSchedule:
                             pass
 
                         backupSchedule.remoteBackupLogging(backupLogPath, "An error occurred, Error message: " + status)
+                        try:
+                            os.remove(pathToFile)
+                        except:
+                            pass
                         return 0, tempStoragePath
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
-            return 0, "None"
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [119:startBackup]")
+            return 0, str(msg)
 
     @staticmethod
     def createBackup(virtualHost, ipAddress, backupLogPath , port):
@@ -181,7 +185,7 @@ class backupSchedule:
             os.remove(backupPath)
 
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [189:startBackup]")
 
     @staticmethod
     def prepare():

@@ -49,6 +49,8 @@ class CyberCPLogFileWriter:
             statusFile.close()
             print(mesg + '\n')
         except BaseException, msg:
-            CyberCPLogFileWriter.writeToFile(str(msg) + ' [statusWriter]')
-            print str(msg)
+            pass
+            #CyberCPLogFileWriter.writeToFile(str(msg) + ' [statusWriter]')
+            #print str(msg)
+
 

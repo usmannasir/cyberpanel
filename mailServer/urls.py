@@ -4,7 +4,9 @@ import views
 urlpatterns = [
     url(r'^$', views.loadEmailHome, name='loadEmailHome'),
     url(r'^createEmailAccount', views.createEmailAccount, name='createEmailAccount'),
+    url(r'^listEmails$', views.listEmails, name='listEmails'),
     url(r'^submitEmailCreation', views.submitEmailCreation, name='submitEmailCreation'),
+    url(r'^fetchEmails$', views.fetchEmails, name='fetchEmails'),
 
 
     ## Mail Forwardings

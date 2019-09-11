@@ -200,6 +200,7 @@ app.controller('websiteContainerLimit', function ($scope, $http, $timeout, $wind
             dataType: 'json',
             success: update,
             type: "POST",
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
             contentType: "application/json",
             data: JSON.stringify(data), // Our valid JSON string
             error: function () {
@@ -324,6 +325,7 @@ app.controller('websiteContainerLimit', function ($scope, $http, $timeout, $wind
         $.ajax({
             url: "/container/getUsageData",
             dataType: 'json',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
             success: updateMemory,
             type: "POST",
             contentType: "application/json",
@@ -457,6 +459,7 @@ app.controller('websiteContainerLimit', function ($scope, $http, $timeout, $wind
         $.ajax({
             url: "/container/getUsageData",
             dataType: 'json',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
             success: updateDisk,
             type: "POST",
             contentType: "application/json",

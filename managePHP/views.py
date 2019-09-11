@@ -1001,6 +1001,7 @@ def installExtensions(request):
 
             phpExtension.save()
 
+
             ## non-active packages
 
 
@@ -1063,6 +1064,13 @@ def installExtensions(request):
             phpExtension = installedPackages(phpVers=php56,
                                              extensionName="lsphp56-xcache-admin",
                                              description="XCache Administration",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-pecl-imagick",
+                                             description="Extension to create and modify images using ImageMagick",
                                              status=0)
 
             phpExtension.save()
@@ -1267,10 +1275,10 @@ def submitExtensionRequest(request):
                 type = data['type']
 
                 if type == "install":
-                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+                    execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
                     execPath = execPath + " installPHPExtension --extension " + extensionName
                 else:
-                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+                    execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
                     execPath = execPath + " unInstallPHPExtension --extension " + extensionName
 
                 ProcessUtilities.popenExecutioner(execPath)
@@ -1690,7 +1698,7 @@ def savePHPConfigBasic(request):
 
                 ##
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
                 execPath = execPath + " savePHPConfigBasic --phpVers " + phpVers + " --allow_url_fopen '" + allow_url_fopen + "' --display_errors '" + display_errors + "' --file_uploads '" + file_uploads + "' --allow_url_include '" + allow_url_include + "' --memory_limit " + memory_limit + " --max_execution_time " + max_execution_time + " --upload_max_filesize " + upload_max_filesize + " --max_input_time " + max_input_time + " --post_max_size " + post_max_size
 
                 output = ProcessUtilities.outputExecutioner(execPath)
@@ -1788,7 +1796,7 @@ def savePHPConfigAdvance(request):
                 vhost.write(data['configData'])
                 vhost.close()
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
                 execPath = execPath + " savePHPConfigAdvance --phpVers " + path + " --tempPath " + tempPath
 
                 output = ProcessUtilities.outputExecutioner(execPath)

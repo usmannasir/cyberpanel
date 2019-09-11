@@ -1,0 +1,146 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Create Cloud Linux Package - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Create CloudLinux Package." %}</h2>
+            <p>{% trans "Each CloudLinux package have one associated (owner) CyberPanel package. During website creation associated CloudLinux package will be assigned to website user." %}</p>
+        </div>
+        <div ng-controller="createCLPackage" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Create Package" %} <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+
+                    <form action="/" class="form-horizontal bordered-row panel-body">
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Package" %} </label>
+                            <div class="col-sm-6">
+                                <select ng-change="toggleView()" ng-model="selectedPackage" class="form-control">
+                                    {% for items in packList %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <!------ Modification form that appears after a click --------------->
+
+                        <div ng-hide="modifyPackageForm">
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Package Name" %}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="form-control" ng-model="name" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "SPEED" %}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="form-control" ng-model="SPEED" required>
+                                </div>
+                                <div class="current-pack ng-binding">Ex 100%</div>
+                            </div>
+
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "VMEM" %}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="form-control" ng-model="VMEM" required>
+                                </div>
+                                <div class="current-pack ng-binding">Ex 256m or 1G</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "PMEM" %}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="form-control" ng-model="PMEM" required>
+                                </div>
+                                <div class="current-pack ng-binding">Ex 256m or 1G</div>
+                            </div>
+
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "IO" %}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="form-control" ng-model="IO" required>
+                                </div>
+                                <div class="current-pack ng-binding">Ex 1024</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "IOPS" %}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="form-control" ng-model="IOPS" required>
+                                </div>
+                                <div class="current-pack ng-binding">Ex 1024</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "EP" %}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="form-control" ng-model="EP" required>
+                                </div>
+                                <div class="current-pack ng-binding">Ex 10</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "NPROC" %}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="form-control" ng-model="NPROC" required>
+                                </div>
+                                <div class="current-pack ng-binding">Ex 10</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "INODES soft" %}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="form-control" ng-model="INODESsoft" required>
+                                </div>
+                                <div class="current-pack ng-binding">Ex 1024</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "INODES hard" %}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="form-control" ng-model="INODEShard" required>
+                                </div>
+                                <div class="current-pack ng-binding">Ex 1024</div>
+                            </div>
+
+
+                        </div>
+
+                        <!------ Modification form that appears after a click --------------->
+
+
+                        <div ng-hide="modifyPackageForm" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="createPackage()"
+                                        class="btn btn-primary btn-lg ">{% trans "Create Package" %}</button>
+
+                            </div>
+                        </div>
+
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

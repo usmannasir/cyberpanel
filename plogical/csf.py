@@ -212,10 +212,13 @@ class CSF(multi.Thread):
             print '0',str(msg)
 
     @staticmethod
-    def modifyPorts(protocol, ports):
+    def modifyPorts(protocol, portsPath):
         try:
+
             data = open('/etc/csf/csf.conf', 'r').readlines()
             writeToFile = open('/etc/csf/csf.conf', 'w')
+
+            ports = open(portsPath, 'r').read()
 
             if protocol == 'TCP_IN':
                 for items in data:
@@ -248,6 +251,11 @@ class CSF(multi.Thread):
 
             command = 'csf -r'
             subprocess.call(shlex.split(command))
+
+            try:
+                os.remove(portsPath)
+            except:
+                pass
 
             print '1,None'
 

@@ -13,6 +13,44 @@ import socket
 from os.path import *
 from stat import *
 import stat
+from os import urandom
+from random import choice
+
+char_set = {'small': 'abcdefghijklmnopqrstuvwxyz',
+             'nums': '0123456789',
+             'big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+            }
+
+
+def generate_pass(length=14):
+    """Function to generate a password"""
+
+    password = []
+
+    while len(password) < length:
+        key = choice(char_set.keys())
+        a_char = urandom(1)
+        if a_char in char_set[key]:
+            if check_prev_char(password, char_set[key]):
+                continue
+            else:
+                password.append(a_char)
+    return ''.join(password)
+
+def check_prev_char(password, current_char_set):
+    """Function to ensure that there are no consecutive
+    UPPERCASE/lowercase/numbers/special-characters."""
+
+    index = len(password)
+    if index == 0:
+        return False
+    else:
+        prev_char = password[index - 1]
+        if prev_char in current_char_set:
+            return True
+        else:
+            return False
+
 
 # There can not be peace without first a great suffering.
 
@@ -914,7 +952,7 @@ class preFlightsChecks:
 
         os.chdir(self.path)
 
-        command = "wget http://cyberpanel.sh/CyberPanel.1.8.5.tar.gz"
+        command = "wget http://cyberpanel.sh/CyberPanel.1.9.0.tar.gz"
         #command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'CyberPanel Download',
@@ -923,7 +961,7 @@ class preFlightsChecks:
         ##
 
         count = 0
-        command = "tar zxf CyberPanel.1.8.5.tar.gz"
+        command = "tar zxf CyberPanel.1.9.0.tar.gz"
         #command = "tar zxf CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'Extract CyberPanel',1, 1, os.EX_OSERR)
@@ -949,6 +987,10 @@ class preFlightsChecks:
         counter = 0
 
         for items in data:
+            if items.find('SECRET_KEY') > -1:
+                SK = "SECRET_KEY = '%s'\n" % (generate_pass(50))
+                writeDataToFile.writelines(SK)
+                continue
             if mysql == 'Two':
                 if items.find("'PASSWORD':") > -1:
                     if counter == 0:
@@ -973,6 +1015,8 @@ class preFlightsChecks:
                     writeDataToFile.writelines("        'PORT': '',\n")
                 else:
                     writeDataToFile.writelines(items)
+
+
 
         if self.distro == ubuntu:
             os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
@@ -1009,8 +1053,8 @@ class preFlightsChecks:
         try:
             path = "/usr/local/CyberCP/version.txt"
             writeToFile = open(path, 'w')
-            writeToFile.writelines('1.8\n')
-            writeToFile.writelines('2')
+            writeToFile.writelines('1.9\n')
+            writeToFile.writelines('0')
             writeToFile.close()
         except:
             pass
@@ -1096,6 +1140,54 @@ class preFlightsChecks:
         command = "chown root:cyberpanel /usr/local/CyberCP/CyberCP/settings.py"
         preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
                               'Change permissions for client.', 1, 0, os.EX_OSERR)
+
+        files = ['/etc/yum.repos.d/MariaDB.repo', '/etc/pdns/pdns.conf', '/etc/systemd/system/lscpd.service',
+                 '/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf', '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
+                 '/etc/dovecot/dovecot.conf', '/usr/local/lsws/conf/httpd_config.xml', '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
+
+        for items in files:
+            command = 'chmod 644 %s' % (items)
+            preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
+                                  'Change permissions for client.', 1, 0, os.EX_OSERR)
+
+        impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf', '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
+                 '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf', '/etc/pure-ftpd/db/mysql.conf', '/etc/powerdns/pdns.conf']
+
+        for items in impFile:
+            command = 'chmod 600 %s' % (items)
+            preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
+                                  'Change permissions for client.', 1, 0, os.EX_OSERR)
+
+
+        command = 'chmod 640 /etc/postfix/*.cf'
+        subprocess.call(command, shell=True)
+
+        command = 'chmod 644 /etc/postfix/main.cf'
+        subprocess.call(command, shell=True)
+
+        command = 'chmod 640 /etc/dovecot/*.conf'
+        subprocess.call(command, shell=True)
+
+        command = 'chmod 644 /etc/dovecot/dovecot.conf'
+        subprocess.call(command, shell=True)
+
+        command = 'chmod 640 /etc/dovecot/dovecot-sql.conf.ext'
+        subprocess.call(command, shell=True)
+
+        command = 'chmod 644 /etc/postfix/dynamicmaps.cf'
+        subprocess.call(command, shell=True)
+
+        fileM = ['/usr/local/lsws/FileManager/', '/usr/local/CyberCP/install/FileManager',
+                 '/usr/local/CyberCP/serverStatus/litespeed/FileManager', '/usr/local/lsws/Example/html/FileManager']
+
+        for items in fileM:
+            try:
+                shutil.rmtree(items)
+            except:
+                pass
+
+        command = 'chmod 755 /etc/pure-ftpd/'
+        subprocess.call(command, shell=True)
 
     def install_unzip(self):
         self.stdOut("Install unzip")
@@ -1184,6 +1276,11 @@ enabled=1"""
 
         try:
             if self.distro == centos:
+
+                command = 'yum -y install http://cyberpanel.sh/gf-release-latest.gf.el7.noarch.rpm'
+                subprocess.call(shlex.split(command))
+
+
                 command = 'yum remove postfix -y'
             else:
                 command = 'apt-get -y remove postfix'
@@ -1194,7 +1291,7 @@ enabled=1"""
             count = 0
             while (1):
                 if self.distro == centos:
-                    command = 'yum install -y postfix'
+                    command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
                 else:
                     command = 'apt-get -y debconf-utils'
                     subprocess.call(shlex.split(command))
@@ -1272,6 +1369,40 @@ enabled=1"""
                     logging.InstallLog.writeToFile("Dovecot and Dovecot-MySQL successfully installed!")
                     preFlightsChecks.stdOut("Dovecot and Dovecot-MySQL successfully installed!")
                     break
+
+
+            if self.distro != centos:
+                command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
+                subprocess.call(command, shell=True)
+
+                command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
+                subprocess.call(command, shell=True)
+
+                debPath = '/etc/apt/sources.list.d/dovecot.list'
+                writeToFile = open(debPath, 'w')
+                writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
+                writeToFile.close()
+
+                try:
+                    command = 'apt update -y'
+                    subprocess.call(command, shell=True)
+                except:
+                    pass
+
+                try:
+                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                    subprocess.call(command, shell=True)
+
+                    command = 'dpkg --configure -a'
+                    subprocess.call(command, shell=True)
+
+                    command = 'apt --fix-broken install -y'
+                    subprocess.call(command, shell=True)
+
+                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                    subprocess.call(command, shell=True)
+                except:
+                    pass
 
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [install_postfix_davecot]")
@@ -2221,6 +2352,8 @@ enabled=1"""
 
             #############
 
+
+
             count = 0
 
             while (1):
@@ -2248,7 +2381,27 @@ enabled=1"""
                                   'rainlooop data folder',
                                   1, 0, os.EX_OSERR)
 
-            path = "/usr/local/CyberCP/public/rainloop/rainloop/v/1.12.1/include.php"
+
+            ### Enable sub-folders
+
+            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
+            preFlightsChecks.call(command, self.distro, '[downoad_and_install_rainloop]',
+                                  'rainlooop data folder',
+                                  1, 0, os.EX_OSERR)
+
+            labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+
+            labsData = """[labs]
+imap_folder_list_limit = 0
+"""
+
+            writeToFile = open(labsPath, 'w')
+            writeToFile.write(labsData)
+            writeToFile.close()
+
+            iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
+
+            path = "/usr/local/CyberCP/public/rainloop/rainloop/v/%s/include.php" % (iPath[0])
 
             data = open(path, 'r').readlines()
             writeToFile = open(path, 'w')
@@ -2261,8 +2414,6 @@ enabled=1"""
                     writeToFile.writelines(items)
 
             writeToFile.close()
-
-
 
 
         except OSError, msg:
@@ -2379,6 +2530,7 @@ enabled=1"""
             FirewallUtilities.addRule("tcp", "993")
             FirewallUtilities.addRule("udp", "53")
             FirewallUtilities.addRule("tcp", "53")
+            FirewallUtilities.addRule("udp", "443")
             FirewallUtilities.addRule("tcp", "40110-40210")
 
             logging.InstallLog.writeToFile("FirewallD installed and configured!")
@@ -3082,6 +3234,24 @@ enabled=1"""
                     logging.InstallLog.writeToFile("tldextract successfully installed!  [pip]")
                     preFlightsChecks.stdOut("tldextract successfully installed!  [pip]")
                     break
+
+            count = 0
+            while (1):
+                command = "pip install bcrypt"
+
+                res = subprocess.call(shlex.split(command))
+
+                if preFlightsChecks.resFailed(self.distro, res):
+                    count = count + 1
+                    preFlightsChecks.stdOut(
+                        "Trying to install tldextract, trying again, try number: " + str(count))
+                    if count == 3:
+                        logging.InstallLog.writeToFile(
+                            "Failed to install tldextract! [installTLDExtract]")
+                else:
+                    logging.InstallLog.writeToFile("tldextract successfully installed!  [pip]")
+                    preFlightsChecks.stdOut("tldextract successfully installed!  [pip]")
+                    break
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [installTLDExtract]")
             return 0
@@ -3658,18 +3828,23 @@ def main():
     checks.test_Requests()
     checks.installPYDNS()
     checks.installDockerPY()
+    checks.installTLDExtract()
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
     checks.downoad_and_install_raindloop()
     checks.download_install_phpmyadmin()
     checks.setupCLI()
     checks.setup_cron()
-    checks.installTLDExtract()
     # checks.installdnsPython()
 
     ## Install and Configure OpenDKIM.
 
-    checks.installOpenDKIM()
-    checks.configureOpenDKIM()
+    if args.postfix == None:
+        checks.installOpenDKIM()
+        checks.configureOpenDKIM()
+    else:
+        if args.postfix == 'On':
+            checks.installOpenDKIM()
+            checks.configureOpenDKIM()
 
     checks.modSecPreReqs()
     checks.setupVirtualEnv(distro)

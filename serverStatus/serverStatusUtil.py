@@ -57,22 +57,22 @@ class ServerStatusUtil:
             except:
                 pass
 
-            command = 'wget https://www.litespeedtech.com/packages/5.0/lsws-5.3.5-ent-x86_64-linux.tar.gz'
+            command = 'wget https://www.litespeedtech.com/packages/5.0/lsws-5.3.8-ent-x86_64-linux.tar.gz'
             if ServerStatusUtil.executioner(command, statusFile) == 0:
                 return 0
 
-            command = 'tar zxf lsws-5.3.5-ent-x86_64-linux.tar.gz -C /usr/local/CyberCP'
+            command = 'tar zxf lsws-5.3.8-ent-x86_64-linux.tar.gz -C /usr/local/CyberCP'
             if ServerStatusUtil.executioner(command, statusFile) == 0:
                 return 0
 
-            writeSerial = open('/usr/local/CyberCP/lsws-5.3.5/serial.no', 'w')
+            writeSerial = open('/usr/local/CyberCP/lsws-5.3.8/serial.no', 'w')
             writeSerial.writelines(licenseKey)
             writeSerial.close()
 
-            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/install.sh', '/usr/local/CyberCP/lsws-5.3.5/')
-            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/functions.sh', '/usr/local/CyberCP/lsws-5.3.5/')
+            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/install.sh', '/usr/local/CyberCP/lsws-5.3.8/')
+            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/functions.sh', '/usr/local/CyberCP/lsws-5.3.8/')
 
-            os.chdir('/usr/local/CyberCP/lsws-5.3.5/')
+            os.chdir('/usr/local/CyberCP/lsws-5.3.8/')
 
             command = 'chmod +x install.sh'
             if ServerStatusUtil.executioner(command, statusFile) == 0:
@@ -99,9 +99,16 @@ class ServerStatusUtil:
                 pass
 
             try:
-                os.rmdir("/usr/local/CyberCP/lsws-5.3.5")
+                os.rmdir("/usr/local/CyberCP/lsws-5.3.8")
             except:
                 pass
+
+
+            files = ['/usr/local/lsws/conf/httpd_config.xml', '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
+            for items in files:
+                command = 'chmod 644 %s' % (items)
+                ServerStatusUtil.executioner(command, statusFile)
+
 
             return 1
         except BaseException, msg:
@@ -294,6 +301,13 @@ class ServerStatusUtil:
                     except:
                         pass
 
+            if os.path.exists('/etc/redhat-release'):
+                command = 'yum remove -y openlitespeed'
+            else:
+                command = "apt-get -y remove openlitespeed"
+
+            ServerStatusUtil.executioner(command, FNULL)
+
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "OpenLiteSpeed removed.\n", 1)
 
@@ -310,10 +324,10 @@ class ServerStatusUtil:
                                                       "LiteSpeed Enterprise Web Server installed.\n", 1)
 
 
-            if ServerStatusUtil.setupFileManager(statusFile) == 0:
-                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to set up File Manager. [404]", 1)
-                ServerStatusUtil.recover()
-                return 0
+            # if ServerStatusUtil.setupFileManager(statusFile) == 0:
+            #     logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to set up File Manager. [404]", 1)
+            #     ServerStatusUtil.recover()
+            #     return 0
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "Rebuilding vhost conf..\n", 1)

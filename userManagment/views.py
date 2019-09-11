@@ -9,7 +9,7 @@ import json
 from plogical import hashPassword
 from plogical import CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
-
+from plogical.virtualHostUtilities import virtualHostUtilities
 
 # Create your views here.
 
@@ -18,7 +18,12 @@ def loadUserHome(request):
         val = request.session['userID']
         try:
             admin = Administrator.objects.get(pk=val)
-            return render(request, 'userManagment/index.html', {"type": admin.type})
+            currentACL = ACLManager.loadedACL(val)
+            if currentACL['admin'] == 1:
+                listUsers = 1
+            else:
+                listUsers = currentACL['listUsers']
+            return render(request, 'userManagment/index.html', {"type": admin.type, 'listUsers': listUsers})
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
@@ -67,6 +72,7 @@ def createUser(request):
     except BaseException, msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         return redirect(loadLoginPage)
+
 
 def apiAccess(request):
     try:
@@ -143,7 +149,6 @@ def submitUserCreation(request):
             token = hashPassword.generateToken(userName, password)
             password = hashPassword.hash_password(password)
             currentAdmin = Administrator.objects.get(pk=userID)
-
 
             if ACLManager.websitesLimitCheck(currentAdmin, websitesLimit) == 0:
                 data_ret = {'status': 0, 'createStatus': 0,
@@ -237,6 +242,20 @@ def fetchUserDetails(request):
 
                 user = Administrator.objects.get(userName=accountUsername)
 
+                currentACL = ACLManager.loadedACL(val)
+                loggedUser = Administrator.objects.get(pk=val)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif user.owner == loggedUser.pk:
+                    pass
+                elif user.pk == loggedUser.pk:
+                    pass
+                else:
+                    data_ret = {'fetchStatus': 0, 'error_message': 'Un-authorized access.'}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
                 firstName = user.firstName
                 lastName = user.lastName
                 email = user.email
@@ -278,8 +297,21 @@ def saveModifications(request):
                 lastName = data['lastName']
                 email = data['email']
 
-                admin = Administrator.objects.get(pk=val)
                 user = Administrator.objects.get(userName=accountUsername)
+
+                currentACL = ACLManager.loadedACL(val)
+                loggedUser = Administrator.objects.get(pk=val)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif user.owner == loggedUser.pk:
+                    pass
+                elif user.pk == loggedUser.pk:
+                    pass
+                else:
+                    data_ret = {'fetchStatus': 0, 'error_message': 'Un-authorized access.'}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
 
                 token = hashPassword.generateToken(accountUsername, data['password'])
                 password = hashPassword.hash_password(data['password'])
@@ -323,7 +355,6 @@ def deleteUser(request):
         else:
             return ACLManager.loadError()
 
-
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -339,20 +370,24 @@ def submitUserDeletion(request):
 
                 currentACL = ACLManager.loadedACL(userID)
 
-                if accountUsername == 'admin':
-                    data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': 'You can not delete the super user.'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                currentUser = Administrator.objects.get(pk=userID)
+                userInQuestion = Administrator.objects.get(userName=accountUsername)
 
-                if currentACL['admin'] == 1:
+                if ACLManager.checkUserOwnerShip(currentACL, currentUser, userInQuestion):
                     user = Administrator.objects.get(userName=accountUsername)
+
+                    childUsers = Administrator.objects.filter(owner=user.pk)
+
+                    for items in childUsers:
+                        items.delete()
+
                     user.delete()
 
                     data_ret = {'status': 1, 'deleteStatus': 1, 'error_message': 'None'}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
                 else:
-                    data_ret = {'status': 0, 'deleteStatus': 1, 'error_message': 'Not enough privileges'}
+                    data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': 'Not enough privileges.'}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
@@ -398,6 +433,7 @@ def createACLFunc(request):
 
                          ## User Management
                          createNewUser=int(data['createNewUser']),
+                         listUsers=int(data['listUsers']),
                          resellerCenter=int(data['resellerCenter']),
                          deleteUser=int(data['deleteUser']),
                          changeUserACL=int(data['changeUserACL']),
@@ -412,6 +448,7 @@ def createACLFunc(request):
                          ## Package Management
 
                          createPackage=int(data['createPackage']),
+                         listPackages=int(data['listPackages']),
                          deletePackage=int(data['deletePackage']),
                          modifyPackage=int(data['modifyPackage']),
 
@@ -431,6 +468,7 @@ def createACLFunc(request):
                          ## Email Management
 
                          createEmail=int(data['createEmail']),
+                         listEmails=int(data['listEmails']),
                          deleteEmail=int(data['deleteEmail']),
                          emailForwarding=int(data['emailForwarding']),
                          changeEmailPassword=int(data['changeEmailPassword']),
@@ -483,6 +521,7 @@ def deleteACL(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def deleteACLFunc(request):
     try:
         val = request.session['userID']
@@ -497,7 +536,8 @@ def deleteACLFunc(request):
                 acl.delete()
                 finalResponse = {'status': 1}
             else:
-                finalResponse = {'status': 0, 'errorMesssage': 'This ACL is currently in used by existing users.', 'error_message': 'This ACL is currently in used by existing users.'}
+                finalResponse = {'status': 0, 'errorMesssage': 'This ACL is currently in used by existing users.',
+                                 'error_message': 'This ACL is currently in used by existing users.'}
         else:
             return ACLManager.loadErrorJson()
 
@@ -542,6 +582,7 @@ def fetchACLDetails(request):
             ## User Management
 
             finalResponse['createNewUser'] = acl.createNewUser
+            finalResponse['listUsers'] = acl.listUsers
             finalResponse['resellerCenter'] = acl.resellerCenter
             finalResponse['deleteUser'] = acl.deleteUser
             finalResponse['changeUserACL'] = acl.changeUserACL
@@ -555,8 +596,8 @@ def fetchACLDetails(request):
 
             ## Package Management
 
-
             finalResponse['createPackage'] = acl.createPackage
+            finalResponse['listPackages'] = acl.listPackages
             finalResponse['deletePackage'] = acl.deletePackage
             finalResponse['modifyPackage'] = acl.modifyPackage
 
@@ -576,6 +617,7 @@ def fetchACLDetails(request):
             ## Email Management
 
             finalResponse['createEmail'] = acl.createEmail
+            finalResponse['listEmails'] = acl.listEmails
             finalResponse['deleteEmail'] = acl.deleteEmail
             finalResponse['emailForwarding'] = acl.emailForwarding
             finalResponse['changeEmailPassword'] = acl.changeEmailPassword
@@ -631,6 +673,7 @@ def submitACLModifications(request):
             ## User Management
 
             acl.createNewUser = int(data['createNewUser'])
+            acl.listUsers = int(data['listUsers'])
             acl.resellerCenter = int(data['resellerCenter'])
             acl.deleteUser = int(data['deleteUser'])
             acl.changeUserACL = int(data['changeUserACL'])
@@ -645,6 +688,7 @@ def submitACLModifications(request):
             ## Package Management
 
             acl.createPackage = int(data['createPackage'])
+            acl.listPackages = int(data['listPackages'])
             acl.deletePackage = int(data['deletePackage'])
             acl.modifyPackage = int(data['modifyPackage'])
 
@@ -664,6 +708,7 @@ def submitACLModifications(request):
             ## Email Management
 
             acl.createEmail = int(data['createEmail'])
+            acl.listEmails = int(data['listEmails'])
             acl.deleteEmail = int(data['deleteEmail'])
             acl.emailForwarding = int(data['emailForwarding'])
             acl.changeEmailPassword = int(data['changeEmailPassword'])
@@ -814,18 +859,33 @@ def saveResellerChanges(request):
             json_data = json.dumps(finalResponse)
             return HttpResponse(json_data)
 
+        currentACL = ACLManager.loadedACL(val)
+
+        if currentACL['admin'] == 1:
+            pass
+        elif currentACL['resellerCenter'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
         userToBeModified = Administrator.objects.get(userName=data['userToBeModified'])
         newOwner = Administrator.objects.get(userName=data['newOwner'])
 
-        if ACLManager.websitesLimitCheck(newOwner, data['websitesLimit'], userToBeModified) == 0:
-            finalResponse = {'status': 0,
-                             'errorMessage': "You've reached maximum websites limit as a reseller.",
-                             'error_message': "You've reached maximum websites limit as a reseller."}
-            json_data = json.dumps(finalResponse)
-            return HttpResponse(json_data)
+        try:
+            if ACLManager.websitesLimitCheck(newOwner, data['websitesLimit'], userToBeModified) == 0:
+                finalResponse = {'status': 0,
+                                 'errorMessage': "You've reached maximum websites limit as a reseller.",
+                                 'error_message': "You've reached maximum websites limit as a reseller."}
+                json_data = json.dumps(finalResponse)
+                return HttpResponse(json_data)
+        except:
+            pass
 
         userToBeModified.owner = newOwner.pk
-        userToBeModified.initWebsitesLimit = data['websitesLimit']
+        try:
+            userToBeModified.initWebsitesLimit = data['websitesLimit']
+        except:
+            pass
         userToBeModified.save()
 
         finalResponse = {'status': 1}
@@ -835,3 +895,84 @@ def saveResellerChanges(request):
         finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
+
+
+def listUsers(request):
+    try:
+        userID = request.session['userID']
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            aclNames = ACLManager.unFileteredACLs()
+        elif currentACL['changeUserACL'] == 1:
+            aclNames = ACLManager.unFileteredACLs()
+        elif currentACL['createNewUser'] == 1:
+            aclNames = ['user']
+        else:
+            aclNames = []
+
+        if currentACL['admin'] == 1:
+            resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
+        elif currentACL['resellerCenter'] == 1:
+            resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
+        else:
+            resellerPrivUsers = []
+
+        if currentACL['admin'] == 1:
+            return render(request, 'userManagment/listUsers.html', {'aclNames': aclNames, 'resellerPrivUsers': resellerPrivUsers})
+        elif currentACL['listUsers'] == 1:
+            return render(request, 'userManagment/listUsers.html', {'aclNames': aclNames, 'resellerPrivUsers': resellerPrivUsers})
+        else:
+            return ACLManager.loadError()
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def fetchTableUsers(request):
+    try:
+        userID = request.session['userID']
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            users = ACLManager.fetchTableUserObjects(userID)
+        elif currentACL['listUsers'] == 1:
+            users = ACLManager.fetchTableUserObjects(userID)
+        else:
+            return ACLManager.loadErrorJson()
+
+        json_data = "["
+        checker = 0
+
+        for items in users:
+
+            diskUsage = 0
+
+            for webs in items.websites_set.all():
+                diskUsage = virtualHostUtilities.getDiskUsage("/home/" + webs.domain, webs.package.diskSpace)[0] + diskUsage
+
+            owner = Administrator.objects.get(pk=items.owner)
+
+            dic = {'id': items.pk,
+                   'name': items.userName,
+                   'owner': owner.userName,
+                   'acl': items.acl.name,
+                   'diskUsage': '%sMB' % str(diskUsage),
+                   'websites': items.initWebsitesLimit
+                   }
+
+            if checker == 0:
+                json_data = json_data + json.dumps(dic)
+                checker = 1
+            else:
+                json_data = json_data + ',' + json.dumps(dic)
+
+        json_data = json_data + ']'
+
+        final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
+        return HttpResponse(final_json)
+
+    except KeyError:
+        return redirect(loadLoginPage)

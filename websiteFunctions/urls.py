@@ -17,6 +17,7 @@ urlpatterns = [
     url(r'^submitWebsiteCreation$', views.submitWebsiteCreation, name='submitWebsiteCreation'),
     url(r'^submitWebsiteDeletion$', views.submitWebsiteDeletion, name='submitWebsiteDeletion'),
     url(r'^submitWebsiteListing$', views.getFurtherAccounts, name='submitWebsiteListing'),
+    url(r'^fetchWebsitesList$', views.fetchWebsitesList, name='fetchWebsitesList'),
     url(r'^searchWebsites$', views.searchWebsites, name='searchWebsites'),
     url(r'^submitWebsiteModification$', views.deleteWebsite, name='submitWebsiteModification'),
     url(r'^submitWebsiteStatus$', views.submitWebsiteStatus, name='submitWebsiteStatus'),
@@ -91,6 +92,18 @@ urlpatterns = [
     ## Git
     url(r'^(?P<domain>(.*))/setupGit$', views.setupGit, name='setupGit'),
     url(r'^setupGitRepo$', views.setupGitRepo, name='setupGitRepo'),
+
+    ## Set up SSH Access
+    url(r'^(?P<domain>(.*))/sshAccess$', views.sshAccess, name='sshAccess'),
+    url(r'^saveSSHAccessChanges$', views.saveSSHAccessChanges, name='saveSSHAccessChanges'),
+
+    ## Staging Enviroment
+
+    url(r'^(?P<domain>(.*))/setupStaging$', views.setupStaging, name='setupStaging'),
+    url(r'^startCloning$', views.startCloning, name='startCloning'),
+    url(r'^(?P<domain>(.*))/(?P<childDomain>(.*))/syncToMaster$', views.syncToMaster, name='syncToMaster'),
+    url(r'^startSync$', views.startSync, name='startSync'),
+
 
     url(r'^(?P<domain>(.*))/gitNotify$', views.gitNotify, name='gitNotify'),
     url(r'^detachRepo$', views.detachRepo, name='detachRepo'),

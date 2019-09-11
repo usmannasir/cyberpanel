@@ -5,7 +5,10 @@ import sys
 import django
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-django.setup()
+try:
+    django.setup()
+except:
+    pass
 import shutil
 import argparse
 import installUtilities
@@ -14,9 +17,6 @@ from os.path import join
 from os import listdir, rmdir
 from shutil import move
 from multiprocessing import Process
-from websiteFunctions.models import Websites, ChildDomains, aliasDomains
-from loginSystem.models import Administrator
-from packages.models import Package
 import subprocess
 import shlex
 from plogical.mailUtilities import mailUtilities
@@ -30,6 +30,14 @@ from ApachController.ApacheController import ApacheController
 from ApachController.ApacheVhosts import ApacheVhost
 from managePHP.phpManager import PHPManager
 
+try:
+    from websiteFunctions.models import Websites, ChildDomains, aliasDomains
+    from loginSystem.models import Administrator
+    from packages.models import Package
+    from CLManager.models import CLPackages
+except:
+    pass
+
 ## If you want justice, you have come to the wrong place.
 
 
@@ -37,6 +45,38 @@ class virtualHostUtilities:
     apache = 1
     ols = 2
     lsws = 3
+
+    @staticmethod
+    def EnableCloudLinux():
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            confPath = '/usr/local/lsws/conf/httpd_config.conf'
+            data = open(confPath, 'r').readlines()
+
+            writeToFile = open(confPath, 'w')
+
+            for items in data:
+                if items.find('priority') > -1:
+                    writeToFile.writelines(items)
+                    writeToFile.writelines('enableLVE                 2\n')
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+        else:
+            confPath = '/usr/local/lsws/conf/httpd_config.xml'
+            data = open(confPath, 'r').readlines()
+
+            writeToFile = open(confPath, 'w')
+
+            for items in data:
+                if items.find('<enableChroot>') > -1:
+                    writeToFile.writelines(items)
+                    writeToFile.writelines('  <enableLVE>2</enableLVE>\n')
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+
 
     Server_root = "/usr/local/lsws"
     cyberPanel = "/usr/local/CyberCP"
@@ -154,11 +194,56 @@ class virtualHostUtilities:
 
             ## DKIM Check
 
-            if dkimCheck == 1:
-                DNS.createDKIMRecords(virtualHostName)
+            postFixPath = '/home/cyberpanel/postfix'
 
+            if os.path.exists(postFixPath):
+                if dkimCheck == 1:
+                    DNS.createDKIMRecords(virtualHostName)
 
+            cageFSPath = '/home/cyberpanel/cagefs'
+
+            if os.path.exists(cageFSPath):
+                command = '/usr/sbin/cagefsctl --enable %s' % (virtualHostUser)
+                ProcessUtilities.normalExecutioner(command)
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Website successfully created. [200]')
+
+            CLPath = '/etc/sysconfig/cloudlinux'
+
+            if os.path.exists(CLPath):
+                if CLPackages.objects.count() == 0:
+                    package = Package.objects.get(packageName='Default')
+                    clPackage = CLPackages(name='Default', owner=package, speed='100%', vmem='1G', pmem='1G', io='1024',
+                                           iops='1024', ep='20', nproc='50', inodessoft='20', inodeshard='20')
+                    clPackage.save()
+
+                    writeToFile = open(CLPath, 'a')
+                    writeToFile.writelines('CUSTOM_GETPACKAGE_SCRIPT=/usr/local/CyberCP/CLManager/CLPackages.py\n')
+                    writeToFile.close()
+
+                    command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
+                    ProcessUtilities.normalExecutioner(command)
+
+                    virtualHostUtilities.EnableCloudLinux()
+                    installUtilities.installUtilities.reStartLiteSpeed()
+
+                    command = 'sudo lvectl package-set %s --speed=%s --pmem=%s --io=%s --nproc=%s --iops=%s --vmem=%s --ep=%s' % (
+                        'Default', '100%', '1G', '1024', '50', '1024', '1G', '20')
+                    ProcessUtilities.normalExecutioner(command)
+
+                    command = 'sudo lvectl apply all'
+                    ProcessUtilities.normalExecutioner(command)
+                else:
+                    try:
+                        clPackage = CLPackages.objects.get(owner=selectedPackage)
+                        command = 'sudo lvectl package-set %s --speed=%s --pmem=%s --io=%s --nproc=%s --iops=%s --vmem=%s --ep=%s' % (
+                            clPackage.name, clPackage.speed, clPackage.pmem, clPackage.io, clPackage.np, clPackage.iops, clPackage.vmem, clPackage.ep)
+                        ProcessUtilities.normalExecutioner(command)
+                        command = 'sudo lvectl apply all'
+                        ProcessUtilities.normalExecutioner(command)
+                    except:
+                        pass
+
+
 
             return 1, 'None'
 
@@ -176,6 +261,7 @@ class virtualHostUtilities:
 
             if retValues[0] == 0:
                 print "0," + str(retValues[1])
+                logging.CyberCPLogFileWriter.writeToFile(str(retValues[1]))
                 return 0, str(retValues[1])
 
             installUtilities.installUtilities.reStartLiteSpeed()
@@ -191,6 +277,10 @@ class virtualHostUtilities:
     @staticmethod
     def getAccessLogs(fileName, page):
         try:
+
+            if os.path.islink(fileName):
+                print "0, %s file is symlinked." % (fileName)
+                return 0
 
             numberOfTotalLines = int(subprocess.check_output(["wc", "-l", fileName]).split(" ")[0])
 
@@ -224,6 +314,10 @@ class virtualHostUtilities:
     @staticmethod
     def getErrorLogs(fileName, page):
         try:
+
+            if os.path.islink(fileName):
+                print "0, %s file is symlinked." % (fileName)
+                return 0
 
             numberOfTotalLines = int(subprocess.check_output(["wc", "-l", fileName]).split(" ")[0])
 
@@ -280,16 +374,21 @@ class virtualHostUtilities:
     def saveRewriteRules(virtualHost, fileName, tempPath):
         try:
 
+            if os.path.islink(fileName):
+                print "0, .htaccess file is symlinked."
+                return 0
+
             vhost.addRewriteRules(virtualHost, fileName)
 
             vhostFile = open(fileName, "w")
             vhostFile.write(open(tempPath, "r").read())
             vhostFile.close()
 
-            if os.path.exists(tempPath):
-                os.remove(tempPath)
-
-            installUtilities.installUtilities.reStartLiteSpeed()
+            try:
+                if os.path.exists(tempPath):
+                    os.remove(tempPath)
+            except:
+                pass
 
             print "1,None"
 
@@ -921,6 +1020,15 @@ class virtualHostUtilities:
             master = Websites.objects.get(domain=masterDomain)
             domainsInPackage = master.package.allowedDomains
 
+            if master.package.allowFullDomain == 0:
+                if virtualHostName.find(masterDomain) > -1:
+                    pass
+                else:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'Fully qualified domain is not allowed in the package. [404]')
+                    return 0, "Fully qualified domain is not allowed in the package."
+
+
             if domainsInPackage == 0:
                 pass
             elif domainsInPackage > master.childdomains_set.all().count():
@@ -1007,8 +1115,11 @@ class virtualHostUtilities:
 
             ## DKIM Check
 
-            if dkimCheck == 1:
-                DNS.createDKIMRecords(virtualHostName)
+            postFixPath = '/home/cyberpanel/postfix'
+
+            if os.path.exists(postFixPath):
+                if dkimCheck == 1:
+                    DNS.createDKIMRecords(virtualHostName)
 
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Domain successfully created. [200]')

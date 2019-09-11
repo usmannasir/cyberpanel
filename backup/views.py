@@ -9,7 +9,10 @@ from django.shortcuts import redirect
 from backup.backupManager import BackupManager
 from backup.pluginManager import pluginManager
 from loginSystem.views import loadLoginPage
-
+import os
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from django.shortcuts import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 
 def loadBackupHome(request):
     try:
@@ -27,6 +30,7 @@ def backupSite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def restoreSite(request):
     try:
         userID = request.session['userID']
@@ -34,6 +38,7 @@ def restoreSite(request):
         return bm.restoreSite(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def getCurrentBackups(request):
     try:
@@ -45,7 +50,7 @@ def getCurrentBackups(request):
 
 def submitBackupCreation(request):
     try:
-        userID = 1
+        userID = request.session['userID']
 
         result = pluginManager.preSubmitBackupCreation(request)
         if result != 200:
@@ -56,8 +61,9 @@ def submitBackupCreation(request):
 
         return coreResult
 
-    except KeyError:
-        return redirect(loadLoginPage)
+    except BaseException, msg:
+        logging.writeToFile(str(msg))
+
 
 def backupStatus(request):
     try:
@@ -67,6 +73,7 @@ def backupStatus(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def cancelBackupCreation(request):
     try:
         userID = request.session['userID']
@@ -74,6 +81,7 @@ def cancelBackupCreation(request):
         return wm.cancelBackupCreation(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def deleteBackup(request):
     try:
@@ -95,18 +103,21 @@ def deleteBackup(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def submitRestore(request):
     try:
+        userID = request.session['userID']
         result = pluginManager.preSubmitRestore(request)
         if result != 200:
             return result
 
         wm = BackupManager()
-        coreResult = wm.submitRestore(json.loads(request.body))
+        coreResult = wm.submitRestore(json.loads(request.body), userID)
 
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def restoreStatus(request):
     try:
@@ -115,6 +126,7 @@ def restoreStatus(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def backupDestinations(request):
     try:
         userID = request.session['userID']
@@ -122,6 +134,7 @@ def backupDestinations(request):
         return bm.backupDestinations(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def submitDestinationCreation(request):
     try:
@@ -313,3 +326,16 @@ def cancelRemoteBackup(request):
         return wm.cancelRemoteBackup(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+
+@csrf_exempt
+def localInitiate(request):
+    try:
+        data = json.loads(request.body)
+        randomFile = data['randomFile']
+
+        if os.path.exists(randomFile):
+            wm = BackupManager()
+            return wm.submitBackupCreation(1, json.loads(request.body))
+    except BaseException, msg:
+        logging.writeToFile(str(msg))
