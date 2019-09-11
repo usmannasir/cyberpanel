@@ -5,7 +5,7 @@ import subprocess
 import socket
 from plogical.processUtilities import ProcessUtilities
 try:
-    from websiteFunctions.models import ChildDomains, Websites
+    from websiteFunctions.models import ChildDomains, Websites, aliasDomains
 except:
     pass
 
@@ -311,6 +311,7 @@ class sslUtilities:
                                 alias = aliasDomains.objects.get(master=website.id,aliasDomain=aDomain)
                                 aDomains.append(alias.aliasDomain)
                             except BaseException, msg:
+                                print('Error getting aliasdomain: ', msg)
                                 continue
 
                         return aDomains
