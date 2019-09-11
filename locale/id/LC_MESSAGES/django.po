@@ -3,20 +3,20 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#: baseTemplate/templates/baseTemplate/index.html:227
-#: baseTemplate/templates/baseTemplate/index.html:280
-#: baseTemplate/templates/baseTemplate/index.html:287
-#: baseTemplate/templates/baseTemplate/index.html:294
-#: baseTemplate/templates/baseTemplate/index.html:301
-#: baseTemplate/templates/baseTemplate/index.html:308
-#: baseTemplate/templates/baseTemplate/index.html:315
+#: baseTemplate/templates/baseTemplate/index.html:221
+#: baseTemplate/templates/baseTemplate/index.html:274
+#: baseTemplate/templates/baseTemplate/index.html:281
+#: baseTemplate/templates/baseTemplate/index.html:288
+#: baseTemplate/templates/baseTemplate/index.html:295
+#: baseTemplate/templates/baseTemplate/index.html:302
+#: baseTemplate/templates/baseTemplate/index.html:309
 #: emailMarketing/templates/emailMarketing/sendEmails.html:93
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-02-01 02:45+0500\n"
+"POT-Creation-Date: 2019-08-13 16:26+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,56 +26,297 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: CyberCP/settings.py:176
+#: CLManager/templates/CLManager/createPackage.html:3
+msgid "Create Cloud Linux Package - CyberPanel"
+msgstr ""
+
+#: CLManager/templates/CLManager/createPackage.html:9
+msgid "Create CloudLinux Package."
+msgstr ""
+
+#: CLManager/templates/CLManager/createPackage.html:10
+msgid ""
+"Each CloudLinux package have one associated (owner) CyberPanel package. "
+"During website creation associated CloudLinux package will be assigned to "
+"website user."
+msgstr ""
+
+#: CLManager/templates/CLManager/createPackage.html:15
+#: CLManager/templates/CLManager/createPackage.html:130
+#: baseTemplate/templates/baseTemplate/index.html:443
+#: baseTemplate/templates/baseTemplate/index.html:628
+#: packages/templates/packages/createPackage.html:13
+#: packages/templates/packages/createPackage.html:100
+#: packages/templates/packages/index.html:25
+#: packages/templates/packages/index.html:28
+#: userManagment/templates/userManagment/createACL.html:152
+#: userManagment/templates/userManagment/modifyACL.html:156
+msgid "Create Package"
+msgstr ""
+
+#: CLManager/templates/CLManager/createPackage.html:24
+#: packages/templates/packages/deletePackage.html:26
+#: packages/templates/packages/modifyPackage.html:24
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:29
+#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:45
+msgid "Select Package"
+msgstr ""
+
+#: CLManager/templates/CLManager/createPackage.html:40
+#: packages/templates/packages/createPackage.html:27
+msgid "Package Name"
+msgstr ""
+
+#: CLManager/templates/CLManager/createPackage.html:47
+#: CLManager/templates/CLManager/listPackages.html:87
+msgid "SPEED"
+msgstr ""
+
+#: CLManager/templates/CLManager/createPackage.html:56
+#: CLManager/templates/CLManager/listPackages.html:98
+msgid "VMEM"
+msgstr ""
+
+#: CLManager/templates/CLManager/createPackage.html:64
+#: CLManager/templates/CLManager/listPackages.html:109
+msgid "PMEM"
+msgstr ""
+
+#: CLManager/templates/CLManager/createPackage.html:73
+#: CLManager/templates/CLManager/listPackages.html:120
+msgid "IO"
+msgstr ""
+
+#: CLManager/templates/CLManager/createPackage.html:81
+#: CLManager/templates/CLManager/listPackages.html:131
+#: containerization/templates/containerization/websiteContainerLimit.html:52
+#: containerization/templates/containerization/websiteContainerLimit.html:99
+msgid "IOPS"
+msgstr ""
+
+#: CLManager/templates/CLManager/createPackage.html:89
+#: CLManager/templates/CLManager/listPackages.html:142
+msgid "EP"
+msgstr ""
+
+#: CLManager/templates/CLManager/createPackage.html:97
+#: CLManager/templates/CLManager/listPackages.html:153
+msgid "NPROC"
+msgstr ""
+
+#: CLManager/templates/CLManager/createPackage.html:105
+#: CLManager/templates/CLManager/listPackages.html:164
+msgid "INODES soft"
+msgstr ""
+
+#: CLManager/templates/CLManager/createPackage.html:113
+#: CLManager/templates/CLManager/listPackages.html:175
+msgid "INODES hard"
+msgstr ""
+
+#: CLManager/templates/CLManager/listPackages.html:3
+msgid "Manage CloudLinux Packages - CyberPanel"
+msgstr ""
+
+#: CLManager/templates/CLManager/listPackages.html:14
+msgid "Manage CloudLinux Packages"
+msgstr ""
+
+#: CLManager/templates/CLManager/listPackages.html:15
+msgid "Manage/Delete CloudLinux Packages."
+msgstr ""
+
+#: CLManager/templates/CLManager/listPackages.html:76
+#: dns/templates/dns/addDeleteDNSRecords.html:74
+#: dns/templates/dns/addDeleteDNSRecords.html:97
+#: dns/templates/dns/addDeleteDNSRecords.html:121
+#: dns/templates/dns/addDeleteDNSRecords.html:144
+#: dns/templates/dns/addDeleteDNSRecords.html:172
+#: dns/templates/dns/addDeleteDNSRecords.html:196
+#: dns/templates/dns/addDeleteDNSRecords.html:220
+#: dns/templates/dns/addDeleteDNSRecords.html:244
+#: dns/templates/dns/addDeleteDNSRecords.html:268
+#: dns/templates/dns/addDeleteDNSRecords.html:295
+#: dns/templates/dns/addDeleteDNSRecords.html:328
+#: dockerManager/templates/dockerManager/runContainer.html:29
+#: filemanager/templates/filemanager/index.html:203
+#: firewall/templates/firewall/firewall.html:120
+#: packages/templates/packages/listPackages.html:84
+#: pluginHolder/templates/pluginHolder/plugins.html:28
+#: serverStatus/templates/serverStatus/litespeedStatus.html:38
+#: serverStatus/templates/serverStatus/litespeedStatus.html:225
+#: userManagment/templates/userManagment/listUsers.html:75
+msgid "Name"
+msgstr ""
+
+#: CLManager/templates/CLManager/listPackages.html:205
+#: CLManager/templates/CLManager/listWebsites.html:86
+#: CLManager/templates/CLManager/monitorUsage.html:57
+#: containerization/templates/containerization/listWebsites.html:57
+#: emailPremium/templates/emailPremium/emailLimits.html:172
+#: emailPremium/templates/emailPremium/emailPage.html:179
+#: emailPremium/templates/emailPremium/listDomains.html:75
+#: pluginHolder/templates/pluginHolder/plugins.html:51
+#: websiteFunctions/templates/websiteFunctions/listWebsites.html:122
+msgid "Cannot list websites. Error message:"
+msgstr ""
+
+#: CLManager/templates/CLManager/listWebsites.html:3
+msgid "CageFS - CyberPanel"
+msgstr ""
+
+#: CLManager/templates/CLManager/listWebsites.html:14
+#: CLManager/templates/CLManager/monitorUsage.html:14
+#: baseTemplate/templates/baseTemplate/index.html:419
+#: containerization/templates/containerization/listWebsites.html:14
+#: websiteFunctions/templates/websiteFunctions/index.html:31
+#: websiteFunctions/templates/websiteFunctions/index.html:55
+#: websiteFunctions/templates/websiteFunctions/listWebsites.html:19
+msgid "List Websites"
+msgstr ""
+
+#: CLManager/templates/CLManager/listWebsites.html:15
+msgid "Enable/Disable and view CageFS status for websites."
+msgstr ""
+
+#: CLManager/templates/CLManager/listWebsites.html:28
+msgid "Default: "
+msgstr ""
+
+#: CLManager/templates/CLManager/monitorUsage.html:3
+msgid "Monitor Usage - CyberPanel"
+msgstr ""
+
+#: CLManager/templates/CLManager/monitorUsage.html:15
+msgid "Monitor usage of your websites."
+msgstr ""
+
+#: CLManager/templates/CLManager/monitorUsage.html:21
+#: baseTemplate/templates/baseTemplate/homePage.html:42
+#: baseTemplate/templates/baseTemplate/index.html:278
+#: baseTemplate/templates/baseTemplate/index.html:408
+#: baseTemplate/templates/baseTemplate/index.html:409
+#: baseTemplate/templates/baseTemplate/index.html:410
+#: containerization/templates/containerization/listWebsites.html:21
+msgid "Websites"
+msgstr ""
+
+#: CLManager/templates/CLManager/notAvailable.html:3
+#: containerization/templates/containerization/notAvailable.html:3
+msgid "Not available - CyberPanel"
+msgstr ""
+
+#: CLManager/templates/CLManager/notAvailable.html:13
+#: containerization/templates/containerization/notAvailable.html:13
+msgid "Not available"
+msgstr ""
+
+#: CLManager/templates/CLManager/notAvailable.html:14
+msgid "Either CageFS is not installed or you are not on CloudLinux OS."
+msgstr ""
+
+#: CLManager/templates/CLManager/notAvailable.html:22
+msgid "CageFS is only available with CloudLinux OS. "
+msgstr ""
+
+#: CLManager/templates/CLManager/notAvailable.html:24
+#: containerization/templates/containerization/notAvailable.html:24
+msgid " for conversion details."
+msgstr ""
+
+#: CLManager/templates/CLManager/notAvailable.html:34
+#: containerization/templates/containerization/notAvailable.html:34
+msgid "Install Packages"
+msgstr ""
+
+#: CLManager/templates/CLManager/notAvailable.html:39
+msgid "CageFS is not installed on this server. Please proceed to installation."
+msgstr ""
+
+#: CLManager/templates/CLManager/websiteContainerLimit.html:3
+msgid " usage - CyberPanel"
+msgstr ""
+
+#: CLManager/templates/CLManager/websiteContainerLimit.html:14
+#: emailMarketing/templates/emailMarketing/website.html:40
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:40
+#: websiteFunctions/templates/websiteFunctions/website.html:43
+msgid "Usage"
+msgstr ""
+
+#: CLManager/templates/CLManager/websiteContainerLimit.html:15
+msgid "View CPU, Memory and Disk usage for "
+msgstr ""
+
+#: CLManager/templates/CLManager/websiteContainerLimit.html:21
+#: containerization/templates/containerization/websiteContainerLimit.html:155
+msgid "CPU Usage of"
+msgstr ""
+
+#: CLManager/templates/CLManager/websiteContainerLimit.html:30
+#: containerization/templates/containerization/websiteContainerLimit.html:164
+msgid "Memory Usage of"
+msgstr ""
+
+#: CLManager/templates/CLManager/websiteContainerLimit.html:39
+#: containerization/templates/containerization/websiteContainerLimit.html:173
+msgid "Disk Usage of"
+msgstr ""
+
+#: CyberCP/settings.py:174
 msgid "English"
 msgstr ""
 
-#: CyberCP/settings.py:177
+#: CyberCP/settings.py:175
 msgid "Chinese"
 msgstr ""
 
-#: CyberCP/settings.py:178
+#: CyberCP/settings.py:176
 msgid "Bulgarian"
 msgstr ""
 
-#: CyberCP/settings.py:179
+#: CyberCP/settings.py:177
 msgid "Portuguese"
 msgstr ""
 
-#: CyberCP/settings.py:180
+#: CyberCP/settings.py:178
 msgid "Japanese"
 msgstr ""
 
-#: CyberCP/settings.py:181
+#: CyberCP/settings.py:179
 msgid "Bosnian"
 msgstr ""
 
-#: CyberCP/settings.py:182
+#: CyberCP/settings.py:180
 msgid "Greek"
 msgstr ""
 
-#: CyberCP/settings.py:183
+#: CyberCP/settings.py:181
 msgid "Russian"
 msgstr ""
 
-#: CyberCP/settings.py:184
+#: CyberCP/settings.py:182
 msgid "Turkish"
 msgstr ""
 
-#: CyberCP/settings.py:185
+#: CyberCP/settings.py:183
 msgid "Spanish"
 msgstr ""
 
-#: CyberCP/settings.py:186
+#: CyberCP/settings.py:184
 msgid "French"
 msgstr ""
 
-#: CyberCP/settings.py:187
+#: CyberCP/settings.py:185
 msgid "Polish"
 msgstr ""
 
-#: CyberCP/settings.py:188
+#: CyberCP/settings.py:186
 msgid "Vietnamese"
+msgstr ""
+
+#: CyberCP/settings.py:187
+msgid "Italian"
 msgstr ""
 
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
@@ -95,10 +336,11 @@ msgstr ""
 #: backup/templates/backup/backup.html:30
 #: databases/templates/databases/createDatabase.html:26
 #: databases/templates/databases/deleteDatabase.html:26
-#: ftp/templates/ftp/createFTPAccount.html:40
-#: mailServer/templates/mailServer/changeEmailPassword.html:41
-#: mailServer/templates/mailServer/createEmailAccount.html:41
-#: mailServer/templates/mailServer/deleteEmailAccount.html:41
+#: databases/templates/databases/phpMyAdmin.html:26
+#: ftp/templates/ftp/createFTPAccount.html:42
+#: mailServer/templates/mailServer/changeEmailPassword.html:44
+#: mailServer/templates/mailServer/createEmailAccount.html:44
+#: mailServer/templates/mailServer/deleteEmailAccount.html:44
 #: mailServer/templates/mailServer/dkimManager.html:83
 #: mailServer/templates/mailServer/emailForwarding.html:38
 #: manageSSL/templates/manageSSL/manageSSL.html:29
@@ -134,7 +376,7 @@ msgstr ""
 #: backup/templates/backup/backup.html:106
 #: backup/templates/backup/restore.html:63
 #: baseTemplate/templates/baseTemplate/homePage.html:132
-#: baseTemplate/templates/baseTemplate/index.html:319
+#: baseTemplate/templates/baseTemplate/index.html:313
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:45
 #: filemanager/templates/filemanager/index.html:206
 #: firewall/templates/firewall/firewall.html:35
@@ -149,9 +391,9 @@ msgid "Running"
 msgstr ""
 
 #: backup/templates/backup/backup.html:81
-#: baseTemplate/templates/baseTemplate/index.html:568
-#: userManagment/templates/userManagment/createACL.html:325
-#: userManagment/templates/userManagment/modifyACL.html:331
+#: baseTemplate/templates/baseTemplate/index.html:574
+#: userManagment/templates/userManagment/createACL.html:352
+#: userManagment/templates/userManagment/modifyACL.html:356
 msgid "Create Back up"
 msgstr ""
 
@@ -160,16 +402,16 @@ msgid "Cancel Backup"
 msgstr ""
 
 #: backup/templates/backup/backup.html:102
-#: backup/templates/backup/backupDestinations.html:97
+#: backup/templates/backup/backupDestinations.html:96
 #: backup/templates/backup/backupSchedule.html:89
-#: databases/templates/databases/listDataBases.html:85
+#: databases/templates/databases/listDataBases.html:104
 #: dns/templates/dns/addDeleteDNSRecords.html:326
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:43
 #: emailMarketing/templates/emailMarketing/manageLists.html:141
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:74
-#: firewall/templates/firewall/firewall.html:117
+#: firewall/templates/firewall/firewall.html:119
 #: firewall/templates/firewall/modSecurityRulesPacks.html:109
-#: ftp/templates/ftp/listFTPAccounts.html:99
+#: ftp/templates/ftp/listFTPAccounts.html:122
 #: mailServer/templates/mailServer/emailForwarding.html:107
 #: managePHP/templates/managePHP/installExtensions.html:60
 msgid "ID"
@@ -186,14 +428,13 @@ msgstr ""
 
 #: backup/templates/backup/backup.html:105
 #: filemanager/templates/filemanager/index.html:204
-#: ftp/templates/ftp/listFTPAccounts.html:102
+#: ftp/templates/ftp/listFTPAccounts.html:125
 msgid "Size"
 msgstr ""
 
 #: backup/templates/backup/backup.html:107
-#: backup/templates/backup/backupDestinations.html:100
+#: backup/templates/backup/backupDestinations.html:99
 #: backup/templates/backup/backupSchedule.html:92
-#: databases/templates/databases/index.html:39
 #: dns/templates/dns/addDeleteDNSRecords.html:332
 #: emailMarketing/templates/emailMarketing/manageLists.html:156
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:92
@@ -201,14 +442,15 @@ msgstr ""
 #: emailMarketing/templates/emailMarketing/website.html:533
 #: filemanager/templates/filemanager/index.html:67
 #: filemanager/templates/filemanager/index.html:696
-#: firewall/templates/firewall/firewall.html:122
+#: firewall/templates/firewall/firewall.html:124
 #: firewall/templates/firewall/secureSSH.html:122
+#: mailServer/templates/mailServer/listEmails.html:78
+#: packages/templates/packages/listPackages.html:63
+#: userManagment/templates/userManagment/listUsers.html:54
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:40
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:55
-#: websiteFunctions/templates/websiteFunctions/index.html:78
-#: websiteFunctions/templates/websiteFunctions/index.html:80
 #: websiteFunctions/templates/websiteFunctions/listCron.html:65
-#: websiteFunctions/templates/websiteFunctions/website.html:494
+#: websiteFunctions/templates/websiteFunctions/website.html:497
 msgid "Delete"
 msgstr ""
 
@@ -245,29 +487,31 @@ msgstr ""
 #: dns/templates/dns/addDeleteDNSRecords.html:82
 #: dns/templates/dns/createNameServer.html:55
 #: dns/templates/dns/createNameServer.html:71
-#: firewall/templates/firewall/firewall.html:120
+#: firewall/templates/firewall/firewall.html:122
 msgid "IP Address"
 msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:38
 #: backup/templates/backup/remoteBackups.html:37
 #: databases/templates/databases/createDatabase.html:56
-#: databases/templates/databases/listDataBases.html:88
+#: databases/templates/databases/listDataBases.html:107
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:50
-#: ftp/templates/ftp/listFTPAccounts.html:103
-#: mailServer/templates/mailServer/changeEmailPassword.html:65
-#: mailServer/templates/mailServer/createEmailAccount.html:64
+#: ftp/templates/ftp/listFTPAccounts.html:126
+#: mailServer/templates/mailServer/changeEmailPassword.html:68
+#: mailServer/templates/mailServer/createEmailAccount.html:68
+#: mailServer/templates/mailServer/listEmails.html:113
 #: userManagment/templates/userManagment/createUser.html:83
-#: userManagment/templates/userManagment/modifyUser.html:61
+#: userManagment/templates/userManagment/modifyUser.html:62
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:56
+#: websiteFunctions/templates/websiteFunctions/sshAccess.html:33
 msgid "Password"
 msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:45
-#: dockerManager/templates/dockerManager/runContainer.html:71
+#: dockerManager/templates/dockerManager/runContainer.html:74
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:36
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:77
-#: firewall/templates/firewall/firewall.html:121
+#: firewall/templates/firewall/firewall.html:123
 msgid "Port"
 msgstr ""
 
@@ -277,41 +521,42 @@ msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:55
 #: backup/templates/backup/backupSchedule.html:54
-#: baseTemplate/templates/baseTemplate/index.html:574
+#: baseTemplate/templates/baseTemplate/index.html:580
 msgid "Add Destination"
 msgstr ""
 
-#: backup/templates/backup/backupDestinations.html:69
-#: backup/templates/backup/backupDestinations.html:73
+#: backup/templates/backup/backupDestinations.html:68
+#: backup/templates/backup/backupDestinations.html:72
 msgid "Connection to"
 msgstr ""
 
-#: backup/templates/backup/backupDestinations.html:69
+#: backup/templates/backup/backupDestinations.html:68
 msgid "failed. Please delete and re-add. "
 msgstr ""
 
-#: backup/templates/backup/backupDestinations.html:73
+#: backup/templates/backup/backupDestinations.html:72
 msgid "successful."
 msgstr ""
 
-#: backup/templates/backup/backupDestinations.html:77
+#: backup/templates/backup/backupDestinations.html:76
 msgid "Cannot add destination. Error message:"
 msgstr ""
 
-#: backup/templates/backup/backupDestinations.html:81
+#: backup/templates/backup/backupDestinations.html:80
 msgid "Destination Added."
 msgstr ""
 
-#: backup/templates/backup/backupDestinations.html:85
+#: backup/templates/backup/backupDestinations.html:84
 #: backup/templates/backup/backupSchedule.html:77
 #: backup/templates/backup/restore.html:95
-#: databases/templates/databases/createDatabase.html:86
+#: databases/templates/databases/createDatabase.html:98
 #: databases/templates/databases/deleteDatabase.html:69
+#: databases/templates/databases/phpMyAdmin.html:50
 #: dns/templates/dns/addDeleteDNSRecords.html:384
 #: dns/templates/dns/createDNSZone.html:70
 #: dns/templates/dns/createNameServer.html:102
 #: dns/templates/dns/deleteDNSZone.html:77
-#: dockerManager/templates/dockerManager/runContainer.html:171
+#: dockerManager/templates/dockerManager/runContainer.html:185
 #: emailMarketing/templates/emailMarketing/website.html:161
 #: emailMarketing/templates/emailMarketing/website.html:420
 #: emailMarketing/templates/emailMarketing/website.html:471
@@ -322,46 +567,46 @@ msgstr ""
 #: emailMarketing/templates/emailMarketing/website.html:955
 #: emailPremium/templates/emailPremium/emailLimits.html:101
 #: emailPremium/templates/emailPremium/emailPage.html:119
-#: mailServer/templates/mailServer/changeEmailPassword.html:93
-#: mailServer/templates/mailServer/createEmailAccount.html:92
-#: mailServer/templates/mailServer/deleteEmailAccount.html:92
+#: mailServer/templates/mailServer/changeEmailPassword.html:114
+#: mailServer/templates/mailServer/createEmailAccount.html:115
+#: mailServer/templates/mailServer/deleteEmailAccount.html:98
 #: mailServer/templates/mailServer/dkimManager.html:156
 #: mailServer/templates/mailServer/emailForwarding.html:73
 #: manageSSL/templates/manageSSL/manageSSL.html:60
-#: userManagment/templates/userManagment/createUser.html:111
-#: userManagment/templates/userManagment/modifyUser.html:91
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:149
+#: userManagment/templates/userManagment/createUser.html:126
+#: userManagment/templates/userManagment/modifyUser.html:107
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:145
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:126
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:101
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:115
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:101
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:156
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:324
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:380
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:436
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:522
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:642
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:129
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:250
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:296
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:155
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:320
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:376
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:432
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:518
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:641
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:127
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:247
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:293
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:77
-#: websiteFunctions/templates/websiteFunctions/website.html:137
-#: websiteFunctions/templates/websiteFunctions/website.html:380
-#: websiteFunctions/templates/websiteFunctions/website.html:431
-#: websiteFunctions/templates/websiteFunctions/website.html:578
-#: websiteFunctions/templates/websiteFunctions/website.html:625
-#: websiteFunctions/templates/websiteFunctions/website.html:675
-#: websiteFunctions/templates/websiteFunctions/website.html:758
-#: websiteFunctions/templates/websiteFunctions/website.html:859
+#: websiteFunctions/templates/websiteFunctions/website.html:140
+#: websiteFunctions/templates/websiteFunctions/website.html:383
+#: websiteFunctions/templates/websiteFunctions/website.html:434
+#: websiteFunctions/templates/websiteFunctions/website.html:581
+#: websiteFunctions/templates/websiteFunctions/website.html:628
+#: websiteFunctions/templates/websiteFunctions/website.html:695
+#: websiteFunctions/templates/websiteFunctions/website.html:778
+#: websiteFunctions/templates/websiteFunctions/website.html:884
 msgid "Could not connect to server. Please refresh this page."
 msgstr ""
 
-#: backup/templates/backup/backupDestinations.html:98
+#: backup/templates/backup/backupDestinations.html:97
 msgid "IP"
 msgstr ""
 
-#: backup/templates/backup/backupDestinations.html:99
-#: backup/templates/backup/backupDestinations.html:107
+#: backup/templates/backup/backupDestinations.html:98
+#: backup/templates/backup/backupDestinations.html:106
 msgid "Check Connection"
 msgstr ""
 
@@ -372,8 +617,9 @@ msgstr ""
 #: backup/templates/backup/backupSchedule.html:13
 #: backup/templates/backup/backupSchedule.html:20
 #: backup/templates/backup/index.html:75 backup/templates/backup/index.html:77
-#: baseTemplate/templates/baseTemplate/index.html:577
-#: userManagment/templates/userManagment/createACL.html:354
+#: baseTemplate/templates/baseTemplate/index.html:583
+#: userManagment/templates/userManagment/createACL.html:381
+#: userManagment/templates/userManagment/modifyACL.html:385
 msgid "Schedule Back up"
 msgstr ""
 
@@ -410,9 +656,9 @@ msgstr ""
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:30
 #: baseTemplate/templates/baseTemplate/homePage.html:95
 #: baseTemplate/templates/baseTemplate/homePage.html:97
-#: baseTemplate/templates/baseTemplate/index.html:560
-#: baseTemplate/templates/baseTemplate/index.html:562
-#: baseTemplate/templates/baseTemplate/index.html:589
+#: baseTemplate/templates/baseTemplate/index.html:566
+#: baseTemplate/templates/baseTemplate/index.html:568
+#: baseTemplate/templates/baseTemplate/index.html:595
 msgid "Back up"
 msgstr ""
 
@@ -442,9 +688,9 @@ msgid "Back up Site"
 msgstr ""
 
 #: backup/templates/backup/index.html:44
-#: baseTemplate/templates/baseTemplate/index.html:571
-#: userManagment/templates/userManagment/createACL.html:334
-#: userManagment/templates/userManagment/modifyACL.html:340
+#: baseTemplate/templates/baseTemplate/index.html:577
+#: userManagment/templates/userManagment/createACL.html:361
+#: userManagment/templates/userManagment/modifyACL.html:365
 msgid "Restore Back up"
 msgstr ""
 
@@ -458,9 +704,9 @@ msgid "Add/Delete Destinations"
 msgstr ""
 
 #: backup/templates/backup/index.html:90 backup/templates/backup/index.html:92
-#: baseTemplate/templates/baseTemplate/index.html:580
-#: userManagment/templates/userManagment/createACL.html:364
-#: userManagment/templates/userManagment/modifyACL.html:370
+#: baseTemplate/templates/baseTemplate/index.html:586
+#: userManagment/templates/userManagment/createACL.html:391
+#: userManagment/templates/userManagment/modifyACL.html:395
 msgid "Remote Back ups"
 msgstr ""
 
@@ -492,11 +738,11 @@ msgstr ""
 #: emailPremium/templates/emailPremium/emailPage.html:83
 #: emailPremium/templates/emailPremium/emailPage.html:93
 #: filemanager/templates/filemanager/index.html:230
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:491
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:615
-#: websiteFunctions/templates/websiteFunctions/website.html:283
-#: websiteFunctions/templates/websiteFunctions/website.html:727
-#: websiteFunctions/templates/websiteFunctions/website.html:833
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:487
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:614
+#: websiteFunctions/templates/websiteFunctions/website.html:286
+#: websiteFunctions/templates/websiteFunctions/website.html:747
+#: websiteFunctions/templates/websiteFunctions/website.html:858
 msgid "Cancel"
 msgstr ""
 
@@ -527,26 +773,28 @@ msgstr ""
 
 #: backup/templates/backup/remoteBackups.html:108
 #: baseTemplate/templates/baseTemplate/homePage.html:143
-#: baseTemplate/templates/baseTemplate/index.html:696
-#: baseTemplate/templates/baseTemplate/index.html:698
+#: baseTemplate/templates/baseTemplate/index.html:730
+#: baseTemplate/templates/baseTemplate/index.html:732
 #: managePHP/templates/managePHP/installExtensions.html:61
 msgid "PHP"
 msgstr ""
 
 #: backup/templates/backup/remoteBackups.html:109
-#: packages/templates/packages/createPackage.html:96
+#: packages/templates/packages/createPackage.html:112
 #: packages/templates/packages/deletePackage.html:60
-#: packages/templates/packages/modifyPackage.html:112
+#: packages/templates/packages/listPackages.html:33
+#: packages/templates/packages/modifyPackage.html:125
 msgid "Package"
 msgstr ""
 
 #: backup/templates/backup/remoteBackups.html:110
-#: baseTemplate/templates/baseTemplate/index.html:507
-#: baseTemplate/templates/baseTemplate/index.html:509
+#: baseTemplate/templates/baseTemplate/index.html:510
+#: baseTemplate/templates/baseTemplate/index.html:512
+#: mailServer/templates/mailServer/listEmails.html:101
 #: userManagment/templates/userManagment/createUser.html:45
-#: userManagment/templates/userManagment/modifyUser.html:53
+#: userManagment/templates/userManagment/modifyUser.html:54
 #: userManagment/templates/userManagment/userProfile.html:41
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:62
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:61
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:49
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:49
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:67
@@ -579,20 +827,20 @@ msgstr ""
 
 #: backup/templates/backup/restore.html:86
 #: databases/templates/databases/deleteDatabase.html:60
-#: databases/templates/databases/listDataBases.html:52
+#: databases/templates/databases/listDataBases.html:54
 #: dockerManager/templates/dockerManager/listContainers.html:57
-#: dockerManager/templates/dockerManager/runContainer.html:161
+#: dockerManager/templates/dockerManager/runContainer.html:176
 #: emailMarketing/templates/emailMarketing/website.html:411
 #: emailMarketing/templates/emailMarketing/website.html:947
-#: firewall/templates/firewall/firewall.html:148
+#: firewall/templates/firewall/firewall.html:152
 #: managePHP/templates/managePHP/editPHPConfig.html:214
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:140
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:634
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:119
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:240
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:286
-#: websiteFunctions/templates/websiteFunctions/website.html:371
-#: websiteFunctions/templates/websiteFunctions/website.html:851
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:136
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:633
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:117
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:237
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:283
+#: websiteFunctions/templates/websiteFunctions/website.html:374
+#: websiteFunctions/templates/websiteFunctions/website.html:876
 msgid "Error message:"
 msgstr ""
 
@@ -614,9 +862,9 @@ msgid "User Functions"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/homePage.html:31
-#: baseTemplate/templates/baseTemplate/index.html:369
-#: baseTemplate/templates/baseTemplate/index.html:370
-#: baseTemplate/templates/baseTemplate/index.html:371
+#: baseTemplate/templates/baseTemplate/index.html:363
+#: baseTemplate/templates/baseTemplate/index.html:364
+#: baseTemplate/templates/baseTemplate/index.html:365
 msgid "Users"
 msgstr ""
 
@@ -625,21 +873,12 @@ msgstr ""
 msgid "Website Functions"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/homePage.html:42
-#: baseTemplate/templates/baseTemplate/index.html:284
-#: baseTemplate/templates/baseTemplate/index.html:408
-#: baseTemplate/templates/baseTemplate/index.html:409
-#: baseTemplate/templates/baseTemplate/index.html:410
-#: containerization/templates/containerization/listWebsites.html:21
-msgid "Websites"
-msgstr ""
-
 #: baseTemplate/templates/baseTemplate/homePage.html:51
 msgid "Add/Modify Packages"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/homePage.html:53
-#: baseTemplate/templates/baseTemplate/index.html:291
+#: baseTemplate/templates/baseTemplate/index.html:285
 #: baseTemplate/templates/baseTemplate/index.html:435
 #: baseTemplate/templates/baseTemplate/index.html:437
 #: packages/templates/packages/index.html:13
@@ -652,14 +891,16 @@ msgid "Database Functions"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/homePage.html:64
-#: baseTemplate/templates/baseTemplate/index.html:457
-#: baseTemplate/templates/baseTemplate/index.html:458
-#: baseTemplate/templates/baseTemplate/index.html:459
+#: baseTemplate/templates/baseTemplate/index.html:460
+#: baseTemplate/templates/baseTemplate/index.html:461
+#: baseTemplate/templates/baseTemplate/index.html:462
 #: emailMarketing/templates/emailMarketing/website.html:51
-#: packages/templates/packages/createPackage.html:67
+#: packages/templates/packages/createPackage.html:69
+#: packages/templates/packages/listPackages.html:37
+#: packages/templates/packages/listPackages.html:134
 #: packages/templates/packages/modifyPackage.html:73
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:52
-#: websiteFunctions/templates/websiteFunctions/website.html:51
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:51
+#: websiteFunctions/templates/websiteFunctions/website.html:54
 msgid "Databases"
 msgstr ""
 
@@ -668,9 +909,9 @@ msgid "Control DNS"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/homePage.html:75
-#: baseTemplate/templates/baseTemplate/index.html:298
-#: baseTemplate/templates/baseTemplate/index.html:482
-#: baseTemplate/templates/baseTemplate/index.html:484
+#: baseTemplate/templates/baseTemplate/index.html:292
+#: baseTemplate/templates/baseTemplate/index.html:485
+#: baseTemplate/templates/baseTemplate/index.html:487
 msgid "DNS"
 msgstr ""
 
@@ -680,34 +921,36 @@ msgid "FTP Functions"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/homePage.html:86
-#: baseTemplate/templates/baseTemplate/index.html:305
-#: baseTemplate/templates/baseTemplate/index.html:538
-#: baseTemplate/templates/baseTemplate/index.html:540
+#: baseTemplate/templates/baseTemplate/index.html:299
+#: baseTemplate/templates/baseTemplate/index.html:544
+#: baseTemplate/templates/baseTemplate/index.html:546
 #: emailMarketing/templates/emailMarketing/website.html:46
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:47
-#: websiteFunctions/templates/websiteFunctions/website.html:46
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:46
+#: websiteFunctions/templates/websiteFunctions/website.html:49
 msgid "FTP"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/homePage.html:106
 #: baseTemplate/templates/baseTemplate/homePage.html:108
-#: packages/templates/packages/createPackage.html:75
+#: mailServer/templates/mailServer/listEmails.html:64
+#: packages/templates/packages/createPackage.html:77
+#: packages/templates/packages/listPackages.html:143
 #: packages/templates/packages/modifyPackage.html:80
 msgid "Emails"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/homePage.html:117
 #: baseTemplate/templates/baseTemplate/homePage.html:119
-#: baseTemplate/templates/baseTemplate/index.html:590
-#: baseTemplate/templates/baseTemplate/index.html:591
+#: baseTemplate/templates/baseTemplate/index.html:596
+#: baseTemplate/templates/baseTemplate/index.html:597
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:39
 msgid "SSL"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/homePage.html:130
-#: baseTemplate/templates/baseTemplate/index.html:671
-#: baseTemplate/templates/baseTemplate/index.html:673
-#: baseTemplate/templates/baseTemplate/index.html:715
+#: baseTemplate/templates/baseTemplate/index.html:705
+#: baseTemplate/templates/baseTemplate/index.html:707
+#: baseTemplate/templates/baseTemplate/index.html:749
 #: emailPremium/templates/emailPremium/policyServer.html:30
 #: serverStatus/templates/serverStatus/index.html:13
 msgid "Server Status"
@@ -719,18 +962,18 @@ msgstr ""
 
 #: baseTemplate/templates/baseTemplate/homePage.html:152
 #: baseTemplate/templates/baseTemplate/homePage.html:154
-#: baseTemplate/templates/baseTemplate/index.html:717
-#: dockerManager/templates/dockerManager/viewContainer.html:156
+#: baseTemplate/templates/baseTemplate/index.html:751
+#: dockerManager/templates/dockerManager/viewContainer.html:174
 #: emailMarketing/templates/emailMarketing/website.html:117
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:116
-#: websiteFunctions/templates/websiteFunctions/website.html:103
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:115
+#: websiteFunctions/templates/websiteFunctions/website.html:106
 msgid "Logs"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/homePage.html:163
 #: baseTemplate/templates/baseTemplate/homePage.html:165
-#: baseTemplate/templates/baseTemplate/index.html:739
-#: baseTemplate/templates/baseTemplate/index.html:741
+#: baseTemplate/templates/baseTemplate/index.html:773
+#: baseTemplate/templates/baseTemplate/index.html:775
 msgid "Security"
 msgstr ""
 
@@ -739,13 +982,13 @@ msgid "Resources"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/homePage.html:197
-#: baseTemplate/templates/baseTemplate/index.html:147
+#: baseTemplate/templates/baseTemplate/index.html:141
 #: dockerManager/templates/dockerManager/viewContainer.html:48
 msgid "CPU Usage"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/homePage.html:218
-#: baseTemplate/templates/baseTemplate/index.html:158
+#: baseTemplate/templates/baseTemplate/index.html:152
 msgid "Ram Usage"
 msgstr ""
 
@@ -753,84 +996,85 @@ msgstr ""
 msgid "Disk Usage '/'"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:167
+#: baseTemplate/templates/baseTemplate/index.html:161
 #: emailMarketing/templates/emailMarketing/website.html:58
 #: emailMarketing/templates/emailMarketing/website.html:78
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:59
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:79
-#: websiteFunctions/templates/websiteFunctions/website.html:56
-#: websiteFunctions/templates/websiteFunctions/website.html:74
+#: userManagment/templates/userManagment/listUsers.html:34
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:58
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:78
+#: websiteFunctions/templates/websiteFunctions/website.html:59
+#: websiteFunctions/templates/websiteFunctions/website.html:77
 msgid "Disk Usage"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:200
-#: baseTemplate/templates/baseTemplate/index.html:203
-#: baseTemplate/templates/baseTemplate/index.html:207
+#: baseTemplate/templates/baseTemplate/index.html:194
+#: baseTemplate/templates/baseTemplate/index.html:197
+#: baseTemplate/templates/baseTemplate/index.html:201
 msgid "CyberPanel"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:205
-#: baseTemplate/templates/baseTemplate/index.html:209
+#: baseTemplate/templates/baseTemplate/index.html:199
+#: baseTemplate/templates/baseTemplate/index.html:203
 msgid "Web Hosting Control Panel"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:211
+#: baseTemplate/templates/baseTemplate/index.html:205
 msgid "Close sidebar"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:217
+#: baseTemplate/templates/baseTemplate/index.html:211
 msgid "My Account"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:236
+#: baseTemplate/templates/baseTemplate/index.html:230
 msgid "Edit profile"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:238
-#: baseTemplate/templates/baseTemplate/index.html:377
+#: baseTemplate/templates/baseTemplate/index.html:232
+#: baseTemplate/templates/baseTemplate/index.html:371
 #: userManagment/templates/userManagment/index.html:24
-#: userManagment/templates/userManagment/index.html:27
+#: userManagment/templates/userManagment/index.html:26
 msgid "View Profile"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:245
-#: baseTemplate/templates/baseTemplate/index.html:327
+#: baseTemplate/templates/baseTemplate/index.html:239
+#: baseTemplate/templates/baseTemplate/index.html:321
 msgid "Logout"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:257
-#: baseTemplate/templates/baseTemplate/index.html:262
-#: baseTemplate/templates/baseTemplate/index.html:267
+#: baseTemplate/templates/baseTemplate/index.html:251
+#: baseTemplate/templates/baseTemplate/index.html:256
+#: baseTemplate/templates/baseTemplate/index.html:261
 msgid "CPU Load Average"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:273
+#: baseTemplate/templates/baseTemplate/index.html:267
 msgid "Dashboard Quick Menu"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:312
-#: baseTemplate/templates/baseTemplate/index.html:653
-#: baseTemplate/templates/baseTemplate/index.html:655
+#: baseTemplate/templates/baseTemplate/index.html:306
+#: baseTemplate/templates/baseTemplate/index.html:687
+#: baseTemplate/templates/baseTemplate/index.html:689
 msgid "Tuning"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:340
+#: baseTemplate/templates/baseTemplate/index.html:334
 msgid "Overview"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:342
-#: baseTemplate/templates/baseTemplate/index.html:343
+#: baseTemplate/templates/baseTemplate/index.html:336
+#: baseTemplate/templates/baseTemplate/index.html:337
 msgid "Server IP Address"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:347
-#: baseTemplate/templates/baseTemplate/index.html:349
+#: baseTemplate/templates/baseTemplate/index.html:341
+#: baseTemplate/templates/baseTemplate/index.html:343
 msgid "Dashboard"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:352
-#: baseTemplate/templates/baseTemplate/index.html:354
-#: baseTemplate/templates/baseTemplate/index.html:356
+#: baseTemplate/templates/baseTemplate/index.html:346
+#: baseTemplate/templates/baseTemplate/index.html:348
+#: baseTemplate/templates/baseTemplate/index.html:350
 #: baseTemplate/templates/baseTemplate/versionManagment.html:10
 #: userManagment/templates/userManagment/createACL.html:47
 #: userManagment/templates/userManagment/createACL.html:52
@@ -839,90 +1083,102 @@ msgstr ""
 msgid "Version Management"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:359
-#: baseTemplate/templates/baseTemplate/index.html:360
-#: baseTemplate/templates/baseTemplate/index.html:362
+#: baseTemplate/templates/baseTemplate/index.html:353
+#: baseTemplate/templates/baseTemplate/index.html:354
+#: baseTemplate/templates/baseTemplate/index.html:356
 msgid "Connect"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:366
+#: baseTemplate/templates/baseTemplate/index.html:360
 msgid "Main"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:380
+#: baseTemplate/templates/baseTemplate/index.html:374
 #: userManagment/templates/userManagment/createACL.html:64
 #: userManagment/templates/userManagment/createUser.html:12
 #: userManagment/templates/userManagment/modifyACL.html:68
 msgid "Create New User"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:383
+#: baseTemplate/templates/baseTemplate/index.html:377
+#: userManagment/templates/userManagment/createACL.html:73
+#: userManagment/templates/userManagment/listUsers.html:13
+#: userManagment/templates/userManagment/listUsers.html:19
+#: userManagment/templates/userManagment/modifyACL.html:77
+msgid "List Users"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:380
+#: userManagment/templates/userManagment/index.html:46
 #: userManagment/templates/userManagment/index.html:48
-#: userManagment/templates/userManagment/index.html:51
 #: userManagment/templates/userManagment/modifyUser.html:12
-#: userManagment/templates/userManagment/modifyUser.html:72
+#: userManagment/templates/userManagment/modifyUser.html:88
 msgid "Modify User"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:382
+#: userManagment/templates/userManagment/createACL.html:91
+#: userManagment/templates/userManagment/deleteUser.html:13
+#: userManagment/templates/userManagment/deleteUser.html:20
+#: userManagment/templates/userManagment/deleteUser.html:42
+#: userManagment/templates/userManagment/index.html:62
+#: userManagment/templates/userManagment/index.html:64
+#: userManagment/templates/userManagment/modifyACL.html:95
+msgid "Delete User"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:385
 #: userManagment/templates/userManagment/createACL.html:82
-#: userManagment/templates/userManagment/deleteUser.html:13
-#: userManagment/templates/userManagment/deleteUser.html:20
-#: userManagment/templates/userManagment/deleteUser.html:42
-#: userManagment/templates/userManagment/index.html:65
-#: userManagment/templates/userManagment/index.html:68
-#: userManagment/templates/userManagment/modifyACL.html:88
-msgid "Delete User"
-msgstr ""
-
-#: baseTemplate/templates/baseTemplate/index.html:388
-#: userManagment/templates/userManagment/createACL.html:73
-#: userManagment/templates/userManagment/modifyACL.html:78
+#: userManagment/templates/userManagment/modifyACL.html:86
 #: userManagment/templates/userManagment/resellerCenter.html:12
 #: userManagment/templates/userManagment/resellerCenter.html:19
 msgid "Reseller Center"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:391
+#: baseTemplate/templates/baseTemplate/index.html:388
 #: userManagment/templates/userManagment/changeUserACL.html:12
-#: userManagment/templates/userManagment/createACL.html:91
-#: userManagment/templates/userManagment/modifyACL.html:97
+#: userManagment/templates/userManagment/changeUserACL.html:19
+#: userManagment/templates/userManagment/createACL.html:100
+#: userManagment/templates/userManagment/modifyACL.html:104
 msgid "Change User ACL"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:394
+#: baseTemplate/templates/baseTemplate/index.html:391
 #: userManagment/templates/userManagment/createACL.html:12
 msgid "Create New ACL"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:397
+#: baseTemplate/templates/baseTemplate/index.html:394
 #: userManagment/templates/userManagment/deleteACL.html:12
 #: userManagment/templates/userManagment/deleteACL.html:40
 msgid "Delete ACL"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:400
+#: baseTemplate/templates/baseTemplate/index.html:397
 msgid "Modify ACL"
 msgstr ""
 
+#: baseTemplate/templates/baseTemplate/index.html:400
+#: userManagment/templates/userManagment/apiAccess.html:13
+#: userManagment/templates/userManagment/apiAccess.html:20
+msgid "API Access"
+msgstr ""
+
 #: baseTemplate/templates/baseTemplate/index.html:416
-#: userManagment/templates/userManagment/createACL.html:103
-#: userManagment/templates/userManagment/modifyACL.html:109
+#: userManagment/templates/userManagment/createACL.html:112
+#: userManagment/templates/userManagment/modifyACL.html:116
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:12
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:118
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:115
+#: websiteFunctions/templates/websiteFunctions/index.html:43
+#: websiteFunctions/templates/websiteFunctions/index.html:45
 msgid "Create Website"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:419
-#: containerization/templates/containerization/listWebsites.html:14
-#: websiteFunctions/templates/websiteFunctions/index.html:31
-#: websiteFunctions/templates/websiteFunctions/listWebsites.html:19
-msgid "List Websites"
-msgstr ""
-
 #: baseTemplate/templates/baseTemplate/index.html:422
-#: userManagment/templates/userManagment/createACL.html:112
-#: userManagment/templates/userManagment/modifyACL.html:118
+#: userManagment/templates/userManagment/createACL.html:121
+#: userManagment/templates/userManagment/modifyACL.html:125
+#: websiteFunctions/templates/websiteFunctions/index.html:67
+#: websiteFunctions/templates/websiteFunctions/index.html:69
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:12
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:19
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:93
@@ -930,418 +1186,451 @@ msgid "Modify Website"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:425
-#: websiteFunctions/templates/websiteFunctions/index.html:89
-#: websiteFunctions/templates/websiteFunctions/index.html:91
+#: websiteFunctions/templates/websiteFunctions/index.html:81
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:41
 msgid "Suspend/Unsuspend"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:428
-#: userManagment/templates/userManagment/changeUserACL.html:19
-#: userManagment/templates/userManagment/createACL.html:130
+#: userManagment/templates/userManagment/createACL.html:139
 #: userManagment/templates/userManagment/deleteACL.html:19
-#: userManagment/templates/userManagment/modifyACL.html:136
+#: userManagment/templates/userManagment/modifyACL.html:143
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:12
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:19
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:42
+#: websiteFunctions/templates/websiteFunctions/index.html:90
+#: websiteFunctions/templates/websiteFunctions/index.html:92
 msgid "Delete Website"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:443
-#: packages/templates/packages/createPackage.html:13
-#: packages/templates/packages/createPackage.html:84
-#: packages/templates/packages/index.html:25
-#: packages/templates/packages/index.html:27
-#: userManagment/templates/userManagment/createACL.html:143
-#: userManagment/templates/userManagment/modifyACL.html:149
-msgid "Create Package"
-msgstr ""
-
 #: baseTemplate/templates/baseTemplate/index.html:446
-#: packages/templates/packages/deletePackage.html:12
-#: packages/templates/packages/deletePackage.html:18
-#: packages/templates/packages/deletePackage.html:39
-#: packages/templates/packages/index.html:37
-#: packages/templates/packages/index.html:39
-#: userManagment/templates/userManagment/createACL.html:152
-#: userManagment/templates/userManagment/modifyACL.html:158
-msgid "Delete Package"
+#: baseTemplate/templates/baseTemplate/index.html:633
+#: packages/templates/packages/listPackages.html:13
+#: packages/templates/packages/listPackages.html:19
+#: userManagment/templates/userManagment/createACL.html:161
+#: userManagment/templates/userManagment/modifyACL.html:165
+msgid "List Packages"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:449
-#: packages/templates/packages/index.html:49
+#: packages/templates/packages/deletePackage.html:12
+#: packages/templates/packages/deletePackage.html:18
+#: packages/templates/packages/deletePackage.html:39
+#: packages/templates/packages/index.html:38
+#: packages/templates/packages/index.html:41
+#: userManagment/templates/userManagment/createACL.html:170
+#: userManagment/templates/userManagment/modifyACL.html:174
+msgid "Delete Package"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:452
 #: packages/templates/packages/index.html:51
+#: packages/templates/packages/index.html:54
 #: packages/templates/packages/modifyPackage.html:9
 #: packages/templates/packages/modifyPackage.html:15
-#: packages/templates/packages/modifyPackage.html:95
-#: userManagment/templates/userManagment/createACL.html:161
-#: userManagment/templates/userManagment/modifyACL.html:167
+#: packages/templates/packages/modifyPackage.html:108
+#: userManagment/templates/userManagment/createACL.html:179
+#: userManagment/templates/userManagment/modifyACL.html:183
 msgid "Modify Package"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:465
+#: baseTemplate/templates/baseTemplate/index.html:468
 #: databases/templates/databases/createDatabase.html:12
 #: databases/templates/databases/createDatabase.html:19
-#: databases/templates/databases/createDatabase.html:66
+#: databases/templates/databases/createDatabase.html:79
 #: databases/templates/databases/index.html:25
-#: userManagment/templates/userManagment/createACL.html:173
-#: userManagment/templates/userManagment/modifyACL.html:179
+#: databases/templates/databases/index.html:27
+#: databases/templates/databases/phpMyAdmin.html:12
+#: databases/templates/databases/phpMyAdmin.html:19
+#: userManagment/templates/userManagment/createACL.html:191
+#: userManagment/templates/userManagment/modifyACL.html:195
 msgid "Create Database"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:468
+#: baseTemplate/templates/baseTemplate/index.html:471
 #: databases/templates/databases/deleteDatabase.html:12
 #: databases/templates/databases/deleteDatabase.html:19
 #: databases/templates/databases/deleteDatabase.html:51
 #: databases/templates/databases/index.html:37
-#: userManagment/templates/userManagment/createACL.html:182
-#: userManagment/templates/userManagment/modifyACL.html:188
+#: databases/templates/databases/index.html:39
+#: userManagment/templates/userManagment/createACL.html:200
+#: userManagment/templates/userManagment/modifyACL.html:204
 msgid "Delete Database"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:471
+#: baseTemplate/templates/baseTemplate/index.html:474
 #: databases/templates/databases/index.html:48
+#: databases/templates/databases/index.html:50
 #: databases/templates/databases/listDataBases.html:13
 #: databases/templates/databases/listDataBases.html:19
-#: userManagment/templates/userManagment/createACL.html:191
-#: userManagment/templates/userManagment/modifyACL.html:197
+#: userManagment/templates/userManagment/createACL.html:209
+#: userManagment/templates/userManagment/modifyACL.html:213
 msgid "List Databases"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:473
-#: baseTemplate/templates/baseTemplate/index.html:474
+#: baseTemplate/templates/baseTemplate/index.html:476
+#: baseTemplate/templates/baseTemplate/index.html:477
 #: databases/templates/databases/index.html:59
 #: databases/templates/databases/index.html:61
 msgid "PHPMYAdmin"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:490
+#: baseTemplate/templates/baseTemplate/index.html:493
 #: dns/templates/dns/createNameServer.html:12
-#: dns/templates/dns/createNameServer.html:80 dns/templates/dns/index.html:75
-#: dns/templates/dns/index.html:78
-#: userManagment/templates/userManagment/createACL.html:203
-#: userManagment/templates/userManagment/modifyACL.html:209
+#: dns/templates/dns/createNameServer.html:80 dns/templates/dns/index.html:72
+#: dns/templates/dns/index.html:74
+#: userManagment/templates/userManagment/createACL.html:221
+#: userManagment/templates/userManagment/modifyACL.html:225
 msgid "Create Nameserver"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:493
+#: baseTemplate/templates/baseTemplate/index.html:496
 #: dns/templates/dns/createDNSZone.html:12
 #: dns/templates/dns/createDNSZone.html:50 dns/templates/dns/index.html:29
-#: dns/templates/dns/index.html:32 dns/templates/dns/index.html:88
-#: dns/templates/dns/index.html:91
+#: dns/templates/dns/index.html:31 dns/templates/dns/index.html:84
+#: dns/templates/dns/index.html:86
 msgid "Create DNS Zone"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:496
-#: dns/templates/dns/deleteDNSZone.html:50 dns/templates/dns/index.html:42
-#: dns/templates/dns/index.html:45 dns/templates/dns/index.html:101
-#: dns/templates/dns/index.html:104
-#: userManagment/templates/userManagment/createACL.html:221
-#: userManagment/templates/userManagment/modifyACL.html:227
+#: baseTemplate/templates/baseTemplate/index.html:499
+#: dns/templates/dns/deleteDNSZone.html:50 dns/templates/dns/index.html:41
+#: dns/templates/dns/index.html:43 dns/templates/dns/index.html:96
+#: dns/templates/dns/index.html:98
+#: userManagment/templates/userManagment/createACL.html:239
+#: userManagment/templates/userManagment/modifyACL.html:243
 msgid "Delete Zone"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:499
+#: baseTemplate/templates/baseTemplate/index.html:502
 msgid "Add/Delete Records"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:515
+#: baseTemplate/templates/baseTemplate/index.html:518
 #: mailServer/templates/mailServer/createEmailAccount.html:12
 #: mailServer/templates/mailServer/createEmailAccount.html:19
 msgid "Create Email Account"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:515
-#: mailServer/templates/mailServer/createEmailAccount.html:77
+#: baseTemplate/templates/baseTemplate/index.html:518
+#: mailServer/templates/mailServer/createEmailAccount.html:98
 #: mailServer/templates/mailServer/index.html:25
-#: mailServer/templates/mailServer/index.html:27
-#: userManagment/templates/userManagment/createACL.html:244
-#: userManagment/templates/userManagment/modifyACL.html:250
+#: mailServer/templates/mailServer/index.html:28
+#: userManagment/templates/userManagment/createACL.html:262
+#: userManagment/templates/userManagment/modifyACL.html:266
 msgid "Create Email"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:518
+#: baseTemplate/templates/baseTemplate/index.html:521
+#: userManagment/templates/userManagment/createACL.html:271
+#: userManagment/templates/userManagment/modifyACL.html:275
+msgid "List Emails"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:524
 #: mailServer/templates/mailServer/deleteEmailAccount.html:12
 #: mailServer/templates/mailServer/deleteEmailAccount.html:19
 msgid "Delete Email Account"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:518
-#: mailServer/templates/mailServer/deleteEmailAccount.html:69
-#: mailServer/templates/mailServer/index.html:37
-#: mailServer/templates/mailServer/index.html:39
-#: userManagment/templates/userManagment/createACL.html:253
-#: userManagment/templates/userManagment/modifyACL.html:259
+#: baseTemplate/templates/baseTemplate/index.html:524
+#: mailServer/templates/mailServer/deleteEmailAccount.html:73
+#: mailServer/templates/mailServer/index.html:38
+#: mailServer/templates/mailServer/index.html:41
+#: userManagment/templates/userManagment/createACL.html:280
+#: userManagment/templates/userManagment/modifyACL.html:284
 msgid "Delete Email"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:521
-#: userManagment/templates/userManagment/createACL.html:262
-#: userManagment/templates/userManagment/modifyACL.html:268
+#: baseTemplate/templates/baseTemplate/index.html:527
+#: userManagment/templates/userManagment/createACL.html:289
+#: userManagment/templates/userManagment/modifyACL.html:293
 msgid "Email Forwarding"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:524
-#: databases/templates/databases/listDataBases.html:71
-#: ftp/templates/ftp/listFTPAccounts.html:85
-#: mailServer/templates/mailServer/changeEmailPassword.html:77
-#: mailServer/templates/mailServer/index.html:49
+#: baseTemplate/templates/baseTemplate/index.html:530
+#: databases/templates/databases/listDataBases.html:90
+#: ftp/templates/ftp/listFTPAccounts.html:108
+#: mailServer/templates/mailServer/changeEmailPassword.html:97
 #: mailServer/templates/mailServer/index.html:51
+#: mailServer/templates/mailServer/index.html:54
+#: mailServer/templates/mailServer/listEmails.html:76
 msgid "Change Password"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:527
+#: baseTemplate/templates/baseTemplate/index.html:533
 #: mailServer/templates/mailServer/dkimManager.html:13
 #: mailServer/templates/mailServer/dkimManager.html:22
 #: mailServer/templates/mailServer/dkimManager.html:75
-#: userManagment/templates/userManagment/createACL.html:282
-#: userManagment/templates/userManagment/modifyACL.html:288
+#: userManagment/templates/userManagment/createACL.html:309
+#: userManagment/templates/userManagment/modifyACL.html:313
 msgid "DKIM Manager"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:529
-#: baseTemplate/templates/baseTemplate/index.html:530
+#: baseTemplate/templates/baseTemplate/index.html:535
+#: baseTemplate/templates/baseTemplate/index.html:536
 msgid "Access Webmail"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:546
+#: baseTemplate/templates/baseTemplate/index.html:552
 #: emailMarketing/templates/emailMarketing/website.html:886
 #: emailMarketing/templates/emailMarketing/website.html:889
 #: ftp/templates/ftp/createFTPAccount.html:12
-#: ftp/templates/ftp/createFTPAccount.html:19 ftp/templates/ftp/index.html:25
-#: ftp/templates/ftp/index.html:27
-#: userManagment/templates/userManagment/createACL.html:295
-#: userManagment/templates/userManagment/modifyACL.html:301
+#: ftp/templates/ftp/createFTPAccount.html:19 ftp/templates/ftp/index.html:24
+#: ftp/templates/ftp/index.html:26
+#: userManagment/templates/userManagment/createACL.html:322
+#: userManagment/templates/userManagment/modifyACL.html:326
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:570
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:573
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:576
-#: websiteFunctions/templates/websiteFunctions/website.html:798
-#: websiteFunctions/templates/websiteFunctions/website.html:801
+#: websiteFunctions/templates/websiteFunctions/website.html:821
+#: websiteFunctions/templates/websiteFunctions/website.html:824
 msgid "Create FTP Account"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:549
+#: baseTemplate/templates/baseTemplate/index.html:555
 #: emailMarketing/templates/emailMarketing/website.html:898
 #: emailMarketing/templates/emailMarketing/website.html:901
 #: ftp/templates/ftp/deleteFTPAccount.html:12
 #: ftp/templates/ftp/deleteFTPAccount.html:18
-#: ftp/templates/ftp/deleteFTPAccount.html:64 ftp/templates/ftp/index.html:37
-#: ftp/templates/ftp/index.html:39
-#: userManagment/templates/userManagment/createACL.html:304
-#: userManagment/templates/userManagment/modifyACL.html:310
+#: ftp/templates/ftp/deleteFTPAccount.html:64 ftp/templates/ftp/index.html:35
+#: ftp/templates/ftp/index.html:37
+#: userManagment/templates/userManagment/createACL.html:331
+#: userManagment/templates/userManagment/modifyACL.html:335
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:582
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:585
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:588
-#: websiteFunctions/templates/websiteFunctions/website.html:807
-#: websiteFunctions/templates/websiteFunctions/website.html:810
+#: websiteFunctions/templates/websiteFunctions/website.html:830
+#: websiteFunctions/templates/websiteFunctions/website.html:833
 msgid "Delete FTP Account"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:552
-#: ftp/templates/ftp/index.html:49 ftp/templates/ftp/index.html:51
+#: baseTemplate/templates/baseTemplate/index.html:558
+#: ftp/templates/ftp/index.html:46 ftp/templates/ftp/index.html:48
 #: ftp/templates/ftp/listFTPAccounts.html:13
 #: ftp/templates/ftp/listFTPAccounts.html:19
-#: userManagment/templates/userManagment/createACL.html:313
-#: userManagment/templates/userManagment/modifyACL.html:319
+#: userManagment/templates/userManagment/createACL.html:340
+#: userManagment/templates/userManagment/modifyACL.html:344
 msgid "List FTP Accounts"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:574
-#: userManagment/templates/userManagment/createACL.html:343
-#: userManagment/templates/userManagment/modifyACL.html:349
+#: baseTemplate/templates/baseTemplate/index.html:580
+#: userManagment/templates/userManagment/createACL.html:370
+#: userManagment/templates/userManagment/modifyACL.html:374
 msgid "Add/Delete Destination"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:597
+#: baseTemplate/templates/baseTemplate/index.html:603
 #: manageSSL/templates/manageSSL/index.html:29
 #: manageSSL/templates/manageSSL/index.html:31
 #: manageSSL/templates/manageSSL/manageSSL.html:13
 #: manageSSL/templates/manageSSL/manageSSL.html:20
-#: userManagment/templates/userManagment/createACL.html:377
-#: userManagment/templates/userManagment/modifyACL.html:383
+#: userManagment/templates/userManagment/createACL.html:404
+#: userManagment/templates/userManagment/modifyACL.html:408
 msgid "Manage SSL"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:600
+#: baseTemplate/templates/baseTemplate/index.html:606
 #: manageSSL/templates/manageSSL/index.html:45
 #: manageSSL/templates/manageSSL/index.html:47
-#: userManagment/templates/userManagment/createACL.html:386
-#: userManagment/templates/userManagment/modifyACL.html:392
+#: userManagment/templates/userManagment/createACL.html:413
+#: userManagment/templates/userManagment/modifyACL.html:417
 msgid "Hostname SSL"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:603
+#: baseTemplate/templates/baseTemplate/index.html:609
 #: manageSSL/templates/manageSSL/index.html:60
 #: manageSSL/templates/manageSSL/index.html:62
-#: userManagment/templates/userManagment/createACL.html:395
-#: userManagment/templates/userManagment/modifyACL.html:401
+#: userManagment/templates/userManagment/createACL.html:422
+#: userManagment/templates/userManagment/modifyACL.html:426
 msgid "MailServer SSL"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:610
+#: baseTemplate/templates/baseTemplate/index.html:616
 msgid "Server"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:613
-#: baseTemplate/templates/baseTemplate/index.html:615
-msgid "Containerization"
+#: baseTemplate/templates/baseTemplate/index.html:619
+#: baseTemplate/templates/baseTemplate/index.html:621
+msgid "CloudLinux"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:616
-#: baseTemplate/templates/baseTemplate/index.html:633
-#: baseTemplate/templates/baseTemplate/index.html:771
+#: baseTemplate/templates/baseTemplate/index.html:622
+#: baseTemplate/templates/baseTemplate/index.html:650
+#: baseTemplate/templates/baseTemplate/index.html:667
+#: baseTemplate/templates/baseTemplate/index.html:808
 msgid "NEW"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:622
+#: baseTemplate/templates/baseTemplate/index.html:628
+msgid "Create Cloud Linux Package"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:633
+msgid "List Cloud Linux Package"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:638
+msgid "Monitor Usage of your Websites"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:638
+msgid "Monitor Usage"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:647
+#: baseTemplate/templates/baseTemplate/index.html:649
+msgid "Containerization"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:656
 msgid "Create Website Limits"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:622
+#: baseTemplate/templates/baseTemplate/index.html:656
 msgid "Create Limits"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:630
+#: baseTemplate/templates/baseTemplate/index.html:664
 msgid "Docker"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:632
+#: baseTemplate/templates/baseTemplate/index.html:666
 msgid "Docker Manager"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:639
+#: baseTemplate/templates/baseTemplate/index.html:673
 msgid "Manage Docker Images"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:639
+#: baseTemplate/templates/baseTemplate/index.html:673
 #: dockerManager/templates/dockerManager/index.html:49
 #: dockerManager/templates/dockerManager/index.html:51
 #: dockerManager/templates/dockerManager/manageImages.html:14
 msgid "Manage Images"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:642
+#: baseTemplate/templates/baseTemplate/index.html:676
 msgid "Manage Docker Containers"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:642
+#: baseTemplate/templates/baseTemplate/index.html:676
 #: dockerManager/templates/dockerManager/index.html:29
 #: dockerManager/templates/dockerManager/index.html:31
 msgid "Manage Containers"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:645
+#: baseTemplate/templates/baseTemplate/index.html:679
 msgid "Create New Docker Container"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:645
+#: baseTemplate/templates/baseTemplate/index.html:679
 msgid "Create New Container"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:661
+#: baseTemplate/templates/baseTemplate/index.html:695
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
 #: tuning/templates/tuning/liteSpeedTuning.html:12
 msgid "LiteSpeed Tuning"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:664
+#: baseTemplate/templates/baseTemplate/index.html:698
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13
 #: tuning/templates/tuning/phpTuning.html:149
 msgid "PHP Tuning"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:679
+#: baseTemplate/templates/baseTemplate/index.html:713
 #: serverStatus/templates/serverStatus/topProcesses.html:14
 #: serverStatus/templates/serverStatus/topProcesses.html:179
 msgid "Top Processes"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:682
+#: baseTemplate/templates/baseTemplate/index.html:716
 #: serverStatus/templates/serverStatus/index.html:25
-#: serverStatus/templates/serverStatus/index.html:27
+#: serverStatus/templates/serverStatus/index.html:28
 msgid "LiteSpeed Status"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:685
+#: baseTemplate/templates/baseTemplate/index.html:719
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:13
-#: serverStatus/templates/serverStatus/index.html:37
+#: serverStatus/templates/serverStatus/index.html:38
 msgid "CyberPanel Main Log File"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:688
+#: baseTemplate/templates/baseTemplate/index.html:722
 msgid "Services Status"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:704
+#: baseTemplate/templates/baseTemplate/index.html:738
 #: managePHP/templates/managePHP/installExtensions.html:13
 msgid "Install PHP Extensions"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:704
+#: baseTemplate/templates/baseTemplate/index.html:738
 #: managePHP/templates/managePHP/index.html:24
 #: managePHP/templates/managePHP/index.html:26
 msgid "Install Extensions"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:707
+#: baseTemplate/templates/baseTemplate/index.html:741
 #: managePHP/templates/managePHP/index.html:35
 #: managePHP/templates/managePHP/index.html:37
 msgid "Edit PHP Configs"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:723
+#: baseTemplate/templates/baseTemplate/index.html:757
 msgid "Access Log"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:725
+#: baseTemplate/templates/baseTemplate/index.html:759
 #: emailMarketing/templates/emailMarketing/website.html:139
 #: serverLogs/templates/serverLogs/errorLogs.html:13
-#: serverLogs/templates/serverLogs/index.html:36
-#: serverLogs/templates/serverLogs/index.html:38
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:136
-#: websiteFunctions/templates/websiteFunctions/website.html:123
+#: serverLogs/templates/serverLogs/index.html:37
+#: serverLogs/templates/serverLogs/index.html:40
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:135
+#: websiteFunctions/templates/websiteFunctions/website.html:126
 msgid "Error Logs"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:727
+#: baseTemplate/templates/baseTemplate/index.html:761
 #: emailPremium/templates/emailPremium/emailPage.html:144
 #: serverLogs/templates/serverLogs/emailLogs.html:14
-#: serverLogs/templates/serverLogs/index.html:47
 #: serverLogs/templates/serverLogs/index.html:49
+#: serverLogs/templates/serverLogs/index.html:52
 msgid "Email Logs"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:727
+#: baseTemplate/templates/baseTemplate/index.html:761
 msgid "Email Log"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:729
+#: baseTemplate/templates/baseTemplate/index.html:763
 #: serverLogs/templates/serverLogs/ftplogs.html:13
-#: serverLogs/templates/serverLogs/index.html:58
-#: serverLogs/templates/serverLogs/index.html:60
+#: serverLogs/templates/serverLogs/index.html:61
+#: serverLogs/templates/serverLogs/index.html:64
 msgid "FTP Logs"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:731
+#: baseTemplate/templates/baseTemplate/index.html:765
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:14
 msgid "ModSecurity Audit Logs"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:731
+#: baseTemplate/templates/baseTemplate/index.html:765
 msgid "ModSec Audit Logs"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:747
+#: baseTemplate/templates/baseTemplate/index.html:781
 msgid "Firewall Home"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:747
+#: baseTemplate/templates/baseTemplate/index.html:781
 #: firewall/templates/firewall/csf.html:119
 #: firewall/templates/firewall/index.html:25
 #: firewall/templates/firewall/index.html:27
 msgid "Firewall"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:749
+#: baseTemplate/templates/baseTemplate/index.html:783
 #: firewall/templates/firewall/index.html:36
 #: firewall/templates/firewall/index.html:38
 #: firewall/templates/firewall/secureSSH.html:13
@@ -1349,97 +1638,105 @@ msgstr ""
 msgid "Secure SSH"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:751
+#: baseTemplate/templates/baseTemplate/index.html:785
 msgid "ModSecurity Configurations"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:751
+#: baseTemplate/templates/baseTemplate/index.html:785
 msgid "ModSecurity Conf"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:754
+#: baseTemplate/templates/baseTemplate/index.html:788
 #: firewall/templates/firewall/modSecurityRules.html:20
 msgid "ModSecurity Rules"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:757
+#: baseTemplate/templates/baseTemplate/index.html:791
 msgid "ModSecurity Rules Packs"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:760
+#: baseTemplate/templates/baseTemplate/index.html:794
 msgid "ConfigServer Security & Firewall (CSF)"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:760
+#: baseTemplate/templates/baseTemplate/index.html:794
 #: firewall/templates/firewall/csf.html:21
 #: firewall/templates/firewall/csf.html:86
 #: firewall/templates/firewall/csf.html:95
 msgid "CSF"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:768
-#: baseTemplate/templates/baseTemplate/index.html:770
+#: baseTemplate/templates/baseTemplate/index.html:797
+msgid "CageFS Configurations"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:797
+msgid "CageFS"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:805
+#: baseTemplate/templates/baseTemplate/index.html:807
 msgid "Mail Settings"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:777
+#: baseTemplate/templates/baseTemplate/index.html:814
 #: emailPremium/templates/emailPremium/policyServer.html:20
 msgid "Email Policy Server"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:780
+#: baseTemplate/templates/baseTemplate/index.html:817
 msgid "Email Limits"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:783
+#: baseTemplate/templates/baseTemplate/index.html:820
 msgid "SpamAssassin Configurations"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:783
-#: emailPremium/templates/emailPremium/SpamAssassin.html:20
+#: baseTemplate/templates/baseTemplate/index.html:820
+#: emailPremium/templates/emailPremium/SpamAssassin.html:25
 #: firewall/templates/firewall/spamassassin.html:20
 msgid "SpamAssassin"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:786
+#: baseTemplate/templates/baseTemplate/index.html:823
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:14
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:22
 #: emailMarketing/templates/emailMarketing/website.html:978
-#: websiteFunctions/templates/websiteFunctions/website.html:882
+#: websiteFunctions/templates/websiteFunctions/website.html:909
 msgid "Email Marketing"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:794
-#: baseTemplate/templates/baseTemplate/index.html:796
+#: baseTemplate/templates/baseTemplate/index.html:831
+#: baseTemplate/templates/baseTemplate/index.html:833
 msgid "Manage Services"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:802
-#: manageServices/templates/manageServices/managePowerDNS.html:22
+#: baseTemplate/templates/baseTemplate/index.html:839
+#: manageServices/templates/manageServices/managePowerDNS.html:25
 msgid "Manage PowerDNS"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:805
+#: baseTemplate/templates/baseTemplate/index.html:842
 #: manageServices/templates/manageServices/managePostfix.html:22
 msgid "Manage Postfix"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:808
+#: baseTemplate/templates/baseTemplate/index.html:845
 msgid "Manage FTP"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:815
-#: baseTemplate/templates/baseTemplate/index.html:817
+#: baseTemplate/templates/baseTemplate/index.html:852
+#: baseTemplate/templates/baseTemplate/index.html:854
 #: pluginHolder/templates/pluginHolder/plugins.html:14
 #: pluginHolder/templates/pluginHolder/plugins.html:21
 msgid "Plugins"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:823
+#: baseTemplate/templates/baseTemplate/index.html:860
 msgid "Installed Plugins"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:823
+#: baseTemplate/templates/baseTemplate/index.html:860
 msgid "Installed"
 msgstr ""
 
@@ -1477,37 +1774,12 @@ msgstr ""
 msgid "Launch and set limits for the websites."
 msgstr ""
 
-#: containerization/templates/containerization/listWebsites.html:57
-#: emailPremium/templates/emailPremium/emailLimits.html:172
-#: emailPremium/templates/emailPremium/emailPage.html:179
-#: emailPremium/templates/emailPremium/listDomains.html:75
-#: pluginHolder/templates/pluginHolder/plugins.html:51
-#: websiteFunctions/templates/websiteFunctions/listWebsites.html:116
-msgid "Cannot list websites. Error message:"
-msgstr ""
-
-#: containerization/templates/containerization/notAvailable.html:3
-msgid "Not available - CyberPanel"
-msgstr ""
-
-#: containerization/templates/containerization/notAvailable.html:13
-msgid "Not available"
-msgstr ""
-
 #: containerization/templates/containerization/notAvailable.html:14
 msgid "CyberPanel Ent is required for Containerization."
 msgstr ""
 
 #: containerization/templates/containerization/notAvailable.html:22
 msgid "Containerization is only available on CyberPanel Ent. "
-msgstr ""
-
-#: containerization/templates/containerization/notAvailable.html:24
-msgid " for conversion details."
-msgstr ""
-
-#: containerization/templates/containerization/notAvailable.html:34
-msgid "Install Packages"
 msgstr ""
 
 #: containerization/templates/containerization/notAvailable.html:39
@@ -1557,11 +1829,6 @@ msgstr ""
 msgid "I/O"
 msgstr ""
 
-#: containerization/templates/containerization/websiteContainerLimit.html:52
-#: containerization/templates/containerization/websiteContainerLimit.html:99
-msgid "IOPS"
-msgstr ""
-
 #: containerization/templates/containerization/websiteContainerLimit.html:56
 #: containerization/templates/containerization/websiteContainerLimit.html:107
 msgid "Network Speed"
@@ -1571,44 +1838,68 @@ msgstr ""
 msgid "Memory Limit"
 msgstr ""
 
-#: containerization/templates/containerization/websiteContainerLimit.html:155
-msgid "CPU Usage of"
-msgstr ""
-
-#: containerization/templates/containerization/websiteContainerLimit.html:164
-msgid "Memory Usage of"
-msgstr ""
-
-#: containerization/templates/containerization/websiteContainerLimit.html:173
-msgid "Disk Usage of"
-msgstr ""
-
 #: databases/templates/databases/createDatabase.html:3
 msgid "Create New Database - CyberPanel"
 msgstr ""
 
 #: databases/templates/databases/createDatabase.html:13
+#: databases/templates/databases/phpMyAdmin.html:13
 msgid "Create a new database on this page."
 msgstr ""
 
 #: databases/templates/databases/createDatabase.html:40
-#: databases/templates/databases/listDataBases.html:86
+#: databases/templates/databases/listDataBases.html:105
 msgid "Database Name"
 msgstr ""
 
 #: databases/templates/databases/createDatabase.html:48
 #: firewall/templates/firewall/secureSSH.html:120
-#: ftp/templates/ftp/createFTPAccount.html:55
-#: ftp/templates/ftp/listFTPAccounts.html:100
-#: mailServer/templates/mailServer/createEmailAccount.html:56
+#: ftp/templates/ftp/createFTPAccount.html:57
+#: ftp/templates/ftp/listFTPAccounts.html:123
+#: mailServer/templates/mailServer/createEmailAccount.html:59
 msgid "User Name"
 msgstr ""
 
-#: databases/templates/databases/createDatabase.html:77
+#: databases/templates/databases/createDatabase.html:61
+#: databases/templates/databases/listDataBases.html:74
+#: ftp/templates/ftp/createFTPAccount.html:73
+#: ftp/templates/ftp/listFTPAccounts.html:92
+#: mailServer/templates/mailServer/changeEmailPassword.html:74
+#: mailServer/templates/mailServer/createEmailAccount.html:74
+#: userManagment/templates/userManagment/createUser.html:90
+#: userManagment/templates/userManagment/modifyUser.html:68
+msgid "Generate"
+msgstr ""
+
+#: databases/templates/databases/createDatabase.html:66
+#: databases/templates/databases/listDataBases.html:77
+#: ftp/templates/ftp/createFTPAccount.html:78
+#: ftp/templates/ftp/listFTPAccounts.html:96
+#: mailServer/templates/mailServer/changeEmailPassword.html:79
+#: mailServer/templates/mailServer/createEmailAccount.html:79
+#: userManagment/templates/userManagment/createUser.html:95
+#: userManagment/templates/userManagment/modifyUser.html:73
+msgid "Generated Password"
+msgstr ""
+
+#: databases/templates/databases/createDatabase.html:71
+#: databases/templates/databases/listDataBases.html:84
+#: ftp/templates/ftp/createFTPAccount.html:85
+#: ftp/templates/ftp/listFTPAccounts.html:103
+#: mailServer/templates/mailServer/changeEmailPassword.html:86
+#: mailServer/templates/mailServer/createEmailAccount.html:86
+#: userManagment/templates/userManagment/createUser.html:101
+#: userManagment/templates/userManagment/modifyUser.html:79
+msgid "Use"
+msgstr ""
+
+#: databases/templates/databases/createDatabase.html:89
+#: databases/templates/databases/phpMyAdmin.html:41
 msgid "Cannot create database. Error message:"
 msgstr ""
 
-#: databases/templates/databases/createDatabase.html:81
+#: databases/templates/databases/createDatabase.html:93
+#: databases/templates/databases/phpMyAdmin.html:45
 msgid "Database created successfully."
 msgstr ""
 
@@ -1636,20 +1927,6 @@ msgstr ""
 msgid "Create, edit and delete databases on this page."
 msgstr ""
 
-#: databases/templates/databases/index.html:27
-#: dockerManager/templates/dockerManager/images.html:48
-#: websiteFunctions/templates/websiteFunctions/index.html:43
-#: websiteFunctions/templates/websiteFunctions/index.html:45
-msgid "Create"
-msgstr ""
-
-#: databases/templates/databases/index.html:50
-#: websiteFunctions/templates/websiteFunctions/index.html:33
-#: websiteFunctions/templates/websiteFunctions/index.html:55
-#: websiteFunctions/templates/websiteFunctions/index.html:57
-msgid "List"
-msgstr ""
-
 #: databases/templates/databases/listDataBases.html:3
 msgid "List Databases  - CyberPanel"
 msgstr ""
@@ -1661,38 +1938,43 @@ msgstr ""
 #: databases/templates/databases/listDataBases.html:26
 #: dns/templates/dns/addDeleteDNSRecords.html:42
 #: ftp/templates/ftp/deleteFTPAccount.html:39
-#: ftp/templates/ftp/listFTPAccounts.html:40
+#: ftp/templates/ftp/listFTPAccounts.html:42
+#: mailServer/templates/mailServer/listEmails.html:43
 #: tuning/templates/tuning/phpTuning.html:30
 msgid "Select Domain"
 msgstr ""
 
 #: databases/templates/databases/listDataBases.html:44
 #: dns/templates/dns/addDeleteDNSRecords.html:367
-#: ftp/templates/ftp/listFTPAccounts.html:58
+#: ftp/templates/ftp/listFTPAccounts.html:61
 msgid "Records successfully fetched for"
 msgstr ""
 
-#: databases/templates/databases/listDataBases.html:48
+#: databases/templates/databases/listDataBases.html:49
 msgid "Password changed for: "
 msgstr ""
 
-#: databases/templates/databases/listDataBases.html:52
+#: databases/templates/databases/listDataBases.html:53
 msgid "Cannot change password for "
 msgstr ""
 
-#: databases/templates/databases/listDataBases.html:57
-#: firewall/templates/firewall/firewall.html:158
-#: ftp/templates/ftp/listFTPAccounts.html:71
+#: databases/templates/databases/listDataBases.html:59
+#: firewall/templates/firewall/firewall.html:161
+#: ftp/templates/ftp/listFTPAccounts.html:76
 msgid "Could Not Connect to server. Please refresh this page"
 msgstr ""
 
-#: databases/templates/databases/listDataBases.html:87
+#: databases/templates/databases/listDataBases.html:106
 msgid "Database User"
 msgstr ""
 
-#: databases/templates/databases/listDataBases.html:96
-#: ftp/templates/ftp/listFTPAccounts.html:112
+#: databases/templates/databases/listDataBases.html:117
+#: ftp/templates/ftp/listFTPAccounts.html:139
 msgid "Change"
+msgstr ""
+
+#: databases/templates/databases/phpMyAdmin.html:3
+msgid "phpMyAdmin - CyberPanel"
 msgstr ""
 
 #: dns/templates/dns/addDeleteDNSRecords.html:3
@@ -1731,34 +2013,15 @@ msgstr ""
 #: dns/templates/dns/createDNSZone.html:26
 #: dns/templates/dns/createNameServer.html:26
 #: dns/templates/dns/deleteDNSZone.html:27
-#: ftp/templates/ftp/createFTPAccount.html:28
+#: ftp/templates/ftp/createFTPAccount.html:29
 #: ftp/templates/ftp/deleteFTPAccount.html:27
-#: ftp/templates/ftp/listFTPAccounts.html:28
-#: mailServer/templates/mailServer/changeEmailPassword.html:28
-#: mailServer/templates/mailServer/createEmailAccount.html:28
-#: mailServer/templates/mailServer/deleteEmailAccount.html:28
+#: ftp/templates/ftp/listFTPAccounts.html:29
+#: mailServer/templates/mailServer/changeEmailPassword.html:30
+#: mailServer/templates/mailServer/createEmailAccount.html:30
+#: mailServer/templates/mailServer/deleteEmailAccount.html:30
 #: mailServer/templates/mailServer/emailForwarding.html:28
+#: mailServer/templates/mailServer/listEmails.html:30
 msgid "Enable Now"
-msgstr ""
-
-#: dns/templates/dns/addDeleteDNSRecords.html:74
-#: dns/templates/dns/addDeleteDNSRecords.html:97
-#: dns/templates/dns/addDeleteDNSRecords.html:121
-#: dns/templates/dns/addDeleteDNSRecords.html:144
-#: dns/templates/dns/addDeleteDNSRecords.html:172
-#: dns/templates/dns/addDeleteDNSRecords.html:196
-#: dns/templates/dns/addDeleteDNSRecords.html:220
-#: dns/templates/dns/addDeleteDNSRecords.html:244
-#: dns/templates/dns/addDeleteDNSRecords.html:268
-#: dns/templates/dns/addDeleteDNSRecords.html:295
-#: dns/templates/dns/addDeleteDNSRecords.html:328
-#: dockerManager/templates/dockerManager/runContainer.html:28
-#: filemanager/templates/filemanager/index.html:203
-#: firewall/templates/firewall/firewall.html:118
-#: pluginHolder/templates/pluginHolder/plugins.html:28
-#: serverStatus/templates/serverStatus/litespeedStatus.html:39
-#: serverStatus/templates/serverStatus/litespeedStatus.html:227
-msgid "Name"
 msgstr ""
 
 #: dns/templates/dns/addDeleteDNSRecords.html:78
@@ -1785,7 +2048,7 @@ msgstr ""
 #: dns/templates/dns/addDeleteDNSRecords.html:259
 #: dns/templates/dns/addDeleteDNSRecords.html:287
 #: dns/templates/dns/addDeleteDNSRecords.html:304
-#: firewall/templates/firewall/firewall.html:99
+#: firewall/templates/firewall/firewall.html:104
 msgid "Add"
 msgstr ""
 
@@ -1798,8 +2061,8 @@ msgstr ""
 #: dns/templates/dns/createDNSZone.html:38
 #: dns/templates/dns/createNameServer.html:36
 #: emailMarketing/templates/emailMarketing/website.html:318
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:52
-#: websiteFunctions/templates/websiteFunctions/website.html:277
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:51
+#: websiteFunctions/templates/websiteFunctions/website.html:280
 msgid "Domain Name"
 msgstr ""
 
@@ -1913,8 +2176,8 @@ msgstr ""
 
 #: dns/templates/dns/deleteDNSZone.html:12
 #: dns/templates/dns/deleteDNSZone.html:18
-#: userManagment/templates/userManagment/createACL.html:212
-#: userManagment/templates/userManagment/modifyACL.html:218
+#: userManagment/templates/userManagment/createACL.html:230
+#: userManagment/templates/userManagment/modifyACL.html:234
 msgid "Delete DNS Zone"
 msgstr ""
 
@@ -1932,7 +2195,7 @@ msgstr ""
 #: emailMarketing/templates/emailMarketing/manageLists.html:51
 #: emailMarketing/templates/emailMarketing/sendEmails.html:51
 #: ftp/templates/ftp/deleteFTPAccount.html:73
-#: mailServer/templates/mailServer/deleteEmailAccount.html:77
+#: mailServer/templates/mailServer/deleteEmailAccount.html:82
 #: packages/templates/packages/deletePackage.html:47
 #: userManagment/templates/userManagment/deleteACL.html:49
 #: userManagment/templates/userManagment/deleteUser.html:51
@@ -1964,11 +2227,11 @@ msgstr ""
 msgid "Create, edit and delete DNS zones on this page."
 msgstr ""
 
-#: dns/templates/dns/index.html:55 dns/templates/dns/index.html:114
+#: dns/templates/dns/index.html:53 dns/templates/dns/index.html:108
 msgid "Add Delete Records"
 msgstr ""
 
-#: dns/templates/dns/index.html:58 dns/templates/dns/index.html:117
+#: dns/templates/dns/index.html:55 dns/templates/dns/index.html:110
 msgid "Add Delete/Records"
 msgstr ""
 
@@ -1988,6 +2251,10 @@ msgstr ""
 
 #: dockerManager/templates/dockerManager/images.html:22
 msgid "Locally Available Images"
+msgstr ""
+
+#: dockerManager/templates/dockerManager/images.html:48
+msgid "Create"
 msgstr ""
 
 #: dockerManager/templates/dockerManager/index.html:3
@@ -2060,7 +2327,7 @@ msgid ""
 msgstr ""
 
 #: dockerManager/templates/dockerManager/listContainers.html:148
-#: dockerManager/templates/dockerManager/runContainer.html:49
+#: dockerManager/templates/dockerManager/runContainer.html:52
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:40
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:56
 msgid "Select Owner"
@@ -2079,11 +2346,11 @@ msgstr ""
 msgid "Delete unused images"
 msgstr ""
 
-#: dockerManager/templates/dockerManager/manageImages.html:96
+#: dockerManager/templates/dockerManager/manageImages.html:95
 msgid "Official image"
 msgstr ""
 
-#: dockerManager/templates/dockerManager/manageImages.html:105
+#: dockerManager/templates/dockerManager/manageImages.html:104
 msgid "Pull"
 msgstr ""
 
@@ -2103,55 +2370,57 @@ msgstr ""
 msgid "Container Details"
 msgstr ""
 
-#: dockerManager/templates/dockerManager/runContainer.html:35
-#: dockerManager/templates/dockerManager/viewContainer.html:71
+#: dockerManager/templates/dockerManager/runContainer.html:36
+#: dockerManager/templates/dockerManager/viewContainer.html:70
 msgid "Image"
 msgstr ""
 
-#: dockerManager/templates/dockerManager/runContainer.html:42
+#: dockerManager/templates/dockerManager/runContainer.html:44
 msgid "Tag"
 msgstr ""
 
-#: dockerManager/templates/dockerManager/runContainer.html:61
-#: dockerManager/templates/dockerManager/viewContainer.html:188
+#: dockerManager/templates/dockerManager/runContainer.html:64
+#: dockerManager/templates/dockerManager/viewContainer.html:206
 msgid "Memory limit"
 msgstr ""
 
-#: dockerManager/templates/dockerManager/runContainer.html:98
-#: dockerManager/templates/dockerManager/viewContainer.html:231
+#: dockerManager/templates/dockerManager/runContainer.html:104
+#: dockerManager/templates/dockerManager/viewContainer.html:250
 msgid "ENV"
 msgstr ""
 
-#: dockerManager/templates/dockerManager/runContainer.html:116
-#: dockerManager/templates/dockerManager/viewContainer.html:260
+#: dockerManager/templates/dockerManager/runContainer.html:125
+#: dockerManager/templates/dockerManager/viewContainer.html:283
 msgid "Map Volumes"
 msgstr ""
 
-#: dockerManager/templates/dockerManager/runContainer.html:139
-#: dockerManager/templates/dockerManager/viewContainer.html:282
+#: dockerManager/templates/dockerManager/runContainer.html:153
+#: dockerManager/templates/dockerManager/viewContainer.html:310
 msgid "Add field"
 msgstr ""
 
-#: dockerManager/templates/dockerManager/runContainer.html:145
+#: dockerManager/templates/dockerManager/runContainer.html:161
 msgid "Create Container"
 msgstr ""
 
-#: dockerManager/templates/dockerManager/runContainer.html:165
+#: dockerManager/templates/dockerManager/runContainer.html:180
 msgid "Container succesfully created."
 msgstr ""
 
-#: dockerManager/templates/dockerManager/runContainer.html:181
+#: dockerManager/templates/dockerManager/runContainer.html:196
 #: emailMarketing/templates/emailMarketing/createEmailList.html:59
 #: emailMarketing/templates/emailMarketing/manageLists.html:100
 #: emailMarketing/templates/emailMarketing/sendEmails.html:135
 #: emailMarketing/templates/emailMarketing/website.html:431
 #: managePHP/templates/managePHP/installExtensions.html:103
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:160
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:156
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:111
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:125
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:111
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:139
-#: websiteFunctions/templates/websiteFunctions/website.html:391
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:137
+#: websiteFunctions/templates/websiteFunctions/setupStaging.html:74
+#: websiteFunctions/templates/websiteFunctions/syncMaster.html:90
+#: websiteFunctions/templates/websiteFunctions/website.html:394
 msgid "Go Back"
 msgstr ""
 
@@ -2175,7 +2444,7 @@ msgstr ""
 msgid "Memory Usage"
 msgstr ""
 
-#: dockerManager/templates/dockerManager/viewContainer.html:69
+#: dockerManager/templates/dockerManager/viewContainer.html:68
 msgid "Container ID"
 msgstr ""
 
@@ -2187,17 +2456,20 @@ msgstr ""
 msgid "to"
 msgstr ""
 
-#: dockerManager/templates/dockerManager/viewContainer.html:104
+#: dockerManager/templates/dockerManager/viewContainer.html:108
 #: emailMarketing/templates/emailMarketing/manageLists.html:145
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:79
 #: emailMarketing/templates/emailMarketing/sendEmails.html:157
 #: filemanager/templates/filemanager/index.html:207
 #: mailServer/templates/mailServer/emailForwarding.html:110
+#: mailServer/templates/mailServer/listEmails.html:65
+#: packages/templates/packages/listPackages.html:41
 #: serverStatus/templates/serverStatus/topProcesses.html:201
+#: userManagment/templates/userManagment/listUsers.html:37
 msgid "Actions"
 msgstr ""
 
-#: dockerManager/templates/dockerManager/viewContainer.html:208
+#: dockerManager/templates/dockerManager/viewContainer.html:227
 msgid "Confirmation"
 msgstr ""
 
@@ -2261,7 +2533,7 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:56
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:70
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:56
-#: websiteFunctions/templates/websiteFunctions/website.html:290
+#: websiteFunctions/templates/websiteFunctions/website.html:293
 msgid "Path"
 msgstr ""
 
@@ -2291,8 +2563,9 @@ msgstr ""
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:43
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:78
 #: userManagment/templates/userManagment/createUser.html:76
+#: userManagment/templates/userManagment/listUsers.html:32
 #: userManagment/templates/userManagment/userProfile.html:36
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:71
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:69
 msgid "Username"
 msgstr ""
 
@@ -2363,7 +2636,7 @@ msgstr ""
 #: filemanager/templates/filemanager/index.html:558
 #: filemanager/templates/filemanager/index.html:588
 #: filemanager/templates/filemanager/index.html:649
-#: websiteFunctions/templates/websiteFunctions/website.html:444
+#: websiteFunctions/templates/websiteFunctions/website.html:447
 msgid "Close"
 msgstr ""
 
@@ -2421,6 +2694,7 @@ msgid "Save Host"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:75
+#: userManagment/templates/userManagment/listUsers.html:36
 msgid "Owner"
 msgstr ""
 
@@ -2442,9 +2716,9 @@ msgstr ""
 #: emailMarketing/templates/emailMarketing/website.html:1030
 #: emailMarketing/templates/emailMarketing/website.html:1033
 #: emailMarketing/templates/emailMarketing/website.html:1034
-#: websiteFunctions/templates/websiteFunctions/website.html:924
-#: websiteFunctions/templates/websiteFunctions/website.html:927
-#: websiteFunctions/templates/websiteFunctions/website.html:928
+#: websiteFunctions/templates/websiteFunctions/website.html:956
+#: websiteFunctions/templates/websiteFunctions/website.html:960
+#: websiteFunctions/templates/websiteFunctions/website.html:961
 msgid "Send Emails"
 msgstr ""
 
@@ -2454,6 +2728,7 @@ msgid ""
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:28
+#: websiteFunctions/templates/websiteFunctions/website.html:677
 msgid "Select Template"
 msgstr ""
 
@@ -2514,101 +2789,96 @@ msgid "All functions related to a particular site."
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:28
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:29
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:28
 #: websiteFunctions/templates/websiteFunctions/website.html:28
 msgid "Resource Usage"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:39
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:40
-#: websiteFunctions/templates/websiteFunctions/website.html:39
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:39
+#: websiteFunctions/templates/websiteFunctions/website.html:42
 msgid "Resource"
 msgstr ""
 
-#: emailMarketing/templates/emailMarketing/website.html:40
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:41
-#: websiteFunctions/templates/websiteFunctions/website.html:40
-msgid "Usage"
-msgstr ""
-
 #: emailMarketing/templates/emailMarketing/website.html:41
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:42
-#: websiteFunctions/templates/websiteFunctions/website.html:41
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:41
+#: websiteFunctions/templates/websiteFunctions/website.html:44
 msgid "Allowed"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:63
 #: emailMarketing/templates/emailMarketing/website.html:89
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:64
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:90
-#: websiteFunctions/templates/websiteFunctions/website.html:61
-#: websiteFunctions/templates/websiteFunctions/website.html:83
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:63
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:89
+#: websiteFunctions/templates/websiteFunctions/website.html:64
+#: websiteFunctions/templates/websiteFunctions/website.html:86
 msgid "Bandwidth Usage"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:124
 #: emailMarketing/templates/emailMarketing/website.html:127
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:121
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:125
-#: websiteFunctions/templates/websiteFunctions/website.html:109
-#: websiteFunctions/templates/websiteFunctions/website.html:113
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:120
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:124
+#: websiteFunctions/templates/websiteFunctions/website.html:112
+#: websiteFunctions/templates/websiteFunctions/website.html:116
 msgid "Load Access Logs"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:128
 #: serverLogs/templates/serverLogs/accessLogs.html:16
 #: serverLogs/templates/serverLogs/index.html:25
-#: serverLogs/templates/serverLogs/index.html:27
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:126
-#: websiteFunctions/templates/websiteFunctions/website.html:114
+#: serverLogs/templates/serverLogs/index.html:28
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:125
+#: websiteFunctions/templates/websiteFunctions/website.html:117
 msgid "Access Logs"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:135
 #: emailMarketing/templates/emailMarketing/website.html:138
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:131
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:135
-#: websiteFunctions/templates/websiteFunctions/website.html:118
-#: websiteFunctions/templates/websiteFunctions/website.html:122
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:130
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:134
+#: websiteFunctions/templates/websiteFunctions/website.html:121
+#: websiteFunctions/templates/websiteFunctions/website.html:125
 msgid "Load Error Logs"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:150
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:145
-#: websiteFunctions/templates/websiteFunctions/website.html:130
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:144
+#: websiteFunctions/templates/websiteFunctions/website.html:133
 msgid "Logs Fetched"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:155
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:150
-#: websiteFunctions/templates/websiteFunctions/website.html:133
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:149
+#: websiteFunctions/templates/websiteFunctions/website.html:136
 msgid ""
 "Could not fetch logs, see the logs file through command line. Error message:"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:179
 #: emailMarketing/templates/emailMarketing/website.html:221
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:174
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:173
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:216
-#: websiteFunctions/templates/websiteFunctions/website.html:151
-#: websiteFunctions/templates/websiteFunctions/website.html:196
+#: websiteFunctions/templates/websiteFunctions/website.html:154
+#: websiteFunctions/templates/websiteFunctions/website.html:199
 msgid "Next"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:181
 #: emailMarketing/templates/emailMarketing/website.html:223
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:176
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:175
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:218
-#: websiteFunctions/templates/websiteFunctions/website.html:153
-#: websiteFunctions/templates/websiteFunctions/website.html:198
+#: websiteFunctions/templates/websiteFunctions/website.html:156
+#: websiteFunctions/templates/websiteFunctions/website.html:201
 msgid "Previous"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:254
 #: emailPremium/templates/emailPremium/listDomains.html:22
-#: packages/templates/packages/createPackage.html:35
+#: packages/templates/packages/createPackage.html:36
+#: packages/templates/packages/listPackages.html:93
 #: packages/templates/packages/modifyPackage.html:40
-#: websiteFunctions/templates/websiteFunctions/website.html:222
+#: websiteFunctions/templates/websiteFunctions/website.html:225
 msgid "Domains"
 msgstr ""
 
@@ -2616,10 +2886,10 @@ msgstr ""
 #: emailMarketing/templates/emailMarketing/website.html:265
 #: emailMarketing/templates/emailMarketing/website.html:266
 #: emailMarketing/templates/emailMarketing/website.html:267
-#: websiteFunctions/templates/websiteFunctions/website.html:227
 #: websiteFunctions/templates/websiteFunctions/website.html:230
-#: websiteFunctions/templates/websiteFunctions/website.html:231
-#: websiteFunctions/templates/websiteFunctions/website.html:232
+#: websiteFunctions/templates/websiteFunctions/website.html:233
+#: websiteFunctions/templates/websiteFunctions/website.html:234
+#: websiteFunctions/templates/websiteFunctions/website.html:235
 msgid "Add Domains"
 msgstr ""
 
@@ -2631,13 +2901,13 @@ msgstr ""
 #: emailMarketing/templates/emailMarketing/website.html:300
 #: emailMarketing/templates/emailMarketing/website.html:303
 #: emailPremium/templates/emailPremium/listDomains.html:14
-#: websiteFunctions/templates/websiteFunctions/website.html:237
-#: websiteFunctions/templates/websiteFunctions/website.html:238
+#: websiteFunctions/templates/websiteFunctions/website.html:240
 #: websiteFunctions/templates/websiteFunctions/website.html:241
-#: websiteFunctions/templates/websiteFunctions/website.html:242
-#: websiteFunctions/templates/websiteFunctions/website.html:243
-#: websiteFunctions/templates/websiteFunctions/website.html:260
+#: websiteFunctions/templates/websiteFunctions/website.html:244
+#: websiteFunctions/templates/websiteFunctions/website.html:245
+#: websiteFunctions/templates/websiteFunctions/website.html:246
 #: websiteFunctions/templates/websiteFunctions/website.html:263
+#: websiteFunctions/templates/websiteFunctions/website.html:266
 msgid "List Domains"
 msgstr ""
 
@@ -2646,39 +2916,39 @@ msgstr ""
 #: emailMarketing/templates/emailMarketing/website.html:290
 #: emailMarketing/templates/emailMarketing/website.html:291
 #: emailMarketing/templates/emailMarketing/website.html:292
-#: websiteFunctions/templates/websiteFunctions/website.html:248
-#: websiteFunctions/templates/websiteFunctions/website.html:249
+#: websiteFunctions/templates/websiteFunctions/website.html:251
 #: websiteFunctions/templates/websiteFunctions/website.html:252
-#: websiteFunctions/templates/websiteFunctions/website.html:253
-#: websiteFunctions/templates/websiteFunctions/website.html:254
+#: websiteFunctions/templates/websiteFunctions/website.html:255
+#: websiteFunctions/templates/websiteFunctions/website.html:256
+#: websiteFunctions/templates/websiteFunctions/website.html:257
 msgid "Domain Alias"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:299
 #: emailMarketing/templates/emailMarketing/website.html:304
-#: websiteFunctions/templates/websiteFunctions/website.html:259
-#: websiteFunctions/templates/websiteFunctions/website.html:264
+#: websiteFunctions/templates/websiteFunctions/website.html:262
+#: websiteFunctions/templates/websiteFunctions/website.html:267
 msgid "Add new Cron Job"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:305
-#: websiteFunctions/templates/websiteFunctions/website.html:265
+#: websiteFunctions/templates/websiteFunctions/website.html:268
 msgid "Cron Jobs"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:332
-#: websiteFunctions/templates/websiteFunctions/website.html:292
+#: websiteFunctions/templates/websiteFunctions/website.html:295
 msgid "This path is relative to: "
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:332
-#: websiteFunctions/templates/websiteFunctions/website.html:292
+#: websiteFunctions/templates/websiteFunctions/website.html:295
 msgid "Leave empty to set default."
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:336
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:58
-#: websiteFunctions/templates/websiteFunctions/website.html:296
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:57
+#: websiteFunctions/templates/websiteFunctions/website.html:299
 msgid "Invalid Domain (Note: You don't need to add 'http' or 'https')"
 msgstr ""
 
@@ -2688,317 +2958,318 @@ msgstr ""
 #: managePHP/templates/managePHP/editPHPConfig.html:177
 #: managePHP/templates/managePHP/installExtensions.html:29
 #: tuning/templates/tuning/phpTuning.html:166
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:71
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:481
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:70
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:477
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:74
-#: websiteFunctions/templates/websiteFunctions/website.html:301
-#: websiteFunctions/templates/websiteFunctions/website.html:717
+#: websiteFunctions/templates/websiteFunctions/website.html:304
+#: websiteFunctions/templates/websiteFunctions/website.html:737
 msgid "Select PHP"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:354
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:83
+#: packages/templates/packages/createPackage.html:84
+#: packages/templates/packages/modifyPackage.html:87
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:81
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:86
-#: websiteFunctions/templates/websiteFunctions/website.html:314
+#: websiteFunctions/templates/websiteFunctions/website.html:317
 msgid "Additional Features"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:388
-#: websiteFunctions/templates/websiteFunctions/website.html:348
+#: websiteFunctions/templates/websiteFunctions/website.html:351
 msgid "Create Domain"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:415
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:144
-#: websiteFunctions/templates/websiteFunctions/website.html:375
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:140
+#: websiteFunctions/templates/websiteFunctions/website.html:378
 msgid "Website succesfully created."
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:449
-#: websiteFunctions/templates/websiteFunctions/website.html:409
+#: websiteFunctions/templates/websiteFunctions/website.html:412
 msgid "PHP Version Changed to:"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:453
-#: websiteFunctions/templates/websiteFunctions/website.html:413
+#: websiteFunctions/templates/websiteFunctions/website.html:416
 msgid "Deleted:"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:457
-#: websiteFunctions/templates/websiteFunctions/website.html:417
+#: websiteFunctions/templates/websiteFunctions/website.html:420
 msgid "SSL Issued:"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:461
-#: websiteFunctions/templates/websiteFunctions/website.html:421
+#: websiteFunctions/templates/websiteFunctions/website.html:424
 msgid "Changes applied successfully."
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:528
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:53
-#: websiteFunctions/templates/websiteFunctions/website.html:489
+#: websiteFunctions/templates/websiteFunctions/website.html:492
 msgid "Issue"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:558
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:249
-#: websiteFunctions/templates/websiteFunctions/website.html:517
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:248
+#: websiteFunctions/templates/websiteFunctions/website.html:520
 msgid "Configurations"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:568
 #: emailMarketing/templates/emailMarketing/website.html:572
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:259
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:263
-#: websiteFunctions/templates/websiteFunctions/website.html:523
-#: websiteFunctions/templates/websiteFunctions/website.html:527
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:256
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:260
+#: websiteFunctions/templates/websiteFunctions/website.html:526
+#: websiteFunctions/templates/websiteFunctions/website.html:530
 msgid "Edit vHost Main Configurations"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:573
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:264
-#: websiteFunctions/templates/websiteFunctions/website.html:528
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:261
+#: websiteFunctions/templates/websiteFunctions/website.html:531
 msgid "vHost Conf"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:582
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:273
-#: websiteFunctions/templates/websiteFunctions/website.html:534
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:269
+#: websiteFunctions/templates/websiteFunctions/website.html:537
 msgid "Add Rewrite Rules (.htaccess)"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:586
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:277
-#: websiteFunctions/templates/websiteFunctions/website.html:538
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:273
+#: websiteFunctions/templates/websiteFunctions/website.html:541
 msgid "Rewrite Rules (.htaccess)"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:587
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:278
-#: websiteFunctions/templates/websiteFunctions/website.html:539
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:274
+#: websiteFunctions/templates/websiteFunctions/website.html:542
 msgid "Rewrite Rules"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:595
 #: emailMarketing/templates/emailMarketing/website.html:598
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:286
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:289
-#: websiteFunctions/templates/websiteFunctions/website.html:544
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:281
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:285
 #: websiteFunctions/templates/websiteFunctions/website.html:547
+#: websiteFunctions/templates/websiteFunctions/website.html:550
 msgid "Add Your Own SSL"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:599
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:290
-#: websiteFunctions/templates/websiteFunctions/website.html:548
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:286
+#: websiteFunctions/templates/websiteFunctions/website.html:551
 msgid "Add SSL"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:607
 #: emailMarketing/templates/emailMarketing/website.html:610
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:298
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:301
-#: websiteFunctions/templates/websiteFunctions/website.html:553
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:293
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:297
 #: websiteFunctions/templates/websiteFunctions/website.html:556
+#: websiteFunctions/templates/websiteFunctions/website.html:559
 msgid "Change PHP Version"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:611
 #: emailMarketing/templates/emailMarketing/website.html:815
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:302
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:502
-#: websiteFunctions/templates/websiteFunctions/website.html:557
-#: websiteFunctions/templates/websiteFunctions/website.html:738
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:298
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:498
+#: websiteFunctions/templates/websiteFunctions/website.html:560
+#: websiteFunctions/templates/websiteFunctions/website.html:758
 msgid "Change PHP"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:623
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:314
-#: websiteFunctions/templates/websiteFunctions/website.html:568
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:310
+#: websiteFunctions/templates/websiteFunctions/website.html:571
 msgid "SSL Saved"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:628
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:319
-#: websiteFunctions/templates/websiteFunctions/website.html:573
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:315
+#: websiteFunctions/templates/websiteFunctions/website.html:576
 msgid "Could not save SSL. Error message:"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:656
 #: emailMarketing/templates/emailMarketing/website.html:716
 #: firewall/templates/firewall/secureSSH.html:158
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:347
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:407
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:343
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:403
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:55
-#: websiteFunctions/templates/websiteFunctions/website.html:601
-#: websiteFunctions/templates/websiteFunctions/website.html:651
+#: websiteFunctions/templates/websiteFunctions/website.html:604
+#: websiteFunctions/templates/websiteFunctions/website.html:654
 msgid "Save"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:678
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:369
-#: websiteFunctions/templates/websiteFunctions/website.html:616
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:365
+#: websiteFunctions/templates/websiteFunctions/website.html:619
 msgid "Current configuration in the file fetched."
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:683
 #: emailMarketing/templates/emailMarketing/website.html:697
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:374
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:388
-#: websiteFunctions/templates/websiteFunctions/website.html:620
-#: websiteFunctions/templates/websiteFunctions/website.html:633
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:370
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:384
+#: websiteFunctions/templates/websiteFunctions/website.html:623
+#: websiteFunctions/templates/websiteFunctions/website.html:636
 msgid "Could not fetch current configuration. Error message:"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:693
 #: emailMarketing/templates/emailMarketing/website.html:753
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:384
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:440
-#: websiteFunctions/templates/websiteFunctions/website.html:629
-#: websiteFunctions/templates/websiteFunctions/website.html:679
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:380
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:436
+#: websiteFunctions/templates/websiteFunctions/website.html:632
+#: websiteFunctions/templates/websiteFunctions/website.html:699
 msgid "Configurations saved."
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:734
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:425
-#: websiteFunctions/templates/websiteFunctions/website.html:662
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:421
 msgid "Current rewrite rules in the file fetched."
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:743
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:430
-#: websiteFunctions/templates/websiteFunctions/website.html:670
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:426
+#: websiteFunctions/templates/websiteFunctions/website.html:690
 msgid "Could not fetch current rewrite rules. Error message:"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:757
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:444
-#: websiteFunctions/templates/websiteFunctions/website.html:683
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:440
+#: websiteFunctions/templates/websiteFunctions/website.html:703
 msgid "Could not save rewrite rules. Error message:"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:776
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:463
-#: websiteFunctions/templates/websiteFunctions/website.html:701
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:459
+#: websiteFunctions/templates/websiteFunctions/website.html:721
 msgid "Save Rewrite Rules"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:825
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:512
-#: websiteFunctions/templates/websiteFunctions/website.html:748
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:508
+#: websiteFunctions/templates/websiteFunctions/website.html:768
 msgid "Failed to change PHP version. Error message:"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:830
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:517
-#: websiteFunctions/templates/websiteFunctions/website.html:753
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:513
+#: websiteFunctions/templates/websiteFunctions/website.html:773
 msgid "PHP successfully changed for: "
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:855
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:542
-#: websiteFunctions/templates/websiteFunctions/website.html:775
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:538
+#: websiteFunctions/templates/websiteFunctions/website.html:795
 msgid "Files"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:863
 #: emailMarketing/templates/emailMarketing/website.html:866
 #: emailMarketing/templates/emailMarketing/website.html:867
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:546
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:549
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:550
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:553
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:554
-#: websiteFunctions/templates/websiteFunctions/website.html:780
-#: websiteFunctions/templates/websiteFunctions/website.html:783
-#: websiteFunctions/templates/websiteFunctions/website.html:784
+#: websiteFunctions/templates/websiteFunctions/website.html:800
+#: websiteFunctions/templates/websiteFunctions/website.html:803
+#: websiteFunctions/templates/websiteFunctions/website.html:804
 msgid "File Manager"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:874
 #: emailMarketing/templates/emailMarketing/website.html:877
 #: emailMarketing/templates/emailMarketing/website.html:915
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:561
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:564
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:602
-#: websiteFunctions/templates/websiteFunctions/website.html:789
-#: websiteFunctions/templates/websiteFunctions/website.html:792
-#: websiteFunctions/templates/websiteFunctions/website.html:820
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:557
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:560
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:601
+#: websiteFunctions/templates/websiteFunctions/website.html:809
+#: websiteFunctions/templates/websiteFunctions/website.html:812
+#: websiteFunctions/templates/websiteFunctions/website.html:845
 msgid "open_basedir Protection"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:878
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:565
-#: websiteFunctions/templates/websiteFunctions/website.html:793
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:561
+#: websiteFunctions/templates/websiteFunctions/website.html:813
 msgid "open_basedir"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:890
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:577
-#: websiteFunctions/templates/websiteFunctions/website.html:802
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:574
+#: websiteFunctions/templates/websiteFunctions/website.html:825
 msgid "Create FTP Acct"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:902
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:589
-#: websiteFunctions/templates/websiteFunctions/website.html:811
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:586
+#: websiteFunctions/templates/websiteFunctions/website.html:834
 msgid "Delete FTP Acct"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:939
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:626
-#: websiteFunctions/templates/websiteFunctions/website.html:843
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:625
+#: websiteFunctions/templates/websiteFunctions/website.html:868
 msgid "Apply Changes"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:951
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:638
-#: websiteFunctions/templates/websiteFunctions/website.html:855
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:637
+#: websiteFunctions/templates/websiteFunctions/website.html:880
 msgid "Changes successfully saved."
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:986
 #: emailMarketing/templates/emailMarketing/website.html:989
 #: emailMarketing/templates/emailMarketing/website.html:990
-#: websiteFunctions/templates/websiteFunctions/website.html:888
-#: websiteFunctions/templates/websiteFunctions/website.html:891
-#: websiteFunctions/templates/websiteFunctions/website.html:892
+#: websiteFunctions/templates/websiteFunctions/website.html:915
+#: websiteFunctions/templates/websiteFunctions/website.html:919
+#: websiteFunctions/templates/websiteFunctions/website.html:920
 msgid "Create Lists"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:997
 #: emailMarketing/templates/emailMarketing/website.html:1000
 #: emailMarketing/templates/emailMarketing/website.html:1001
-#: websiteFunctions/templates/websiteFunctions/website.html:897
-#: websiteFunctions/templates/websiteFunctions/website.html:900
-#: websiteFunctions/templates/websiteFunctions/website.html:901
+#: websiteFunctions/templates/websiteFunctions/website.html:925
+#: websiteFunctions/templates/websiteFunctions/website.html:929
+#: websiteFunctions/templates/websiteFunctions/website.html:930
 msgid "Manage Lists"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:1008
 #: emailMarketing/templates/emailMarketing/website.html:1011
 #: emailMarketing/templates/emailMarketing/website.html:1012
-#: websiteFunctions/templates/websiteFunctions/website.html:906
-#: websiteFunctions/templates/websiteFunctions/website.html:909
-#: websiteFunctions/templates/websiteFunctions/website.html:910
+#: websiteFunctions/templates/websiteFunctions/website.html:935
+#: websiteFunctions/templates/websiteFunctions/website.html:939
+#: websiteFunctions/templates/websiteFunctions/website.html:940
 msgid "SMTP Hosts"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:1019
 #: emailMarketing/templates/emailMarketing/website.html:1022
-#: websiteFunctions/templates/websiteFunctions/website.html:915
-#: websiteFunctions/templates/websiteFunctions/website.html:918
+#: websiteFunctions/templates/websiteFunctions/website.html:945
+#: websiteFunctions/templates/websiteFunctions/website.html:950
 msgid "Compose Message"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:1023
-#: websiteFunctions/templates/websiteFunctions/website.html:919
+#: websiteFunctions/templates/websiteFunctions/website.html:951
 msgid "Compose"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:1050
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:14
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:22
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:664
-#: websiteFunctions/templates/websiteFunctions/website.html:942
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:663
+#: websiteFunctions/templates/websiteFunctions/website.html:977
 msgid "Application Installer"
 msgstr ""
 
@@ -3008,15 +3279,13 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:31
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:34
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:674
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:678
-#: websiteFunctions/templates/websiteFunctions/website.html:950
-#: websiteFunctions/templates/websiteFunctions/website.html:954
+#: websiteFunctions/templates/websiteFunctions/website.html:985
+#: websiteFunctions/templates/websiteFunctions/website.html:989
 msgid "Install wordpress with LSCache"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:1066
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:35
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:679
 msgid "Wordpress with LSCache"
 msgstr ""
 
@@ -3024,47 +3293,47 @@ msgstr ""
 #: emailMarketing/templates/emailMarketing/website.html:1079
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:44
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:47
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:688
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:692
-#: websiteFunctions/templates/websiteFunctions/website.html:961
-#: websiteFunctions/templates/websiteFunctions/website.html:965
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:682
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:686
+#: websiteFunctions/templates/websiteFunctions/website.html:996
+#: websiteFunctions/templates/websiteFunctions/website.html:1000
 msgid "Install Joomla with LSCache"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:1080
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:48
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:693
-#: websiteFunctions/templates/websiteFunctions/website.html:966
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:687
+#: websiteFunctions/templates/websiteFunctions/website.html:1001
 msgid "Joomla"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:1089
 #: emailMarketing/templates/emailMarketing/website.html:1093
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:702
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:706
-#: websiteFunctions/templates/websiteFunctions/website.html:972
-#: websiteFunctions/templates/websiteFunctions/website.html:976
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:694
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:698
+#: websiteFunctions/templates/websiteFunctions/website.html:1007
+#: websiteFunctions/templates/websiteFunctions/website.html:1011
 msgid "Attach Git with this website!"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:1094
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:707
-#: websiteFunctions/templates/websiteFunctions/website.html:977
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:699
+#: websiteFunctions/templates/websiteFunctions/website.html:1012
 msgid "Git"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:1103
 #: emailMarketing/templates/emailMarketing/website.html:1107
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:716
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:720
-#: websiteFunctions/templates/websiteFunctions/website.html:983
-#: websiteFunctions/templates/websiteFunctions/website.html:987
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:708
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:712
+#: websiteFunctions/templates/websiteFunctions/website.html:1018
+#: websiteFunctions/templates/websiteFunctions/website.html:1022
 msgid "Install Prestashop"
 msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:1108
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:721
-#: websiteFunctions/templates/websiteFunctions/website.html:988
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:713
+#: websiteFunctions/templates/websiteFunctions/website.html:1023
 msgid "Prestashop"
 msgstr ""
 
@@ -3078,20 +3347,20 @@ msgstr ""
 msgid "SpamAssassin Configurations!"
 msgstr ""
 
-#: emailPremium/templates/emailPremium/SpamAssassin.html:13
+#: emailPremium/templates/emailPremium/SpamAssassin.html:17
 msgid "SpamAssassin Docs"
 msgstr ""
 
-#: emailPremium/templates/emailPremium/SpamAssassin.html:14
+#: emailPremium/templates/emailPremium/SpamAssassin.html:19
 #: firewall/templates/firewall/spamassassin.html:14
 msgid "On this page you can configure SpamAssassin settings."
 msgstr ""
 
-#: emailPremium/templates/emailPremium/SpamAssassin.html:29
+#: emailPremium/templates/emailPremium/SpamAssassin.html:34
 msgid "SpamAssassin is not installed "
 msgstr ""
 
-#: emailPremium/templates/emailPremium/SpamAssassin.html:32
+#: emailPremium/templates/emailPremium/SpamAssassin.html:37
 #: firewall/templates/firewall/csf.html:31
 #: firewall/templates/firewall/modSecurity.html:35
 #: firewall/templates/firewall/modSecurity.html:231
@@ -3101,7 +3370,7 @@ msgstr ""
 msgid "Install Now."
 msgstr ""
 
-#: emailPremium/templates/emailPremium/SpamAssassin.html:44
+#: emailPremium/templates/emailPremium/SpamAssassin.html:49
 #: firewall/templates/firewall/csf.html:43
 #: firewall/templates/firewall/modSecurity.html:47
 #: firewall/templates/firewall/modSecurity.html:244
@@ -3109,8 +3378,8 @@ msgstr ""
 msgid "Failed to start installation, Error message: "
 msgstr ""
 
-#: emailPremium/templates/emailPremium/SpamAssassin.html:48
-#: emailPremium/templates/emailPremium/SpamAssassin.html:135
+#: emailPremium/templates/emailPremium/SpamAssassin.html:54
+#: emailPremium/templates/emailPremium/SpamAssassin.html:146
 #: emailPremium/templates/emailPremium/policyServer.html:60
 #: firewall/templates/firewall/csf.html:47
 #: firewall/templates/firewall/modSecurity.html:53
@@ -3128,12 +3397,12 @@ msgstr ""
 #: managePHP/templates/managePHP/editPHPConfig.html:223
 #: managePHP/templates/managePHP/installExtensions.html:124
 #: manageServices/templates/manageServices/managePostfix.html:59
-#: manageServices/templates/manageServices/managePowerDNS.html:59
+#: manageServices/templates/manageServices/managePowerDNS.html:130
 #: manageServices/templates/manageServices/managePureFtpd.html:59
 msgid "Could not connect. Please refresh this page."
 msgstr ""
 
-#: emailPremium/templates/emailPremium/SpamAssassin.html:52
+#: emailPremium/templates/emailPremium/SpamAssassin.html:58
 #: firewall/templates/firewall/csf.html:51
 #: firewall/templates/firewall/modSecurity.html:57
 #: firewall/templates/firewall/modSecurity.html:253
@@ -3141,26 +3410,26 @@ msgstr ""
 msgid "Installation failed."
 msgstr ""
 
-#: emailPremium/templates/emailPremium/SpamAssassin.html:56
+#: emailPremium/templates/emailPremium/SpamAssassin.html:62
 msgid "SpamAssassin successfully installed, refreshing page in 3 seconds.."
 msgstr ""
 
-#: emailPremium/templates/emailPremium/SpamAssassin.html:67
+#: emailPremium/templates/emailPremium/SpamAssassin.html:74
 msgid "Winter is coming, but so is SpamAssassin."
 msgstr ""
 
-#: emailPremium/templates/emailPremium/SpamAssassin.html:115
+#: emailPremium/templates/emailPremium/SpamAssassin.html:126
 #: firewall/templates/firewall/modSecurity.html:163
 #: firewall/templates/firewall/modSecurity.html:351
 #: firewall/templates/firewall/spamassassin.html:157
 msgid "Save changes."
 msgstr ""
 
-#: emailPremium/templates/emailPremium/SpamAssassin.html:127
+#: emailPremium/templates/emailPremium/SpamAssassin.html:137
 msgid "Failed to save SpamAssassin configurations. Error message: "
 msgstr ""
 
-#: emailPremium/templates/emailPremium/SpamAssassin.html:131
+#: emailPremium/templates/emailPremium/SpamAssassin.html:142
 msgid "SpamAssassin configurations successfully saved."
 msgstr ""
 
@@ -3197,6 +3466,8 @@ msgstr ""
 #: emailPremium/templates/emailPremium/emailPage.html:66
 #: filemanager/templates/filemanager/index.html:79
 #: filemanager/templates/filemanager/index.html:699
+#: packages/templates/packages/listPackages.html:60
+#: userManagment/templates/userManagment/listUsers.html:51
 #: websiteFunctions/templates/websiteFunctions/listCron.html:66
 msgid "Edit"
 msgstr ""
@@ -3231,7 +3502,7 @@ msgstr ""
 
 #: emailPremium/templates/emailPremium/emailLimits.html:164
 #: emailPremium/templates/emailPremium/listDomains.html:67
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:209
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:207
 msgid "Manage"
 msgstr ""
 
@@ -3285,7 +3556,7 @@ msgstr ""
 
 #: emailPremium/templates/emailPremium/policyServer.html:40
 #: manageServices/templates/manageServices/managePostfix.html:41
-#: manageServices/templates/manageServices/managePowerDNS.html:41
+#: manageServices/templates/manageServices/managePowerDNS.html:112
 #: manageServices/templates/manageServices/managePureFtpd.html:41
 msgid "Save changes"
 msgstr ""
@@ -3295,14 +3566,14 @@ msgstr ""
 #: mailServer/templates/mailServer/dkimManager.html:40
 #: managePHP/templates/managePHP/editPHPConfig.html:148
 #: manageServices/templates/manageServices/managePostfix.html:51
-#: manageServices/templates/manageServices/managePowerDNS.html:51
+#: manageServices/templates/manageServices/managePowerDNS.html:122
 #: manageServices/templates/manageServices/managePureFtpd.html:51
 msgid "Error message: "
 msgstr ""
 
 #: emailPremium/templates/emailPremium/policyServer.html:56
 #: manageServices/templates/manageServices/managePostfix.html:55
-#: manageServices/templates/manageServices/managePowerDNS.html:55
+#: manageServices/templates/manageServices/managePowerDNS.html:126
 #: manageServices/templates/manageServices/managePureFtpd.html:55
 msgid "Changes successfully applied."
 msgstr ""
@@ -3463,8 +3734,10 @@ msgstr ""
 #: firewall/templates/firewall/secureSSH.html:68
 #: managePHP/templates/managePHP/editPHPConfig.html:138
 #: managePHP/templates/managePHP/editPHPConfig.html:205
-#: userManagment/templates/userManagment/modifyACL.html:410
+#: userManagment/templates/userManagment/apiAccess.html:53
+#: userManagment/templates/userManagment/modifyACL.html:436
 #: userManagment/templates/userManagment/resellerCenter.html:58
+#: websiteFunctions/templates/websiteFunctions/sshAccess.html:42
 msgid "Save Changes"
 msgstr ""
 
@@ -3721,21 +3994,21 @@ msgstr ""
 msgid "Add/Delete Rules"
 msgstr ""
 
-#: firewall/templates/firewall/firewall.html:55
+#: firewall/templates/firewall/firewall.html:56
 msgid "Action failed. Error message:"
 msgstr ""
 
-#: firewall/templates/firewall/firewall.html:59
-#: serverStatus/templates/serverStatus/litespeedStatus.html:87
-#: serverStatus/templates/serverStatus/litespeedStatus.html:274
+#: firewall/templates/firewall/firewall.html:61
+#: serverStatus/templates/serverStatus/litespeedStatus.html:82
+#: serverStatus/templates/serverStatus/litespeedStatus.html:268
 msgid "Action successful."
 msgstr ""
 
-#: firewall/templates/firewall/firewall.html:119
+#: firewall/templates/firewall/firewall.html:121
 msgid "Protocol"
 msgstr ""
 
-#: firewall/templates/firewall/firewall.html:154
+#: firewall/templates/firewall/firewall.html:157
 msgid "Rule successfully added."
 msgstr ""
 
@@ -3935,35 +4208,35 @@ msgstr ""
 msgid "PureFTPD is disabled."
 msgstr ""
 
-#: ftp/templates/ftp/createFTPAccount.html:64
+#: ftp/templates/ftp/createFTPAccount.html:67
 msgid "FTP Password"
 msgstr ""
 
-#: ftp/templates/ftp/createFTPAccount.html:71
+#: ftp/templates/ftp/createFTPAccount.html:90
 msgid "Path (Relative)"
 msgstr ""
 
-#: ftp/templates/ftp/createFTPAccount.html:73
+#: ftp/templates/ftp/createFTPAccount.html:92
 msgid "Leave empty to select default home directory."
 msgstr ""
 
-#: ftp/templates/ftp/createFTPAccount.html:84
+#: ftp/templates/ftp/createFTPAccount.html:105
 msgid "Create FTP"
 msgstr ""
 
-#: ftp/templates/ftp/createFTPAccount.html:92
+#: ftp/templates/ftp/createFTPAccount.html:113
 msgid "Cannot create FTP account. Error message:"
 msgstr ""
 
-#: ftp/templates/ftp/createFTPAccount.html:96
-#: ftp/templates/ftp/createFTPAccount.html:99
+#: ftp/templates/ftp/createFTPAccount.html:118
+#: ftp/templates/ftp/createFTPAccount.html:122
 #: ftp/templates/ftp/deleteFTPAccount.html:87
 msgid "FTP Account with username:"
 msgstr ""
 
-#: ftp/templates/ftp/createFTPAccount.html:96
-#: ftp/templates/ftp/createFTPAccount.html:99
-#: userManagment/templates/userManagment/createUser.html:103
+#: ftp/templates/ftp/createFTPAccount.html:119
+#: ftp/templates/ftp/createFTPAccount.html:123
+#: userManagment/templates/userManagment/createUser.html:118
 msgid "is successfully created."
 msgstr ""
 
@@ -4008,16 +4281,16 @@ msgstr ""
 msgid "List FTP Accounts or change their passwords."
 msgstr ""
 
-#: ftp/templates/ftp/listFTPAccounts.html:62
+#: ftp/templates/ftp/listFTPAccounts.html:66
 msgid "Password changed for"
 msgstr ""
 
-#: ftp/templates/ftp/listFTPAccounts.html:66
+#: ftp/templates/ftp/listFTPAccounts.html:70
 msgid ""
 "Cannot change password for <strong>{$ ftpUsername $}</strong>. Error message:"
 msgstr ""
 
-#: ftp/templates/ftp/listFTPAccounts.html:101
+#: ftp/templates/ftp/listFTPAccounts.html:124
 msgid "Directory"
 msgstr ""
 
@@ -4027,8 +4300,8 @@ msgstr ""
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:12
 #: mailServer/templates/mailServer/changeEmailPassword.html:19
-#: userManagment/templates/userManagment/createACL.html:272
-#: userManagment/templates/userManagment/modifyACL.html:278
+#: userManagment/templates/userManagment/createACL.html:299
+#: userManagment/templates/userManagment/modifyACL.html:303
 msgid "Change Email Password"
 msgstr ""
 
@@ -4036,30 +4309,31 @@ msgstr ""
 msgid "Select a website from the list, to change its password."
 msgstr ""
 
-#: mailServer/templates/mailServer/changeEmailPassword.html:26
-#: mailServer/templates/mailServer/createEmailAccount.html:26
-#: mailServer/templates/mailServer/deleteEmailAccount.html:26
+#: mailServer/templates/mailServer/changeEmailPassword.html:27
+#: mailServer/templates/mailServer/createEmailAccount.html:27
+#: mailServer/templates/mailServer/deleteEmailAccount.html:27
 #: mailServer/templates/mailServer/emailForwarding.html:26
+#: mailServer/templates/mailServer/listEmails.html:27
 msgid "Postfix is disabled."
 msgstr ""
 
-#: mailServer/templates/mailServer/changeEmailPassword.html:55
-#: mailServer/templates/mailServer/deleteEmailAccount.html:55
+#: mailServer/templates/mailServer/changeEmailPassword.html:58
+#: mailServer/templates/mailServer/deleteEmailAccount.html:58
 #: mailServer/templates/mailServer/emailForwarding.html:52
 msgid "Select Email"
 msgstr ""
 
-#: mailServer/templates/mailServer/changeEmailPassword.html:86
-#: mailServer/templates/mailServer/deleteEmailAccount.html:85
+#: mailServer/templates/mailServer/changeEmailPassword.html:106
+#: mailServer/templates/mailServer/deleteEmailAccount.html:90
 msgid "Cannot delete email account. Error message:"
 msgstr ""
 
-#: mailServer/templates/mailServer/changeEmailPassword.html:90
+#: mailServer/templates/mailServer/changeEmailPassword.html:111
 msgid "Password successfully changed for :"
 msgstr ""
 
-#: mailServer/templates/mailServer/changeEmailPassword.html:97
-#: mailServer/templates/mailServer/deleteEmailAccount.html:96
+#: mailServer/templates/mailServer/changeEmailPassword.html:118
+#: mailServer/templates/mailServer/deleteEmailAccount.html:102
 msgid "Currently no email accounts exist for this domain."
 msgstr ""
 
@@ -4071,15 +4345,15 @@ msgstr ""
 msgid "Select a website from the list, to create an email account."
 msgstr ""
 
-#: mailServer/templates/mailServer/createEmailAccount.html:85
+#: mailServer/templates/mailServer/createEmailAccount.html:106
 msgid "Cannot create email account. Error message:"
 msgstr ""
 
-#: mailServer/templates/mailServer/createEmailAccount.html:89
+#: mailServer/templates/mailServer/createEmailAccount.html:111
 msgid "Email with id :"
 msgstr ""
 
-#: mailServer/templates/mailServer/createEmailAccount.html:89
+#: mailServer/templates/mailServer/createEmailAccount.html:112
 msgid " is successfully created."
 msgstr ""
 
@@ -4091,7 +4365,7 @@ msgstr ""
 msgid "Select a website from the list, to delete an email account."
 msgstr ""
 
-#: mailServer/templates/mailServer/deleteEmailAccount.html:89
+#: mailServer/templates/mailServer/deleteEmailAccount.html:95
 msgid "Email with id : {$ deletedID $} is successfully deleted."
 msgstr ""
 
@@ -4131,6 +4405,7 @@ msgid "Generate Now"
 msgstr ""
 
 #: mailServer/templates/mailServer/dkimManager.html:110
+#: websiteFunctions/templates/websiteFunctions/setupStaging.html:37
 msgid "Domain"
 msgstr ""
 
@@ -4178,6 +4453,19 @@ msgstr ""
 
 #: mailServer/templates/mailServer/index.html:13
 msgid "Manage email accounts on this page."
+msgstr ""
+
+#: mailServer/templates/mailServer/listEmails.html:3
+msgid "List Email Accounts - CyberPanel"
+msgstr ""
+
+#: mailServer/templates/mailServer/listEmails.html:13
+#: mailServer/templates/mailServer/listEmails.html:19
+msgid "List Email Accounts"
+msgstr ""
+
+#: mailServer/templates/mailServer/listEmails.html:14
+msgid "List Emails Accounts. Change their passwords or delete them."
 msgstr ""
 
 #: managePHP/templates/managePHP/editPHPConfig.html:3
@@ -4290,7 +4578,7 @@ msgstr ""
 #: managePHP/templates/managePHP/installExtensions.html:115
 #: tuning/templates/tuning/phpTuning.html:115
 #: tuning/templates/tuning/phpTuning.html:255
-#: userManagment/templates/userManagment/modifyUser.html:96
+#: userManagment/templates/userManagment/modifyUser.html:112
 msgid "Cannot fetch details. Error message:"
 msgstr ""
 
@@ -4390,7 +4678,7 @@ msgid "Manage Email Server (Postfix)!"
 msgstr ""
 
 #: manageServices/templates/manageServices/managePostfix.html:13
-#: manageServices/templates/manageServices/managePowerDNS.html:13
+#: manageServices/templates/manageServices/managePowerDNS.html:16
 #: manageServices/templates/manageServices/managePureFtpd.html:13
 msgid "Services Docs"
 msgstr ""
@@ -4400,7 +4688,7 @@ msgid "Enable or disable Email services. "
 msgstr ""
 
 #: manageServices/templates/manageServices/managePostfix.html:79
-#: manageServices/templates/manageServices/managePowerDNS.html:79
+#: manageServices/templates/manageServices/managePowerDNS.html:149
 #: manageServices/templates/manageServices/managePureFtpd.html:79
 msgid "Only administrator can manage services."
 msgstr ""
@@ -4413,8 +4701,44 @@ msgstr ""
 msgid "Manage PowerDNS!"
 msgstr ""
 
-#: manageServices/templates/manageServices/managePowerDNS.html:14
+#: manageServices/templates/manageServices/managePowerDNS.html:17
 msgid "Enable or disable DNS services. "
+msgstr ""
+
+#: manageServices/templates/manageServices/managePowerDNS.html:42
+msgid "Select Function Mode"
+msgstr ""
+
+#: manageServices/templates/manageServices/managePowerDNS.html:53
+msgid "Slave Server"
+msgstr ""
+
+#: manageServices/templates/manageServices/managePowerDNS.html:60
+msgid "Master Server IP"
+msgstr ""
+
+#: manageServices/templates/manageServices/managePowerDNS.html:67
+msgid "Slave Server 1"
+msgstr ""
+
+#: manageServices/templates/manageServices/managePowerDNS.html:74
+msgid "Slave Server IP"
+msgstr ""
+
+#: manageServices/templates/manageServices/managePowerDNS.html:81
+msgid "Slave Server 2 (Optional)"
+msgstr ""
+
+#: manageServices/templates/manageServices/managePowerDNS.html:88
+msgid "Slave Server IP 2 (Optional)"
+msgstr ""
+
+#: manageServices/templates/manageServices/managePowerDNS.html:95
+msgid "Slave Server 3 (Optional)"
+msgstr ""
+
+#: manageServices/templates/manageServices/managePowerDNS.html:102
+msgid "Slave Server IP 3 (Optional)"
 msgstr ""
 
 #: manageServices/templates/manageServices/managePureFtpd.html:3
@@ -4451,42 +4775,45 @@ msgstr ""
 msgid "Package Details"
 msgstr ""
 
-#: packages/templates/packages/createPackage.html:26
-msgid "Package Name"
-msgstr ""
-
-#: packages/templates/packages/createPackage.html:39
+#: packages/templates/packages/createPackage.html:41
+#: packages/templates/packages/listPackages.html:98
 #: packages/templates/packages/modifyPackage.html:44
 msgid "(0 = Unlimited)"
 msgstr ""
 
-#: packages/templates/packages/createPackage.html:43
+#: packages/templates/packages/createPackage.html:45
+#: packages/templates/packages/listPackages.html:104
 #: packages/templates/packages/modifyPackage.html:49
 msgid "Disk Space"
 msgstr ""
 
-#: packages/templates/packages/createPackage.html:47
-#: packages/templates/packages/createPackage.html:55
+#: packages/templates/packages/createPackage.html:49
+#: packages/templates/packages/createPackage.html:57
+#: packages/templates/packages/listPackages.html:109
+#: packages/templates/packages/listPackages.html:119
 #: packages/templates/packages/modifyPackage.html:53
 #: packages/templates/packages/modifyPackage.html:61
 msgid "MB (0 = Unlimited)"
 msgstr ""
 
-#: packages/templates/packages/createPackage.html:51
+#: packages/templates/packages/createPackage.html:53
+#: packages/templates/packages/listPackages.html:35
+#: packages/templates/packages/listPackages.html:114
 #: packages/templates/packages/modifyPackage.html:57
 msgid "Bandwidth"
 msgstr ""
 
-#: packages/templates/packages/createPackage.html:60
+#: packages/templates/packages/createPackage.html:62
+#: packages/templates/packages/listPackages.html:125
 #: packages/templates/packages/modifyPackage.html:66
 msgid "FTP Accounts"
 msgstr ""
 
-#: packages/templates/packages/createPackage.html:92
+#: packages/templates/packages/createPackage.html:108
 msgid "Cannot create package. Error message:"
 msgstr ""
 
-#: packages/templates/packages/createPackage.html:96
+#: packages/templates/packages/createPackage.html:113
 msgid "Successfully Created"
 msgstr ""
 
@@ -4494,39 +4821,63 @@ msgstr ""
 msgid "Delete Package - CyberPanel"
 msgstr ""
 
-#: packages/templates/packages/deletePackage.html:26
-#: packages/templates/packages/modifyPackage.html:24
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:29
-#: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:45
-msgid "Select Package"
-msgstr ""
-
 #: packages/templates/packages/deletePackage.html:56
 msgid "Cannot delete package. Error message:"
 msgstr ""
 
 #: packages/templates/packages/deletePackage.html:60
-#: userManagment/templates/userManagment/deleteUser.html:65
-msgid " Successfully Deleted"
+msgid " Successfully Deleted."
 msgstr ""
 
 #: packages/templates/packages/index.html:3
 msgid "Packages - CyberPanel"
 msgstr ""
 
+#: packages/templates/packages/listPackages.html:3
+msgid "List Packages  - CyberPanel"
+msgstr ""
+
+#: packages/templates/packages/listPackages.html:14
+msgid "List Packages and delete or edit them."
+msgstr ""
+
+#: packages/templates/packages/listPackages.html:34
+msgid "Diskspace"
+msgstr ""
+
+#: packages/templates/packages/listPackages.html:36
+msgid "Email Accounts"
+msgstr ""
+
+#: packages/templates/packages/listPackages.html:38
+msgid "FTPs"
+msgstr ""
+
+#: packages/templates/packages/listPackages.html:39
+msgid "Child Domains"
+msgstr ""
+
+#: packages/templates/packages/listPackages.html:40
+msgid "Allow FQDN as Childs"
+msgstr ""
+
+#: packages/templates/packages/listPackages.html:152
+msgid "Additional"
+msgstr ""
+
 #: packages/templates/packages/modifyPackage.html:3
 msgid "Modify Package - CyberPanel"
 msgstr ""
 
-#: packages/templates/packages/modifyPackage.html:104
+#: packages/templates/packages/modifyPackage.html:117
 msgid "Cannot fetch package details. Error message:"
 msgstr ""
 
-#: packages/templates/packages/modifyPackage.html:108
+#: packages/templates/packages/modifyPackage.html:121
 msgid "Package Details Successfully Fetched"
 msgstr ""
 
-#: packages/templates/packages/modifyPackage.html:112
+#: packages/templates/packages/modifyPackage.html:125
 msgid "Successfully Modified"
 msgstr ""
 
@@ -4642,7 +4993,7 @@ msgstr ""
 msgid "View LiteSpeed status and log files."
 msgstr ""
 
-#: serverStatus/templates/serverStatus/index.html:39
+#: serverStatus/templates/serverStatus/index.html:41
 msgid "CyberPanel Main Log"
 msgstr ""
 
@@ -4650,106 +5001,99 @@ msgstr ""
 msgid "LiteSpeed Status - CyberPanel"
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:15
-#: serverStatus/templates/serverStatus/litespeedStatus.html:206
+#: serverStatus/templates/serverStatus/litespeedStatus.html:14
+#: serverStatus/templates/serverStatus/litespeedStatus.html:204
 msgid "LiteSpeed Status:"
 msgstr ""
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:16
-#: serverStatus/templates/serverStatus/litespeedStatus.html:207
+#: serverStatus/templates/serverStatus/litespeedStatus.html:205
 msgid ""
 "On this page you can get information regarding your LiteSpeed processes."
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:31
-#: serverStatus/templates/serverStatus/litespeedStatus.html:219
+#: serverStatus/templates/serverStatus/litespeedStatus.html:30
+#: serverStatus/templates/serverStatus/litespeedStatus.html:217
 msgid "LiteSpeed Processes"
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:38
-#: serverStatus/templates/serverStatus/litespeedStatus.html:226
+#: serverStatus/templates/serverStatus/litespeedStatus.html:37
+#: serverStatus/templates/serverStatus/litespeedStatus.html:224
 msgid "Process ID"
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:50
-#: serverStatus/templates/serverStatus/litespeedStatus.html:238
+#: serverStatus/templates/serverStatus/litespeedStatus.html:49
+#: serverStatus/templates/serverStatus/litespeedStatus.html:236
 msgid "Main Process"
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:53
-#: serverStatus/templates/serverStatus/litespeedStatus.html:241
+#: serverStatus/templates/serverStatus/litespeedStatus.html:52
+#: serverStatus/templates/serverStatus/litespeedStatus.html:239
 msgid "lscgid Process"
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:56
-#: serverStatus/templates/serverStatus/litespeedStatus.html:244
+#: serverStatus/templates/serverStatus/litespeedStatus.html:55
+#: serverStatus/templates/serverStatus/litespeedStatus.html:242
 msgid "Worker Process"
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:66
+#: serverStatus/templates/serverStatus/litespeedStatus.html:67
 #: serverStatus/templates/serverStatus/litespeedStatus.html:254
-msgid ""
-"Could not fetch details, either LiteSpeed is not running or some error "
-"occurred, please see CyberPanel Main log file."
-msgstr ""
-
-#: serverStatus/templates/serverStatus/litespeedStatus.html:72
-#: serverStatus/templates/serverStatus/litespeedStatus.html:260
 msgid "Reboot Litespeed"
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:78
-#: serverStatus/templates/serverStatus/litespeedStatus.html:266
+#: serverStatus/templates/serverStatus/litespeedStatus.html:73
+#: serverStatus/templates/serverStatus/litespeedStatus.html:260
 msgid "Stop LiteSpeed"
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:92
-#: serverStatus/templates/serverStatus/litespeedStatus.html:279
+#: serverStatus/templates/serverStatus/litespeedStatus.html:87
+#: serverStatus/templates/serverStatus/litespeedStatus.html:273
 msgid "Error Occurred. See CyberPanel main log file."
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:97
-#: serverStatus/templates/serverStatus/litespeedStatus.html:284
+#: serverStatus/templates/serverStatus/litespeedStatus.html:92
+#: serverStatus/templates/serverStatus/litespeedStatus.html:278
 msgid "Could not connect to server."
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:142
+#: serverStatus/templates/serverStatus/litespeedStatus.html:138
 msgid "Switch to LiteSpeed Enterprise Web Server"
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:152
+#: serverStatus/templates/serverStatus/litespeedStatus.html:149
 msgid "License Key"
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:163
+#: serverStatus/templates/serverStatus/litespeedStatus.html:160
 msgid "Switch"
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:179
+#: serverStatus/templates/serverStatus/litespeedStatus.html:176
 msgid "With great wisdom comes great responsibility."
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:297
+#: serverStatus/templates/serverStatus/litespeedStatus.html:292
 msgid "License Manager"
 msgstr ""
 
+#: serverStatus/templates/serverStatus/litespeedStatus.html:299
+#: serverStatus/templates/serverStatus/litespeedStatus.html:303
 #: serverStatus/templates/serverStatus/litespeedStatus.html:304
-#: serverStatus/templates/serverStatus/litespeedStatus.html:307
-#: serverStatus/templates/serverStatus/litespeedStatus.html:308
 msgid "License Status"
 msgstr ""
 
+#: serverStatus/templates/serverStatus/litespeedStatus.html:309
 #: serverStatus/templates/serverStatus/litespeedStatus.html:313
-#: serverStatus/templates/serverStatus/litespeedStatus.html:316
-#: serverStatus/templates/serverStatus/litespeedStatus.html:317
+#: serverStatus/templates/serverStatus/litespeedStatus.html:314
 msgid "Change License"
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:344
+#: serverStatus/templates/serverStatus/litespeedStatus.html:341
 msgid "New key"
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:354
+#: serverStatus/templates/serverStatus/litespeedStatus.html:351
 msgid "Change Key"
 msgstr ""
 
@@ -5030,6 +5374,27 @@ msgstr ""
 msgid "Successfully tuned."
 msgstr ""
 
+#: userManagment/templates/userManagment/apiAccess.html:3
+msgid "API Access for User - CyberPanel"
+msgstr ""
+
+#: userManagment/templates/userManagment/apiAccess.html:14
+msgid ""
+"Allow/Remove API access for account, this effects Cloud Platform Connection "
+"and Third Party Modules."
+msgstr ""
+
+#: userManagment/templates/userManagment/apiAccess.html:29
+#: userManagment/templates/userManagment/changeUserACL.html:28
+#: userManagment/templates/userManagment/deleteUser.html:29
+#: userManagment/templates/userManagment/resellerCenter.html:25
+msgid "Select User"
+msgstr ""
+
+#: userManagment/templates/userManagment/apiAccess.html:40
+msgid "Access"
+msgstr ""
+
 #: userManagment/templates/userManagment/changeUserACL.html:3
 msgid "Change User ACL - CyberPanel"
 msgstr ""
@@ -5038,15 +5403,10 @@ msgstr ""
 msgid "This page can be used to change ACL for CyberPanel users."
 msgstr ""
 
-#: userManagment/templates/userManagment/changeUserACL.html:28
-#: userManagment/templates/userManagment/deleteUser.html:29
-#: userManagment/templates/userManagment/resellerCenter.html:25
-msgid "Select User"
-msgstr ""
-
 #: userManagment/templates/userManagment/changeUserACL.html:39
 #: userManagment/templates/userManagment/createUser.html:56
 #: userManagment/templates/userManagment/deleteACL.html:26
+#: userManagment/templates/userManagment/listUsers.html:99
 #: userManagment/templates/userManagment/modifyACL.html:28
 msgid "Select ACL"
 msgstr ""
@@ -5084,57 +5444,57 @@ msgstr ""
 msgid "User Management"
 msgstr ""
 
-#: userManagment/templates/userManagment/createACL.html:98
-#: userManagment/templates/userManagment/modifyACL.html:104
+#: userManagment/templates/userManagment/createACL.html:107
+#: userManagment/templates/userManagment/modifyACL.html:111
 msgid "Website Management"
 msgstr ""
 
-#: userManagment/templates/userManagment/createACL.html:121
-#: userManagment/templates/userManagment/modifyACL.html:127
+#: userManagment/templates/userManagment/createACL.html:130
+#: userManagment/templates/userManagment/modifyACL.html:134
 msgid "Suspend Website"
 msgstr ""
 
-#: userManagment/templates/userManagment/createACL.html:138
-#: userManagment/templates/userManagment/modifyACL.html:144
+#: userManagment/templates/userManagment/createACL.html:147
+#: userManagment/templates/userManagment/modifyACL.html:151
 msgid "Package Management"
 msgstr ""
 
-#: userManagment/templates/userManagment/createACL.html:168
-#: userManagment/templates/userManagment/modifyACL.html:174
+#: userManagment/templates/userManagment/createACL.html:186
+#: userManagment/templates/userManagment/modifyACL.html:190
 msgid "Database Management"
 msgstr ""
 
-#: userManagment/templates/userManagment/createACL.html:198
-#: userManagment/templates/userManagment/modifyACL.html:204
+#: userManagment/templates/userManagment/createACL.html:216
+#: userManagment/templates/userManagment/modifyACL.html:220
 msgid "DNS Management"
 msgstr ""
 
-#: userManagment/templates/userManagment/createACL.html:231
-#: userManagment/templates/userManagment/modifyACL.html:237
+#: userManagment/templates/userManagment/createACL.html:249
+#: userManagment/templates/userManagment/modifyACL.html:253
 msgid "Add/Delete"
 msgstr ""
 
-#: userManagment/templates/userManagment/createACL.html:239
-#: userManagment/templates/userManagment/modifyACL.html:245
+#: userManagment/templates/userManagment/createACL.html:257
+#: userManagment/templates/userManagment/modifyACL.html:261
 msgid "Email Management"
 msgstr ""
 
-#: userManagment/templates/userManagment/createACL.html:290
-#: userManagment/templates/userManagment/modifyACL.html:296
+#: userManagment/templates/userManagment/createACL.html:317
+#: userManagment/templates/userManagment/modifyACL.html:321
 msgid "FTP Management"
 msgstr ""
 
-#: userManagment/templates/userManagment/createACL.html:320
-#: userManagment/templates/userManagment/modifyACL.html:326
+#: userManagment/templates/userManagment/createACL.html:347
+#: userManagment/templates/userManagment/modifyACL.html:351
 msgid "Backup Management"
 msgstr ""
 
-#: userManagment/templates/userManagment/createACL.html:372
-#: userManagment/templates/userManagment/modifyACL.html:378
+#: userManagment/templates/userManagment/createACL.html:399
+#: userManagment/templates/userManagment/modifyACL.html:403
 msgid "SSL Management"
 msgstr ""
 
-#: userManagment/templates/userManagment/createACL.html:405
+#: userManagment/templates/userManagment/createACL.html:432
 msgid "Create ACL"
 msgstr ""
 
@@ -5151,7 +5511,7 @@ msgid "User Details"
 msgstr ""
 
 #: userManagment/templates/userManagment/createUser.html:25
-#: userManagment/templates/userManagment/modifyUser.html:38
+#: userManagment/templates/userManagment/modifyUser.html:39
 #: userManagment/templates/userManagment/userProfile.html:24
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:35
 msgid "First Name"
@@ -5162,7 +5522,7 @@ msgid "First Name should contain only alphabetic characters."
 msgstr ""
 
 #: userManagment/templates/userManagment/createUser.html:35
-#: userManagment/templates/userManagment/modifyUser.html:45
+#: userManagment/templates/userManagment/modifyUser.html:46
 #: userManagment/templates/userManagment/userProfile.html:29
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:42
 msgid "Last Name"
@@ -5173,32 +5533,33 @@ msgid "Last Name should contain only alphabetic characters."
 msgstr ""
 
 #: userManagment/templates/userManagment/createUser.html:50
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:67
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:66
 msgid "Invalid Email"
 msgstr ""
 
 #: userManagment/templates/userManagment/createUser.html:68
+#: userManagment/templates/userManagment/listUsers.html:33
 #: userManagment/templates/userManagment/resellerCenter.html:48
 #: userManagment/templates/userManagment/userProfile.html:53
 msgid "Websites Limit"
 msgstr ""
 
-#: userManagment/templates/userManagment/createUser.html:94
-#: userManagment/templates/userManagment/index.html:36
-#: userManagment/templates/userManagment/index.html:39
+#: userManagment/templates/userManagment/createUser.html:109
+#: userManagment/templates/userManagment/index.html:35
+#: userManagment/templates/userManagment/index.html:37
 msgid "Create User"
 msgstr ""
 
-#: userManagment/templates/userManagment/createUser.html:102
-#: userManagment/templates/userManagment/modifyUser.html:83
+#: userManagment/templates/userManagment/createUser.html:117
+#: userManagment/templates/userManagment/modifyUser.html:98
 msgid "Account with username:"
 msgstr ""
 
-#: userManagment/templates/userManagment/createUser.html:107
+#: userManagment/templates/userManagment/createUser.html:122
 msgid "Cannot create user. Error message:"
 msgstr ""
 
-#: userManagment/templates/userManagment/createUser.html:115
+#: userManagment/templates/userManagment/createUser.html:130
 msgid ""
 "Length of first and last name combined should be less than or equal to 20 "
 "characters"
@@ -5228,12 +5589,33 @@ msgstr ""
 msgid "User "
 msgstr ""
 
+#: userManagment/templates/userManagment/deleteUser.html:65
+msgid " Successfully Deleted"
+msgstr ""
+
 #: userManagment/templates/userManagment/index.html:3
 msgid "User Functions - CyberPanel"
 msgstr ""
 
 #: userManagment/templates/userManagment/index.html:14
 msgid "Create, edit and delete users on this page."
+msgstr ""
+
+#: userManagment/templates/userManagment/listUsers.html:3
+msgid "List Users  - CyberPanel"
+msgstr ""
+
+#: userManagment/templates/userManagment/listUsers.html:14
+msgid "List Users that you own."
+msgstr ""
+
+#: userManagment/templates/userManagment/listUsers.html:35
+msgid "ACL"
+msgstr ""
+
+#: userManagment/templates/userManagment/listUsers.html:84
+#: userManagment/templates/userManagment/resellerCenter.html:37
+msgid "New Owner"
 msgstr ""
 
 #: userManagment/templates/userManagment/modifyACL.html:3
@@ -5248,10 +5630,6 @@ msgstr ""
 msgid "On this page you can modify an existing ACL."
 msgstr ""
 
-#: userManagment/templates/userManagment/modifyACL.html:360
-msgid "Achedule Back up"
-msgstr ""
-
 #: userManagment/templates/userManagment/modifyUser.html:3
 msgid "Modify User - CyberPanel"
 msgstr ""
@@ -5260,19 +5638,19 @@ msgstr ""
 msgid "Modify existing user settings on this page."
 msgstr ""
 
-#: userManagment/templates/userManagment/modifyUser.html:26
+#: userManagment/templates/userManagment/modifyUser.html:27
 msgid "Select Account"
 msgstr ""
 
-#: userManagment/templates/userManagment/modifyUser.html:83
+#: userManagment/templates/userManagment/modifyUser.html:99
 msgid " is successfully modified."
 msgstr ""
 
-#: userManagment/templates/userManagment/modifyUser.html:87
+#: userManagment/templates/userManagment/modifyUser.html:103
 msgid "Cannot modify user. Error message:"
 msgstr ""
 
-#: userManagment/templates/userManagment/modifyUser.html:100
+#: userManagment/templates/userManagment/modifyUser.html:116
 msgid "Details fetched."
 msgstr ""
 
@@ -5282,10 +5660,6 @@ msgstr ""
 
 #: userManagment/templates/userManagment/resellerCenter.html:13
 msgid "Change owner of users and change websites limits."
-msgstr ""
-
-#: userManagment/templates/userManagment/resellerCenter.html:37
-msgid "New Owner"
 msgstr ""
 
 #: userManagment/templates/userManagment/userProfile.html:3
@@ -5327,7 +5701,7 @@ msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:13
 #: websiteFunctions/templates/websiteFunctions/index.html:14
-#: websiteFunctions/templates/websiteFunctions/listWebsites.html:20
+#: websiteFunctions/templates/websiteFunctions/listWebsites.html:21
 msgid ""
 "On this page you can launch, list, modify and delete websites from your "
 "server."
@@ -5337,7 +5711,7 @@ msgstr ""
 msgid "Website Details"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/createWebsite.html:55
+#: websiteFunctions/templates/websiteFunctions/createWebsite.html:54
 msgid "Do not enter WWW, it will be auto created!"
 msgstr ""
 
@@ -5421,9 +5795,15 @@ msgstr ""
 msgid "Website Functions - CyberPanel"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/index.html:67
-#: websiteFunctions/templates/websiteFunctions/index.html:69
-msgid "Modify"
+#: websiteFunctions/templates/websiteFunctions/index.html:33
+#: websiteFunctions/templates/websiteFunctions/index.html:57
+msgid "List Website"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/index.html:79
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:13
+#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:20
+msgid "Suspend/Unsuspend Website"
 msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:3
@@ -5505,6 +5885,16 @@ msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:28
 msgid "Blog Title"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:29
+msgid "Copy/Sync to Master"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:670
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:675
+#: websiteFunctions/templates/websiteFunctions/website.html:990
+msgid "WP + LSCache"
 msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:3
@@ -5665,47 +6055,47 @@ msgid "Providers"
 msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:36
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:163
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:161
 msgid "Deployment Key"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:67
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:65
 msgid ""
 "Before attaching repo to your website, make sure to place your Development "
 "key in your GIT repository."
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:79
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:77
 msgid "Repository Name"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:88
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:265
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:86
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:262
 msgid "Branch"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:99
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:97
 msgid "Attach Now"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:123
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:121
 msgid "GIT Successfully attached, refreshing page in 3 seconds... Visit:"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:215
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:276
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:213
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:273
 msgid "Change Branch"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:225
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:222
 msgid "Detach Repo"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:231
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:228
 msgid "Webhook URL"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:232
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:229
 msgid ""
 "Add this URL to Webhooks section of your Git respository, if you've used "
 "hostname SSL then replace IP with your hostname. Otherwise use IP and "
@@ -5713,21 +6103,75 @@ msgid ""
 "your resposity as soon as you commit some changes."
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:244
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:241
 msgid "Repo successfully detached, refreshing in 3 seconds.."
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/setupGit.html:290
+#: websiteFunctions/templates/websiteFunctions/setupGit.html:287
 msgid "Branch successfully changed."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupStaging.html:3
+msgid "Set up Staging Enviroment - CyberPanel"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupStaging.html:12
+msgid "Set up Staging Enviroment"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupStaging.html:13
+#: websiteFunctions/templates/websiteFunctions/setupStaging.html:20
+msgid "Set up staging enviroment for "
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupStaging.html:13
+msgid ""
+". Any domain that you will choose here will be created as child-domain for "
+"this master site."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupStaging.html:31
+msgid "Domain that you will enter below will be created as child-domain to "
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupStaging.html:33
+msgid "."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/setupStaging.html:47
+msgid "Start Cloning"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/sshAccess.html:3
+msgid "SSH and CageFS - CyberPanel"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/sshAccess.html:12
+msgid "SSH Access"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/sshAccess.html:13
+msgid "Set up SSH access and enable/disable CageFS for "
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/sshAccess.html:13
+msgid " CageFS require CloudLinux OS."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/sshAccess.html:20
+msgid "Set up SSH access for "
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/sshAccess.html:29
+msgid "SSH user for "
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/sshAccess.html:29
+msgid " is "
 msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:3
 msgid "Suspend/Unsuspend Website - CyberPanel"
-msgstr ""
-
-#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:13
-#: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:20
-msgid "Suspend/Unsuspend Website"
 msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:14
@@ -5758,6 +6202,46 @@ msgstr ""
 msgid "Successfully "
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/website.html:955
-msgid "WP + LSCache"
+#: websiteFunctions/templates/websiteFunctions/syncMaster.html:3
+msgid "Sync to Master - CyberPanel"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/syncMaster.html:12
+msgid "Sync your site to Master"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/syncMaster.html:13
+msgid "Right now you can only sync your child domains to master domains."
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/syncMaster.html:13
+msgid " will be synced to "
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/syncMaster.html:20
+msgid "Sync "
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/syncMaster.html:20
+msgid "to "
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/syncMaster.html:30
+msgid "What to Sync"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/syncMaster.html:63
+msgid "Start Syncing"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:29
+msgid "Clone/Staging"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:30
+msgid "Set up SSH Access"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/website.html:665
+msgid "It is not required to modify rules if you are using OpenLiteSpeed."
 msgstr ""

@@ -680,6 +680,7 @@ app.controller('scheduleBackup', function ($scope, $http, $timeout) {
     $scope.couldNotConnect = true;
     $scope.scheduleFreq = true;
     $scope.scheduleBtn = true;
+    $scope.localPath = true;
 
     populateCurrentRecords();
 
@@ -690,6 +691,12 @@ app.controller('scheduleBackup', function ($scope, $http, $timeout) {
         $scope.couldNotConnect = true;
         $scope.scheduleFreq = false;
         $scope.scheduleBtn = true;
+
+        if($scope.backupDest === 'Home'){
+            $scope.localPath = false;
+        }else{
+            $scope.localPath = true;
+        }
 
     };
 
@@ -719,6 +726,7 @@ app.controller('scheduleBackup', function ($scope, $http, $timeout) {
         var data = {
             backupDest: $scope.backupDest,
             backupFreq: $scope.backupFreq,
+            localPath: $scope.localPathValue
         };
 
         var config = {

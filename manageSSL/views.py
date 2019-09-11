@@ -60,6 +60,11 @@ def issueSSL(request):
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
 
+                if ACLManager.checkOwnership(virtualHost, admin, currentACL) == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson()
+
 
                 adminEmail = ""
                 path = ""
@@ -75,7 +80,7 @@ def issueSSL(request):
 
                 ## ssl issue
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
                 execPath = execPath + " issueSSL --virtualHostName " + virtualHost + " --administratorEmail " + adminEmail + " --path " + path
                 output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -146,9 +151,17 @@ def obtainHostNameSSL(request):
 
                 path = "/home/" + virtualHost + "/public_html"
 
+                data = json.loads(request.body)
+                virtualHost = data['virtualHost']
+                admin = Administrator.objects.get(pk=userID)
+                if ACLManager.checkOwnership(virtualHost, admin, currentACL) == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson()
+
                 ## ssl issue
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
                 execPath = execPath + " issueSSLForHostName --virtualHostName " + virtualHost + " --path " + path
                 output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -213,11 +226,17 @@ def obtainMailServerSSL(request):
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
 
+                admin = Administrator.objects.get(pk=userID)
+                if ACLManager.checkOwnership(virtualHost, admin, currentACL) == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson()
+
                 path = "/home/" + virtualHost + "/public_html"
 
                 ## ssl issue
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
                 execPath = execPath + " issueSSLForMailServer --virtualHostName " + virtualHost + " --path " + path
                 output = ProcessUtilities.outputExecutioner(execPath)
 

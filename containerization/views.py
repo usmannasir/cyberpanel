@@ -10,10 +10,9 @@ from .models import ContainerLimits
 from random import randint
 from plogical.processUtilities import ProcessUtilities
 import os
-import subprocess, shlex
+import subprocess
 import multiprocessing
 from plogical.httpProc import httpProc
-from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
 # Create your views here.
 

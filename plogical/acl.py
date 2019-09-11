@@ -34,7 +34,7 @@ class ACLManager:
             serverIPAddress = "192.168.100.1"
 
         finalResponse['serverIPAddress'] = serverIPAddress
-        finalResponse['adminName'] = admin.firstName + " " + admin.lastName[:3]
+        finalResponse['adminName'] = admin.firstName
 
         if admin.acl.adminStatus == 1:
             finalResponse['admin'] = 1
@@ -47,6 +47,7 @@ class ACLManager:
             ## User Management
 
             finalResponse['createNewUser'] = acl.createNewUser
+            finalResponse['listUsers'] = acl.listUsers
             finalResponse['deleteUser'] = acl.deleteUser
             finalResponse['changeUserACL'] = acl.changeUserACL
             finalResponse['resellerCenter'] = acl.resellerCenter
@@ -62,6 +63,7 @@ class ACLManager:
 
 
             finalResponse['createPackage'] = acl.createPackage
+            finalResponse['listPackages'] = acl.listPackages
             finalResponse['deletePackage'] = acl.deletePackage
             finalResponse['modifyPackage'] = acl.modifyPackage
 
@@ -81,6 +83,7 @@ class ACLManager:
             ## Email Management
 
             finalResponse['createEmail'] = acl.createEmail
+            finalResponse['listEmails'] = acl.listEmails
             finalResponse['deleteEmail'] = acl.deleteEmail
             finalResponse['emailForwarding'] = acl.emailForwarding
             finalResponse['changeEmailPassword'] = acl.changeEmailPassword
@@ -107,6 +110,17 @@ class ACLManager:
             finalResponse['mailServerSSL'] = acl.mailServerSSL
 
         return finalResponse
+
+    @staticmethod
+    def checkUserOwnerShip(currentACL, owner, user):
+        if currentACL['admin'] == 1:
+            return 1
+        elif owner == user:
+            return 1
+        elif owner.pk == user.owner:
+            return 1
+        else:
+            return 0
 
     @staticmethod
     def currentContextPermission(currentACL, context):
@@ -246,6 +260,22 @@ class ACLManager:
                 adminObjects.append(items)
 
                 adminObjects.append(admin)
+
+        return adminObjects
+
+    @staticmethod
+    def fetchTableUserObjects(userID):
+        admin = Administrator.objects.get(pk=userID)
+        adminObjects = []
+
+        finalResponse = ACLManager.loadedACL(userID)
+
+        if finalResponse['admin'] == 1:
+            return Administrator.objects.all().exclude(pk=userID)
+        else:
+            admins = Administrator.objects.filter(owner=admin.pk)
+            for items in admins:
+                adminObjects.append(items)
 
         return adminObjects
 
@@ -434,6 +464,29 @@ class ACLManager:
         return domainsList
 
     @staticmethod
+    def findAllWebsites(currentACL, userID):
+        domainsList = []
+
+        if currentACL['admin'] == 1:
+            domains = Websites.objects.all()
+            for items in domains:
+                domainsList.append(items.domain)
+        else:
+            admin = Administrator.objects.get(pk=userID)
+            domains = admin.websites_set.all()
+
+            for items in domains:
+                domainsList.append(items.domain)
+
+            admins = Administrator.objects.filter(owner=admin.pk)
+
+            for items in admins:
+                doms = items.websites_set.all()
+                for dom in doms:
+                    domainsList.append(dom.domain)
+        return domainsList
+
+    @staticmethod
     def checkOwnership(domain, admin, currentACL):
 
         try:
@@ -459,6 +512,19 @@ class ACLManager:
                     return 1
                 else:
                     return 0
+
+    @staticmethod
+    def checkOwnershipZone(domain, admin, currentACL):
+        domain = Domains.objects.get(name=domain)
+
+        if currentACL['admin'] == 1:
+            return 1
+        elif domain.admin == admin:
+            return 1
+        elif domain.admin.owner == admin.pk:
+            return 1
+        else:
+            return 0
 
     @staticmethod
     def executeCall(command):

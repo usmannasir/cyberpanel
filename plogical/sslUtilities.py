@@ -4,7 +4,10 @@ import shlex
 import subprocess
 import socket
 from plogical.processUtilities import ProcessUtilities
-from websiteFunctions.models import ChildDomains, Websites, aliasDomains
+try:
+    from websiteFunctions.models import ChildDomains, Websites
+except:
+    pass
 
 class sslUtilities:
 
@@ -192,7 +195,7 @@ class sslUtilities:
     </IfModule>
 """
 
-                VirtualHost = '<VirtualHost *:443>\n\n'
+                VirtualHost = '\n<VirtualHost *:443>\n\n'
                 ServerName = '    ServerName ' + virtualHostName + '\n'
                 ServerAlias = '    ServerAlias www.' + virtualHostName + '\n'
                 ServerAdmin = '    ServerAdmin ' + adminEmail + '\n'

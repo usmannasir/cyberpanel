@@ -1,0 +1,236 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Manage CloudLinux Packages - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div ng-controller="listCloudLinuxPackages" class="container">
+
+        <div id="page-title">
+            <h2 id="domainNamePage">{% trans "Manage CloudLinux Packages" %}</h2>
+            <p>{% trans "Manage/Delete CloudLinux Packages." %}</p>
+        </div>
+
+        <div class="panel">
+            <div class="panel-body">
+                <div class="example-box-wrapper">
+
+                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered"
+                           id="datatable-example">
+                        <thead>
+                        <tr>
+                            <th>Name<img ng-hide="cyberPanelLoading" src="/static/images/loading.gif"></th>
+                            <th>SPEED</th>
+                            <th>VMEM</th>
+                            <th>PMEM</th>
+                            <th>IO</th>
+                            <th>IOPS</th>
+                            <th>EP</th>
+                            <th>NPROC</th>
+                            <th>INODES soft</th>
+                            <th>INODES hard</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        <tr ng-repeat="pack in packages track by $index">
+                            <td ng-bind="pack.name"></td>
+                            <td ng-bind="pack.SPEED"></td>
+                            <td ng-bind="pack.VMEM"></td>
+                            <td ng-bind="pack.PMEM"></td>
+                            <td ng-bind="pack.IO"></td>
+                            <td ng-bind="pack.IOPS"></td>
+                            <td ng-bind="pack.EP"></td>
+                            <td ng-bind="pack.NPROC"></td>
+                            <td ng-bind="pack.inodessoft"></td>
+                            <td ng-bind="pack.inodeshard"></td>
+                            <td>
+                                <a ng-click='deleteCLPackage(pack.name)'
+                                   class="btn btn-border btn-alt border-red btn-link font-red"
+                                   title=""><span>Delete</span></a>
+                                <a ng-click="populatePackage(pack.name, pack.SPEED, pack.VMEM, pack.PMEM, pack.IO, pack.IOPS, pack.EP, pack.NPROC, pack.inodessoft, pack.inodeshard)" data-toggle="modal" data-target="#settings" ng-click='deleteCLPackage()'
+                                   class="btn btn-border btn-alt border-green btn-link font-green"
+                                   title=""><span>Edit</span></a>
+                                <div id="settings" class="modal fade" role="dialog">
+                                    <div class="modal-dialog">
+
+                                        <!-- Modal content-->
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;
+                                                </button>
+                                                <h4 class="modal-title">Edit Package
+                                                    <img id="containerSettingLoading" src="/static/images/loading.gif"
+                                                         style="display: none;">
+                                                </h4>
+                                            </div>
+                                            <div class="modal-body">
+
+                                                <form name="containerSettingsForm" action="/" class="form-horizontal">
+                                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                                        <label class="col-sm-3 control-label">{% trans "Name" %}</label>
+                                                        <div class="col-sm-6">
+                                                            <input name="name" type="text" class="form-control"
+                                                                   ng-model="name" readonly>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+
+                                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                                        <div ng-hide="installationDetailsForm" class="form-group">
+                                                            <label class="col-sm-3 control-label">{% trans "SPEED" %}</label>
+                                                            <div class="col-sm-6">
+                                                                <input name="SPEED" type="text" class="form-control"
+                                                                       ng-model="$parent.SPEED" required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+                                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                                        <div ng-hide="installationDetailsForm" class="form-group">
+                                                            <label class="col-sm-3 control-label">{% trans "VMEM" %}</label>
+                                                            <div class="col-sm-6">
+                                                                <input name="VMEM" type="text" class="form-control"
+                                                                       ng-model="$parent.VMEM" required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+                                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                                        <div ng-hide="installationDetailsForm" class="form-group">
+                                                            <label class="col-sm-3 control-label">{% trans "PMEM" %}</label>
+                                                            <div class="col-sm-6">
+                                                                <input name="PMEM" type="text" class="form-control"
+                                                                       ng-model="$parent.PMEM" required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+                                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                                        <div ng-hide="installationDetailsForm" class="form-group">
+                                                            <label class="col-sm-3 control-label">{% trans "IO" %}</label>
+                                                            <div class="col-sm-6">
+                                                                <input name="IO" type="text" class="form-control"
+                                                                       ng-model="$parent.IO" required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+                                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                                        <div ng-hide="installationDetailsForm" class="form-group">
+                                                            <label class="col-sm-3 control-label">{% trans "IOPS" %}</label>
+                                                            <div class="col-sm-6">
+                                                                <input name="IOPS" type="text" class="form-control"
+                                                                       ng-model="$parent.IOPS" required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+                                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                                        <div ng-hide="installationDetailsForm" class="form-group">
+                                                            <label class="col-sm-3 control-label">{% trans "EP" %}</label>
+                                                            <div class="col-sm-6">
+                                                                <input name="EP" type="text" class="form-control"
+                                                                       ng-model="$parent.EP" required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+                                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                                        <div ng-hide="installationDetailsForm" class="form-group">
+                                                            <label class="col-sm-3 control-label">{% trans "NPROC" %}</label>
+                                                            <div class="col-sm-6">
+                                                                <input name="NPROC" type="text" class="form-control"
+                                                                       ng-model="$parent.NPROC" required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+                                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                                        <div ng-hide="installationDetailsForm" class="form-group">
+                                                            <label class="col-sm-3 control-label">{% trans "INODES soft" %}</label>
+                                                            <div class="col-sm-6">
+                                                                <input name="inodessoft" type="text" class="form-control"
+                                                                       ng-model="$parent.inodessoft" required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+                                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                                        <div ng-hide="installationDetailsForm" class="form-group">
+                                                            <label class="col-sm-3 control-label">{% trans "INODES hard" %}</label>
+                                                            <div class="col-sm-6">
+                                                                <input name="inodeshard" type="text" class="form-control"
+                                                                       ng-model="$parent.inodeshard" required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </form>
+
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" ng-disabled="savingSettings"
+                                                        class="btn btn-primary"
+                                                        ng-click="saveSettings()" data-dismiss="modal">Save
+                                                </button>
+                                                <button type="button" ng-disabled="savingSettings"
+                                                        class="btn btn-default" data-dismiss="modal">
+                                                    Close
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        </tbody>
+                    </table>
+
+                    <div id="listFail" class="alert alert-danger">
+                        <p>{% trans "Cannot list websites. Error message:" %} {$ errorMessage $}</p>
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-sm-4 col-sm-offset-8">
+
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination">
+
+                                    <li ng-repeat="page in pagination" ng-click="getFurtherWebsitesFromDB($index+1)"
+                                        id="webPages"><a
+                                            href="">{$ $index + 1 $}</a></li>
+
+                                </ul>
+                            </nav>
+
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+
+{% endblock %}

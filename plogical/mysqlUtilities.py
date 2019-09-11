@@ -2,12 +2,19 @@ import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-django.setup()
+try:
+    django.setup()
+except:
+    pass
 import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
-from websiteFunctions.models import Websites
-from databases.models import Databases
+try:
+    from websiteFunctions.models import Websites
+    from databases.models import Databases
+    from backup.models import DBUsers
+except:
+    pass
 import MySQLdb as mysql
 import json
 from random import randint
@@ -128,7 +135,7 @@ class mysqlUtilities:
             if connection == 0:
                 return 0
 
-            cursor.execute("DROP DATABASE " + dbname)
+            cursor.execute("DROP DATABASE `%s`" % (dbname))
             cursor.execute("DROP USER '"+dbuser+"'@'localhost'")
             connection.close()
 
@@ -139,32 +146,53 @@ class mysqlUtilities:
             return str(msg)
 
     @staticmethod
-    def createDatabaseBackup(databaseName,tempStoragePath):
+    def createDatabaseBackup(databaseName, tempStoragePath):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
-
             f = open(passFile)
             data = f.read()
             password = data.split('\n', 1)[0]
 
-            command = 'sudo mysqldump -u root -p'+password+' '+databaseName
+            cnfPath = '/home/cyberpanel/.my.cnf'
 
+            if not os.path.exists(cnfPath):
+                cnfContent = """[mysqldump]
+user=root
+password=%s
+[mysql]
+user=root
+password=%s
+""" % (password, password)
+                writeToFile = open(cnfPath, 'w')
+                writeToFile.write(cnfContent)
+                writeToFile.close()
+
+                os.chmod(cnfPath, 0600)
+
+            command = 'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf --host=localhost ' + databaseName
             cmd = shlex.split(command)
 
-            with open(tempStoragePath+"/"+databaseName+'.sql', 'w') as f:
-                res = subprocess.call(cmd,stdout=f)
+            try:
+                errorPath = '/home/cyberpanel/error-logs.txt'
+                errorLog = open(errorPath, 'a')
+                with open(tempStoragePath+"/"+databaseName+'.sql', 'w') as f:
+                    res = subprocess.call(cmd,stdout=f, stderr=errorLog)
+                    if res != 0:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            "Database: " + databaseName + "could not be backed! [createDatabaseBackup]")
+                        return 0
 
-            if res == 1:
-                logging.CyberCPLogFileWriter.writeToFile("Database: "+databaseName + "could not be backed! [createDatabaseBackup]")
+            except subprocess.CalledProcessError, msg:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    "Database: " + databaseName + "could not be backed! Error: %s. [createDatabaseBackup]" % (str(msg)))
                 return 0
-
             return 1
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabaseBackup]")
             return 0
 
     @staticmethod
-    def restoreDatabaseBackup(databaseName, tempStoragePath,dbPassword):
+    def restoreDatabaseBackup(databaseName, tempStoragePath, dbPassword, passwordCheck = None, additionalName = None):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
 
@@ -172,28 +200,51 @@ class mysqlUtilities:
             data = f.read()
             password = data.split('\n', 1)[0]
 
+            cnfPath = '/home/cyberpanel/.my.cnf'
 
-            command = 'sudo mysql -u root -p' + password + ' ' + databaseName
+            if not os.path.exists(cnfPath):
+                cnfContent = """[mysqldump]
+user=root
+password=%s
+[mysql]
+user=root
+password=%s
+""" % (password, password)
+                writeToFile = open(cnfPath, 'w')
+                writeToFile.write(cnfContent)
+                writeToFile.close()
 
+                os.chmod(cnfPath, 0600)
+                command = 'chown cyberpanel:cyberpanel %s' % (cnfPath)
+                subprocess.call(shlex.split(command))
+
+            command = 'mysql --defaults-extra-file=/home/cyberpanel/.my.cnf --host=localhost ' + databaseName
             cmd = shlex.split(command)
 
+            if additionalName == None:
+                with open(tempStoragePath + "/" + databaseName + '.sql', 'r') as f:
+                    res = subprocess.call(cmd, stdin=f)
+                if res != 0:
+                    logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " + databaseName +"! [restoreDatabaseBackup]")
+                    return 0
+            else:
+                with open(tempStoragePath + "/" + additionalName + '.sql', 'r') as f:
+                    res = subprocess.call(cmd, stdin=f)
 
-            with open(tempStoragePath + "/" + databaseName + '.sql', 'r') as f:
-                res = subprocess.call(cmd, stdin=f)
+                if res != 0:
+                    logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " + additionalName + "! [restoreDatabaseBackup]")
+                    return 0
 
-            if res == 1:
-                logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " +databaseName +"! [restoreDatabaseBackup]")
-                return 0
+            if passwordCheck == None:
+                connection, cursor = mysqlUtilities.setupConnection()
 
-            connection, cursor = mysqlUtilities.setupConnection()
+                if connection == 0:
+                    return 0
 
-            if connection == 0:
-                return 0
+                passwordCMD = "use mysql;SET PASSWORD FOR '" + databaseName + "'@'localhost' = '" + dbPassword + "';FLUSH PRIVILEGES;"
 
-            passwordCMD = "use mysql;SET PASSWORD FOR '" + databaseName + "'@'localhost' = '" + dbPassword + "';FLUSH PRIVILEGES;"
-
-            cursor.execute(passwordCMD)
-            connection.close()
+                cursor.execute(passwordCMD)
+                connection.close()
 
             return 1
         except BaseException, msg:
@@ -654,13 +705,60 @@ class mysqlUtilities:
 
             if connection == 0:
                 return 0
-
             cursor.execute("use mysql")
-            cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "')")
+
+
+            try:
+                dbuser = DBUsers.objects.get(user=userName)
+                cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "')")
+            except:
+                userName = mysqlUtilities.fetchuser(userName)
+                cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "')")
+
             connection.close()
 
             return 1
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.changePassword]")
+            return 0
+
+    @staticmethod
+    def fetchuser(userName):
+        try:
+            connection, cursor = mysqlUtilities.setupConnection()
+            cursor.execute("use mysql")
+
+            database = Databases.objects.get(dbUser=userName)
+            databaseName = database.dbName
+            databaseName = databaseName.replace('_', '\_')
+            query = "select user from db where db = '%s'" % (databaseName)
+
+            if connection == 0:
+                return 0
+
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            counter = 0
+
+            for row in rows:
+                if row[0].find('_') > -1:
+                    database.dbUser = row[0]
+                    database.save()
+                    try:
+                        connection.close()
+                    except:
+                        pass
+                    message = 'Detected databaser user is %s for database %s.' % (row[0], databaseName)
+                    logging.CyberCPLogFileWriter.writeToFile(message)
+                    return row[0]
+                else:
+                    counter = counter + 1
+
+            connection.close()
+
+            return 1
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.fetchuser]")
             return 0

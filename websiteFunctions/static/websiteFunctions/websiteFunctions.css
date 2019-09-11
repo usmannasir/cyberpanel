@@ -100,10 +100,10 @@
 /*span.h4 {
     white-space: nowrap;
 }*/
-.panel-body {
+/*.panel-body {
     white-space: nowrap;
 }
-
+*/
 .bg-gradient-9 {
     background: #0daeff; /* Old browsers */
     background: -moz-linear-gradient(-45deg, #0daeff 0%,#3939ad 30%); /* FF3.6-15 */

@@ -20,15 +20,8 @@ class CronUtil:
             else:
                 cronPath = "/var/spool/cron/crontabs/" + externalApp
 
-            cmd = 'sudo test -e ' + cronPath + ' && echo Exists'
-            output = os.popen(cmd).read()
-
-            if "Exists" not in output:
-                print  "0,CyberPanel,Not Exists"
-                return 1
-
             try:
-                f = subprocess.check_output(["sudo", "crontab", "-u", externalApp, "-l"])
+                f = open(cronPath, 'r').read()
                 print f
             except BaseException, msg:
                 print "0,CyberPanel," + str(msg)
@@ -41,37 +34,19 @@ class CronUtil:
     def saveCronChanges(externalApp, finalCron, line):
         try:
 
-            tempPath = "/home/cyberpanel/" + externalApp + str(randint(10000, 99999)) + ".cron.tmp"
 
-            output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", externalApp, "-l"])
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                cronPath = "/var/spool/cron/" + externalApp
+            else:
+                cronPath = "/var/spool/cron/crontabs/" + externalApp
 
-            if "no crontab for" in output:
-                print "0,crontab file does not exists for user"
-                return 1
-
-            with open(tempPath, "w+") as file:
-                file.write(output)
-
-            # Confirming that directory is read/writable
-            o = subprocess.call(['sudo', 'chown', 'cyberpanel:cyberpanel', tempPath])
-            if o is not 0:
-                print "0,Error Changing Permissions"
-                return 1
-
-            with open(tempPath, 'r') as file:
+            with open(cronPath, 'r') as file:
                 data = file.readlines()
 
             data[line] = finalCron + '\n'
 
-            with open(tempPath, 'w') as file:
+            with open(cronPath, 'w') as file:
                 file.writelines(data)
-
-            output = subprocess.call(["sudo", "/usr/bin/crontab", "-u", externalApp, tempPath])
-
-            os.remove(tempPath)
-            if output != 0:
-                print "0,Incorrect Syntax cannot be accepted."
-                return 1
 
             print "1,None"
         except BaseException, msg:
@@ -82,37 +57,24 @@ class CronUtil:
         try:
             line -= 1
 
-            output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", externalApp, "-l"])
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                cronPath = "/var/spool/cron/" + externalApp
+            else:
+                cronPath = "/var/spool/cron/crontabs/" + externalApp
 
-            if "no crontab for" in output:
-                print "0,No Cron exists for this user"
-                return 1
+            data = open(cronPath, 'r').readlines()
 
-            tempPath = "/home/cyberpanel/" + externalApp + str(randint(10000, 99999)) + ".cron.tmp"
+            counter = 0
 
-            with open(tempPath, "w+") as file:
-                file.write(output)
+            writeToFile = open(cronPath, 'w')
+            for items in data:
+                if counter == line:
+                    removedLine = items
+                    continue
+                else:
+                    writeToFile.writelines(items)
 
-            # Confirming that directory is read/writable
-            o = subprocess.call(['sudo', 'chown', 'cyberpanel:cyberpanel', tempPath])
-            if o is not 0:
-                print "0,Error Changing Permissions"
-                return 1
-
-            with open(tempPath, 'r') as file:
-                data = file.readlines()
-
-            removedLine = data.pop(line)
-
-            with open(tempPath, 'w') as file:
-                file.writelines(data)
-
-            output = subprocess.call(["sudo", "/usr/bin/crontab", "-u", externalApp, tempPath])
-
-            os.remove(tempPath)
-            if output != 0:
-                print "0,Incorrect Syntax cannot be accepted"
-                return 1
+                counter = counter + 1
 
             print "1," + removedLine
         except BaseException, msg:
@@ -121,43 +83,25 @@ class CronUtil:
     @staticmethod
     def addNewCron(externalApp, finalCron):
         try:
+            CronPath = '/var/spool/cron/%s' % (externalApp)
 
-            try:
-                output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", externalApp, "-l"])
-            except:
-                try:
-                    subprocess.call(('sudo', 'crontab', '-u', externalApp, '-'))
-                except:
-                    print "0,Unable to initialise crontab file for user"
-                    return 1
-
-            output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", externalApp, "-l"])
-
-            if "no crontab for" in output:
-                echo = subprocess.Popen((['cat', '/dev/null']), stdout=subprocess.PIPE)
-                subprocess.call(('sudo', 'crontab', '-u', externalApp, '-'), stdin=echo.stdout)
-                echo.wait()
-                echo.stdout.close()
-                output = subprocess.check_output(["sudo", "/usr/bin/crontab", "-u", externalApp, "-l"])
-                if "no crontab for" in output:
-                    print "0,Unable to initialise crontab file for user"
-                    return 1
-
-            tempPath = "/home/cyberpanel/" + externalApp + str(randint(10000, 99999)) + ".cron.tmp"
-
-            with open(tempPath, "a") as file:
-                file.write(output + finalCron + "\n")
-
-            output = subprocess.call(["sudo", "/usr/bin/crontab", "-u", externalApp, tempPath])
-
-            os.remove(tempPath)
-            if output != 0:
-                print "0,Incorrect Syntax cannot be accepted"
-                return 1
+            with open(CronPath, "a") as file:
+                file.write(finalCron + "\n")
 
             print "1,None"
         except BaseException, msg:
             print "0," + str(msg)
+
+    @staticmethod
+    def CronPrem(mode):
+        if mode:
+            cronParent = '/var/spool/cron'
+            commandT = 'chmod 755 %s' % (cronParent)
+            ProcessUtilities.executioner(commandT, 'root')
+        else:
+            cronParent = '/var/spool/cron'
+            commandT = 'chmod 700 %s' % (cronParent)
+            ProcessUtilities.executioner(commandT, 'root')
 
 
 

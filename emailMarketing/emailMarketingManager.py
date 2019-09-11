@@ -205,7 +205,7 @@ class EmailMarketingManager:
             if currentACL['admin'] == 1:
                 pass
             elif emailList.owner.id != userID:
-                ACLManager.loadErrorJson()
+                return ACLManager.loadErrorJson()
 
             emails = emailList.emailsinlist_set.all()
 
@@ -274,7 +274,7 @@ class EmailMarketingManager:
             if currentACL['admin'] == 1:
                 pass
             elif delList.owner.id != userID:
-                ACLManager.loadErrorJson()
+                return ACLManager.loadErrorJson()
 
             delList.delete()
 
@@ -304,7 +304,7 @@ class EmailMarketingManager:
             if currentACL['admin'] == 1:
                 pass
             elif delList.owner.id != userID:
-                ACLManager.loadErrorJson()
+                return ACLManager.loadErrorJson()
 
             em = EM('verificationJob', extraArgs)
             em.start()
@@ -337,7 +337,7 @@ class EmailMarketingManager:
             if currentACL['admin'] == 1:
                 pass
             elif delEmail.owner.owner.id != userID:
-                ACLManager.loadErrorJson()
+                return ACLManager.loadErrorJson()
 
             delEmail.delete()
 
@@ -488,7 +488,7 @@ class EmailMarketingManager:
                 if currentACL['admin'] == 1:
                     pass
                 elif delHost.owner.id != userID:
-                    ACLManager.loadErrorJson()
+                    return ACLManager.loadErrorJson()
                 delHost.delete()
                 data_ret = {"status": 1, 'message': 'Successfully deleted.'}
                 json_data = json.dumps(data_ret)

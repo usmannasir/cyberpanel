@@ -108,3 +108,23 @@ def saveChanges(request):
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def listPackages(request):
+    try:
+        pm = PackagesManager(request)
+        return pm.listPackages()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+
+def fetchPackagesTable(request):
+    try:
+
+        pm = PackagesManager(request)
+        coreResult = pm.fetchPackagesTable()
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)

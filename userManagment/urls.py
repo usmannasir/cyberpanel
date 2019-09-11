@@ -30,4 +30,6 @@ urlpatterns = [
     url(r'^saveResellerChanges$',views.saveResellerChanges,name="saveResellerChanges"),
     url(r'^apiAccess$', views.apiAccess, name="apiAccess"),
     url(r'^saveChangesAPIAccess$', views.saveChangesAPIAccess, name="saveChangesAPIAccess"),
+    url(r'^listUsers$', views.listUsers, name="listUsers"),
+    url(r'^fetchTableUsers$', views.fetchTableUsers, name="fetchTableUsers"),
 ]

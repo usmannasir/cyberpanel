@@ -7,6 +7,7 @@ from websiteFunctions.models import Websites
 from random import randint
 from django.core.files.storage import FileSystemStorage
 import HTMLParser
+import os
 
 class FileManager:
     def __init__(self, request, data):
@@ -22,6 +23,7 @@ class FileManager:
     def returnPathEnclosed(self, path):
         htmlParser = HTMLParser.HTMLParser()
         path = htmlParser.unescape(path)
+        return path
         return "'" + path + "'"
 
     def changeOwner(self,  path):
@@ -31,20 +33,23 @@ class FileManager:
         if path.find('..') > -1:
             return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-        command = "sudo chown -R " + website.externalApp + ':' + website.externalApp + ' ' + self.returnPathEnclosed(path)
-        ProcessUtilities.executioner(command)
+        command = "chown -R " + website.externalApp + ':' + website.externalApp + ' ' + self.returnPathEnclosed(path)
+        ProcessUtilities.executioner(command, website.externalApp)
 
     def listForTable(self):
         try:
             finalData = {}
             finalData['status'] = 1
 
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
+
             if not self.data['completeStartingPath'].find(self.data['home']) > -1:
                 return self.ajaxPre(0, 'Not allowed to browse this path, going back home!')
 
-            command = "sudo ls -la --group-directories-first " + self.returnPathEnclosed(
+            command = "ls -la --group-directories-first " + self.returnPathEnclosed(
                 self.data['completeStartingPath'])
-            output = ProcessUtilities.outputExecutioner(command).splitlines()
+            output = ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()
 
             counter = 0
             for items in output:
@@ -81,9 +86,12 @@ class FileManager:
             finalData = {}
             finalData['status'] = 1
 
-            command = "sudo ls -la --group-directories-first " + self.returnPathEnclosed(
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
+
+            command = "ls -la --group-directories-first " + self.returnPathEnclosed(
                 self.data['completeStartingPath'])
-            output = ProcessUtilities.outputExecutioner(command).splitlines()
+            output = ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()
 
             counter = 0
             for items in output:
@@ -119,12 +127,15 @@ class FileManager:
             finalData = {}
             finalData['status'] = 1
 
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
+
             if self.data['fileName'].find('..') > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
 
-            command = "sudo touch " + self.returnPathEnclosed(self.data['fileName'])
-            ProcessUtilities.executioner(command)
+            command = "touch " + self.returnPathEnclosed(self.data['fileName'])
+            ProcessUtilities.executioner(command, website.externalApp)
 
             self.changeOwner(self.returnPathEnclosed(self.data['fileName']))
 
@@ -138,9 +149,11 @@ class FileManager:
         try:
             finalData = {}
             finalData['status'] = 1
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
 
-            command = "sudo mkdir " + self.returnPathEnclosed(self.data['folderName'])
-            ProcessUtilities.executioner(command)
+            command = "mkdir " + self.returnPathEnclosed(self.data['folderName'])
+            ProcessUtilities.executioner(command, website.externalApp)
 
             self.changeOwner(self.returnPathEnclosed(self.data['folderName']))
 
@@ -155,9 +168,12 @@ class FileManager:
             finalData = {}
             finalData['status'] = 1
 
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
+
             for item in self.data['fileAndFolders']:
-                command = 'sudo rm -rf ' + self.returnPathEnclosed(self.data['path'] + '/' + item)
-                ProcessUtilities.executioner(command)
+                command = 'rm -rf ' + self.returnPathEnclosed(self.data['path'] + '/' + item)
+                ProcessUtilities.executioner(command, website.externalApp)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -171,15 +187,25 @@ class FileManager:
             finalData = {}
             finalData['status'] = 1
 
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
+
             if not self.data['newPath'].find(self.data['home']) > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-            command = 'sudo mkdir ' + self.returnPathEnclosed(self.data['newPath'])
-            ProcessUtilities.executioner(command)
+            if len(self.data['fileAndFolders']) == 1:
+                command = 'yes| cp -Rf %s %s' % (self.returnPathEnclosed(self.data['basePath']+ '/' + self.data['fileAndFolders'][0]), self.data['newPath'])
+                ProcessUtilities.executioner(command, website.externalApp)
+                self.changeOwner(self.data['newPath'])
+                json_data = json.dumps(finalData)
+                return HttpResponse(json_data)
+
+            command = 'mkdir ' + self.returnPathEnclosed(self.data['newPath'])
+            ProcessUtilities.executioner(command, website.externalApp)
 
             for item in self.data['fileAndFolders']:
-                command = 'sudo cp -R ' + self.returnPathEnclosed(self.data['basePath'] + '/' + item) + ' ' + self.returnPathEnclosed(self.data['newPath'] + '/' + item)
-                ProcessUtilities.executioner(command)
+                command = '%scp -Rf ' % ('yes |') + self.returnPathEnclosed(self.data['basePath'] + '/' + item) + ' ' + self.returnPathEnclosed(self.data['newPath'])
+                ProcessUtilities.executioner(command, website.externalApp)
 
             self.changeOwner(self.data['newPath'])
 
@@ -194,16 +220,18 @@ class FileManager:
 
             finalData = {}
             finalData['status'] = 1
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
 
             if not self.data['newPath'].find(self.data['home']) > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-            command = 'sudo mkdir ' + self.returnPathEnclosed(self.data['newPath'])
-            ProcessUtilities.executioner(command)
+            command = 'mkdir ' + self.returnPathEnclosed(self.data['newPath'])
+            ProcessUtilities.executioner(command, website.externalApp)
 
             for item in self.data['fileAndFolders']:
-                command = 'sudo mv ' + self.returnPathEnclosed(self.data['basePath'] + '/' + item) + ' ' + self.returnPathEnclosed(self.data['newPath'] + '/' + item)
-                ProcessUtilities.executioner(command)
+                command = 'mv ' + self.returnPathEnclosed(self.data['basePath'] + '/' + item) + ' ' + self.returnPathEnclosed(self.data['newPath'] + '/' + item)
+                ProcessUtilities.executioner(command, website.externalApp)
 
             self.changeOwner(self.data['newPath'])
 
@@ -218,13 +246,15 @@ class FileManager:
 
             finalData = {}
             finalData['status'] = 1
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
 
             if self.data['newFileName'].find('..') > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
 
-            command = 'sudo mv ' + self.returnPathEnclosed(self.data['basePath'] + '/' + self.data['existingName']) + ' ' + self.returnPathEnclosed(self.data['basePath'] + '/' + self.data['newFileName'])
-            ProcessUtilities.executioner(command)
+            command = 'mv ' + self.returnPathEnclosed(self.data['basePath'] + '/' + self.data['existingName']) + ' ' + self.returnPathEnclosed(self.data['basePath'] + '/' + self.data['newFileName'])
+            ProcessUtilities.executioner(command, website.externalApp)
 
             self.changeOwner(self.data['basePath'] + '/' + self.data['newFileName'])
 
@@ -239,9 +269,11 @@ class FileManager:
 
             finalData = {}
             finalData['status'] = 1
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
 
-            command = 'sudo cat ' + self.returnPathEnclosed(self.data['fileName'])
-            finalData['fileContents'] = ProcessUtilities.outputExecutioner(command)
+            command = 'cat ' + self.returnPathEnclosed(self.data['fileName'])
+            finalData['fileContents'] = ProcessUtilities.outputExecutioner(command, website.externalApp)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -255,13 +287,27 @@ class FileManager:
             finalData = {}
             finalData['status'] = 1
             tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+            self.data['home'] = '/home/%s' % (self.data['domainName'])
+
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
 
             writeToFile = open(tempPath, 'w')
             writeToFile.write(self.data['fileContent'])
             writeToFile.close()
 
-            command = 'sudo mv ' + tempPath + ' ' + self.returnPathEnclosed(self.data['fileName'])
+            if os.path.islink(self.data['fileName']):
+                return self.ajaxPre(0, 'File exists and is symlink.')
+
+            if not self.data['fileName'].find(self.data['home']) > -1:
+                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+
+            command = 'mv ' + tempPath + ' ' + self.returnPathEnclosed(self.data['fileName'])
             ProcessUtilities.executioner(command)
+
+            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.data['fileName'])
+            ProcessUtilities.executioner(command)
+
             self.changeOwner(self.data['fileName'])
 
             json_data = json.dumps(finalData)
@@ -282,7 +328,16 @@ class FileManager:
             filename = fs.save(myfile.name, myfile)
             finalData['fileName'] = fs.url(filename)
 
-            command = 'sudo mv ' + self.returnPathEnclosed('/home/cyberpanel/media/' + myfile.name) + ' ' + self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name)
+            if not self.data['completePath'].find(self.data['home']) > -1:
+                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+
+            command = 'mv ' + self.returnPathEnclosed('/home/cyberpanel/media/' + myfile.name) + ' ' + self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name)
+            ProcessUtilities.executioner(command)
+
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
+
+            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.data['completePath'] + '/' + myfile.name)
             ProcessUtilities.executioner(command)
 
             self.changeOwner(self.data['completePath'] + '/' + myfile.name)
@@ -299,15 +354,18 @@ class FileManager:
             finalData = {}
             finalData['status'] = 1
 
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
+
             if not self.data['extractionLocation'].find(self.data['home']) > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
             if self.data['extractionType'] == 'zip':
-                command = 'sudo unzip -o ' + self.returnPathEnclosed(self.data['fileToExtract']) + ' -d ' + self.returnPathEnclosed(self.data['extractionLocation'])
+                command = 'unzip -o ' + self.returnPathEnclosed(self.data['fileToExtract']) + ' -d ' + self.returnPathEnclosed(self.data['extractionLocation'])
             else:
-                command = 'sudo tar -xf ' + self.returnPathEnclosed(self.data['fileToExtract']) + ' -C ' + self.returnPathEnclosed(self.data['extractionLocation'])
+                command = 'tar -xf ' + self.returnPathEnclosed(self.data['fileToExtract']) + ' -C ' + self.returnPathEnclosed(self.data['extractionLocation'])
 
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, website.externalApp)
 
             self.changeOwner(self.data['extractionLocation'])
 
@@ -322,21 +380,25 @@ class FileManager:
 
             finalData = {}
             finalData['status'] = 1
-
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
 
 
             if self.data['compressionType'] == 'zip':
                 compressedFileName = self.returnPathEnclosed(self.data['basePath'] + '/' + self.data['compressedFileName'] + '.zip')
-                command = 'sudo zip -r ' + compressedFileName + ' '
+                command = 'zip -r ' + compressedFileName + ' '
             else:
                 compressedFileName = self.returnPathEnclosed(
                     self.data['basePath'] + '/' + self.data['compressedFileName'] + '.tar.gz')
-                command = 'sudo tar -czvf ' + compressedFileName + ' '
+                command = 'tar -czvf ' + compressedFileName + ' '
 
             for item in self.data['listOfFiles']:
-                command = command + self.returnPathEnclosed(self.data['basePath'] + '/' + item) + ' '
+                command = '%s%s ' % (command, self.returnPathEnclosed(item))
 
-            ProcessUtilities.executioner(command)
+
+            finalCommand = 'cd %s && %s' % (self.data['basePath'], command)
+
+            ProcessUtilities.executioner(finalCommand, website.externalApp)
 
             self.changeOwner(self.data['compressedFileName'])
 
@@ -351,16 +413,18 @@ class FileManager:
 
             finalData = {}
             finalData['status'] = 1
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
 
             if self.data['recursive'] == 1:
-                command = 'sudo chmod -R ' + self.data['newPermissions'] + ' ' + self.returnPathEnclosed(
+                command = 'chmod -R ' + self.data['newPermissions'] + ' ' + self.returnPathEnclosed(
                     self.data['basePath'] + '/' + self.data['permissionsPath'])
             else:
-                command = 'sudo chmod ' + self.data['newPermissions'] + ' ' + self.returnPathEnclosed(
+                command = 'chmod ' + self.data['newPermissions'] + ' ' + self.returnPathEnclosed(
                     self.data['basePath'] + '/' + self.data['permissionsPath'])
 
 
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, website.externalApp)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)

@@ -2,7 +2,10 @@ import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-django.setup()
+try:
+    django.setup()
+except:
+    pass
 import pexpect
 import CyberCPLogFileWriter as logging
 import subprocess
@@ -14,24 +17,34 @@ from multiprocessing import Process
 import signal
 from installUtilities import installUtilities
 import argparse
-from virtualHostUtilities import virtualHostUtilities
-from sslUtilities import sslUtilities
-from websiteFunctions.models import Websites, ChildDomains, Backups
-from databases.models import Databases
-from loginSystem.models import Administrator
-from dnsUtilities import DNS
+try:
+    from virtualHostUtilities import virtualHostUtilities
+    from sslUtilities import sslUtilities
+    from plogical.mailUtilities import mailUtilities
+except:
+    pass
+
 from xml.etree.ElementTree import Element, SubElement
 from xml.etree import ElementTree
 from xml.dom import minidom
-from backup.models import DBUsers
-from mailServer.models import Domains as eDomains
 import time
-from plogical.mailUtilities import mailUtilities
 from shutil import copy
+from random import randint
+from plogical.processUtilities import ProcessUtilities
+try:
+    from websiteFunctions.models import Websites, ChildDomains, Backups
+    from databases.models import Databases
+    from loginSystem.models import Administrator
+    from dnsUtilities import DNS
+    from mailServer.models import Domains as eDomains
+    from backup.models import DBUsers
+except:
+    pass
 
 ## I am not the monster that you think I am..
 
 class backupUtilities:
+    Server_root = "/usr/local/lsws"
 
     completeKeyPath  = "/home/cyberpanel/.ssh"
     destinationsPath = "/home/cyberpanel/destinations"
@@ -40,14 +53,10 @@ class backupUtilities:
     @staticmethod
     def prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath):
         try:
-            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
-            ## /home/example.com/backup - backupPath
 
-            if not os.path.exists(backupPath):
-                os.mkdir(backupPath)
+            status = os.path.join(backupPath, 'status')
 
-            if not os.path.exists(tempStoragePath):
-                os.mkdir(tempStoragePath)
+            logging.CyberCPLogFileWriter.statusWriter(status, 'Setting up meta data..')
 
             website = Websites.objects.get(domain=backupDomain)
 
@@ -93,14 +102,34 @@ class backupUtilities:
             databasesXML = Element('Databases')
 
             for items in databases:
-                dbuser = DBUsers.objects.get(user=items.dbUser)
+                try:
+                    dbuser = DBUsers.objects.get(user=items.dbUser)
+                    userToTry = items.dbUser
+                except:
+                    dbusers = DBUsers.objects.all().filter(user=items.dbUser)
+                    userToTry = items.dbUser
+                    for it in dbusers:
+                        dbuser = it
+                        break
+
+                    userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbUser)
+
+                    try:
+                        dbuser = DBUsers.objects.get(user=userToTry)
+                    except:
+                        dbusers = DBUsers.objects.all().filter(user=userToTry)
+                        for it in dbusers:
+                            dbuser = it
+                            break
+
+
 
                 databaseXML = Element('database')
 
                 child = SubElement(databaseXML, 'dbName')
                 child.text = items.dbName
                 child = SubElement(databaseXML, 'dbUser')
-                child.text = items.dbUser
+                child.text = userToTry
                 child = SubElement(databaseXML, 'password')
                 child.text = dbuser.password
 
@@ -145,8 +174,8 @@ class backupUtilities:
 
                 metaFileXML.append(dnsRecordsXML)
 
-            except:
-                pass
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [158:prepMeta]' % (str(msg)))
 
             ## Email accounts XML
 
@@ -166,9 +195,8 @@ class backupUtilities:
                     emailRecordsXML.append(emailRecordXML)
 
                 metaFileXML.append(emailRecordsXML)
-
-            except:
-                pass
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [179:prepMeta]' % (str(msg)))
 
             ## Email meta generated!
 
@@ -181,29 +209,37 @@ class backupUtilities:
                 return reparsed.toprettyxml(indent="  ")
 
             ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018/meta.xml -- metaPath
-            metaPath = os.path.join(tempStoragePath, "meta.xml")
+
+            metaPath = '/tmp/%s' % (str(randint(1000, 9999)))
 
             xmlpretty = prettify(metaFileXML).encode('ascii', 'ignore')
             metaFile = open(metaPath, 'w')
             metaFile.write(xmlpretty)
             metaFile.close()
+            os.chmod(metaPath, 0777)
 
             ## meta generated
 
 
             newBackup = Backups(website=website, fileName=backupName, date=time.strftime("%I-%M-%S-%a-%b-%Y"),
-                                size=0, status=0)
+                                size=0, status=1)
             newBackup.save()
 
-            return 1,'None'
+            logging.CyberCPLogFileWriter.statusWriter(status, 'Meta data us ready..')
+
+            return 1,'None', metaPath
 
 
         except BaseException, msg:
+            logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)))
             return 0,str(msg)
 
     @staticmethod
-    def startBackup(tempStoragePath, backupName, backupPath):
+    def startBackup(tempStoragePath, backupName, backupPath, metaPath = None):
         try:
+
+            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
+            ## /home/example.com/backup - backupPath
 
             ##### Writing the name of backup file.
 
@@ -221,7 +257,16 @@ class backupUtilities:
             ##### Parsing XML Meta file!
 
             ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
-            backupMetaData = ElementTree.parse(os.path.join(tempStoragePath,'meta.xml'))
+
+            metaPathInBackup = os.path.join(tempStoragePath,'meta.xml')
+
+            if metaPath != None:
+                writeToFile = open(metaPathInBackup, 'w')
+                writeToFile.write(open(metaPath, 'r').read())
+                writeToFile.close()
+
+            backupMetaData = ElementTree.parse(metaPathInBackup)
+
 
             ##### Making archive of home directory
 
@@ -229,7 +274,7 @@ class backupUtilities:
 
             ## Saving original vhost conf file
 
-            completPathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + domainName + '/vhost.conf'
+            completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + domainName + '/vhost.conf'
 
             if os.path.exists(backupUtilities.licenseKey):
                 copy(completPathToConf, tempStoragePath + '/vhost.conf')
@@ -239,119 +284,125 @@ class backupUtilities:
 
             make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
-            ##### Saving SSL Certificates if any
-
-            sslStoragePath = '/etc/letsencrypt/live/' + domainName
-
-            if os.path.exists(sslStoragePath):
-                try:
-                    copy(os.path.join(sslStoragePath, "cert.pem"), os.path.join(tempStoragePath, domainName + ".cert.pem"))
-                    copy(os.path.join(sslStoragePath, "fullchain.pem"), os.path.join(tempStoragePath, domainName + ".fullchain.pem"))
-                    copy(os.path.join(sslStoragePath, "privkey.pem"), os.path.join(tempStoragePath, domainName + ".privkey.pem"))
-                except:
-                    pass
-
-            ## backup email accounts
-
-            logging.CyberCPLogFileWriter.statusWriter(status, "Backing up email accounts!\n")
-
-            try:
-                make_archive(os.path.join(tempStoragePath,domainName),'gztar',os.path.join("/home","vmail",domainName))
-            except:
-                pass
-
-            ## Backing up databases
-            databases = backupMetaData.findall('Databases/database')
-
-            for database in databases:
-
-                dbName = database.find('dbName').text
-
-                logging.CyberCPLogFileWriter.statusWriter(status, "Backing up database: " + dbName)
-
-                if mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, tempStoragePath) == 0:
-                    raise BaseException
-
-
-            ## Child Domains SSL.
-
-
-            childDomains = backupMetaData.findall('ChildDomains/domain')
-
-            try:
-                for childDomain in childDomains:
-
-                    actualChildDomain = childDomain.find('domain').text
-
-                    if os.path.exists(backupUtilities.licenseKey):
-                        completPathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + actualChildDomain + '/vhost.conf'
-                        copy(completPathToConf, tempStoragePath + '/' + actualChildDomain + '.vhost.conf')
-
-                        ### Storing SSL for child domainsa
-
-                    sslStoragePath = '/etc/letsencrypt/live/' + actualChildDomain
-
-                    if os.path.exists(sslStoragePath):
-                        try:
-                            copy(os.path.join(sslStoragePath, "cert.pem"),
-                                 os.path.join(tempStoragePath, actualChildDomain + ".cert.pem"))
-                            copy(os.path.join(sslStoragePath, "fullchain.pem"),
-                                 os.path.join(tempStoragePath, actualChildDomain + ".fullchain.pem"))
-                            copy(os.path.join(sslStoragePath, "privkey.pem"),
-                                 os.path.join(tempStoragePath, actualChildDomain + ".privkey.pem"))
-                            make_archive(os.path.join(tempStoragePath, "sslData-" + domainName), 'gztar',
-                                         sslStoragePath)
-                        except:
-                            pass
-
-            except BaseException, msg:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
-
-            ##### Saving SSL Certificates if any
-
-            ## shutil.make_archive. Creating final package.
-
-            make_archive(os.path.join(backupPath,backupName), 'gztar', tempStoragePath)
-            rmtree(tempStoragePath)
-
-            ###
-
-            fileName = open(backupFileNamePath, 'r').read()
-
-            backupObs = Backups.objects.filter(fileName=fileName)
-
-            ## adding backup data to database.
-            try:
-                for items in backupObs:
-                    items.status = 1
-                    items.size = str(int(float(
-                        os.path.getsize(os.path.join(backupPath,backupName+".tar.gz"))) / (
-                                             1024.0 * 1024.0))) + "MB"
-                    items.save()
-            except:
-                for items in backupObs:
-                    items.status = 1
-                    items.size = str(int(float(
-                        os.path.getsize(os.path.join(backupPath,backupName+".tar.gz"))) / (
-                                             1024.0 * 1024.0))) + "MB"
-                    items.save()
-
-            logging.CyberCPLogFileWriter.statusWriter(status, "Completed\n")
+            logging.CyberCPLogFileWriter.statusWriter(status, "Backing up databases..")
+            print '1,None'
 
         except BaseException,msg:
             try:
                 os.remove(os.path.join(backupPath,backupName+".tar.gz"))
             except:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+                pass
 
             try:
                 rmtree(tempStoragePath)
             except:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+                pass
 
             status = os.path.join(backupPath, 'status')
-            logging.CyberCPLogFileWriter.statusWriter(status, "Aborted, "+ str(msg) + ". [5009]")
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+            logging.CyberCPLogFileWriter.statusWriter(status, "Aborted, "+ str(msg) + ".[365] [5009]")
+            print ("Aborted, "+ str(msg) + ".[365] [5009]")
+
+    @staticmethod
+    def BackupRoot(tempStoragePath, backupName, backupPath, metaPath=None):
+
+        status = os.path.join(backupPath, 'status')
+        metaPathInBackup = os.path.join(tempStoragePath, 'meta.xml')
+        backupMetaData = ElementTree.parse(metaPathInBackup)
+
+        domainName = backupMetaData.find('masterDomain').text
+        ##### Saving SSL Certificates if any
+
+        sslStoragePath = '/etc/letsencrypt/live/' + domainName
+
+        if os.path.exists(sslStoragePath):
+            try:
+                copy(os.path.join(sslStoragePath, "cert.pem"), os.path.join(tempStoragePath, domainName + ".cert.pem"))
+                copy(os.path.join(sslStoragePath, "fullchain.pem"),
+                     os.path.join(tempStoragePath, domainName + ".fullchain.pem"))
+                copy(os.path.join(sslStoragePath, "privkey.pem"),
+                     os.path.join(tempStoragePath, domainName + ".privkey.pem"))
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile('%s. [283:startBackup]' % (str(msg)))
+
+        ## Child Domains SSL.
+
+        childDomains = backupMetaData.findall('ChildDomains/domain')
+
+        try:
+            for childDomain in childDomains:
+
+                actualChildDomain = childDomain.find('domain').text
+
+                if os.path.exists(backupUtilities.licenseKey):
+                    completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + actualChildDomain + '/vhost.conf'
+                    copy(completPathToConf, tempStoragePath + '/' + actualChildDomain + '.vhost.conf')
+
+                    ### Storing SSL for child domainsa
+
+                sslStoragePath = '/etc/letsencrypt/live/' + actualChildDomain
+
+                if os.path.exists(sslStoragePath):
+                    try:
+                        copy(os.path.join(sslStoragePath, "cert.pem"),
+                             os.path.join(tempStoragePath, actualChildDomain + ".cert.pem"))
+                        copy(os.path.join(sslStoragePath, "fullchain.pem"),
+                             os.path.join(tempStoragePath, actualChildDomain + ".fullchain.pem"))
+                        copy(os.path.join(sslStoragePath, "privkey.pem"),
+                             os.path.join(tempStoragePath, actualChildDomain + ".privkey.pem"))
+                        make_archive(os.path.join(tempStoragePath, "sslData-" + domainName), 'gztar',
+                                     sslStoragePath)
+                    except:
+                        pass
+        except BaseException, msg:
+            pass
+
+        ## backup emails
+
+        domainName = backupMetaData.find('masterDomain').text
+
+        if os.path.islink(status) or os.path.islink(tempStoragePath or os.path.islink(backupPath)) or os.path.islink(metaPath):
+            logging.CyberCPLogFileWriter.writeToFile('symlinked.')
+            logging.CyberCPLogFileWriter.statusWriter(status, 'Symlink attack. [5009]')
+            return 0
+
+        ## backup email accounts
+
+        logging.CyberCPLogFileWriter.statusWriter(status, "Backing up email accounts..\n")
+
+        try:
+            make_archive(os.path.join(tempStoragePath, domainName), 'gztar', os.path.join("/home", "vmail", domainName))
+        except BaseException, msg:
+            pass
+
+
+        ## shutil.make_archive. Creating final package.
+
+        make_archive(os.path.join(backupPath, backupName), 'gztar', tempStoragePath)
+        rmtree(tempStoragePath)
+
+        ###
+        backupFileNamePath = os.path.join(backupPath,"backupFileName")
+        fileName = open(backupFileNamePath, 'r').read()
+
+        backupObs = Backups.objects.filter(fileName=fileName)
+
+        ## adding backup data to database.
+        try:
+            for items in backupObs:
+                items.status = 1
+                items.size = str(int(float(
+                    os.path.getsize(os.path.join(backupPath,backupName+".tar.gz"))) / (
+                                         1024.0 * 1024.0))) + "MB"
+                items.save()
+        except:
+            for items in backupObs:
+                items.status = 1
+                items.size = str(int(float(
+                    os.path.getsize(os.path.join(backupPath,backupName+".tar.gz"))) / (
+                                         1024.0 * 1024.0))) + "MB"
+                items.save()
+
+        logging.CyberCPLogFileWriter.statusWriter(status, "Completed\n")
 
     @staticmethod
     def initiateBackup(tempStoragePath,backupName,backupPath):
@@ -517,8 +568,8 @@ class backupUtilities:
                         copy(completPath + "/" + masterDomain + ".fullchain.pem", sslHome + "/fullchain.pem")
 
                         sslUtilities.installSSLForDomain(masterDomain)
-                    except:
-                        pass
+                    except BaseException, msg:
+                        logging.CyberCPLogFileWriter.writeToFile('%s. [555:startRestore]' % (str(msg)))
 
             else:
                 logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + result[1] + ". Not able to create Account, Databases and DNS Records, aborting. [5009]")
@@ -556,7 +607,7 @@ class backupUtilities:
 
                             if os.path.exists(backupUtilities.licenseKey):
                                 if os.path.exists(completPath + '/' + domain + '.vhost.conf'):
-                                    completPathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + domain + '/vhost.conf'
+                                    completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + domain + '/vhost.conf'
                                     copy(completPath + '/' + domain + '.vhost.conf', completPathToConf)
 
                             sslStoragePath = completPath + "/" + domain + ".cert.pem"
@@ -668,7 +719,7 @@ class backupUtilities:
             ## emails extracted
 
             if os.path.exists(backupUtilities.licenseKey):
-                completPathToConf = virtualHostUtilities.Server_root + '/conf/vhosts/' + masterDomain + '/vhost.conf'
+                completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + masterDomain + '/vhost.conf'
                 if os.path.exists(completPath + '/vhost.conf'):
                     copy(completPath + '/vhost.conf', completPathToConf)
 
@@ -976,20 +1027,103 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         ## /home/cyberpanel/1047.xml - metaPath
 
         status = os.path.join(backupPath, 'status')
+        website = Websites.objects.get(domain=backupDomain)
+
+        ##
+
+        if not os.path.exists(backupPath) or not os.path.islink(backupPath):
+            command = 'mkdir -p %s' % (backupPath)
+            ProcessUtilities.executioner(command)
+        else:
+            return 0
+
+        if not os.path.exists(backupPath) or not os.path.islink(backupPath):
+            command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
+            ProcessUtilities.executioner(command)
+        else:
+            return 0
+
+        ##
+
+        if not os.path.exists(tempStoragePath) or not os.path.islink(tempStoragePath):
+            command = 'mkdir -p %s' % (tempStoragePath)
+            ProcessUtilities.executioner(command)
+        else:
+            return 0
+
+        if not os.path.exists(tempStoragePath) or not os.path.islink(tempStoragePath):
+            command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, tempStoragePath)
+            ProcessUtilities.executioner(command)
+        else:
+            return 0
+
+        ##
+        if not os.path.exists(status) or not os.path.islink(status):
+            command = 'touch %s' % (status)
+            ProcessUtilities.executioner(command)
+        else:
+            return 0
+
+        if not os.path.exists(status) or not os.path.islink(status):
+            command = 'chown cyberpanel:cyberpanel %s' % (status)
+            ProcessUtilities.executioner(command)
+        else:
+            return 0
+
+
         result = backupUtilities.prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath)
 
+
         if result[0] == 0:
-            logging.CyberCPLogFileWriter.writeToFile(result[1] + ' [5009]')
-            logging.CyberCPLogFileWriter.statusWriter(status, result[1] + ' [5009]')
-            return
+            logging.CyberCPLogFileWriter.statusWriter(status, str(result[1]) + ' [5009]')
+            return 0
 
+        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, status)
+        ProcessUtilities.executioner(command)
 
-        p = Process(target=backupUtilities.startBackup, args=(tempStoragePath, backupName, backupPath,))
-        p.start()
-        pid = open(os.path.join(backupPath, 'pid'), "w")
-        pid.write(str(p.pid))
-        pid.close()
+        execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+        execPath = execPath + " startBackup --tempStoragePath " + tempStoragePath + " --backupName " \
+                   + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (result[2])
 
+        output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+        if output.find('[5009') > -1:
+            logging.CyberCPLogFileWriter.writeToFile(output)
+            return 0
+
+        ## Backing up databases
+
+        backupMetaData = ElementTree.parse(result[2])
+
+        databases = backupMetaData.findall('Databases/database')
+
+        for database in databases:
+
+            dbName = database.find('dbName').text
+
+            if mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel') == 0:
+                return 0
+
+            command = 'mv /home/cyberpanel/%s.sql %s/%s.sql' % (dbName, tempStoragePath, dbName)
+            ProcessUtilities.executioner(command, 'root')
+
+        ##
+
+        output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+        if output.find('1,None') > -1:
+            execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = execPath + " BackupRoot --tempStoragePath " + tempStoragePath + " --backupName " \
+                       + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (
+                       result[2])
+
+            ProcessUtilities.executioner(execPath, 'root')
+        else:
+            logging.CyberCPLogFileWriter.writeToFile(output)
+
+        command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
+        ProcessUtilities.executioner(command)
+
+        command = 'rm -f %s' % (result[2])
+        ProcessUtilities.executioner(command, 'cyberpanel')
 
     except BaseException, msg:
         logging.CyberCPLogFileWriter.writeToFile(
@@ -1105,6 +1239,10 @@ def main():
         submitDestinationCreation(args.ipAddress, args.password, args.port)
     elif args.function == "getConnectionStatus":
         getConnectionStatus(args.ipAddress)
+    elif args.function == "startBackup":
+        backupUtilities.startBackup(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath)
+    elif args.function == "BackupRoot":
+        backupUtilities.BackupRoot(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath)
 
 if __name__ == "__main__":
     main()

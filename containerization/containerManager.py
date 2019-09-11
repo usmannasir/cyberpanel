@@ -5,7 +5,6 @@ from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
 from serverStatus.serverStatusUtil import ServerStatusUtil
 import os, stat
-from plogical.virtualHostUtilities import virtualHostUtilities
 
 
 class ContainerManager(multi.Thread):
@@ -125,7 +124,7 @@ class ContainerManager(multi.Thread):
                                                           1)
                 return 0
 
-            execPath = "sudo python /usr/local/CyberCP/containerization/container.py"
+            execPath = "/usr/local/CyberCP/bin/python2 /usr/local/CyberCP/containerization/container.py"
             execPath = execPath + " --function submitContainerInstall"
             ProcessUtilities.outputExecutioner(execPath)
 

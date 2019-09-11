@@ -24,6 +24,7 @@ import os
 from plogical.dnsUtilities import DNS
 from loginSystem.models import Administrator
 from plogical.processUtilities import ProcessUtilities
+import bcrypt
 
 class MailServerManager:
 
@@ -57,6 +58,26 @@ class MailServerManager:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
 
+
+    def listEmails(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'listEmails') == 0:
+                return ACLManager.loadError()
+
+            if not os.path.exists('/home/cyberpanel/postfix'):
+                return render(self.request, "mailServer/listEmails.html", {"status": 0})
+
+            websitesName = ACLManager.findAllSites(currentACL, userID)
+            websitesName = websitesName + ACLManager.findChildDomains(websitesName)
+
+            return render(self.request, 'mailServer/listEmails.html',
+                          {'websiteList': websitesName, "status": 1})
+        except BaseException, msg:
+            return redirect(loadLoginPage)
+
     def submitEmailCreation(self):
         try:
 
@@ -69,24 +90,27 @@ class MailServerManager:
             data = json.loads(self.request.body)
             domainName = data['domain']
             userName = data['username']
-            password = data['password']
+            password = data['passwordByPass']
+
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
 
             ## Create email entry
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+            result = mailUtilities.createEmailAccount(domainName, userName, password)
 
-            execPath = execPath + " createEmailAccount --domain " + domainName + " --userName " \
-                       + userName + " --password '" + password + "'"
-
-            output = ProcessUtilities.outputExecutioner(execPath)
-
-            if output.find("1,None") > -1:
+            if result[0] == 1:
                 data_ret = {'status': 1, 'createEmailStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
             else:
-                data_ret = {'status': 0, 'createEmailStatus': 0, 'error_message': output}
+                data_ret = {'status': 0, 'createEmailStatus': 0, 'error_message': result[1]}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -126,6 +150,12 @@ class MailServerManager:
 
             data = json.loads(self.request.body)
             domain = data['domain']
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
 
             try:
                 domain = Domains.objects.get(domain=domain)
@@ -174,8 +204,17 @@ class MailServerManager:
             if ACLManager.currentContextPermission(currentACL, 'deleteEmail') == 0:
                 return ACLManager.loadErrorJson('deleteEmailStatus', 0)
 
+
             data = json.loads(self.request.body)
             email = data['email']
+
+            eUser = EUsers.objects.get(email=email)
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(eUser.emailOwner.domainOwner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
 
             mailUtilities.deleteEmailAccount(email)
             data_ret = {'status': 1, 'deleteEmailStatus': 1, 'error_message': "None"}
@@ -216,6 +255,14 @@ class MailServerManager:
 
             data = json.loads(self.request.body)
             emailAddress = data['emailAddress']
+
+            eUser = EUsers.objects.get(email=emailAddress)
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(eUser.emailOwner.domainOwner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
 
             currentForwardings = Forwardings.objects.filter(source=emailAddress)
 
@@ -260,6 +307,14 @@ class MailServerManager:
             destination = data['destination']
             source = data['source']
 
+            eUser = EUsers.objects.get(email=source)
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(eUser.emailOwner.domainOwner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
             for items in Forwardings.objects.filter(destination=destination, source=source):
                 items.delete()
 
@@ -284,6 +339,14 @@ class MailServerManager:
             source = data['source']
             destination = data['destination']
 
+            eUser = EUsers.objects.get(email=source)
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(eUser.emailOwner.domainOwner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
             if Forwardings.objects.filter(source=source, destination=destination).count() > 0:
                 data_ret = {'status': 0, 'createStatus': 0,
                             'error_message': "You have already forwared to this destination."}
@@ -305,6 +368,53 @@ class MailServerManager:
             data_ret = {'status': 0, 'createStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+
+    def fetchEmails(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'listEmails') == 0:
+                return ACLManager.loadErrorJson('status', 0)
+
+            data = json.loads(self.request.body)
+            selectedDomain = data['selectedDomain']
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(selectedDomain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+            try:
+
+                emailDomain = Domains.objects.get(domain=selectedDomain)
+            except:
+                raise BaseException('No emails exist for this domain.')
+
+            records = emailDomain.eusers_set.all()
+
+            json_data = "["
+            checker = 0
+
+            for items in records:
+                dic = {'email': items.email,
+                       }
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+            json_data = json_data + ']'
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            return HttpResponse(final_json)
+
+        except BaseException, msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
 
     #######
 
@@ -336,16 +446,30 @@ class MailServerManager:
 
             data = json.loads(self.request.body)
             email = data['email']
-            password = data['password']
+            password = data['passwordByPass']
 
             emailDB = EUsers.objects.get(email=email)
 
+            admin = Administrator.objects.get(pk=userID)
+            try:
+                if ACLManager.checkOwnership(emailDB.emailOwner.domainOwner.domain, admin, currentACL) == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson()
+            except:
+                if ACLManager.checkOwnership(emailDB.emailOwner.childOwner.domain, admin, currentACL) == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson()
+
             CentOSPath = '/etc/redhat-release'
             if os.path.exists(CentOSPath):
-                command = 'doveadm pw -p %s' % (password)
-                password = ProcessUtilities.outputExecutioner(command).strip('\n')
+                password = bcrypt.hashpw(str(password), bcrypt.gensalt())
+                password = '{CRYPT}%s' % (password)
                 emailDB.password = password
             else:
+                password = bcrypt.hashpw(str(password), bcrypt.gensalt())
+                password = '{CRYPT}%s' % (password)
                 emailDB.password = password
 
             emailDB.save()
@@ -392,16 +516,22 @@ class MailServerManager:
             data = json.loads(self.request.body)
             domainName = data['domainName']
 
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
             try:
                 path = "/etc/opendkim/keys/" + domainName + "/default.txt"
                 command = "sudo cat " + path
-                output = ProcessUtilities.outputExecutioner(command)
+                output = ProcessUtilities.outputExecutioner(command, 'opendkim')
                 leftIndex = output.index('(') + 2
                 rightIndex = output.rindex(')') - 1
 
                 path = "/etc/opendkim/keys/" + domainName + "/default.private"
                 command = "sudo cat " + path
-                privateKey = ProcessUtilities.outputExecutioner(command)
+                privateKey = ProcessUtilities.outputExecutioner(command, 'opendkim')
 
                 data_ret = {'status': 1, 'fetchStatus': 1, 'keysAvailable': 1, 'publicKey': output[leftIndex:rightIndex],
                             'privateKey': privateKey, 'dkimSuccessMessage': 'Keys successfully fetched!',
@@ -430,7 +560,13 @@ class MailServerManager:
             data = json.loads(self.request.body)
             domainName = data['domainName']
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
             execPath = execPath + " generateKeys --domain " + domainName
             output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -500,7 +636,7 @@ class MailServerManager:
 
             if installStatus.find("[200]") > -1:
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                 execPath = execPath + " configureOpenDKIM"
 
                 output = ProcessUtilities.outputExecutioner(execPath)

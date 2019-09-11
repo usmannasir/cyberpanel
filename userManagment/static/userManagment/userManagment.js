@@ -3,9 +3,8 @@
  */
 
 
-
 /* Java script code to create account */
-app.controller('createUserCtr', function($scope,$http) {
+app.controller('createUserCtr', function ($scope, $http) {
 
     $scope.acctsLimit = true;
     $scope.webLimits = true;
@@ -15,7 +14,7 @@ app.controller('createUserCtr', function($scope,$http) {
     $scope.userCreationLoading = true;
     $scope.combinedLength = true;
 
-    $scope.createUserFunc = function(){
+    $scope.createUserFunc = function () {
 
         $scope.webLimits = false;
         $scope.userCreated = true;
@@ -34,84 +33,75 @@ app.controller('createUserCtr', function($scope,$http) {
         var password = $scope.password;
 
 
-                var url = "/users/submitUserCreation";
+        var url = "/users/submitUserCreation";
 
-                var data = {
-                    firstName:firstName,
-                    lastName:lastName,
-                    email:email,
-                    selectedACL:selectedACL,
-                    websitesLimit:websitesLimits,
-                    userName:userName,
-                    password:password
-                };
+        var data = {
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            selectedACL: selectedACL,
+            websitesLimit: websitesLimits,
+            userName: userName,
+            password: password
+        };
 
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    if(response.data.createStatus == 1){
-
-                        $scope.userCreated = false;
-                        $scope.userCreationFailed = true;
-                        $scope.couldNotConnect = true;
-                        $scope.userCreationLoading = true;
-
-                        $scope.userName = userName;
+        function ListInitialDatas(response) {
 
 
+            if (response.data.createStatus == 1) {
 
-                    }
+                $scope.userCreated = false;
+                $scope.userCreationFailed = true;
+                $scope.couldNotConnect = true;
+                $scope.userCreationLoading = true;
 
-                    else
-                    {
-
-                        $scope.acctsLimit = false;
-                        $scope.webLimits = false;
-                        $scope.userCreated = true;
-                        $scope.userCreationFailed = false;
-                        $scope.couldNotConnect = true;
-                        $scope.userCreationLoading = true;
-
-                        $scope.errorMessage = response.data.error_message;
+                $scope.userName = userName;
 
 
-                    }
+            } else {
+
+                $scope.acctsLimit = false;
+                $scope.webLimits = false;
+                $scope.userCreated = true;
+                $scope.userCreationFailed = false;
+                $scope.couldNotConnect = true;
+                $scope.userCreationLoading = true;
+
+                $scope.errorMessage = response.data.error_message;
 
 
-
-                }
-                function cantLoadInitialDatas(response) {
-
-                    $scope.acctsLimit = false;
-                    $scope.webLimits = false;
-                    $scope.userCreated = true;
-                    $scope.userCreationFailed = true;
-                    $scope.couldNotConnect = false;
-                    $scope.userCreationLoading = true;
+            }
 
 
+        }
 
-                }
+        function cantLoadInitialDatas(response) {
+
+            $scope.acctsLimit = false;
+            $scope.webLimits = false;
+            $scope.userCreated = true;
+            $scope.userCreationFailed = true;
+            $scope.couldNotConnect = false;
+            $scope.userCreationLoading = true;
 
 
-
+        }
 
 
     };
 
-    $scope.hideSomeThings = function(){
+    $scope.hideSomeThings = function () {
 
         $scope.userCreated = true;
-
 
 
     };
@@ -121,8 +111,8 @@ app.controller('createUserCtr', function($scope,$http) {
     $scope.generatedPasswordView = true;
 
     $scope.generatePassword = function () {
-      $scope.generatedPasswordView = false;
-      $scope.password = randomPassword(12);
+        $scope.generatedPasswordView = false;
+        $scope.password = randomPassword(12);
     };
 
     $scope.usePassword = function () {
@@ -134,7 +124,7 @@ app.controller('createUserCtr', function($scope,$http) {
 
 
 /* Java script code to modify user account */
-app.controller('modifyUser', function($scope,$http) {
+app.controller('modifyUser', function ($scope, $http) {
 
     $scope.userModificationLoading = true;
     $scope.acctDetailsFetched = true;
@@ -148,96 +138,87 @@ app.controller('modifyUser', function($scope,$http) {
     $scope.websitesLimit = true;
 
 
-    $scope.fetchUserDetails = function(){
+    $scope.fetchUserDetails = function () {
 
 
         var accountUsername = $scope.accountUsername;
 
 
+        var url = "/users/fetchUserDetails";
 
-                var url = "/users/fetchUserDetails";
+        var data = {
+            accountUsername: accountUsername
+        };
 
-                var data = {
-                    accountUsername:accountUsername
-                };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    if(response.data.fetchStatus === 1){
-
-                        $scope.acctDetailsFetched = false;
-
-                        var userDetails = response.data.userDetails;
-
-                        $scope.firstName = userDetails.firstName;
-                        $scope.lastName = userDetails.lastName;
-                        $scope.email = userDetails.email;
-
-                        $scope.userModificationLoading = true;
-                        $scope.acctDetailsFetched = false;
-                        $scope.userModified = true;
-                        $scope.canotModifyUser = true;
-                        $scope.couldNotConnect = true;
-                        $scope.canotFetchDetails = true;
-                        $scope.detailsFetched = false;
-                        $scope.userAccountsLimit = true;
-                        $scope.websitesLimit = true;
-                    }
-
-                    else
-                    {
-                        $scope.userModificationLoading = true;
-                        $scope.acctDetailsFetched = true;
-                        $scope.userAccountsLimit = true;
-                        $scope.userModified = true;
-                        $scope.canotModifyUser = true;
-                        $scope.couldNotConnect = true;
-                        $scope.canotFetchDetails = false;
-                        $scope.detailsFetched = true;
+        function ListInitialDatas(response) {
 
 
-                        $scope.errorMessage = response.data.error_message;
+            if (response.data.fetchStatus === 1) {
+
+                $scope.acctDetailsFetched = false;
+
+                var userDetails = response.data.userDetails;
+
+                $scope.firstName = userDetails.firstName;
+                $scope.lastName = userDetails.lastName;
+                $scope.email = userDetails.email;
+
+                $scope.userModificationLoading = true;
+                $scope.acctDetailsFetched = false;
+                $scope.userModified = true;
+                $scope.canotModifyUser = true;
+                $scope.couldNotConnect = true;
+                $scope.canotFetchDetails = true;
+                $scope.detailsFetched = false;
+                $scope.userAccountsLimit = true;
+                $scope.websitesLimit = true;
+            } else {
+                $scope.userModificationLoading = true;
+                $scope.acctDetailsFetched = true;
+                $scope.userAccountsLimit = true;
+                $scope.userModified = true;
+                $scope.canotModifyUser = true;
+                $scope.couldNotConnect = true;
+                $scope.canotFetchDetails = false;
+                $scope.detailsFetched = true;
 
 
-                    }
+                $scope.errorMessage = response.data.error_message;
 
 
-
-                }
-                function cantLoadInitialDatas(response) {
-
-                    $scope.userModificationLoading = true;
-                    $scope.acctDetailsFetched = true;
-                    $scope.userAccountsLimit = true;
-                    $scope.userModified = true;
-                    $scope.canotModifyUser = true;
-                    $scope.couldNotConnect = false;
-                    $scope.canotFetchDetails = true;
-                    $scope.detailsFetched = true;
+            }
 
 
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.userModificationLoading = true;
+            $scope.acctDetailsFetched = true;
+            $scope.userAccountsLimit = true;
+            $scope.userModified = true;
+            $scope.canotModifyUser = true;
+            $scope.couldNotConnect = false;
+            $scope.canotFetchDetails = true;
+            $scope.detailsFetched = true;
 
 
-                }
-
-
-
+        }
 
 
     };
 
 
-    $scope.modifyUser = function(){
+    $scope.modifyUser = function () {
 
 
         $scope.userModificationLoading = false;
@@ -249,114 +230,101 @@ app.controller('modifyUser', function($scope,$http) {
         $scope.detailsFetched = true;
 
 
-         var accountUsername = $scope.accountUsername;
+        var accountUsername = $scope.accountUsername;
 
-         var accountType = $scope.accountType;
-         var firstName = $scope.firstName;
+        var accountType = $scope.accountType;
+        var firstName = $scope.firstName;
 
-         var lastName  = $scope.lastName;
-         var email = $scope.email;
+        var lastName = $scope.lastName;
+        var email = $scope.email;
 
-         var password = $scope.password;
-
-
-
-                var url = "/users/saveModifications";
-
-                var data = {
-                    accountUsername:accountUsername,
-                    firstName:firstName,
-                    lastName:lastName,
-                    email:email,
-                    password:password
-                };
-
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        var password = $scope.password;
 
 
-                function ListInitialDatas(response) {
+        var url = "/users/saveModifications";
+
+        var data = {
+            accountUsername: accountUsername,
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            password: password
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    if(response.data.saveStatus == 1){
-
-                        $scope.userModificationLoading = true;
-                        $scope.acctDetailsFetched = true;
-                        $scope.userModified = false;
-                        $scope.canotModifyUser = true;
-                        $scope.couldNotConnect = true;
-                        $scope.canotFetchDetails = true;
-                        $scope.detailsFetched = true;
-                        $scope.userAccountsLimit = true;
-                        $scope.accountTypeView = true;
-                        $scope.websitesLimit = true;
+        function ListInitialDatas(response) {
 
 
-                        $scope.userName = accountUsername;
+            if (response.data.saveStatus == 1) {
+
+                $scope.userModificationLoading = true;
+                $scope.acctDetailsFetched = true;
+                $scope.userModified = false;
+                $scope.canotModifyUser = true;
+                $scope.couldNotConnect = true;
+                $scope.canotFetchDetails = true;
+                $scope.detailsFetched = true;
+                $scope.userAccountsLimit = true;
+                $scope.accountTypeView = true;
+                $scope.websitesLimit = true;
 
 
-
-                    }
-
-                    else
-                    {
-
-                        $scope.userModificationLoading = true;
-                        $scope.acctDetailsFetched = false;
-                        $scope.userModified = true;
-                        $scope.canotModifyUser = false;
-                        $scope.couldNotConnect = true;
-                        $scope.canotFetchDetails = true;
-                        $scope.detailsFetched = true;
+                $scope.userName = accountUsername;
 
 
-                        $scope.errorMessage = response.data.error_message;
+            } else {
+
+                $scope.userModificationLoading = true;
+                $scope.acctDetailsFetched = false;
+                $scope.userModified = true;
+                $scope.canotModifyUser = false;
+                $scope.couldNotConnect = true;
+                $scope.canotFetchDetails = true;
+                $scope.detailsFetched = true;
 
 
-                    }
+                $scope.errorMessage = response.data.error_message;
 
 
-
-                }
-                function cantLoadInitialDatas(response) {
-
-                    $scope.userModificationLoading = true;
-                    $scope.acctDetailsFetched = true;
-                    $scope.userModified = true;
-                    $scope.canotModifyUser = true;
-                    $scope.couldNotConnect = false;
-                    $scope.canotFetchDetails = true;
-                    $scope.detailsFetched = true;
+            }
 
 
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.userModificationLoading = true;
+            $scope.acctDetailsFetched = true;
+            $scope.userModified = true;
+            $scope.canotModifyUser = true;
+            $scope.couldNotConnect = false;
+            $scope.canotFetchDetails = true;
+            $scope.detailsFetched = true;
 
 
-
-                }
-
-
-
+        }
 
 
     };
 
     $scope.showLimitsBox = function () {
 
-        if ($scope.accountType == "Normal User"){
+        if ($scope.accountType == "Normal User") {
             $scope.websitesLimit = false;
             $scope.userAccountsLimit = true;
-        }
-        else if($scope.accountType=="Admin"){
+        } else if ($scope.accountType == "Admin") {
             $scope.websitesLimit = true;
             $scope.userAccountsLimit = true;
 
-        }
-        else{
+        } else {
             $scope.userAccountsLimit = false;
             $scope.websitesLimit = false;
         }
@@ -369,8 +337,8 @@ app.controller('modifyUser', function($scope,$http) {
     $scope.generatedPasswordView = true;
 
     $scope.generatePassword = function () {
-      $scope.generatedPasswordView = false;
-      $scope.password = randomPassword(12);
+        $scope.generatedPasswordView = false;
+        $scope.password = randomPassword(12);
     };
 
     $scope.usePassword = function () {
@@ -381,9 +349,8 @@ app.controller('modifyUser', function($scope,$http) {
 /* Java script code to modify user account ends here */
 
 
-
 /* Java script code to delete user account */
-app.controller('deleteUser', function($scope,$http) {
+app.controller('deleteUser', function ($scope, $http) {
 
 
     $scope.deleteUserButton = true;
@@ -392,82 +359,71 @@ app.controller('deleteUser', function($scope,$http) {
     $scope.couldNotConnect = true;
 
 
-    $scope.deleteUser = function(){
+    $scope.deleteUser = function () {
         $scope.deleteUserButton = false;
-    }
+    };
 
-    $scope.deleteUserFinal = function(){
-
-
-            var accountUsername = $scope.accountUsername;
+    $scope.deleteUserFinal = function () {
 
 
-
-                var url = "/users/submitUserDeletion";
-
-                var data = {
-                    accountUsername:accountUsername,
-                };
-
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        var accountUsername = $scope.accountUsername;
 
 
-                function ListInitialDatas(response) {
+        var url = "/users/submitUserDeletion";
+
+        var data = {
+            accountUsername: accountUsername,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    if(response.data.deleteStatus == 1){
-
-                        $scope.deleteUserButton = true;
-                        $scope.deleteFailure = true;
-                        $scope.deleteSuccess = false;
-                        $scope.couldNotConnect = true;
-
-                        $scope.deletedUser = accountUsername;
+        function ListInitialDatas(response) {
 
 
+            if (response.data.deleteStatus === 1) {
 
-                    }
+                $scope.deleteUserButton = true;
+                $scope.deleteFailure = true;
+                $scope.deleteSuccess = false;
+                $scope.couldNotConnect = true;
 
-                    else
-                    {
-                        $scope.deleteUserButton = true;
-                        $scope.deleteFailure = false;
-                        $scope.deleteSuccess = true;
-                        $scope.couldNotConnect = true;
-                        $scope.deleteUserButton = true;
-
-                        $scope.errorMessage = response.data.error_message;
-
-                    }
+                $scope.deletedUser = accountUsername;
 
 
+            } else {
+                $scope.deleteUserButton = true;
+                $scope.deleteFailure = false;
+                $scope.deleteSuccess = true;
+                $scope.couldNotConnect = true;
+                $scope.deleteUserButton = true;
 
-                }
-                function cantLoadInitialDatas(response) {
+                $scope.errorMessage = response.data.error_message;
 
-                            $scope.deleteUserButton = true;
-                            $scope.deleteFailure = true;
-                            $scope.deleteSuccess = true;
-                            $scope.couldNotConnect = false;
-                            $scope.deleteUserButton = true;
-
-
-
-
-                }
+            }
 
 
+        }
 
+        function cantLoadInitialDatas(response) {
+
+            $scope.deleteUserButton = true;
+            $scope.deleteFailure = true;
+            $scope.deleteSuccess = true;
+            $scope.couldNotConnect = false;
+            $scope.deleteUserButton = true;
+
+
+        }
 
 
     };
-
 
 
 });
@@ -475,10 +431,9 @@ app.controller('deleteUser', function($scope,$http) {
 
 
 /* Java script code to create acl */
-app.controller('createACLCTRL', function($scope,$http) {
+app.controller('createACLCTRL', function ($scope, $http) {
 
     $scope.aclLoading = true;
-
     $scope.makeAdmin = false;
 
     //
@@ -488,6 +443,7 @@ app.controller('createACLCTRL', function($scope,$http) {
     // User Management
 
     $scope.createNewUser = false;
+    $scope.listUsers = false;
     $scope.resellerCenter = false;
     $scope.deleteUser = false;
     $scope.changeUserACL = false;
@@ -502,6 +458,7 @@ app.controller('createACLCTRL', function($scope,$http) {
     // Package Management
 
     $scope.createPackage = false;
+    $scope.listPackages = false;
     $scope.deletePackage = false;
     $scope.modifyPackage = false;
 
@@ -521,6 +478,7 @@ app.controller('createACLCTRL', function($scope,$http) {
     // Email Management
 
     $scope.createEmail = true;
+    $scope.listEmails = true;
     $scope.deleteEmail = true;
     $scope.emailForwarding = true;
     $scope.changeEmailPassword = true;
@@ -547,138 +505,135 @@ app.controller('createACLCTRL', function($scope,$http) {
     $scope.mailServerSSL = false;
 
 
-
-    $scope.createACLFunc = function(){
+    $scope.createACLFunc = function () {
 
         $scope.aclLoading = false;
 
-                var url = "/users/createACLFunc";
+        var url = "/users/createACLFunc";
 
-                var data = {
+        var data = {
 
-                   aclName : $scope.aclName,
-                   makeAdmin : $scope.makeAdmin,
+            aclName: $scope.aclName,
+            makeAdmin: $scope.makeAdmin,
 
-                   //
-                   versionManagement : $scope.versionManagement,
+            //
+            versionManagement: $scope.versionManagement,
 
-                   // User Management
+            // User Management
 
-                   createNewUser  : $scope.createNewUser,
-                   resellerCenter : $scope.resellerCenter,
-                   deleteUser  : $scope.deleteUser,
-                   changeUserACL : $scope.changeUserACL,
+            createNewUser: $scope.createNewUser,
+            listUsers: $scope.listUsers,
+            resellerCenter: $scope.resellerCenter,
+            deleteUser: $scope.deleteUser,
+            changeUserACL: $scope.changeUserACL,
 
-                   // Website Management
+            // Website Management
 
-                   createWebsite  : $scope.createWebsite,
-                   modifyWebsite  : $scope.modifyWebsite,
-                   suspendWebsite  : $scope.suspendWebsite,
-                   deleteWebsite  : $scope.deleteWebsite,
+            createWebsite: $scope.createWebsite,
+            modifyWebsite: $scope.modifyWebsite,
+            suspendWebsite: $scope.suspendWebsite,
+            deleteWebsite: $scope.deleteWebsite,
 
-                   // Package Management
+            // Package Management
 
-                   createPackage  : $scope.createPackage,
-                   deletePackage  : $scope.deletePackage,
-                   modifyPackage  : $scope.modifyPackage,
+            createPackage: $scope.createPackage,
+            listPackages: $scope.listPackages,
+            deletePackage: $scope.deletePackage,
+            modifyPackage: $scope.modifyPackage,
 
-                   // Database Management
+            // Database Management
 
-                   createDatabase  : $scope.createDatabase,
-                   deleteDatabase  : $scope.deleteDatabase,
-                   listDatabases  : $scope.listDatabases,
+            createDatabase: $scope.createDatabase,
+            deleteDatabase: $scope.deleteDatabase,
+            listDatabases: $scope.listDatabases,
 
-                   // DNS Management
+            // DNS Management
 
-                   createNameServer  : $scope.createNameServer,
-                   createDNSZone  : $scope.createDNSZone,
-                   deleteZone  : $scope.deleteZone,
-                   addDeleteRecords  : $scope.addDeleteRecords,
+            createNameServer: $scope.createNameServer,
+            createDNSZone: $scope.createDNSZone,
+            deleteZone: $scope.deleteZone,
+            addDeleteRecords: $scope.addDeleteRecords,
 
-                   // Email Management
+            // Email Management
 
-                   createEmail  : $scope.createEmail,
-                   deleteEmail  : $scope.deleteEmail,
-                   emailForwarding  : $scope.emailForwarding,
-                   changeEmailPassword  : $scope.changeEmailPassword,
-                   dkimManager  : $scope.dkimManager,
+            createEmail: $scope.createEmail,
+            listEmails: $scope.listEmails,
+            deleteEmail: $scope.deleteEmail,
+            emailForwarding: $scope.emailForwarding,
+            changeEmailPassword: $scope.changeEmailPassword,
+            dkimManager: $scope.dkimManager,
 
-                   // FTP Management
+            // FTP Management
 
-                   createFTPAccount  : $scope.createFTPAccount,
-                   deleteFTPAccount  : $scope.deleteFTPAccount,
-                   listFTPAccounts  : $scope.listFTPAccounts,
+            createFTPAccount: $scope.createFTPAccount,
+            deleteFTPAccount: $scope.deleteFTPAccount,
+            listFTPAccounts: $scope.listFTPAccounts,
 
-                   // Backup Management
+            // Backup Management
 
-                   createBackup  : $scope.createBackup,
-                   restoreBackup  : $scope.restoreBackup,
-                   addDeleteDestinations  : $scope.addDeleteDestinations,
-                   scheDuleBackups  : $scope.scheDuleBackups,
-                   remoteBackups  : $scope.remoteBackups,
+            createBackup: $scope.createBackup,
+            restoreBackup: $scope.restoreBackup,
+            addDeleteDestinations: $scope.addDeleteDestinations,
+            scheDuleBackups: $scope.scheDuleBackups,
+            remoteBackups: $scope.remoteBackups,
 
-                   // SSL Management
+            // SSL Management
 
-                   manageSSL  : $scope.manageSSL,
-                   hostnameSSL  : $scope.hostnameSSL,
-                   mailServerSSL  : $scope.mailServerSSL
+            manageSSL: $scope.manageSSL,
+            hostnameSSL: $scope.hostnameSSL,
+            mailServerSSL: $scope.mailServerSSL
 
-                };
+        };
 
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
-                    $scope.aclLoading = true;
-
-                    if(response.data.status === 1){
-                        new PNotify({
-                            title: 'Success!',
-                            text: 'ACL Successfully created.',
-                            type:'success'
-                          });
-                    }
-
-                    else
-                    {
-
-                        new PNotify({
-                            title: 'Error!',
-                            text: response.data.errorMessage,
-                            type:'error'
-                          });
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    }
+        function ListInitialDatas(response) {
+            $scope.aclLoading = true;
 
-                }
-                function cantLoadInitialDatas(response) {
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'ACL Successfully created.',
+                    type: 'success'
+                });
+            } else {
 
-                    $scope.aclLoading = false;
-
-                    new PNotify({
-                            title: 'Error!',
-                            text: 'Could not connect to server, please refresh this page.',
-                            type:'error'
-                          });
-
-                }
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.errorMessage,
+                    type: 'error'
+                });
 
 
+            }
 
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.aclLoading = false;
+
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+        }
 
 
     };
 
     $scope.adminHook = function () {
 
-        if($scope.makeAdmin === true){
+        if ($scope.makeAdmin === true) {
 
             $scope.makeAdmin = true;
 
@@ -689,6 +644,7 @@ app.controller('createACLCTRL', function($scope,$http) {
             // User Management
 
             $scope.createNewUser = true;
+            $scope.listUsers = true;
             $scope.resellerCenter = true;
             $scope.deleteUser = true;
             $scope.changeUserACL = true;
@@ -703,6 +659,7 @@ app.controller('createACLCTRL', function($scope,$http) {
             // Package Management
 
             $scope.createPackage = true;
+            $scope.listPackages = true;
             $scope.deletePackage = true;
             $scope.modifyPackage = true;
 
@@ -722,6 +679,7 @@ app.controller('createACLCTRL', function($scope,$http) {
             // Email Management
 
             $scope.createEmail = true;
+            $scope.listEmails = true;
             $scope.deleteEmail = true;
             $scope.emailForwarding = true;
             $scope.changeEmailPassword = true;
@@ -747,8 +705,7 @@ app.controller('createACLCTRL', function($scope,$http) {
             $scope.hostnameSSL = true;
             $scope.mailServerSSL = true;
 
-        }
-        else{
+        } else {
             $scope.makeAdmin = false;
 
             //
@@ -758,6 +715,7 @@ app.controller('createACLCTRL', function($scope,$http) {
             // User Management
 
             $scope.createNewUser = false;
+            $scope.listUsers = false;
             $scope.resellerCenter = false;
             $scope.deleteUser = false;
             $scope.changeUserACL = false;
@@ -772,6 +730,7 @@ app.controller('createACLCTRL', function($scope,$http) {
             // Package Management
 
             $scope.createPackage = false;
+            $scope.listPackages = false;
             $scope.deletePackage = false;
             $scope.modifyPackage = false;
 
@@ -791,6 +750,7 @@ app.controller('createACLCTRL', function($scope,$http) {
             // Email Management
 
             $scope.createEmail = true;
+            $scope.listEmails = True;
             $scope.deleteEmail = true;
             $scope.emailForwarding = true;
             $scope.changeEmailPassword = true;
@@ -825,66 +785,65 @@ app.controller('createACLCTRL', function($scope,$http) {
 
 
 /* Java script code to delete acl */
-app.controller('deleteACTCTRL', function($scope,$http) {
+app.controller('deleteACTCTRL', function ($scope, $http) {
 
     $scope.aclLoading = true;
     $scope.deleteACLButton = true;
 
-    $scope.deleteACLFunc = function(){
+    $scope.deleteACLFunc = function () {
 
         $scope.deleteACLButton = false;
 
     };
 
-    $scope.deleteACLFinal = function(){
+    $scope.deleteACLFinal = function () {
 
-                $scope.aclLoading = false;
+        $scope.aclLoading = false;
 
-                url = "/users/deleteACLFunc";
+        url = "/users/deleteACLFunc";
 
-                var data = {
-                    aclToBeDeleted: $scope.aclToBeDeleted
-                };
+        var data = {
+            aclToBeDeleted: $scope.aclToBeDeleted
+        };
 
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
-                    $scope.aclLoading = true;
-
-                    if (response.data.status === 1)
-                    {
-                        new PNotify({
-                            title: 'Success!',
-                            text: 'ACL Successfully deleted.',
-                            type:'success'
-                          });
-
-                    }
-                    else{
-                        new PNotify({
-                            title: 'Error!',
-                            text: response.data.errorMessage,
-                            type:'error'
-                          });
-                    }
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.aclLoading = true;
-                    new PNotify({
-                            title: 'Error!',
-                            text: 'Could not connect to server, please refresh this page.',
-                            type:'error'
-                          });
-                }
+        function ListInitialDatas(response) {
+            $scope.aclLoading = true;
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'ACL Successfully deleted.',
+                    type: 'success'
+                });
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.errorMessage,
+                    type: 'error'
+                });
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.aclLoading = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
 
 
     };
@@ -894,7 +853,7 @@ app.controller('deleteACTCTRL', function($scope,$http) {
 
 
 /* Java script code to create acl */
-app.controller('modifyACLCtrl', function($scope,$http) {
+app.controller('modifyACLCtrl', function ($scope, $http) {
 
     $scope.aclLoading = true;
     $scope.aclDetails = true;
@@ -903,255 +862,255 @@ app.controller('modifyACLCtrl', function($scope,$http) {
 
         $scope.aclLoading = false;
 
-                var url = "/users/fetchACLDetails";
+        var url = "/users/fetchACLDetails";
 
-                var data = {
-                   aclToModify : $scope.aclToModify
-                };
+        var data = {
+            aclToModify: $scope.aclToModify
+        };
 
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
-                    $scope.aclLoading = true;
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    if(response.data.status === 1){
-                        new PNotify({
-                            title: 'Success!',
-                            text: 'Current settings successfully fetched',
-                            type:'success'
-                          });
+        function ListInitialDatas(response) {
+            $scope.aclLoading = true;
 
-                        $scope.aclDetails = false;
 
-                        $scope.makeAdmin = Boolean(response.data.adminStatus);
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Current settings successfully fetched',
+                    type: 'success'
+                });
 
-                        //
+                $scope.aclDetails = false;
 
-                        $scope.versionManagement = Boolean(response.data.versionManagement);
+                $scope.makeAdmin = Boolean(response.data.adminStatus);
 
-                        // User Management
+                //
 
-                        $scope.createNewUser = Boolean(response.data.createNewUser);
-                        $scope.resellerCenter = Boolean(response.data.resellerCenter);
-                        $scope.deleteUser = Boolean(response.data.deleteUser);
-                        $scope.changeUserACL = Boolean(response.data.changeUserACL);
+                $scope.versionManagement = Boolean(response.data.versionManagement);
 
-                        // Website Management
+                // User Management
 
-                        $scope.createWebsite = Boolean(response.data.createWebsite);
-                        $scope.modifyWebsite = Boolean(response.data.modifyWebsite);
-                        $scope.suspendWebsite = Boolean(response.data.suspendWebsite);
-                        $scope.deleteWebsite = Boolean(response.data.deleteWebsite);
+                $scope.createNewUser = Boolean(response.data.createNewUser);
+                $scope.listUsers = Boolean(response.data.listUsers);
+                $scope.resellerCenter = Boolean(response.data.resellerCenter);
+                $scope.deleteUser = Boolean(response.data.deleteUser);
+                $scope.changeUserACL = Boolean(response.data.changeUserACL);
 
-                        // Package Management
+                // Website Management
 
-                        $scope.createPackage = Boolean(response.data.createPackage);
-                        $scope.deletePackage = Boolean(response.data.deletePackage);
-                        $scope.modifyPackage = Boolean(response.data.modifyPackage);
+                $scope.createWebsite = Boolean(response.data.createWebsite);
+                $scope.modifyWebsite = Boolean(response.data.modifyWebsite);
+                $scope.suspendWebsite = Boolean(response.data.suspendWebsite);
+                $scope.deleteWebsite = Boolean(response.data.deleteWebsite);
 
-                        // Database Management
+                // Package Management
 
-                        $scope.createDatabase = Boolean(response.data.createDatabase);
-                        $scope.deleteDatabase = Boolean(response.data.deleteDatabase);
-                        $scope.listDatabases = Boolean(response.data.listDatabases);
+                $scope.createPackage = Boolean(response.data.createPackage);
+                $scope.listPackages = Boolean(response.data.listPackages);
+                $scope.deletePackage = Boolean(response.data.deletePackage);
+                $scope.modifyPackage = Boolean(response.data.modifyPackage);
 
-                        // DNS Management
+                // Database Management
 
-                        $scope.createNameServer = Boolean(response.data.createNameServer);
-                        $scope.createDNSZone = Boolean(response.data.createDNSZone);
-                        $scope.deleteZone = Boolean(response.data.deleteZone);
-                        $scope.addDeleteRecords = Boolean(response.data.addDeleteRecords);
+                $scope.createDatabase = Boolean(response.data.createDatabase);
+                $scope.deleteDatabase = Boolean(response.data.deleteDatabase);
+                $scope.listDatabases = Boolean(response.data.listDatabases);
 
-                        // Email Management
+                // DNS Management
 
-                        $scope.createEmail = Boolean(response.data.createEmail);
-                        $scope.deleteEmail = Boolean(response.data.deleteEmail);
-                        $scope.emailForwarding = Boolean(response.data.emailForwarding);
-                        $scope.changeEmailPassword = Boolean(response.data.changeEmailPassword);
-                        $scope.dkimManager = Boolean(response.data.dkimManager);
+                $scope.createNameServer = Boolean(response.data.createNameServer);
+                $scope.createDNSZone = Boolean(response.data.createDNSZone);
+                $scope.deleteZone = Boolean(response.data.deleteZone);
+                $scope.addDeleteRecords = Boolean(response.data.addDeleteRecords);
 
-                        // FTP Management
+                // Email Management
 
-                        $scope.createFTPAccount = Boolean(response.data.createFTPAccount);
-                        $scope.deleteFTPAccount = Boolean(response.data.deleteFTPAccount);
-                        $scope.listFTPAccounts = Boolean(response.data.listFTPAccounts);
+                $scope.createEmail = Boolean(response.data.createEmail);
+                $scope.listEmails = Boolean(response.data.listEmails);
+                $scope.deleteEmail = Boolean(response.data.deleteEmail);
+                $scope.emailForwarding = Boolean(response.data.emailForwarding);
+                $scope.changeEmailPassword = Boolean(response.data.changeEmailPassword);
+                $scope.dkimManager = Boolean(response.data.dkimManager);
 
-                        // Backup Management
+                // FTP Management
 
-                        $scope.createBackup = Boolean(response.data.createBackup);
-                        $scope.restoreBackup = Boolean(response.data.restoreBackup);
-                        $scope.addDeleteDestinations = Boolean(response.data.addDeleteDestinations);
-                        $scope.scheDuleBackups = Boolean(response.data.scheDuleBackups);
-                        $scope.remoteBackups = Boolean(response.data.remoteBackups);
+                $scope.createFTPAccount = Boolean(response.data.createFTPAccount);
+                $scope.deleteFTPAccount = Boolean(response.data.deleteFTPAccount);
+                $scope.listFTPAccounts = Boolean(response.data.listFTPAccounts);
 
-                        // SSL Management
+                // Backup Management
 
-                        $scope.manageSSL = Boolean(response.data.manageSSL);
-                        $scope.hostnameSSL = Boolean(response.data.hostnameSSL);
-                        $scope.mailServerSSL = Boolean(response.data.mailServerSSL);
+                $scope.createBackup = Boolean(response.data.createBackup);
+                $scope.restoreBackup = Boolean(response.data.restoreBackup);
+                $scope.addDeleteDestinations = Boolean(response.data.addDeleteDestinations);
+                $scope.scheDuleBackups = Boolean(response.data.scheDuleBackups);
+                $scope.remoteBackups = Boolean(response.data.remoteBackups);
 
-                    }
-                    else
-                    {
-                        new PNotify({
-                            title: 'Error!',
-                            text: response.data.errorMessage,
-                            type:'error'
-                          });
-                    }
+                // SSL Management
 
-                }
-                function cantLoadInitialDatas(response) {
+                $scope.manageSSL = Boolean(response.data.manageSSL);
+                $scope.hostnameSSL = Boolean(response.data.hostnameSSL);
+                $scope.mailServerSSL = Boolean(response.data.mailServerSSL);
 
-                    $scope.aclLoading = false;
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.errorMessage,
+                    type: 'error'
+                });
+            }
 
-                    new PNotify({
-                            title: 'Error!',
-                            text: 'Could not connect to server, please refresh this page.',
-                            type:'error'
-                          });
+        }
 
-                }
+        function cantLoadInitialDatas(response) {
+
+            $scope.aclLoading = false;
+
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+        }
 
     };
 
-    $scope.saveChanges = function(){
+    $scope.saveChanges = function () {
 
         $scope.aclLoading = false;
 
-                var url = "/users/submitACLModifications";
+        var url = "/users/submitACLModifications";
 
-                var data = {
-                   aclToModify : $scope.aclToModify,
-                   adminStatus : $scope.makeAdmin,
-                   //
-                   versionManagement : $scope.versionManagement,
+        var data = {
+            aclToModify: $scope.aclToModify,
+            adminStatus: $scope.makeAdmin,
+            //
+            versionManagement: $scope.versionManagement,
 
-                   // User Management
+            // User Management
 
-                   createNewUser  : $scope.createNewUser,
-                   resellerCenter : $scope.resellerCenter,
-                   deleteUser  : $scope.deleteUser,
-                   changeUserACL : $scope.changeUserACL,
+            createNewUser: $scope.createNewUser,
+            listUsers: $scope.listUsers,
+            resellerCenter: $scope.resellerCenter,
+            deleteUser: $scope.deleteUser,
+            changeUserACL: $scope.changeUserACL,
 
-                   // Website Management
+            // Website Management
 
-                   createWebsite  : $scope.createWebsite,
-                   modifyWebsite  : $scope.modifyWebsite,
-                   suspendWebsite  : $scope.suspendWebsite,
-                   deleteWebsite  : $scope.deleteWebsite,
+            createWebsite: $scope.createWebsite,
+            modifyWebsite: $scope.modifyWebsite,
+            suspendWebsite: $scope.suspendWebsite,
+            deleteWebsite: $scope.deleteWebsite,
 
-                   // Package Management
+            // Package Management
 
-                   createPackage  : $scope.createPackage,
-                   deletePackage  : $scope.deletePackage,
-                   modifyPackage  : $scope.modifyPackage,
+            createPackage: $scope.createPackage,
+            listPackages: $scope.listPackages,
+            deletePackage: $scope.deletePackage,
+            modifyPackage: $scope.modifyPackage,
 
-                   // Database Management
+            // Database Management
 
-                   createDatabase  : $scope.createDatabase,
-                   deleteDatabase  : $scope.deleteDatabase,
-                   listDatabases  : $scope.listDatabases,
+            createDatabase: $scope.createDatabase,
+            deleteDatabase: $scope.deleteDatabase,
+            listDatabases: $scope.listDatabases,
 
-                   // DNS Management
+            // DNS Management
 
-                   createNameServer  : $scope.createNameServer,
-                   createDNSZone  : $scope.createDNSZone,
-                   deleteZone  : $scope.deleteZone,
-                   addDeleteRecords  : $scope.addDeleteRecords,
+            createNameServer: $scope.createNameServer,
+            createDNSZone: $scope.createDNSZone,
+            deleteZone: $scope.deleteZone,
+            addDeleteRecords: $scope.addDeleteRecords,
 
-                   // Email Management
+            // Email Management
 
-                   createEmail  : $scope.createEmail,
-                   deleteEmail  : $scope.deleteEmail,
-                   emailForwarding  : $scope.emailForwarding,
-                   changeEmailPassword  : $scope.changeEmailPassword,
-                   dkimManager  : $scope.dkimManager,
+            createEmail: $scope.createEmail,
+            listEmails: $scope.listEmails,
+            deleteEmail: $scope.deleteEmail,
+            emailForwarding: $scope.emailForwarding,
+            changeEmailPassword: $scope.changeEmailPassword,
+            dkimManager: $scope.dkimManager,
 
-                   // FTP Management
+            // FTP Management
 
-                   createFTPAccount  : $scope.createFTPAccount,
-                   deleteFTPAccount  : $scope.deleteFTPAccount,
-                   listFTPAccounts  : $scope.listFTPAccounts,
+            createFTPAccount: $scope.createFTPAccount,
+            deleteFTPAccount: $scope.deleteFTPAccount,
+            listFTPAccounts: $scope.listFTPAccounts,
 
-                   // Backup Management
+            // Backup Management
 
-                   createBackup  : $scope.createBackup,
-                   restoreBackup  : $scope.restoreBackup,
-                   addDeleteDestinations  : $scope.addDeleteDestinations,
-                   scheDuleBackups  : $scope.scheDuleBackups,
-                   remoteBackups  : $scope.remoteBackups,
+            createBackup: $scope.createBackup,
+            restoreBackup: $scope.restoreBackup,
+            addDeleteDestinations: $scope.addDeleteDestinations,
+            scheDuleBackups: $scope.scheDuleBackups,
+            remoteBackups: $scope.remoteBackups,
 
-                   // SSL Management
+            // SSL Management
 
-                   manageSSL  : $scope.manageSSL,
-                   hostnameSSL  : $scope.hostnameSSL,
-                   mailServerSSL  : $scope.mailServerSSL
+            manageSSL: $scope.manageSSL,
+            hostnameSSL: $scope.hostnameSSL,
+            mailServerSSL: $scope.mailServerSSL
 
-                };
+        };
 
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
-                    $scope.aclLoading = true;
-
-                    if(response.data.status === 1){
-                        new PNotify({
-                            title: 'Success!',
-                            text: 'ACL Successfully modified.',
-                            type:'success'
-                          });
-                    }
-
-                    else
-                    {
-
-                        new PNotify({
-                            title: 'Error!',
-                            text: response.data.errorMessage,
-                            type:'error'
-                          });
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    }
+        function ListInitialDatas(response) {
+            $scope.aclLoading = true;
 
-                }
-                function cantLoadInitialDatas(response) {
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'ACL Successfully modified.',
+                    type: 'success'
+                });
+            } else {
 
-                    $scope.aclLoading = false;
-
-                    new PNotify({
-                            title: 'Error!',
-                            text: 'Could not connect to server, please refresh this page.',
-                            type:'error'
-                          });
-
-                }
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.errorMessage,
+                    type: 'error'
+                });
 
 
+            }
 
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.aclLoading = false;
+
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+        }
 
 
     };
 
     $scope.adminHook = function () {
 
-        if($scope.makeAdmin === true){
+        if ($scope.makeAdmin === true) {
 
             $scope.makeAdmin = true;
 
@@ -1162,6 +1121,7 @@ app.controller('modifyACLCtrl', function($scope,$http) {
             // User Management
 
             $scope.createNewUser = true;
+            $scope.listUsers = true;
             $scope.resellerCenter = true;
             $scope.deleteUser = true;
             $scope.changeUserACL = true;
@@ -1176,6 +1136,7 @@ app.controller('modifyACLCtrl', function($scope,$http) {
             // Package Management
 
             $scope.createPackage = true;
+            $scope.listPackages = true;
             $scope.deletePackage = true;
             $scope.modifyPackage = true;
 
@@ -1195,6 +1156,7 @@ app.controller('modifyACLCtrl', function($scope,$http) {
             // Email Management
 
             $scope.createEmail = true;
+            $scope.listEmails = true;
             $scope.deleteEmail = true;
             $scope.emailForwarding = true;
             $scope.changeEmailPassword = true;
@@ -1220,8 +1182,7 @@ app.controller('modifyACLCtrl', function($scope,$http) {
             $scope.hostnameSSL = true;
             $scope.mailServerSSL = true;
 
-        }
-        else{
+        } else {
             $scope.makeAdmin = false;
 
             //
@@ -1231,6 +1192,7 @@ app.controller('modifyACLCtrl', function($scope,$http) {
             // User Management
 
             $scope.createNewUser = false;
+            $scope.listUsers = false;
             $scope.resellerCenter = false;
             $scope.deleteUser = false;
             $scope.changeUserACL = false;
@@ -1245,6 +1207,7 @@ app.controller('modifyACLCtrl', function($scope,$http) {
             // Package Management
 
             $scope.createPackage = false;
+            $scope.listPackages = false;
             $scope.deletePackage = false;
             $scope.modifyPackage = false;
 
@@ -1264,6 +1227,7 @@ app.controller('modifyACLCtrl', function($scope,$http) {
             // Email Management
 
             $scope.createEmail = true;
+            $scope.listEmails = True;
             $scope.deleteEmail = true;
             $scope.emailForwarding = true;
             $scope.changeEmailPassword = true;
@@ -1297,60 +1261,59 @@ app.controller('modifyACLCtrl', function($scope,$http) {
 
 
 /* Java script code to change user acl */
-app.controller('changeUserACLCTRL', function($scope,$http) {
+app.controller('changeUserACLCTRL', function ($scope, $http) {
 
     $scope.aclLoading = true;
 
-    $scope.changeACLFunc = function(){
+    $scope.changeACLFunc = function () {
 
-                $scope.aclLoading = false;
+        $scope.aclLoading = false;
 
-                url = "/users/changeACLFunc";
+        url = "/users/changeACLFunc";
 
-                var data = {
-                    selectedUser: $scope.selectedUser,
-                    selectedACL: $scope.selectedACL
-                };
+        var data = {
+            selectedUser: $scope.selectedUser,
+            selectedACL: $scope.selectedACL
+        };
 
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
-                    $scope.aclLoading = true;
-
-                    if (response.data.status === 1)
-                    {
-                        new PNotify({
-                            title: 'Success!',
-                            text: 'ACL Successfully changed.',
-                            type:'success'
-                          });
-
-                    }
-                    else{
-                        new PNotify({
-                            title: 'Error!',
-                            text: response.data.errorMessage,
-                            type:'error'
-                          });
-                    }
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.aclLoading = true;
-                    new PNotify({
-                            title: 'Error!',
-                            text: 'Could not connect to server, please refresh this page.',
-                            type:'error'
-                          });
-                }
+        function ListInitialDatas(response) {
+            $scope.aclLoading = true;
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'ACL Successfully changed.',
+                    type: 'success'
+                });
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.errorMessage,
+                    type: 'error'
+                });
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.aclLoading = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
 
 
     };
@@ -1359,61 +1322,60 @@ app.controller('changeUserACLCTRL', function($scope,$http) {
 /* Java script code to change user acl */
 
 /* Java script code for reseller center */
-app.controller('resellerCenterCTRL', function($scope,$http) {
+app.controller('resellerCenterCTRL', function ($scope, $http) {
 
     $scope.aclLoading = true;
 
-    $scope.saveResellerChanges = function(){
+    $scope.saveResellerChanges = function () {
 
-                $scope.aclLoading = false;
+        $scope.aclLoading = false;
 
-                url = "/users/saveResellerChanges";
+        url = "/users/saveResellerChanges";
 
-                var data = {
-                    userToBeModified: $scope.userToBeModified,
-                    newOwner: $scope.newOwner,
-                    websitesLimit: $scope.websitesLimit
-                };
+        var data = {
+            userToBeModified: $scope.userToBeModified,
+            newOwner: $scope.newOwner,
+            websitesLimit: $scope.websitesLimit
+        };
 
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
-                    $scope.aclLoading = true;
-
-                    if (response.data.status === 1)
-                    {
-                        new PNotify({
-                            title: 'Success!',
-                            text: 'Changes successfully applied!',
-                            type:'success'
-                          });
-
-                    }
-                    else{
-                        new PNotify({
-                            title: 'Error!',
-                            text: response.data.errorMessage,
-                            type:'error'
-                          });
-                    }
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.aclLoading = true;
-                    new PNotify({
-                            title: 'Error!',
-                            text: 'Could not connect to server, please refresh this page.',
-                            type:'error'
-                          });
-                }
+        function ListInitialDatas(response) {
+            $scope.aclLoading = true;
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Changes successfully applied!',
+                    type: 'success'
+                });
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.errorMessage,
+                    type: 'error'
+                });
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.aclLoading = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
 
 
     };
@@ -1423,7 +1385,7 @@ app.controller('resellerCenterCTRL', function($scope,$http) {
 
 
 /* Java script code for api access */
-app.controller('apiAccessCTRL', function($scope,$http) {
+app.controller('apiAccessCTRL', function ($scope, $http) {
 
 
     $scope.apiAccessDropDown = true;
@@ -1433,65 +1395,294 @@ app.controller('apiAccessCTRL', function($scope,$http) {
         $scope.apiAccessDropDown = false;
     };
 
-    $scope.saveChanges = function(){
+    $scope.saveChanges = function () {
 
-                $scope.cyberpanelLoading = false;
+        $scope.cyberpanelLoading = false;
 
-                var url = "/users/saveChangesAPIAccess";
+        var url = "/users/saveChangesAPIAccess";
 
-                var data = {
-                    accountUsername:$scope.accountUsername,
-                    access:$scope.access,
-                };
+        var data = {
+            accountUsername: $scope.accountUsername,
+            access: $scope.access,
+        };
 
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                function ListInitialDatas(response) {
-                    $scope.cyberpanelLoading = true;
-
-                    if (response.data.status === 1)
-                    {
-                        $scope.apiAccessDropDown = true;
-                        new PNotify({
-                            title: 'Success!',
-                            text: 'Changes successfully applied!',
-                            type:'success'
-                          });
-
-                    }
-                    else{
-                        new PNotify({
-                            title: 'Error!',
-                            text: response.data.error_message,
-                            type:'error'
-                          });
-                    }
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.cyberpanelLoading = true;
-                    new PNotify({
-                            title: 'Error!',
-                            text: 'Could not connect to server, please refresh this page.',
-                            type:'error'
-                          });
-                }
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.status === 1) {
+                $scope.apiAccessDropDown = true;
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Changes successfully applied!',
+                    type: 'success'
+                });
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
 
 
+        }
 
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
 
 
     };
 
 
-
 });
 /* Java script code for api access */
+
+
+/* Java script code to list table users */
+
+
+app.controller('listTableUsers', function ($scope, $http) {
+
+    $scope.cyberpanelLoading = true;
+
+    $scope.populateCurrentRecords = function () {
+        $scope.cyberpanelLoading = false;
+
+        url = "/users/fetchTableUsers";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.status === 1) {
+
+                $scope.records = JSON.parse(response.data.data);
+
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Users successfully fetched!',
+                    type: 'success'
+                });
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+
+    };
+    $scope.populateCurrentRecords();
+
+
+    $scope.deleteUserFinal = function (name) {
+        $scope.cyberpanelLoading = false;
+
+        var url = "/users/submitUserDeletion";
+
+        var data = {
+            accountUsername: name,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.deleteStatus === 1) {
+                $scope.populateCurrentRecords();
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Users successfully deleted!',
+                    type: 'success'
+                });
+
+            } else {
+
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.cyberpanelLoading = false;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+
+
+    };
+
+    $scope.editInitial = function (name) {
+
+        $scope.name = name;
+
+    };
+
+    $scope.saveResellerChanges = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/users/saveResellerChanges";
+
+        var data = {
+            userToBeModified: $scope.name,
+            newOwner: $scope.newOwner
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                $scope.populateCurrentRecords();
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Changes successfully applied!',
+                    type: 'success'
+                });
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.errorMessage,
+                    type: 'error'
+                });
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.changeACLFunc = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/users/changeACLFunc";
+
+        var data = {
+            selectedUser: $scope.name,
+            selectedACL: $scope.selectedACL
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.status === 1) {
+                $scope.populateCurrentRecords();
+                new PNotify({
+                    title: 'Success!',
+                    text: 'ACL Successfully changed.',
+                    type: 'success'
+                });
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.errorMessage,
+                    type: 'error'
+                });
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.aclLoading = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+});
+
+
+/* Java script code to list table users */

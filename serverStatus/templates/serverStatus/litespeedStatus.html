@@ -11,19 +11,20 @@
     {% if OLS %}
         <div class="container">
             <div id="page-title">
-                <h2>{% trans "LiteSpeed Status:" %} <img src="{% static 'images/lsON.png' %}" style="margin-bottom: 5px;"></h2>
+                <h2>{% trans "LiteSpeed Status:" %} <img src="{% static 'images/lsON.png' %}"
+                                                         style="margin-bottom: 5px;"></h2>
                 <p>{% trans "On this page you can get information regarding your LiteSpeed processes." %}</p>
             </div>
 
             <div class="example-box-wrapper">
                 <div class="panel">
                     <div class="panel-body">
-                        <div ng-controller="litespeedStatus" class="col-md-6" style="min-width: 350px;">
+                        {% if processList %}
+                            <div ng-controller="litespeedStatus" class="col-md-6" style="min-width: 350px;">
 
 
-                            <div class="example-box-wrapper mr-10">
+                                <div class="example-box-wrapper mr-10">
 
-                                {% if processList %}
 
                                     <h3 class="content-box-header">
                                         {% trans "LiteSpeed Processes" %}
@@ -59,47 +60,44 @@
                                         </tr>
                                         </tbody>
                                     </table>
-                                {% else %}
-                                    <div class="alert alert-danger">
-                                        <p>{% trans "Could not fetch details, either LiteSpeed is not running or some error occurred, please see CyberPanel Main log file." %}</p>
+
+                                    <div class="mx-10">
+                                        <button ng-click="restartLitespeed()" ng-disabled="disableReboot"
+                                                class="btn btn-alt btn-hover btn-blue-alt mx-5 my-10">
+                                            <span>{% trans "Reboot Litespeed" %}</span>
+                                            <i class="glyph-icon icon-arrow-right"></i>
+                                        </button>
+
+                                        <button ng-click="stopLitespeed()" ng-disable="disableStop"
+                                                class="btn btn-alt btn-hover btn-danger mx-5 my-10">
+                                            <span>{% trans "Stop LiteSpeed" %}</span>
+                                            <i class="glyph-icon icon-arrow-right"></i>
+                                        </button>
                                     </div>
-                                {% endif %}
-                                <div class="mx-10">
-                                    <button ng-click="restartLitespeed()" ng-disabled="disableReboot"
-                                            class="btn btn-alt btn-hover btn-blue-alt mx-5 my-10">
-                                        <span>{% trans "Reboot Litespeed" %}</span>
-                                        <i class="glyph-icon icon-arrow-right"></i>
-                                    </button>
 
-                                    <button ng-click="stopLitespeed()" ng-disable="disableStop"
-                                            class="btn btn-alt btn-hover btn-danger mx-5 my-10">
-                                        <span>{% trans "Stop LiteSpeed" %}</span>
-                                        <i class="glyph-icon icon-arrow-right"></i>
-                                    </button>
-                                </div>
-
-                                <img ng-hide="restartorStopLoading" src="{% static 'images/loading.gif' %}">
+                                    <img ng-hide="restartorStopLoading" src="{% static 'images/loading.gif' %}">
 
 
-                                <div ng-hide="actionResult" class="alert alert-success">
-                                    <p>{% trans "Action successful." %}</p>
-                                </div>
+                                    <div ng-hide="actionResult" class="alert alert-success">
+                                        <p>{% trans "Action successful." %}</p>
+                                    </div>
 
 
-                                <div ng-hide="actionResultBad" class="alert alert-danger">
-                                    <p>{% trans "Error Occurred. See CyberPanel main log file." %}</p>
-                                </div>
+                                    <div ng-hide="actionResultBad" class="alert alert-danger">
+                                        <p>{% trans "Error Occurred. See CyberPanel main log file." %}</p>
+                                    </div>
 
 
-                                <div ng-hide="serverStatusCouldNotConnect" class="alert alert-danger">
-                                    <p>{% trans "Could not connect to server." %}</p>
+                                    <div ng-hide="serverStatusCouldNotConnect" class="alert alert-danger">
+                                        <p>{% trans "Could not connect to server." %}</p>
+                                    </div>
+
+
                                 </div>
 
 
                             </div>
-
-
-                        </div>
+                        {% endif %}
 
                         <div class="col-md-6">
 
@@ -133,67 +131,69 @@
         </div>
 
         <div class="row">
-        <div class="panel panel-body">
-            <div ng-controller="lswsSwitch" class="example-box-wrapper">
-                <div class="panel-body">
-                    <h3 class="content-box-header">
-                        {% trans "Switch to LiteSpeed Enterprise Web Server" %} <img ng-hide="cyberPanelLoading" src="/static/images/loading.gif">
-                    </h3>
+            <div class="panel panel-body">
+                <div ng-controller="lswsSwitch" class="example-box-wrapper">
+                    <div class="panel-body">
+                        <h3 class="content-box-header">
+                            {% trans "Switch to LiteSpeed Enterprise Web Server" %} <img ng-hide="cyberPanelLoading"
+                                                                                         src="/static/images/loading.gif">
+                        </h3>
 
-                    <div class="content-box-wrapper">
-                        <div class="row">
-                            <div class="col-md-12">
+                        <div class="content-box-wrapper">
+                            <div class="row">
+                                <div class="col-md-12">
 
-                                <form action="/" class="form-horizontal bordered-row">
+                                    <form action="/" class="form-horizontal bordered-row">
 
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "License Key" %}</label>
-                                        <div class="col-sm-6">
-                                            <input type="text" class="form-control" ng-model="licenseKey"
-                                                   required>
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label">{% trans "License Key" %}</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control" ng-model="licenseKey"
+                                                       required>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label"></label>
-                                        <div class="col-sm-4">
-                                            <button type="button" ng-click="switchTOLSWS()"
-                                                    class="btn btn-primary btn-lg">{% trans "Switch" %}</button>
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label"></label>
+                                            <div class="col-sm-4">
+                                                <button type="button" ng-click="switchTOLSWS()"
+                                                        class="btn btn-primary btn-lg">{% trans "Switch" %}</button>
 
+                                            </div>
                                         </div>
-                                    </div>
 
-                                </form>
-                            </div>
+                                    </form>
+                                </div>
 
-                            <!------ LSWS Switch box ----------------->
+                                <!------ LSWS Switch box ----------------->
 
-                            <div style="margin-top: 2%" ng-hide="installBoxGen" class="col-md-12">
+                                <div style="margin-top: 2%" ng-hide="installBoxGen" class="col-md-12">
 
-                                <form action="/" id="" class="form-horizontal bordered-row">
-                                    <div class="form-group">
-                                        <div class="col-sm-12 text-center">
-                                            <h3><img style="width:70px"
-                                                     src="{% static 'images/litespeed-logo.png' %}"> {% trans "With great wisdom comes great responsibility." %}
-                                                <img ng-hide="cyberPanelLoading" src="/static/images/loading.gif"></h3>
-                                        </div>
-                                        <div style="margin-top: 2%;" class="col-sm-12">
+                                    <form action="/" id="" class="form-horizontal bordered-row">
+                                        <div class="form-group">
+                                            <div class="col-sm-12 text-center">
+                                                <h3><img style="width:70px"
+                                                         src="{% static 'images/litespeed-logo.png' %}"> {% trans "With great wisdom comes great responsibility." %}
+                                                    <img ng-hide="cyberPanelLoading" src="/static/images/loading.gif">
+                                                </h3>
+                                            </div>
+                                            <div style="margin-top: 2%;" class="col-sm-12">
                                             <textarea ng-model="requestData" rows="15"
                                                       class="form-control">{{ requestData }}</textarea>
+                                            </div>
                                         </div>
-                                    </div>
-                                </form>
+                                    </form>
+                                </div>
+
+
+                                <!----- LSWS Switch box ----------------->
+
+
                             </div>
-
-
-                            <!----- LSWS Switch box ----------------->
-
-
                         </div>
                     </div>
                 </div>
             </div>
-</div>
         </div>
     {% else %}
 
@@ -204,14 +204,14 @@
                 <h2>{% trans "LiteSpeed Status:" %} <img src="{% static 'images/lsON.png' %}"></h2>
                 <p>{% trans "On this page you can get information regarding your LiteSpeed processes." %}</p>
             </div>
+            {% if processList %}
 
-            <div class="example-box-wrapper">
-                <div class="panel">
-                    <div class="panel-body">
-                        <div class="col-md-12">
-                            <div class="example-box-wrapper">
+                <div class="example-box-wrapper">
+                    <div class="panel">
+                        <div class="panel-body">
+                            <div class="col-md-12">
+                                <div class="example-box-wrapper">
 
-                                {% if processList %}
 
                                     <h3 class="content-box-header bg-black">
                                         {% trans "LiteSpeed Processes" %}
@@ -247,47 +247,44 @@
                                         </tr>
                                         </tbody>
                                     </table>
-                                {% else %}
-                                    <div class="alert alert-danger">
-                                        <p>{% trans "Could not fetch details, either LiteSpeed is not running or some error occurred, please see CyberPanel Main log file." %}</p>
+
+
+                                    <button ng-click="restartLitespeed()" ng-disabled="disableReboot"
+                                            class="btn btn-alt btn-hover btn-blue-alt mx-5 my-10">
+                                        <span>{% trans "Reboot Litespeed" %}</span>
+                                        <i class="glyph-icon icon-arrow-right"></i>
+                                    </button>
+
+                                    <button ng-click="stopLitespeed()" ng-disable="disableStop"
+                                            class="btn btn-alt btn-hover btn-danger mx-5 my-10">
+                                        <span>{% trans "Stop LiteSpeed" %}</span>
+                                        <i class="glyph-icon icon-arrow-right"></i>
+                                    </button>
+
+                                    <img ng-hide="restartorStopLoading" src="{% static 'images/loading.gif' %}">
+
+
+                                    <div ng-hide="actionResult" class="alert alert-success">
+                                        <p>{% trans "Action successful." %}</p>
                                     </div>
-                                {% endif %}
-
-                                <button ng-click="restartLitespeed()" ng-disabled="disableReboot"
-                                        class="btn btn-alt btn-hover btn-blue-alt mx-5 my-10">
-                                    <span>{% trans "Reboot Litespeed" %}</span>
-                                    <i class="glyph-icon icon-arrow-right"></i>
-                                </button>
-
-                                <button ng-click="stopLitespeed()" ng-disable="disableStop"
-                                        class="btn btn-alt btn-hover btn-danger mx-5 my-10">
-                                    <span>{% trans "Stop LiteSpeed" %}</span>
-                                    <i class="glyph-icon icon-arrow-right"></i>
-                                </button>
-
-                                <img ng-hide="restartorStopLoading" src="{% static 'images/loading.gif' %}">
 
 
-                                <div ng-hide="actionResult" class="alert alert-success">
-                                    <p>{% trans "Action successful." %}</p>
+                                    <div ng-hide="actionResultBad" class="alert alert-danger">
+                                        <p>{% trans "Error Occurred. See CyberPanel main log file." %}</p>
+                                    </div>
+
+
+                                    <div ng-hide="serverStatusCouldNotConnect" class="alert alert-danger">
+                                        <p>{% trans "Could not connect to server." %}</p>
+                                    </div>
+
                                 </div>
-
-
-                                <div ng-hide="actionResultBad" class="alert alert-danger">
-                                    <p>{% trans "Error Occurred. See CyberPanel main log file." %}</p>
-                                </div>
-
-
-                                <div ng-hide="serverStatusCouldNotConnect" class="alert alert-danger">
-                                    <p>{% trans "Could not connect to server." %}</p>
-                                </div>
-
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
+            {% endif %}
 
             <div class="example-box-wrapper">
                 <div class="panel panel-body">

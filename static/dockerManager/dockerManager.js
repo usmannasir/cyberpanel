@@ -788,7 +788,6 @@ app.controller('viewContainer', function ($scope, $http) {
 
     $scope.cAction = function (action) {
         $('#actionLoading').show();
-        console.log($scope.cName)
         url = "/docker/doContainerAction";
         var data = {name: $scope.cName, action: action};
         var config = {

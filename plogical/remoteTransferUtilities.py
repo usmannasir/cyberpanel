@@ -90,9 +90,8 @@ class remoteTransferUtilities:
                     pass
             else:
                 writeToFile.writelines("[" + time.strftime(
-                    "%I-%M-%S-%a-%b-%Y") + "]" + " Host:" + ipAddress + " is down, aborting. [5010]" + "\n")
+                    "%I-%M-%S-%a-%b-%Y") + "]" + " Host:" + ipAddress + " could be  down, we are continuing..." + "\n")
                 writeToFile.close()
-                return
 
             writeToFile.close()
 
@@ -263,7 +262,7 @@ class remoteTransferUtilities:
                     writeToFile.close()
 
                     backupFile = backup
-                    execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+                    execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
                     execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
                     subprocess.Popen(shlex.split(execPath))
                     time.sleep(4)
@@ -320,12 +319,6 @@ class remoteTransferUtilities:
             writeToFile.writelines("[" + time.strftime(
                 "%I-%M-%S-%a-%b-%Y") + "]" + " Backup Restore complete\n")
             writeToFile.writelines("completed[success]")
-
-            try:
-                shutil.rmtree("/home/backup/transfer-" + dir)
-            except:
-                pass
-
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.startRestore]")

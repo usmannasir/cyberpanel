@@ -266,4 +266,10 @@
          <status>0</status>
     </extension>
 
+    <extension>
+         <extensionName>lsphp70-pecl-imagick</extensionName>
+         <extensionDescription>Extension to create and modify images using ImageMagick</extensionDescription>
+         <status>0</status>
+    </extension>
+
 </php>

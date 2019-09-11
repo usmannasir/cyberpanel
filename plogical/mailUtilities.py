@@ -2,25 +2,49 @@ import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-django.setup()
+try:
+    django.setup()
+except:
+    pass
 import os.path
 import shutil
 import CyberCPLogFileWriter as logging
 import subprocess
 import argparse
 import shlex
-from mailServer.models import Domains,EUsers
-from emailPremium.models import DomainLimits, EmailLimits
-from websiteFunctions.models import Websites, ChildDomains
 from processUtilities import ProcessUtilities
 import os, getpass
 import hashlib
+import bcrypt
+import getpass
+
+try:
+    from mailServer.models import Domains, EUsers
+    from emailPremium.models import DomainLimits, EmailLimits
+    from websiteFunctions.models import Websites, ChildDomains
+except:
+    pass
 
 class mailUtilities:
 
     installLogPath = "/home/cyberpanel/openDKIMInstallLog"
     spamassassinInstallLogPath = "/home/cyberpanel/spamassassinInstallLogPath"
     cyberPanelHome = "/home/cyberpanel"
+
+    @staticmethod
+    def AfterEffects(domain):
+        path = "/usr/local/CyberCP/install/rainloop/cyberpanel.net.ini"
+
+        if not os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/"):
+            os.makedirs("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/")
+
+        finalPath = "/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/" + domain + ".ini"
+
+        if not os.path.exists(finalPath):
+            shutil.copy(path, finalPath)
+
+        command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/'
+        ProcessUtilities.normalExecutioner(command)
 
     @staticmethod
     def createEmailAccount(domain, userName, password):
@@ -88,19 +112,14 @@ class mailUtilities:
 
             ## After effects
 
+            execPath = "/usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/mailUtilities.py"
+            execPath = execPath + " AfterEffects --domain " + domain
 
-            path = "/usr/local/CyberCP/install/rainloop/cyberpanel.net.ini"
-
-            if not os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/"):
-                os.makedirs("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/")
-
-            finalPath = "/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/" + domain + ".ini"
-
-            if not os.path.exists(finalPath):
-                shutil.copy(path, finalPath)
-
-            command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/'
-            ProcessUtilities.normalExecutioner(command)
+            if getpass.getuser() == 'root':
+                ## This is the case when cPanel Importer is running and token is not present in enviroment.
+                ProcessUtilities.normalExecutioner(execPath)
+            else:
+                ProcessUtilities.executioner(execPath, 'lscpd')
 
             ## After effects ends
 
@@ -114,12 +133,14 @@ class mailUtilities:
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-                command = 'doveadm pw -p %s' % (password)
-                password = subprocess.check_output(shlex.split(command)).strip('\n')
+                password = bcrypt.hashpw(str(password), bcrypt.gensalt())
+                password = '{CRYPT}%s' % (password)
                 emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
                 emailAcct.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (domain, userName)
                 emailAcct.save()
             else:
+                password = bcrypt.hashpw(str(password), bcrypt.gensalt())
+                password = '{CRYPT}%s' % (password)
                 emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
                 emailAcct.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (domain, userName)
                 emailAcct.save()
@@ -164,8 +185,8 @@ class mailUtilities:
             CentOSPath = '/etc/redhat-release'
             changePass = EUsers.objects.get(email=email)
             if os.path.exists(CentOSPath):
-                command = 'doveadm pw -p %s' % (newPassword)
-                password = subprocess.check_output(shlex.split(command)).strip('\n')
+                password = bcrypt.hashpw(str(newPassword), bcrypt.gensalt())
+                password = '{CRYPT}%s' % (password)
                 changePass.password = password
             else:
                 changePass.password = newPassword
@@ -478,21 +499,21 @@ milter_default_action = accept
 
 
             command = "groupadd spamd"
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.normalExecutioner(command)
 
             command = "useradd -g spamd -s /bin/false -d /var/log/spamassassin spamd"
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.normalExecutioner(command)
 
             ##
 
             command = "chown spamd:spamd /var/log/spamassassin"
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.normalExecutioner(command)
 
             command = "systemctl enable spamassassin"
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.normalExecutioner(command)
 
             command = "systemctl start spamassassin"
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.normalExecutioner(command)
 
             ## Configuration to postfix
 
@@ -513,7 +534,7 @@ milter_default_action = accept
             writeToFile.close()
 
             command = 'systemctl restart postfix'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.normalExecutioner(command)
 
 
             print "1,None"
@@ -657,6 +678,8 @@ def main():
         mailUtilities.savePolicyServerStatus(args.install)
     elif args.function == 'installSpamAssassin':
         mailUtilities.installSpamAssassin("install", "SpamAssassin")
+    elif args.function == 'AfterEffects':
+        mailUtilities.AfterEffects(args.domain)
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,57 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "SSH and CageFS - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "SSH Access" %}</h2>
+   <p>{% trans "Set up SSH access and enable/disable CageFS for " %} {{ domainName }}. {% trans " CageFS require CloudLinux OS." %}</p>
+</div>
+
+
+<div ng-controller="sshAccess" class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Set up SSH access for " %} {{ domainName }}.</span> <img ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div class="example-box-wrapper">
+
+
+            <form name="websiteCreationForm"  action="/" id="createPackages" class="form-horizontal bordered-row">
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <label class="col-sm-4 control-label">{% trans "SSH user for " %} <spam id="domainName">{{ domainName }}</spam> {% trans ' is ' %} <span id="externalApp">{{ externalApp }}</span></label>
+                </div>
+
+                <div  class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="password" class="form-control" ng-model="password" required>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button"  ng-click="setupSSHAccess()" class="btn btn-primary btn-lg btn-block">{% trans "Save Changes" %}</button>
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+
+</div>
+
+
+{% endblock %}
