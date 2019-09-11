@@ -261,6 +261,7 @@ class virtualHostUtilities:
 
             if retValues[0] == 0:
                 print "0," + str(retValues[1])
+                logging.CyberCPLogFileWriter.writeToFile(str(retValues[1]))
                 return 0, str(retValues[1])
 
             installUtilities.installUtilities.reStartLiteSpeed()

@@ -90,9 +90,8 @@ class remoteTransferUtilities:
                     pass
             else:
                 writeToFile.writelines("[" + time.strftime(
-                    "%I-%M-%S-%a-%b-%Y") + "]" + " Host:" + ipAddress + " is down, aborting. [5010]" + "\n")
+                    "%I-%M-%S-%a-%b-%Y") + "]" + " Host:" + ipAddress + " could be  down, we are continuing..." + "\n")
                 writeToFile.close()
-                return
 
             writeToFile.close()
 
