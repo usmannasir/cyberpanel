@@ -178,6 +178,9 @@ class BackupManager:
             try:
                 command = "sudo cat " + backupFileNamePath
                 fileName = ProcessUtilities.outputExecutioner(command, domain.externalApp)
+                if fileName.find('No such file or directory') > -1:
+                    final_json = json.dumps({'backupStatus': 0, 'error_message': "None", "status": 0, "abort": 0})
+                    return HttpResponse(final_json)
             except:
                 fileName = "Fetching.."
 
