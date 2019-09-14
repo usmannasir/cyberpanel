@@ -325,6 +325,12 @@ class vhost:
                 vhost.deleteCoreConf(virtualHostName, numberOfSites)
 
                 delWebsite = Websites.objects.get(domain=virtualHostName)
+
+                ## Cagefs
+
+                command = '/usr/sbin/cagefsctl --disable %s' % (delWebsite.externalApp)
+                ProcessUtilities.normalExecutioner(command)
+
                 databases = Databases.objects.filter(website=delWebsite)
 
                 childDomains = delWebsite.childdomains_set.all()
@@ -361,6 +367,12 @@ class vhost:
                 vhost.deleteCoreConf(virtualHostName, numberOfSites)
 
                 delWebsite = Websites.objects.get(domain=virtualHostName)
+
+                ## Cagefs
+
+                command = '/usr/sbin/cagefsctl --disable %s' % (delWebsite.externalApp)
+                ProcessUtilities.normalExecutioner(command)
+
                 databases = Databases.objects.filter(website=delWebsite)
 
                 childDomains = delWebsite.childdomains_set.all()
