@@ -10,11 +10,11 @@ import argparse
 import shutil
 import plogical.CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
-from websiteFunctions.models import Websites, ChildDomains, aliasDomains
+from websiteFunctions.models import Websites
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.sslUtilities import sslUtilities
 from plogical.vhost import vhost
-
+from shutil import copytree, ignore_patterns
 
 
 class ServerStatusUtil:
@@ -145,7 +145,10 @@ class ServerStatusUtil:
         if os.path.exists('/usr/local/lsws'):
             shutil.rmtree('/usr/local/lsws')
 
-        command = 'mv /usr/local/lsws.bak /usr/local/lsws'
+        command = 'mv /usr/local/lswsbak /usr/local/lsws'
+        ServerStatusUtil.executioner(command, FNULL)
+
+        command = '/usr/local/lsws/bin/openlitespeed'
         ServerStatusUtil.executioner(command, FNULL)
 
     @staticmethod
@@ -279,18 +282,9 @@ class ServerStatusUtil:
             ProcessUtilities.killLiteSpeed()
 
             if os.path.exists('/usr/local/lsws'):
-                command = 'mkdir /usr/local/lsws.bak'
-                if ServerStatusUtil.executioner(command, FNULL) == 0:
-                    logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to create backup of current LSWS. [mkdir] [404]", 1)
-                    ServerStatusUtil.recover()
-                    return 0
 
-                command = 'cp -R /usr/local/lsws/* /usr/local/lsws.bak/'
-                if ServerStatusUtil.executioner(command, FNULL) == 0:
-                    logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                              "Failed to create backup of current LSWS. [cp][404]", 1)
-                    ServerStatusUtil.recover()
-                    return 0
+                if not os.path.exists('/usr/local/lswsbak'):
+                    shutil.copytree('/usr/local/lsws', '/usr/local/lswsbak', symlinks=True, ignore=ignore_patterns('*.sock*'))
 
                 dirs = os.listdir('/usr/local/lsws')
                 for dir in dirs:
@@ -345,6 +339,8 @@ class ServerStatusUtil:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,"Successfully switched to LITESPEED ENTERPRISE WEB SERVER. [200]\n", 1)
 
         except BaseException, msg:
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "%s. [404]" % (str(msg)), 1)
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             ServerStatusUtil.recover()
 
