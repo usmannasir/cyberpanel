@@ -1025,19 +1025,21 @@ class preFlightsChecks:
 
         logging.InstallLog.writeToFile("settings.py updated!")
 
+        self.setupVirtualEnv(self.distro)
+
         ### Applying migrations
 
 
         os.chdir("CyberCP")
 
-        command = "python manage.py makemigrations"
+        command = "/usr/local/CyberCP/bin/python2 manage.py makemigrations"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'CyberPanel Make Migrations',
                                       1, 1, os.EX_OSERR)
 
         ##
 
-        command = "python manage.py migrate"
+        command = "/usr/local/CyberCP/bin/python2 manage.py migrate"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                                       'CyberPanel Migrate',1, 1, os.EX_OSERR)
 
@@ -3847,7 +3849,6 @@ def main():
             checks.configureOpenDKIM()
 
     checks.modSecPreReqs()
-    checks.setupVirtualEnv(distro)
     checks.installLSCPD()
     checks.setupLSCPDDaemon()
     checks.fixCyberPanelPermissions()

@@ -145,14 +145,8 @@ class ServerStatusUtil:
         if os.path.exists('/usr/local/lsws'):
             shutil.rmtree('/usr/local/lsws')
 
-        command = 'tar -zxvf /usr/local/olsBackup.tar.gz -C /usr/local/'
+        command = 'mv /usr/local/lsws.bak /usr/local/lsws'
         ServerStatusUtil.executioner(command, FNULL)
-
-        command = 'mv /usr/local/usr/local/lsws /usr/local'
-        ServerStatusUtil.executioner(command, FNULL)
-
-        if os.path.exists('/usr/local/usr'):
-            shutil.rmtree('/usr/local/usr')
 
     @staticmethod
     def createWebsite(website):
@@ -285,9 +279,16 @@ class ServerStatusUtil:
             ProcessUtilities.killLiteSpeed()
 
             if os.path.exists('/usr/local/lsws'):
-                command = 'tar -zcvf /usr/local/olsBackup.tar.gz /usr/local/lsws'
+                command = 'mkdir /usr/local/lsws.bak'
                 if ServerStatusUtil.executioner(command, FNULL) == 0:
-                    logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to create backup of current LSWS. [404]", 1)
+                    logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to create backup of current LSWS. [mkdir] [404]", 1)
+                    ServerStatusUtil.recover()
+                    return 0
+
+                command = 'cp -R /usr/local/lsws/* /usr/local/lsws.bak/'
+                if ServerStatusUtil.executioner(command, FNULL) == 0:
+                    logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                              "Failed to create backup of current LSWS. [cp][404]", 1)
                     ServerStatusUtil.recover()
                     return 0
 
