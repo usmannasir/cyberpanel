@@ -48,19 +48,18 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-6">
-                            <div ng-hide="canNotIssue" class="alert alert-danger">
-                                        <p>{% trans "Cannot issue SSL. Error message:" %} {$ errorMessage $}</p>
-                            </div>
+                        <div ng-hide="canNotIssue" class="alert alert-danger">
+                            <p>{% trans "Cannot issue SSL. Error message:" %} {$ errorMessage $}</p>
+                        </div>
 
-                            <div ng-hide="sslIssued" class="alert alert-success">
-                                <p>{% trans "SSL Issued for" %} <strong>{$ sslDomain $}</strong></p>
-                            </div>
+                        <div ng-hide="sslIssued" class="alert alert-success">
+                            <p>{% trans "SSL Issued for" %} <strong>{$ sslDomain $}</strong></p>
+                        </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                            </div>
+                        <div ng-hide="couldNotConnect" class="alert alert-danger">
+                            <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                        </div>
                     </div>
-
 
 
                 </div>

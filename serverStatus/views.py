@@ -343,8 +343,13 @@ def switchTOLSWS(request):
 
         data = json.loads(request.body)
 
+        try:
+            licenseKey = data['licenseKey']
+        except:
+            licenseKey = 'trial'
+
         execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/serverStatus/serverStatusUtil.py"
-        execPath = execPath + " switchTOLSWS --licenseKey " + data['licenseKey']
+        execPath = execPath + " switchTOLSWS --licenseKey " + licenseKey
 
         ProcessUtilities.popenExecutioner(execPath)
         time.sleep(2)

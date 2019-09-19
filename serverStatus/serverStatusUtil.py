@@ -61,13 +61,22 @@ class ServerStatusUtil:
             if ServerStatusUtil.executioner(command, statusFile) == 0:
                 return 0
 
+            if os.path.exists('/usr/local/CyberCP/lsws-5.3.8/'):
+                shutil.rmtree('/usr/local/CyberCP/lsws-5.3.8')
+
+
             command = 'tar zxf lsws-5.3.8-ent-x86_64-linux.tar.gz -C /usr/local/CyberCP'
             if ServerStatusUtil.executioner(command, statusFile) == 0:
                 return 0
 
-            writeSerial = open('/usr/local/CyberCP/lsws-5.3.8/serial.no', 'w')
-            writeSerial.writelines(licenseKey)
-            writeSerial.close()
+            if licenseKey == 'trial':
+                command = 'wget -q --output-document=/usr/local/CyberCP/lsws-5.3.8/trial.key http://license.litespeedtech.com/reseller/trial.key'
+                if ServerStatusUtil.executioner(command, statusFile) == 0:
+                    return 0
+            else:
+                writeSerial = open('/usr/local/CyberCP/lsws-5.3.8/serial.no', 'w')
+                writeSerial.writelines(licenseKey)
+                writeSerial.close()
 
             shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/install.sh', '/usr/local/CyberCP/lsws-5.3.8/')
             shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/functions.sh', '/usr/local/CyberCP/lsws-5.3.8/')
