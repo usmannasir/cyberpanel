@@ -212,6 +212,15 @@ class cPanelImporter:
 
             externalApp = "".join(re.findall("[a-zA-Z]+", DomainName))[:7]
 
+            try:
+                counter = 0
+                while 1:
+                    tWeb = Websites.objects.get(externalApp=externalApp)
+                    externalApp = '%s%s' % (tWeb.externalApp, str(counter))
+                    counter = counter + 1
+            except:
+                pass
+
             result = virtualHostUtilities.createVirtualHost(DomainName, self.email, self.PHPVersion, externalApp, 0, 0,
                                                             0, 'admin', 'Default', 0)
 

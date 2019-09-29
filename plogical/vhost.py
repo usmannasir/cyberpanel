@@ -498,6 +498,7 @@ class vhost:
 
     @staticmethod
     def changePHP(vhFile, phpVersion):
+        phpDetachUpdatePath = '/home/%s/.lsphp_restart.txt' % (vhFile.split('/')[-2])
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
                 if ApacheVhost.changePHP(phpVersion, vhFile) == 0:
@@ -521,7 +522,14 @@ class vhost:
 
                     writeDataToFile.close()
 
+                    writeToFile = open(phpDetachUpdatePath, 'w')
+                    writeToFile.close()
+
                     installUtilities.installUtilities.reStartLiteSpeed()
+                    try:
+                        os.remove(phpDetachUpdatePath)
+                    except:
+                        pass
                 else:
                     php = PHPManager.getPHPString(phpVersion)
                     command = "systemctl restart php%s-php-fpm" % (php)
@@ -556,7 +564,14 @@ class vhost:
 
                 writeDataToFile.close()
 
+                writeToFile = open(phpDetachUpdatePath, 'w')
+                writeToFile.close()
+
                 installUtilities.installUtilities.reStartLiteSpeed()
+                try:
+                    os.remove(phpDetachUpdatePath)
+                except:
+                    pass
 
                 print "1,None"
                 return 1, 'None'

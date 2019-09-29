@@ -89,11 +89,19 @@ class StagingSetup(multi.Thread):
 
             for items in data:
                 if items.find('DB_NAME') > -1:
-                    dbName = items.split("'")[3]
-                    if mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel'):
-                        break
-                    else:
-                        raise BaseException('Failed to create database backup.')
+                    try:
+                        dbName = items.split("'")[3]
+                        if mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel'):
+                            break
+                        else:
+                            raise BaseException('Failed to create database backup.')
+                    except:
+                        dbName = items.split('"')[1]
+                        if mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel'):
+                            break
+                        else:
+                            raise BaseException('Failed to create database backup.')
+
 
             databasePath = '%s/%s.sql' % ('/home/cyberpanel', dbName)
 

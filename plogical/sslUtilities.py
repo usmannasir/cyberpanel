@@ -254,6 +254,8 @@ class sslUtilities:
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                               + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
 
+                    logging.CyberCPLogFileWriter.writeToFile(command)
+
                     output = subprocess.check_output(shlex.split(command))
                     logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName)
 
