@@ -137,7 +137,7 @@ class BackupManager:
             backupDomainName = data['websiteToBeBacked']
             backupName = 'backup-' + backupDomainName + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
 
-            ## /home/example.com/backup/backup-example-02.15.2018_06-50-03
+            ## /home/example.com/backup/backup-example.com-02.15.2018_06-50-03
             tempStoragePath = os.path.join(backupPath, backupName)
 
             execPath = "sudo nice -n 10 python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
