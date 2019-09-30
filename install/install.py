@@ -123,7 +123,7 @@ class preFlightsChecks:
         print("\n\n")
         print ("[" + time.strftime(
             "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
-        print("[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + message + "\n")
+        print("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n")
         print ("[" + time.strftime(
             "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
 
@@ -584,7 +584,7 @@ class preFlightsChecks:
                     os._exit(0)
             else:
                 logging.InstallLog.writeToFile("Python setup tools Successfully installed!")
-                print("[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + "Python setup tools Successfully installed!")
+                print("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + "Python setup tools Successfully installed!")
                 break
 
     def install_python_requests(self):
@@ -2349,7 +2349,7 @@ enabled=1"""
                 else:
                     logging.InstallLog.writeToFile("Rainloop permissions changed!")
                     print(
-                        "[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + "Rainloop permissions changed!")
+                        "[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + "Rainloop permissions changed!")
                     break
 
             #############

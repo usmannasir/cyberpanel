@@ -28,7 +28,7 @@ class Upgrade:
         print("\n\n")
         print ("[" + time.strftime(
             "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
-        print("[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + message + "\n")
+        print("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n")
         print ("[" + time.strftime(
             "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
 

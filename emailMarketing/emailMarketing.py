@@ -35,7 +35,7 @@ class emailMarketing(multi.Thread):
         try:
             website = Websites.objects.get(domain=self.extraArgs['domain'])
             try:
-                newList = EmailLists(owner=website, listName=self.extraArgs['listName'], dateCreated=time.strftime("%I-%M-%S-%a-%b-%Y"))
+                newList = EmailLists(owner=website, listName=self.extraArgs['listName'], dateCreated=time.strftime("%m.%d.%Y_%H-%M-%S"))
                 newList.save()
             except:
                 newList = EmailLists.objects.get(listName=self.extraArgs['listName'])
@@ -54,7 +54,7 @@ class emailMarketing(multi.Thread):
                                     except:
                                         newEmail = EmailsInList(owner=newList, email=value,
                                                                 verificationStatus='NOT CHECKED',
-                                                                dateCreated=time.strftime("%I-%M-%S-%a-%b-%Y"))
+                                                                dateCreated=time.strftime("%m.%d.%Y_%H-%M-%S"))
                                         newEmail.save()
                                     logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], str(counter) + ' emails read.')
                                     counter = counter + 1
@@ -71,7 +71,7 @@ class emailMarketing(multi.Thread):
                                 getEmail = EmailsInList.objects.get(owner=newList, email=email)
                             except BaseException, msg:
                                 newEmail = EmailsInList(owner=newList, email=email, verificationStatus='NOT CHECKED',
-                                                        dateCreated=time.strftime("%I-%M-%S-%a-%b-%Y"))
+                                                        dateCreated=time.strftime("%m.%d.%Y_%H-%M-%S"))
                                 newEmail.save()
                             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],str(counter) + ' emails read.')
                             counter = counter + 1
@@ -242,7 +242,7 @@ class emailMarketing(multi.Thread):
                                                                       sent) + ', Failed: ' + str(failed))
                         logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
-                    emailJob = EmailJobs(owner=emailMessage, date=time.strftime("%I-%M-%S-%a-%b-%Y"),
+                    emailJob = EmailJobs(owner=emailMessage, date=time.strftime("%m.%d.%Y_%H-%M-%S"),
                                          host=self.extraArgs['host'], totalEmails=totalEmails,
                                          sent=sent, failed=failed
                                          )

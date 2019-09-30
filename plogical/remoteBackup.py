@@ -123,7 +123,7 @@ class remoteBackup:
             writeToFile.writelines("\n")
             writeToFile.writelines("############################\n")
             writeToFile.writelines("      Starting Backup Restore\n")
-            writeToFile.writelines("      Start date: " + time.strftime("%I-%M-%S-%a-%b-%Y") + "\n")
+            writeToFile.writelines("      Start date: " + time.strftime("%m.%d.%Y_%H-%M-%S") + "\n")
             writeToFile.writelines("############################\n")
             writeToFile.writelines("\n")
             writeToFile.writelines("\n")
@@ -172,7 +172,7 @@ class remoteBackup:
     def createBackup(virtualHost, ipAddress,writeToFile, dir):
         try:
             writeToFile.writelines("Location: "+dir + "\n")
-            writeToFile.writelines("["+time.strftime("%I-%M-%S-%a-%b-%Y")+"]"+" Preparing to create backup for: "+virtualHost+"\n")
+            writeToFile.writelines("["+time.strftime("%m.%d.%Y_%H-%M-%S")+"]"+" Preparing to create backup for: "+virtualHost+"\n")
             writeToFile.writelines("[" + time.strftime(
                 "%I-%M-%S-%a-%b-%Y") + "]" + " Backup started for: " + virtualHost + "\n")
 
@@ -325,7 +325,7 @@ class remoteBackup:
 
             writeToFile.writelines("############################\n")
             writeToFile.writelines("      Starting remote Backup\n")
-            writeToFile.writelines("      Start date: " + time.strftime("%I-%M-%S-%a-%b-%Y") + "\n")
+            writeToFile.writelines("      Start date: " + time.strftime("%m.%d.%Y_%H-%M-%S") + "\n")
             writeToFile.writelines("############################\n")
             writeToFile.writelines("\n")
             writeToFile.writelines("\n")
