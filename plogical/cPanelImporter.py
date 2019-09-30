@@ -672,8 +672,8 @@ class cPanelImporter:
                                 break
 
 
-                    db = Databases(website=website, dbName=items.replace('.sql', ''), dbUser=cDBUser)
-                    db.save()
+                                db = Databases(website=website, dbName=items.replace('.sql', ''), dbUser=cDBUser)
+                                db.save()
 
                     message = 'MySQL dump successfully restored for %s.' % (items.replace('.sql', ''))
                     logging.statusWriter(self.logFile, message, 1)
