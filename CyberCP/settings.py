@@ -64,7 +64,8 @@ INSTALLED_APPS = [
     's3Backups',
     'dockerManager',
     'containerization',
-    'CLManager'
+    'CLManager',
+    'IncBackups'
 ]
 
 MIDDLEWARE = [

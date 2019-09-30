@@ -43,4 +43,5 @@ urlpatterns = [
     url(r'^docker/', include('dockerManager.urls')),
     url(r'^container/', include('containerization.urls')),
     url(r'^CloudLinux/', include('CLManager.urls')),
+    url(r'^IncrementalBackups/', include('IncBackups.urls')),
 ]
