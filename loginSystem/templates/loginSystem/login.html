@@ -123,8 +123,8 @@
 
                                 <div class="form-group">
                                     <div class="input-group">
-                                        <select ng-model="languageSelection" class="form-control">
-                                                <option selected>English</option>
+                                        <select ng-model="languageSelection" ng-init="languageSelection='english'" class="form-control">
+                                                <option value="english">English</option>
                                                 <option>Chinese</option>
                                                 <option>Italian</option>
                                                 <option>French</option>
