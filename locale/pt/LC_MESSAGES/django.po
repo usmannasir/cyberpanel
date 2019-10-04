@@ -3845,7 +3845,7 @@ msgstr " foi criado com sucesso."
 #: emailPremium/templates/emailPremium/policyServer.html:13
 #, fuzzy
 #| msgid "Email Logs"
-msgid "Emai Limits Docs"
+msgid "Email Limits Docs"
 msgstr "Logs de E-Mail"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14
