@@ -7,5 +7,9 @@ urlpatterns = [
     url(r'^addDestination$', views.addDestination, name='addDestinationInc'),
     url(r'^populateCurrentRecords$', views.populateCurrentRecords, name='populateCurrentRecordsInc'),
     url(r'^removeDestination$', views.removeDestination, name='removeDestinationInc'),
-
+    url(r'^fetchCurrentBackups$', views.fetchCurrentBackups, name='fetchCurrentBackupsInc'),
+    url(r'^submitBackupCreation$', views.submitBackupCreation, name='submitBackupCreationInc'),
+    url(r'^getBackupStatus$', views.getBackupStatus, name='getBackupStatusInc'),
+    url(r'^deleteBackup$', views.deleteBackup, name='deleteBackupInc'),
+    url(r'^fetchRestorePoints$', views.fetchRestorePoints, name='fetchRestorePointsInc'),
 ]

@@ -7,7 +7,6 @@ django.setup()
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
-import shlex
 from vhost import vhost
 from websiteFunctions.models import ChildDomains, Websites
 import randomPassword

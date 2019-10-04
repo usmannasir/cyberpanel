@@ -6,50 +6,24 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
     $scope.backupButton = true;
     $scope.cyberpanelLoading = true;
     $scope.runningBackup = true;
-    $scope.cancelButton = true;
 
-    populateCurrentRecords();
-
-    $scope.cancelBackup = function () {
-
-        var backupCancellationDomain = $scope.websiteToBeBacked;
-
-        url = "/backup/cancelBackupCreation";
-
-        var data = {
-            backupCancellationDomain: backupCancellationDomain,
-            fileName: $scope.fileName,
-        };
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-    };
 
     $scope.fetchDetails = function () {
         getBackupStatus();
-        populateCurrentRecords();
+        $scope.populateCurrentRecords();
         $scope.destination = false;
         $scope.runningBackup = true;
-
     };
-
 
     function getBackupStatus() {
 
         $scope.cyberpanelLoadingBottom = false;
 
-        var websiteToBeBacked = $scope.websiteToBeBacked;
-
-        url = "/backup/backupStatus";
+        url = "/IncrementalBackups/getBackupStatus";
 
         var data = {
-            websiteToBeBacked: websiteToBeBacked,
+            websiteToBeBacked: $scope.websiteToBeBacked,
+            tempPath: $scope.tempPath
         };
 
         var config = {
@@ -72,18 +46,16 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
                     $scope.cyberpanelLoadingBottom = true;
                     $scope.destination = false;
                     $scope.runningBackup = false;
-                    $scope.cancelButton = true;
                     $scope.backupButton = false;
                     $scope.cyberpanelLoading = true;
                     $scope.fileName = response.data.fileName;
                     $scope.status = response.data.status;
-                    populateCurrentRecords();
+                    $scope.populateCurrentRecords();
                     return;
                 } else {
                     $scope.destination = true;
                     $scope.backupButton = true;
                     $scope.runningBackup = false;
-                    $scope.cancelButton = false;
 
                     $scope.fileName = response.data.fileName;
                     $scope.status = response.data.status;
@@ -94,7 +66,6 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
                 $timeout.cancel();
                 $scope.cyberpanelLoadingBottom = true;
                 $scope.cyberpanelLoading = true;
-                $scope.cancelButton = true;
                 $scope.backupButton = false;
             }
 
@@ -103,22 +74,18 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
         function cantLoadInitialDatas(response) {
         }
 
-    };
-
+    }
 
     $scope.destinationSelection = function () {
         $scope.backupButton = false;
     };
 
+    $scope.populateCurrentRecords = function () {
 
-    function populateCurrentRecords() {
-
-        var websiteToBeBacked = $scope.websiteToBeBacked;
-
-        url = "/backup/getCurrentBackups";
+        url = "/IncrementalBackups/fetchCurrentBackups";
 
         var data = {
-            websiteToBeBacked: websiteToBeBacked,
+            websiteToBeBacked: $scope.websiteToBeBacked,
         };
 
         var config = {
@@ -132,31 +99,43 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
 
 
         function ListInitialDatas(response) {
-
-
-            if (response.data.fetchStatus == 1) {
+            if (response.data.status === 1) {
                 $scope.records = JSON.parse(response.data.data);
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
             }
-
 
         }
 
         function cantLoadInitialDatas(response) {
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
         }
 
     };
 
-
     $scope.createBackup = function () {
 
-        var websiteToBeBacked = $scope.websiteToBeBacked;
         $scope.cyberpanelLoading = false;
 
 
-        url = "/backup/submitBackupCreation";
+        url = "/IncrementalBackups/submitBackupCreation";
 
         var data = {
-            websiteToBeBacked: websiteToBeBacked,
+            websiteToBeBacked: $scope.websiteToBeBacked,
+            backupDestinations: $scope.backupDestinations,
+            websiteData: $scope.websiteData,
+            websiteEmails: $scope.websiteEmails,
+            websiteSSLs: $scope.websiteSSLs,
+            websiteDatabases: $scope.websiteDatabases
+
         };
 
         var config = {
@@ -171,8 +150,8 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
 
         function ListInitialDatas(response) {
 
-
-            if (response.data.metaStatus === 1) {
+            if (response.data.status === 1) {
+                $scope.tempPath = response.data.tempPath;
                 getBackupStatus();
             }
 
@@ -183,11 +162,10 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
 
     };
 
-
     $scope.deleteBackup = function (id) {
 
 
-        url = "/backup/deleteBackup";
+        url = "/IncrementalBackups/deleteBackup";
 
         var data = {
             backupID: id,
@@ -206,22 +184,64 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
         function ListInitialDatas(response) {
 
 
-            if (response.data.deleteStatus == 1) {
+            if (response.data.status === 1) {
 
-                populateCurrentRecords();
+                $scope.populateCurrentRecords();
 
-
-            } else {
 
             }
 
         }
 
         function cantLoadInitialDatas(response) {
+        }
 
+
+    };
+
+    $scope.restore = function (id) {
+
+        $scope.cyberpanelLoading = false;
+
+
+        url = "/IncrementalBackups/fetchRestorePoints";
+
+        var data = {
+            id: id
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.jobs = JSON.parse(response.data.data);
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
 
         }
 
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
 
     };
 
@@ -256,9 +276,9 @@ app.controller('incrementalDestinations', function ($scope, $http) {
         url = "/IncrementalBackups/populateCurrentRecords";
 
         var type = 'SFTP';
-        if ($scope.destinationType === 'SFTP'){
+        if ($scope.destinationType === 'SFTP') {
             type = 'SFTP';
-        }else{
+        } else {
             type = 'AWS';
         }
 
@@ -307,14 +327,14 @@ app.controller('incrementalDestinations', function ($scope, $http) {
 
         url = "/IncrementalBackups/addDestination";
 
-        if(type === 'SFTP'){
+        if (type === 'SFTP') {
             var data = {
                 type: type,
                 IPAddress: $scope.IPAddress,
                 password: $scope.password,
                 backupSSHPort: $scope.backupSSHPort
             };
-        }else {
+        } else {
             var data = {
                 type: type,
                 AWS_ACCESS_KEY_ID: $scope.AWS_ACCESS_KEY_ID,
