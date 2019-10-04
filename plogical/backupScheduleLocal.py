@@ -11,12 +11,12 @@ class backupScheduleLocal:
     @staticmethod
     def prepare():
         try:
-            backupLogPath = "/usr/local/lscp/logs/local_backup_log." + time.strftime("%I-%M-%S-%a-%b-%Y")
+            backupLogPath = "/usr/local/lscp/logs/local_backup_log." + time.strftime("%H-%M-%S-%b-%d-%Y")
 
             writeToFile = open(backupLogPath, "a")
 
             backupSchedule.remoteBackupLogging(backupLogPath, "#################################################")
-            backupSchedule.remoteBackupLogging(backupLogPath,"      Local Backup log for: " + time.strftime("%I-%M-%S-%a-%b-%Y"))
+            backupSchedule.remoteBackupLogging(backupLogPath,"      Local Backup log for: " + time.strftime("%H-%M-%S-%b-%d-%Y"))
             backupSchedule.remoteBackupLogging(backupLogPath, "#################################################\n")
 
             backupSchedule.remoteBackupLogging(backupLogPath, "")

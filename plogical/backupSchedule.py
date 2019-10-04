@@ -24,8 +24,8 @@ class backupSchedule:
     def remoteBackupLogging(fileName, message):
         try:
             file = open(fileName,'a')
-            file.writelines("[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] "+ message + "\n")
-            print ("[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] "+ message + "\n")
+            file.writelines("[" + time.strftime("%H-%M-%S-%b-%d-%Y") + "] "+ message + "\n")
+            print ("[" + time.strftime("%H-%M-%S-%b-%d-%Y") + "] "+ message + "\n")
             file.close()
         except IOError,msg:
             return "Can not write to error file."
@@ -192,10 +192,10 @@ class backupSchedule:
         try:
             destinations = backupUtilities.destinationsPath
 
-            backupLogPath = "/usr/local/lscp/logs/backup_log."+time.strftime("%I-%M-%S-%a-%b-%Y")
+            backupLogPath = "/usr/local/lscp/logs/backup_log."+time.strftime("%H-%M-%S-%b-%d-%Y")
 
             backupSchedule.remoteBackupLogging(backupLogPath,"#################################################")
-            backupSchedule.remoteBackupLogging(backupLogPath,"      Backup log for: " +time.strftime("%I-%M-%S-%a-%b-%Y"))
+            backupSchedule.remoteBackupLogging(backupLogPath,"      Backup log for: " +time.strftime("%H-%M-%S-%b-%d-%Y"))
             backupSchedule.remoteBackupLogging(backupLogPath,"#################################################\n")
 
             backupSchedule.remoteBackupLogging(backupLogPath, "")

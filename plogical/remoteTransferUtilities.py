@@ -74,7 +74,7 @@ class remoteTransferUtilities:
 
             writeToFile.writelines("############################\n")
             writeToFile.writelines("      Starting remote Backup\n")
-            writeToFile.writelines("      Start date: " + time.strftime("%I-%M-%S-%a-%b-%Y") + "\n")
+            writeToFile.writelines("      Start date: " + time.strftime("%H-%M-%S-%b-%d-%Y") + "\n")
             writeToFile.writelines("############################\n")
             writeToFile.writelines("\n")
             writeToFile.writelines("\n")
@@ -83,14 +83,14 @@ class remoteTransferUtilities:
                 checkConn = backupUtil.backupUtilities.checkConnection(ipAddress)
                 if checkConn[0] == 0:
                     writeToFile.writelines("[" + time.strftime(
-                        "%I-%M-%S-%a-%b-%Y") + "]" + " Connection to:" + ipAddress + " Failed, please resetup this destination from CyberPanel, aborting. [5010]" + "\n")
+                        "%H-%M-%S-%b-%d-%Y") + "]" + " Connection to:" + ipAddress + " Failed, please resetup this destination from CyberPanel, aborting. [5010]" + "\n")
                     writeToFile.close()
                     return
                 else:
                     pass
             else:
                 writeToFile.writelines("[" + time.strftime(
-                    "%I-%M-%S-%a-%b-%Y") + "]" + " Host:" + ipAddress + " could be  down, we are continuing..." + "\n")
+                    "%H-%M-%S-%b-%d-%Y") + "]" + " Host:" + ipAddress + " could be  down, we are continuing..." + "\n")
                 writeToFile.close()
 
             writeToFile.close()
@@ -133,7 +133,7 @@ class remoteTransferUtilities:
 
                         writeToFile = open(backupLogPath, "a")
                         writeToFile.writelines("[" + time.strftime(
-                            "%I-%M-%S-%a-%b-%Y") + "]" + " Currently generating local backups for: " + virtualHost + "\n")
+                            "%H-%M-%S-%b-%d-%Y") + "]" + " Currently generating local backups for: " + virtualHost + "\n")
                         writeToFile.close()
 
                         retValue = backupSchedule.createLocalBackup(virtualHost, backupLogPath)
@@ -141,7 +141,7 @@ class remoteTransferUtilities:
                         if retValue[0] == 1:
                             writeToFile = open(backupLogPath, 'a')
                             writeToFile.writelines("[" + time.strftime(
-                                "%I-%M-%S-%a-%b-%Y") + "]" + " Local Backup Completed for: " + virtualHost + "\n")
+                                "%H-%M-%S-%b-%d-%Y") + "]" + " Local Backup Completed for: " + virtualHost + "\n")
 
                             completePathToBackupFile = retValue[1] + '.tar.gz'
 
@@ -153,20 +153,20 @@ class remoteTransferUtilities:
                             completedPathToSend = dir + "/" + completePathToBackupFile.split("/")[-1]
 
                             writeToFile.writelines("[" + time.strftime(
-                                "%I-%M-%S-%a-%b-%Y") + "]" + " Sending " + completedPathToSend + " to " + ipAddress + ".\n")
+                                "%H-%M-%S-%b-%d-%Y") + "]" + " Sending " + completedPathToSend + " to " + ipAddress + ".\n")
 
                             remoteTransferUtilities.sendBackup(completedPathToSend, ipAddress, str(folderNumber),
                                                                writeToFile)
                             writeToFile.writelines("[" + time.strftime(
-                                "%I-%M-%S-%a-%b-%Y") + "]" + " Sent " + completedPathToSend + " to " + ipAddress + ".\n")
+                                "%H-%M-%S-%b-%d-%Y") + "]" + " Sent " + completedPathToSend + " to " + ipAddress + ".\n")
 
                             writeToFile.writelines("[" + time.strftime(
-                                "%I-%M-%S-%a-%b-%Y") + "]" + " #############################################" + "\n")
+                                "%H-%M-%S-%b-%d-%Y") + "]" + " #############################################" + "\n")
 
                             writeToFile.close()
                         else:
                             writeToFile.writelines("[" + time.strftime(
-                                "%I-%M-%S-%a-%b-%Y") + "]" + "Failed to generate local backup for: " + virtualHost + "\n")
+                                "%H-%M-%S-%b-%d-%Y") + "]" + "Failed to generate local backup for: " + virtualHost + "\n")
 
                     except BaseException, msg:
                         logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.backupProcess:173]")
@@ -174,7 +174,7 @@ class remoteTransferUtilities:
 
                 writeToFile = open(backupLogPath, "a")
                 writeToFile.writelines("[" + time.strftime(
-                    "%I-%M-%S-%a-%b-%Y") + "]" + " Backups are successfully generated and received on: " + ipAddress + "\n")
+                    "%H-%M-%S-%b-%d-%Y") + "]" + " Backups are successfully generated and received on: " + ipAddress + "\n")
                 writeToFile.close()
 
                 ## removing local directory where backups were generated
@@ -212,7 +212,7 @@ class remoteTransferUtilities:
             writeToFile.writelines("\n")
             writeToFile.writelines("############################\n")
             writeToFile.writelines("      Starting Backup Restore\n")
-            writeToFile.writelines("      Start date: " + time.strftime("%I-%M-%S-%a-%b-%Y") + "\n")
+            writeToFile.writelines("      Start date: " + time.strftime("%H-%M-%S-%b-%d-%Y") + "\n")
             writeToFile.writelines("############################\n")
             writeToFile.writelines("\n")
             writeToFile.writelines("\n")
@@ -258,7 +258,7 @@ class remoteTransferUtilities:
                     writeToFile.writelines("\n")
                     writeToFile.writelines("\n")
                     writeToFile.writelines("[" + time.strftime(
-                        "%I-%M-%S-%a-%b-%Y") + "]" + " Starting restore for: " + backup + ".\n")
+                        "%H-%M-%S-%b-%d-%Y") + "]" + " Starting restore for: " + backup + ".\n")
                     writeToFile.close()
 
                     backupFile = backup
@@ -282,9 +282,9 @@ class remoteTransferUtilities:
                             writeToFile.writelines("\n")
                             writeToFile.writelines("\n")
                             writeToFile.writelines("[" + time.strftime(
-                                "%I-%M-%S-%a-%b-%Y") + "]" + " Restore Completed for: " + backup + ".\n")
+                                "%H-%M-%S-%b-%d-%Y") + "]" + " Restore Completed for: " + backup + ".\n")
                             writeToFile.writelines("[" + time.strftime(
-                                "%I-%M-%S-%a-%b-%Y") + "]" + " #########################################\n")
+                                "%H-%M-%S-%b-%d-%Y") + "]" + " #########################################\n")
                             writeToFile.close()
                             break
                         elif status.find("[5009]") > -1:
@@ -296,10 +296,10 @@ class remoteTransferUtilities:
                             writeToFile.writelines("\n")
                             writeToFile.writelines("\n")
                             writeToFile.writelines("[" + time.strftime(
-                                "%I-%M-%S-%a-%b-%Y") + "]" + " Restore aborted for: " + backup + ". Error message: " +
+                                "%H-%M-%S-%b-%d-%Y") + "]" + " Restore aborted for: " + backup + ". Error message: " +
                                                    status + "\n")
                             writeToFile.writelines("[" + time.strftime(
-                                "%I-%M-%S-%a-%b-%Y") + "]" + " #########################################\n")
+                                "%H-%M-%S-%b-%d-%Y") + "]" + " #########################################\n")
                             writeToFile.close()
                             break
                         else:
@@ -307,7 +307,7 @@ class remoteTransferUtilities:
                             writeToFile.writelines("\n")
                             writeToFile.writelines("\n")
                             writeToFile.writelines("[" + time.strftime(
-                                "%I-%M-%S-%a-%b-%Y") + "]" + " Waiting for restore to complete.\n")
+                                "%H-%M-%S-%b-%d-%Y") + "]" + " Waiting for restore to complete.\n")
                             writeToFile.close()
                             time.sleep(3)
                             pass
@@ -317,7 +317,7 @@ class remoteTransferUtilities:
             writeToFile.writelines("\n")
             writeToFile.writelines("\n")
             writeToFile.writelines("[" + time.strftime(
-                "%I-%M-%S-%a-%b-%Y") + "]" + " Backup Restore complete\n")
+                "%H-%M-%S-%b-%d-%Y") + "]" + " Backup Restore complete\n")
             writeToFile.writelines("completed[success]")
 
         except BaseException, msg:

@@ -324,7 +324,7 @@ class cyberPanel:
 
     def createBackup(self, virtualHostName):
         try:
-            backupLogPath = "/usr/local/lscp/logs/backup_log."+time.strftime("%I-%M-%S-%a-%b-%Y")
+            backupLogPath = "/usr/local/lscp/logs/backup_log."+time.strftime("%H-%M-%S-%b-%d-%Y")
 
             print 'Backup logs to be generated in %s' % (backupLogPath)
 
