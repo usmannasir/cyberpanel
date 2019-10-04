@@ -3835,7 +3835,7 @@ msgstr " uspješno je kreiran."
 #: emailPremium/templates/emailPremium/policyServer.html:13
 #, fuzzy
 #| msgid "Email Logs"
-msgid "Emai Limits Docs"
+msgid "Email Limits Docs"
 msgstr "Email logovi"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14

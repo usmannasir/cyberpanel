@@ -3692,7 +3692,7 @@ msgstr "SpamAssassin конфигурация е успешно променен
 #: emailPremium/templates/emailPremium/emailPage.html:13
 #: emailPremium/templates/emailPremium/listDomains.html:14
 #: emailPremium/templates/emailPremium/policyServer.html:13
-msgid "Emai Limits Docs"
+msgid "Email Limits Docs"
 msgstr "Email лимити документация"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14
