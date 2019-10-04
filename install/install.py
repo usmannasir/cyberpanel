@@ -122,10 +122,10 @@ class preFlightsChecks:
     def stdOut(message, log=0, do_exit=0, code=os.EX_OK):
         print("\n\n")
         print ("[" + time.strftime(
-            "%H-%M-%S-%b-%d-%Y") + "] #########################################################################\n")
-        print("[" + time.strftime("%H-%M-%S-%b-%d-%Y") + "] " + message + "\n")
+            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n")
+        print("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n")
         print ("[" + time.strftime(
-            "%H-%M-%S-%b-%d-%Y") + "] #########################################################################\n")
+            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n")
 
         if log:
             logging.InstallLog.writeToFile(message)
@@ -584,7 +584,7 @@ class preFlightsChecks:
                     os._exit(0)
             else:
                 logging.InstallLog.writeToFile("Python setup tools Successfully installed!")
-                print("[" + time.strftime("%H-%M-%S-%b-%d-%Y") + "] " + "Python setup tools Successfully installed!")
+                print("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + "Python setup tools Successfully installed!")
                 break
 
     def install_python_requests(self):
@@ -2349,7 +2349,7 @@ enabled=1"""
                 else:
                     logging.InstallLog.writeToFile("Rainloop permissions changed!")
                     print(
-                        "[" + time.strftime("%H-%M-%S-%b-%d-%Y") + "] " + "Rainloop permissions changed!")
+                        "[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + "Rainloop permissions changed!")
                     break
 
             #############

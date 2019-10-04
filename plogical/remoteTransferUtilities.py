@@ -74,7 +74,7 @@ class remoteTransferUtilities:
 
             writeToFile.writelines("############################\n")
             writeToFile.writelines("      Starting remote Backup\n")
-            writeToFile.writelines("      Start date: " + time.strftime("%H-%M-%S-%b-%d-%Y") + "\n")
+            writeToFile.writelines("      Start date: " + time.strftime("%m.%d.%Y_%H-%M-%S") + "\n")
             writeToFile.writelines("############################\n")
             writeToFile.writelines("\n")
             writeToFile.writelines("\n")
@@ -212,7 +212,7 @@ class remoteTransferUtilities:
             writeToFile.writelines("\n")
             writeToFile.writelines("############################\n")
             writeToFile.writelines("      Starting Backup Restore\n")
-            writeToFile.writelines("      Start date: " + time.strftime("%H-%M-%S-%b-%d-%Y") + "\n")
+            writeToFile.writelines("      Start date: " + time.strftime("%m.%d.%Y_%H-%M-%S") + "\n")
             writeToFile.writelines("############################\n")
             writeToFile.writelines("\n")
             writeToFile.writelines("\n")
