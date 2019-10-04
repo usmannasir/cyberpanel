@@ -17,6 +17,7 @@ class backupScheduleLocal:
 
             backupSchedule.remoteBackupLogging(backupLogPath, "#################################################")
             backupSchedule.remoteBackupLogging(backupLogPath,"      Local Backup log for: " + time.strftime("%m.%d.%Y_%H-%M-%S"))
+
             backupSchedule.remoteBackupLogging(backupLogPath, "#################################################\n")
 
             backupSchedule.remoteBackupLogging(backupLogPath, "")

@@ -10,5 +10,6 @@ class IncJob(models.Model):
 
 class JobSnapshots(models.Model):
     job = models.ForeignKey(IncJob)
-    type = models.CharField(max_length=50)
+    type = models.CharField(max_length=300)
     snapshotid = models.CharField(max_length=50)
+    destination = models.CharField(max_length=200, default='')

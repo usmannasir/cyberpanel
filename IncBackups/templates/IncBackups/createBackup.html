@@ -66,11 +66,21 @@
                             <div class="col-sm-9">
                                 <div class="checkbox">
                                     <label>
+                                        <input ng-model="websiteDatabases" type="checkbox" value="">
+                                        Databases
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
                                         <input ng-model="websiteEmails" type="checkbox" value="">
                                         Emails
                                     </label>
                                 </div>
                             </div>
+                            <!---
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-9">
                                 <div class="checkbox">
@@ -79,7 +89,7 @@
                                         SSL Certificates
                                     </label>
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
 
 
@@ -116,7 +126,7 @@
                                     <tr>
                                         <th>{% trans "ID" %}</th>
                                         <th>{% trans "Date" %}</th>
-                                        <th>{% trans "Includes" %}</th>
+                                        <th>{% trans "Restore" %}</th>
                                         <th>{% trans "Delete" %}</th>
                                     </tr>
                                     </thead>
@@ -124,7 +134,63 @@
                                     <tr ng-repeat="record in records track by $index">
                                         <td ng-bind="record.id"></td>
                                         <td ng-bind="record.date"></td>
-                                        <td ng-bind="record.includes"></td>
+                                        <td>
+                                            <a ng-click="restore(record.id)" data-toggle="modal" data-target="#settings"
+                                               ng-click='deleteCLPackage()'
+                                               class="btn btn-border btn-alt border-green btn-link font-green"
+                                               title=""><span>Restore Points</span></a>
+                                            <div id="settings" class="modal fade" role="dialog">
+                                                <div class="modal-dialog">
+
+                                                    <!-- Modal content-->
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <button type="button" class="close" data-dismiss="modal">
+                                                                &times;
+                                                            </button>
+                                                            <h4 class="modal-title">Restore Points
+                                                                <img id="cyberpanelLoading"
+                                                                     src="/static/images/loading.gif"
+                                                                     style="display: none;">
+                                                            </h4>
+                                                        </div>
+                                                        <div class="modal-body">
+
+                                                            <table class="table">
+                                                                <thead>
+                                                                <tr>
+                                                                    <th>{% trans "Job ID" %}</th>
+                                                                    <th>{% trans "Snapshot ID" %}</th>
+                                                                    <th>{% trans "Type" %}</th>
+                                                                    <th>{% trans "Destination" %}</th>
+                                                                    <th>{% trans "Action" %}</th>
+                                                                </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                <tr ng-repeat="job in jobs track by $index">
+                                                                    <td ng-bind="job.id"></td>
+                                                                    <td ng-bind="job.snapshotid"></td>
+                                                                    <td ng-bind="job.type"></td>
+                                                                    <td ng-bind="job.destination"></td>
+                                                                    <td>
+                                                                        <a class="btn btn-border btn-alt border-green btn-link font-green"
+                                                                           title=""><span>Restore</span></a>
+                                                                    </td>
+                                                                </tr>
+                                                                </tbody>
+                                                            </table>
+
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" ng-disabled="savingSettings"
+                                                                    class="btn btn-default" data-dismiss="modal">
+                                                                Close
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
                                         <a href="">
                                             <td ng-click="deleteBackup(record.id)"><img
                                                     src="{% static 'images/delete.png' %}"></td>

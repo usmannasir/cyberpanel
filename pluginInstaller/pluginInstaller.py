@@ -18,7 +18,7 @@ class pluginInstaller:
         print("\n\n")
         print ("[" + time.strftime(
             "%H-%M-%S-%b-%d-%Y") + "] #########################################################################\n")
-        print("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n")
+        print("[" + time.strftime("%H-%M-%S-%b-%d-%Y") + "] " + message + "\n")
         print ("[" + time.strftime(
             "%H-%M-%S-%b-%d-%Y") + "] #########################################################################\n")
 

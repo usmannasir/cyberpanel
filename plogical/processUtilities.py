@@ -189,11 +189,13 @@ class ProcessUtilities(multi.Thread):
             # for items in CommandArgs:
             #     finalCommand = '%s %s' % (finalCommand, items)
 
-            #logging.writeToFile(command)
+
             if user == None:
+                logging.writeToFile(ProcessUtilities.token + command)
                 sock.sendall(ProcessUtilities.token + command)
             else:
                 command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
+                logging.writeToFile(command)
                 command = command.replace('sudo', '')
                 sock.sendall(command)
 

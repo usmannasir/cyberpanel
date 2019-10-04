@@ -11,4 +11,5 @@ urlpatterns = [
     url(r'^submitBackupCreation$', views.submitBackupCreation, name='submitBackupCreationInc'),
     url(r'^getBackupStatus$', views.getBackupStatus, name='getBackupStatusInc'),
     url(r'^deleteBackup$', views.deleteBackup, name='deleteBackupInc'),
+    url(r'^fetchRestorePoints$', views.fetchRestorePoints, name='fetchRestorePointsInc'),
 ]

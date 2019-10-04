@@ -133,7 +133,8 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
             backupDestinations: $scope.backupDestinations,
             websiteData: $scope.websiteData,
             websiteEmails: $scope.websiteEmails,
-            websiteSSLs: $scope.websiteSSLs
+            websiteSSLs: $scope.websiteSSLs,
+            websiteDatabases: $scope.websiteDatabases
 
         };
 
@@ -195,6 +196,52 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
         function cantLoadInitialDatas(response) {
         }
 
+
+    };
+
+    $scope.restore = function (id) {
+
+        $scope.cyberpanelLoading = false;
+
+
+        url = "/IncrementalBackups/fetchRestorePoints";
+
+        var data = {
+            id: id
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.jobs = JSON.parse(response.data.data);
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
 
     };
 
