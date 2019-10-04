@@ -117,7 +117,7 @@
      </extension>
 
     <extension>
-         <extensionName>lsphp72-pecl-imagick</extensionName>
+         <extensionName>lsphp72-imagick</extensionName>
          <extensionDescription>Extension to create and modify images using ImageMagick</extensionDescription>
          <status>0</status>
      </extension>

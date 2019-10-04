@@ -9,4 +9,4 @@ from websiteFunctions.models import Websites
 class Databases(models.Model):
     website = models.ForeignKey(Websites)
     dbName = models.CharField(max_length=50,unique=True)
-    dbUser = models.CharField(max_length=50, unique=True)
+    dbUser = models.CharField(max_length=50)

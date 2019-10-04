@@ -752,6 +752,7 @@ class backupUtilities:
             expectation.append("password:")
             expectation.append("Password:")
             expectation.append("Permission denied")
+            expectation.append("100%")
 
             command = "scp -o StrictHostKeyChecking=no -P "+ port +" /root/.ssh/cyberpanel.pub root@" + IPAddress + ":/root/.ssh/authorized_keys"
             setupKeys = pexpect.spawn(command, timeout=3)
@@ -770,6 +771,8 @@ class backupUtilities:
                 setupKeys.wait()
             elif index == 2:
                 return [0, 'Please enable password authentication on your remote server.']
+            elif index == 3:
+                pass
             else:
                 raise BaseException
 
@@ -802,6 +805,7 @@ class backupUtilities:
             expectation.append("password:")
             expectation.append("Password:")
             expectation.append("Permission denied")
+            expectation.append("File exists")
 
             command = "ssh -o StrictHostKeyChecking=no -p "+ port +" root@"+IPAddress+' "mkdir /root/.ssh || rm -f /root/.ssh/temp && rm -f /root/.ssh/authorized_temp && cp /root/.ssh/authorized_keys /root/.ssh/temp"'
             setupKeys = pexpect.spawn(command, timeout=3)
@@ -816,6 +820,8 @@ class backupUtilities:
                 setupKeys.sendline(password)
             elif index == 2:
                 return [0, 'Please enable password authentication on your remote server.']
+            elif index == 3:
+                pass
             else:
                 raise BaseException
 

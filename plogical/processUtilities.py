@@ -189,7 +189,7 @@ class ProcessUtilities(multi.Thread):
             # for items in CommandArgs:
             #     finalCommand = '%s %s' % (finalCommand, items)
 
-
+            #logging.writeToFile(command)
             if user == None:
                 sock.sendall(ProcessUtilities.token + command)
             else:
