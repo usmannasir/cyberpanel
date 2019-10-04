@@ -284,7 +284,7 @@ def fetchCurrentBackups(request):
 
         website = Websites.objects.get(domain=backupDomain)
 
-        backups = website.incjob_set.all()
+        backups = website.incjob_set.all().reverse()
 
         json_data = "["
         checker = 0
@@ -349,6 +349,12 @@ def submitBackupCreation(request):
         except:
             websiteSSLs = False
 
+
+        try:
+            websiteDatabases = data['websiteDatabases']
+        except:
+            websiteDatabases = False
+
         extraArgs = {}
         extraArgs['website'] = backupDomain
         extraArgs['tempPath'] = tempPath
@@ -356,6 +362,7 @@ def submitBackupCreation(request):
         extraArgs['websiteData'] = websiteData
         extraArgs['websiteEmails'] = websiteEmails
         extraArgs['websiteSSLs'] = websiteSSLs
+        extraArgs['websiteDatabases'] = websiteDatabases
 
         startJob = IncJobs('createBackup', extraArgs)
         startJob.start()
@@ -427,7 +434,6 @@ def getBackupStatus(request):
         logging.writeToFile(str(msg) + " [backupStatus]")
         return HttpResponse(final_json)
 
-
 def deleteBackup(request):
     try:
         userID = request.session['userID']
@@ -448,5 +454,43 @@ def deleteBackup(request):
 
     except BaseException, msg:
         final_dic = {'destStatus': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def fetchRestorePoints(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        data = json.loads(request.body)
+        id = data['id']
+
+        incJob = IncJob.objects.get(id=id)
+
+        backups = incJob.jobsnapshots_set.all()
+
+        json_data = "["
+        checker = 0
+
+        for items in backups:
+
+            dic = {'id': items.id,
+                   'snapshotid': items.snapshotid,
+                   'type': items.type,
+                   'destination': items.destination,
+                   }
+
+            if checker == 0:
+                json_data = json_data + json.dumps(dic)
+                checker = 1
+            else:
+                json_data = json_data + ',' + json.dumps(dic)
+
+        json_data = json_data + ']'
+        final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
+        return HttpResponse(final_json)
+    except BaseException, msg:
+        final_dic = {'status': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
