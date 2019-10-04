@@ -122,10 +122,10 @@ class preFlightsChecks:
     def stdOut(message, log=0, do_exit=0, code=os.EX_OK):
         print("\n\n")
         print ("[" + time.strftime(
-            "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
+            "%H-%M-%S-%b-%d-%Y") + "] #########################################################################\n")
         print("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n")
         print ("[" + time.strftime(
-            "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
+            "%H-%M-%S-%b-%d-%Y") + "] #########################################################################\n")
 
         if log:
             logging.InstallLog.writeToFile(message)
@@ -575,7 +575,7 @@ class preFlightsChecks:
             if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 print("[" + time.strftime(
-                    "%I-%M-%S-%a-%b-%Y") + "] " + "Unable to install Python setup tools, trying again, try number: " + str(
+                    "%H-%M-%S-%b-%d-%Y") + "] " + "Unable to install Python setup tools, trying again, try number: " + str(
                     count) + "\n")
                 if count == 3:
                     logging.InstallLog.writeToFile(
