@@ -208,7 +208,7 @@ class backupUtilities:
                 reparsed = minidom.parseString(rough_string)
                 return reparsed.toprettyxml(indent="  ")
 
-            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018/meta.xml -- metaPath
+            ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52/meta.xml -- metaPath
 
             metaPath = '/tmp/%s' % (str(randint(1000, 9999)))
 
@@ -238,7 +238,7 @@ class backupUtilities:
     def startBackup(tempStoragePath, backupName, backupPath, metaPath = None):
         try:
 
-            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
+            ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52 -- tempStoragePath
             ## /home/example.com/backup - backupPath
 
             ##### Writing the name of backup file.
@@ -256,7 +256,7 @@ class backupUtilities:
 
             ##### Parsing XML Meta file!
 
-            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
+            ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52 -- tempStoragePath
 
             metaPathInBackup = os.path.join(tempStoragePath,'meta.xml')
 
@@ -279,7 +279,7 @@ class backupUtilities:
             if os.path.exists(backupUtilities.licenseKey):
                 copy(completPathToConf, tempStoragePath + '/vhost.conf')
 
-            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
+            ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52 -- tempStoragePath
             ## shutil.make_archive
 
             make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
@@ -534,7 +534,7 @@ class backupUtilities:
             status = os.path.join(completPath,'status')
             logging.CyberCPLogFileWriter.statusWriter(status, "Extracting Main Archive!")
 
-            ## Converting /home/backup/backup-example-06-50-03-Thu-Feb-2018.tar.gz -> /home/backup/backup-example-06-50-03-Thu-Feb-2018
+            ## Converting /home/backup/backup-example.com-02.13.2018_10-24-52.tar.gz -> /home/backup/backup-example.com-02.13.2018_10-24-52
 
             tar = tarfile.open(originalFile)
             tar.extractall(completPath)
@@ -690,7 +690,7 @@ class backupUtilities:
 
             logging.CyberCPLogFileWriter.statusWriter(status, "Extracting web home data!")
 
-            # /home/backup/backup-example-06-50-03-Thu-Feb-2018/public_html.tar.gz
+            # /home/backup/backup-example.com-02.13.2018_10-24-52/public_html.tar.gz
 
             tar = tarfile.open(pathToCompressedHome)
             tar.extractall(websiteHome)
@@ -1027,8 +1027,8 @@ class backupUtilities:
 
 def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
     try:
-        ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018 -- tempStoragePath
-        ## backup-example-06-50-03-Thu-Feb-2018 -- backup name
+        ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52 -- tempStoragePath
+        ## backup-example.com-02.13.2018_10-24-52 -- backup name
         ## /home/example.com/backup - backupPath
         ## /home/cyberpanel/1047.xml - metaPath
 

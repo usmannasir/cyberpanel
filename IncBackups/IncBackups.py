@@ -188,7 +188,7 @@ class IncJobs(multi.Thread):
                 reparsed = minidom.parseString(rough_string)
                 return reparsed.toprettyxml(indent="  ")
 
-            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018/meta.xml -- metaPath
+            ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52/meta.xml -- metaPath
 
             metaPath = '/home/cyberpanel/%s' % (str(randint(1000, 9999)))
 
