@@ -128,7 +128,7 @@ class CSF(multi.Thread):
 
 		#  Enable login failure detection of imap connections: 10 failures triggers
                 elif items.find('LF_IMAPD =') > -1 and items.find('=') > -1 and (items[0] != '#'):
-                    writeToConf.writelines('LF_IMAPD = "1800"\n')
+                    writeToConf.writelines('LF_IMAPD = "10"\n')
 
 		#  LF_IMAPD_PERM = "1800" => the IP is blocked temporarily for 30 minutes
                 elif items.find('LF_IMAPD_PERM') > -1 and items.find('=') > -1 and (items[0] != '#'):
