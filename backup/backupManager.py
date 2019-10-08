@@ -143,7 +143,7 @@ class BackupManager:
             ## /home/example.com/backup
             backupPath = os.path.join("/home", backupDomain, "backup/")
             backupDomainName = data['websiteToBeBacked']
-            backupName = 'backup-' + backupDomainName + "-" + time.strftime("%H-%M-%S-%b-%d-%Y")
+            backupName = 'backup-' + backupDomainName + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
 
             ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52
             tempStoragePath = os.path.join(backupPath, backupName)

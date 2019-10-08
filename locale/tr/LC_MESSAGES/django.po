@@ -3775,7 +3775,7 @@ msgstr "Yedekleme işlemi başarıyla başlatıldı."
 #: emailPremium/templates/emailPremium/policyServer.html:13
 #, fuzzy
 #| msgid "Email Logs"
-msgid "Email Limits Docs"
+msgid "Emai Limits Docs"
 msgstr "Eposta günlükleri"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14

@@ -575,7 +575,7 @@ class preFlightsChecks:
             if preFlightsChecks.resFailed(self.distro, res):
                 count = count + 1
                 print("[" + time.strftime(
-                    "%H-%M-%S-%b-%d-%Y") + "] " + "Unable to install Python setup tools, trying again, try number: " + str(
+                    "%m.%d.%Y_%H-%M-%S") + "] " + "Unable to install Python setup tools, trying again, try number: " + str(
                     count) + "\n")
                 if count == 3:
                     logging.InstallLog.writeToFile(

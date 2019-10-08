@@ -11,7 +11,7 @@ import os
 from loginSystem.models import Administrator
 from websiteFunctions.models import Websites
 from .models import IncJob, JobSnapshots
-from .IncBackups import IncJobs
+from .IncBackupsControl import IncJobs
 from random import randint
 import time
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
@@ -67,8 +67,6 @@ def addDestination(request):
             return ACLManager.loadErrorJson('destStatus', 0)
 
         data = json.loads(request.body)
-
-
 
         if data['type'] == 'SFTP':
 
@@ -158,9 +156,6 @@ def addDestination(request):
             final_dic = {'status': 1}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-
-
-
 
     except BaseException, msg:
         final_dic = {'status': 0, 'error_message': str(msg)}
@@ -284,12 +279,12 @@ def fetchCurrentBackups(request):
 
         website = Websites.objects.get(domain=backupDomain)
 
-        backups = website.incjob_set.all().reverse()
+        backups = website.incjob_set.all()
 
         json_data = "["
         checker = 0
 
-        for items in backups:
+        for items in reversed(backups):
 
             includes = ""
 
@@ -381,47 +376,50 @@ def submitBackupCreation(request):
 
 def getBackupStatus(request):
     try:
-        userID = request.session['userID']
         data = json.loads(request.body)
 
         status = data['tempPath']
         backupDomain = data['websiteToBeBacked']
 
-        domain = Websites.objects.get(domain=backupDomain)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(backupDomain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
 
         ## file name read ends
 
         if os.path.exists(status):
             command = "sudo cat " + status
-            status = ProcessUtilities.outputExecutioner(command, 'cyberpanel')
+            result = ProcessUtilities.outputExecutioner(command, 'cyberpanel')
 
-            if status.find("Completed") > -1:
+            if result.find("Completed") > -1:
 
                 ### Removing Files
 
-                command = 'sudo rm -f ' + status
-                ProcessUtilities.executioner(command, 'cyberpanel')
+                os.remove(status)
 
                 final_json = json.dumps(
-                    {'backupStatus': 1, 'error_message': "None", "status": status, "abort": 1})
+                    {'backupStatus': 1, 'error_message': "None", "status": result, "abort": 1})
                 return HttpResponse(final_json)
 
-            elif status.find("[5009]") > -1:
+            elif result.find("[5009]") > -1:
                 ## removing status file, so that backup can re-run
                 try:
-                    command = 'sudo rm -f ' + status
-                    ProcessUtilities.executioner(command, 'cyberpanel')
-
+                    os.remove(status)
                 except:
                     pass
 
                 final_json = json.dumps(
-                    {'backupStatus': 1, 'error_message': "None", "status": status,
+                    {'backupStatus': 1, 'error_message': "None", "status": result,
                      "abort": 1})
                 return HttpResponse(final_json)
             else:
                 final_json = json.dumps(
-                    {'backupStatus': 1, 'error_message': "None", "status": status,
+                    {'backupStatus': 1, 'error_message': "None", "status": result,
                      "abort": 0})
                 return HttpResponse(final_json)
         else:
@@ -438,11 +436,14 @@ def deleteBackup(request):
     try:
         userID = request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
-
-        if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
-            return ACLManager.loadErrorJson('destStatus', 0)
-
+        admin = Administrator.objects.get(pk=userID)
         data = json.loads(request.body)
+        backupDomain = data['websiteToBeBacked']
+
+        if ACLManager.checkOwnership(backupDomain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
 
         id = data['backupID']
 
@@ -462,6 +463,13 @@ def fetchRestorePoints(request):
         userID = request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
+        data = json.loads(request.body)
+        backupDomain = data['websiteToBeBacked']
+
+        if ACLManager.checkOwnership(backupDomain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
 
         data = json.loads(request.body)
         id = data['id']
@@ -492,5 +500,44 @@ def fetchRestorePoints(request):
         return HttpResponse(final_json)
     except BaseException, msg:
         final_dic = {'status': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def restorePoint(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        data = json.loads(request.body)
+        backupDomain = data['websiteToBeBacked']
+        jobid = data['jobid']
+
+        if ACLManager.checkOwnership(backupDomain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('metaStatus', 0)
+
+        tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+        extraArgs = {}
+        extraArgs['website'] = backupDomain
+        extraArgs['jobid'] = jobid
+        extraArgs['tempPath'] = tempPath
+        extraArgs['reconstruct'] = data['reconstruct']
+
+
+        startJob = IncJobs('restorePoint', extraArgs)
+        startJob.start()
+
+
+        time.sleep(2)
+
+        final_json = json.dumps({'status': 1,  'error_message': "None", 'tempPath': tempPath})
+        return HttpResponse(final_json)
+
+    except BaseException, msg:
+        logging.writeToFile(str(msg))
+        final_dic = {'status': 0, 'metaStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)

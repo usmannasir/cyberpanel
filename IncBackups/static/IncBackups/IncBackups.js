@@ -6,6 +6,7 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
     $scope.backupButton = true;
     $scope.cyberpanelLoading = true;
     $scope.runningBackup = true;
+    $scope.restoreSt = true;
 
 
     $scope.fetchDetails = function () {
@@ -123,6 +124,8 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
 
     $scope.createBackup = function () {
 
+        $scope.status = '';
+
         $scope.cyberpanelLoading = false;
 
 
@@ -153,6 +156,12 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
             if (response.data.status === 1) {
                 $scope.tempPath = response.data.tempPath;
                 getBackupStatus();
+            }else{
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
             }
 
         }
@@ -169,6 +178,7 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
 
         var data = {
             backupID: id,
+            websiteToBeBacked: $scope.websiteToBeBacked
         };
 
         var config = {
@@ -188,7 +198,12 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
 
                 $scope.populateCurrentRecords();
 
-
+            }else{
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
             }
 
         }
@@ -207,7 +222,8 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
         url = "/IncrementalBackups/fetchRestorePoints";
 
         var data = {
-            id: id
+            id: id,
+            websiteToBeBacked: $scope.websiteToBeBacked
         };
 
         var config = {
@@ -241,6 +257,47 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
                 text: 'Could not connect to server, please refresh this page',
                 type: 'error'
             });
+        }
+
+    };
+
+    $scope.restorePoint = function (id, reconstruct) {
+
+        $scope.status = '';
+
+        $scope.cyberpanelLoading = false;
+        $scope.restoreSt = false;
+
+
+        url = "/IncrementalBackups/restorePoint";
+
+        var data = {
+            websiteToBeBacked: $scope.websiteToBeBacked,
+            jobid : id,
+            reconstruct: reconstruct
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                $scope.tempPath = response.data.tempPath;
+                getBackupStatus();
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
         }
 
     };

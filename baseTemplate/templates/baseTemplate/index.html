@@ -588,6 +588,26 @@
 
 
                     <li>
+                        <a href="{% url 'loadBackupHome' %}" title="{% trans 'Incremental Back up' %}">
+                            <i class="glyph-icon tooltip-button icon-copy" title=".icon-folder"></i>
+                            <span>{% trans "Incremental Back up" %}</span>
+                        </a>
+                        <div class="sidebar-submenu">
+
+                            <ul>
+                                <li class="createBackup"><a href="{% url 'createBackupInc' %}"
+                                                            title="{% trans 'Create Back up' %}"><span>{% trans "Create Back up" %}</span></a>
+                                </li>
+                                <li class="restoreBackup"><a href="{% url 'backupDestinationsInc' %}"
+                                                             title="{% trans 'Restore Back up' %}"><span>{% trans "Add Destinations" %}</span></a>
+                                </li>
+                            </ul>
+
+                        </div><!-- .sidebar-submenu -->
+                    </li>
+
+
+                    <li>
                         <a href="{% url 'loadSSLHome' %}" title="{% trans 'Back up' %}">
                             <i class="glyph-icon tooltip-button icon-lock" title="{% trans 'SSL' %}"></i>
                             <span>{% trans "SSL" %}</span>
