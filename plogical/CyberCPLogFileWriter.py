@@ -10,7 +10,7 @@ class CyberCPLogFileWriter:
         try:
             file = open(CyberCPLogFileWriter.fileName,'a')
             file.writelines("[" + time.strftime(
-                    "%I-%M-%S-%a-%b-%Y") + "] "+ message + "\n")
+                    "%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n")
             file.close()
 
         except IOError,msg:
@@ -21,7 +21,7 @@ class CyberCPLogFileWriter:
         try:
             file = open(CyberCPLogFileWriter.fileName, 'a')
             file.writelines("[" + time.strftime(
-                "%I-%M-%S-%a-%b-%Y") + "] [" + level + ":" + method + "] " + message + "\n")
+                "%m.%d.%Y_%H-%M-%S") + "] [" + level + ":" + method + "] " + message + "\n")
             file.close()
             file.close()
         except IOError:

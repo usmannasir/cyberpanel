@@ -3848,7 +3848,7 @@ msgstr "δημιουργήθηκε με επιτυχία."
 #: emailPremium/templates/emailPremium/policyServer.html:13
 #, fuzzy
 #| msgid "Email Logs"
-msgid "Emai Limits Docs"
+msgid "Email Limits Docs"
 msgstr "Αρχεία καταγραφής Email "
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14

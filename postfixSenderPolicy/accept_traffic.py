@@ -117,7 +117,7 @@ class HandleRequest(multi.Thread):
                 else:
                     email = EUsers.objects.get(email=emailAddress)
                     if emailObj.logStatus == 1:
-                        logEntry = EmailLogs(email=email, destination=destination, timeStamp=time.strftime("%I-%M-%S-%a-%b-%Y"))
+                        logEntry = EmailLogs(email=email, destination=destination, timeStamp=time.strftime("%m.%d.%Y_%H-%M-%S"))
                         logEntry.save()
                     emailObj.monthlyUsed = emailObj.monthlyUsed + 1
                     emailObj.hourlyUsed = emailObj.hourlyUsed + 1
@@ -127,7 +127,7 @@ class HandleRequest(multi.Thread):
                 email = EUsers.objects.get(email=emailAddress)
                 if emailObj.logStatus == 1:
                     logEntry = EmailLogs(email=email, destination=destination,
-                                         timeStamp=time.strftime("%I-%M-%S-%a-%b-%Y"))
+                                         timeStamp=time.strftime("%m.%d.%Y_%H-%M-%S"))
                     logEntry.save()
 
                 emailObj.monthlyUsed = emailObj.monthlyUsed + 1

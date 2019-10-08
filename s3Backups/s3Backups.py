@@ -424,9 +424,9 @@ class S3Backups(multi.Thread):
         ## /home/example.com/backup
         backupPath = os.path.join("/home", virtualHost, "backup/")
         domainUser = website.externalApp
-        backupName = 'backup-' + domainUser + "-" + time.strftime("%I-%M-%S-%a-%b-%Y")
+        backupName = 'backup-' + domainUser + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
 
-        ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018
+        ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52
         tempStoragePath = os.path.join(backupPath, backupName)
 
         p = Process(target=backupUtil.submitBackupCreation,

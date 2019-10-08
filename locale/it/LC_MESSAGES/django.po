@@ -3803,7 +3803,7 @@ msgstr "Le configurazioni di SpamAssassin sono state salvate correttamente."
 #: emailPremium/templates/emailPremium/policyServer.html:13
 #, fuzzy
 #| msgid "Email Logs"
-msgid "Emai Limits Docs"
+msgid "Email Limits Docs"
 msgstr "Documentazione Limiti Email"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14

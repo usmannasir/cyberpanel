@@ -11,6 +11,7 @@ from mailUtilities import mailUtilities
 import threading as multi
 from plogical.processUtilities import ProcessUtilities
 
+
 class CSF(multi.Thread):
     installLogPath = "/home/cyberpanel/csfInstallLog"
     csfURL = 'https://download.configserver.com/csf.tgz'
@@ -58,25 +59,233 @@ class CSF(multi.Thread):
             command = 'bash install.sh'
             ProcessUtilities.normalExecutioner(command)
 
+            # install required packages for CSF perl and /usr/bin/host
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                command = 'yum install bind-utils perl-libwww-perl net-tools perl-LWP-Protocol-https -y'
+                ProcessUtilities.normalExecutioner(command)
+            elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                command = 'apt-get install dnsutils libwww-perl -y'
+                ProcessUtilities.normalExecutioner(command)
+            else:
 
-            ## Some initial configurations
+                logging.CyberCPLogFileWriter.statusWriter(CSF.installLogPath,
+                                                          'CSF required packages successfully Installed.[200]\n', 1)
+
+            # Some initial configurations
 
             data = open('/etc/csf/csf.conf', 'r').readlines()
             writeToConf = open('/etc/csf/csf.conf', 'w')
 
             for items in data:
                 if items.find('TCP_IN') > -1 and items.find('=') > -1 and (items[0] != '#'):
-                    writeToConf.writelines('TCP_IN = "20,21,22,25,53,80,110,143,443,465,587,993,995,8090,40110:40210"\n')
+                    writeToConf.writelines(
+                        'TCP_IN = "20,21,22,25,53,80,110,143,443,465,587,993,995,7080,8090,40110:40210"\n')
                 elif items.find('TCP_OUT') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('TCP_OUT = "20,21,22,25,53,80,110,113,443,587,993,995,8090,40110:40210"\n')
                 elif items.find('UDP_IN') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('UDP_IN = "20,21,53"\n')
                 elif items.find('UDP_OUT') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('UDP_OUT = "20,21,53,113,123"\n')
+                # setting RESTRICT_SYSLOG to "3" for use with option RESTRICT_SYSLOG_GROUP
+                elif items.find('RESTRICT_SYSLOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('RESTRICT_SYSLOG = "3"\n')
+
+                #  Send an email alert if an IP address is blocked by one of the [*] triggers: disabled
+                elif items.find('LF_EMAIL_ALERT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_EMAIL_ALERT = "0"\n')
+
+                # Set LF_PERMBLOCK_ALERT to "0" to disable this feature
+                elif items.find('LF_PERMBLOCK_ALERT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_PERMBLOCK_ALERT = "0"\n')
+
+                #  Set LF_NETBLOCK_ALERT to "0" to disable this feature
+                elif items.find('LF_NETBLOCK_ALERT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_NETBLOCK_ALERT = "0"\n')
+
+                # Login Failure Blocking and Alerts
+                # LF_TRIGGER_PERM = "1800" => the IP is blocked temporarily for 30 minutes
+                elif items.find('LF_TRIGGER_PERM') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_TRIGGER_PERM = "1800"\n')
+
+                #  Enable login failure detection of sshd connections: 10 failures triggers
+                elif items.find('LF_SSHD =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_SSHD = "10"\n')
+
+                #  LF_SSHD_PERM = "1800" => the IP is blocked temporarily for 30 minutes
+                elif items.find('LF_SSHD_PERM') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_SSHD_PERM = "1800"\n')
+
+                #  Enable login failure detection of ftp connections: 10 failures triggers
+                elif items.find('LF_FTPD =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_FTPD = "10"\n')
+
+                #  LF_FTPD_PERM = "1800" => the IP is blocked temporarily for 30 minutes
+                elif items.find('LF_FTPD_PERM') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_FTPD_PERM = "1800"\n')
+
+                #  Enable login failure detection of SMTP AUTH connections: 10 failures triggers
+                elif items.find('LF_SMTPAUTH =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_SMTPAUTH = "10"\n')
+
+                #  LF_SMTPAUTH_PERM = "1800" => the IP is blocked temporarily for 30 minutes
+                elif items.find('LF_SMTPAUTH_PERM') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_SMTPAUTH_PERM = "1800"\n')
+
+                #  Enable login failure detection of pop3 connections: 10 failures triggers
+                elif items.find('LF_POP3D =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_POP3D = "10"\n')
+
+                #  LF_POP3D_PERM = "1800" => the IP is blocked temporarily for 30 minutes
+                elif items.find('LF_POP3D_PERM') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_POP3D_PERM = "1800"\n')
+
+                #  Enable login failure detection of imap connections: 10 failures triggers
+                elif items.find('LF_IMAPD =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_IMAPD = "10"\n')
+
+                #  LF_IMAPD_PERM = "1800" => the IP is blocked temporarily for 30 minutes
+                elif items.find('LF_IMAPD_PERM') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_IMAPD_PERM = "1800"\n')
+
+                #  LF_HTACCESS_PERM = "1800" => the IP is blocked temporarily for 30 minutes
+                elif items.find('LF_HTACCESS_PERM') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_HTACCESS_PERM = "1800"\n')
+
+                #  Enable failure detection of repeated Apache mod_security rule triggers: 10 failures triggers
+                elif items.find('LF_MODSEC =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_MODSEC = "10"\n')
+
+                #  LF_MODSEC_PERM = "1800" => the IP is blocked temporarily for 30 minutes
+                elif items.find('LF_MODSEC_PERM') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_MODSEC_PERM = "1800"\n')
+
+                #  MODSEC_LOG location
+                elif items.find('MODSEC_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('MODSEC_LOG = "/usr/local/lsws/logs/auditmodsec.log"\n')
+
+                #  Send an email alert if anyone logs in successfully using SSH: Disabled
+                elif items.find('LF_SSH_EMAIL_ALERT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_SSH_EMAIL_ALERT = "0"\n')
+
+                #  Send an email alert if anyone accesses webmin: Disabled not applicable
+                elif items.find('LF_WEBMIN_EMAIL_ALERT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_WEBMIN_EMAIL_ALERT = "0"\n')
+
+                #  LF_QUEUE_ALERT disabled
+                elif items.find('LF_QUEUE_ALERT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_QUEUE_ALERT = "0"\n')
+
+                #  LF_QUEUE_INTERVAL disabled
+                elif items.find('LF_QUEUE_INTERVAL = "0"') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_TRIGGER_PERM = "1800"\n')
+
+                #  Relay Tracking. This allows you to track email that is relayed through the server. Disabled
+                elif items.find('RT_RELAY_ALERT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('RT_RELAY_ALERT = "0"\n')
+
+                #  RT_[relay type]_LIMIT: the limit/hour afterwhich an email alert will be sent
+                elif items.find('RT_RELAY_LIMIT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('RT_RELAY_LIMIT = "500"\n')
+
+                #  RT_[relay type]_BLOCK: 0 = no block;1 = perm block;nn=temp block for nn secs
+                elif items.find('RT_RELAY_BLOCK') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('RT_RELAY_BLOCK = "0"\n')
+
+                #   This option triggers for email authenticated by SMTP AUTH disabled
+                elif items.find('RT_AUTHRELAY_ALERT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('RT_AUTHRELAY_ALERT = "0"\n')
+
+                #  RT_AUTHRELAY_LIMIT set to 100
+                elif items.find('RT_AUTHRELAY_LIMIT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('RT_AUTHRELAY_LIMIT = "100"\n')
+
+                #  RT_AUTHRELAY_LIMIT set to 0
+                elif items.find('RT_AUTHRELAY_BLOCK') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('RT_AUTHRELAY_BLOCK = "0"\n')
+
+                #   This option triggers for email authenticated by POP before SMTP
+                elif items.find('RT_POPRELAY_ALERT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('RT_POPRELAY_ALERT = "0"\n')
+
+                #   This option triggers for email authenticated by POP before SMTP
+                elif items.find('RT_POPRELAY_LIMIT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('RT_POPRELAY_LIMIT = "100"\n')
+
+                #  RT_POPRELAY_BLOCK disabled
+                elif items.find('RT_POPRELAY_BLOCK') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('RT_POPRELAY_BLOCK = "0"\n')
+
+                #   This option triggers for email sent via /usr/sbin/sendmail or /usr/sbin/exim: Disabled
+                elif items.find('RT_LOCALRELAY_ALERT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('RT_LOCALRELAY_ALERT = "0"\n')
+
+                #   This option triggers for email sent via a local IP addresses
+                elif items.find('RT_LOCALRELAY_LIMIT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('RT_LOCALRELAY_LIMIT = "100"\n')
+
+                #   This option triggers for email sent via a local IP addresses
+                elif items.find('RT_LOCALHOSTRELAY_ALERT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('RT_LOCALHOSTRELAY_ALERT = "0"\n')
+
+                #   This option triggers for email sent via a local IP addresses disabled
+                elif items.find('RT_LOCALHOSTRELAY_LIMIT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('RT_LOCALHOSTRELAY_LIMIT = "100"\n')
+
+                #  If an RT_* event is triggered, then if the following contains the path to a script
+                elif items.find('RT_ACTION') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('RT_ACTION = ""\n')
+
+                #   Send an email alert if an IP address is blocked due to connection tracking disabled
+                elif items.find('CT_EMAIL_ALERT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('CT_EMAIL_ALERT = "0"\n')
+
+                #  User Process Tracking.  Set to 0 to disable this feature
+                elif items.find('PT_USERPROC =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('PT_USERPROC = "0"\n')
+
+                #  This User Process Tracking option sends an alert if any user process exceeds the virtual memory usage set (MB)
+                elif items.find('PT_USERMEM =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('PT_USERMEM = "0"\n')
+
+                #  This User Process Tracking option sends an alert if any user process exceeds the RSS memory usage set (MB) - RAM used, not virtual.
+                elif items.find('PT_USERRSS =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('PT_USERRSS = "0"\n')
+
+                #  If this option is set then processes detected by PT_USERMEM, PT_USERTIME or PT_USERPROC are killed. Disabled
+                elif items.find('PT_USERTIME =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('PT_USERTIME = "0"\n')
+
+                #  If you want to disable email alerts if PT_USERKILL is triggered, then set this option to 0. Disabled
+                elif items.find('PT_USERKILL_ALERT') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('PT_USERKILL_ALERT = "0"\n')
+
+                #  Check the PT_LOAD_AVG minute Load Average (can be set to 1 5 or 15 and defaults to 5 if set otherwise) on the server every PT_LOAD seconds. Disabled
+                elif items.find('PT_LOAD =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('PT_LOAD = "0"\n')
+
+                #  HTACCESS_LOG is ins main error.log
+                elif items.find('HTACCESS_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('HTACCESS_LOG = "/usr/local/lsws/logs/error.log"\n')
+                elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                    if items.find('SSHD_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                        writeToConf.writelines('SSHD_LOG = "/var/log/auth.log"\n')
+                    elif items.find('SU_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                        writeToConf.writelines('SU_LOG = "/var/log/auth.log"\n')
+                    elif items.find('SMTPAUTH_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                        writeToConf.writelines('SMTPAUTH_LOG = "/var/log/mail.log"\n')
+                    elif items.find('POP3D_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                        writeToConf.writelines('POP3D_LOG = "/var/log/mail.log"\n')
+                    elif items.find('IMAPD_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                        writeToConf.writelines('IMAPD_LOG = "/var/log/mail.log"\n')
+                    elif items.find('IPTABLES_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                        writeToConf.writelines('IPTABLES_LOG = "/var/log/kern.log"\n')
+                    elif items.find('SYSLOG_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                        writeToConf.writelines('SYSLOG_LOG = "/var/log/syslog"\n')
                 else:
                     writeToConf.writelines(items)
 
             writeToConf.close()
+
             ##
 
             command = 'csf -s'
@@ -144,7 +353,8 @@ class CSF(multi.Thread):
             output = ProcessUtilities.outputExecutioner(command).splitlines()
 
             for items in output:
-                if items.find('TESTING') > -1 and items.find('=') > -1 and (items[0]!= '#') and items.find('TESTING_INTERVAL') == -1:
+                if items.find('TESTING') > -1 and items.find('=') > -1 and (items[0] != '#') and items.find(
+                        'TESTING_INTERVAL') == -1:
                     if items.find('0') > -1:
                         currentSettings['TESTING'] = 0
                     else:
@@ -171,7 +381,6 @@ class CSF(multi.Thread):
 
             if output.find('0.0.0.0/0') > -1:
                 currentSettings['firewallStatus'] = 1
-
 
             return currentSettings
 
@@ -209,7 +418,7 @@ class CSF(multi.Thread):
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[changeStatus]")
-            print '0',str(msg)
+            print '0', str(msg)
 
     @staticmethod
     def modifyPorts(protocol, portsPath):
@@ -289,8 +498,23 @@ class CSF(multi.Thread):
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[blockIP]")
 
 
-def main():
+    def run_command(command):
+        p = subprocess.Popen(command,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
+        return iter(p.stdout.readline, b'')
 
+    @staticmethod
+    def checkIP(ipAddress):
+        try:
+            command = "sudo csf -g ' + ipAddress.split()
+            for line in run_command(command):
+                print(line)
+
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[checkIP]")
+
+def main():
     parser = argparse.ArgumentParser(description='CSF Manager')
     parser.add_argument('function', help='Specific a function to call!')
 
@@ -302,7 +526,7 @@ def main():
     args = parser.parse_args()
 
     if args.function == "installCSF":
-       CSF.installCSF()
+        CSF.installCSF()
     elif args.function == 'removeCSF':
         controller = CSF(args.function, {})
         controller.run()
@@ -310,6 +534,7 @@ def main():
         CSF.changeStatus(args.controller, args.status)
     elif args.function == 'modifyPorts':
         CSF.modifyPorts(args.protocol, args.ports)
+
 
 if __name__ == "__main__":
     main()
