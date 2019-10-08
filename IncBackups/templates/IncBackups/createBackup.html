@@ -140,7 +140,7 @@
                                                class="btn btn-border btn-alt border-green btn-link font-green"
                                                title=""><span>Restore Points</span></a>
                                             <div id="settings" class="modal fade" role="dialog">
-                                                <div class="modal-dialog modal-lg">
+                                                <div class="modal-dialog">
 
                                                     <!-- Modal content-->
                                                     <div class="modal-content">
@@ -149,8 +149,9 @@
                                                                 &times;
                                                             </button>
                                                             <h4 class="modal-title">Restore Points
-                                                                <img ng-hide="cyberpanelLoading"
-                                                       src="{% static 'images/loading.gif' %}">
+                                                                <img id="cyberpanelLoading"
+                                                                     src="/static/images/loading.gif"
+                                                                     style="display: none;">
                                                             </h4>
                                                         </div>
                                                         <div class="modal-body">
@@ -172,24 +173,12 @@
                                                                     <td ng-bind="job.type"></td>
                                                                     <td ng-bind="job.destination"></td>
                                                                     <td>
-                                                                        <a ng-click="restorePoint(job.id, 0)" class="btn btn-border btn-alt border-green btn-link font-green"
+                                                                        <a class="btn btn-border btn-alt border-green btn-link font-green"
                                                                            title=""><span>Restore</span></a>
-                                                                        <a ng-click="restorePoint(job.id, 1)" class="btn btn-border btn-alt border-green btn-link font-green"
-                                                                           title=""><span>Restore and Reconstruct</span></a>
                                                                     </td>
                                                                 </tr>
                                                                 </tbody>
                                                             </table>
-
-                                                            <div ng-hide="restoreSt" class="form-group">
-                                                                <div class="col-sm-12">
-                                                                    <div class="col-sm-12">
-                                                                        <textarea ng-model="status"
-                                                                                  class="form-control"
-                                                                                  rows="7"></textarea>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
 
                                                         </div>
                                                         <div class="modal-footer">

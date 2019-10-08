@@ -7,5 +7,5 @@ class InstallLog:
     def writeToFile(message):
         file = open(InstallLog.fileName,'a')
         file.writelines("[" + time.strftime(
-                    "%m.%d.%Y_%H-%M-%S") + "] "+message + "\n")
+                    "%H-%M-%S-%b-%d-%Y") + "] "+message + "\n")
         file.close()

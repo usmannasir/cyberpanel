@@ -180,22 +180,17 @@ class mailUtilities:
             return 0
 
     @staticmethod
-    def changeEmailPassword(email, newPassword, encrypt = None):
+    def changeEmailPassword(email, newPassword):
         try:
-            if encrypt == None:
-                CentOSPath = '/etc/redhat-release'
-                changePass = EUsers.objects.get(email=email)
-                if os.path.exists(CentOSPath):
-                    password = bcrypt.hashpw(str(newPassword), bcrypt.gensalt())
-                    password = '{CRYPT}%s' % (password)
-                    changePass.password = password
-                else:
-                    changePass.password = newPassword
-                changePass.save()
+            CentOSPath = '/etc/redhat-release'
+            changePass = EUsers.objects.get(email=email)
+            if os.path.exists(CentOSPath):
+                password = bcrypt.hashpw(str(newPassword), bcrypt.gensalt())
+                password = '{CRYPT}%s' % (password)
+                changePass.password = password
             else:
-                changePass = EUsers.objects.get(email=email)
                 changePass.password = newPassword
-                changePass.save()
+            changePass.save()
             return 0,'None'
         except BaseException, msg:
             return 0, str(msg)

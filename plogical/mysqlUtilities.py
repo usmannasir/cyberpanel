@@ -698,7 +698,7 @@ password=%s
             return 0
 
     @staticmethod
-    def changePassword(userName, dbPassword, encrypt = None):
+    def changePassword(userName, dbPassword):
         try:
 
             connection, cursor = mysqlUtilities.setupConnection()
@@ -707,15 +707,13 @@ password=%s
                 return 0
             cursor.execute("use mysql")
 
-            if encrypt == None:
-                try:
-                    dbuser = DBUsers.objects.get(user=userName)
-                    cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "')")
-                except:
-                    userName = mysqlUtilities.fetchuser(userName)
-                    cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "')")
-            else:
-                cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = '" + dbPassword + "'")
+
+            try:
+                dbuser = DBUsers.objects.get(user=userName)
+                cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "')")
+            except:
+                userName = mysqlUtilities.fetchuser(userName)
+                cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "')")
 
             connection.close()
 

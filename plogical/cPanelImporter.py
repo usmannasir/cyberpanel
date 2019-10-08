@@ -2,6 +2,7 @@
 import os.path
 import sys
 import django
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -712,7 +713,7 @@ class cPanelImporter:
         command = "sudo chown -R " + externalApp + ":" + externalApp + " /home/" + self.mainDomain
         ProcessUtilities.normalExecutioner(command)
 
-        command = "sudo chown -R root:nobody /home/" + self.mainDomain + "/logs"
+        command = "sudo chown -R lscpd:lscpd /home/" + self.mainDomain + "/logs"
         ProcessUtilities.normalExecutioner(command)
 
         command = "sudo find %s -type d -exec chmod 0755 {} \;" % ("/home/" + self.mainDomain + "/public_html")

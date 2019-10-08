@@ -10,7 +10,7 @@ class cliLogger:
         try:
             file = open(cliLogger.fileName, 'a')
             file.writelines("[" + time.strftime(
-                "%m.%d.%Y_%H-%M-%S") + "] [" + level + ":" + method + "] " + message + "\n")
+                "%H-%M-%S-%b-%d-%Y") + "] [" + level + ":" + method + "] " + message + "\n")
             file.close()
             file.close()
         except IOError:
