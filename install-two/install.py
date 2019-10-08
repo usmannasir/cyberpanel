@@ -25,10 +25,10 @@ class preFlightsChecks:
     def stdOut(message):
         print("\n\n")
         print ("[" + time.strftime(
-            "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
-        print("[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + message + "\n")
+            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n")
+        print("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n")
         print ("[" + time.strftime(
-            "%I-%M-%S-%a-%b-%Y") + "] #########################################################################\n")
+            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n")
 
     def checkIfSeLinuxDisabled(self):
         try:
@@ -317,17 +317,17 @@ class preFlightsChecks:
             if res == 1:
                 count = count + 1
                 print("[" + time.strftime(
-                    "%I-%M-%S-%a-%b-%Y") + "] " + "Unable to install Python setup tools, trying again, try number: " + str(
+                    "%m.%d.%Y_%H-%M-%S") + "] " + "Unable to install Python setup tools, trying again, try number: " + str(
                     count) + "\n")
                 if count == 3:
                     logging.InstallLog.writeToFile(
                         "Unable to install Python setup tools, exiting installer! [install_python_setup_tools]")
                     print("[" + time.strftime(
-                        "%I-%M-%S-%a-%b-%Y") + "] " + "Installation failed, consult: /var/log/installLogs.txt")
+                        "%m.%d.%Y_%H-%M-%S") + "] " + "Installation failed, consult: /var/log/installLogs.txt")
                     sys.exit()
             else:
                 logging.InstallLog.writeToFile("Python setup tools Successfully installed!")
-                print("[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + "Python setup tools Successfully installed!")
+                print("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + "Python setup tools Successfully installed!")
                 break
 
     def install_python_requests(self):
@@ -974,18 +974,18 @@ class preFlightsChecks:
                 if res == 1:
                     count = count + 1
                     print("[" + time.strftime(
-                        "%I-%M-%S-%a-%b-%Y") + "] " + "Unable to unzip PHPMYAdmin, trying again, try number: " + str(
+                        "%m.%d.%Y_%H-%M-%S") + "] " + "Unable to unzip PHPMYAdmin, trying again, try number: " + str(
                         count) + "\n")
                     if count == 3:
                         logging.InstallLog.writeToFile(
                             "Unable to unzip PHPMYAdmin, exiting installer! [download_install_phpmyadmin]")
                         print("[" + time.strftime(
-                            "%I-%M-%S-%a-%b-%Y") + "] " + "Installation failed, consult: /var/log/installLogs.txt")
+                            "%m.%d.%Y_%H-%M-%S") + "] " + "Installation failed, consult: /var/log/installLogs.txt")
                         sys.exit()
                 else:
                     logging.InstallLog.writeToFile("PHPMYAdmin unzipped!")
                     print(
-                        "[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + "PHPMYAdmin unzipped!")
+                        "[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + "PHPMYAdmin unzipped!")
                     break
 
             ###
@@ -1004,18 +1004,18 @@ class preFlightsChecks:
                 if res == 1:
                     count = count + 1
                     print("[" + time.strftime(
-                        "%I-%M-%S-%a-%b-%Y") + "] " + "Unable to install PHPMYAdmin, trying again, try number: " + str(
+                        "%m.%d.%Y_%H-%M-%S") + "] " + "Unable to install PHPMYAdmin, trying again, try number: " + str(
                         count) + "\n")
                     if count == 3:
                         logging.InstallLog.writeToFile(
                             "Unable to install PHPMYAdmin, exiting installer! [download_install_phpmyadmin]")
                         print("[" + time.strftime(
-                            "%I-%M-%S-%a-%b-%Y") + "] " + "Installation failed, consult: /var/log/installLogs.txt")
+                            "%m.%d.%Y_%H-%M-%S") + "] " + "Installation failed, consult: /var/log/installLogs.txt")
                         sys.exit()
                 else:
                     logging.InstallLog.writeToFile("PHPMYAdmin Successfully installed!")
                     print(
-                        "[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + "PHPMYAdmin Successfully installed!")
+                        "[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + "PHPMYAdmin Successfully installed!")
                     break
 
         except OSError, msg:
@@ -1892,7 +1892,7 @@ class preFlightsChecks:
                 else:
                     logging.InstallLog.writeToFile("Rainloop permissions changed!")
                     print(
-                        "[" + time.strftime("%I-%M-%S-%a-%b-%Y") + "] " + "Rainloop permissions changed!")
+                        "[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + "Rainloop permissions changed!")
                     break
 
             #############
