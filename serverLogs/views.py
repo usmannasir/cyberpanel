@@ -7,33 +7,38 @@ from django.http import HttpResponse
 import json
 import plogical.CyberCPLogFileWriter as logging
 from plogical.installUtilities import installUtilities
-from loginSystem.models import Administrator
 import subprocess
 import shlex
 from plogical.virtualHostUtilities import virtualHostUtilities
+from plogical.acl import ACLManager
+from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
 
 def logsHome(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-        if admin.type == 3:
-            return HttpResponse("You don't have enough privileges to access this page.")
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
     except KeyError:
         return redirect(loadLoginPage)
 
     return render(request,'serverLogs/index.html')
 
-
 def accessLogs(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=val)
-        if admin.type == 3:
-            return HttpResponse("You don't have enough privileges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         return render(request,'serverLogs/accessLogs.html')
 
@@ -41,15 +46,15 @@ def accessLogs(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[accessLogs]")
         return redirect(loadLoginPage)
 
-
 def errorLogs(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=val)
-
-        if admin.type == 3:
-            return HttpResponse("You don't have enough privileges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
 
         return render(request,'serverLogs/errorLogs.html')
@@ -60,13 +65,13 @@ def errorLogs(request):
 
 def ftplogs(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=val)
-
-        if admin.type == 3:
-            return HttpResponse("You don't have enough privileges to access this page.")
-
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         return render(request,'serverLogs/ftplogs.html')
 
@@ -76,12 +81,13 @@ def ftplogs(request):
 
 def emailLogs(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=val)
-
-        if admin.type == 3:
-            return HttpResponse("You don't have enough privileges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
 
         return render(request,'serverLogs/emailLogs.html')
@@ -92,13 +98,13 @@ def emailLogs(request):
 
 def modSecAuditLogs(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=val)
-
-        if admin.type == 3:
-            return HttpResponse("You don't have enough privileges to access this page.")
-
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         return render(request,'serverLogs/modSecAuditLog.html')
 
@@ -106,78 +112,79 @@ def modSecAuditLogs(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[accessLogs]")
         return redirect(loadLoginPage)
 
-
 def getLogsFromFile(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(id=val)
-
-        if admin.type == 1:
-            data = json.loads(request.body)
-            type = data['type']
-
-            if type=="access":
-                fileName = installUtilities.Server_root_path+"/logs/access.log"
-            elif type=="error":
-                fileName = installUtilities.Server_root_path + "/logs/error.log"
-            elif type=="email":
-                fileName="/var/log/maillog"
-            elif type=="ftp":
-                fileName="/var/log/messages"
-            elif type == "modSec":
-                fileName = "/usr/local/lsws/logs/auditmodsec.log"
-
-
-            command = "sudo tail -50 " + fileName
-
-            fewLinesOfLogFile = subprocess.check_output(shlex.split(command))
-
-            status = {"logstatus":1,"logsdata":fewLinesOfLogFile}
-            final_json = json.dumps(status)
-            return HttpResponse(final_json)
-
+        if currentACL['admin'] == 1:
+            pass
         else:
-            status = {"logstatus": 0, 'error': "You don't have enough privileges to access this page."}
+            return ACLManager.loadErrorJson('logstatus', 0)
+
+        data = json.loads(request.body)
+        type = data['type']
+
+        if type == "access":
+            fileName = installUtilities.Server_root_path + "/logs/access.log"
+        elif type == "error":
+            fileName = installUtilities.Server_root_path + "/logs/error.log"
+        elif type == "email":
+            fileName = "/var/log/maillog"
+        elif type == "ftp":
+            fileName = "/var/log/messages"
+        elif type == "modSec":
+            fileName = "/usr/local/lsws/logs/auditmodsec.log"
+        elif type == "cyberpanel":
+            fileName = "/home/cyberpanel/error-logs.txt"
+
+        try:
+            command = "sudo tail -50 " + fileName
+            fewLinesOfLogFile = ProcessUtilities.outputExecutioner(command)
+            status = {"status": 1, "logstatus": 1, "logsdata": fewLinesOfLogFile}
             final_json = json.dumps(status)
             return HttpResponse(final_json)
-
+        except:
+            status = {"status": 1, "logstatus": 1, "logsdata": 'Emtpy File.'}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
 
     except KeyError, msg:
-        status = {"logstatus":0,"error":"Could not fetch data from log file, please see CyberCP main log file through command line."}
+        status = {"status": 0, "logstatus":0,"error":"Could not fetch data from log file, please see CyberCP main log file through command line."}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[getLogsFromFile]")
-        return HttpResponse("Not Logged in as admin")
+        final_json = json.dumps(status)
+        return HttpResponse(final_json)
 
 def clearLogFile(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('cleanStatus', 0)
+
         try:
-            if admin.type == 1:
-                if request.method == 'POST':
+            if request.method == 'POST':
 
-                    data = json.loads(request.body)
+                data = json.loads(request.body)
 
-                    fileName = data['fileName']
+                fileName = data['fileName']
 
-                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/serverLogs.py"
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/serverLogs.py"
+                execPath = execPath + " cleanLogFile --fileName " + fileName
 
-                    execPath = execPath + " cleanLogFile --fileName " + fileName
+                output = ProcessUtilities.outputExecutioner(execPath)
 
-                    output = subprocess.check_output(shlex.split(execPath))
-
-                    if output.find("1,None") > -1:
-                        data_ret = {'cleanStatus': 1, 'error_message': "None"}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-                    else:
-                        data_ret = {'cleanStatus': 0, 'error_message': output}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-            else:
-                data_ret = {'cleanStatus': 0, 'error_message': 'Not enough privileges.'}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+                if output.find("1,None") > -1:
+                    data_ret = {'cleanStatus': 1, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'cleanStatus': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
 
         except BaseException,msg:
             data_ret = {'cleanStatus': 0, 'error_message': str(msg)}

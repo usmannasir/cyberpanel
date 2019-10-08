@@ -18,11 +18,11 @@
 
     {% if openDKIMInstalled == 0 %}
         <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "DKIM Manager" %} <img ng-hide="manageDKIMLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
-            <form  action="/" class="form-horizontal bordered-row">
+            <form  action="/" class="form-horizontal bordered-row panel-body">
                  <div class="form-group text-center">
                      <h3>{% trans "OpenDKIM is not installed. " %}
                          <a href="" ng-click="installOpenDKIM()"><strong>{% trans "Install Now" %}</strong></a>
@@ -53,7 +53,7 @@
 
                      <div ng-hide="openDKIMInstallBox" class="col-md-12">
 
-                        <form  action="/" id="" class="form-horizontal bordered-row">
+                        <form  action="/" id="" class="form-horizontal bordered-row panel-body">
                             <div class="form-group">
                                     <div style="margin-top: 2%;" class="col-sm-12">
                                         <textarea ng-model="requestData" rows="15" class="form-control">{{ requestData }}</textarea>
@@ -71,12 +71,12 @@
     </div>
     {% else %}
         <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "DKIM Manager" %} <img ng-hide="manageDKIMLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
-            <form  action="/" class="form-horizontal bordered-row">
+            <form  action="/" class="form-horizontal bordered-row panel-body">
 
 
                  <div class="form-group">

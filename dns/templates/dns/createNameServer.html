@@ -14,14 +14,23 @@
 </div>
 <div ng-controller="createNameserver" class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Details" %} <img ng-hide="createNameserverLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div class="example-box-wrapper">
 
+        {% if not status %}
+            <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                <h3>{% trans "PowerDNS is disabled." %}
+                    <a href="{% url 'managePowerDNS' %}"><button class="btn btn-alt btn-hover btn-blue-alt">
+                        <span>{% trans "Enable Now" %}</span>
+                        <i class="glyph-icon icon-arrow-right"></i>
+                    </button></a></h3>
+            </div>
 
-            <form  action="/" class="form-horizontal bordered-row">
+        {% else %}
 
+            <form  action="/" class="form-horizontal bordered-row panel-body">
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
@@ -29,11 +38,9 @@
                         <input name="dom"  type="text" class="form-control" ng-model="domainForNS" required>
                     </div>
 
-
                     <div class="current-pack">example.com</div>
 
                 </div>
-
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "First Nameserver" %}</label>
@@ -60,7 +67,6 @@
 
                 </div>
 
-
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "IP Address" %}</label>
                     <div class="col-sm-6">
@@ -68,21 +74,17 @@
                     </div>
                 </div>
 
-
-
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="createNameserverFunc()" class="btn btn-primary btn-lg btn-block">{% trans "Create Nameserver" %}</button>
+                         <button type="button" ng-click="createNameserverFunc()" class="btn btn-primary btn-lg">{% trans "Create Nameserver" %}</button>
 
                     </div>
                 </div>
 
-
-
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
+                    <div class="col-sm-6">
                             <div ng-hide="nameserverCreationFailed" class="alert alert-danger">
                                         <p>{% trans "Nameserver cannot be created. Error message:" %} {$ errorMessage $}</p>
                             </div>
@@ -109,6 +111,9 @@
 
 
             </form>
+
+
+        {% endif %}
 
 
 

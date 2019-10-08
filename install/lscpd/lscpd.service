@@ -1,12 +1,20 @@
 [Unit]
 Description = LSCPD Daemon
+After=network.target remote-fs.target nss-lookup.target
 
 [Service]
 Type=forking
 ExecStart = /usr/local/lscp/bin/lscpdctrl start
 ExecStop = /usr/local/lscp/bin/lscpdctrl stop
-Restart= /usr/local/lscp/bin/lscpdctrl restart
-Restart=on-abnormal
+#ExecReload= /usr/local/lscp/bin/lscpdctrl restart
+
+KillMode=none
+PrivateTmp=false
+
+# do not want to be limited in anyway
+CPUAccounting=false
+TasksAccounting=false
+MemoryAccounting=false
 
 [Install]
 WantedBy=default.target

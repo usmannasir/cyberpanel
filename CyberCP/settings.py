@@ -24,12 +24,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'xr%j*p!*$0d%(-(e%@-*hyoz4$f%y77coq0u)6pwmjg4)q&19f'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
-
-
 
 # Application definition
 
@@ -58,7 +55,17 @@ INSTALLED_APPS = [
     'manageSSL',
     'api',
     'filemanager',
-    'emailPremium'
+    'manageServices',
+    'pluginHolder',
+    'emailPremium',
+    'emailMarketing',
+    'cloudAPI',
+    'highAvailability',
+    's3Backups',
+    'dockerManager',
+    'containerization',
+    'CLManager',
+    'IncBackups'
 ]
 
 MIDDLEWARE = [
@@ -66,7 +73,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
-
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -106,7 +113,7 @@ DATABASES = {
         'USER': 'cyberpanel',
         'PASSWORD': 'Bz9gF7Hr7X4RtD',
         'HOST': '127.0.0.1',
-        'PORT':'3307'
+        'PORT':'3306'
     },
     'rootdb': {
         'ENGINE': 'django.db.backends.mysql',
@@ -153,7 +160,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
@@ -176,4 +182,11 @@ LANGUAGES = (
     ('ru', _('Russian')),
     ('tr', _('Turkish')),
     ('es', _('Spanish')),
+    ('fr', _('French')),
+    ('pl', _('Polish')),
+    ('vi', _('Vietnamese')),
+    ('it', _('Italian')),
 )
+
+MEDIA_URL = '/home/cyberpanel/media/'
+MEDIA_ROOT = MEDIA_URL

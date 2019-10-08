@@ -69,9 +69,7 @@ class HandleRequest(multi.Thread):
 
     def manageRequest(self, completeData):
         try:
-
             completeData = completeData.split('\n')
-
             for items in completeData:
                 tempData = items.split('=')
                 if tempData[0] == 'sasl_username':
@@ -81,6 +79,9 @@ class HandleRequest(multi.Thread):
                     emailAddress = tempData[1]
                     domainName = emailAddress.split('@')[1]
                 elif tempData[0] == 'recipient':
+                    if len(tempData[1]) == 0:
+                        self.connection.sendall('action=dunno\n\n')
+                        return
                     destination = tempData[1]
 
 
@@ -116,7 +117,7 @@ class HandleRequest(multi.Thread):
                 else:
                     email = EUsers.objects.get(email=emailAddress)
                     if emailObj.logStatus == 1:
-                        logEntry = EmailLogs(email=email, destination=destination, timeStamp=time.strftime("%I-%M-%S-%a-%b-%Y"))
+                        logEntry = EmailLogs(email=email, destination=destination, timeStamp=time.strftime("%m.%d.%Y_%H-%M-%S"))
                         logEntry.save()
                     emailObj.monthlyUsed = emailObj.monthlyUsed + 1
                     emailObj.hourlyUsed = emailObj.hourlyUsed + 1
@@ -126,7 +127,7 @@ class HandleRequest(multi.Thread):
                 email = EUsers.objects.get(email=emailAddress)
                 if emailObj.logStatus == 1:
                     logEntry = EmailLogs(email=email, destination=destination,
-                                         timeStamp=time.strftime("%I-%M-%S-%a-%b-%Y"))
+                                         timeStamp=time.strftime("%m.%d.%Y_%H-%M-%S"))
                     logEntry.save()
 
                 emailObj.monthlyUsed = emailObj.monthlyUsed + 1

@@ -1,29 +1,53 @@
+#!/usr/local/CyberCP/bin/python2
+import os.path
+import sys
+import django
+sys.path.append('/usr/local/CyberCP')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+django.setup()
 import argparse
-import requests
-import json
-from random import randint
+from loginSystem.models import Administrator, ACL
+from plogical import hashPassword
+from plogical.acl import ACLManager
+from packages.models import Package
+from baseTemplate.models import version
 
 def main():
 
     parser = argparse.ArgumentParser(description='Reset admin user password!')
     parser.add_argument('--password', help='New Password')
-
-    pathToFile = "/home/cyberpanel/"+str(randint(1000, 9999))
-    file = open(pathToFile,"w")
-    file.close()
-
     args = parser.parse_args()
 
-    finalData = json.dumps({'password': args.password,'randomFile': pathToFile})
-    r = requests.post("http://localhost:5003/api/changeAdminPassword", data=finalData,
-                      verify=False)
+    adminPass = args.password
 
-    data = json.loads(r.text)
+    numberOfAdministrator = Administrator.objects.count()
+    if numberOfAdministrator == 0:
+        ACLManager.createDefaultACLs()
+        acl = ACL.objects.get(name='admin')
+        token = hashPassword.generateToken('admin', '1234567')
 
-    if data['changed'] == 1:
+        email = 'usman@cyberpersons.com'
+        admin = Administrator(userName="admin", password=hashPassword.hash_password(adminPass), type=1, email=email,
+                              firstName="Cyber", lastName="Panel", acl=acl, token=token)
+        admin.save()
+
+        vers = version(currentVersion="1.9", build=0)
+        vers.save()
+
+        package = Package(admin=admin, packageName="Default", diskSpace=1000,
+                          bandwidth=1000, ftpAccounts=1000, dataBases=1000,
+                          emailAccounts=1000, allowedDomains=20)
+        package.save()
         print("Admin password successfully changed!")
-    else:
-        print(data['error_message'])
+        return 1
+
+    token = hashPassword.generateToken('admin', adminPass)
+    admin = Administrator.objects.get(userName="admin")
+    admin.password = hashPassword.hash_password(adminPass)
+    admin.token = token
+    admin.save()
+
+    print("Admin password successfully changed!")
 
 if __name__ == "__main__":
     main()

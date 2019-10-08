@@ -21,6 +21,9 @@ from cliParser import cliParser
 from plogical.vhost import vhost
 from plogical.mailUtilities import mailUtilities
 from plogical.ftpUtilities import FTPUtilities
+from plogical.sslUtilities import sslUtilities
+from plogical.processUtilities import ProcessUtilities
+from plogical.backupSchedule import backupSchedule
 
 # All that we see or seem is but a dream within a dream.
 
@@ -36,13 +39,12 @@ class cyberPanel:
 
     def createWebsite(self, package, owner, domainName, email, php, ssl, dkim, openBasedir):
         try:
+
             externalApp = "".join(re.findall("[a-zA-Z]+", domainName))[:7]
-            numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-            sslpath = "/home/" + domainName + "/public_html"
             phpSelection = 'PHP ' + php
 
-            result = virtualHostUtilities.createVirtualHost(domainName, email, phpSelection, externalApp, numberOfWebsites, ssl, sslpath, dkim,
-                              openBasedir, owner, package)
+            result = virtualHostUtilities.createVirtualHost(domainName, email, phpSelection, externalApp, ssl, dkim,
+                              openBasedir, owner, package, 0)
 
             if result[0] == 1:
                 self.printStatus(1,'None')
@@ -59,7 +61,7 @@ class cyberPanel:
             path = '/home/' + masterDomain + '/public_html/' + domainName
             phpSelection = 'PHP ' + php
 
-            result = virtualHostUtilities.createDomain(masterDomain, domainName, phpSelection, path, ssl, dkim, openBasedir, '0', owner)
+            result = virtualHostUtilities.createDomain(masterDomain, domainName, phpSelection, path, ssl, dkim, openBasedir, owner, 0)
 
             if result[0] == 1:
                 self.printStatus(1,'None')
@@ -72,9 +74,7 @@ class cyberPanel:
 
     def deleteWebsite(self, domainName):
         try:
-
-            numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-            vhost.deleteVirtualHostConfigurations(domainName, numberOfWebsites)
+            vhost.deleteVirtualHostConfigurations(domainName)
             self.printStatus(1, 'None')
 
         except BaseException, msg:
@@ -324,37 +324,11 @@ class cyberPanel:
 
     def createBackup(self, virtualHostName):
         try:
-            website = Websites.objects.get(domain=virtualHostName)
+            backupLogPath = "/usr/local/lscp/logs/backup_log."+time.strftime("%m.%d.%Y_%H-%M-%S")
 
-            ## defining paths
+            print 'Backup logs to be generated in %s' % (backupLogPath)
 
-            ## /home/example.com/backup
-            backupPath = os.path.join("/home", virtualHostName, "backup/")
-            domainUser = website.externalApp
-            backupName = 'backup-' + domainUser + "-" + time.strftime("%I-%M-%S-%a-%b-%Y")
-
-            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018
-            tempStoragePath = os.path.join(backupPath, backupName)
-
-            backupUtilities.submitBackupCreation(tempStoragePath, backupName, backupPath, virtualHostName)
-
-            finalData = json.dumps({'websiteToBeBacked': virtualHostName})
-
-            while (1):
-                r = requests.post("http://localhost:5003/backup/backupStatus", data=finalData)
-                time.sleep(2)
-                data = json.loads(r.text)
-
-                if data['backupStatus'] == 0:
-                    print 'Failed to generate backup, Error message : ' + data['error_message'] + '\n'
-                    break
-                elif data['abort'] == 1:
-                    print 'Backup successfully generated.\n'
-                    print 'File Location: ' + tempStoragePath + ".tar.gz\n"
-                    break
-                else:
-                    print 'Waiting for backup to complete. Current status: ' + data['status']
-
+            backupSchedule.createLocalBackup(virtualHostName, backupLogPath)
 
         except BaseException, msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
@@ -783,6 +757,35 @@ class cyberPanel:
                 self.printStatus(1, 'None')
             else:
                 self.printStatus(1, result[1])
+        except BaseException, msg:
+            logger.writeforCLI(str(msg), "Error", stack()[0][3])
+            self.printStatus(0, str(msg))
+
+
+    def issueSelfSignedSSL(self, virtualHost):
+        try:
+
+            try:
+                website = ChildDomains.objects.get(domain=virtualHost)
+                adminEmail = website.master.adminEmail
+            except:
+                website = Websites.objects.get(domain=virtualHost)
+                adminEmail = website.adminEmail
+
+            pathToStoreSSL = "/etc/letsencrypt/live/" + virtualHost
+            command = 'mkdir -p ' + pathToStoreSSL
+            ProcessUtilities.executioner(command)
+
+            pathToStoreSSLPrivKey = "/etc/letsencrypt/live/" + virtualHost + "/privkey.pem"
+            pathToStoreSSLFullChain = "/etc/letsencrypt/live/" + virtualHost + "/fullchain.pem"
+
+            command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
+            ProcessUtilities.executioner(command)
+
+            sslUtilities.installSSLForDomain(virtualHost, adminEmail)
+            ProcessUtilities.restartLitespeed()
+            self.printStatus(1, 'None')
+
         except BaseException, msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
@@ -1269,6 +1272,15 @@ def main():
             return
 
         cyberpanel.issueSSLForMailServer(args.domainName)
+
+    elif args.function == "issueSelfSignedSSL":
+        completeCommandExample = 'cyberpanel issueSelfSignedSSL --domainName cyberpanel.net'
+
+        if not args.domainName:
+            print "\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n"
+            return
+
+        cyberpanel.issueSelfSignedSSL(args.domainName)
 
 
 

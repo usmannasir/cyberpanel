@@ -1,83 +1,61 @@
-import thread
-import pexpect
 import CyberCPLogFileWriter as logging
-import subprocess
-import shlex
-from shutil import rmtree
 import os
-import requests
-import json
 import time
+from backupSchedule import backupSchedule
+from plogical.processUtilities import ProcessUtilities
+from re import match,I,M
 
 class backupScheduleLocal:
-
-
-    @staticmethod
-    def createBackup(virtualHost,writeToFile):
-        try:
-
-            writeToFile.writelines("[" + time.strftime(
-                "%I-%M-%S-%a-%b-%Y") + "]" + " Starting local backup for: "+virtualHost + "\n")
-
-            finalData = json.dumps({'websiteToBeBacked': virtualHost})
-            requests.post("http://localhost:5003/backup/submitBackupCreation", data=finalData)
-
-            writeToFile.writelines("[" + time.strftime(
-                "%I-%M-%S-%a-%b-%Y") + "]" + " Waiting for backup to complete.. " + "\n")
-
-            while (1):
-                r = requests.post("http://localhost:5003/backup/backupStatus", data= finalData)
-                time.sleep(2)
-                data = json.loads(r.text)
-
-                writeToFile.writelines("[" + time.strftime(
-                    "%I-%M-%S-%a-%b-%Y") + "]" + " Waiting for backup to complete.. " + "\n")
-
-                if data['backupStatus'] == 0:
-                    writeToFile.writelines("[" + time.strftime(
-                        "%I-%M-%S-%a-%b-%Y") + "]" + "An error occurred, Error message: " + data['error_message'] + "\n")
-                    break
-                elif data['abort'] == 1:
-                    writeToFile.writelines("[" + time.strftime(
-                        "%I-%M-%S-%a-%b-%Y") + "]" + " Backup Completed for: " + virtualHost + "\n")
-
-                    writeToFile.writelines("[" + time.strftime(
-                        "%I-%M-%S-%a-%b-%Y") + "]" + " #############################################" + "\n")
-                    break
-
-        except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+    localBackupPath = '/home/cyberpanel/localBackupPath'
 
     @staticmethod
     def prepare():
         try:
-            backupLogPath = "/usr/local/lscp/logs/local_backup_log." + time.strftime("%I-%M-%S-%a-%b-%Y")
+            backupLogPath = "/usr/local/lscp/logs/local_backup_log." + time.strftime("%m.%d.%Y_%H-%M-%S")
 
             writeToFile = open(backupLogPath, "a")
 
-            writeToFile.writelines("#################################################\n")
-            writeToFile.writelines("      Backup log for: " + time.strftime("%I-%M-%S-%a-%b-%Y") + "\n")
-            writeToFile.writelines("#################################################\n")
+            backupSchedule.remoteBackupLogging(backupLogPath, "#################################################")
+            backupSchedule.remoteBackupLogging(backupLogPath,"      Local Backup log for: " + time.strftime("%m.%d.%Y_%H-%M-%S"))
+            backupSchedule.remoteBackupLogging(backupLogPath, "#################################################\n")
 
-            writeToFile.writelines("\n")
-            writeToFile.writelines("\n")
+            backupSchedule.remoteBackupLogging(backupLogPath, "")
+            backupSchedule.remoteBackupLogging(backupLogPath, "")
 
             for virtualHost in os.listdir("/home"):
-                backupScheduleLocal.createBackup(virtualHost,writeToFile)
+                if match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', virtualHost, M | I):
+                    retValues = backupSchedule.createLocalBackup(virtualHost, backupLogPath)
 
-            writeToFile.writelines("\n")
-            writeToFile.writelines("\n")
-            writeToFile.writelines("[" + time.strftime(
-                "%I-%M-%S-%a-%b-%Y") + "]" + " #############################################" + "\n")
-            writeToFile.writelines("[" + time.strftime(
-                "%I-%M-%S-%a-%b-%Y") + "]" + " Local Backup Completed" + "\n")
-            writeToFile.writelines("[" + time.strftime(
-                "%I-%M-%S-%a-%b-%Y") + "]" + " #############################################" + "\n")
+                    if os.path.exists(backupScheduleLocal.localBackupPath):
+                        backupPath = retValues[1] + ".tar.gz"
+                        localBackupPath = '%s/%s' % (open(backupScheduleLocal.localBackupPath, 'r').read().rstrip('/'), time.strftime("%b-%d-%Y"))
+
+                        command = 'mkdir -p %s' % (localBackupPath)
+                        ProcessUtilities.normalExecutioner(command)
+
+                        command = 'mv %s %s' % (backupPath, localBackupPath)
+                        ProcessUtilities.normalExecutioner(command)
+
+
+
+                backupSchedule.remoteBackupLogging(backupLogPath, "")
+                backupSchedule.remoteBackupLogging(backupLogPath, "")
+
+                backupSchedule.remoteBackupLogging(backupLogPath, "#################################################")
+
+                backupSchedule.remoteBackupLogging(backupLogPath, "")
+                backupSchedule.remoteBackupLogging(backupLogPath, "")
+
+            backupSchedule.remoteBackupLogging(backupLogPath, "Local backup job completed.\n")
 
             writeToFile.close()
 
         except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [214:startBackup]")
+
+def main():
+    backupScheduleLocal.prepare()
 
 
-backupScheduleLocal.prepare()
+if __name__ == "__main__":
+    main()

@@ -15,3 +15,4 @@ class Package(models.Model):
     dataBases = models.IntegerField(default=0)
     ftpAccounts = models.IntegerField(default=0)
     allowedDomains = models.IntegerField(default=0)
+    allowFullDomain = models.IntegerField(default=1)

@@ -15,8 +15,8 @@
 </div>
 
 <div ng-controller="policyServer" class="example-box-wrapper">
-        <div style="border-radius: 25px;border-color:#3498db" class="content-box">
-            <h3 class="content-box-header bg-blue">
+        <div class="panel panel-body">
+            <h3 class="content-box-header">
                 {% trans "Email Policy Server" %} <img ng-hide="policyServerLoading"  src="/static/images/loading.gif">
             </h3>
 
@@ -24,10 +24,10 @@
                 <div class="row">
 
                  <div style="padding: 2%"  class="col-md-12">
-                    <form  action="/" id="createPackages" class="form-horizontal bordered-row">
+                    <form  action="/" id="createPackages" class="form-horizontal bordered-row panel-body">
 
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Server Status</label>
+                            <label class="col-sm-3 control-label">{% trans "Server Status" %}</label>
                             <div class="col-sm-6">
                                 <input type="checkbox" id="policServerStatus" data-toggle="toggle">
                             </div>
@@ -37,7 +37,7 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-4">
-                                 <button type="button" ng-click="savePolicServerStatus()" class="btn btn-primary btn-lg btn-block">{% trans "Save changes." %}</button>
+                                 <button type="button" ng-click="savePolicServerStatus()" class="btn btn-primary btn-lg">{% trans "Save changes" %}</button>
 
                             </div>
                         </div>

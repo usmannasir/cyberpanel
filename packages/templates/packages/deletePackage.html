@@ -14,14 +14,13 @@
 </div>
 <div class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Delete Package" %}
         </h3>
         <div ng-controller="deletePackage" class="example-box-wrapper">
 
 
-            <form  action="/" id="deletePackage" class="form-horizontal bordered-row">
-
+            <form  action="/" id="deletePackage" class="form-horizontal bordered-row panel-body">
 
                  <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Select Package" %}</label>
@@ -37,30 +36,28 @@
             <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="deletePackage()" class="btn btn-primary btn-lg btn-block">{% trans "Delete Package" %}</button>
+                         <button type="button" ng-click="deletePackage()" class="btn btn-primary btn-lg">{% trans "Delete Package" %}</button>
 
                     </div>
             </div>
-
 
             <div id="deletePackageButton" class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="deletePackageFinal()" class="btn btn-primary btn-lg btn-block">{% trans "Are you sure?" %}</button>
+                         <button type="button" ng-click="deletePackageFinal()" class="btn btn-primary btn-lg">{% trans "Are you sure?" %}</button>
 
                     </div>
             </div>
 
-
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
+                    <div class="col-sm-6">
                             <div id="deleteFailure" class="alert alert-danger">
                                         <p>{% trans "Cannot delete package. Error message:" %} {$ errorMessage $}</p>
                             </div>
 
                             <div id="deleteSuccess" class="alert alert-success">
-                                <p>{% trans "Package" %} <strong>{$ deletedPackage $}</strong>{% trans " Successfully Deleted" %}"</p>
+                                <p>{% trans "Package" %} <strong>{$ deletedPackage $}</strong>{% trans " Successfully Deleted." %}</p>
                             </div>
                     </div>
 

@@ -22,6 +22,16 @@ function getCookie(name) {
     return cookieValue;
 }
 
+function randomPassword(length) {
+    var chars = "abcdefghijklmnopqrstuvwxyz!@#%^*-+ABCDEFGHIJKLMNOP1234567890";
+    var pass = "";
+    for (var x = 0; x < length; x++) {
+        var i = Math.floor(Math.random() * chars.length);
+        pass += chars.charAt(i);
+    }
+    return pass;
+}
+
 /* Utilities ends here */
 
 
@@ -41,7 +51,7 @@ app.filter('getwebsitename', function() {
 
         if(domain !== undefined) {
 
-            domain = domain.replace("-", "");
+            domain = domain.replace(/-/g, '');
 
             var domainName = domain.split(".");
 
@@ -70,16 +80,13 @@ app.controller('systemStatusInfo', function($scope,$http,$timeout) {
 
         function ListInitialData(response) {
 
-
             $scope.cpuUsage = response.data.cpuUsage;
             $scope.ramUsage = response.data.ramUsage;
             $scope.diskUsage = response.data.diskUsage;
 
         }
 
-        function cantLoadInitialData(response) {
-            console.log("not good");
-        }
+        function cantLoadInitialData(response) {}
 
         //$timeout(getStuff, 2000);
 
@@ -103,52 +110,209 @@ app.controller('adminController', function($scope,$http,$timeout) {
         function ListInitialData(response) {
 
 
-            $scope.currentAdmin = response.data.user_name;
+            $scope.currentAdmin = response.data.adminName;
             $scope.admin_type = response.data.admin_type;
-
 
             $("#serverIPAddress").text(response.data.serverIPAddress);
 
-             if (response.data.admin_type !== "Administrator")
-            {
+             if (response.data.admin === 0) {
+                $('.serverACL').hide();
 
-                if(response.data.admin_type !== "Reseller") {
-                    $("#normalUser").hide();
-                    $("#normalUserA").hide();
-                    $("#normalUserB").hide();
+
+                if(!Boolean(response.data.versionManagement)){
+                     $('.versionManagement').hide();
+                 }
+                // User Management
+                if(!Boolean(response.data.createNewUser)){
+                     $('.createNewUser').hide();
+                 }
+                if(!Boolean(response.data.listUsers)){
+                     $('.listUsers').hide();
+                 }
+                if(!Boolean(response.data.resellerCenter)){
+                     $('.resellerCenter').hide();
+                 }
+                if(!Boolean(response.data.deleteUser)){
+                     $('.deleteUser').hide();
+                 }
+                if(!Boolean(response.data.changeUserACL)){
+                     $('.changeUserACL').hide();
+                 }
+                // Website Management
+                if(!Boolean(response.data.createWebsite)){
+                     $('.createWebsite').hide();
+                 }
+
+                if(!Boolean(response.data.modifyWebsite)){
+                     $('.modifyWebsite').hide();
+                 }
+
+                if(!Boolean(response.data.suspendWebsite)){
+                     $('.suspendWebsite').hide();
+                 }
+
+                if(!Boolean(response.data.deleteWebsite)){
+                     $('.deleteWebsite').hide();
                 }
 
-                    $("#normalUserC").hide();
-                    $("#normalUserD").hide();
-                    $("#normalUserE").hide();
-                    $("#normalUserF").hide();
-                    $("#normalUserG").hide();
-                    $("#normalUserH").hide();
-                    $("#normalUserP").hide();
-                    $("#normalUserI").hide();
+                // Package Management
 
-                    $("#ssl").hide();
-                    $("#sslA").hide();
-                    $("#siteState").hide();
+               if(!Boolean(response.data.createPackage)){
+                     $('.createPackage').hide();
+                 }
 
-                    $("#restoreSite").hide();
-                    $("#backupDestinations").hide();
-                    $("#scheduleBackup").hide();
+               if(!Boolean(response.data.listPackages)){
+                     $('.listPackages').hide();
+                 }
 
-                    $("#remoteBackups").hide();
-                    $("#packageHome").hide();
-                    $("#packageSub").hide();
-                    $("#createWebsite").hide();
-                    $("#modifyWebSite").hide();
-                    $("#deleteWebsite").hide();
-                    $("#versionManagement").hide();
+                if(!Boolean(response.data.deletePackage)){
+                     $('.deletePackage').hide();
+                 }
 
-            }
+                if(!Boolean(response.data.modifyPackage)){
+                     $('.modifyPackage').hide();
+                }
+
+                // Database Management
+
+               if(!Boolean(response.data.createDatabase)){
+                     $('.createDatabase').hide();
+                 }
+
+               if(!Boolean(response.data.deleteDatabase)){
+                     $('.deleteDatabase').hide();
+                 }
+
+               if(!Boolean(response.data.listDatabases)){
+                     $('.listDatabases').hide();
+               }
+
+              // DNS Management
+
+                 if(!Boolean(response.data.dnsAsWhole)){
+                     $('.dnsAsWhole').hide();
+                 }
+
+               if(!Boolean(response.data.createNameServer)){
+                     $('.createNameServer').hide();
+                 }
+
+               if(!Boolean(response.data.createDNSZone)){
+                     $('.createDNSZone').hide();
+                 }
+
+               if(!Boolean(response.data.deleteZone)){
+                     $('.addDeleteRecords').hide();
+                }
+
+               if(!Boolean(response.data.addDeleteRecords)){
+                     $('.deleteDatabase').hide();
+               }
+
+             // Email Management
+
+               if(!Boolean(response.data.emailAsWhole)){
+                     $('.emailAsWhole').hide();
+                 }
+
+               if(!Boolean(response.data.listEmails)){
+                     $('.listEmails').hide();
+                 }
+
+               if(!Boolean(response.data.createEmail)){
+                     $('.createEmail').hide();
+                 }
+
+               if(!Boolean(response.data.deleteEmail)){
+                     $('.deleteEmail').hide();
+                 }
+
+               if(!Boolean(response.data.emailForwarding)){
+                     $('.emailForwarding').hide();
+                }
+
+               if(!Boolean(response.data.changeEmailPassword)){
+                     $('.changeEmailPassword').hide();
+               }
+
+               if(!Boolean(response.data.dkimManager)){
+                     $('.dkimManager').hide();
+               }
+
+
+              // FTP Management
+
+                 if(!Boolean(response.data.ftpAsWhole)){
+                     $('.ftpAsWhole').hide();
+                 }
+
+               if(!Boolean(response.data.createFTPAccount)){
+                     $('.createFTPAccount').hide();
+                 }
+
+               if(!Boolean(response.data.deleteFTPAccount)){
+                     $('.deleteFTPAccount').hide();
+                 }
+
+               if(!Boolean(response.data.listFTPAccounts)){
+                     $('.listFTPAccounts').hide();
+                }
+
+               // Backup Management
+
+               if(!Boolean(response.data.createBackup)){
+                     $('.createBackup').hide();
+                 }
+
+               if(!Boolean(response.data.restoreBackup)){
+                     $('.restoreBackup').hide();
+                 }
+
+               if(!Boolean(response.data.addDeleteDestinations)){
+                     $('.addDeleteDestinations').hide();
+                }
+
+               if(!Boolean(response.data.scheDuleBackups)){
+                     $('.scheDuleBackups').hide();
+               }
+
+               if(!Boolean(response.data.remoteBackups)){
+                     $('.remoteBackups').hide();
+               }
+
+
+               // SSL Management
+
+               if(!Boolean(response.data.manageSSL)){
+                     $('.manageSSL').hide();
+                 }
+
+               if(!Boolean(response.data.hostnameSSL)){
+                     $('.hostnameSSL').hide();
+                 }
+
+               if(!Boolean(response.data.mailServerSSL)){
+                     $('.mailServerSSL').hide();
+                }
+
+
+            }else{
+
+               if(!Boolean(response.data.emailAsWhole)){
+                     $('.emailAsWhole').hide();
+                 }
+
+               if(!Boolean(response.data.ftpAsWhole)){
+                     $('.ftpAsWhole').hide();
+                 }
+
+               if(!Boolean(response.data.dnsAsWhole)){
+                     $('.dnsAsWhole').hide();
+                 }
+             }
         }
 
-        function cantLoadInitialData(response) {
-            console.log("not good");
-        }
+        function cantLoadInitialData(response) {}
 });
 
 

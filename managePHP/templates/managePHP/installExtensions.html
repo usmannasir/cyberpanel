@@ -3,136 +3,139 @@
 {% block title %}{% trans "Install PHP Extensions - CyberPanel" %}{% endblock %}
 {% block content %}
 
-{% load static %}
-{% get_current_language as LANGUAGE_CODE %}
-<!-- Current language: {{ LANGUAGE_CODE }} -->
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
 
 
-<div class="container">
-<div id="page-title">
-   <h2>{% trans "Install PHP Extensions" %}</h2>
-   <p>{% trans "Install/uninstall php extensions on this page." %}</p>
-</div>
-<div class="panel">
-    <div ng-controller="installExtensions" class="panel-body">
-        <h3 class="title-hero">
-            {% trans "Select PHP Version" %} <img ng-hide="loadingExtensions" src="{% static 'images/loading.gif' %}">
-        </h3>
-        <div  class="example-box-wrapper">
-
-
-            <form  action="/" id="modifyPackageForm" class="form-horizontal bordered-row">
-
-
-                 <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
-                    <div class="col-sm-6">
-                        <select ng-disabled="phpSelectionDisabled" ng-change="fetchPHPDetails()" ng-model="phpSelection" class="form-control">
-                                <option>PHP 5.3</option>
-                                <option>PHP 5.4</option>
-                                <option>PHP 5.5</option>
-                                <option>PHP 5.6</option>
-                                <option>PHP 7.0</option>
-                                <option>PHP 7.1</option>
-                                <option>PHP 7.2</option>
-                        </select>
-                    </div>
-                 </div>
-
-
-            <!------ Extensions --------------->
-
-
-                <div ng-hide="availableExtensions" class="form-group">
-
-                    <div class="col-sm-12">
-                        <input type="text" ng-model="extSearch" placeholder="{% trans 'Search Extensions..' %}" class="form-control autocomplete-input">
-                    </div>
-                </div>
-
-             <div ng-hide="availableExtensions" class="form-group">
-
-                    <div  class="col-sm-12">
-
-
-
-                        <table class="table">
-                            <thead>
-                            <tr>
-                                <th>{% trans "ID" %}</th>
-                                <th>{% trans "PHP" %}</th>
-                                <th>{% trans "Extension Name" %}</th>
-                                <th>{% trans "Description" %}</th>
-                                <th>{% trans "Status" %}</th>
-                                <th>{% trans "Install" %}</th>
-                                <th>{% trans "Uninstall" %}</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr ng-repeat="record in records | filter:extSearch">
-                                <td ng-bind="record.id"></td>
-                                <td ng-bind="record.phpVers"></td>
-                                <td ng-bind="record.extensionName"></td>
-                                <td ng-bind="record.description"></td>
-                                <strong><td ng-bind="record.status"></td></strong>
-                                <td><button ng-disabled="record.status=='Installed'" type="button" ng-click="installExt(record.extensionName)" class="btn ra-100 btn-blue-alt">{% trans "Install" %}</button></td>
-                                <td><button ng-disabled="record.status=='Not-Installed'" type="button" ng-click="uninstallExt(record.extensionName)" class="btn ra-100 btn-blue-alt">{% trans "Uninstall" %}</button></td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-
-
-            <!------ Extensions --------------->
-
-            <!------ Log box ----------------->
-
-                <div ng-hide="request" class="form-group">
-                    <div class="col-sm-12">
-                        <button ng-disabled="goback" style="margin-bottom: 1%" type="button" ng-click="fetchPHPDetails()" class="btn ra-100 btn-blue-alt">{% trans "Go Back" %}</button>
-                        <textarea ng-model="requestData" rows="15" class="form-control">{{ requestData }}</textarea>
-                    </div>
-                </div>
-
-            <!----- Log box ----------------->
-
-            <div class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                            <div ng-hide="canNotFetch" class="alert alert-danger">
-                                        <p>{% trans "Cannot fetch details. Error message:" %} {$ errorMessage $}</p>
-                            </div>
-
-                            <div ng-hide="canNotPerform" class="alert alert-danger">
-                                        <p>{% trans "Cannot perform operation. Error message:" %} {$ errorMessage $}</p>
-                            </div>
-
-
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                        <p>{% trans "Could not connect. Please refresh this page." %}</p>
-                            </div>
-                    </div>
-            </div>
-
-
-
-
-
-
-
-            </form>
-
-
-
-
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Install PHP Extensions" %}</h2>
+            <p>{% trans "Install/uninstall php extensions on this page." %}</p>
         </div>
+        <div class="panel">
+            <div ng-controller="installExtensions" class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Select PHP Version" %} <img ng-hide="loadingExtensions"
+                                                          src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+
+                    <form action="/" id="modifyPackageForm" class="form-horizontal bordered-row panel-body">
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-disabled="phpSelectionDisabled" ng-change="fetchPHPDetails()"
+                                        ng-model="phpSelection" class="form-control">
+                                    {% for php in phps %}
+                                        <option>{{ php }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <!------ Extensions --------------->
+
+
+                        <div ng-hide="availableExtensions" class="form-group">
+
+                            <div class="col-sm-12">
+                                <input type="text" ng-model="extSearch" placeholder="{% trans 'Search Extensions..' %}"
+                                       class="form-control autocomplete-input">
+                            </div>
+                        </div>
+
+                        <div ng-hide="availableExtensions" class="form-group">
+
+                            <div class="col-sm-12">
+
+
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "PHP" %}</th>
+                                        <th>{% trans "Extension Name" %}</th>
+                                        <th>{% trans "Description" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th>{% trans "Install" %}</th>
+                                        <th>{% trans "Uninstall" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat="record in records | filter:extSearch">
+                                        <td ng-bind="record.id"></td>
+                                        <td ng-bind="record.phpVers"></td>
+                                        <td ng-bind="record.extensionName"></td>
+                                        <td ng-bind="record.description"></td>
+                                        <strong>
+                                            <td ng-bind="record.status"></td>
+                                        </strong>
+                                        <td>
+                                            <button ng-disabled="record.status=='Installed'" type="button"
+                                                    ng-click="installExt(record.extensionName)"
+                                                    class="btn ra-100 btn-blue-alt">{% trans "Install" %}</button>
+                                        </td>
+                                        <td>
+                                            <button ng-disabled="record.status=='Not-Installed'" type="button"
+                                                    ng-click="uninstallExt(record.extensionName)"
+                                                    class="btn ra-100 btn-blue-alt">{% trans "Uninstall" %}</button>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+
+                        <!------ Extensions --------------->
+
+                        <!------ Log box ----------------->
+
+                        <div ng-hide="request" class="form-group">
+                            <div class="col-sm-12">
+                                <button ng-disabled="goback" style="margin-bottom: 1%" type="button"
+                                        ng-click="fetchPHPDetails()"
+                                        class="btn ra-100 btn-blue-alt">{% trans "Go Back" %}</button>
+                                <textarea ng-model="requestData" rows="15"
+                                          class="form-control">{{ requestData }}</textarea>
+                            </div>
+                        </div>
+
+                        <!----- Log box ----------------->
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <div ng-hide="canNotFetch" class="alert alert-danger">
+                                    <p>{% trans "Cannot fetch details. Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+                                <div ng-hide="canNotPerform" class="alert alert-danger">
+                                    <p>{% trans "Cannot perform operation. Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect. Please refresh this page." %}</p>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+
+
     </div>
-</div>
-
-
-</div>
 
 
 {% endblock %}

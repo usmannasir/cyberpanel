@@ -1,0 +1,73 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "phpMyAdmin - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Create Database" %}</h2>
+   <p>{% trans "Create a new database on this page." %}</p>
+</div>
+
+<div ng-controller="phpMyAdmin" class="panel">
+    <div class="panel-body">
+        <h3 class="content-box-header">
+            {% trans "Create Database" %} <img ng-hide="createDatabaseLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+            <form  class="form-horizontal bordered-row panel-body">
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select Website" %}</label>
+                    <div class="col-sm-6">
+                        <select ng-change="showDetailsBoxes()" ng-model="databaseWebsite" class="form-control">
+                            {% for items in websitesList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                            <div ng-hide="databaseCreationFailed" class="alert alert-danger">
+                                <p>{% trans "Cannot create database. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="databaseCreated" class="alert alert-success">
+                                <p>{% trans "Database created successfully." %}</p>
+                            </div>
+
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+                    </div>
+
+
+
+                </div>
+
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+</div>
+
+
+{% endblock %}

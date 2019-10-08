@@ -1,0 +1,90 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Compose Email Message - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Compose Email Message" %}</h2>
+   <p>{% trans "On this page you can compose email message to be sent out later." %}</p>
+</div>
+<div ng-controller="composeMessageCTRL" class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Compose Email Message" %} <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+
+            <form action="/" class="form-horizontal bordered-row">
+
+            <!---- Create Email Template --->
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Template Name" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="name" required>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Email Subject" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="subject" required>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "From Name" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="fromName" required>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "From Email" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="fromEmail" required>
+                    </div>
+                </div>
+
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Reply Email" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="replyTo" required>
+                    </div>
+                </div>
+
+
+                <div ng-hide="request" class="form-group">
+                    <div class="col-sm-12">
+                        <textarea placeholder="Paste your email message, any format is accepted. (HTML or Plain)" ng-model="emailMessage" rows="15" class="form-control"></textarea>
+                    </div>
+                </div>
+
+                <div ng-hide="installationProgress" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                        <button type="button"  ng-click="saveTemplate()" class="btn btn-primary btn-lg btn-block">{% trans "Save Template" %}</button>
+                    </div>
+                </div>
+
+            <!---- Create Email Template --->
+
+            </form>
+
+
+
+
+        </div>
+    </div>
+</div>
+</div>
+
+
+{% endblock %}

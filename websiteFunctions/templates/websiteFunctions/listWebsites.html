@@ -3,30 +3,111 @@
 {% block title %}{% trans "Websites Hosted - CyberPanel" %}{% endblock %}
 {% block content %}
 
-{% load static %}
-{% get_current_language as LANGUAGE_CODE %}
-<!-- Current language: {{ LANGUAGE_CODE }} -->
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
 
+    <script>
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+    </script>
 
-<div class="container">
+    <div ng-controller="listWebsites" class="container">
 
     <div id="page-title">
-       <h2 id="domainNamePage">{% trans "List Websites" %}</h2>
-       <p>{% trans "On this page you can launch, list, modify and delete websites from your server." %}</p>
+        <h2 id="domainNamePage">{% trans "List Websites" %}</h2> <img ng-hide="cyberPanelLoading"
+                                                                      src="{% static 'images/loading.gif' %}">
+        <p>{% trans "On this page you can launch, list, modify and delete websites from your server." %}</p>
     </div>
 
-<div class="panel">
-    <div class="panel-body">
-        <h3 class="title-hero">
-            {% trans "Websites" %}
-        </h3>
-        <div ng-controller="listWebsites" class="example-box-wrapper">
+    <div class="col-sm-10" style="padding: 0px; box-shadow: 0px 0px 1px 0px #888888; margin-bottom: 2%">
+        <input ng-change="searchWebsites()" placeholder="Search..." ng-model="patternAdded" name="dom" type="text"
+               class="form-control" required>
+    </div>
 
-                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="datatable-example">
+    <div class="col-sm-2">
+        <div class="form-group">
+            <select ng-model="recordsToShow" ng-change="getFurtherWebsitesFromDB()"
+                    class="form-control" id="example-select">
+                <option>10</option>
+                <option>50</option>
+                <option>100</option>
+            </select>
+        </div>
+    </div>
+
+    <div ng-repeat="web in WebSitesList track by $index" class="panel col-md-12"
+         style="padding: 0px; box-shadow: 0px 0px 1px 0px #888888;">
+        <div class="">
+            <div class="table-responsive no-gutter text-nowrap" style="overflow-x: hidden;">
+                <div
+                        style="background-image: url({% static 'images/not-available-preview.png' %});
+                                height: 160px;
+                                width: 200px;
+                                background-position: top;
+                                background-repeat: no-repeat;
+                                background-size: cover;
+                                position: relative;"
+                        class="col-lg-3 col-md-12"
+                >
+                </div>
+                <div class="col-lg-9" style="text-transform: none">
+                    <div style="border-bottom: 1px solid #888888" class="col-md-12">
+                        <div class="col-lg-10 content-box-header" style="text-transform: none;">
+                            <a href="http://{$ web.domain $}" target="_blank" title="Visit Site">
+                                <h2 style="display: inline; color: #414C59;" ng-bind="web.domain"></h2>
+                            </a>
+                            <a target="_blank" href="/filemanager/{$ web.domain $}" title="Open File Manager"> --
+                                /home/{$ web.domain $}/public_html</a>
+                        </div>
+                        <div class="col-md-2 content-box-header" style="text-transform: none;">
+                            <a href="/websites/{$ web.domain $}" target="_blank" title="Manage Website">
+                                <i class="p fa fa-external-link btn-icon">&emsp;</i>
+                                <span>Manage</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="col-md-4 content-box-header">
+                            <i class="p fa fa-sticky-note btn-icon text-muted" data-toggle="tooltip"
+                               data-placement="right" title="State">&emsp;</i>
+                            <span ng-bind="web.state" style="text-transform: none"></span>
+                        </div>
+                        <div class="col-md-4 content-box-header">
+                            <i class="p fa fa-map-marker btn-icon text-muted" data-toggle="tooltip"
+                               data-placement="right" title="IP Address">&emsp;</i>
+                            <span ng-bind="web.ipAddress"></span>
+                        </div>
+                        <div class="col-md-4 content-box-header">
+                            <i class="p fa fa-lock btn-icon text-muted" data-toggle="tooltip" data-placement="right"
+                               title="SSL">&emsp;</i>
+                            <span><a ng-click="issueSSL(web.domain)" href="" style="text-transform: none">Issue SSL</a></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+
+                        <div class="col-md-4 content-box-header">
+                            <i class="p fa fa-hdd-o btn-icon text-muted" data-toggle="tooltip" data-placement="right"
+                               title="Disk Usage">&emsp;</i>
+                            <span ng-bind="web.diskUsed" style="text-transform: none"></span>
+                        </div>
+
+                        <div class="col-md-4 content-box-header">
+                            <i class="p fa fa-cubes btn-icon text-muted" data-toggle="tooltip" data-placement="right"
+                               title="Packages">&emsp;</i>
+                            <span ng-bind="web.package" style="text-transform: none"></span>
+                        </div>
+                        <div class="col-md-4 content-box-header">
+                            <i class="p fa fa-user btn-icon text-muted" data-toggle="tooltip" data-placement="right"
+                               title="Owner">&emsp;</i>
+                            <span ng-bind="web.admin" style="text-transform: none"></span>
+                        </div>
+
+                    </div>
+                    <!--table cellpadding="0" cellspacing="0" border="0" class="table" style="margin:0px 0px; id="datatable-example">
                 <thead>
                 <tr>
-                    <th>Domain</th>
-                    <th>Launch</th>
                     <th>IP Address</th>
                     <th>Package</th>
                     <th>Owner</th>
@@ -35,10 +116,7 @@
                 </tr>
                 </thead>
                 <tbody>
-
-                <tr ng-repeat="web in WebSitesList track by $index">
-                    <td ng-bind="web.domain"></td>
-                    <td><a href="{$ web.domain $}"><img width="30px" height="30" class="center-block" src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"></a></td>
+                <tr>
                     <td ng-bind="web.ipAddress"></td>
                     <td ng-bind="web.package"></td>
                     <td ng-bind="web.admin"></td>
@@ -47,39 +125,31 @@
                 </tr>
 
                 </tbody>
-                </table>
+                </table-->
 
-        <div id="listFail" class="alert alert-danger">
-            <p>{% trans "Cannot list websites. Error message:" %} {$ errorMessage $}</p>
-        </div>
+                </div>
 
-            <div class="row">
-
-                            <div class="col-sm-4 col-sm-offset-8">
-
-                                <nav aria-label="Page navigation">
-                                      <ul class="pagination">
-
-
-                                            {% for items in pagination %}
-
-                                                <li ng-click="getFurtherWebsitesFromDB({{ forloop.counter }})" id="webPages"><a href="">{{ forloop.counter }}</a></li>
-
-                                            {% endfor %}
-
-                                      </ul>
-                                    </nav>
-
-
-                            </div>
-
-
-                        </div>
-
+                <div id="listFail" class="alert alert-danger">
+                    <p>{% trans "Cannot list websites. Error message:" %} {$ errorMessage $}</p>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-
-
+    <div style="margin-top: 2%" class="row">
+        <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-9">
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <select ng-model="currentPage" class="form-control"
+                                ng-change="getFurtherWebsitesFromDB()">
+                            <option ng-repeat="page in pagination">{$ $index + 1 $}</option>
+                        </select>
+                    </div>
+                </div>
+            </div> <!-- end row -->
+        </div>
+    </div>
 
 {% endblock %}

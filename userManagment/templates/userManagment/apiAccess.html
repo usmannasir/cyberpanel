@@ -1,0 +1,70 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "API Access for User - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div ng-controller="apiAccessCTRL" class="container">
+        <div id="page-title">
+            <h2>{% trans "API Access" %}</h2>
+            <p>{% trans "Allow/Remove API access for account, this effects Cloud Platform Connection and Third Party Modules." %}</p>
+        </div>
+
+        <div class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "API Access" %} <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+
+                    <form action="/" class="form-horizontal bordered-row panel-body">
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select User" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-change="showApiAccessDropDown()" ng-model="accountUsername" class="form-control">
+                                    {% for items in acctNames %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div ng-hide="apiAccessDropDown" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Access" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="access" class="form-control">
+                                    <option>Enable</option>
+                                    <option>Disable</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="saveChanges()"
+                                        class="btn btn-primary btn-lg">{% trans "Save Changes" %}</button>
+
+                            </div>
+                        </div>
+
+
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

@@ -14,36 +14,60 @@
    <p>{% trans "Issue Let’s Encrypt SSLs for websites and hostname." %}</p>
 </div>
 
-    <div class="panel">
+    <div class="panel col-lg-10">
         <div class="panel-body">
-            <h3 class="title-hero">
+            <h3 class="content-box-header">
             {% trans "Available Functions" %}
             </h3>
 
              <div class="example-box-wrapper">
                 <div class="row">
-                    <div class="col-md-6">
-                                    <a href="{% url 'createDatabase' %}" title="{% trans 'Create Database' %}" class="tile-box tile-box-shortcut btn-primary">
+
+                {% if manageSSL or admin %}
+
+                    <div class="col-md-4 btn-min-width">
+                                    <a href="{% url 'manageSSL' %}" title="{% trans 'Manage SSL' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Manage SSL" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-folder-open"></i>
                                         </div>
                                     </a>
                     </div>
 
+                {% endif %}
 
-                    <div class="col-md-6">
-                                    <a href="{% url 'deleteDatabase' %}" title="{% trans 'Delete Database' %}" class="tile-box tile-box-shortcut btn-primary">
+                    {% if hostnameSSL or admin %}
+
+
+                    <div class="col-md-4 btn-min-width">
+                                    <a href="{% url 'sslForHostName' %}" title="{% trans 'Hostname SSL' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Hostname SSL" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-laptop"></i>
                                         </div>
                                     </a>
                     </div>
+
+                    {% endif %}
+
+                {% if mailServerSSL or admin %}
+
+                    <div class="col-md-4 btn-min-width">
+                                    <a href="{% url 'sslForMailServer' %}" title="{% trans 'MailServer SSL' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <div class="tile-header">
+                                            {% trans "MailServer SSL" %}
+                                        </div>
+                                        <div class="tile-content-wrapper">
+                                            <i class="fa fa-envelope-square"></i>
+                                        </div>
+                                    </a>
+                    </div>
+
+                {% endif %}
 
 
                 </div>

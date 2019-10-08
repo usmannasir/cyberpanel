@@ -1,0 +1,227 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Top Processes - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div ng-controller="topProcesses" class="container">
+
+        <div id="page-title">
+            <h2>{% trans "Top Processes" %} <img height="20px" ng-hide="cyberPanelLoading"
+                                                 src="/static/images/loading.gif"></h2>
+            <p>{% trans "List of top processes on your server. (Refresh every 3 seconds)" %}</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="example-box-wrapper">
+
+                    <div class="content-box-wrapper">
+                        <table class="table">
+                            <thead>
+                            <tr >
+                                <th>{% trans 'Cores' %}</th>
+                                <th>{% trans 'Model Name' %}</th>
+                                <th>{% trans 'CPU Mhz' %}</th>
+                                <th>{% trans 'Cache Size' %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{$ cores $}</td>
+                                <td>{$ modelName $}</td>
+                                <td>{$ cpuMHZ $}</td>
+                                <td>{$ cacheSize $}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="example-box-wrapper">
+                    <div class="content-box-wrapper">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th >{% trans 'Processes' %}</th>
+                                <th >{% trans 'Running' %}</th>
+                                <th >{% trans 'Sleeping' %}</th>
+                                <th >{% trans 'Stopped' %}</th>
+                                <th >{% trans 'Zombie' %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{$ totalProcesses $}</td>
+                                <td>{$ runningProcesses $}</td>
+                                <td>{$ sleepingProcesses $}</td>
+                                <td>{$ stoppedProcesses $}</td>
+                                <td>{$ zombieProcesses $}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="example-box-wrapper">
+                    <div class="content-box-wrapper">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>{% trans 'CPU Load' %}</th>
+                                <th>{% trans '1 Min' %}</th>
+                                <th>{% trans '5 Min' %}</th>
+                                <th>{% trans '15 Min' %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{$ cpuNow $}</td>
+                                <td>{$ cpuOne $}</td>
+                                <td>{$ cpuFive $}</td>
+                                <td>{$ cpuFifteen $}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="example-box-wrapper">
+                    <div class="content-box-wrapper">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>{% trans 'I/O Wait' %}</th>
+                                <th>{% trans 'Idle Time' %}</th>
+                                <th>{% trans 'HW Interrupts' %}</th>
+                                <th>{% trans 'Softirqs' %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{$ ioWait $}</td>
+                                <td>{$ idleTime $}</td>
+                                <td>{$ hwInterrupts $}</td>
+                                <td>{$ Softirqs $}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="example-box-wrapper">
+                    <div class="content-box-wrapper">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>{% trans 'Memory' %}</th>
+                                <th>{% trans 'Free' %}</th>
+                                <th>{% trans 'Used' %}</th>
+                                <th>{% trans 'buff/cache' %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{$ totalMemory $}</td>
+                                <td>{$ freeMemory $}</td>
+                                <td>{$ usedMemory $}</td>
+                                <td>{$ buffCache $}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="example-box-wrapper">
+                    <div class="content-box-wrapper">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>{% trans 'SWAP' %}</th>
+                                <th>{% trans 'Free' %}</th>
+                                <th>{% trans 'Used' %}</th>
+                                <th>{% trans 'buff/cache' %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{$ swapTotalMemory $}</td>
+                                <td>{$ swapFreeMemory $}</td>
+                                <td>{$ swapUsedMemory $}</td>
+                                <td>{$ swapBuffCache $}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 mt-30">
+                <div class="example-box-wrapper">
+                    <h3 style="" class="content-box-header bg-blue mx-10">
+                        {% trans 'Top Processes' %}
+                    </h3>
+                    <div class="content-box-wrapper content">
+                        <div style="margin-top: 2%; margin-bottom: 2%" class="row">
+                            <div class="col-sm-8">
+                                <input placeholder="Search..." ng-model="search" name="dom" type="text"
+                                       class="form-control mx-10" ng-model="domainNameCreate" required>
+                            </div>
+                        </div>
+
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>{% trans 'PID' %}</th>
+                                <th>{% trans 'User' %}</th>
+                                <th>{% trans 'VIRT' %}</th>
+                                <th>{% trans 'RES' %}</th>
+                                <th>{% trans 'State' %}</th>
+                                <th>{% trans '%CPU' %}</th>
+                                <th>{% trans '%MEM' %}</th>
+                                <th>{% trans 'Time' %}</th>
+                                <th>{% trans 'Command' %}</th>
+                                <th>{% trans 'Actions' %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="process in processes | filter:search">
+                                <td ng-bind="process.PID"></td>
+                                <td ng-bind="process.User"></td>
+                                <td ng-bind="process.VIRT"></td>
+                                <td ng-bind="process.RES"></td>
+                                <td ng-bind="process.S"></td>
+                                <td ng-bind="process.CPU"></td>
+                                <td ng-bind="process.MEM"></td>
+                                <td ng-bind="process.Time"></td>
+                                <td ng-bind="process.Command"></td>
+                                <td>
+                                    <button ng-click="killProcess(process.PID)" class="btn btn-sm btn-danger">KILL</button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

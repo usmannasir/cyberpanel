@@ -14,14 +14,24 @@
 </div>
 <div class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Delete DNS Zone" %}
         </h3>
         <div ng-controller="deleteDNSZone" class="example-box-wrapper">
 
 
-            <form  action="/" class="form-horizontal bordered-row">
+        {% if not status %}
+            <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                <h3>{% trans "PowerDNS is disabled." %}
+                    <a href="{% url 'managePowerDNS' %}"><button class="btn btn-alt btn-hover btn-blue-alt">
+                        <span>{% trans "Enable Now" %}</span>
+                        <i class="glyph-icon icon-arrow-right"></i>
+                    </button></a></h3>
+            </div>
 
+        {% else %}
+
+            <form  action="/" class="form-horizontal bordered-row panel-body">
 
                  <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Select Zone" %}</label>
@@ -37,7 +47,7 @@
             <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="deleteZone()" class="btn btn-primary btn-lg btn-block">{% trans "Delete Zone" %}</button>
+                         <button type="button" ng-click="deleteZone()" class="btn btn-primary btn-lg">{% trans "Delete Zone" %}</button>
 
                     </div>
             </div>
@@ -54,7 +64,7 @@
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
+                    <div class="col-sm-6">
                             <div ng-hide="deleteFailure" class="alert alert-danger">
                                         <p>{% trans "Cannot delete zone. Error message: " %}{$ errorMessage $}</p>
                             </div>
@@ -74,6 +84,8 @@
 
 
             </form>
+
+        {% endif %}
 
 
 

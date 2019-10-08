@@ -1,10 +1,3 @@
-# This is an auto-generated Django model module.
-# You'll have to do the following manually to clean this up:
-#   * Rearrange models' order
-#   * Make sure each model has one field with primary_key=True
-#   * Make sure each ForeignKey has `on_delete` set to the desired behavior.
-#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
-# Feel free to rename the models, but don't rename db_table values or field names.
 from __future__ import unicode_literals
 
 from django.db import models
@@ -12,7 +5,7 @@ from loginSystem.models import Administrator
 
 
 class Domains(models.Model):
-    admin = models.ForeignKey(Administrator,on_delete=models.CASCADE)
+    admin = models.ForeignKey(Administrator,on_delete=models.CASCADE, default=1, null=True)
     name = models.CharField(unique=True, max_length=255)
     master = models.CharField(max_length=128, blank=True, null=True)
     last_check = models.IntegerField(blank=True, null=True)
@@ -25,7 +18,7 @@ class Domains(models.Model):
 
 
 class Records(models.Model):
-    domainOwner = models.ForeignKey(Domains, on_delete=models.CASCADE)
+    domainOwner = models.ForeignKey(Domains, on_delete=models.CASCADE, null=True)
     id = models.BigAutoField(primary_key=True)
     domain_id = models.IntegerField(blank=True, null=True)
     name = models.CharField(max_length=255, blank=True, null=True)

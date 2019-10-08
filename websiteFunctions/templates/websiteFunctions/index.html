@@ -14,15 +14,12 @@
    <p>{% trans "On this page you can launch, list, modify and delete websites from your server." %}</p>
 </div>
 
-    <div class="panel">
+    <div class="panel col-md-12">
         <div class="panel-body">
 
-
-            <h3 class="title-hero">
+            <h3 class="content-box-header">
             {% trans "Available Functions" %}
             </h3>
-
-
 
              <div class="example-box-wrapper">
 
@@ -30,87 +27,75 @@
 
                     <div class="row">
 
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'listWebsites' %}" title="{% trans 'List Websites' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
-                                            {% trans "List Websites" %}
+                                            {% trans "List Website" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-plus-square"></i>
                                         </div>
                                     </a>
                     </div>
 
-                </div>
-
                 {% else %}
-                    <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'createWebsite' %}" title="{% trans 'Create Website' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Create Website" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-plus-square"></i>
                                         </div>
                                     </a>
                     </div>
 
 
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'listWebsites' %}" title="{% trans 'List Websites' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
-                                            {% trans "List Websites" %}
+                                            {% trans "List Website" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-list-ul"></i>
                                         </div>
                                     </a>
                     </div>
 
 
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'modifyWebsite' %}" title="{% trans 'Modify Website' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Modify Website" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-edit"></i>
                                         </div>
                                     </a>
                     </div>
 
 
-                </div>
-
-                    <div class="row">
-
-                        <div class="col-md-4">
+                        <div class="col-md-3 btn-min-width">
                                         <a href="{% url 'siteState' %}" title="{% trans 'Suspend/Unsuspend Website' %}" class="tile-box tile-box-shortcut btn-primary">
                                             <div class="tile-header">
-                                                {% trans "Suspend/Unsuspend Website" %}
+                                                {% trans "Suspend/Unsuspend" %}
                                             </div>
                                             <div class="tile-content-wrapper">
-                                                <i class="glyph-icon icon-dashboard"></i>
+                                                <i class="fa fa-pause"></i>
                                             </div>
                                         </a>
                         </div>
 
-
-
-                        <div class="col-md-4">
+                        <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'deleteWebsite' %}" title="{% trans 'Delete Website' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Delete Website" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-trash"></i>
                                         </div>
                                     </a>
                         </div>
-
-
-
 
                 </div>
                 {% endif %}

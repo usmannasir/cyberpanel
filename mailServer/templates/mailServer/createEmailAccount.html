@@ -3,100 +3,135 @@
 {% block title %}{% trans "Create Email Account - CyberPanel" %}{% endblock %}
 {% block content %}
 
-{% load static %}
-{% get_current_language as LANGUAGE_CODE %}
-<!-- Current language: {{ LANGUAGE_CODE }} -->
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
 
-<div class="container">
-<div id="page-title">
-   <h2>{% trans "Create Email Account" %}</h2>
-   <p>{% trans "Select a website from the list, to create an email account." %}</p>
-</div>
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Create Email Account" %}</h2>
+            <p>{% trans "Select a website from the list, to create an email account." %}</p>
+        </div>
 
-<div ng-controller="createEmailAccount" class="panel">
-    <div class="panel-body">
-        <h3 class="title-hero">
-            {% trans "Create Email Account" %} <img ng-hide="emailLoading" src="{% static 'images/loading.gif' %}">
-        </h3>
-        <div  class="example-box-wrapper">
+        <div ng-controller="createEmailAccount" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Create Email Account" %} <img ng-hide="emailLoading"
+                                                            src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
 
+                    {% if not status %}
 
-            <form  action="/" class="form-horizontal bordered-row">
-
-
-                 <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
-                    <div class="col-sm-6">
-                        <select ng-change="showEmailDetails()" ng-model="emailDomain" class="form-control">
-                            {% for items in websiteList %}
-                                <option>{{ items }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
+                        <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                            <h3>{% trans "Postfix is disabled." %}
+                                <a href="{% url 'managePostfix' %}">
+                                    <button class="btn btn-alt btn-hover btn-blue-alt">
+                                        <span>{% trans "Enable Now" %}</span>
+                                        <i class="glyph-icon icon-arrow-right"></i>
+                                    </button>
+                                </a></h3>
+                        </div>
 
 
-            <!------ Modification form that appears after a click --------------->
+                    {% else %}
 
 
-                <div ng-hide="emailDetails" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "User Name" %}</label>
-                    <div class="col-sm-6">
-                        <input ng-change="hideFewDetails" type="text" class="form-control" ng-model="emailUsername" required>
-                    </div>
-                    <div class="current-pack">@{$ selectedDomain $}</div>
-                </div>
-
-                <div ng-hide="emailDetails" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Password" %}</label>
-                    <div class="col-sm-6">
-                        <input  type="password" class="form-control" ng-model="emailPassword" required>
-                    </div>
-                </div>
+                        <form action="/" class="form-horizontal bordered-row panel-body">
 
 
-            <!------ Modification form that appears after a click --------------->
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
+                                <div class="col-sm-6">
+                                    <select ng-change="showEmailDetails()" ng-model="emailDomain" class="form-control">
+                                        {% for items in websiteList %}
+                                            <option>{{ items }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
 
 
-            <div ng-hide="emailDetails" class="form-group">
-                <label class="col-sm-3 control-label"></label>
-                <div class="col-sm-4">
-                    <button  type="button" ng-click="createEmailAccount()" class="btn btn-primary btn-lg btn-block">{% trans "Create Email" %}</button>
+                            <!------ Modification form that appears after a click --------------->
+
+
+                            <div ng-hide="emailDetails" class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "User Name" %}</label>
+                                <div class="col-sm-6">
+                                    <input ng-change="hideFewDetails" type="text" class="form-control"
+                                           ng-model="emailUsername" required>
+                                </div>
+                                <div class="current-pack">@{$ selectedDomain $}</div>
+                            </div>
+
+                            <div ng-hide="emailDetails" class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                                <div class="col-sm-6">
+                                    <input type="password" class="form-control" ng-model="emailPassword" required>
+                                </div>
+                                <div class="col-sm-3">
+                                    <button type="button" ng-click="generatePassword()"
+                                            class="btn btn-primary">{% trans "Generate" %}</button>
+                                </div>
+                            </div>
+
+                            <div ng-hide="generatedPasswordView" class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Generated Password" %}</label>
+                                <div class="col-sm-6">
+                                    <input type="text" name="email" class="form-control" ng-model="emailPassword"
+                                           required>
+                                </div>
+                                <div class="col-sm-3">
+                                    <button type="button" ng-click="usePassword()"
+                                            class="btn btn-primary">{% trans "Use" %}</button>
+                                </div>
+                            </div>
+
+
+                            <!------ Modification form that appears after a click --------------->
+
+
+                            <div ng-hide="emailDetails" class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                    <button type="button" ng-click="createEmailAccount()"
+                                            class="btn btn-primary btn-lg">{% trans "Create Email" %}</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-6">
+                                    <div ng-hide="canNotCreate" class="alert alert-danger">
+                                        <p>{% trans "Cannot create email account. Error message:" %} {$ errorMessage
+                                            $}</p>
+                                    </div>
+
+                                    <div ng-hide="successfullyCreated" class="alert alert-success">
+                                        <p>{% trans "Email with id :" %} {$ createdID
+                                            $}{% trans " is successfully created." %}</p>
+                                    </div>
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                    </div>
+
+                                </div>
+
+
+                            </div>
+
+
+                        </form>
+
+                    {% endif %}
+
+
                 </div>
             </div>
-
-            <div class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                            <div ng-hide="canNotCreate" class="alert alert-danger">
-                                        <p>{% trans "Cannot create email account. Error message:" %} {$ errorMessage $}</p>
-                            </div>
-
-                            <div ng-hide="successfullyCreated" class="alert alert-success">
-                                        <p>{% trans "Email with id :" %} {$ createdID $}{% trans " is successfully created." %}</p>
-                            </div>
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                            </div>
-
-                    </div>
-
-
-
-                </div>
-
-
-            </form>
-
-
-
-
         </div>
+
+
     </div>
-</div>
-
-
-</div>
 
 
 {% endblock %}

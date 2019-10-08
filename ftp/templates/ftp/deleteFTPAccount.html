@@ -19,6 +19,18 @@
         </h3>
         <div ng-controller="deleteFTPAccount" class="example-box-wrapper">
 
+        {% if not status %}
+
+            <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                <h3>{% trans "PureFTPD is disabled." %}
+                    <a href="{% url 'managePureFtpd' %}"><button class="btn btn-alt btn-hover btn-blue-alt">
+                        <span>{% trans "Enable Now" %}</span>
+                        <i class="glyph-icon icon-arrow-right"></i>
+                    </button></a></h3>
+            </div>
+
+
+        {% else %}
 
             <form  action="/" class="form-horizontal bordered-row">
 
@@ -66,7 +78,7 @@
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
+                    <div class="col-sm-6">
                             <div ng-hide="deleteFailure" class="alert alert-danger">
                                         <p>{% trans "Cannot delete account. Error message:" %} {$ errorMessage $}</p>
                             </div>
@@ -86,6 +98,8 @@
 
 
             </form>
+
+        {% endif %}
 
 
 

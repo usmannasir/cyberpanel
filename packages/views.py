@@ -1,265 +1,130 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render,redirect
-from django.http import HttpResponse
+from django.shortcuts import redirect
 from loginSystem.views import loadLoginPage
-from loginSystem.models import Administrator
-import json
-from .models import Package
-import plogical.CyberCPLogFileWriter as logging
+from packagesManager import PackagesManager
+from pluginManager import pluginManager
 
 # Create your views here.
 
 
 def packagesHome(request):
     try:
-        val = request.session['userID']
+        pm = PackagesManager(request)
+        return pm.packagesHome()
     except KeyError:
         return redirect(loadLoginPage)
-
-    return render(request,'packages/index.html',{})
-
-
 
 def createPacakge(request):
-
     try:
-        val = request.session['userID']
 
-        admin = Administrator.objects.get(pk=val)
+        result = pluginManager.preCreatePacakge(request)
+        if result != 200:
+            return result
 
-        if admin.type == 3:
-            return HttpResponse("You don't have enough privileges to access this page.")
+        pm = PackagesManager(request)
+        coreResult = pm.createPacakge()
 
+        result = pluginManager.postCreatePacakge(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
-
-    return render(request,'packages/createPackage.html',{"admin":admin.userName})
-
 
 def deletePacakge(request):
-
     try:
-        val = request.session['userID']
-        try:
-
-            admin = Administrator.objects.get(pk=val)
-
-            if admin.type == 3:
-                return HttpResponse("You don't have enough privileges to access this page.")
-
-            if admin.type == 1:
-                packages = Package.objects.all()
-            else:
-                packages = Package.objects.filter(admin=admin)
-
-            packageList = []
-            for items in packages:
-                packageList.append(items.packageName)
-
-        except BaseException,msg:
-            logging.writeToFile(str(msg))
-            return HttpResponse("Please see CyberCP Main Log File")
-
+        pm = PackagesManager(request)
+        return pm.deletePacakge()
     except KeyError:
         return redirect(loadLoginPage)
-
-    return render(request,'packages/deletePackage.html',{"packageList" : packageList})
-
-
 
 def submitPackage(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-        try:
-            if request.method == 'POST':
-                data = json.loads(request.body)
-                packageName = data['packageName']
-                packageSpace = int(data['diskSpace'])
-                packageBandwidth = int(data['bandwidth'])
-                packageDatabases = int(data['dataBases'])
-                ftpAccounts = int(data['ftpAccounts'])
-                emails = int(data['emails'])
-                allowedDomains = int(data['allowedDomains'])
 
-                if admin.type == 1:
+        result = pluginManager.preSubmitPackage(request)
+        if result != 200:
+            return result
 
-                    if packageSpace < 0 or packageBandwidth < 0 or packageDatabases < 0 or ftpAccounts < 0 or emails < 0 or allowedDomains < 0:
-                        data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
+        pm = PackagesManager(request)
+        coreResult = pm.submitPackage()
+
+        result = pluginManager.postSubmitPackage(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def submitDelete(request):
+    try:
+
+        result = pluginManager.preSubmitDelete(request)
+        if result != 200:
+            return result
+
+        pm = PackagesManager(request)
+        coreResult = pm.submitDelete()
+
+        result = pluginManager.postSubmitDelete(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def modifyPackage(request):
+    try:
+        pm = PackagesManager(request)
+        return pm.modifyPackage()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def submitModify(request):
+    try:
+        pm = PackagesManager(request)
+        return pm.submitModify()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def saveChanges(request):
+    try:
+
+        result = pluginManager.preSaveChanges(request)
+        if result != 200:
+            return result
+
+        pm = PackagesManager(request)
+        coreResult = pm.saveChanges()
+
+        result = pluginManager.postSaveChanges(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
 
 
-                    admin = Administrator.objects.get(pk=val)
-
-                    packageName = admin.userName+"_"+packageName
-
-                    package = Package(admin=admin, packageName=packageName, diskSpace=packageSpace,
-                                      bandwidth=packageBandwidth, ftpAccounts=ftpAccounts, dataBases=packageDatabases,emailAccounts=emails,allowedDomains=allowedDomains)
-
-                    package.save()
-
-                    data_ret = {'saveStatus': 1,'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-                else:
-                    data_ret = {'saveStatus': 0, 'error_message': "Not enough privileges."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-        except BaseException,msg:
-            data_ret = {'saveStatus': 0, 'error_message': str(msg)}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+def listPackages(request):
+    try:
+        pm = PackagesManager(request)
+        return pm.listPackages()
     except KeyError:
         return redirect(loadLoginPage)
 
 
 
-def submitDelete(request):
+def fetchPackagesTable(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-        try:
-            if admin.type == 1:
-                if request.method == 'POST':
-                    data = json.loads(request.body)
-                    packageName = data['packageName']
 
-                    delPackage = Package.objects.get(packageName=packageName)
-                    delPackage.delete()
+        pm = PackagesManager(request)
+        coreResult = pm.fetchPackagesTable()
 
-                    data_ret = {'deleteStatus': 1,'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-            else:
-                data_ret = {'deleteStatus': 0, 'error_message': "Not enough privileges."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-        except BaseException,msg:
-            data_ret = {'deleteStatus': 0, 'error_message': str(msg)}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-    except KeyError,msg:
-        data_ret = {'deleteStatus': 0, 'error_message': str(msg)}
-        json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
-
-
-def modifyPackage(request):
-    try:
-        val = request.session['userID']
-        try:
-            admin = Administrator.objects.get(pk=val)
-
-            if admin.type == 3:
-                return HttpResponse("You don't have enough privileges to access this page.")
-
-            if admin.type == 1:
-                packages = Package.objects.all()
-            else:
-                packages = Package.objects.filter(admin=admin)
-
-            packageList = []
-            for items in packages:
-                packageList.append(items.packageName)
-
-        except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse("Please see CyberCP Main Log File")
-
+        return coreResult
     except KeyError:
-        packages = Package.objects.all()
-
-        packageList = []
-        for items in packages:
-            packageList.append(items.packageName)
-        return render(request,'packages/modifyPackage.html',{"packList" : packageList})
-
-    return render(request,'packages/modifyPackage.html',{"packList" : packageList})
-
-
-def submitModify(request):
-    try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-        try:
-            if admin.type == 1:
-                if request.method == 'POST':
-
-                    data = json.loads(request.body)
-                    packageName = data['packageName']
-
-                    modifyPack = Package.objects.get(packageName=packageName)
-
-                    diskSpace = modifyPack.diskSpace
-                    bandwidth = modifyPack.bandwidth
-                    ftpAccounts = modifyPack.ftpAccounts
-                    dataBases = modifyPack.dataBases
-                    emails = modifyPack.emailAccounts
-
-                    data_ret = {'emails':emails,'modifyStatus': 1,'error_message': "None",
-                                "diskSpace":diskSpace,"bandwidth":bandwidth,"ftpAccounts":ftpAccounts,"dataBases":dataBases,"allowedDomains":modifyPack.allowedDomains}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-            else:
-                data_ret = {'modifyStatus': 0, 'error_message': "Not enough privileges."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-
-        except BaseException,msg:
-            data_ret = {'modifyStatus': 0, 'error_message': str(msg)}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-    except KeyError,msg:
-        data_ret = {'modifyStatus': 0, 'error_message': str(msg)}
-        json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
-
-def saveChanges(request):
-    try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-        try:
-            if admin.type == 1:
-                if request.method == 'POST':
-                    data = json.loads(request.body)
-                    packageName = data['packageName']
-
-                    if data['diskSpace'] < 0 or data['bandwidth'] < 0 or data['ftpAccounts'] < 0 or data['dataBases'] < 0 or data['emails'] < 0 or data['allowedDomains'] < 0:
-                        data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-
-                    modifyPack = Package.objects.get(packageName=packageName)
-
-                    modifyPack.diskSpace = data['diskSpace']
-                    modifyPack.bandwidth = data['bandwidth']
-                    modifyPack.ftpAccounts = data['ftpAccounts']
-                    modifyPack.dataBases = data['dataBases']
-                    modifyPack.emailAccounts = data['emails']
-                    modifyPack.allowedDomains = data['allowedDomains']
-                    modifyPack.save()
-
-                    data_ret = {'saveStatus': 1,'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-            else:
-                data_ret = {'saveStatus': 0,'error_message': "Not enough privileges."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-        except BaseException,msg:
-            data_ret = {'saveStatus': 0, 'error_message': str(msg)}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-    except KeyError,msg:
-        data_ret = {'saveStatus': 0, 'error_message': str(msg)}
-        json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
+        return redirect(loadLoginPage)

@@ -15,8 +15,8 @@
 </div>
 
 <div ng-controller="modSecRulesPack" class="example-box-wrapper">
-        <div style="border-radius: 25px;border-color:#3498db" class="content-box">
-            <h3 class="content-box-header bg-blue">
+        <div class="panel panel-body">
+            <h3 class="content-box-header">
                 {% trans "ModSecurity Rules Packages!" %} <img ng-hide="modsecLoading"  src="/static/images/loading.gif">
             </h3>
 
@@ -25,12 +25,12 @@
                     <div class="row">
 
                     <div class="col-md-12 text-center" style="margin-bottom: 2%;">
-                                <h3>{% trans "ModSecurity is not installed " %}
-                                    <a href="{% url 'modSecurity' %}"><button class="btn btn-alt btn-hover btn-blue-alt">
-                                        <span>{% trans "Install Now." %}</span>
-                                        <i class="glyph-icon icon-arrow-right"></i>
-                                    </button></a>
-                                </h3>
+                                <h4 class="mb-10">{% trans "ModSecurity is not installed " %}
+                                </h4>
+                                <a href="{% url 'modSecurity' %}"><button class="btn btn-alt btn-hover btn-blue-alt">
+                                    <span>{% trans "Install Now." %}</span>
+                                    <i class="glyph-icon icon-arrow-right"></i>
+                                </button></a>
                     </div>
                 </div>
                 </div>

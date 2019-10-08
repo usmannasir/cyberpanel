@@ -1,0 +1,125 @@
+<?xml version="1.0" ?>
+<php>
+     <name>php70</name>
+
+     <extension>
+         <extensionName>lsphp70-common</extensionName>
+         <extensionDescription>Most of what you need.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-curl</extensionName>
+         <extensionDescription>Curl (common web tools) required for PHP</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-dbg</extensionName>
+         <extensionDescription>Debugging extension</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-dev</extensionName>
+         <extensionDescription>Development features almost always required.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-imap</extensionName>
+         <extensionDescription>Email extensions for PHP.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-intl</extensionName>
+         <extensionDescription>Extensions for countries other than the U.S.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-json</extensionName>
+         <extensionDescription>PHP extensions for JavaScript Object Notation.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-ldap</extensionName>
+         <extensionDescription>PHP extensions for LDAP (directory access protocol)</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-modules-source</extensionName>
+         <extensionDescription>PHP source modules for virtually everything.  Very large.</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-mysql</extensionName>
+         <extensionDescription>PHP extension for MySQL or MariaDB databases.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-opcache</extensionName>
+         <extensionDescription>PHP low-level caching of code.  Very important for performance.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-pgsql</extensionName>
+         <extensionDescription>A PostgreSQL database extension for PHP.</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-pspell</extensionName>
+         <extensionDescription>PHP spell checking extensions.</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-recode</extensionName>
+         <extensionDescription>PHP extension to transform data between different character sets.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-snmp</extensionName>
+         <extensionDescription>PHP network management extensions.</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-sqlite3</extensionName>
+         <extensionDescription>An extension for PHP applications that use the SQLite v3 features.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-sybase</extensionName>
+         <extensionDescription>An extension for PHP applications that use Sybase databases.</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-tidy</extensionName>
+         <extensionDescription>PHP extensions for manipulating HTML, XHTML and XML documents.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp70-ioncube</extensionName>
+         <extensionDescription>ioncube loaders</extensionDescription>
+         <status>0</status>
+     </extension>
+
+    <extension>
+         <extensionName>lsphp70-imagick</extensionName>
+         <extensionDescription>Extension to create and modify images using ImageMagick</extensionDescription>
+         <status>0</status>
+     </extension>
+
+</php>

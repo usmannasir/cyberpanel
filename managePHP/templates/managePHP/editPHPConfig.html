@@ -4,191 +4,183 @@
 {% block content %}
 
 
-{% load static %}
-{% get_current_language as LANGUAGE_CODE %}
-<!-- Current language: {{ LANGUAGE_CODE }} -->
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
 
 
-<div class="container">
-<div id="page-title">
-   <h2>{% trans "Edit PHP Configurations" %}</h2>
-   <p>{% trans "Edit PHP Configurations on this page." %}</p>
-</div>
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Edit PHP Configurations" %}</h2>
+            <p>{% trans "Edit PHP Configurations on this page." %}</p>
+        </div>
 
-<div ng-controller="editPHPConfig" class="panel">
+        <div ng-controller="editPHPConfig" class="panel">
             <div class="panel-body">
-                <h3 class="title-hero">
+                <h3 class="content-box-header">
                     {% trans "Edit PHP Configurations" %}
                 </h3>
                 <div class="example-box-wrapper">
-                    <ul class="list-group list-group-separator row list-group-icons">
+                    <ul class="nav nav-tabs">
 
-                        <li class="col-md-3 active">
-                            <a href="#tab-example-1" data-toggle="tab" class="list-group-item">
-                                <i class="glyph-icon icon-dashboard"></i>
-                                {% trans "Basic" %}
+                        <li class="col-md-2 nav-item tab-mod active">
+                            <a href="#tab-example-1" data-toggle="tab" class="h4 nav-link">
+                                    <i class="fa fa-cog btn-icon"></i>
+                                    <span>{% trans "Basic" %}</span>
                             </a>
+
                         </li>
-                        <li class="col-md-3">
-                            <a href="#tab-example-3" data-toggle="tab" class="list-group-item">
-                                <i class="glyph-icon font-blue-alt icon-globe"></i>
-                                {% trans "Advanced" %}
+                        <li class="col-md-2 tab-mod nav-item">
+                            <a href="#tab-example-3" data-toggle="tab" class="h4 nav-link">
+                                <i class="fa fa-cogs btn-icon"></i>
+                                <span>{% trans "Advanced" %}</span>
                             </a>
                         </li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane fade active in" id="tab-example-1">
-                            <div  class="example-box-wrapper">
+                            <div class="example-box-wrapper">
 
 
-                    <form  action="/" class="form-horizontal bordered-row">
+                                <form action="/" class="form-horizontal bordered-row">
 
 
-                         <div class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
-                            <div class="col-sm-6">
-                                <select ng-change="fetchPHPDetails()" ng-model="phpSelection" class="form-control">
-                                        <option>PHP 5.3</option>
-                                        <option>PHP 5.4</option>
-                                        <option>PHP 5.5</option>
-                                        <option>PHP 5.6</option>
-                                        <option>PHP 7.0</option>
-                                        <option>PHP 7.1</option>
-                                        <option>PHP 7.2</option>
-                                </select>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
+                                        <div class="col-sm-6">
+                                            <select ng-change="fetchPHPDetails()" ng-model="phpSelection"
+                                                    class="form-control">
+                                                {% for php in phps %}
+                                                    <option>{{ php }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <img ng-hide="loadingPHP" src="{% static 'images/loading.gif' %}">
+                                    </div>
+
+                                    <!------ PHP Basic Settings Box --------------->
+
+
+                                    <div ng-hide="phpDetailsBox" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "display_errors" %}</label>
+                                        <div class="col-sm-6">
+                                            <input type="checkbox" id="display_errors" data-toggle="toggle">
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="phpDetailsBox" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "file_uploads" %}</label>
+                                        <div class="col-sm-6">
+                                            <input type="checkbox" id="file_uploads" data-toggle="toggle">
+                                        </div>
+                                    </div>
+
+
+                                    <div ng-hide="phpDetailsBox" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "allow_url_fopen" %}</label>
+                                        <div class="col-sm-6">
+                                            <input type="checkbox" id="allow_url_fopen" data-toggle="toggle">
+                                        </div>
+                                    </div>
+
+
+                                    <div ng-hide="phpDetailsBox" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "allow_url_include" %}</label>
+                                        <div class="col-sm-6">
+                                            <input type="checkbox" id="allow_url_include" data-toggle="toggle">
+                                        </div>
+                                    </div>
+
+
+                                    <div ng-hide="phpDetailsBox" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "memory_limit" %}</label>
+                                        <div class="col-sm-6">
+                                            <input ng-model="memory_limit" type="text" class="form-control" required>
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="phpDetailsBox" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "max_execution_time" %}</label>
+                                        <div class="col-sm-6">
+                                            <input ng-model="max_execution_time" type="text" class="form-control"
+                                                   required>
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="phpDetailsBox" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "upload_max_filesize" %}</label>
+                                        <div class="col-sm-6">
+                                            <input ng-model="upload_max_filesize" type="text" class="form-control"
+                                                   required>
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="phpDetailsBox" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "post_max_size" %}</label>
+                                        <div class="col-sm-6">
+                                            <input ng-model="post_max_size" type="text" class="form-control" required>
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="phpDetailsBox" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "max_input_time" %}</label>
+                                        <div class="col-sm-6">
+                                            <input ng-model="max_input_time" type="text" class="form-control" required>
+                                        </div>
+                                    </div>
+
+
+                                    <!------ PHP Basic Settings Box --------------->
+                                    <div ng-hide="savebtn" class="form-group">
+                                        <label class="col-sm-3 control-label"></label>
+                                        <div class="col-sm-4">
+                                            <button type="button" ng-click="saveChanges()"
+                                                    class="btn btn-primary btn-lg btn-block">{% trans "Save Changes" %}</button>
+
+                                        </div>
+                                    </div>
+
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label"></label>
+                                        <div class="col-sm-4">
+                                            <div ng-hide="canNotFetch" class="alert alert-danger">
+                                                <p>{% trans "Error message: " %}{$ errorMessage $}</p>
+                                            </div>
+
+                                            <div ng-hide="detailsSaved" class="alert alert-success">
+                                                <p>{% trans "PHP Configs Saved." %}</p>
+                                            </div>
+
+
+                                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                <p>{% trans "Could not connect. Please refresh this page." %}</p>
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+
+
+                                </form>
+
+
                             </div>
-                             <img ng-hide="loadingPHP" src="{% static 'images/loading.gif' %}">
-                         </div>
-
-            <!------ PHP Basic Settings Box --------------->
-
-
-                <div ng-hide="phpDetailsBox" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "display_errors" %}</label>
-                    <div class="col-sm-6">
-                        <input type="checkbox" id="display_errors" data-toggle="toggle">
-                    </div>
-                </div>
-
-                <div ng-hide="phpDetailsBox" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "file_uploads" %}</label>
-                    <div class="col-sm-6">
-                        <input type="checkbox" id="file_uploads" data-toggle="toggle">
-                    </div>
-                </div>
-
-
-                <div ng-hide="phpDetailsBox" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "allow_url_fopen" %}</label>
-                    <div class="col-sm-6">
-                        <input type="checkbox" id="allow_url_fopen"  data-toggle="toggle">
-                    </div>
-                </div>
-
-
-                <div ng-hide="phpDetailsBox" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "allow_url_include" %}</label>
-                    <div class="col-sm-6">
-                        <input type="checkbox" id="allow_url_include"  data-toggle="toggle">
-                    </div>
-                </div>
-
-
-                <div ng-hide="phpDetailsBox" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "memory_limit" %}</label>
-                    <div class="col-sm-6">
-                        <input ng-model="memory_limit"  type="text" class="form-control" required>
-                    </div>
-                </div>
-
-                <div ng-hide="phpDetailsBox" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "max_execution_time" %}</label>
-                    <div class="col-sm-6">
-                        <input ng-model="max_execution_time" type="text" class="form-control"  required>
-                    </div>
-                </div>
-
-                <div ng-hide="phpDetailsBox" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "upload_max_filesize" %}</label>
-                    <div class="col-sm-6">
-                        <input ng-model="upload_max_filesize"  type="text" class="form-control" required>
-                    </div>
-                </div>
-
-                <div ng-hide="phpDetailsBox" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "post_max_size" %}</label>
-                    <div class="col-sm-6">
-                        <input ng-model="post_max_size"  type="text" class="form-control" required>
-                    </div>
-                </div>
-
-                <div ng-hide="phpDetailsBox" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "max_input_time" %}</label>
-                    <div class="col-sm-6">
-                        <input ng-model="max_input_time"  type="text" class="form-control" required>
-                    </div>
-                </div>
-
-
-
-            <!------ PHP Basic Settings Box --------------->
-            <div ng-hide="savebtn" class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                         <button type="button" ng-click="saveChanges()" class="btn btn-primary btn-lg btn-block">{% trans "Save Changes" %}</button>
-
-                    </div>
-            </div>
-
-
-            <div class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                            <div ng-hide="canNotFetch" class="alert alert-danger">
-                                        <p>{% trans "Error message: " %}{$ errorMessage $}</p>
-                            </div>
-
-                            <div ng-hide="detailsSaved" class="alert alert-success">
-                                        <p>{% trans "PHP Configs Saved." %}</p>
-                            </div>
-
-
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                        <p>{% trans "Could not connect. Please refresh this page." %}</p>
-                            </div>
-                    </div>
-
-
-
-            </div>
-
-
-
-            </form>
-
-
-
-
-        </div>
                         </div>
-
 
 
                         <div class="tab-pane fade" id="tab-example-3">
 
-                            <form  action="/" class="form-horizontal bordered-row">
+                            <form action="/" class="form-horizontal bordered-row">
 
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
                                     <div class="col-sm-6">
-                                        <select ng-change="fetchAdvancePHPDetails()" ng-model="phpSelection" class="form-control">
-                                                <option>PHP 5.3</option>
-                                                <option>PHP 5.4</option>
-                                                <option>PHP 5.5</option>
-                                                <option>PHP 5.6</option>
-                                                <option>PHP 7.0</option>
-                                                <option>PHP 7.1</option>
-                                                <option>PHP 7.2</option>
+                                        <select ng-change="fetchAdvancePHPDetails()" ng-model="phpSelection"
+                                                class="form-control">
+                                            {% for php in phps %}
+                                                <option>{{ php }}</option>
+                                            {% endfor %}
                                         </select>
                                     </div>
                                     <img ng-hide="loadingPHP" src="{% static 'images/loading.gif' %}">
@@ -209,35 +201,32 @@
                                 <div ng-hide="savebtnAdvance" class="form-group">
                                     <label class="col-sm-3 control-label"></label>
                                     <div class="col-sm-4">
-                                         <button type="button" ng-click="saveChangesAdvance()" class="btn btn-primary btn-lg btn-block">{% trans "Save Changes" %}</button>
+                                        <button type="button" ng-click="saveChangesAdvance()"
+                                                class="btn btn-primary btn-lg btn-block">{% trans "Save Changes" %}</button>
 
                                     </div>
                                 </div>
 
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label"></label>
-                        <div class="col-sm-4">
-                                <div ng-hide="canNotFetchAdvanced" class="alert alert-danger">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label"></label>
+                                    <div class="col-sm-4">
+                                        <div ng-hide="canNotFetchAdvanced" class="alert alert-danger">
                                             <p>{% trans "Error message:" %} {$ errorMessage $}</p>
-                                </div>
+                                        </div>
 
-                                <div ng-hide="detailsSavedAdvanced" class="alert alert-success">
+                                        <div ng-hide="detailsSavedAdvanced" class="alert alert-success">
                                             <p>{% trans "PHP Configs Saved." %}</p>
-                                </div>
+                                        </div>
 
 
-                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <div ng-hide="couldNotConnect" class="alert alert-danger">
                                             <p>{% trans "Could not connect. Please refresh this page." %}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                        </div>
-                    </div>
-
-
-
 
 
                             </form>
-
 
 
                         </div>
@@ -247,7 +236,7 @@
         </div>
 
 
-</div>
+    </div>
 
 
 {% endblock %}

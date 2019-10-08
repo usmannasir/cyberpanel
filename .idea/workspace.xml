@@ -1,0 +1,1073 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="1cc52d7e-f2fd-4205-b67b-8dfa17896fab" name="Default Changelist" comment="" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_DATA_SOURCES" value="true" />
+    <option name="GROUP_SCHEMA" value="true" />
+    <option name="GROUP_CONTENTS" value="false" />
+    <option name="SORT_POSITIONED" value="false" />
+    <option name="SHOW_EMPTY_GROUPS" value="false" />
+    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <option name="HIDDEN_KINDS">
+      <set />
+    </option>
+    <expand />
+    <select />
+  </component>
+  <component name="DjangoConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)">
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/IncBackups/views.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="419">
+              <caret line="376" column="29" selection-start-line="376" selection-start-column="29" selection-end-line="376" selection-end-column="29" />
+              <folding>
+                <element signature="e#24#63#0" expanded="true" />
+                <element signature="e#755#1548#0" />
+                <element signature="e#1587#1970#0" />
+                <element signature="e#2005#5358#0" />
+                <element signature="e#5401#7631#0" />
+                <element signature="e#7669#8522#0" />
+                <element signature="e#8562#10178#0" />
+                <element signature="e#12084#14080#0" />
+                <element signature="e#14113#14920#0" />
+                <element signature="e#14959#16339#0" />
+                <element signature="e#16372#17549#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/IncBackups/IncBackupsControl.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="142">
+              <caret line="420" column="50" selection-start-line="420" selection-start-column="50" selection-end-line="420" selection-end-column="50" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/plogical/processUtilities.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="2865">
+              <caret line="197" column="45" selection-start-line="197" selection-start-column="45" selection-end-line="197" selection-end-column="45" />
+              <folding>
+                <element signature="e#0#64#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/baseTemplate/templates/baseTemplate/index.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="9000">
+              <caret line="600" column="96" selection-start-line="600" selection-start-column="96" selection-end-line="600" selection-end-column="96" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/IncBackups/urls.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="60">
+              <caret line="5" column="86" selection-start-line="5" selection-start-column="65" selection-end-line="5" selection-end-column="86" />
+              <folding>
+                <element signature="e#0#32#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/IncBackups/restoreMeta.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="2355">
+              <caret line="159" selection-start-line="159" selection-end-line="159" />
+              <folding>
+                <element signature="e#33#42#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/IncBackups/static/IncBackups/IncBackups.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-403">
+              <caret line="205" column="19" selection-start-line="205" selection-start-column="19" selection-end-line="205" selection-end-column="19" />
+              <folding>
+                <element signature="e#491#2247#0" />
+                <element signature="e#2295#2339#0" />
+                <element signature="e#2390#3395#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>destination</find>
+      <find>createDatabaseBack</find>
+      <find>158:prepMeta</find>
+      <find>arning:179:prepMeta</find>
+      <find>writetofile</find>
+      <find>data</find>
+      <find>completPath</find>
+      <find>restoreDatabaseBackup</find>
+      <find>restoreDatabase</find>
+      <find>restore</find>
+      <find>self.statusPath</find>
+      <find>hello world 2</find>
+      <find>dns</find>
+      <find>modal-content</find>
+      <find>Databases</find>
+      <find>domain</find>
+      <find>fetchRestorePoints</find>
+      <find>fetchCurrentBackups</find>
+      <find>skip</find>
+      <find>.py</find>
+      <find>email</find>
+      <find>dbuser</find>
+      <find>createBackup</find>
+      <find>restoreData</find>
+      <find>submitBackupCreation</find>
+      <find>changePassword</find>
+      <find>createEmail</find>
+      <find>createDatabase</find>
+      <find>changeEmailPassword</find>
+      <find>Backups</find>
+    </findStrings>
+    <replaceStrings>
+      <replace>admin.api == 1</replace>
+      <replace>build=5</replace>
+      <replace>/CloudLinux</replace>
+      <replace />
+      <replace>externalApp</replace>
+      <replace>backupUtilities.Server_root</replace>
+      <replace>checkOwnershipZone</replace>
+      <replace>/usr/local/CyberCP/bin/python2</replace>
+      <replace>metaPath</replace>
+      <replace>$scope.cyberpanelLoading</replace>
+      <replace>self.website</replace>
+      <replace>statusPath</replace>
+    </replaceStrings>
+    <dirStrings>
+      <dir>$PROJECT_DIR$/backup</dir>
+      <dir>$PROJECT_DIR$/emailMarketing</dir>
+      <dir>$PROJECT_DIR$/ftp</dir>
+      <dir>$PROJECT_DIR$/manageServices</dir>
+      <dir>$PROJECT_DIR$/install</dir>
+      <dir>$PROJECT_DIR$/plogical</dir>
+    </dirStrings>
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/api/views.py" />
+        <option value="$PROJECT_DIR$/loginSystem/static/loginSystem/login-systen.js" />
+        <option value="$PROJECT_DIR$/websiteFunctions/website.py" />
+        <option value="$PROJECT_DIR$/postfixSenderPolicy/startServer.py" />
+        <option value="$PROJECT_DIR$/postfixSenderPolicy/accept_traffic.py" />
+        <option value="$PROJECT_DIR$/emailPremium/views.py" />
+        <option value="$PROJECT_DIR$/dns/dnsManager.py" />
+        <option value="$PROJECT_DIR$/plogical/acl.py" />
+        <option value="$PROJECT_DIR$/filemanager/filemanager.py" />
+        <option value="$PROJECT_DIR$/plogical/test.py" />
+        <option value="$PROJECT_DIR$/websiteFunctions/static/websiteFunctions/websiteFunctions.css" />
+        <option value="$PROJECT_DIR$/plogical/virtualHostUtilities.py" />
+        <option value="$PROJECT_DIR$/plogical/remoteTransferUtilities.py" />
+        <option value="$PROJECT_DIR$/backup/backupManager.py" />
+        <option value="$PROJECT_DIR$/plogical/upgrade.py" />
+        <option value="$PROJECT_DIR$/install/install.py" />
+        <option value="$PROJECT_DIR$/manageSSL/templates/manageSSL/manageSSL.html" />
+        <option value="$PROJECT_DIR$/serverStatus/views.py" />
+        <option value="$PROJECT_DIR$/serverStatus/serverStatusUtil.py" />
+        <option value="$PROJECT_DIR$/serverStatus/templates/serverStatus/litespeedStatus.html" />
+        <option value="$PROJECT_DIR$/websiteFunctions/StagingSetup.py" />
+        <option value="$PROJECT_DIR$/databases/models.py" />
+        <option value="$PROJECT_DIR$/plogical/sslUtilities.py" />
+        <option value="$PROJECT_DIR$/plogical/vhost.py" />
+        <option value="$PROJECT_DIR$/CyberCP/urls.py" />
+        <option value="$PROJECT_DIR$/CyberCP/settings.py" />
+        <option value="$PROJECT_DIR$/backup/views.py" />
+        <option value="$PROJECT_DIR$/plogical/backupUtilities.py" />
+        <option value="$PROJECT_DIR$/IncBackups/templates/IncBackups/incrementalDestinations.html" />
+        <option value="$PROJECT_DIR$/managePHP/ubuntuphp70.xml" />
+        <option value="$PROJECT_DIR$/managePHP/ubuntuphp71.xml" />
+        <option value="$PROJECT_DIR$/managePHP/ubuntuphp72.xml" />
+        <option value="$PROJECT_DIR$/managePHP/ubuntuphp73.xml" />
+        <option value="$PROJECT_DIR$/plogical/applicationInstaller.py" />
+        <option value="$PROJECT_DIR$/CyberCP/secMiddleware.py" />
+        <option value="$PROJECT_DIR$/IncBackups/models.py" />
+        <option value="$PROJECT_DIR$/IncBackups/urls.py" />
+        <option value="$PROJECT_DIR$/plogical/CyberCPLogFileWriter.py" />
+        <option value="$PROJECT_DIR$/IncBackups/templates/IncBackups/createBackup.html" />
+        <option value="$PROJECT_DIR$/loginSystem/templates/loginSystem/login.html" />
+        <option value="$PROJECT_DIR$/plogical/cPanelImporter.py" />
+        <option value="$PROJECT_DIR$/emailPremium/templates/emailPremium/emailLimits.html" />
+        <option value="$PROJECT_DIR$/IncBackups/IncBackups.py" />
+        <option value="$PROJECT_DIR$/plogical/mailUtilities.py" />
+        <option value="$PROJECT_DIR$/plogical/mysqlUtilities.py" />
+        <option value="$PROJECT_DIR$/IncBackups/restoreMeta.py" />
+        <option value="$PROJECT_DIR$/baseTemplate/templates/baseTemplate/index.html" />
+        <option value="$PROJECT_DIR$/plogical/processUtilities.py" />
+        <option value="$PROJECT_DIR$/IncBackups/views.py" />
+        <option value="$PROJECT_DIR$/IncBackups/IncBackupsControl.py" />
+        <option value="$PROJECT_DIR$/IncBackups/static/IncBackups/IncBackups.js" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="y" value="-2" />
+    <option name="width" value="1366" />
+    <option name="height" value="711" />
+  </component>
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="CyberCP" type="b2602c69:ProjectViewProjectNode" />
+              <item name="CyberCP" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="CyberCP" type="b2602c69:ProjectViewProjectNode" />
+              <item name="CyberCP" type="462c0819:PsiDirectoryNode" />
+              <item name="plogical" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scope" />
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/IncBackups/templates/IncBackups" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/websiteFunctions" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/IncBackups/templates/IncBackups" />
+      <recent name="$PROJECT_DIR$/dns/templates/dns" />
+      <recent name="$PROJECT_DIR$/mailServer/templates/mailServer" />
+      <recent name="$PROJECT_DIR$/packages/templates/packages" />
+      <recent name="$PROJECT_DIR$/userManagment/templates/userManagment" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="Python.cPanelImporter">
+    <configuration name="cPanelImporter" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="CyberCP" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/plogical" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/plogical/cPanelImporter.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="CyberCP" type="Python.DjangoServer" factoryName="Django server">
+      <module name="CyberCP" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="launchJavascriptDebuger" value="false" />
+      <option name="port" value="8000" />
+      <option name="host" value="" />
+      <option name="additionalOptions" value="" />
+      <option name="browserUrl" value="" />
+      <option name="runTestServer" value="false" />
+      <option name="runNoReload" value="false" />
+      <option name="useCustomRunCommand" value="false" />
+      <option name="customRunCommand" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.cPanelImporter" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="1cc52d7e-f2fd-4205-b67b-8dfa17896fab" name="Default Changelist" comment="" />
+      <created>1559525918903</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1559525918903</updated>
+      <workItem from="1559525921187" duration="598000" />
+      <workItem from="1559529208626" duration="2053000" />
+      <workItem from="1559588596923" duration="5142000" />
+      <workItem from="1559740321592" duration="8982000" />
+      <workItem from="1559814784544" duration="5031000" />
+      <workItem from="1559889004102" duration="12000" />
+      <workItem from="1559891788652" duration="13000" />
+      <workItem from="1559899730439" duration="1012000" />
+      <workItem from="1559978213919" duration="3565000" />
+      <workItem from="1560029078301" duration="1141000" />
+      <workItem from="1560288334150" duration="18000" />
+      <workItem from="1560332422576" duration="648000" />
+      <workItem from="1560364345599" duration="704000" />
+      <workItem from="1560503436803" duration="819000" />
+      <workItem from="1560520381189" duration="1599000" />
+      <workItem from="1560529598733" duration="1372000" />
+      <workItem from="1560854294929" duration="2867000" />
+      <workItem from="1560895651090" duration="599000" />
+      <workItem from="1560976425910" duration="905000" />
+      <workItem from="1561023103584" duration="2952000" />
+      <workItem from="1561091357804" duration="13710000" />
+      <workItem from="1561319153236" duration="879000" />
+      <workItem from="1561376301623" duration="4574000" />
+      <workItem from="1561468477561" duration="9175000" />
+      <workItem from="1561669032332" duration="392000" />
+      <workItem from="1561736679802" duration="811000" />
+      <workItem from="1561921457970" duration="22630000" />
+      <workItem from="1562016593011" duration="2569000" />
+      <workItem from="1562051747993" duration="2886000" />
+      <workItem from="1562060284474" duration="5695000" />
+      <workItem from="1562078411177" duration="2623000" />
+      <workItem from="1562081084557" duration="8171000" />
+      <workItem from="1562099191613" duration="26102000" />
+      <workItem from="1562250586450" duration="3385000" />
+      <workItem from="1562268825439" duration="8021000" />
+      <workItem from="1562308452496" duration="6559000" />
+      <workItem from="1562349417668" duration="4846000" />
+      <workItem from="1562483302535" duration="6882000" />
+      <workItem from="1562560041786" duration="2598000" />
+      <workItem from="1562570042656" duration="3587000" />
+      <workItem from="1562584028611" duration="2895000" />
+      <workItem from="1562653662156" duration="26431000" />
+      <workItem from="1562753936761" duration="17489000" />
+      <workItem from="1562822911047" duration="45222000" />
+      <workItem from="1562962984197" duration="19301000" />
+      <workItem from="1563176890714" duration="23697000" />
+      <workItem from="1563350493460" duration="19486000" />
+      <workItem from="1563447060343" duration="60000" />
+      <workItem from="1563465808230" duration="4130000" />
+      <workItem from="1563531567933" duration="1182000" />
+      <workItem from="1563534721711" duration="5209000" />
+      <workItem from="1563613188534" duration="2862000" />
+      <workItem from="1563649220013" duration="1905000" />
+      <workItem from="1563890419099" duration="2018000" />
+      <workItem from="1563948997007" duration="27000" />
+      <workItem from="1563961729762" duration="3374000" />
+      <workItem from="1563989225566" duration="4181000" />
+      <workItem from="1564044504109" duration="5160000" />
+      <workItem from="1564121630814" duration="77000" />
+      <workItem from="1564122461694" duration="1454000" />
+      <workItem from="1564133572622" duration="4784000" />
+      <workItem from="1564304860145" duration="20243000" />
+      <workItem from="1564421837624" duration="2571000" />
+      <workItem from="1564467662841" duration="2791000" />
+      <workItem from="1564506754452" duration="4281000" />
+      <workItem from="1564647527635" duration="671000" />
+      <workItem from="1564682664468" duration="599000" />
+      <workItem from="1564731580935" duration="886000" />
+      <workItem from="1564769863227" duration="257000" />
+      <workItem from="1564820389580" duration="7442000" />
+      <workItem from="1564915565927" duration="3942000" />
+      <workItem from="1564936034529" duration="564000" />
+      <workItem from="1565080583035" duration="32883000" />
+      <workItem from="1565771495192" duration="3394000" />
+      <workItem from="1565883310426" duration="15776000" />
+      <workItem from="1566250344944" duration="12074000" />
+      <workItem from="1566455013377" duration="36620000" />
+      <workItem from="1566895980509" duration="7294000" />
+      <workItem from="1567065608746" duration="37323000" />
+      <workItem from="1567955194263" duration="1456000" />
+      <workItem from="1568043090865" duration="1601000" />
+      <workItem from="1568102215652" duration="15702000" />
+      <workItem from="1568795039740" duration="90331000" />
+      <workItem from="1570351061233" duration="1861000" />
+      <workItem from="1570367938280" duration="720000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="668353000" />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="0" y="25" width="1366" height="684" extended-state="6" />
+    <editor active="true" />
+    <layout>
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.19166666" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.3270548" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.32854578" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="8" />
+      <window_info anchor="bottom" id="Database Changes" order="9" />
+      <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" weight="0.22441652" />
+      <window_info anchor="bottom" id="Terminal" order="11" />
+      <window_info anchor="bottom" id="Python Console" order="12" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="Coverage" order="3" side_tool="true" />
+      <window_info anchor="right" id="SciView" order="4" weight="0.32954547" />
+      <window_info anchor="right" id="Database" order="5" weight="0.32954547" />
+    </layout>
+    <layout-to-restore>
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.16287878" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.32854578" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="8" />
+      <window_info anchor="bottom" id="Database Changes" order="9" />
+      <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" weight="0.32854578" />
+      <window_info anchor="bottom" id="Terminal" order="11" />
+      <window_info anchor="bottom" id="Python Console" order="12" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="SciView" order="3" weight="0.32954547" />
+      <window_info anchor="right" id="Database" order="4" weight="0.32954547" />
+      <window_info anchor="right" id="Coverage" order="5" side_tool="true" />
+    </layout-to-restore>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.sh" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/plogical/adminPass.py</url>
+          <line>1</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/serverStatus/views.py</url>
+          <line>474</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="django-line">
+          <url>file://$PROJECT_DIR$/CLManager/templates/CLManager/createPackage.html</url>
+          <line>46</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="django-line">
+          <url>file://$PROJECT_DIR$/IncBackups/templates/IncBackups/createBackup.html</url>
+          <line>43</line>
+          <option name="timeStamp" value="14" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/plogical/backupSchedule.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="376">
+          <caret line="46" lean-forward="true" selection-start-line="46" selection-end-line="46" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/remoteTransferUtilities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="355">
+          <caret line="92" column="71" selection-start-line="92" selection-start-column="71" selection-end-line="92" selection-end-column="71" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/upgrade.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="232">
+          <caret line="1438" column="84" lean-forward="true" selection-start-line="1438" selection-start-column="23" selection-end-line="1438" selection-end-column="84" />
+          <folding>
+            <element signature="e#543#985#0" />
+            <element signature="e#1065#1663#0" />
+            <element signature="e#1082#1626#0" />
+            <element signature="e#1132#1602#0" />
+            <element signature="e#1225#1488#0" />
+            <element signature="e#1404#1488#0" />
+            <element signature="e#1531#1602#0" />
+            <element signature="e#1712#3223#0" />
+            <element signature="e#1730#3130#0" />
+            <element signature="e#3278#3918#0" />
+            <element signature="e#3296#3880#0" />
+            <element signature="e#3969#4406#0" />
+            <element signature="e#4456#5619#0" />
+            <element signature="e#4473#5571#0" />
+            <element signature="e#4565#4947#0" />
+            <element signature="e#4755#4907#0" />
+            <element signature="e#4983#5472#0" />
+            <element signature="e#5008#5423#0" />
+            <element signature="e#5201#5382#0" />
+            <element signature="e#5686#7123#0" />
+            <element signature="e#7176#7423#0" />
+            <element signature="e#7604#8608#0" />
+            <element signature="e#7734#8028#0" />
+            <element signature="e#8274#8546#0" />
+            <element signature="e#8344#8466#0" />
+            <element signature="e#8873#9229#0" />
+            <element signature="e#9099#9181#0" />
+            <element signature="e#9320#9672#0" />
+            <element signature="e#9542#9624#0" />
+            <element signature="e#9873#10187#0" />
+            <element signature="e#10057#10139#0" />
+            <element signature="e#10279#10593#0" />
+            <element signature="e#10463#10545#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/manageSSL/templates/manageSSL/manageSSL.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="227">
+          <caret line="46" lean-forward="true" selection-start-line="46" selection-end-line="46" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/serverStatus/templates/serverStatus/litespeedStatus.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="109">
+          <caret line="174" column="185" selection-start-line="174" selection-start-column="185" selection-end-line="174" selection-end-column="185" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/serverStatus/serverStatusUtil.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="295">
+          <caret line="64" column="62" lean-forward="true" selection-start-line="64" selection-start-column="62" selection-end-line="64" selection-end-column="62" />
+          <folding>
+            <element signature="e#762#1072#0" />
+            <element signature="e#4096#4964#0" />
+            <element signature="e#5011#5356#0" />
+            <element signature="e#5523#6888#0" />
+            <element signature="e#6947#8424#0" />
+            <element signature="e#8476#10438#0" />
+            <element signature="e#10500#14477#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/websiteFunctions/StagingSetup.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="286">
+          <caret line="97" column="17" lean-forward="true" selection-start-line="97" selection-start-column="17" selection-end-line="97" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CyberCP/settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="344">
+          <caret line="67" column="8" selection-start-line="67" selection-end-line="67" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/sslUtilities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="276">
+          <caret line="256" column="34" lean-forward="true" selection-start-line="256" selection-start-column="34" selection-end-line="256" selection-end-column="34" />
+          <folding>
+            <element signature="e#359#1133#0" />
+            <element signature="e#1189#1583#0" />
+            <element signature="e#1651#1936#0" />
+            <element signature="e#2047#9743#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/vhost.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-7">
+          <caret line="573" column="24" selection-start-line="573" selection-start-column="24" selection-end-line="573" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/serverLogs/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="13" selection-end-column="1" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/managePHP/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="157">
+          <caret line="1260" column="10" selection-start-line="1260" selection-start-column="10" selection-end-line="1260" selection-end-column="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/backup/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="6" selection-start-line="6" selection-end-line="6" selection-end-column="61" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CyberCP/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="407">
+          <caret line="45" column="29" selection-start-line="45" selection-start-column="11" selection-end-line="45" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/backup/static/backup/backup.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="237" column="28" lean-forward="true" selection-start-line="4" selection-end-line="237" selection-end-column="28" />
+          <folding>
+            <element signature="e#141#5100#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/websiteFunctions/templates/websiteFunctions/createWebsite.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="64">
+          <caret line="107" column="30" lean-forward="true" selection-start-line="79" selection-start-column="24" selection-end-line="107" selection-end-column="30" />
+          <folding>
+            <element signature="n#div#5;n#form#0;n#div#0;n#div#0;n#div#1;n#div#0;n#!!top" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CLManager/static/CLManager/CLManager.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="390">
+          <caret line="92" column="15" lean-forward="true" selection-start-line="88" selection-start-column="12" selection-end-line="92" selection-end-column="15" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/serverStatus/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1057">
+          <caret line="272" column="47" selection-start-line="272" selection-start-column="41" selection-end-line="272" selection-end-column="47" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/templates/IncBackups/incrementalDestinations.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="296">
+          <caret line="99" column="77" selection-start-line="99" selection-start-column="77" selection-end-line="99" selection-end-column="77" />
+          <folding>
+            <element signature="e#1111#1415#0#HTML" />
+            <element signature="e#1434#1753#0#HTML" />
+            <element signature="e#1771#2144#0#HTML" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/managePHP/ubuntuphp72.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="322">
+          <caret line="119" column="31" selection-start-line="119" selection-start-column="31" selection-end-line="119" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/managePHP/ubuntuphp71.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="322">
+          <caret line="119" column="40" lean-forward="true" selection-start-line="119" selection-start-column="40" selection-end-line="119" selection-end-column="40" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/managePHP/ubuntuphp70.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="308">
+          <caret line="119" column="31" selection-start-line="119" selection-start-column="31" selection-end-line="119" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/managePHP/ubuntuphp73.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="322">
+          <caret line="119" column="37" lean-forward="true" selection-start-line="119" selection-start-column="37" selection-end-line="119" selection-end-column="37" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/backup/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="4" selection-end-column="28" />
+          <folding>
+            <element signature="e#0#39#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/databases/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="105">
+          <caret line="10" column="56" lean-forward="true" selection-start-line="10" selection-start-column="13" selection-end-line="10" selection-end-column="56" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/serverStatus/templates/serverStatus/cybercpmainlogfile.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="26" column="32" lean-forward="true" selection-start-line="26" selection-start-column="32" selection-end-line="28" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CyberCP/secMiddleware.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="259">
+          <caret line="62" column="49" selection-start-line="62" selection-start-column="49" selection-end-line="62" selection-end-column="49" />
+          <folding>
+            <element signature="e#0#73#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/applicationInstaller.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="165">
+          <caret line="11" selection-start-line="11" selection-end-line="11" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/install/install.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="82">
+          <caret line="506" column="52" selection-start-line="506" selection-start-column="27" selection-end-line="506" selection-end-column="52" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/websiteFunctions/website.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="9435">
+          <caret line="653" column="45" selection-start-line="653" selection-start-column="36" selection-end-line="653" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CLManager/templates/CLManager/listPackages.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="207">
+          <caret line="196" column="38" lean-forward="true" selection-start-line="55" selection-start-column="32" selection-end-line="196" selection-end-column="38" />
+          <folding>
+            <element signature="e#2494#2881#0#HTML" />
+            <element signature="e#2914#13791#0#HTML" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="195">
+          <caret line="13" column="14" selection-start-line="13" selection-start-column="4" selection-end-line="13" selection-end-column="14" />
+          <folding>
+            <element signature="e#0#39#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/backup/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="337">
+          <caret line="79" column="17" selection-start-line="79" selection-start-column="17" selection-end-line="79" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/backup/backupManager.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="292">
+          <caret line="317" column="55" lean-forward="true" selection-start-line="315" selection-start-column="12" selection-end-line="317" selection-end-column="55" />
+          <folding>
+            <element signature="e#2852#4576#0" />
+            <element signature="e#4650#6111#0" />
+            <element signature="e#6177#9755#0" />
+            <element signature="e#19376#20503#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loginSystem/templates/loginSystem/login.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="154">
+          <caret line="145" column="105" lean-forward="true" selection-start-line="145" selection-start-column="105" selection-end-line="145" selection-end-column="105" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/CyberCPLogFileWriter.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="364">
+          <caret line="50" column="34" selection-start-line="50" selection-start-column="34" selection-end-line="50" selection-end-column="34" />
+          <folding>
+            <element signature="e#0#17#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/cPanelImporter.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-495">
+          <caret line="3" column="13" selection-start-line="3" selection-start-column="13" selection-end-line="3" selection-end-column="13" />
+          <folding>
+            <element signature="e#33#47#0" expanded="true" />
+            <element signature="e#1202#1501#0" />
+            <element signature="e#1538#2371#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/templates/IncBackups/createBackup.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="226">
+          <caret line="176" column="107" selection-start-line="176" selection-start-column="107" selection-end-line="176" selection-end-column="107" />
+          <folding>
+            <element signature="e#1044#1562#0#HTML" />
+            <element signature="e#1580#2033#0#HTML" />
+            <element signature="e#2627#4736#0#HTML" />
+            <element signature="e#3691#4649#0#HTML" />
+            <element signature="e#4713#5068#0#HTML" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/emailPremium/templates/emailPremium/emailLimits.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="499">
+          <caret line="222" selection-start-line="222" selection-end-line="222" />
+          <folding>
+            <element signature="n#style#0;n#div#0;n#div#1;n#div#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#img#0;n#td#4;n#tr#0;n#tbody#0;n#table#0;n#div#0;n#div#0;n#div#0;n#div#0;n#div#1;n#div#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#img#1;n#td#4;n#tr#0;n#tbody#0;n#table#0;n#div#0;n#div#0;n#div#0;n#div#0;n#div#1;n#div#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#div#1;n#div#0;n#form#0;n#div#1;n#div#0;n#div#0;n#div#0;n#div#1;n#div#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#div#0;n#div#2;n#div#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#div#0;n#div#0;n#div#0;n#div#0;n#div#2;n#div#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#th#5;n#tr#0;n#thead#0;n#table#0;n#div#1;n#div#0;n#div#0;n#div#0;n#div#2;n#div#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#img#0;n#td#5;n#tr#0;n#tbody#0;n#table#0;n#div#1;n#div#0;n#div#0;n#div#0;n#div#2;n#div#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#img#1;n#td#5;n#tr#0;n#tbody#0;n#table#0;n#div#1;n#div#0;n#div#0;n#div#0;n#div#2;n#div#0;n#!!top" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/IncBackups.py" />
+    <entry file="file://$PROJECT_DIR$/plogical/backupUtilities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4995">
+          <caret line="505" column="38" selection-start-line="505" selection-start-column="38" selection-end-line="505" selection-end-column="38" />
+          <folding>
+            <element signature="e#7702#10041#0" />
+            <element signature="e#10146#14433#0" />
+            <element signature="e#14524#14882#0" />
+            <element signature="e#17860#27925#0" />
+            <element signature="e#27994#28227#0" />
+            <element signature="e#28298#29844#0" />
+            <element signature="e#29920#32138#0" />
+            <element signature="e#32202#32491#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/virtualHostUtilities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="9" column="7" selection-start-line="9" selection-start-column="7" selection-end-line="9" selection-end-column="7" />
+          <folding>
+            <element signature="e#33#42#0" expanded="true" />
+            <element signature="e#1294#2317#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/mysqlUtilities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="20">
+          <caret line="72" column="22" selection-start-line="72" selection-start-column="8" selection-end-line="72" selection-end-column="22" />
+          <folding>
+            <element signature="e#661#1069#0" />
+            <element signature="e#1135#1274#0" />
+            <element signature="e#1329#1835#0" />
+            <element signature="e#2626#3079#0" />
+            <element signature="e#3158#3589#0" />
+            <element signature="e#3657#4113#0" />
+            <element signature="e#4202#5853#0" />
+            <element signature="e#6000#8115#0" />
+            <element signature="e#6277#6680#0" />
+            <element signature="e#8218#9383#0" />
+            <element signature="e#9445#9894#0" />
+            <element signature="e#9961#10109#0" />
+            <element signature="e#10159#12226#0" />
+            <element signature="e#12280#12553#0" />
+            <element signature="e#12614#14004#0" />
+            <element signature="e#14058#14529#0" />
+            <element signature="e#14581#14956#0" />
+            <element signature="e#15010#16208#0" />
+            <element signature="e#16263#17486#0" />
+            <element signature="e#17541#18011#0" />
+            <element signature="e#18069#19856#0" />
+            <element signature="e#19914#21114#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/mailUtilities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="67">
+          <caret line="182" column="27" selection-start-line="182" selection-start-column="8" selection-end-line="182" selection-end-column="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/processUtilities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2865">
+          <caret line="197" column="45" selection-start-line="197" selection-start-column="45" selection-end-line="197" selection-end-column="45" />
+          <folding>
+            <element signature="e#0#64#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/baseTemplate/templates/baseTemplate/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="9000">
+          <caret line="600" column="96" selection-start-line="600" selection-start-column="96" selection-end-line="600" selection-end-column="96" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="5" column="86" selection-start-line="5" selection-start-column="65" selection-end-line="5" selection-end-column="86" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/restoreMeta.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2355">
+          <caret line="159" selection-start-line="159" selection-end-line="159" />
+          <folding>
+            <element signature="e#33#42#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/IncBackupsControl.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="142">
+          <caret line="420" column="50" selection-start-line="420" selection-start-column="50" selection-end-line="420" selection-end-column="50" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="419">
+          <caret line="376" column="29" selection-start-line="376" selection-start-column="29" selection-end-line="376" selection-end-column="29" />
+          <folding>
+            <element signature="e#24#63#0" expanded="true" />
+            <element signature="e#755#1548#0" />
+            <element signature="e#1587#1970#0" />
+            <element signature="e#2005#5358#0" />
+            <element signature="e#5401#7631#0" />
+            <element signature="e#7669#8522#0" />
+            <element signature="e#8562#10178#0" />
+            <element signature="e#12084#14080#0" />
+            <element signature="e#14113#14920#0" />
+            <element signature="e#14959#16339#0" />
+            <element signature="e#16372#17549#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/static/IncBackups/IncBackups.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-403">
+          <caret line="205" column="19" selection-start-line="205" selection-start-column="19" selection-end-line="205" selection-end-column="19" />
+          <folding>
+            <element signature="e#491#2247#0" />
+            <element signature="e#2295#2339#0" />
+            <element signature="e#2390#3395#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>

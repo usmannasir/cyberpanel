@@ -1,0 +1,214 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "CSF (ConfigServer Security and Firewall) - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div ng-controller="csf" class="container">
+<div id="page-title">
+   <h2>{% trans "CSF (ConfigServer Security and Firewall)!" %}</h2>
+   <p>{% trans "On this page you can configure CSF (ConfigServer Security and Firewall) settings." %}</p>
+</div>
+
+{% if csfInstalled == 0 %}
+    <div class="example-box-wrapper">
+        <div class="panel panel-body">
+            <h3 class="content-box-header">
+                {% trans "CSF" %} <img ng-hide="csfLoading"  src="/static/images/loading.gif">
+            </h3>
+
+            <div class="content-box-wrapper">
+                <div class="row">
+
+                    <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                                <h4 class="mb-10">{% trans "CSF is not installed " %}
+                                    </h4>
+                                    <button ng-click="installCSF()" class="btn btn-alt btn-hover btn-blue-alt">
+                                        <span>{% trans "Install Now." %}</span>
+                                        <i class="glyph-icon icon-arrow-right"></i>
+                                    </button>
+                    </div>
+
+                    <!------ ModeSec Install Log box ----------------->
+
+                     <div ng-hide="modSecNotifyBox" class="form-group">
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-6">
+
+                                <div ng-hide="failedToStartInallation" class="alert alert-danger">
+                                            <p>{% trans "Failed to start installation, Error message: " %} {$ errorMessage $}</p>
+                                </div>
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                </div>
+
+                                <div ng-hide="installationFailed" class="alert alert-danger">
+                                        <p>{% trans "Installation failed." %} {$ errorMessage $}</p>
+                                </div>
+
+                                <div ng-hide="modSecSuccessfullyInstalled" class="alert alert-success">
+                                        <p>{% trans "CSF successfully installed, refreshing page in 3 seconds.." %}</p>
+                                </div>
+                        </div>
+                    </div>
+
+
+                     <div ng-hide="modeSecInstallBox" class="col-md-12">
+
+                        <form  action="/" id="" class="form-horizontal bordered-row">
+                            <div class="form-group">
+                                    <div class="col-sm-12 text-center">
+                                         <h3><img  src="{% static 'firewall/icons/firewall.png'  %}"> {% trans "In winter we must protect each other.." %} <img ng-hide="modsecLoading"  src="/static/images/loading.gif"></h3>
+                                    </div>
+                                    <div style="margin-top: 2%;" class="col-sm-12">
+                                        <textarea ng-model="requestData" rows="15" class="form-control">{{ requestData }}</textarea>
+                                    </div>
+                            </div>
+                        </form>
+                    </div>
+
+
+                    <!----- ModeSec Install Log box ----------------->
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+
+<div class="example-box-wrapper">
+        <div class="content-box tabs ui-tabs ui-widget ui-widget-content ui-corner-all">
+            <h3 class="content-box-header bg-blue">
+                <span>{% trans 'CSF' %} <img ng-hide="csfLoading"  src="/static/images/loading.gif"></span>
+                <ul class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all" role="tablist">
+                    <li ng-click="activateTab('generalLI', 'general')" id="generalLI" class="ui-state-default ui-corner-top ui-tabs-active ui-state-active" role="tab" tabindex="0" aria-controls="tabs-example-1" aria-labelledby="ui-id-22" aria-selected="true" aria-expanded="true">
+                        <a ng-click="activateTab('generalLI', 'general')" href="" title="Tab 1" class="ui-tabs-anchor" role="presentation" tabindex="-1" id="ui-id-22">
+                            {% trans 'General' %}
+                        </a>
+                    </li>
+                    <li ng-click="activateTab('csfLI', 'csf')" id="csfLI" class="ui-state-default ui-corner-top" role="tab" tabindex="-1" aria-controls="tabs-example-2" aria-labelledby="ui-id-23" aria-selected="false" aria-expanded="false">
+                        <a href="" ng-click="activateTab('csfLI', 'csf')" title="Tab 2" class="ui-tabs-anchor" role="presentation" tabindex="-1" id="ui-id-23">
+                            {% trans 'CSF' %}
+                        </a>
+                    </li>
+                    <li id="lfdLI" class="ui-state-default ui-corner-top" role="tab" tabindex="-1" aria-controls="tabs-example-3" aria-labelledby="ui-id-24" aria-selected="false" aria-expanded="false">
+                        <a href="" ng-click="activateTab('lfdLI', 'lfd')" title="Tab 3" class="ui-tabs-anchor" role="presentation" tabindex="-1" id="ui-id-24">
+                            {% trans 'LFD' %}
+                        </a>
+                    </li>
+                </ul>
+            </h3>
+            <div id="general" aria-labelledby="ui-id-22" class="ui-tabs-panel ui-widget-content ui-corner-bottom" role="tabpanel" aria-hidden="false">
+                <form  action="/" id="createPackages" class="form-horizontal bordered-row">
+
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">{% trans 'Remove CSF' %}</label>
+                            <div class="col-sm-6">
+                                <button type="button" ng-click="removeCSF()" class="btn btn-alt btn-hover btn-blue-alt">
+                                    <span>{% trans 'Completely Remove CSF' %}</span>
+                                    <i class="glyph-icon icon-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">{% trans 'Firewall' %}</label>
+                            <div class="col-sm-6">
+                                <input type="checkbox" id="firewallStatus" data-toggle="toggle">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">{% trans 'Testing Mode' %}</label>
+                            <div class="col-sm-6">
+                                <input type="checkbox" id="testingMode" data-toggle="toggle">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">{% trans "TCP IN Ports" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="tcpIN">
+                            </div>
+                            <button type="button" ng-click="modifyPorts('TCP_IN')" class="btn btn-round btn-blue-alt">
+                                <i class="glyph-icon icon-save"></i>
+                            </button>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">{% trans "TCP Out Ports" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="tcpOUT">
+                            </div>
+                            <button type="button" ng-click="modifyPorts('TCP_OUT')" class="btn btn-round btn-blue-alt">
+                                <i class="glyph-icon icon-save"></i>
+                            </button>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">{% trans "UDP In Ports" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="udpIN">
+                            </div>
+                            <button type="button" ng-click="modifyPorts('UDP_IN')" class="btn btn-round btn-blue-alt">
+                                <i class="glyph-icon icon-save"></i>
+                            </button>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">{% trans "UDP Out Ports" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="udpOUT">
+                            </div>
+                            <button ng-click="modifyPorts('UDP_OUT')" class="btn btn-round btn-blue-alt">
+                                <i class="glyph-icon icon-save"></i>
+                            </button>
+                        </div>
+
+
+
+
+                    </form>
+            </div>
+            <div id="csf" aria-labelledby="ui-id-23" class="ui-tabs-panel ui-widget-content ui-corner-bottom" role="tabpanel" aria-hidden="true" style="display: none;">
+                <form  action="/" id="createPackages" class="form-horizontal bordered-row">
+
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">{% trans "Allow IP" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="allowIP">
+                            </div>
+                            <button type="button" ng-click="modifyIPs('allowIP')" class="btn btn-round btn-blue-alt">
+                                <i class="glyph-icon icon-save"></i>
+                            </button>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">{% trans "Block IP Address" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="blockIP">
+                            </div>
+                            <button type="button" ng-click="modifyIPs('blockIP')" class="btn btn-round btn-blue-alt">
+                                <i class="glyph-icon icon-save"></i>
+                            </button>
+                        </div>
+
+                    </form>
+            </div>
+            <div id="lfd" aria-labelledby="ui-id-24" class="ui-tabs-panel ui-widget-content ui-corner-bottom" role="tabpanel" aria-hidden="true" style="display: none;">
+                {% trans 'Comming Soon.' %}
+            </div>
+        </div>
+    </div>
+
+{% endif %}
+
+
+</div>
+
+
+{% endblock %}

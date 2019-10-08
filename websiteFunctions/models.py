@@ -9,8 +9,8 @@ from loginSystem.models import Administrator
 
 
 class Websites(models.Model):
-    admin = models.ForeignKey(Administrator)
-    package = models.ForeignKey(Package)
+    admin = models.ForeignKey(Administrator, on_delete=models.PROTECT)
+    package = models.ForeignKey(Package, on_delete=models.PROTECT)
     domain = models.CharField(max_length=50,unique=True)
     adminEmail = models.CharField(max_length=50)
     phpSelection = models.CharField(max_length=10)
@@ -41,4 +41,9 @@ class dest(models.Model):
 class backupSchedules(models.Model):
     dest = models.ForeignKey(dest)
     frequency = models.CharField(max_length=15)
+
+
+class aliasDomains(models.Model):
+    master = models.ForeignKey(Websites, on_delete=models.CASCADE)
+    aliasDomain = models.CharField(max_length=75)
 

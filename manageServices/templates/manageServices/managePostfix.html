@@ -1,0 +1,88 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Manage Email Server (Postfix) - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Manage Email Server (Postfix)!" %} - <a  target="_blank" href="https://go.cyberpanel.net/manage-services" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "Services Docs" %}</span></a> </h2>
+   <p>{% trans "Enable or disable Email services. " %}</p>
+</div>
+
+    {% if status %}
+
+    <div ng-controller="postfix" class="example-box-wrapper">
+        <div class="panel panel-body">
+            <h3 class="content-box-header">
+                {% trans "Manage Postfix" %} <img ng-hide="serviceLoading"  src="/static/images/loading.gif">
+            </h3>
+
+            <div class="content-box-wrapper">
+                <div class="row">
+
+                 <div style="padding: 2%"  class="col-md-12">
+                    <form  action="/" id="createPackages" class="form-horizontal bordered-row">
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Postfix Status</label>
+                            <div class="col-sm-6">
+                                <input type="checkbox" id="serviceStatus" data-toggle="toggle">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                 <button type="button" ng-click="saveStatus('postfix')" class="btn btn-primary btn-lg">{% trans "Save changes" %}</button>
+
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+
+                                    <div ng-hide="failedToFetch" class="alert alert-danger">
+                                                <p>{% trans "Error message: " %} {$ errorMessage $}</p>
+                                    </div>
+
+                                    <div ng-hide="changesApplied" class="alert alert-success">
+                                                <p>{% trans "Changes successfully applied." %}</p>
+                                    </div>
+
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                            <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                    </div>
+
+                            </div>
+                        </div>
+
+
+                    </form>
+                </div>
+
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+
+        <div class="alert alert-danger">
+            <p>{% trans "Only administrator can manage services." %}</p>
+    </div>
+
+    {% endif  %}
+
+
+</div>
+
+
+{% endblock %}

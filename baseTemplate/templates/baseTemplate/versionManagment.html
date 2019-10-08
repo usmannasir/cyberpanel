@@ -53,37 +53,6 @@
                     </div>
                 </div>
 
-                {% if active == 1 %}
-
-                <div ng-hide="dbDetails" class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                         <button type="button" ng-click="upgrade()" class="btn btn-primary btn-lg btn-block">Upgrade</button>
-                    </div>
-                    <img  ng-hide="upgradeLoading" src="{% static 'images/loading.gif' %}">
-                    <div style="margin-top: 2%" class="col-sm-12">
-                                <div ng-hide="updateError" class="alert alert-danger">
-                                            <p>{% trans "Error message: " %}{$ errorMessage $}</p>
-                                </div>
-
-                                <div ng-hide="updateStarted" class="alert alert-success">
-                                            <p>{% trans "Update started..." %}</p>
-                                </div>
-
-                                <div ng-hide="updateFinish" class="alert alert-success">
-                                            <p>{% trans "Update finished..." %}</p>
-                                </div>
-
-
-                                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                            <p>{% trans "Could not connect. Please refresh this page." %}</p>
-                                </div>
-                        </div>
-                </div>
-
-
-                {% endif %}
-
 
                 <div ng-hide="upgradelogBox" class="form-group">
                                 <div class="col-sm-12">

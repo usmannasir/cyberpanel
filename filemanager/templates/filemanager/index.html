@@ -40,11 +40,58 @@
 <!--- navigation bar ---->
 
 <nav id="navBar" class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#"><img id="logo" src="{% static 'filemanager/images/fileManager.png' %}">{% trans " File Manager" %} </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+    <div class="header-logo">
+        <a href="#"><img src="{% static 'filemanager/images/fileManager.png' %}"> <span style="display: none" id="domainNameInitial">{{ domainName }}</span></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+    </div>
+    <!--- second bar ---->
 
+    <div class="">
+        <div class="flex-wrap">
+            <!--div class="text-white h4 mt-5 mx-10">
+                 {% trans " File Manager" %}
+            </div-->
+            <ul class="nav mr-10">
+                <li class="nav-item">
+                    <a onclick="return false;" ng-click="showUploadBox()" class="nav-link point-events" href="#"><i class="fa fa-upload" aria-hidden="true"></i>  {% trans "Upload" %}</a>
+                </li>
+                <li class="nav-item">
+                    <a onclick="return false;" ng-click="showCreateFileModal()" class="nav-link point-events" href="#"><i class="fa fa-plus-square" aria-hidden="true"></i>  {% trans "New File" %}</a>
+                </li>
+                <li class="nav-item">
+                    <a onclick="return false;" ng-click="showCreateFolderModal()" class="nav-link point-events" href="#"><i class="fa fa-folder" aria-hidden="true"></i>  {% trans "New Folder" %}</a>
+                </li>
+                <li id="deleteFile" class="nav-item">
+                    <a onclick="return false;" ng-click="showDeleteModal()" class="nav-link point-events" href="#"><i class="fa fa-trash-o" aria-hidden="true"></i>  {% trans "Delete" %}</a>
+                </li>
+                <li id="copyFile" class="nav-item">
+                    <a onclick="return false;" ng-click="showCopyModal()" class="nav-link point-events" href="#"><i class="fa fa-files-o" aria-hidden="true"></i>  {% trans "Copy" %}</a>
+                </li>
+                <li id="moveFile" class="nav-item">
+                    <a onclick="return false;" ng-click="showMoveModal()" class="nav-link point-events" href="#"><i class="fa fa-arrows-alt" aria-hidden="true"></i>  {% trans "Move" %}</a>
+                </li>
+                <li id="renameFile" class="nav-item">
+                    <a onclick="return false;" ng-click="showRenameModal()" class="nav-link point-events" href="#"><i class="fa fa-file-text-o" aria-hidden="true"></i>  {% trans "Rename" %}</a>
+                </li>
+                <li id="editFile" class="nav-item" >
+                    <a onclick="return false;" ng-click="showHTMLEditorModal()"  class="nav-link point-events" href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {% trans "Edit" %}</a>
+                </li>
+                <li id="compressFile" class="nav-item">
+                    <a onclick="return false;" ng-click="showCompressionModal()" class="nav-link point-events" href="#"><i class="fa fa-compress" aria-hidden="true"></i>  {% trans "Compress" %}</a>
+                </li>
+                <li id="extractFile" class="nav-item">
+                    <a onclick="return false;" ng-click="showExtractionModal()" class="nav-link point-events" href="#"><i class="fa fa-expand" aria-hidden="true"></i>  {% trans "Extract" %}</a>
+                </li>
+                <li id="fixPermissions" class="nav-item">
+                    <a onclick="return false;" ng-click="fixPermissions()" class="nav-link point-events" href="#"><i class="fa fa-wrench" aria-hidden="true"></i>  {% trans "Fix Permissions" %}</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!--- second bar ends ---->
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
 
@@ -54,69 +101,23 @@
 
 <!--- navigation bar ends ---->
 
-<!--- second bar ---->
 
-<div class="card">
-    <div class="card-body">
-        <ul class="nav">
-            <li class="nav-item">
-                <a onclick="return false;" ng-click="showUploadBox()" class="nav-link" href="#"><i class="fa fa-upload" aria-hidden="true"></i>  {% trans "Upload" %}</a>
-            </li>
-            <li class="nav-item">
-                <a onclick="return false;" ng-click="showCreateFileModal()" class="nav-link" href="#"><i class="fa fa-file" aria-hidden="true"></i>  {% trans "New File" %}</a>
-            </li>
-            <li class="nav-item">
-                <a onclick="return false;" ng-click="showCreateFolderModal()" class="nav-link" href="#"><i class="fa fa-folder" aria-hidden="true"></i>  {% trans "New Folder" %}</a>
-            </li>
-            <li id="deleteFile" class="nav-item">
-                <a onclick="return false;" ng-click="showDeleteModal()" class="nav-link" href="#"><i class="fa fa-trash-o" aria-hidden="true"></i>  {% trans "Delete" %}</a>
-            </li>
-            <li id="copyFile" class="nav-item">
-                <a onclick="return false;" ng-click="showCopyModal()" class="nav-link" href="#"><i class="fa fa-files-o" aria-hidden="true"></i>  {% trans "Copy" %}</a>
-            </li>
-            <li id="moveFile" class="nav-item">
-                <a onclick="return false;" ng-click="showMoveModal()" class="nav-link" href="#"><i class="fa fa-arrows-alt" aria-hidden="true"></i>  {% trans "Move" %}</a>
-            </li>
-            <li id="renameFile" class="nav-item">
-                <a onclick="return false;" ng-click="showRenameModal()" class="nav-link" href="#"><i class="fa fa-file-text-o" aria-hidden="true"></i>  {% trans "Rename" %}</a>
-            </li>
-            <li id="editFile" class="nav-item">
-                <a onclick="return false;" ng-click="showHTMLEditorModal()"  class="nav-link" href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {% trans "Edit" %}</a>
-            </li>
-            <li id="compressFile" class="nav-item">
-                <a onclick="return false;" ng-click="showCompressionModal()" class="nav-link" href="#"><i class="fa fa-compress" aria-hidden="true"></i>  {% trans "Compress" %}</a>
-            </li>
-            <li id="extractFile" class="nav-item">
-                <a onclick="return false;" ng-click="showExtractionModal()" class="nav-link" href="#"><i class="fa fa-expand" aria-hidden="true"></i>  {% trans "Extract" %}</a>
-            </li>
-            <li id="fixPermissions" class="nav-item">
-                <a onclick="return false;" ng-click="fixPermissions()" class="nav-link" href="#"><i class="fa fa-bars" aria-hidden="true"></i>  {% trans "Fix Permissions" %}</a>
-            </li>
-        </ul>
-    </div>
-</div>
-
-<!--- second bar ends ---->
 
 <!--- File Manager body ---->
 
-<div id="mainRow" class="row">
-
-    <div id="treeView" class="col-sm-3">
-        <div class="card border-primary mb-3" style="min-height: 30rem;">
+<div class="row">
+    <div id="treeView" class="col-sm-3" style="padding-right: 0px;">
+        <div class="content-box mb-3 bg-lightgray" style="height: 100%;">
             <div class="card-header">
-
-
-                <div>
+                <div class="mt-20">
                     <label>{% trans "Current Path" %}  <img ng-hide="treeLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"> </label>
                     <input type="text" class="form-control" id="currentPath"  ng-model="currentPath" readonly>
                 </div>
-
             </div>
             <ul class="list-group list-group-flush">
                 <li  class="list-group-item">
                     <a href="#" onclick="return false;" ng-click="fetchChilds($event,completeStartingPath,'primary')">
-                        <i class="fa fa-plus" aria-hidden="true"></i>
+                        <i class="fa fa-plus" aria-hidden="true" ></i>
                     </a>
                     <a onclick="return false;" ng-click="fetchForTableSecondary($event,'fromTree',completeStartingPath)" href="#">
                         <i class="fa fa-folder" aria-hidden="true"></i> {$ startingPath $}
@@ -126,32 +127,29 @@
         </div>
     </div>
 
-
     <div class="col-sm-9">
-        <div class="card border-primary mb-3" style="min-height: 30rem;">
-            <div class="card-header">
-
-                <ul class="nav">
+        <div class="mb-3 mt-30 mx-10" style="min-height: 30rem;">
+            <div class="">
+                <ul class="nav mb-10">
                     <li class="nav-item">
-                        <a onclick="return false;" ng-click="fetchForTableSecondary($event,'homeFetch')"  class="nav-link" href="#"><i class="fa fa-home" aria-hidden="true"></i>  {% trans "Home" %}</a>
+                        <a onclick="return false;" ng-click="fetchForTableSecondary($event,'homeFetch')"  class="mx-10" href="#"><i class="fa fa-home fa-lg" aria-hidden="true"></i>  {% trans "Home" %}</a>
                     </li>
                     <li class="nav-item">
-                        <a onclick="return false;" ng-click="fetchForTableSecondary($event,'goBackOnPath')" class="nav-link" href="#"><i class="fa fa-arrow-left" aria-hidden="true"></i>  {% trans "Back" %}</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a onclick="return false;" ng-click="fetchForTableSecondary($event,'refresh')" class="nav-link" href="#"><i class="fa fa-refresh" aria-hidden="true"></i>  {% trans "Refresh" %}</a>
+                        <a onclick="return false;" ng-click="fetchForTableSecondary($event,'goBackOnPath')" class="mx-10" href="#"><i class="fa fa-arrow-left fa-lg" aria-hidden="true"></i>  {% trans "Back" %}</a>
                     </li>
 
                     <li class="nav-item">
-                        <a onclick="return false;" ng-click="selectAll()" class="nav-link" href="#"><i class="fa fa-check-square-o" aria-hidden="true"></i>  {% trans "Select All" %}</a>
+                        <a onclick="return false;" ng-click="fetchForTableSecondary($event,'refresh')" class="mx-10" href="#"><i class="fa fa-refresh fa-lg" aria-hidden="true"></i>  {% trans "Refresh" %}</a>
                     </li>
 
                     <li class="nav-item">
-                        <a onclick="return false;" ng-click="unSelectAll()" class="nav-link" href="#"><i class="fa fa-square-o" aria-hidden="true"></i>  {% trans "UnSelect All" %}</a>
+                        <a onclick="return false;" ng-click="selectAll()" class="mx-10" href="#"><i class="fa fa-check-square-o fa-lg" aria-hidden="true"></i>  {% trans "Select All" %}</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a onclick="return false;" ng-click="unSelectAll()" class="mx-10" href="#"><i class="fa fa-square-o fa-lg" aria-hidden="true"></i>  {% trans "UnSelect All" %}</a>
                     </li>
                 </ul>
-
             </div>
             <table class="table">
                 <thead id="tableHead">
@@ -180,32 +178,25 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div id="uploadBoxLabel" class="modal-header">
-                <h5 class="modal-title" >{% trans "Upload File" %}</h5>
+                <h5 class="modal-title" >{% trans "Upload File" %} - <a  target="_blank" href="https://go.cyberpanel.net/upload-limits" title="">{% trans "Upload Limits" %}</a></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-
                 <h3>{% trans "Upload queue" %}</h3>
                 <p>{% trans "Queue length:" %} {$ uploader.queue.length $}</p>
-
-
                 <div>
-
                     <div class="card my-drop-zone" nv-file-over="" uploader="uploader">
                         <div class="card-body">
                             <h4 class="card-title">{% trans "Drop" %}</h4>
                             <p class="card-text">{% trans "Drop Files here to upload them." %}</p>
                         </div>
                     </div>
-
-
                     <div class="form-group">
                         <label for="uploadControlMultiple">{% trans "Upload" %}</label>
                         <input type="file" nv-file-select="" uploader="uploader" class="form-control-file" id="uploadControlMultiple" multiple>
                     </div>
-
                     <table class="table">
                         <thead>
                         <tr>
@@ -697,15 +688,15 @@
 
 <div style="position: absolute;top: 0;left: 0;"  id="rightClick" class="card" style="width: 20rem;">
     <ul class="list-group list-group-flush">
-        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showMoveModal()" href="#"><li  class="list-group-item"><i class="fa fa-arrows-alt" aria-hidden="true"></i>  Move</li></a>
-        <a style="border-bottom: 1px solid #007bff;" id="downloadOnRight" onclick="return false;" ng-click="downloadFile()" href="#"><li  class="list-group-item"><i class="fa fa-download" aria-hidden="true"></i>  Download</li></a>
-        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showCopyModal()" href="#"><li  class="list-group-item"><i class="fa fa-files-o" aria-hidden="true"></i>  Copy</li></a>
-        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showRenameModal()" href="#"><li  class="list-group-item"><i class="fa fa-file-text-o" aria-hidden="true"></i>  Rename</li></a>
-        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showPermissionsModal()" href="#"><li  class="list-group-item"><i class="fa fa-lock" aria-hidden="true"></i>  Change Permissions</li></a>
-        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showDeleteModal()" href="#"><li class="list-group-item"><i class="fa fa-trash" aria-hidden="true"></i>  Delete</li></a>
-        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showCompressionModal()" href="#"><li class="list-group-item"><i class="fa fa-compress" aria-hidden="true"></i>  Compress</li></a>
-        <a style="border-bottom: 1px solid #007bff;" id="extractOnRight" onclick="return false;" ng-click="showExtractionModal()" href="#"><li class="list-group-item"><i class="fa fa-expand" aria-hidden="true"></i>  Extract</li></a>
-        <a style="border-bottom: 1px solid #007bff;" id="editOnRight" onclick="return false;" ng-click="showHTMLEditorModal()" href="#"><li class="list-group-item"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  Edit</li></a>
+        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showMoveModal()" href="#"><li  class="list-group-item"><i class="fa fa-arrows-alt" aria-hidden="true"></i>  {% trans "Move" %}</li></a>
+        <a style="border-bottom: 1px solid #007bff;" id="downloadOnRight" onclick="return false;" ng-click="downloadFile()" href="#"><li  class="list-group-item"><i class="fa fa-download" aria-hidden="true"></i>  {% trans "Download" %}</li></a>
+        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showCopyModal()" href="#"><li  class="list-group-item"><i class="fa fa-files-o" aria-hidden="true"></i>  {% trans "Copy" %}</li></a>
+        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showRenameModal()" href="#"><li  class="list-group-item"><i class="fa fa-file-text-o" aria-hidden="true"></i>  {% trans "Rename" %}</li></a>
+        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showPermissionsModal()" href="#"><li  class="list-group-item"><i class="fa fa-lock" aria-hidden="true"></i>  {% trans "Change Permissions" %}</li></a>
+        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showDeleteModal()" href="#"><li class="list-group-item"><i class="fa fa-trash" aria-hidden="true"></i>  {% trans "Delete" %}</li></a>
+        <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showCompressionModal()" href="#"><li class="list-group-item"><i class="fa fa-compress" aria-hidden="true"></i>  {% trans "Compress" %}</li></a>
+        <a style="border-bottom: 1px solid #007bff;" id="extractOnRight" onclick="return false;" ng-click="showExtractionModal()" href="#"><li class="list-group-item"><i class="fa fa-expand" aria-hidden="true"></i>  {% trans "Extract" %}</li></a>
+        <a style="border-bottom: 1px solid #007bff;" id="editOnRight" onclick="return false;" ng-click="showHTMLEditorModal()" href="#"><li class="list-group-item"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {% trans "Edit" %}</li></a>
     </ul>
 </div>
 

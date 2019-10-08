@@ -1,0 +1,186 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{{ domain }}{% trans " limits - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div ng-controller="websiteContainerLimit" class="container">
+
+        <div id="page-title">
+            <h2 id="domainNamePage">{% trans "Limits/Usage" %}</h2> <img ng-hide="cyberPanelLoading"
+                                                                         src="{% static 'images/loading.gif' %}">
+            <p>{% trans "Set limits and view usage for " %} <span id="domain">{{ domain }}</span></p>
+        </div>
+
+        <button style="margin-bottom: 2%" class="btn btn-warning" data-toggle="modal" data-target="#settings"><i
+                class="fa fa-gear"></i> Edit Limits
+        </button>
+
+        <div ng-hide="limitsInfoBox" class="form-group">
+            <div class="alert alert-info">
+                <p>{% trans "Limits are not being inforced, click Edit Limits to inforace the limits." %}</p>
+            </div>
+        </div>
+
+        <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered"
+               id="datatable-example">
+            <thead>
+            <tr>
+                <th>{% trans 'Limit' %}</th>
+                <th>{% trans 'Value' %}</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            <tr>
+                <td>{% trans 'CPU Percentage' %}</td>
+                <td>{$ cpuPers $}%</td>
+            </tr>
+            <tr>
+                <td>{% trans 'Memory' %}</td>
+                <td>{$ memory $}MB</td>
+            </tr>
+            <tr>
+                <td>{% trans 'I/O' %}</td>
+                <td>{$ IO $}MB/sec</td>
+            </tr>
+            <tr>
+                <td>{% trans 'IOPS' %}</td>
+                <td>{$ IOPS $}</td>
+            </tr>
+            <tr>
+                <td>{% trans 'Network Speed' %}</td>
+                <td>{$ networkSpeed $}</td>
+            </tr>
+
+            </tbody>
+        </table>
+        <div id="settings" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Website Limits
+                            <img id="containerSettingLoading" src="/static/images/loading.gif" style="display: none;">
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+
+                        <form name="containerSettingsForm" action="/" class="form-horizontal">
+                            <div ng-hide="installationDetailsForm" class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "CPU Percentage" %}</label>
+                                <div class="col-sm-6">
+                                    <input name="memory" type="number" class="form-control" ng-model="cpuPers" required>
+                                </div>
+                                <div class="current-pack ng-binding">%</div>
+                            </div>
+                            <div ng-hide="installationDetailsForm" class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Memory Limit" %}</label>
+                                <div class="col-sm-6">
+                                    <input name="memory" type="number" class="form-control" ng-model="memory" required>
+                                </div>
+                                <div class="current-pack ng-binding">MB</div>
+                            </div>
+                            <div ng-hide="installationDetailsForm" class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "I/O" %}</label>
+                                <div class="col-sm-6">
+                                    <input name="memory" type="number" class="form-control" ng-model="IO" required>
+                                </div>
+                                <div class="current-pack ng-binding">MB</div>
+                            </div>
+
+                            <div ng-hide="installationDetailsForm" class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "IOPS" %}</label>
+                                <div class="col-sm-6">
+                                    <input name="memory" type="number" class="form-control" ng-model="IOPS" required>
+                                </div>
+                                <div class="current-pack ng-binding">Operations</div>
+                            </div>
+
+                            <div ng-hide="installationDetailsForm" class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Network Speed" %}</label>
+                                <div class="col-sm-4">
+                                    <input name="memory" type="number" class="form-control" ng-model="networkSpeedBox"
+                                           required>
+                                </div>
+                                <div class="col-sm-2">
+                                    <select ng-model="networkHandle" class="form-control">
+                                        <option>kbps</option>
+                                        <option>mbit</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <div ng-hide="installationDetailsForm" class="form-group">
+                                <label class="col-sm-3 control-label">Enforce Limits</label>
+                                <div class="col-sm-9">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input ng-model="enforce" type="checkbox" value=""
+                                                   class="ng-pristine ng-untouched ng-valid ng-empty">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <br>
+
+                        </form>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary"
+                                ng-click="saveWebsiteLimits()" data-dismiss="modal">Save
+                        </button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">
+                            Close
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-body">
+                <h2 class="title-hero">
+                    {% trans "CPU Usage of" %} {{ domain }}
+                </h2>
+                <div class="example-box-wrapper">
+                    <div id="flot-placeholder1" style="width:auto;height:300px"></div>
+
+                </div>
+            </div>
+            <div class="panel-body">
+                <h2 class="title-hero">
+                    {% trans "Memory Usage of" %} {{ domain }}
+                </h2>
+                <div class="example-box-wrapper">
+                    <div id="memoryUsage" style="width:auto;height:300px"></div>
+
+                </div>
+            </div>
+            <div class="panel-body">
+                <h2 class="title-hero">
+                    {% trans "Disk Usage of" %} {{ domain }}
+                </h2>
+                <div class="example-box-wrapper">
+                    <div id="diskUsage" style="width:auto;height:300px"></div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+
+{% endblock %}

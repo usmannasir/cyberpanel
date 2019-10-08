@@ -16,13 +16,13 @@
 
 <div class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Delete User" %}
         </h3>
         <div ng-controller="deleteUser" class="example-box-wrapper">
 
 
-            <form  action="/" class="form-horizontal bordered-row">
+            <form  action="/" class="form-horizontal bordered-row panel-body">
 
 
                  <div class="form-group">
@@ -39,7 +39,7 @@
             <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="deleteUser()" class="btn btn-primary btn-lg btn-block">{% trans "Delete User" %}</button>
+                         <button type="button" ng-click="deleteUser()" class="btn btn-primary btn-lg">{% trans "Delete User" %}</button>
 
                     </div>
             </div>
@@ -56,7 +56,7 @@
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
+                    <div class="col-sm-6">
                             <div ng-hide="deleteFailure" class="alert alert-danger">
                                         <p>{% trans "Cannot delete user. Error message:" %} {$ errorMessage $}</p>
                             </div>

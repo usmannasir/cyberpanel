@@ -13,45 +13,42 @@
    <p>{% trans "Delete and create FTP accounts on this page." %}</p>
 </div>
 
-    <div class="panel">
+    <div class="panel col-md-12">
         <div class="panel-body">
-            <h3 class="title-hero">
+            <h3 class="content-box-header">
             {% trans "Available Functions" %}
             </h3>
-
              <div class="example-box-wrapper">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'createFTPAccount' %}" title="{% trans 'Create FTP Account' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Create FTP Account" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-plus-square"></i>
                                         </div>
                                     </a>
                     </div>
 
-
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'deleteFTPAccount' %}" title="{% trans 'Delete FTP Account' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "Delete FTP Account" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-trash"></i>
                                         </div>
                                     </a>
                     </div>
 
-
-                    <div class="col-md-4">
+                    <div class="col-md-3 btn-min-width">
                                     <a href="{% url 'listFTPAccounts' %}" title="{% trans 'List FTP Accounts' %}" class="tile-box tile-box-shortcut btn-primary">
                                         <div class="tile-header">
                                             {% trans "List FTP Accounts" %}
                                         </div>
                                         <div class="tile-content-wrapper">
-                                            <i class="glyph-icon icon-dashboard"></i>
+                                            <i class="fa fa-list-ul"></i>
                                         </div>
                                     </a>
                     </div>

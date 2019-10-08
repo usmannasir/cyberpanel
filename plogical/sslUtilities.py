@@ -1,9 +1,13 @@
 import CyberCPLogFileWriter as logging
-import shutil
 import os
 import shlex
 import subprocess
 import socket
+from plogical.processUtilities import ProcessUtilities
+try:
+    from websiteFunctions.models import ChildDomains, Websites
+except:
+    pass
 
 class sslUtilities:
 
@@ -32,111 +36,6 @@ class sslUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [IO Error with main config file [checkIfSSLMap]]")
             return 0
 
-
-    @staticmethod
-    def installSSLForDomain(virtualHostName):
-
-
-        pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
-
-        confPath = sslUtilities.Server_root + "/conf/vhosts/" + virtualHostName
-        completePathToConfigFile = confPath + "/vhost.conf"
-
-        try:
-            map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
-
-            if sslUtilities.checkSSLListener()!=1:
-
-                writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
-
-                listener = "listener SSL {" + "\n"
-                address = "  address                 *:443" + "\n"
-                secure = "  secure                  1" + "\n"
-                keyFile = "  keyFile                 " + pathToStoreSSL + "/privkey.pem" + "\n"
-                certFile = "  certFile                " + pathToStoreSSL + "/fullchain.pem" + "\n"
-                certChain = "  certChain               1" + "\n"
-                sslProtocol = "  sslProtocol             30" + "\n"
-                map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
-                final = "}" + "\n" + "\n"
-
-                writeDataToFile.writelines("\n")
-                writeDataToFile.writelines(listener)
-                writeDataToFile.writelines(address)
-                writeDataToFile.writelines(secure)
-                writeDataToFile.writelines(keyFile)
-                writeDataToFile.writelines(certFile)
-                writeDataToFile.writelines(certChain)
-                writeDataToFile.writelines(sslProtocol)
-                writeDataToFile.writelines(map)
-                writeDataToFile.writelines(final)
-                writeDataToFile.writelines("\n")
-                writeDataToFile.close()
-
-
-            else:
-
-                if sslUtilities.checkIfSSLMap(virtualHostName) == 0:
-
-                    data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
-                    writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
-                    sslCheck = 0
-
-                    for items in data:
-                        if items.find("listener")>-1 and items.find("SSL") > -1:
-                            sslCheck = 1
-
-                        if (sslCheck == 1):
-                            writeDataToFile.writelines(items)
-                            writeDataToFile.writelines(map)
-                            sslCheck = 0
-                        else:
-                            writeDataToFile.writelines(items)
-                    writeDataToFile.close()
-
-                ###################### Write per host Configs for SSL ###################
-
-                data = open(completePathToConfigFile,"r").readlines()
-
-                ## check if vhssl is already in vhconf file
-
-                vhsslPresense = 0
-
-                for items in data:
-                    if items.find("vhssl")>-1:
-                        vhsslPresense = 1
-
-
-                if vhsslPresense == 0:
-                    writeSSLConfig = open(completePathToConfigFile,"a")
-
-                    vhssl = "vhssl  {" + "\n"
-                    keyFile = "  keyFile                 " + pathToStoreSSL + "/privkey.pem" + "\n"
-                    certFile = "  certFile                " + pathToStoreSSL + "/fullchain.pem" + "\n"
-                    certChain = "  certChain               1" + "\n"
-                    sslProtocol = "  sslProtocol             30" + "\n"
-                    final = "}"
-
-                    writeSSLConfig.writelines("\n")
-
-                    writeSSLConfig.writelines(vhssl)
-                    writeSSLConfig.writelines(keyFile)
-                    writeSSLConfig.writelines(certFile)
-                    writeSSLConfig.writelines(certChain)
-                    writeSSLConfig.writelines(sslProtocol)
-                    writeSSLConfig.writelines(final)
-
-
-                    writeSSLConfig.writelines("\n")
-
-                    writeSSLConfig.close()
-
-            return 1
-
-        except BaseException,msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [installSSLForDomain]]")
-            return 0
-
-
     @staticmethod
     def checkSSLListener():
         try:
@@ -162,192 +61,250 @@ class sslUtilities:
         except BaseException, msg:
             return [0, "347 " + str(msg) + " [issueSSLForDomain]"]
 
+    @staticmethod
+    def installSSLForDomain(virtualHostName, adminEmail='usman@cyberpersons.com'):
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            confPath = sslUtilities.Server_root + "/conf/vhosts/" + virtualHostName
+            completePathToConfigFile = confPath + "/vhost.conf"
+
+            try:
+                map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
+
+                if sslUtilities.checkSSLListener() != 1:
+
+                    writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
+
+                    listener = "listener SSL {" + "\n"
+                    address = "  address                 *:443" + "\n"
+                    secure = "  secure                  1" + "\n"
+                    keyFile = "  keyFile                  /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
+                    certFile = "  certFile                 /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
+                    certChain = "  certChain               1" + "\n"
+                    sslProtocol = "  sslProtocol             30" + "\n"
+                    map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
+                    final = "}" + "\n" + "\n"
+
+                    writeDataToFile.writelines("\n")
+                    writeDataToFile.writelines(listener)
+                    writeDataToFile.writelines(address)
+                    writeDataToFile.writelines(secure)
+                    writeDataToFile.writelines(keyFile)
+                    writeDataToFile.writelines(certFile)
+                    writeDataToFile.writelines(certChain)
+                    writeDataToFile.writelines(sslProtocol)
+                    writeDataToFile.writelines(map)
+                    writeDataToFile.writelines(final)
+                    writeDataToFile.writelines("\n")
+                    writeDataToFile.close()
+
+
+                else:
+
+                    if sslUtilities.checkIfSSLMap(virtualHostName) == 0:
+
+                        data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+                        writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
+                        sslCheck = 0
+
+                        for items in data:
+                            if items.find("listener") > -1 and items.find("SSL") > -1:
+                                sslCheck = 1
+
+                            if (sslCheck == 1):
+                                writeDataToFile.writelines(items)
+                                writeDataToFile.writelines(map)
+                                sslCheck = 0
+                            else:
+                                writeDataToFile.writelines(items)
+                        writeDataToFile.close()
+
+                    ###################### Write per host Configs for SSL ###################
+
+                    data = open(completePathToConfigFile, "r").readlines()
+
+                    ## check if vhssl is already in vhconf file
+
+                    vhsslPresense = 0
+
+                    for items in data:
+                        if items.find("vhssl") > -1:
+                            vhsslPresense = 1
+
+                    if vhsslPresense == 0:
+                        writeSSLConfig = open(completePathToConfigFile, "a")
+
+                        vhssl = "vhssl  {" + "\n"
+                        keyFile = "  keyFile                 /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
+                        certFile = "  certFile                /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
+                        certChain = "  certChain               1" + "\n"
+                        sslProtocol = "  sslProtocol             30" + "\n"
+                        final = "}"
+
+                        writeSSLConfig.writelines("\n")
+
+                        writeSSLConfig.writelines(vhssl)
+                        writeSSLConfig.writelines(keyFile)
+                        writeSSLConfig.writelines(certFile)
+                        writeSSLConfig.writelines(certChain)
+                        writeSSLConfig.writelines(sslProtocol)
+                        writeSSLConfig.writelines(final)
+
+                        writeSSLConfig.writelines("\n")
+
+                        writeSSLConfig.close()
+
+                return 1
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [installSSLForDomain]]")
+                return 0
+        else:
+            confPath = sslUtilities.Server_root + "/conf/vhosts/" + virtualHostName
+            completePathToConfigFile = confPath + "/vhost.conf"
+
+            ## Check if SSL VirtualHost already exists
+
+            data = open(completePathToConfigFile, 'r').readlines()
+
+            for items in data:
+                if items.find('*:443') > -1:
+                    return 1
+
+            try:
+
+                try:
+                    chilDomain = ChildDomains.objects.get(domain=virtualHostName)
+                    externalApp = chilDomain.master.externalApp
+                    DocumentRoot = '    DocumentRoot ' + chilDomain.path + '\n'
+                except BaseException, msg:
+                    website = Websites.objects.get(domain=virtualHostName)
+                    externalApp = website.externalApp
+                    DocumentRoot = '    DocumentRoot /home/' + virtualHostName + '/public_html\n'
+
+                data = open(completePathToConfigFile, 'r').readlines()
+                phpHandler = ''
+
+                for items in data:
+                    if items.find('AddHandler') > -1 and items.find('php') > -1:
+                        phpHandler = items
+                        break
+
+                confFile = open(completePathToConfigFile, 'a')
+
+                cacheRoot = """    <IfModule LiteSpeed>
+        CacheRoot lscache
+    </IfModule>
+"""
+
+                VirtualHost = '\n<VirtualHost *:443>\n\n'
+                ServerName = '    ServerName ' + virtualHostName + '\n'
+                ServerAlias = '    ServerAlias www.' + virtualHostName + '\n'
+                ServerAdmin = '    ServerAdmin ' + adminEmail + '\n'
+                SeexecUserGroup = '    SuexecUserGroup ' + externalApp + ' ' + externalApp + '\n'
+                CustomLogCombined = '    CustomLog /home/' + virtualHostName + '/logs/' + virtualHostName + '.access_log combined\n'
+
+                confFile.writelines(VirtualHost)
+                confFile.writelines(ServerName)
+                confFile.writelines(ServerAlias)
+                confFile.writelines(ServerAdmin)
+                confFile.writelines(SeexecUserGroup)
+                confFile.writelines(DocumentRoot)
+                confFile.writelines(CustomLogCombined)
+                confFile.writelines(cacheRoot)
+
+                SSLEngine = '    SSLEngine on\n'
+                SSLVerifyClient = '    SSLVerifyClient none\n'
+                SSLCertificateFile = '    SSLCertificateFile /etc/letsencrypt/live/' + virtualHostName + '/fullchain.pem\n'
+                SSLCertificateKeyFile = '    SSLCertificateKeyFile /etc/letsencrypt/live/' + virtualHostName + '/privkey.pem\n'
+
+                confFile.writelines(SSLEngine)
+                confFile.writelines(SSLVerifyClient)
+                confFile.writelines(SSLCertificateFile)
+                confFile.writelines(SSLCertificateKeyFile)
+                confFile.writelines(phpHandler)
+
+                VirtualHostEnd = '</VirtualHost>\n'
+                confFile.writelines(VirtualHostEnd)
+                confFile.close()
+                return 1
+
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [installSSLForDomain]")
+                return 0
+
 
     @staticmethod
     def obtainSSLForADomain(virtualHostName,adminEmail,sslpath, aliasDomain = None):
         try:
+            acmePath = '/root/.acme.sh/acme.sh'
 
-            ## Obtaining Server IP
-
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            serverIPAddress = ipData.split('\n', 1)[0]
+            # if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            #     acmePath = '/home/cyberpanel/.acme.sh/acme.sh'
 
             if aliasDomain == None:
 
+                existingCertPath = '/etc/letsencrypt/live/' + virtualHostName
+                if not os.path.exists(existingCertPath):
+                    command = 'mkdir -p ' + existingCertPath
+                    subprocess.call(shlex.split(command))
+
                 try:
                     logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName)
-                    command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName
+
+                    command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
+                              + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
+
+                    logging.CyberCPLogFileWriter.writeToFile(command)
+
                     output = subprocess.check_output(shlex.split(command))
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        "Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName)
-                except subprocess.CalledProcessError, msg:
+                    logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName)
+
+
+                except subprocess.CalledProcessError:
                     logging.CyberCPLogFileWriter.writeToFile(
                         "Failed to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName)
+
                     try:
-                        logging.CyberCPLogFileWriter.writeToFile(
-                            "Trying to obtain SSL for: " + virtualHostName)
-                        command = "certbot certonly -n --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
+                        logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName)
+                        command = acmePath + " --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
+                                  + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
+                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
                         output = subprocess.check_output(shlex.split(command))
-                        logging.CyberCPLogFileWriter.writeToFile(
-                            "Successfully obtained SSL for: " + virtualHostName)
-                    except subprocess.CalledProcessError, msg:
+                        logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName)
+                    except subprocess.CalledProcessError:
                         logging.CyberCPLogFileWriter.writeToFile('Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName)
                         return 0
-
-                pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
-
-                if not os.path.exists(pathToStoreSSL):
-                    os.mkdir(pathToStoreSSL)
-
-                pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-                pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
-
-                ##
-
-                if output.find('Congratulations!') > -1:
-
-                    ###### Copy SSL To config location ######
-
-                    srcPrivKey = "/etc/letsencrypt/live/" + virtualHostName + "/privkey.pem"
-                    srcFullChain = "/etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem"
-
-                    if os.path.exists(pathToStoreSSLPrivKey):
-                        os.remove(pathToStoreSSLPrivKey)
-                    if os.path.exists(pathToStoreSSLFullChain):
-                        os.remove(pathToStoreSSLFullChain)
-
-                    shutil.copy(srcPrivKey, pathToStoreSSLPrivKey)
-                    shutil.copy(srcFullChain, pathToStoreSSLFullChain)
-
-                    return 1
-
-                elif output.find('no action taken.') > -1:
-
-                    ###### Copy SSL To config location ######
-
-                    srcPrivKey = "/etc/letsencrypt/live/" + virtualHostName + "/privkey.pem"
-                    srcFullChain = "/etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem"
-
-                    if os.path.exists(pathToStoreSSLPrivKey):
-                        os.remove(pathToStoreSSLPrivKey)
-                    if os.path.exists(pathToStoreSSLFullChain):
-                        os.remove(pathToStoreSSLFullChain)
-
-                    shutil.copy(srcPrivKey, pathToStoreSSLPrivKey)
-                    shutil.copy(srcFullChain, pathToStoreSSLFullChain)
-
-                    return 1
-                elif output.find('Failed authorization procedure') > -1:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        'Failed authorization procedure for ' + virtualHostName + " while issuing Let's Encrypt SSL.")
-                    return 0
-                elif output.find('Too many SSL requests for this domain, please try to get SSL at later time.') > -1:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        'Too many SSL requests for ' + virtualHostName + " please try to get SSL at later time.")
-                    return 0
-
             else:
 
-                ipRecords = sslUtilities.getDNSRecords(virtualHostName)
+                existingCertPath = '/etc/letsencrypt/live/' + virtualHostName
+                if not os.path.exists(existingCertPath):
+                    command = 'mkdir -p ' + existingCertPath
+                    subprocess.call(shlex.split(command))
 
-                if ipRecords[0] == 1:
-
-                    if serverIPAddress == ipRecords[1] and serverIPAddress == ipRecords[2]:
-
-                        ipRecordsAlias = sslUtilities.getDNSRecords(aliasDomain)
-
-                        if serverIPAddress == ipRecordsAlias[1] and serverIPAddress == ipRecordsAlias[2]:
-
-                            command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName + " -d " + aliasDomain + " -d www." + aliasDomain
-
-                        else:
-                            if serverIPAddress == ipRecordsAlias[2]:
-                                command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName + " -d " + aliasDomain
-                            else:
-                                command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d www." + virtualHostName
-
-                    else:
-                        if serverIPAddress == ipRecords[2]:
-
-                            ipRecordsAlias = sslUtilities.getDNSRecords(aliasDomain)
-
-                            if serverIPAddress == ipRecordsAlias[1] and serverIPAddress == ipRecordsAlias[2]:
-
-                                command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName  + " -d " + aliasDomain + " -d www." + aliasDomain
-
-                            else:
-                                if serverIPAddress == ipRecordsAlias[2]:
-                                    command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName + " -d " + aliasDomain
-                                else:
-                                    command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath + " -d " + virtualHostName
-
-                            logging.CyberCPLogFileWriter.writeToFile(
-                                "SSL is issued without 'www' due to DNS error for domain : " + virtualHostName)
-                        else:
-
-                            ipRecordsAlias = sslUtilities.getDNSRecords(aliasDomain)
-
-                            if serverIPAddress == ipRecordsAlias[1] and serverIPAddress == ipRecordsAlias[2]:
-                                command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath  + " -d " + aliasDomain + " -d www." + aliasDomain
-                            else:
-                                if serverIPAddress == ipRecordsAlias[2]:
-                                    command = "certbot certonly -n --expand --agree-tos --email " + adminEmail + " --webroot -w " + sslpath  + " -d " + aliasDomain
-                                else:
-                                    return 0
-                else:
+                try:
                     logging.CyberCPLogFileWriter.writeToFile(
-                        "Failed to obtain DNS records for " + virtualHostName + ", issuing self signed certificate.")
+                        "Trying to obtain SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasDomain + " and www." + aliasDomain + ",")
+
+                    command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
+                              + ' -d ' + aliasDomain + ' -d www.' + aliasDomain\
+                              + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
+
+                    output = subprocess.check_output(shlex.split(command))
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        "Successfully obtained SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasDomain + "and www." + aliasDomain + ",")
+
+
+                except subprocess.CalledProcessError:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        "Failed to obtain SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasDomain + "and www." + aliasDomain + ",")
                     return 0
-
-            ## SSL Paths
-
-            pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + virtualHostName
-
-            if not os.path.exists(pathToStoreSSL):
-                os.mkdir(pathToStoreSSL)
-
-            pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-            pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
-
 
             ##
 
-            output = subprocess.check_output(shlex.split(command))
-
-            data = output.split('\n')
-
-            if output.find('Congratulations!')  > -1:
-
-                ###### Copy SSL To config location ######
-
-
-                for items in data:
-                    if items.find(virtualHostName) > -1 and items.find('fullchain.pem') > -1:
-                        srcFullChain = items.strip(' ')
-                    elif items.find(virtualHostName) > -1 and items.find('privkey.pem') > -1:
-                        srcPrivKey = items.strip(' ')
-
-
-                if os.path.exists(pathToStoreSSLPrivKey):
-                    os.remove(pathToStoreSSLPrivKey)
-                if os.path.exists(pathToStoreSSLFullChain):
-                    os.remove(pathToStoreSSLFullChain)
-
-                shutil.copy(srcPrivKey, pathToStoreSSLPrivKey)
-                shutil.copy(srcFullChain, pathToStoreSSLFullChain)
-
+            if output.find('Cert success') > -1:
                 return 1
-
-            elif output.find('no action taken.') > -1:
-                return 1
-            elif output.find('Failed authorization procedure')  > -1:
-                logging.CyberCPLogFileWriter.writeToFile('Failed authorization procedure for ' + virtualHostName + " while issuing Let's Encrypt SSL.")
-                return 0
-            elif output.find('Too many SSL requests for this domain, please try to get SSL at later time.') > -1:
-                logging.CyberCPLogFileWriter.writeToFile(
-                    'Too many SSL requests for ' + virtualHostName + " please try to get SSL at later time.")
+            else:
                 return 0
 
         except BaseException,msg:
@@ -357,31 +314,13 @@ class sslUtilities:
 
 def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain = None):
     try:
-
         if sslUtilities.obtainSSLForADomain(domain, adminEmail, sslpath, aliasDomain) == 1:
-
-            if sslUtilities.installSSLForDomain(domain) == 1:
+            if sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
                 return [1, "None"]
             else:
                 return [0, "210 Failed to install SSL for domain. [issueSSLForDomain]"]
         else:
-            pathToStoreSSL = sslUtilities.Server_root + "/conf/vhosts/" + "SSL-" + domain
-
-            if not os.path.exists(pathToStoreSSL):
-                os.mkdir(pathToStoreSSL)
-
-            pathToStoreSSLPrivKey = pathToStoreSSL + "/privkey.pem"
-            pathToStoreSSLFullChain = pathToStoreSSL + "/fullchain.pem"
-
-            command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
-
-            if sslUtilities.installSSLForDomain(domain) == 1:
-                logging.CyberCPLogFileWriter.writeToFile("Self signed SSL issued for " + domain + ".")
-                return [1, "None"]
-            else:
-                return [0, "220 Failed to install SSL for domain. [issueSSLForDomain]"]
+            return [0, "283 Failed to obtain SSL for domain. [issueSSLForDomain]"]
 
     except BaseException,msg:
         return [0, "347 "+ str(msg)+ " [issueSSLForDomain]"]

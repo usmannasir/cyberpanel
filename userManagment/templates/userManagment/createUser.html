@@ -3,178 +3,139 @@
 {% block title %}{% trans "Create New User - CyberPanel" %}{% endblock %}
 {% block content %}
 
-{% load static %}
-{% get_current_language as LANGUAGE_CODE %}
-<!-- Current language: {{ LANGUAGE_CODE }} -->
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
 
-<div class="container">
-<div id="page-title">
-   <h2>{% trans "Create New User" %}</h2>
-   <p>{% trans "Create root, reseller or normal users on this page." %}</p>
-</div>
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Create New User" %}</h2>
+            <p>{% trans "Create root, reseller or normal users on this page." %}</p>
+        </div>
 
-<div class="panel">
-    <div ng-controller="createUserCtr" class="panel-body">
-        <h3 class="title-hero">
-            {% trans "User Details" %} <img ng-hide="userCreationLoading" src="{% static 'images/loading.gif' %}">
-        </h3>
-        <div  class="example-box-wrapper">
-
-
-            <form name="createUser" action="/" class="form-horizontal bordered-row">
-
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "First Name" %}</label>
-                    <div class="col-sm-6">
-                        <input name="firstName" ng-pattern="/^[a-zA-Z]+$/" type="text" class="form-control" ng-model="firstName" required>
-                    </div>
-                        <div ng-show="createUser.firstName.$error.pattern" class="current-pack">{% trans "First Name should contain only alphabetic characters." %}</div>
-
-                </div>
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Last Name" %}</label>
-                    <div class="col-sm-6">
-                        <input name="lastName" ng-pattern="/^[a-zA-Z]+$/"  type="text" class="form-control" ng-model="lastName" required>
-                    </div>
-                         <div ng-show="createUser.lastName.$error.pattern" class="current-pack">{% trans "Last Name should contain only alphabetic characters." %}</div>
-
-                </div>
-
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Email" %}</label>
-                    <div class="col-sm-6">
-                        <input name="email"  type="email" class="form-control" ng-model="email" required>
-                    </div>
-                        <div ng-show="createUser.email.$error.email" class="current-pack">{% trans "Invalid Email" %}</div>
-
-                </div>
-
-
-
-                <!------------ Account Type ------------>
-
-
-                {% if adminType == 1 %}
-
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Account Type" %}</label>
-                    <div class="col-sm-6">
-                        <select ng-change="showLimitsBox()" ng-model="accountType" class="form-control">
-                                <option>Admin</option>
-                                <option>Normal User</option>
-                        </select>
-                    </div>
-                </div>
-
-                {% else %}
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Account Type" %}</label>
-                    <div class="col-sm-6">
-                        <select ng-change="showLimitsBox()" ng-model="accountType" class="form-control">
-                                <option>Normal User</option>
-                        </select>
-                    </div>
-                </div>
-
-                {% endif %}
-
-
-
-                <!------------ Account Type ------------>
-
-
-                <div ng-hide="acctsLimit" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "User Accounts Limit" %}</label>
-                    <div class="col-sm-6">
-                        <input name="userAccountsLimit"  type="number" class="form-control" ng-model="userAccountsLimit" required>
-                    </div>
-                        <div ng-show="createUser.userAccountsLimit.$error.number" class="current-pack">{% trans "Only Numbers" %}</div>
-
-                </div>
-
-
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Username" %}</label>
-                    <div class="col-sm-6">
-                        <input name="username" ng-change="hideSomeThings()"  type="text" class="form-control" ng-model="userName" required>
-                    </div>
-                    <div ng-show="createUser.username.$error.pattern" class="current-pack">{% trans "Username should be lowercase alphanumeric." %}</div>
-                </div>
-
-
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Password" %}</label>
-                    <div class="col-sm-6">
-                        <input name="password"  type="password" class="form-control" ng-model="password" required>
-                    </div>
-                    <div ng-show="createUser.password.$error.pattern" class="current-pack">{% trans "Must contain one number and one special character." %}</div>
-
-                </div>
-
-
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                         <button ng-disabled="createUser.websitesLimit.$error.number ||
-                                          createUser.userAccountsLimit.$error.number ||
-                                          createUser.email.$error.email ||
-                                          createUser.firstName.$error.pattern ||
-                                          createUser.lastName.$error.pattern"
-                                 type="button" ng-click="createUserFunc()" class="btn btn-primary btn-lg btn-block">{% trans "Create User" %}</button>
-
-                    </div>
-                </div>
-
-
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                            <div ng-hide="userCreated" class="alert alert-success">
-                                <p>{% trans "Account with username:" %} <strong>{$ userName $}</strong> {% trans "is successfully created." %}</p>
+        <div class="panel">
+            <div ng-controller="createUserCtr" class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "User Details" %} <img ng-hide="userCreationLoading"
+                                                    src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+                    <form name="createUser" action="/" class="form-horizontal bordered-row panel-body">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "First Name" %}</label>
+                            <div class="col-sm-6">
+                                <input name="firstName" ng-pattern="/^[a-zA-Z]+$/" type="text" class="form-control"
+                                       ng-model="firstName" required>
                             </div>
+                            <div ng-show="createUser.firstName.$error.pattern"
+                                 class="current-pack">{% trans "First Name should contain only alphabetic characters." %}</div>
+                        </div>
 
-                            <div ng-hide="userCreationFailed" class="alert alert-danger">
-                                <p>{% trans "Cannot create user. Error message:" %} {$ errorMessage $}</p>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Last Name" %}</label>
+                            <div class="col-sm-6">
+                                <input name="lastName" ng-pattern="/^[a-zA-Z]+$/" type="text" class="form-control"
+                                       ng-model="lastName" required>
                             </div>
+                            <div ng-show="createUser.lastName.$error.pattern"
+                                 class="current-pack">{% trans "Last Name should contain only alphabetic characters." %}</div>
+                        </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Email" %}</label>
+                            <div class="col-sm-6">
+                                <input name="email" type="email" class="form-control" ng-model="email" required>
                             </div>
+                            <div ng-show="createUser.email.$error.email"
+                                 class="current-pack">{% trans "Invalid Email" %}</div>
+                        </div>
 
-                            <div ng-hide="combinedLength" class="alert alert-danger">
-                                <p>{% trans "Length of first and last name combined should be less than or equal to 20 characters" %}</p>
+                        <!------------ Account ACL ------------>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select ACL" %} </label>
+                            <div class="col-sm-6">
+                                <select ng-model="selectedACL" class="form-control">
+                                    {% for items in aclNames %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
+                        </div>
 
+                        <!------------ Account ACL ------------>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Websites Limit" %}</label>
+                            <div class="col-sm-6">
+                                <input placeholder="0 = Unlimited" type="number" class="form-control"
+                                       ng-model="websitesLimits" required>
+                            </div>
+                        </div>
 
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Username" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="userName" required>
+                            </div>
+                        </div>
 
-                    </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                            <div class="col-sm-6">
+                                <input name="password" type="password" class="form-control" ng-model="password"
+                                       required>
+                            </div>
+                            <div class="col-sm-3">
+                                <button type="button" ng-click="generatePassword()"
+                                        class="btn btn-primary">{% trans "Generate" %}</button>
+                            </div>
+                        </div>
 
+                        <div ng-hide="generatedPasswordView" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Generated Password" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" name="email" class="form-control" ng-model="password" required>
+                            </div>
+                            <div class="col-sm-3">
+                                <button type="button" ng-click="usePassword()"
+                                        class="btn btn-primary">{% trans "Use" %}</button>
+                            </div>
+                        </div>
 
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="createUserFunc()"
+                                        class="btn btn-primary btn-lg">{% trans "Create User" %}</button>
+                            </div>
+                        </div>
 
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-6">
+                                <div ng-hide="userCreated" class="alert alert-success">
+                                    <p>{% trans "Account with username:" %} <strong>{$ userName
+                                        $}</strong> {% trans "is successfully created." %}</p>
+                                </div>
+
+                                <div ng-hide="userCreationFailed" class="alert alert-danger">
+                                    <p>{% trans "Cannot create user. Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+
+                                <div ng-hide="combinedLength" class="alert alert-danger">
+                                    <p>{% trans "Length of first and last name combined should be less than or equal to 20 characters" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-
-
-            </form>
-
-
-
-
+            </div>
         </div>
     </div>
-</div>
-
-
-
-</div>
 
 
 {% endblock %}

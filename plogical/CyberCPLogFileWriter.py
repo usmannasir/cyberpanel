@@ -1,6 +1,7 @@
 import subprocess
 import time
 
+
 class CyberCPLogFileWriter:
     fileName = "/home/cyberpanel/error-logs.txt"
 
@@ -9,8 +10,9 @@ class CyberCPLogFileWriter:
         try:
             file = open(CyberCPLogFileWriter.fileName,'a')
             file.writelines("[" + time.strftime(
-                    "%I-%M-%S-%a-%b-%Y") + "] "+ message + "\n")
+                    "%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n")
             file.close()
+
         except IOError,msg:
             return "Can not write to error file."
 
@@ -19,7 +21,7 @@ class CyberCPLogFileWriter:
         try:
             file = open(CyberCPLogFileWriter.fileName, 'a')
             file.writelines("[" + time.strftime(
-                "%I-%M-%S-%a-%b-%Y") + "] [" + level + ":" + method + "] " + message + "\n")
+                "%m.%d.%Y_%H-%M-%S") + "] [" + level + ":" + method + "] " + message + "\n")
             file.close()
             file.close()
         except IOError:
@@ -35,3 +37,19 @@ class CyberCPLogFileWriter:
 
         except subprocess.CalledProcessError,msg:
             return "File was empty"
+
+    @staticmethod
+    def statusWriter(tempStatusPath, mesg, append = None):
+        try:
+            if append == None:
+                statusFile = open(tempStatusPath, 'w')
+            else:
+                statusFile = open(tempStatusPath, 'a')
+            statusFile.writelines(mesg + '\n')
+            statusFile.close()
+            print(mesg + '\n')
+        except BaseException, msg:
+            CyberCPLogFileWriter.writeToFile(str(msg) + ' [statusWriter]')
+            #print str(msg)
+
+

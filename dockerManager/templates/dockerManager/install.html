@@ -1,0 +1,65 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Install Docker - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Install Docker" %}</h2>
+        </div>
+
+        <div ng-controller="installDocker" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Install Docker" %} <img ng-hide="installDockerStatus"
+                                                      src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper text-center" style="white-space: normal;">
+
+                    {% if conErr == 1 %}
+
+                        {% if status == 1 %}
+                            {% trans "Unable to connect to docker daemon, please try restarting docker from service page" %}
+                        {% else %}
+                            {% trans "You do not have sufficient permissions to access this page" %}
+                        {% endif %}
+
+                    {% else %}
+                        <p class="h4">{% trans "Docker is currently not installed on this server. To manage containers, you must first install it." %}</p>
+                        <!------ LSWS Switch box ----------------->
+
+                        <div style="margin-top: 2%" ng-hide="installBoxGen" class="col-md-12">
+
+                            <form action="/" id="" class="form-horizontal bordered-row panel-body">
+                                <div class="form-group">
+                                    <div style="margin-top: 2%;" class="col-sm-12">
+                                            <textarea ng-model="requestData" rows="15"
+                                                      class="form-control">{{ requestData }}</textarea>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+
+                        <!----- LSWS Switch box ----------------->
+                        <br>
+                        {% if status == 1 %}
+                            <button ng-hide="dockerInstallBTN" class="btn btn-primary" ng-click="installDocker()">Install Docker</button>
+                        {% else %}
+                            {% trans "You do not have permissions to install Docker. Please contact your system administrator" %}
+                        {% endif %}
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

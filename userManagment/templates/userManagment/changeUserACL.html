@@ -1,0 +1,72 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Change User ACL - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Change User ACL" %}</h2>
+   <p>{% trans "This page can be used to change ACL for CyberPanel users." %}</p>
+</div>
+
+<div ng-controller="changeUserACLCTRL" class="panel">
+    <div class="panel-body">
+        <h3 class="content-box-header">
+            {% trans "Change User ACL" %} <img ng-hide="aclLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+
+            <form action="/" class="form-horizontal bordered-row panel-body">
+
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select User" %} </label>
+                    <div class="col-sm-6">
+                        <select ng-model="selectedUser" class="form-control">
+                            {% for items in usersList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Select ACL" %} </label>
+                    <div class="col-sm-6">
+                        <select ng-model="selectedACL" class="form-control">
+                            {% for items in aclNames %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+
+
+
+                <div ng-hide="deleteACLButton" class="form-group">
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-4">
+                             <button type="button" ng-click="changeACLFunc()" class="btn btn-primary btn-lg">{% trans "Change ACL" %}</button>
+
+                        </div>
+                </div>
+
+            </form>
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

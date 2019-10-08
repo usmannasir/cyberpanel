@@ -1,0 +1,67 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Not available - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Not available" %}</h2>
+            <p>{% trans "CyberPanel Ent is required for Containerization." %}</p>
+        </div>
+
+        {% if OLS %}
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="alert alert-danger">
+                        <p>{% trans "Containerization is only available on CyberPanel Ent. " %} <a target="_blank"
+                                                                                       href="https://cyberpanel.net/docs/switching-from-openlitespeed-to-litespeed-enterprise-webserver/">Click
+                            Here</a> {% trans " for conversion details." %}</p>
+                    </div>
+                </div>
+            </div>
+
+        {% elif notInstalled %}
+
+            <div ng-controller="installContainer" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "Install Packages" %} <img ng-hide="installDockerStatus"
+                                                      src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <p>{% trans "Required packages are not installed on this server. Please proceed to installation." %}</p>
+                        <!------ LSWS Switch box ----------------->
+
+                        <div style="margin-top: 2%" ng-hide="installBoxGen" class="col-md-12">
+
+                            <form action="/" id="" class="form-horizontal bordered-row">
+                                <div class="form-group">
+                                    <div style="margin-top: 2%;" class="col-sm-12">
+                                            <textarea ng-model="requestData" rows="15"
+                                                      class="form-control">{{ requestData }}</textarea>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+
+                        <!----- LSWS Switch box ----------------->
+                        <br>
+                        <button class="btn btn-primary" ng-click="submitContainerInstall()">Install Now</button>
+
+                </div>
+            </div>
+        </div>
+
+        {% endif %}
+
+    </div>
+{% endblock %}
+

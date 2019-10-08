@@ -1,0 +1,186 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Set up Back up Destinations" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+
+
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Set up Incremental Back up Destinations" %} - <a target="_blank"
+                                                                           href="http://go.cyberpanel.net/remote-backup"
+                                                                           style="height: 23px;line-height: 21px;"
+                                                                           class="btn btn-border btn-alt border-red btn-link font-red"
+                                                                           title=""><span>{% trans "Remote Backups" %}</span></a>
+            </h2>
+            <p>{% trans "On this page you can set up your Back up destinations. (SFTP and AWS)" %}</p>
+        </div>
+
+        <div ng-controller="incrementalDestinations" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "Set up Back up Destinations." %} <img ng-hide="cyberpanelLoading"
+                                                                    src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+
+                    <form action="/" class="form-horizontal bordered-row">
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Type" %} </label>
+                            <div class="col-sm-6">
+                                <select ng-change="fetchDetails()" ng-model="destinationType" class="form-control">
+                                    <option>SFTP</option>
+                                    <option>AWS</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!--- SFTP --->
+
+                        <div ng-hide="sftpHide" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "IP Address" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="IPAddress" required>
+                            </div>
+                        </div>
+
+                        <div ng-hide="sftpHide" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                            <div class="col-sm-6">
+                                <input placeholder="" type="password" class="form-control" ng-model="password" required>
+                            </div>
+                        </div>
+
+                        <div ng-hide="sftpHide" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Port" %}</label>
+                            <div class="col-sm-6">
+                                <input placeholder="{% trans "Backup server SSH Port, leave empty for 22." %}"
+                                       type="text" class="form-control" ng-model="backupSSHPort" required>
+                            </div>
+                        </div>
+
+                        <div ng-hide="sftpHide" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="addDestination('SFTP')"
+                                        class="btn btn-primary btn-lg btn-block">{% trans "Add Destination" %}</button>
+
+                            </div>
+                        </div>
+
+                        <!--- SFTP --->
+
+
+
+
+                        <!------ List of Destinations --------------->
+
+                        <div ng-hide="sftpHide" class="form-group">
+
+                            <div class="col-sm-12">
+
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "IP" %}</th>
+                                        <th>{% trans "Port" %}</th>
+                                        <th>{% trans "Delete" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat="record in records track by $index">
+                                        <td ng-bind="record.ip"></td>
+                                        <td ng-bind="record.port"></td>
+                                        <td ng-click="removeDestination('SFTP',record.ip)"><img src="{% static 'images/delete.png' %}">
+                                        </td>
+
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!------ List of records --------------->
+
+
+                        <!--- SFTP  End --->
+
+                        <!--- AWS Start --->
+
+                        <div ng-hide="awsHide" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "AWS_ACCESS_KEY_ID" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="AWS_ACCESS_KEY_ID" required>
+                            </div>
+                        </div>
+
+                        <div ng-hide="awsHide" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "AWS_SECRET_ACCESS_KEY" %}</label>
+                            <div class="col-sm-6">
+                                <input placeholder="" type="password" class="form-control" ng-model="AWS_SECRET_ACCESS_KEY" required>
+                            </div>
+                        </div>
+
+                        <div ng-hide="awsHide" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="addDestination('AWS')"
+                                        class="btn btn-primary btn-lg btn-block">{% trans "Add Destination" %}</button>
+
+                            </div>
+                        </div>
+
+                        <!--- SFTP --->
+
+
+
+
+                        <!------ List of Destinations --------------->
+
+                        <div ng-hide="awsHide" class="form-group">
+
+                            <div class="col-sm-12">
+
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "AWS_ACCESS_KEY_ID" %}</th>
+                                        <th>{% trans "Delete" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat="record in records track by $index">
+                                        <td ng-bind="record.AWS_ACCESS_KEY_ID"></td>
+                                        <td ng-click="removeDestination('AWS', record.AWS_ACCESS_KEY_ID)"><img src="{% static 'images/delete.png' %}">
+                                        </td>
+
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!------ List of records --------------->
+
+
+                        <!--- AWS  End --->
+
+
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

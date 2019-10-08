@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render,redirect
+from django.shortcuts import render
 from django.http import HttpResponse
 from models import Administrator
 from plogical import hashPassword
@@ -12,6 +12,10 @@ from baseTemplate.models import version
 from plogical.getSystemInformation import SystemInformation
 from django.utils.translation import LANGUAGE_SESSION_KEY
 import CyberCP.settings as settings
+from models import ACL
+from plogical.acl import ACLManager
+from django.views.decorators.csrf import ensure_csrf_cookie
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 # Create your views here.
 
 def verifyLogin(request):
@@ -27,7 +31,6 @@ def verifyLogin(request):
         try:
             if request.method == "POST":
                 data = json.loads(request.body)
-
 
                 username = data['username']
                 password = data['password']
@@ -83,6 +86,26 @@ def verifyLogin(request):
                         request.session[LANGUAGE_SESSION_KEY] = user_Language
                         request.COOKIES['django_language'] = user_Language
                         settings.LANGUAGE_CODE = user_Language
+                    elif data['languageSelection'] == "French":
+                        user_Language = "fr"
+                        request.session[LANGUAGE_SESSION_KEY] = user_Language
+                        request.COOKIES['django_language'] = user_Language
+                        settings.LANGUAGE_CODE = user_Language
+                    elif data['languageSelection'] == "Polish":
+                        user_Language = "pl"
+                        request.session[LANGUAGE_SESSION_KEY] = user_Language
+                        request.COOKIES['django_language'] = user_Language
+                        settings.LANGUAGE_CODE = user_Language
+                    elif data['languageSelection'] == "Vietnamese":
+                        user_Language = "vi"
+                        request.session[LANGUAGE_SESSION_KEY] = user_Language
+                        request.COOKIES['django_language'] = user_Language
+                        settings.LANGUAGE_CODE = user_Language
+                    elif data['languageSelection'] == "Italian":
+                        user_Language = "it"
+                        request.session[LANGUAGE_SESSION_KEY] = user_Language
+                        request.COOKIES['django_language'] = user_Language
+                        settings.LANGUAGE_CODE = user_Language
                 except:
                     request.session[LANGUAGE_SESSION_KEY] = "en"
                     request.COOKIES['django_language'] = "en"
@@ -94,6 +117,16 @@ def verifyLogin(request):
             if hashPassword.check_password(admin.password, password):
 
                 request.session['userID'] = admin.pk
+
+                ipAddr = request.META.get('REMOTE_ADDR')
+
+                if ipAddr.find(':') > -1:
+                    ipAddr = ipAddr.split(':')[:3]
+                    request.session['ipAddr'] = ''.join(ipAddr)
+                else:
+                    request.session['ipAddr'] = request.META.get('REMOTE_ADDR')
+
+                request.session.set_expiry(3600)
                 data = {'userID': admin.pk, 'loginStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data)
                 return HttpResponse(json_data)
@@ -108,38 +141,30 @@ def verifyLogin(request):
             json_data = json.dumps(data)
             return HttpResponse(json_data)
 
-
+@ensure_csrf_cookie
 def loadLoginPage(request):
     try:
         userID = request.session['userID']
-        admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
 
         cpuRamDisk = SystemInformation.cpuRamDisk()
 
-        finaData = {"type": admin.type, 'ramUsage': cpuRamDisk['ramUsage'], 'cpuUsage': cpuRamDisk['cpuUsage'],
+        if currentACL['admin'] == 1:
+            admin = 1
+        else:
+            admin = 0
+
+        finaData = {"admin": admin, 'ramUsage': cpuRamDisk['ramUsage'], 'cpuUsage': cpuRamDisk['cpuUsage'],
                     'diskUsage': cpuRamDisk['diskUsage']}
 
         return render(request, 'baseTemplate/homePage.html', finaData)
     except KeyError:
 
         numberOfAdministrator = Administrator.objects.count()
-
         password = hashPassword.hash_password('1234567')
+        noOfRules = FirewallRules.objects.count()
 
-        if numberOfAdministrator == 0:
-            email = 'usman@cyberpersons.com'
-            admin = Administrator(userName="admin", password=password, type=1,email=email,
-                                  firstName="Cyber",lastName="Panel")
-            admin.save()
-
-            vers = version(currentVersion="1.7",build=0)
-            vers.save()
-
-            package = Package(admin=admin, packageName="Default", diskSpace=1000,
-                                  bandwidth=1000, ftpAccounts=1000, dataBases=1000,
-                                  emailAccounts=1000,allowedDomains=20)
-            package.save()
-
+        if noOfRules == 0:
             newFWRule = FirewallRules(name="panel", proto="tcp", port="8090")
             newFWRule.save()
 
@@ -179,10 +204,32 @@ def loadLoginPage(request):
             newFWRule = FirewallRules(name="ftptls", proto="tcp", port="40110-40210")
             newFWRule.save()
 
+            newFWRule = FirewallRules(name="quic", proto="udp", port="443")
+            newFWRule.save()
+
+        if numberOfAdministrator == 0:
+            ACLManager.createDefaultACLs()
+            acl = ACL.objects.get(name='admin')
+
+            token = hashPassword.generateToken('admin', '1234567')
+
+            email = 'usman@cyberpersons.com'
+            admin = Administrator(userName="admin", password=password, type=1,email=email,
+                                  firstName="Cyber",lastName="Panel", acl=acl, token=token)
+            admin.save()
+
+            vers = version(currentVersion="1.9", build=0)
+            vers.save()
+
+            package = Package(admin=admin, packageName="Default", diskSpace=1000,
+                                  bandwidth=1000, ftpAccounts=1000, dataBases=1000,
+                                  emailAccounts=1000,allowedDomains=20)
+            package.save()
             return render(request, 'loginSystem/login.html', {})
         else:
             return render(request, 'loginSystem/login.html', {})
 
+@ensure_csrf_cookie
 def logout(request):
     try:
         del request.session['userID']

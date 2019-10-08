@@ -17,8 +17,6 @@ app.controller('sslIssueCtrl', function($scope,$http) {
       $scope.issueSSLBtn = false;
     };
 
-
-
     $scope.issueSSL = function(){
                 $scope.manageSSLLoading = false;
 

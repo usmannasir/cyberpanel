@@ -1,49 +1,52 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from plogical.processUtilities import ProcessUtilities
 import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 import json
 import subprocess
-from loginSystem.models import Administrator
 import psutil
-import shlex
 import socket
-# Create your views here.
+from plogical.acl import ACLManager
+import os
+from plogical.virtualHostUtilities import virtualHostUtilities
+import time
+import serverStatusUtil
+from plogical.processUtilities import ProcessUtilities
+from plogical.httpProc import httpProc
+from plogical.installUtilities import installUtilities
 
+
+# Create your views here.
 
 def serverStatusHome(request):
     try:
         userID = request.session['userID']
-
-        admin = Administrator.objects.get(pk=userID)
-
-        if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
-
-
-        return render(request,'serverStatus/index.html')
+        return render(request, 'serverStatus/index.html')
     except KeyError:
         return redirect(loadLoginPage)
 
-def litespeedStatus(request):
 
+def litespeedStatus(request):
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=userID)
-
-        if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         processList = ProcessUtilities.getLitespeedProcessNumber()
 
+        OLS = 0
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            OLS = 1
         try:
 
-            versionInformation = subprocess.check_output(["/usr/local/lsws/bin/lshttpd", "-v"]).split("\n")
+            versionInformation = ProcessUtilities.outputExecutioner(["/usr/local/lsws/bin/lshttpd", "-v"]).split("\n")
             lsversion = versionInformation[0]
             modules = versionInformation[1]
 
@@ -57,49 +60,50 @@ def litespeedStatus(request):
                 else:
                     loadedModules.append(items)
 
-        except subprocess.CalledProcessError,msg:
+        except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
-            return render(request,"serverStatus/litespeedStatus.html",{"processList":processList,"liteSpeedVersionStatus":"For some reaons not able to load version details, see CyberCP main log file."})
-
-
-        if(processList!=0):
+            return render(request, "serverStatus/litespeedStatus.html", {"processList": processList,
+                                                                         "liteSpeedVersionStatus": "For some reaons not able to load version details, see CyberCP main log file.",
+                                                                         'OLS': OLS})
+        if (processList != 0):
             dataForHtml = {"processList": processList, "lsversion": lsversion, "modules": modules,
-                           "loadedModules": loadedModules}
-            return render(request,"serverStatus/litespeedStatus.html",dataForHtml)
+                           "loadedModules": loadedModules, 'OLS': OLS}
+            return render(request, "serverStatus/litespeedStatus.html", dataForHtml)
         else:
             dataForHtml = {"lsversion": lsversion, "modules": modules,
-                           "loadedModules": loadedModules}
-            return render(request, "serverStatus/litespeedStatus.html",dataForHtml)
+                           "loadedModules": loadedModules, 'OLS': OLS}
+            return render(request, "serverStatus/litespeedStatus.html", dataForHtml)
 
-    except KeyError,msg:
+    except KeyError, msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
         return redirect(loadLoginPage)
-
 
 
 def stopOrRestartLitespeed(request):
     try:
         userID = request.session['userID']
 
-        admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
 
-        if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('reboot', 0)
 
         data = json.loads(request.body)
 
         reboot = data['reboot']
 
-        if reboot==1:
-            if ProcessUtilities.restartLitespeed() == 1:
-                status = {"reboot":1,"shutdown":0}
+        if reboot == 1:
+            if installUtilities.reStartLiteSpeedSocket() == 1:
+                status = {"reboot": 1, "shutdown": 0}
             else:
-                status = {"reboot": 0, "shutdown": 0, "error_message":"Please see CyberCP main log file."}
+                status = {"reboot": 0, "shutdown": 0, "error_message": "Please see CyberCP main log file."}
         else:
-            if ProcessUtilities.stopLitespeed() == 1:
-                status = {"reboot":0,"shutdown":1}
+            if installUtilities.stopLiteSpeedSocket() == 1:
+                status = {"reboot": 0, "shutdown": 1}
             else:
-                status = {"reboot": 0, "shutdown": 0, "error_message":"Please see CyberCP main log file."}
+                status = {"reboot": 0, "shutdown": 0, "error_message": "Please see CyberCP main log file."}
 
         final_json = json.dumps(status)
         return HttpResponse(final_json)
@@ -109,45 +113,44 @@ def stopOrRestartLitespeed(request):
         return HttpResponse("Not Logged in as admin")
 
 
-
 def cyberCPMainLogFile(request):
-
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
 
-        admin = Administrator.objects.get(pk=val)
+        currentACL = ACLManager.loadedACL(userID)
 
-        if admin.type == 3:
-            return HttpResponse("You don't have enough privileges to access this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
+        return render(request, 'serverStatus/cybercpmainlogfile.html')
 
-        return render(request,'serverStatus/cybercpmainlogfile.html')
-
-    except KeyError,msg:
+    except KeyError, msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[cyberCPMainLogFile]")
         return redirect(loadLoginPage)
 
 
 def getFurtherDataFromLogFile(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        if admin.type == 1:
-
-            fewLinesOfLogFile = logging.CyberCPLogFileWriter.readLastNFiles(50,logging.CyberCPLogFileWriter.fileName)
-            fewLinesOfLogFile = str(fewLinesOfLogFile)
-            status = {"logstatus": 1, "logsdata": fewLinesOfLogFile}
-            final_json = json.dumps(status)
-            return HttpResponse(final_json)
-
+        if currentACL['admin'] == 1:
+            pass
         else:
-            status = {"logstatus": 0,'error':"You don't have enough privilege to view logs."}
-            final_json = json.dumps(status)
-            return HttpResponse(final_json)
+            return ACLManager.loadErrorJson('logstatus', 0)
+
+        fewLinesOfLogFile = logging.CyberCPLogFileWriter.readLastNFiles(50, logging.CyberCPLogFileWriter.fileName)
+
+        fewLinesOfLogFile = str(fewLinesOfLogFile)
+        status = {"logstatus": 1, "logsdata": fewLinesOfLogFile}
+        final_json = json.dumps(status)
+        return HttpResponse(final_json)
 
     except KeyError, msg:
-        status = {"logstatus":0,"error":"Could not fetch data from log file, please see CyberCP main log file through command line."}
+        status = {"logstatus": 0,
+                  "error": "Could not fetch data from log file, please see CyberCP main log file through command line."}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[getFurtherDataFromLogFile]")
         return HttpResponse("Not Logged in as admin")
 
@@ -155,13 +158,26 @@ def getFurtherDataFromLogFile(request):
 def services(request):
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=userID)
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+        data = {}
 
-        if admin.type == 3:
-            return HttpResponse("You don't have enough priviliges to access this page.")
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            data['serverName'] = 'OpenLiteSpeed'
+        else:
+            data['serverName'] = 'LiteSpeed Ent'
 
-        return render(request, 'serverStatus/services.html')
+        dockerInstallPath = '/usr/bin/docker'
+        if not os.path.exists(dockerInstallPath):
+            data['isDocker'] = False
+        else:
+            data['isDocker'] = True
+
+        return render(request, 'serverStatus/services.html', data)
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -169,19 +185,19 @@ def services(request):
 def servicesStatus(request):
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=userID)
-
-        if admin.type == 3:
-            final = {'error': 1, "error_message": "Not enough privilege"}
-            final_json = json.dumps(final)
-            return HttpResponse(final_json)
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('serviceAction', 0)
 
         lsStatus = []
         sqlStatus = []
         dnsStatus = []
         ftpStatus = []
         mailStatus = []
+        dockerStatus = []
 
         processlist = subprocess.check_output(['ps', '-A'])
 
@@ -206,8 +222,10 @@ def servicesStatus(request):
         else:
             lsStatus.append(0)
 
-        # mysql status
+        # Docker status
+        dockerStatus.append(getServiceStats('docker'))
 
+        # mysql status
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         result = s.connect_ex(('127.0.0.1', 3306))
 
@@ -245,7 +263,8 @@ def servicesStatus(request):
                           'mysql': sqlStatus[0],
                           'powerdns': dnsStatus[0],
                           'pureftp': ftpStatus[0],
-                          'postfix': mailStatus[0]},
+                          'postfix': mailStatus[0],
+                          'docker': dockerStatus[0]},
                      'memUsage':
                          {'litespeed': lsStatus[1],
                           'mysql': sqlStatus[1],
@@ -260,14 +279,13 @@ def servicesStatus(request):
 
 def servicesAction(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=val)
-
-        if admin.type == 3:
-            final = {'serviceAction': 0, "error_message": "Not enough privileges."}
-            final_json = json.dumps(final)
-            return HttpResponse(final_json)
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('serviceAction', 0)
 
         try:
             if request.method == 'POST':
@@ -283,29 +301,24 @@ def servicesAction(request):
                 else:
                     pass
 
-                if service not in ["lsws", "mysql", "pdns", "pure-ftpd"]:
-
+                if service not in ["lsws", "mysql", "pdns", "pure-ftpd", "docker"]:
                     final_dic = {'serviceAction': 0, "error_message": "Invalid Service"}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
 
                 else:
+                    if service == 'pure-ftpd':
+                        if os.path.exists("/etc/lsb-release"):
+                            service = 'pure-ftpd-mysql'
+                        else:
+                            service = 'pure-ftpd'
 
                     command = 'sudo systemctl %s %s' % (action, service)
-                    cmd = shlex.split(command)
-                    res = subprocess.call(cmd)
+                    ProcessUtilities.executioner(command)
+                    final_dic = {'serviceAction': 1, "error_message": 0}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
-                    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-                    result = p.communicate()[0]
-
-                    if res != 0:
-                        final_dic = {'serviceAction': 0, "error_message": "Error while performing action"}
-                        final_json = json.dumps(final_dic)
-                        return HttpResponse(final_json)
-                    else:
-                        final_dic = {'serviceAction': 1, "error_message": 0}
-                        final_json = json.dumps(final_dic)
-                        return HttpResponse(final_json)
 
         except BaseException, msg:
             final_dic = {'serviceAction': 0, 'error_message': str(msg)}
@@ -313,5 +326,319 @@ def servicesAction(request):
             return HttpResponse(final_json)
     except KeyError, msg:
         final_dic = {'serviceAction': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+
+def switchTOLSWS(request):
+    try:
+        userID = request.session['userID']
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('status', 0)
+
+        data = json.loads(request.body)
+
+        try:
+            licenseKey = data['licenseKey']
+        except:
+            licenseKey = 'trial'
+
+        execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/serverStatus/serverStatusUtil.py"
+        execPath = execPath + " switchTOLSWS --licenseKey " + licenseKey
+
+        ProcessUtilities.popenExecutioner(execPath)
+        time.sleep(2)
+
+        data_ret = {'status': 1, 'error_message': "None", }
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+    except BaseException, msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+
+def switchTOLSWSStatus(request):
+    try:
+
+        command = 'sudo cat ' + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
+        output = ProcessUtilities.outputExecutioner(command)
+
+        if output.find('[404]') > -1:
+            command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
+            ProcessUtilities.popenExecutioner(command)
+            data_ret = {'status': 1, 'abort': 1, 'requestStatus': output, 'installed': 0}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        elif output.find('[200]') > -1:
+            command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
+            ProcessUtilities.popenExecutioner(command)
+            data_ret = {'status': 1, 'abort': 1, 'requestStatus': output, 'installed': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        else:
+            data_ret = {'status': 1, 'abort': 0, 'requestStatus': output, 'installed': 0}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except BaseException, msg:
+        command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
+        ProcessUtilities.popenExecutioner(command)
+        data_ret = {'status': 0,'abort': 1, 'requestStatus': str(msg), 'installed': 0}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def licenseStatus(request):
+    try:
+        userID = request.session['userID']
+
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            command = 'sudo cat /usr/local/lsws/conf/serial.no'
+            serial = ProcessUtilities.outputExecutioner(command)
+
+            command = 'sudo /usr/local/lsws/bin/lshttpd -V'
+            expiration = ProcessUtilities.outputExecutioner(command)
+
+            final_dic = {'status': 1, "erroMessage": 0, 'lsSerial': serial, 'lsexpiration': expiration}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException, msg:
+            final_dic = {'status': 0, 'erroMessage': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError, msg:
+        final_dic = {'status': 0, 'erroMessage': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+
+def changeLicense(request):
+    try:
+        userID = request.session['userID']
+
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            data = json.loads(request.body)
+            newKey = data['newKey']
+
+            command = 'sudo chown -R cyberpanel:cyberpanel /usr/local/lsws/conf'
+            ProcessUtilities.executioner(command)
+
+            serialPath = '/usr/local/lsws/conf/serial.no'
+            serialFile = open(serialPath, 'w')
+            serialFile.write(newKey)
+            serialFile.close()
+
+            command = 'sudo chown -R lsadm:lsadm /usr/local/lsws/conf'
+            ProcessUtilities.executioner(command)
+
+            command = 'sudo /usr/local/lsws/bin/lshttpd -r'
+            ProcessUtilities.executioner(command)
+
+            command = 'sudo /usr/local/lsws/bin/lswsctrl restart'
+            ProcessUtilities.executioner(command)
+
+            final_dic = {'status': 1, "erroMessage": 'None'}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException, msg:
+            final_dic = {'status': 0, 'erroMessage': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError, msg:
+        final_dic = {'status': 0, 'erroMessage': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+
+def topProcesses(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        templateName = "serverStatus/topProcesses.html"
+        proc = httpProc(request, templateName)
+        return proc.renderPre()
+
+    except KeyError, msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
+        return redirect(loadLoginPage)
+
+
+def topProcessesStatus(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        with open("/home/cyberpanel/top", "w") as outfile:
+            subprocess.call("top -n1 -b", shell=True, stdout=outfile)
+
+        data = open('/home/cyberpanel/top', 'r').readlines()
+
+        json_data = "["
+        checker = 0
+        counter = 0
+
+        loadAVG = data[0].split(' ')
+        loadAVG = filter(lambda a: a != '', loadAVG)
+
+        loadNow = data[2].split(' ')
+        loadNow = filter(lambda a: a != '', loadNow)
+
+        memory = data[3].split(' ')
+        memory = filter(lambda a: a != '', memory)
+
+        swap = data[4].split(' ')
+        swap = filter(lambda a: a != '', swap)
+
+        processes = data[1].split(' ')
+        processes = filter(lambda a: a != '', processes)
+
+        for items in data:
+            counter = counter + 1
+            if counter <= 7:
+                continue
+
+            points = items.split(' ')
+            points = filter(lambda a: a != '', points)
+
+            dic = {'PID': points[0], 'User': points[1], 'VIRT': points[4],
+                   'RES': points[5], 'S': points[7], 'CPU': points[8], 'MEM': points[9],
+                   'Time': points[10], 'Command': points[11]
+                   }
+
+            if checker == 0:
+                json_data = json_data + json.dumps(dic)
+                checker = 1
+            else:
+                json_data = json_data + ',' + json.dumps(dic)
+
+        json_data = json_data + ']'
+
+        data = {}
+        data['status'] = 1
+        data['error_message'] = 'None'
+        data['data'] = json_data
+
+        ## CPU
+        data['cpuNow'] = loadNow[1]
+        data['cpuOne'] = loadAVG[-3].rstrip(',')
+        data['cpuFive'] = loadAVG[-2].rstrip(',')
+        data['cpuFifteen'] = loadAVG[-1]
+
+        ## CPU Time spent
+
+        data['ioWait'] = loadNow[9] + '%'
+        data['idleTime'] = loadNow[7] + '%'
+        data['hwInterrupts'] = loadNow[11] + '%'
+        data['Softirqs'] = loadNow[13] + '%'
+
+        ## Memory
+        data['totalMemory'] = str(int(float(memory[3]) / 1024)) + 'MB'
+        data['freeMemory'] = str(int(float(memory[5]) / 1024)) + 'MB'
+        data['usedMemory'] = str(int(float(memory[7]) / 1024)) + 'MB'
+        data['buffCache'] = str(int(float(memory[9]) / 1024)) + 'MB'
+
+        ## Swap
+
+        data['swapTotalMemory'] = str(int(float(swap[2]) / 1024)) + 'MB'
+        data['swapFreeMemory'] = str(int(float(swap[4]) / 1024)) + 'MB'
+        data['swapUsedMemory'] = str(int(float(swap[6]) / 1024)) + 'MB'
+        data['swapBuffCache'] = str(int(float(swap[8]) / 1024)) + 'MB'
+
+        ## Processes
+
+        data['totalProcesses'] = processes[1]
+        data['runningProcesses'] = processes[3]
+        data['sleepingProcesses'] = processes[5]
+        data['stoppedProcesses'] = processes[7]
+        data['zombieProcesses'] = processes[9]
+
+        ## CPU Details
+
+        command = 'sudo cat /proc/cpuinfo'
+        output = ProcessUtilities.outputExecutioner(command).splitlines()
+
+        import psutil
+
+        data['cores'] = psutil.cpu_count()
+
+        for items in output:
+            if items.find('model name') > -1:
+                modelName = items.split(':')[1].strip(' ')
+                index = modelName.find('CPU')
+                data['modelName'] = modelName[0:index]
+            elif items.find('cpu MHz') > -1:
+                data['cpuMHZ'] = items.split(':')[1].strip(' ')
+            elif items.find('cache size') > -1:
+                data['cacheSize'] = items.split(':')[1].strip(' ')
+                break
+
+        final_json = json.dumps(data)
+        return HttpResponse(final_json)
+
+    except BaseException, msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+
+def killProcess(request):
+    try:
+        userID = request.session['userID']
+
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            data = json.loads(request.body)
+            pid = data['pid']
+
+            ProcessUtilities.executioner('sudo kill ' + pid)
+
+            proc = httpProc(request, None)
+            return proc.ajax(1, None)
+
+        except BaseException, msg:
+            final_dic = {'status': 0, 'erroMessage': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError, msg:
+        final_dic = {'status': 0, 'erroMessage': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)

@@ -1,0 +1,452 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Modify an ACL - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Modify an ACL" %}</h2>
+            <p>{% trans "On this page you can modify an existing ACL." %}</p>
+        </div>
+
+        <div class="panel">
+            <div ng-controller="modifyACLCtrl" class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "ACL Details" %} - <img ng-hide="aclLoading" src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+
+                    <form action="/" class="form-horizontal bordered-row panel-body">
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select ACL" %} </label>
+                            <div class="col-sm-6">
+                                <select ng-change="fetchDetails()" ng-model="aclToModify" class="form-control">
+                                    {% for items in aclNames %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div ng-hide="aclDetails" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-change="adminHook()" ng-model="makeAdmin" type="checkbox" value="">
+                                        {% trans "Make Admin" %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-hide="aclDetails" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Version Management" %}</label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="versionManagement" type="checkbox" value="">
+                                        {% trans "Version Management" %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-hide="aclDetails" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "User Management" %}</label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="createNewUser" type="checkbox" value="">
+                                        {% trans "Create New User" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="listUsers" type="checkbox" value="">
+                                        {% trans "List Users" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="resellerCenter" type="checkbox" value="">
+                                        {% trans "Reseller Center" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="deleteUser" type="checkbox" value="">
+                                        {% trans "Delete User" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="changeUserACL" type="checkbox" value="">
+                                        {% trans "Change User ACL" %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-hide="aclDetails" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Website Management" %}</label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="createWebsite" type="checkbox" value="">
+                                        {% trans "Create Website" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="modifyWebsite" type="checkbox" value="">
+                                        {% trans "Modify Website" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="suspendWebsite" type="checkbox" value="">
+                                        {% trans "Suspend Website" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="deleteWebsite" type="checkbox" value="">
+                                        {% trans "Delete Website" %}
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div ng-hide="aclDetails" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Package Management" %}</label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="createPackage" type="checkbox" value="">
+                                        {% trans "Create Package" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="listPackages" type="checkbox" value="">
+                                        {% trans "List Packages" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="deletePackage" type="checkbox" value="">
+                                        {% trans "Delete Package" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="modifyPackage" type="checkbox" value="">
+                                        {% trans "Modify Package" %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-hide="aclDetails" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Database Management" %}</label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="createDatabase" type="checkbox" value="">
+                                        {% trans "Create Database" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="deleteDatabase" type="checkbox" value="">
+                                        {% trans "Delete Database" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="listDatabases" type="checkbox" value="">
+                                        {% trans "List Databases" %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-hide="aclDetails" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "DNS Management" %}</label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="createNameServer" type="checkbox" value="">
+                                        {% trans "Create Nameserver" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="createDNSZone" type="checkbox" value="">
+                                        {% trans "Delete DNS Zone" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="deleteZone" type="checkbox" value="">
+                                        {% trans "Delete Zone" %}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="addDeleteRecords" type="checkbox" value="">
+                                        {% trans "Add/Delete" %}
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div ng-hide="aclDetails" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Email Management" %}</label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="createEmail" type="checkbox" value="">
+                                        {% trans "Create Email" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="listEmails" type="checkbox" value="">
+                                        {% trans "List Emails" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="deleteEmail" type="checkbox" value="">
+                                        {% trans "Delete Email" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="emailForwarding" type="checkbox" value="">
+                                        {% trans "Email Forwarding" %}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="changeEmailPassword" type="checkbox" value="">
+                                        {% trans "Change Email Password" %}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="dkimManager" type="checkbox" value="">
+                                        {% trans "DKIM Manager" %}
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div ng-hide="aclDetails" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "FTP Management" %}</label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="createFTPAccount" type="checkbox" value="">
+                                        {% trans "Create FTP Account" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="deleteFTPAccount" type="checkbox" value="">
+                                        {% trans "Delete FTP Account" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="listFTPAccounts" type="checkbox" value="">
+                                        {% trans "List FTP Accounts" %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-hide="aclDetails" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Backup Management" %}</label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="createBackup" type="checkbox" value="">
+                                        {% trans "Create Back up" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="restoreBackup" type="checkbox" value="">
+                                        {% trans "Restore Back up" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="addDeleteDestinations" type="checkbox" value="">
+                                        {% trans "Add/Delete Destination" %}
+                                    </label>
+                                </div>
+                            </div>
+
+
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="scheDuleBackups" type="checkbox" value="">
+                                        {% trans "Schedule Back up" %}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="remoteBackups" type="checkbox" value="">
+                                        {% trans "Remote Back ups" %}
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div ng-hide="aclDetails" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "SSL Management" %}</label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="manageSSL" type="checkbox" value="">
+                                        {% trans "Manage SSL" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="hostnameSSL" type="checkbox" value="">
+                                        {% trans "Hostname SSL" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="mailServerSSL" type="checkbox" value="">
+                                        {% trans "MailServer SSL" %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-hide="aclDetails" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="saveChanges()"
+                                        class="btn btn-primary btn-lg">{% trans "Save Changes" %} <img
+                                        ng-hide="aclLoading" src="{% static 'images/loading.gif' %}"></button>
+                            </div>
+                        </div>
+
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

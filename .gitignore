@@ -1,0 +1,7 @@
+*.pyc
+ApachController/
+0*.py
+bin/
+lib/
+share/
+public/

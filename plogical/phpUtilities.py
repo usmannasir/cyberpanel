@@ -6,6 +6,7 @@ import installUtilities
 import argparse
 import os
 from mailUtilities import mailUtilities
+from processUtilities import ProcessUtilities
 
 class phpUtilities:
 
@@ -17,25 +18,31 @@ class phpUtilities:
 
             mailUtilities.checkHome()
 
-            command = 'sudo yum install '+extension +' -y'
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                command = 'sudo yum install ' + extension + ' -y'
+            else:
+                command = 'sudo apt-get install ' + extension + ' -y'
 
             cmd = shlex.split(command)
 
-            with open(phpUtilities.installLogPath, 'w') as f:
-                res = subprocess.call(cmd, stdout=f)
+            try:
+                with open(phpUtilities.installLogPath, 'w') as f:
+                    subprocess.call(cmd, stdout=f)
 
-            if res == 1:
-                writeToFile = open(phpUtilities.installLogPath, 'a')
-                writeToFile.writelines("Can not be installed.\n")
-                writeToFile.close()
-                logging.CyberCPLogFileWriter.writeToFile("[Could not Install]")
-                return 0
-            else:
                 writeToFile = open(phpUtilities.installLogPath, 'a')
                 writeToFile.writelines("PHP Extension Installed.\n")
                 writeToFile.close()
 
-            return 1
+                installUtilities.installUtilities.reStartLiteSpeed()
+
+                return 1
+            except:
+                writeToFile = open(phpUtilities.installLogPath, 'a')
+                writeToFile.writelines("Can not be installed.\n")
+                writeToFile.close()
+                logging.CyberCPLogFileWriter.writeToFile("[Could not Install]")
+                installUtilities.installUtilities.reStartLiteSpeed()
+                return 0
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installPHPExtension]")
 
@@ -45,25 +52,31 @@ class phpUtilities:
 
             mailUtilities.checkHome()
 
-            command = 'sudo rpm --nodeps -e  ' + extension + ' -v'
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                command = 'sudo rpm --nodeps -e  ' + extension + ' -v'
+            else:
+                command = 'sudo apt-get remove -y  ' + extension
 
             cmd = shlex.split(command)
 
-            with open(phpUtilities.installLogPath, 'w') as f:
-                res = subprocess.call(cmd, stdout=f)
+            try:
 
-            if res == 1:
+                with open(phpUtilities.installLogPath, 'w') as f:
+                    subprocess.call(cmd, stdout=f)
+
+                writeToFile = open(phpUtilities.installLogPath, 'a')
+                writeToFile.writelines("PHP Extension Removed.\n")
+                writeToFile.close()
+                installUtilities.installUtilities.reStartLiteSpeed()
+                return 1
+            except:
                 writeToFile = open(phpUtilities.installLogPath, 'a')
                 writeToFile.writelines("Can not un-install Extension.\n")
                 writeToFile.close()
                 logging.CyberCPLogFileWriter.writeToFile("[Could not Install]")
+                installUtilities.installUtilities.reStartLiteSpeed()
                 return 0
-            else:
-                writeToFile = open(phpUtilities.installLogPath, 'a')
-                writeToFile.writelines("PHP Extension Removed.\n")
-                writeToFile.close()
 
-            return 1
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[unInstallPHPExtension]")
 
@@ -73,7 +86,6 @@ class phpUtilities:
             thread.start_new_thread(phpUtilities.installPHPExtension, (extension, extension))
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateInstall]")
-
 
     @staticmethod
     def initiateRemoval(extension):
@@ -86,7 +98,16 @@ class phpUtilities:
     def savePHPConfigBasic(phpVers,allow_url_fopen,display_errors,file_uploads,allow_url_include,memory_limit,max_execution_time,upload_max_filesize,max_input_time,post_max_size):
         try:
 
-            path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
+            else:
+                initial = phpVers[3]
+                final = phpVers[4]
+
+                completeName = str(initial) + '.' + str(final)
+                path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
+
+            logging.CyberCPLogFileWriter.writeToFile(path)
 
             data = open(path, 'r').readlines()
 
@@ -163,6 +184,7 @@ def main():
     parser.add_argument("--upload_max_filesize", help="Process Soft Limit for PHP!")
     parser.add_argument("--max_input_time", help="Process Hard Limit for PHP!")
     parser.add_argument("--post_max_size", help="Process Hard Limit for PHP!")
+    parser.add_argument("--extension", help="Process Hard Limit for PHP!")
 
     ## Litespeed Tuning Arguments
 
@@ -176,6 +198,12 @@ def main():
                                         args.max_execution_time, args.upload_max_filesize, args.max_input_time, args.post_max_size)
     elif args.function == "savePHPConfigAdvance":
         phpUtilities.savePHPConfigAdvance(args.phpVers, args.tempPath)
+
+    elif args.function == "installPHPExtension":
+        phpUtilities.installPHPExtension(args.extension, args.extension)
+
+    elif args.function == "unInstallPHPExtension":
+        phpUtilities.unInstallPHPExtension(args.extension, args.extension)
 
 
 

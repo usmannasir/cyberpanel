@@ -15,14 +15,24 @@
 
 <div ng-controller="emailForwarding" class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Setup Email Forwarding" %} <img ng-hide="forwardLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
+        {% if not status %}
 
-            <form  action="/" class="form-horizontal bordered-row">
+            <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                <h3>{% trans "Postfix is disabled." %}
+                    <a href="{% url 'managePostfix' %}"><button class="btn btn-alt btn-hover btn-blue-alt">
+                        <span>{% trans "Enable Now" %}</span>
+                        <i class="glyph-icon icon-arrow-right"></i>
+                    </button></a></h3>
+            </div>
 
+        {% else %}
+
+            <form  action="/" class="form-horizontal bordered-row panel-body">
 
                  <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
@@ -105,7 +115,7 @@
                                 <td ng-bind="record.id"></td>
                                 <td ng-bind="record.source"></td>
                                 <td ng-bind="record.destination"></td>
-                                <td ng-click="deleteForwarding(record.destination)"><img src="{% static 'images/delete.png' %}"></td>
+                                <td ng-click="deleteForwarding(record.source, record.destination)"><img src="{% static 'images/delete.png' %}"></td>
                             </tr>
                             </tbody>
                         </table>
@@ -117,6 +127,8 @@
 
 
             </form>
+
+        {% endif %}
 
 
 

@@ -39,9 +39,6 @@ application.config(['$interpolateProvider',
     }
 ]);
 
-
-
-
 application.controller('loginSystem', function($scope,$http,$window) {
 
 
@@ -73,32 +70,39 @@ application.controller('loginSystem', function($scope,$http,$window) {
 
 
                 function ListInitialData(response) {
-                    console.log(response.data)
 
-                    if (response.data.loginStatus == 0)
+                    if (response.data.loginStatus === 0)
                     {
                         $scope.errorMessage = response.data.error_message;
                         $("#loginFailed").fadeIn();
                     }
                     else{
                         $("#loginFailed").hide();
-                        $window.location.href = '/base';
+                        $window.location.href = '/base/';
                     }
 
 
 
                     $("#verifyingLogin").hide();
                 }
-                function cantLoadInitialData(response) {
-                    console.log("not good");
-                }
+                function cantLoadInitialData(response) {}
 
 
 
 
         };
+
+    $scope.initiateLogin = function($event){
+    var keyCode = $event.which || $event.keyCode;
+    if (keyCode === 13) {
+        $scope.verifyLoginCredentials();
+
+    }
+
+  };
+
+
 });
 
 
 /* Java script code to to Check Login status ends here */
-

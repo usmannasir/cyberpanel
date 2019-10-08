@@ -15,13 +15,27 @@
 </div>
 <div ng-controller="addModifyDNSRecords" class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Add Records" %} <img ng-hide="recordsLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
 
-            <form action="/" class="form-horizontal bordered-row">
+        {% if not status %}
+
+            <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                <h3>{% trans "PowerDNS is disabled." %}
+                    <a href="{% url 'managePowerDNS' %}"><button class="btn btn-alt btn-hover btn-blue-alt">
+                        <span>{% trans "Enable Now" %}</span>
+                        <i class="glyph-icon icon-arrow-right"></i>
+                    </button></a></h3>
+            </div>
+
+
+        {% else %}
+
+
+            <form action="/" class="form-horizontal bordered-row panel-body">
 
 
                  <div class="form-group">
@@ -49,6 +63,7 @@
                                     <li ng-click="fetchRecordsTabs('nsRecord')" id="nsRecord"><a href="">NS</a></li>
                                     <li ng-click="fetchRecordsTabs('soaRecord')" id="soaRecord" ><a href="">SOA</a></li>
                                     <li ng-click="fetchRecordsTabs('srvRecord')" id="srvRecord" ><a href="">SRV</a></li>
+                                    <li ng-click="fetchRecordsTabs('caaRecord')" id="caaRecord" ><a href="">CAA</a></li>
                                 </ul>
                     </div>
 
@@ -274,6 +289,23 @@
 
                     <!------------- SRV Record box ------------->
 
+                    <!------------- CAA Record box ------------->
+
+                    <div class="col-sm-3 caaRecord">
+                        <input placeholder="{% trans 'Name' %}"  type="text" class="form-control" ng-model="recordName">
+                    </div>
+                    <div class="col-sm-3 caaRecord">
+                        <input placeholder="{% trans 'TTL' %}"   type="number" class="form-control" ng-model="ttl" required>
+                    </div>
+                    <div class="col-sm-3 caaRecord">
+                        <input placeholder='Value e.g: 0 issue "letsencrypt.org"'   type="text" class="form-control" ng-model="recordContentCAA" required>
+                    </div>
+                    <div class="col-sm-3 caaRecord">
+                        <button style="width: 100%;"  type="button" ng-click="addDNSRecord('CAA')" class="btn btn-primary">{% trans "Add" %}</button>
+                    </div>
+
+                    <!------------- CAA Record box ------------->
+
 
 
                 </div>
@@ -358,6 +390,8 @@
 
 
             </form>
+
+        {% endif %}
 
 
 

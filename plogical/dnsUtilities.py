@@ -3,18 +3,26 @@ import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-django.setup()
+try:
+    django.setup()
+except:
+    pass
 import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
-from dns.models import Domains,Records
-
+try:
+    from dns.models import Domains,Records
+    from processUtilities import ProcessUtilities
+    from manageServices.models import PDNSStatus, SlaveServers
+except:
+    pass
 
 class DNS:
 
     nsd_base = "/etc/nsd/nsd.conf"
     zones_base_dir = "/usr/local/lsws/conf/zones/"
     create_zone_dir = "/usr/local/lsws/conf/zones"
+    defaultNameServersPath = '/home/cyberpanel/defaultNameservers'
 
     ## DNS Functions
 
@@ -36,8 +44,81 @@ class DNS:
             if len(subDomain) == 0:
 
                 if Domains.objects.filter(name=topLevelDomain).count() == 0:
-                    zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
+                    try:
+                        pdns = PDNSStatus.objects.get(pk=1)
+                        if pdns.type == 'MASTER':
+                            zone = Domains(admin=admin, name=topLevelDomain, type="MASTER")
+                            zone.save()
+
+                            for items in SlaveServers.objects.all():
+                                record = Records(domainOwner=zone,
+                                                 domain_id=zone.id,
+                                                 name=topLevelDomain,
+                                                 type="NS",
+                                                 content=items.slaveServer,
+                                                 ttl=3600,
+                                                 prio=0,
+                                                 disabled=0,
+                                                 auth=1)
+                                record.save()
+
+                        else:
+                            zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
+                    except:
+                        zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
+
+
                     zone.save()
+
+                    if zone.type == 'NATIVE':
+
+                        record = Records(domainOwner=zone,
+                                         domain_id=zone.id,
+                                         name=topLevelDomain,
+                                         type="NS",
+                                         content='hostmaster.%s' % (topLevelDomain),
+                                         ttl=3600,
+                                         prio=0,
+                                         disabled=0,
+                                         auth=1)
+                        record.save()
+
+                        if os.path.exists(DNS.defaultNameServersPath):
+                            defaultNS = open(DNS.defaultNameServersPath, 'r').readlines()
+
+                            for items in defaultNS:
+                                record = Records(domainOwner=zone,
+                                                 domain_id=zone.id,
+                                                 name=topLevelDomain,
+                                                 type="NS",
+                                                 content=items,
+                                                 ttl=3600,
+                                                 prio=0,
+                                                 disabled=0,
+                                                 auth=1)
+                                record.save()
+                        else:
+                            record = Records(domainOwner=zone,
+                                             domain_id=zone.id,
+                                             name=topLevelDomain,
+                                             type="NS",
+                                             content='ns1.%s' % (topLevelDomain),
+                                             ttl=3600,
+                                             prio=0,
+                                             disabled=0,
+                                             auth=1)
+                            record.save()
+
+                            record = Records(domainOwner=zone,
+                                             domain_id=zone.id,
+                                             name=topLevelDomain,
+                                             type="NS",
+                                             content='ns2.%s' % (topLevelDomain),
+                                             ttl=3600,
+                                             prio=0,
+                                             disabled=0,
+                                             auth=1)
+                            record.save()
 
                     content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
 
@@ -153,11 +234,16 @@ class DNS:
                                      disabled=0,
                                      auth=1)
                     record.save()
-
             else:
                 if Domains.objects.filter(name=topLevelDomain).count() == 0:
-                    zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
-                    zone.save()
+                    try:
+                        pdns = PDNSStatus.objects.get(pk=1)
+                        if pdns.type == 'MASTER':
+                            zone = Domains(admin=admin, name=topLevelDomain, type="MASTER")
+                        else:
+                            zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
+                    except:
+                        zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
 
                     content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
 
@@ -290,6 +376,10 @@ class DNS:
 
                 DNS.createDNSRecord(zone, cNameValue, "CNAME", actualSubDomain, 0, 3600)
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                command = 'sudo systemctl restart pdns'
+                ProcessUtilities.executioner(command)
+
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 "We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
@@ -308,17 +398,23 @@ class DNS:
             path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
             command = "sudo cat " + path
             output = subprocess.check_output(shlex.split(command))
+            leftIndex = output.index('(') + 2
+            rightIndex = output.rindex(')') - 1
 
             record = Records(domainOwner=zone,
                              domain_id=zone.id,
                              name="default._domainkey." + topLevelDomain,
                              type="TXT",
-                             content="v=DKIM1; k=rsa; p=" + output[53:269],
+                             content=output[leftIndex:rightIndex],
                              ttl=3600,
                              prio=0,
                              disabled=0,
                              auth=1)
             record.save()
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                command = 'sudo systemctl restart pdns'
+                ProcessUtilities.executioner(command)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
@@ -334,6 +430,16 @@ class DNS:
     @staticmethod
     def createDNSRecord(zone, name, type, value, priority, ttl):
         try:
+
+            if zone.type == 'MASTER':
+                getSOA = Records.objects.get(domainOwner=zone, type='SOA')
+                soaContent = getSOA.content.split(' ')
+                soaContent[2] = str(int(soaContent[2]) + 1)
+                getSOA.content = " ".join(soaContent)
+                getSOA.save()
+
+
+
             if type == 'NS':
                 if Records.objects.filter(name=name, type=type, content=value).count() == 0:
                     record = Records(domainOwner=zone,
@@ -346,6 +452,29 @@ class DNS:
                                      disabled=0,
                                      auth=1)
                     record.save()
+
+                    if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                        command = 'sudo systemctl restart pdns'
+                        ProcessUtilities.executioner(command)
+
+                return
+
+            if type == 'TXT':
+                if Records.objects.filter(name=name, type=type, content=value).count() == 0:
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name=name,
+                                     type=type,
+                                     content=value,
+                                     ttl=ttl,
+                                     prio=priority,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
+
+                    if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                        command = 'sudo systemctl restart pdns'
+                        ProcessUtilities.executioner(command)
                 return
 
             if type == 'MX':
@@ -360,6 +489,11 @@ class DNS:
                                  auth=1)
                 record.save()
 
+                if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                    command = 'sudo systemctl restart pdns'
+                    ProcessUtilities.executioner(command)
+                return
+
 
             if Records.objects.filter(name=name, type=type).count() == 0:
                 record = Records(domainOwner=zone,
@@ -372,6 +506,9 @@ class DNS:
                                  disabled=0,
                                  auth=1)
                 record.save()
+                if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                    command = 'sudo systemctl restart pdns'
+                    ProcessUtilities.executioner(command)
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDNSRecord]")
 

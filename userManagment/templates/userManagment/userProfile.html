@@ -14,74 +14,45 @@
 </div>
 <div class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Account Details" %}
         </h3>
         <div ng-controller="createPackage" class="example-box-wrapper">
 
-
-            <form   action="/" class="form-horizontal bordered-row">
+            <form action="/" class="form-horizontal bordered-row panel-body">
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "First Name" %}</label>
-                    <div class="col-sm-6">
-                        <div class="current-pack">{{ firstName }} </div>
+                    <label class="col-sm-2 control-label mb-5" style="padding-top: 0px;">{% trans "First Name" %}</label>
+                    <div class="col-sm-1 mb-10">
+                        <div class="mb-10 text-bold">{{ firstName }} </div>
+                    </div>
+
+                    <label class="col-sm-2 mb-5 text-right">{% trans "Last Name" %}</label>
+                    <div class="mb-10">
+                        <div class="col-sm-1 mb-10 text-bold">{{ lastName }}</div>
                     </div>
                 </div>
 
-
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Last Name" %}</label>
-                    <div class="col-sm-6">
-                        <div class="current-pack">{{ lastName }}</div>
+                    <label class="col-sm-2 control-label mb-5" style="padding-top: 0px;">{% trans "Username" %}</label>
+                    <div class="col-sm-1 mb-10">
+                        <div class="mb-10 text-bold">{{ userName }}</div>
+                    </div>
+
+                    <label class="col-sm-2 mb-5 text-right">{% trans "Email" %}</label>
+                    <div class="col-sm-5 mb-10">
+                        <div class="mb-10 text-bold">{{ email }}</div>
                     </div>
                 </div>
 
-
-
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Username" %}</label>
-                    <div class="col-sm-6">
-                        <div class="current-pack">{{ userName }}</div>
+                    <label class="col-sm-2 control-label mb-5" style="padding-top: 0px;">{% trans "Account ACL" %}</label>
+                    <div class="col-sm-1 mb-10">
+                        <div class="mb-10 text-bold">{{ accountACL }}</div>
                     </div>
-                </div>
 
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Email" %}</label>
-                    <div class="col-sm-6">
-                        <div class="current-pack">{{ email }}</div>
-                    </div>
-                </div>
-
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Account Level" %}</label>
-                    <div class="col-sm-6">
-                        <div class="current-pack">{{ type }}</div>
-                    </div>
-                </div>
-
-
-                {% if typeNumeric == 1 %}
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "User Accounts Limit" %}</label>
-                    <div class="col-sm-6">
-                        <div class="current-pack">{{ userAccountsLimit }} {% trans "( 0 = Unlimited )" %}</div>
-                    </div>
-                </div>
-                {% elif typeNumeric == 2 %}
-                    <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "User Accounts Limit" %}</label>
-                    <div class="col-sm-6">
-                        <div class="current-pack">{{ userAccountsLimit }} {% trans "( 0 = Unlimited )" %}</div>
-                    </div>
-                </div>
-                {% endif %}
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Websites Limit" %}</label>
-                    <div class="col-sm-6">
-                        <div class="current-pack">{{ websitesLimit }} {% trans "( 0 = Unlimited )" %}</div>
+                    <label class="col-sm-2 mb-5 text-right">{% trans "Websites Limit" %}</label>
+                    <div class="col-sm-5 mb-10">
+                        <div class="mb-10 text-bold">{{ websitesLimit }} {% trans "( 0 = Unlimited )" %}</div>
                     </div>
                 </div>
 

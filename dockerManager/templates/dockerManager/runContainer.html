@@ -1,0 +1,211 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Run new container - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Run Container" %}</h2>
+            <p>{% trans "Modify parameters for your new container" %}</p>
+        </div>
+
+
+        <div ng-controller="runContainer" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "Container Details" %} <img ng-hide="containerCreationLoading"
+                                                         src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+
+                    <form name="dockerInstallForm" action="/" class="form-horizontal bordered-row">
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Name" %}</label>
+                            <div class="col-sm-6" ng-init="name='{{ name }}' ">
+                                <input name="name" type="text" class="form-control" ng-model="name" required>
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Image" %}</label>
+                            <div class="col-sm-6" ng-init="image='{{ image }}' ">
+                                <input name="image" type="text" class="form-control" ng-model="image" required
+                                       disabled="disabled">
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Tag" %}</label>
+                            <div class="col-sm-6" ng-init="tag='{{ tag }}' ">
+                                <input name="tag" type="text" class="form-control" ng-model="tag" required
+                                       disabled="disabled">
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Owner" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="dockerOwner" class="form-control">
+                                    {% for items in ownerList %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Memory limit" %}</label>
+                            <div class="col-sm-6">
+                                <input name="memory" type="number" class="form-control" ng-model="memory" required>
+                            </div>
+                            <div class="current-pack ng-binding">MB</div>
+                        </div>
+
+                        {% for port, protocol in portConfig.items %}
+
+                            <div ng-hide="installationDetailsForm" class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Port" %}</label>
+                                <div class="col-sm-2" ng-init="iport[{{ port }}]={{ port }} ">
+                                    <input name="iport[{{ port }}]" type="text" class="form-control"
+                                           ng-model="iport[{{ port }}]" required disabled="disabled">
+                                </div>
+                                <div class="col-sm-1" ng-init="portType['{{ port }}']='{{ protocol }}'">
+                                    <input name="portType['{{ port }}']" type="text" class="form-control"
+                                           ng-model="portType['{{ port }}']" required disabled="disabled">
+                                </div>
+                                <div class="col-sm-1 current-pack text-center">to</div>
+                                <div class="col-sm-2">
+                                    <input name="eport['{{ port }}']" type="number" class="form-control"
+                                           ng-model="eport['{{ port }}']" required>
+                                </div>
+                            </div>
+
+                        {% endfor %}
+
+                        <span ng-init="envList = {}"></span>
+                        {% for env, value in envList.items %}
+
+                            <span ng-init="envList[{{ forloop.counter0 }}] =  {'name':'{{ env }}' , 'value':'{{ value }}'} "></span>
+
+                        {% endfor %}
+                        <hr>
+                        <div ng-repeat="env in envList track by $index">
+
+                            <div ng-hide="installationDetailsForm" class="form-group">
+                                <label class="col-sm-3 control-label">
+                                    <div ng-show="$first">
+                                        {% trans "ENV" %}
+                                    </div>
+                                </label>
+                                <div class="col-sm-2">
+                                    <input name="$index" type="text" class="form-control"
+                                           ng-model="envList[$index].name" required>
+                                </div>
+                                <div class="col-sm-4">
+                                    <input name="$index" type="text" class="form-control"
+                                           ng-model="envList[$index].value" required>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div ng-hide="installationDetailsForm" class="col-md-offset-3">
+                            <button type="button" class="btn btn-info" ng-click="addEnvField()">Add more</button>
+                        </div>
+                        <br>
+
+                        <div ng-hide="installationDetailsForm" class="form-group text-center">
+                            <label class="control-label">
+                                {% trans "Map Volumes" %}
+                            </label>
+                        </div>
+                        <div ng-repeat="volume in volList track by $index">
+
+                            <div ng-hide="installationDetailsForm" class="form-group">
+                                <div class="col-sm-1"></div>
+                                <div class="col-sm-5">
+                                    <input type="text" class="form-control" ng-model="volList[$index].dest"
+                                           placeholder="Destination" required>
+                                </div>
+                                <div class="col-sm-5">
+                                    <input type="text" class="form-control" ng-model="volList[$index].src"
+                                           placeholder="Source" required>
+                                </div>
+                                <div ng-show="$last">
+                                    <div class="col-sm-1">
+                                        <button class="btn btn-primary" type="button" ng-click="removeVolField()"><i
+                                                style="position: inherit; top: 0px; left: 0px" class="fa fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="text-center">
+                            <button type="button" class="btn btn-info"
+                                    ng-click="addVolField()">{% trans "Add field" %}</button>
+                        </div>
+                        <br>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="createContainer()"
+                                        class="btn btn-primary btn-lg btn-block">{% trans "Create Container" %}</button>
+
+                            </div>
+                        </div>
+
+
+                        <div ng-hide="installationProgress" class="form-group">
+                            <label class="col-sm-2 control-label"></label>
+                            <div class="col-sm-7">
+
+                                <div class="alert alert-success text-center">
+                                    <h2>{$ currentStatus $}</h2>
+                                </div>
+
+                                <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                    <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+                                <div ng-hide="success" class="alert alert-success">
+                                    <p>{% trans "Container succesfully created." %}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationProgress" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-disabled="goBackDisable" ng-click="goBack()"
+                                        class="btn btn-primary btn-lg btn-block">{% trans "Go Back" %}</button>
+                            </div>
+                        </div>
+
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

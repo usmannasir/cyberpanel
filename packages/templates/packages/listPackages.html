@@ -1,0 +1,204 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "List Packages  - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "List Packages" %}</h2>
+            <p>{% trans "List Packages and delete or edit them." %}</p>
+        </div>
+        <div ng-controller="listPackageTables" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "List Packages" %} <img ng-hide="cyberpanelLoading"
+                                                     src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <!------ List of records --------------->
+
+                    <div class="form-group">
+
+                        <div class="col-sm-12">
+
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th>{% trans "Package" %}</th>
+                                    <th>{% trans "Diskspace" %}</th>
+                                    <th>{% trans "Bandwidth" %}</th>
+                                    <th>{% trans "Email Accounts" %}</th>
+                                    <th>{% trans "Databases" %}</th>
+                                    <th>{% trans "FTPs" %}</th>
+                                    <th>{% trans "Child Domains" %}</th>
+                                    <th>{% trans "Allow FQDN as Childs" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr ng-repeat="record in records track by $index">
+                                    <td ng-bind="record.package"></td>
+                                    <td ng-bind="record.diskSpace"></td>
+                                    <td ng-bind="record.bandwidth"></td>
+                                    <td ng-bind="record.emailAccounts"></td>
+                                    <td ng-bind="record.dataBases"></td>
+                                    <td ng-bind="record.ftpAccounts"></td>
+                                    <td ng-bind="record.allowedDomains"></td>
+                                    <td><span ng-hide="record.allowFullDomain==0">Enabled</span><span
+                                            ng-hide="record.allowFullDomain">Disabled</span></td>
+                                    <td>
+                                        <a data-toggle="modal" data-target="#settings"
+                                           ng-click="editInitial(record.package, record.diskSpace, record.bandwidth,
+                                           record.emailAccounts, record.dataBases, record.ftpAccounts, record.allowedDomains, record.allowFullDomain)"
+                                           class="btn btn-border btn-alt border-purple btn-link font-purple" href="#"
+                                           title=""><span>{% trans 'Edit' %}</span></a>
+                                        <a ng-click="deletePackageFinal(record.package)"
+                                           class="btn btn-border btn-alt border-red btn-link font-red" href="#"
+                                           title=""><span>{% trans 'Delete' %}</span></a>
+
+                                        <!--- Modal --->
+                                        <div id="settings" class="modal fade" role="dialog">
+                                            <div class="modal-dialog">
+
+                                                <!-- Modal content-->
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal">&times;
+                                                        </button>
+                                                        <h4 class="modal-title">Edit Package
+                                                            <img ng-hide="cyberpanelLoading"
+                                                                 src="{% static 'images/loading.gif' %}">
+                                                        </h4>
+                                                    </div>
+                                                    <div class="modal-body">
+
+                                                        <form name="containerSettingsForm" action="/"
+                                                              class="form-horizontal">
+                                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                                <label class="col-sm-3 control-label">{% trans "Name" %}</label>
+                                                                <div class="col-sm-6">
+                                                                    <input name="name" type="text" class="form-control"
+                                                                           ng-model="name" readonly>
+                                                                </div>
+                                                            </div>
+
+                                                            <hr>
+                                                            <div class="form-group">
+                                                                <label class="col-sm-3 control-label">{% trans "Domains" %}</label>
+                                                                <div class="col-sm-6">
+                                                                    <input type="number" class="form-control"
+                                                                           ng-model="$parent.allowedDomains" required>
+                                                                </div>
+                                                                <div class="current-pack"> {% trans "(0 = Unlimited)" %} </div>
+                                                            </div>
+                                                            <hr>
+
+
+                                                            <div class="form-group">
+                                                                <label class="col-sm-3 control-label">{% trans "Disk Space" %}</label>
+                                                                <div class="col-sm-6">
+                                                                    <input type="number" class="form-control"
+                                                                           ng-model="$parent.diskSpace" required>
+                                                                </div>
+                                                                <div class="current-pack"> {% trans "MB (0 = Unlimited)" %} </div>
+                                                            </div>
+                                                            <hr>
+
+                                                            <div class="form-group">
+                                                                <label class="col-sm-3 control-label">{% trans "Bandwidth" %}</label>
+                                                                <div class="col-sm-6">
+                                                                    <input type="number" class="form-control"
+                                                                           ng-model="$parent.bandwidth" required>
+                                                                </div>
+                                                                <div class="current-pack"> {% trans "MB (0 = Unlimited)" %} </div>
+                                                            </div>
+                                                            <hr>
+
+
+                                                            <div class="form-group">
+                                                                <label class="col-sm-3 control-label">{% trans "FTP Accounts" %}</label>
+                                                                <div class="col-sm-6">
+                                                                    <input type="number" class="form-control"
+                                                                           ng-model="$parent.ftpAccounts" required>
+                                                                </div>
+                                                            </div>
+                                                            <hr>
+
+                                                            <div class="form-group">
+                                                                <label class="col-sm-3 control-label">{% trans "Databases" %}</label>
+                                                                <div class="col-sm-6">
+                                                                    <input type="number" class="form-control"
+                                                                           ng-model="$parent.dataBases" required>
+                                                                </div>
+                                                            </div>
+                                                            <hr>
+
+                                                            <div class="form-group">
+                                                                <label class="col-sm-3 control-label">{% trans "Emails" %}</label>
+                                                                <div class="col-sm-6">
+                                                                    <input type="number" class="form-control"
+                                                                           ng-model="$parent.emails" required>
+                                                                </div>
+                                                            </div>
+                                                            <hr>
+
+                                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                                <label class="col-sm-3 control-label">{% trans "Additional" %}</label>
+                                                                <label class="col-sm-3 control-label"></label>
+                                                                <div class="col-sm-9">
+                                                                    <div class="checkbox">
+                                                                        <label>
+                                                                            <input ng-model="$parent.allowFullDomain"
+                                                                                   type="checkbox" value="">
+                                                                            Allow Creation of Fully Qualified Domain as
+                                                                            Child-Domains
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <hr>
+
+
+                                                        </form>
+
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" ng-disabled="savingSettings"
+                                                                class="btn btn-primary"
+                                                                ng-click="saveChanges()"
+                                                                data-dismiss="modal">
+                                                            Save
+                                                        </button>
+                                                        <button type="button" ng-disabled="savingSettings"
+                                                                class="btn btn-default" data-dismiss="modal">
+                                                            Close
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--- Modal End--->
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!------ List of records --------------->
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

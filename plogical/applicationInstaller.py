@@ -7,16 +7,15 @@ django.setup()
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
-import shlex
 from vhost import vhost
-from loginSystem.models import Administrator
 from websiteFunctions.models import ChildDomains, Websites
 import randomPassword
 from mysqlUtilities import mysqlUtilities
 from databases.models import Databases
 from installUtilities import installUtilities
 import shutil
-
+from plogical.mailUtilities import mailUtilities
+from plogical.processUtilities import ProcessUtilities
 
 class ApplicationInstaller(multi.Thread):
 
@@ -31,146 +30,87 @@ class ApplicationInstaller(multi.Thread):
                 self.installWordPress()
             elif self.installApp == 'joomla':
                 self.installJoomla()
+            elif self.installApp == 'git':
+                self.setupGit()
+            elif self.installApp == 'pull':
+                self.gitPull()
+            elif self.installApp == 'detach':
+                self.detachRepo()
+            elif self.installApp == 'changeBranch':
+                self.changeBranch()
+            elif self.installApp == 'prestashop':
+                self.installPrestaShop()
 
         except BaseException, msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.run]')
 
-
     def installWPCLI(self):
         try:
             command = 'sudo wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(command)
 
             command = 'sudo chmod +x wp-cli.phar'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(command)
 
             command = 'sudo mv wp-cli.phar /usr/bin/wp'
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(command)
 
         except BaseException, msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.installWPCLI]')
 
+    def dataLossCheck(self, finalPath, tempStatusPath):
 
-    def installWordPress(self):
-        try:
+        dirFiles = os.listdir(finalPath)
 
-            admin = self.extraArgs['admin']
-            domainName = self.extraArgs['domainName']
-            home = self.extraArgs['home']
-            tempStatusPath = self.extraArgs['tempStatusPath']
-            blogTitle = self.extraArgs['blogTitle']
-            adminUser = self.extraArgs['adminUser']
-            adminPassword = self.extraArgs['adminPassword']
-            adminEmail = self.extraArgs['adminEmail']
-
-
-            ### Check WP CLI
-
-            try:
-                command = 'sudo wp --info'
-                res = subprocess.call(shlex.split(command))
-
-                if res == 1:
-                    self.installWPCLI()
-            except subprocess.CalledProcessError:
-                self.installWPCLI()
-
-            ## Open Status File
-
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Setting up paths,0')
-            statusFile.close()
-
-            try:
-                website = ChildDomains.objects.get(domain=domainName)
-                externalApp = website.master.externalApp
-
-                if admin.type != 1:
-                    if website.master.admin != admin:
-                        statusFile = open(tempStatusPath, 'w')
-                        statusFile.writelines("You do not own this website." + " [404]")
-                        statusFile.close()
-                        return 0
-
-            except:
-                website = Websites.objects.get(domain=domainName)
-                externalApp = website.externalApp
-
-                if admin.type != 1:
-                    if website.admin != admin:
-                        statusFile = open(tempStatusPath, 'w')
-                        statusFile.writelines("You do not own this website." + " [404]")
-                        statusFile.close()
-                        return 0
-
-            finalPath = ""
-
-
-            if home == '0':
-                path = self.extraArgs['path']
-                finalPath = "/home/" + domainName + "/public_html/" + path + "/"
-            else:
-                finalPath = "/home/" + domainName + "/public_html/"
-
-
-            ## Security Check
-
-            if finalPath.find("..") > -1:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
-                statusFile.close()
-                return 0
-
-            FNULL = open(os.devnull, 'w')
-
-            if not os.path.exists(finalPath):
-                command = 'sudo mkdir -p ' + finalPath
-                subprocess.call(shlex.split(command))
-
-            ## checking for directories/files
-
-            dirFiles = os.listdir(finalPath)
-
-            if len(dirFiles) == 1:
-                if dirFiles[0] == ".well-known":
-                    pass
-                else:
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines("Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
-                    statusFile.close()
-                    return 0
-            elif len(dirFiles) == 0:
-                pass
+        if len(dirFiles) == 1:
+            if dirFiles[0] == ".well-known" or dirFiles[0] == 'index.html':
+                return 1
             else:
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines(
                     "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
                 statusFile.close()
                 return 0
-
-
-
-
-            ## DB Creation
-
+        elif len(dirFiles) == 2:
+            if ".well-known" in dirFiles and "index.html" in dirFiles:
+                return 1
+            else:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(
+                    "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
+                statusFile.close()
+                return 0
+        elif len(dirFiles) == 0:
+            return 1
+        else:
             statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Setting up Database,20')
+            statusFile.writelines(
+                "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
             statusFile.close()
+            return 0
 
+    def installGit(self):
+        try:
+            if os.path.exists("/etc/lsb-release"):
+                command = 'apt -y install git'
+                ProcessUtilities.executioner(command)
+            else:
+                command = 'sudo yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
+                ProcessUtilities.executioner(command)
+
+                command = 'sudo yum install git -y'
+                ProcessUtilities.executioner(command)
+
+        except BaseException, msg:
+            logging.writeToFile( str(msg) + ' [ApplicationInstaller.installGit]')
+
+    def dbCreation(self, tempStatusPath, website):
+        try:
             dbName = randomPassword.generate_pass()
             dbUser = dbName
             dbPassword = randomPassword.generate_pass()
 
             ## DB Creation
-
-            if website.package.dataBases > website.databases_set.all().count():
-                pass
-            else:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(
-                    "Maximum database limit reached for this website." + " [404]")
-                statusFile.close()
-                return 0
 
             if Databases.objects.filter(dbName=dbName).exists() or Databases.objects.filter(
                     dbUser=dbUser).exists():
@@ -194,6 +134,112 @@ class ApplicationInstaller(multi.Thread):
             db = Databases(website=website, dbName=dbName, dbUser=dbUser)
             db.save()
 
+            return dbName, dbUser, dbPassword
+
+        except BaseException, msg:
+            logging.writeToFile(str(msg) + '[ApplicationInstallerdbCreation]')
+
+    def installWordPress(self):
+        try:
+
+            admin = self.extraArgs['admin']
+            domainName = self.extraArgs['domainName']
+            home = self.extraArgs['home']
+            tempStatusPath = self.extraArgs['tempStatusPath']
+            blogTitle = self.extraArgs['blogTitle']
+            adminUser = self.extraArgs['adminUser']
+            adminPassword = self.extraArgs['adminPassword']
+            adminEmail = self.extraArgs['adminEmail']
+
+            FNULL = open(os.devnull, 'w')
+
+            ### Check WP CLI
+
+            try:
+                command = 'sudo wp --info'
+                outout = ProcessUtilities.outputExecutioner(command)
+
+                if not outout.find('WP-CLI root dir:') > -1:
+                    self.installWPCLI()
+            except subprocess.CalledProcessError:
+                self.installWPCLI()
+
+            ## Open Status File
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Setting up paths,0')
+            statusFile.close()
+
+            finalPath = ''
+
+            try:
+                website = ChildDomains.objects.get(domain=domainName)
+                externalApp = website.master.externalApp
+
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = website.path.rstrip('/') + "/" + path + "/"
+                else:
+                    finalPath = website.path
+
+
+                if website.master.package.dataBases > website.master.databases_set.all().count():
+                    pass
+                else:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines(
+                        "Maximum database limit reached for this website." + " [404]")
+                    statusFile.close()
+                    return 0
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+
+            except:
+                website = Websites.objects.get(domain=domainName)
+                externalApp = website.externalApp
+
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = "/home/" + domainName + "/public_html/" + path + "/"
+                else:
+                    finalPath = "/home/" + domainName + "/public_html/"
+
+
+                if website.package.dataBases > website.databases_set.all().count():
+                    pass
+                else:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines(
+                            "Maximum database limit reached for this website." + " [404]")
+                    statusFile.close()
+                    return 0
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
+
+            ## Security Check
+
+            if finalPath.find("..") > -1:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
+                statusFile.close()
+                return 0
+
+            if not os.path.exists(finalPath):
+                command = 'sudo mkdir -p ' + finalPath
+                ProcessUtilities.executioner(command, externalApp)
+
+            ## checking for directories/files
+
+            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
+                return 0
 
             ####
 
@@ -202,7 +248,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             command = "sudo wp core download --allow-root --path=" + finalPath
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(command, externalApp)
 
             ##
 
@@ -211,7 +257,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             command = "sudo wp core config --dbname=" + dbName + " --dbuser=" + dbUser + " --dbpass=" + dbPassword + " --dbhost=localhost --dbprefix=wp_ --allow-root --path=" + finalPath
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(command, externalApp)
 
             if home == '0':
                 path = self.extraArgs['path']
@@ -220,7 +266,7 @@ class ApplicationInstaller(multi.Thread):
                 finalURL = domainName
 
             command = 'sudo wp core install --url="http://' + finalURL + '" --title="' + blogTitle + '" --admin_user="' + adminUser + '" --admin_password="' + adminPassword + '" --admin_email="' + adminEmail + '" --allow-root --path=' + finalPath
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(command, externalApp)
 
             ##
 
@@ -229,25 +275,20 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             command = "sudo wp plugin install litespeed-cache --allow-root --path=" + finalPath
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(command, externalApp)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Activating LSCache Plugin,90')
             statusFile.close()
 
             command = "sudo wp plugin activate litespeed-cache --allow-root --path=" + finalPath
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.executioner(command, externalApp)
 
             ##
 
 
-            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + "/home/" + domainName + "/public_html/"
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            vhost.addRewriteRules(domainName)
-            installUtilities.reStartLiteSpeed()
-
+            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            ProcessUtilities.executioner(command, externalApp)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
@@ -257,27 +298,14 @@ class ApplicationInstaller(multi.Thread):
 
         except BaseException, msg:
             # remove the downloaded files
-            try:
-
-                command = "sudo rm -rf " + finalPath
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            except BaseException, msg:
-                logging.writeToFile(str(msg) + " [installWordPress]")
+            FNULL = open(os.devnull, 'w')
 
             homeDir = "/home/" + domainName + "/public_html"
 
             if not os.path.exists(homeDir):
-                FNULL = open(os.devnull, 'w')
-
-                command = 'sudo mkdir ' + homeDir
-                subprocess.call(shlex.split(command))
-
 
                 command = "sudo chown -R " + externalApp + ":" + externalApp + " " + homeDir
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+                ProcessUtilities.executioner(command, externalApp)
 
             try:
                 mysqlUtilities.deleteDatabase(dbName, dbUser)
@@ -291,6 +319,370 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
             return 0
 
+    def installPrestaShop(self):
+        try:
+
+            admin = self.extraArgs['admin']
+            domainName = self.extraArgs['domainName']
+            home = self.extraArgs['home']
+            shopName = self.extraArgs['shopName']
+            firstName = self.extraArgs['firstName']
+            lastName = self.extraArgs['lastName']
+            databasePrefix = self.extraArgs['databasePrefix']
+            email = self.extraArgs['email']
+            password = self.extraArgs['password']
+            tempStatusPath = self.extraArgs['tempStatusPath']
+
+            FNULL = open(os.devnull, 'w')
+
+            ## Open Status File
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Setting up paths,0')
+            statusFile.close()
+
+            finalPath = ''
+
+            try:
+                website = ChildDomains.objects.get(domain=domainName)
+                externalApp = website.master.externalApp
+
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = website.path.rstrip('/') + "/" + path + "/"
+                else:
+                    finalPath = website.path + "/"
+
+                if website.master.package.dataBases > website.master.databases_set.all().count():
+                    pass
+                else:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines(
+                        "Maximum database limit reached for this website." + " [404]")
+                    statusFile.close()
+                    return 0
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+
+            except:
+                website = Websites.objects.get(domain=domainName)
+                externalApp = website.externalApp
+
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = "/home/" + domainName + "/public_html/" + path + "/"
+                else:
+                    finalPath = "/home/" + domainName + "/public_html/"
+
+                if website.package.dataBases > website.databases_set.all().count():
+                    pass
+                else:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines(
+                            "Maximum database limit reached for this website." + " [404]")
+                    statusFile.close()
+                    return 0
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
+
+            ## Security Check
+
+            if finalPath.find("..") > -1:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
+                statusFile.close()
+                return 0
+
+            if not os.path.exists(finalPath):
+                command = 'sudo mkdir -p ' + finalPath
+                ProcessUtilities.executioner(command, externalApp)
+
+            ## checking for directories/files
+
+            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
+                return 0
+
+            ####
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Downloading and extracting PrestaShop Core..,30')
+            statusFile.close()
+
+            command = "sudo wget https://download.prestashop.com/download/releases/prestashop_1.7.4.2.zip -P %s" % (finalPath)
+            ProcessUtilities.executioner(command, externalApp)
+
+            command = "sudo unzip -o %sprestashop_1.7.4.2.zip -d " % (finalPath) + finalPath
+            ProcessUtilities.executioner(command, externalApp)
+
+            command = "sudo unzip -o %sprestashop.zip -d " % (finalPath) + finalPath
+            ProcessUtilities.executioner(command, externalApp)
+
+            ##
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Configuring the installation,40')
+            statusFile.close()
+
+            if home == '0':
+                path = self.extraArgs['path']
+                #finalURL = domainName + '/' + path
+                finalURL = domainName
+            else:
+                finalURL = domainName
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Installing and configuring PrestaShop..,60')
+            statusFile.close()
+
+            command = "sudo php " + finalPath + "install/index_cli.php --domain=" + finalURL + \
+                      " --db_server=localhost --db_name=" + dbName + " --db_user=" + dbUser + " --db_password=" + dbPassword \
+                      + " --name='" + shopName + "' --firstname=" + firstName + " --lastname=" + lastName + \
+                      " --email=" + email + " --password=" + password
+            ProcessUtilities.executioner(command, externalApp)
+
+            ##
+
+            command = "sudo rm -rf " + finalPath + "install"
+            ProcessUtilities.executioner(command, externalApp)
+
+            ##
+
+            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            ProcessUtilities.executioner(command, externalApp)
+
+            command = "sudo rm -f prestashop_1.7.4.2.zip"
+            ProcessUtilities.executioner(command, externalApp)
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines("Successfully Installed. [200]")
+            statusFile.close()
+            return 0
+
+
+        except BaseException, msg:
+            # remove the downloaded files
+
+            homeDir = "/home/" + domainName + "/public_html"
+
+            if not os.path.exists(homeDir):
+                command = "sudo chown -R " + externalApp + ":" + externalApp + " " + homeDir
+                ProcessUtilities.executioner(command, externalApp)
+
+            try:
+                mysqlUtilities.deleteDatabase(dbName, dbUser)
+                db = Databases.objects.get(dbName=dbName)
+                db.delete()
+            except:
+                pass
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines(str(msg) + " [404]")
+            statusFile.close()
+            return 0
+
+    def setupGit(self):
+        try:
+            admin = self.extraArgs['admin']
+            domainName = self.extraArgs['domainName']
+            username = self.extraArgs['username']
+            reponame = self.extraArgs['reponame']
+            branch = self.extraArgs['branch']
+            tempStatusPath = self.extraArgs['tempStatusPath']
+            defaultProvider = self.extraArgs['defaultProvider']
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Checking if GIT installed..,0')
+            statusFile.close()
+
+            ### Check git
+
+            try:
+                command = 'sudo git --help'
+                output = ProcessUtilities.outputExecutioner(command)
+
+                if output.find('command not found') > -1:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines('Installing GIT..,0')
+                    statusFile.close()
+                    self.installGit()
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines('GIT successfully installed,20')
+                    statusFile.close()
+            except subprocess.CalledProcessError:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Installing GIT..,0')
+                statusFile.close()
+                self.installGit()
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('GIT successfully installed.,20')
+                statusFile.close()
+
+            ## Open Status File
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Setting up directories..,20')
+            statusFile.close()
+
+            try:
+                website = ChildDomains.objects.get(domain=domainName)
+                externalApp = website.master.externalApp
+                finalPath = website.path
+
+            except:
+                website = Websites.objects.get(domain=domainName)
+                externalApp = website.externalApp
+                finalPath = "/home/" + domainName + "/public_html/"
+
+
+
+            ## Security Check
+
+            if finalPath.find("..") > -1:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
+                statusFile.close()
+                return 0
+
+
+            command = 'sudo mkdir -p ' + finalPath
+            ProcessUtilities.executioner(command, externalApp)
+
+            ## checking for directories/files
+
+            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
+                return 0
+
+            ####
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Cloning the repo..,40')
+            statusFile.close()
+
+            try:
+                command = 'git clone --depth 1 --no-single-branch git@' + defaultProvider +'.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
+                ProcessUtilities.executioner(command, externalApp)
+            except subprocess.CalledProcessError, msg:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Failed to clone repository, make sure you deployed your key to repository. [404]')
+                statusFile.close()
+                return 0
+
+            ##
+
+            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            ProcessUtilities.executioner(command, externalApp)
+
+            vhost.addRewriteRules(domainName)
+            installUtilities.reStartLiteSpeed()
+
+            mailUtilities.checkHome()
+
+            gitPath = '/home/cyberpanel/' + domainName + '.git'
+            writeToFile = open(gitPath, 'w')
+            writeToFile.write(username + ':' + reponame)
+            writeToFile.close()
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines("GIT Repository successfully attached. [200]")
+            statusFile.close()
+            return 0
+
+
+        except BaseException, msg:
+            os.remove('/home/cyberpanel/' + domainName + '.git')
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines(str(msg) + " [404]")
+            statusFile.close()
+            return 0
+
+    def gitPull(self):
+        try:
+            domain = self.extraArgs['domain']
+
+            try:
+                website = Websites.objects.get(domain=domain)
+                finalPath = "/home/" + domain + "/public_html/"
+                externalApp = website.externalApp
+            except:
+                childDomain = ChildDomains.objects.get(domain=domain)
+                finalPath = childDomain.path
+                externalApp = website.externalApp
+
+            path = '/home/cyberpanel/' + domain + '.git'
+
+            if not os.path.exists(path):
+                logging.writeToFile('Git is not setup for this website.')
+                return 0
+
+            command = 'sudo git --git-dir=' + finalPath + '.git --work-tree=' + finalPath +'  pull'
+            ProcessUtilities.executioner(command, externalApp)
+
+            ##
+
+            website = Websites.objects.get(domain=domain)
+            externalApp = website.externalApp
+
+            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            ProcessUtilities.executioner(command, externalApp)
+
+            return 0
+
+
+        except BaseException, msg:
+            logging.writeToFile(str(msg)+ " [ApplicationInstaller.gitPull]")
+            return 0
+
+    def detachRepo(self):
+        try:
+            domain = self.extraArgs['domainName']
+            admin = self.extraArgs['admin']
+
+            try:
+                website = ChildDomains.objects.get(domain=domain)
+                externalApp = website.master.externalApp
+
+
+            except:
+                website = Websites.objects.get(domain=domain)
+                externalApp = website.externalApp
+
+            try:
+                website = Websites.objects.get(domain=domain)
+                finalPath = "/home/" + domain + "/public_html/"
+            except:
+                childDomain = ChildDomains.objects.get(domain=domain)
+                finalPath = childDomain.path
+
+
+            command = 'sudo rm -rf ' + finalPath
+            ProcessUtilities.executioner(command, website.externalApp)
+
+            command = 'sudo mkdir ' + finalPath
+            ProcessUtilities.executioner(command, website.externalApp)
+
+            ##
+
+            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            ProcessUtilities.executioner(command, website.externalApp)
+
+            gitPath = '/home/cyberpanel/' + domain + '.git'
+
+            os.remove(gitPath)
+
+            return 0
+
+
+        except BaseException, msg:
+            logging.writeToFile(str(msg)+ " [ApplicationInstaller.gitPull]")
+            return 0
 
     def installJoomla(self):
 
@@ -308,8 +700,6 @@ class ApplicationInstaller(multi.Thread):
             sitename = self.extraArgs['sitename']
             tempStatusPath = self.extraArgs['tempStatusPath']
 
-
-
             FNULL = open(os.devnull, 'w')
 
             if not os.path.exists(finalPath):
@@ -317,23 +707,7 @@ class ApplicationInstaller(multi.Thread):
 
             ## checking for directories/files
 
-            dirFiles = os.listdir(finalPath)
-
-            if len(dirFiles) == 1:
-                if dirFiles[0] == ".well-known":
-                    pass
-                else:
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines("Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
-                    statusFile.close()
-                    return 0
-            elif len(dirFiles) == 0:
-                pass
-            else:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(
-                    "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
-                statusFile.close()
+            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
                 return 0
 
             ## Get Joomla
@@ -342,8 +716,7 @@ class ApplicationInstaller(multi.Thread):
 
             if not os.path.exists("staging.zip"):
                 command = 'wget --no-check-certificate https://github.com/joomla/joomla-cms/archive/staging.zip -P ' + finalPath
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+                ProcessUtilities.normalExecutioner(command)
             else:
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines("File already exists." + " [404]")
@@ -351,14 +724,12 @@ class ApplicationInstaller(multi.Thread):
                 return 0
 
             command = 'unzip ' + finalPath + 'staging.zip -d ' + finalPath
-            cmd = shlex.split(command)
+            ProcessUtilities.normalExecutioner(command)
 
-            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
             os.remove(finalPath + 'staging.zip')
 
             command = 'cp -r ' + finalPath + 'joomla-cms-staging/. ' + finalPath
-            cmd = shlex.split(command)
-            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            ProcessUtilities.normalExecutioner(command)
 
             shutil.rmtree(finalPath + "joomla-cms-staging")
             os.rename(finalPath + "installation/configuration.php-dist", finalPath + "configuration.php")
@@ -443,11 +814,8 @@ class ApplicationInstaller(multi.Thread):
 
             shutil.rmtree(finalPath + "installation")
 
-            command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + "/home/" + domainName + "/public_html/"
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            command = "sudo chown -R " + virtualHostUser + ":" + virtualHostUser + " " + finalPath
+            ProcessUtilities.normalExecutioner(command)
 
             vhost.addRewriteRules(domainName)
 
@@ -460,21 +828,52 @@ class ApplicationInstaller(multi.Thread):
 
         except BaseException, msg:
             # remove the downloaded files
-            try:
-                shutil.rmtree(finalPath)
-            except:
-                logging.writeToFile("shutil.rmtree(finalPath)")
 
             homeDir = "/home/" + domainName + "/public_html"
 
             if not os.path.exists(homeDir):
-                FNULL = open(os.devnull, 'w')
-                os.mkdir(homeDir)
-                command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + homeDir
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+                command = "sudo chown -R " + virtualHostUser + ":" + virtualHostUser + " " + homeDir
+                ProcessUtilities.executioner(command)
+
+            try:
+                mysqlUtilities.deleteDatabase(dbName, dbUser)
+                db = Databases.objects.get(dbName=dbName)
+                db.delete()
+            except:
+                pass
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
+            logging.writeToFile(str(msg))
+            return 0
+
+    def changeBranch(self):
+        try:
+            domainName = self.extraArgs['domainName']
+            githubBranch = self.extraArgs['githubBranch']
+            admin = self.extraArgs['admin']
+
+            try:
+                website = Websites.objects.get(domain=domainName)
+                finalPath = "/home/" + domainName + "/public_html/"
+                externalApp = website.externalApp
+            except:
+                childDomain = ChildDomains.objects.get(domain=domainName)
+                finalPath = childDomain.path
+                externalApp = childDomain.master.externalApp
+
+            try:
+                command = 'sudo git --git-dir=' + finalPath + '/.git  checkout -b ' + githubBranch
+                ProcessUtilities.executioner(command, externalApp)
+            except:
+                try:
+                    command = 'sudo git --git-dir=' + finalPath + '/.git  checkout ' + githubBranch
+                    ProcessUtilities.executioner(command, externalApp)
+                except subprocess.CalledProcessError, msg:
+                    logging.writeToFile('Failed to change branch: ' +  str(msg))
+                    return 0
+            return 0
+        except BaseException, msg:
+            logging.writeToFile('Failed to change branch: ' + str(msg))
             return 0

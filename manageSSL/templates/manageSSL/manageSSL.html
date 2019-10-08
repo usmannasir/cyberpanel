@@ -16,13 +16,13 @@
 
 <div ng-controller="sslIssueCtrl" class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Manage SSL" %} <img ng-hide="manageSSLLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
 
-            <form  action="/" class="form-horizontal bordered-row">
+            <form  action="/" class="form-horizontal bordered-row panel-body">
 
 
                  <div class="form-group">
@@ -39,7 +39,7 @@
             <div ng-hide="issueSSLBtn" class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="issueSSL()" class="btn btn-primary btn-lg btn-block">{% trans "Issue SSL" %}</button>
+                         <button type="button" ng-click="issueSSL()" class="btn btn-primary btn-lg">{% trans "Issue SSL" %}</button>
 
                     </div>
             </div>
@@ -47,20 +47,19 @@
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                            <div ng-hide="canNotIssue" class="alert alert-danger">
-                                        <p>{% trans "Cannot issue SSL. Error message:" %} {$ errorMessage $}</p>
-                            </div>
+                    <div class="col-sm-6">
+                        <div ng-hide="canNotIssue" class="alert alert-danger">
+                            <p>{% trans "Cannot issue SSL. Error message:" %} {$ errorMessage $}</p>
+                        </div>
 
-                            <div ng-hide="sslIssued" class="alert alert-success">
-                                <p>{% trans "SSL Issued for" %} <strong>{$ sslDomain $}</strong></p>
-                            </div>
+                        <div ng-hide="sslIssued" class="alert alert-success">
+                            <p>{% trans "SSL Issued for" %} <strong>{$ sslDomain $}</strong></p>
+                        </div>
 
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                            </div>
+                        <div ng-hide="couldNotConnect" class="alert alert-danger">
+                            <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                        </div>
                     </div>
-
 
 
                 </div>

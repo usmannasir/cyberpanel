@@ -1,0 +1,377 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Container Home - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container" ng-controller="viewContainer">
+
+        <div id="page-title" ng-init="cName='{{ name }}'">
+            <h2 id="domainNamePage">{% trans "Manage Container" %}</h2>
+            <p>{% trans "Currently managing: " %} {{ name }}</p>
+        </div>
+
+
+        <div class="example-box-wrapper">
+
+            <div class="panel panel-body">
+
+                <h3 class="content-box-header">
+                    {% trans "Container Information" %}
+                    <img id="infoLoading" src="/static/images/loading.gif" style="display: none;">
+                </h3>
+
+
+                <div class="content-box-wrapper">
+                    <div class="row">
+
+                        <div class="col-md-6">
+                            <div class="panel">
+                                <div class="panel-body">
+                                    <div class="example-box-wrapper">
+                                        <h3 class="title-hero">
+                                            {% trans "Memory Usage" %}
+                                        </h3>
+                                        <div class="progressbar" data-value="{{ memoryUsage }}">
+                                            <div class="progressbar-value bg-primary">
+                                                <div class="progress-overlay"></div>
+                                                <div class="progress-label">{{ memoryUsage | floatformat:"2" }}%</div>
+                                            </div>
+                                        </div>
+
+
+                                        <h3 class="title-hero">
+                                            {% trans "CPU Usage" %}
+                                        </h3>
+                                        <div class="progressbar" data-value="{{ cpuUsage }}">
+                                            <div class="progressbar-value bg-primary">
+                                                <div class="progress-overlay"></div>
+                                                <div class="progress-label">{{ cpuUsage }}%</div>
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="panel">
+                                <div class="panel-body">
+                                    <div class="example-box-wrapper">
+                                        {% trans "Container ID" %}: {{ cid }}
+                                        <br>
+                                        {% trans "Image" %}: {{ image }}
+                                        <span ng-show="'{{ image }}' == 'unknown:unknown'"
+                                              title="Actions involving container recreation cannot be executed">
+                                            <i class="fa fa-warning btn-icon"></i>
+                                        </span>
+                                        <br>
+                                        {% if ports %}
+                                            {% trans "Ports" %}: <br>
+                                            {% for iport, eport  in ports.items %}
+                                                {{ iport }} {% trans "to" %} {{ eport }}<br>
+                                            {% endfor %}
+                                        {% endif %}
+
+                                    </div>
+
+                                    <button class="btn btn-warning" data-toggle="modal" data-target="#settings"><i
+                                            class="fa fa-gear btn-icon"></i> Settings
+                                    </button>
+                                    <button class="btn btn-warning" ng-click="recreate()"><i
+                                            class="fa fa-refresh btn-icon"></i> Recreate
+                                    </button>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+
+        <div class="example-box-wrapper">
+
+            <div class="panel panel-body">
+
+                <h3 class="content-box-header">
+                    {% trans "Actions" %}
+                </h3>
+
+
+                <div class="content-box-wrapper">
+                    <div class="row">
+
+                        <div class="col-md-6">
+                            <div class="panel">
+                                <div class="panel-body">
+                                    <div class="example-box-wrapper">
+                                        <h3 class="title-hero" ng-init="status='{{ status }}'">Main Actions
+                                            <img id="actionLoading" src="/static/images/loading.gif"
+                                                 style="display: none;width: 20px;">
+                                        </h3>
+                                        <b>Status:</b> <span ng-bind="status"></span>
+                                        <span ng-click='refreshStatus()' style="cursor:pointer;" class="pull-right"
+                                              title="Refresh status"><i class="fa fa-refresh btn-icon"></i></span>
+                                        <hr>
+                                        <button ng-disabled="status=='running'" class="btn btn-primary"
+                                                ng-click="cAction('start')"><i class="fa fa-play btn-icon"></i> Start
+                                        </button>
+                                        <button ng-disabled="status!='running'" class="btn btn-primary"
+                                                ng-click="cAction('restart')"><i class="fa fa-refresh btn-icon"></i>
+                                            Restart
+                                        </button>
+                                        <button ng-disabled="status!='running'" class="btn btn-primary"
+                                                ng-click="cAction('stop')"><i class="fa fa-stop btn-icon"></i> Stop
+                                        </button>
+                                        <button class="btn  btn-primary" ng-click="cRemove()">Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="panel">
+                                <div class="panel-body">
+                                    <div class="example-box-wrapper">
+                                        <h3 class="title-hero" ng-init="rPolicy='{{ restartPolicy }}'">Other
+                                            Actions</h3>
+                                        <b>Restart on system reboot:</b> <span ng-bind="rPolicy"></span>
+                                        <hr>
+                                        <a href="/docker/exportContainer/?name={{ name }}" class="btn btn-primary">Export
+                                            file</a>
+                                        <button class="btn btn-primary" ng-disabled="loadingTop" ng-click="showTop()">
+                                            View Process
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+
+        </div>
+
+        <div class="example-box-wrapper">
+
+            <div class="content-box panel-body">
+
+                <h3 class="content-box-header" ng-init="loadLogs('{{ name }}')">
+                    {% trans "Logs" %}
+                    <span style="cursor:pointer;" class="pull-right" ng-click="loadLogs('{{ name }}')"><i
+                            class="fa fa-refresh btn-icon"></i></span>
+                </h3>
+
+
+                <div class="content-box-wrapper">
+                    <div class="row">
+
+                        <textarea name="logs" class="form-control" id="" cols="30" rows="10">{$ logs $}</textarea><br>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <div id="settings" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Container Settings
+                            <img id="containerSettingLoading" src="/static/images/loading.gif" style="display: none;">
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+
+                        <form name="containerSettingsForm" action="/" class="form-horizontal">
+                            <div ng-hide="installationDetailsForm" class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Memory limit" %}</label>
+                                <div class="col-sm-6" ng-init="memory={{ memoryLimit }}">
+                                    <input name="memory" type="number" class="form-control" ng-model="memory" required>
+                                </div>
+                                <div class="current-pack ng-binding">MB</div>
+                            </div>
+
+                            <div ng-hide="installationDetailsForm" class="form-group">
+                                <label class="col-sm-3 control-label">Start on reboot</label>
+                                <div class="col-sm-9">
+                                    <div class="checkbox" ng-init="startOnReboot={{ startOnReboot }}">
+                                        <label>
+                                            <input ng-model="startOnReboot" type="checkbox" value=""
+                                                   class="ng-pristine ng-untouched ng-valid ng-empty">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+                            <div ng-hide="installationDetailsForm" class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Confirmation" %}</label>
+                                <div class="col-sm-9">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input ng-model="envConfirmation" type="checkbox">
+                                            Editing ENV or Volume will recreate container.
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr>
+                            <span ng-init="envList = {}"></span>
+                            {% for env, value in envList.items %}
+
+                                <span ng-init="envList[{{ forloop.counter0 }}] =  {'name':'{{ env }}' , 'value':'{{ value }}'} "></span>
+
+                            {% endfor %}
+
+                            <div ng-repeat="env in envList track by $index">
+
+                                <div ng-hide="installationDetailsForm" class="form-group">
+                                    <label class="col-sm-3 control-label">
+                                        <div ng-show="$first">
+                                            {% trans "ENV" %}
+                                        </div>
+                                    </label>
+                                    <div class="col-sm-2">
+                                        <input name="$index" ng-disabled="!envConfirmation" type="text"
+                                               class="form-control" ng-model="envList[$index].name" required>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <input name="$index" ng-disabled="!envConfirmation" type="text"
+                                               class="form-control" ng-model="envList[$index].value" required>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-offset-3">
+                                <button type="button" ng-disabled="!envConfirmation" class="btn btn-info"
+                                        ng-click="addEnvField()">Add more
+                                </button>
+                            </div>
+                            <br>
+
+                            <span ng-init="volList = {}"></span>
+                            <span ng-init="volListNumber=1"></span>
+                            {% for key, value in volList.items %}
+                                <span ng-init="volList[{{ forloop.counter0 }}] =  {'dest':'{{ value.bind }}' , 'src':'{{ key }}'}"></span>
+                                <span ng-init="volListNumber={{ forloop.counter0 }} + 1"></span>
+                            {% endfor %}
+
+                            <hr>
+
+                            <div ng-hide="installationDetailsForm" class="form-group text-center">
+                                <label class="control-label">
+                                    {% trans "Map Volumes" %}
+                                </label>
+                            </div>
+                            <div ng-repeat="volume in volList track by $index">
+                                <div ng-hide="installationDetailsForm" class="form-group">
+                                    <div class="col-sm-5">
+                                        <input type="text" ng-disabled="!envConfirmation" class="form-control"
+                                               ng-model="volList[$index].dest" placeholder="Destination" required>
+                                    </div>
+                                    <div class="col-sm-5">
+                                        <input type="text" ng-disabled="!envConfirmation" class="form-control"
+                                               ng-model="volList[$index].src" placeholder="Source" required>
+                                    </div>
+                                    <div ng-show="$last">
+                                        <div class="col-sm-1">
+                                            <button class="btn btn-primary" ng-disabled="!envConfirmation" type="button"
+                                                    ng-click="removeVolField()"><i
+                                                    style="position: inherit; top: 0px; left: 0px"
+                                                    class="fa fa-times"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div ng-hide="installationDetailsForm" class="text-center">
+                                <button type="button" ng-disabled="!envConfirmation" class="btn btn-info"
+                                        ng-click="addVolField()">{% trans "Add field" %}</button>
+                            </div>
+                            <br>
+
+                        </form>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" ng-disabled="savingSettings" class="btn btn-primary"
+                                ng-click="saveSettings()">Save
+                        </button>
+                        <button type="button" ng-disabled="savingSettings" class="btn btn-default" data-dismiss="modal">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="processes" class="modal fade" role="dialog">
+            <div class="modal-dialog" style="width: 96%;">
+
+                <!-- Modal content-->
+                <div class="modal-content panel-body">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title content-box=header">Container Processes</h4>
+                    </div>
+                    <div class="modal-body">
+
+                        <table cellpadding="0" cellspacing="0" border="0" class="table table-striped"
+                               id="datatable-example">
+                            <thead>
+                            <tr>
+                                <th ng-repeat="item in topHead track by $index">{$ item $}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            <tr ng-repeat="process in topProcesses track by $index">
+                                <th ng-repeat="item in process track by $index">{$ item $}</th>
+                            </tr>
+
+                            </tbody>
+                        </table>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" ng-disabled="savingSettings" class="btn btn-primary" ng-click="showTop()">
+                            Refresh
+                        </button>
+                        <button type="button" ng-disabled="savingSettings" class="btn btn-default" data-dismiss="modal">
+                            Close
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+    </div>
+
+    </div>
+
+
+
+{% endblock %}

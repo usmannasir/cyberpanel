@@ -11,13 +11,13 @@
 </div>
 <div class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Modify Package" %} <img id="packageLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
 
-            <form ng-controller="modifyPackages"  action="/" id="modifyPackageForm" class="form-horizontal bordered-row">
+            <form ng-controller="modifyPackages"  action="/" id="modifyPackageForm" class="form-horizontal bordered-row panel-body">
 
 
                  <div class="form-group">
@@ -83,6 +83,19 @@
                         </div>
                     </div>
 
+                    <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="allowFullDomain" type="checkbox" value="">
+                                        Allow Creation of Fully Qualified Domain as Child-Domains
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
 
             </div>
 
@@ -92,7 +105,7 @@
             <div id="modifyButton" class="form-group">
                 <label class="col-sm-3 control-label"></label>
                 <div class="col-sm-4">
-                    <button  type="button" ng-click="modifyPackageFunc()" class="btn btn-primary btn-lg btn-block">{% trans "Modify Package" %}</button>
+                    <button  type="button" ng-click="modifyPackageFunc()" class="btn btn-primary btn-lg ">{% trans "Modify Package" %}</button>
 
                 </div>
             </div>

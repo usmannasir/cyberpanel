@@ -3,11 +3,11 @@ import views
 
 urlpatterns = [
 
+    url(r'^emailPolicyServer$', views.emailPolicyServer, name='emailPolicyServer'),
     url(r'^listDomains$', views.listDomains, name='listDomains'),
     url(r'^getFurtherDomains$', views.getFurtherDomains, name='getFurtherDomains'),
     url(r'^enableDisableEmailLimits$', views.enableDisableEmailLimits, name='enableDisableEmailLimits'),
 
-    url(r'^(?P<domain>([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?)$', views.emailLimits, name='emailLimits'),
     url(r'^changeDomainLimit$', views.changeDomainLimit, name='changeDomainLimit'),
     url(r'^getFurtherEmail$', views.getFurtherEmail, name='getFurtherEmail'),
 
@@ -30,10 +30,11 @@ urlpatterns = [
     url(r'^installStatusSpamAssassin$', views.installStatusSpamAssassin, name='installStatusSpamAssassin'),
     url(r'^fetchSpamAssassinSettings$', views.fetchSpamAssassinSettings, name='fetchSpamAssassinSettings'),
     url(r'^saveSpamAssassinConfigurations$', views.saveSpamAssassinConfigurations, name='saveSpamAssassinConfigurations'),
-    url(r'^emailPolicyServer$', views.emailPolicyServer, name='emailPolicyServer'),
     url(r'^fetchPolicyServerStatus$', views.fetchPolicyServerStatus, name='fetchPolicyServerStatus'),
 
     url(r'^savePolicyServerStatus$', views.savePolicyServerStatus, name='savePolicyServerStatus'),
+
+    url(r'^(?P<domain>(.*))$', views.emailLimits, name='emailLimits'),
 
 
 

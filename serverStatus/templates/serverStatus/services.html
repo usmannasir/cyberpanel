@@ -22,20 +22,19 @@
     <div id="page-title">
         <h2>Services <img ng-show="actionLoader" src="/static/images/loading.gif"></h2>
 
-       <p>Show stats for services and actions (Start, Stop, Restart)</p>
+       <p>{% trans 'Show stats for services and actions (Start, Stop, Restart)' %}</p>
     </div>
 
     <div >
-        <div class="row">
-            <div class="col-sm-6 col-md-6">
+            <div class="col-sm-6 col-md-3">
                 <div class="panel panel-default service-panel">
                   <div class="panel-body">
                     <div class="serviceImg">
-                        <img src="{% static 'images/litespeed.png' %}" alt="OpenLitespeed" class="img-circle">
+                        <img src="{% static 'images/litespeed.png' %}" alt="Litespeed Webserver" class="img-circle">
                     </div>
                     <div class="serviceDetails">
                         <div class="serviceHeading">
-                            <h5><b>OpenLitespeed</b></h5>
+                            <h5><b>{{ serverName }}</b></h5>
                             <span class="help-block" ng-bind="olsStatus">Stopped</span>
                         </div>
                         <div class="serviceActionBtn">
@@ -50,7 +49,7 @@
                   </div>
                 </div>
             </div>
-            <div class="col-sm-6 col-md-6">
+            <div class="col-sm-6 col-md-3">
                 <div class="panel panel-default service-panel">
                   <div class="panel-body">
                     <div class="serviceImg">
@@ -74,10 +73,8 @@
                 </div>
             </div>
 
-        </div>
-        <div class="row">
 
-            <div class="col-sm-6 col-md-6">
+            <div class="col-sm-6 col-md-3">
                 <div class="panel panel-default service-panel">
                   <div class="panel-body">
                     <div class="serviceImg">
@@ -100,7 +97,7 @@
                   </div>
                 </div>
             </div>
-            <div class="col-sm-6 col-md-6">
+            <div class="col-sm-6 col-md-3">
                 <div class="panel panel-default service-panel">
                   <div class="panel-body">
                     <div class="serviceImg">
@@ -123,7 +120,29 @@
                   </div>
                 </div>
             </div>
-        </div>
+            {% if isDocker %}
+            <div class="col-sm-6 col-md-3">
+                <div class="panel panel-default service-panel">
+                  <div class="panel-body">
+                    <div class="serviceImg">
+                        <img src="{% static 'images/docker.png' %}" alt="Docker" class="img-circle">
+                    </div>
+                    <div class="serviceDetails">
+                        <div class="serviceHeading">
+                            <h5><b>Docker</b></h5>
+                            <span class="help-block" ng-bind="dockerStatus">Stopped</span>
+                        </div>
+                        <div class="serviceActionBtn">
+                            <button type="button" class="btn btn-success" ng-disabled="btnDisable" ng-show="dockerStart" ng-click="serviceAction('docker','start')" data-toggle="tooltip" title="Start!"><i class="glyph-icon icon-play" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-warning" ng-disabled="btnDisable" ng-show="dockerStop" ng-click="serviceAction('docker','stop')" data-toggle="tooltip" title="Stop!"><i class="glyph-icon icon-pause" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-default" ng-disabled="btnDisable" ng-click="serviceAction('docker','restart')" data-toggle="tooltip" title="Restart!"><i class="glyph-icon icon-refresh" aria-hidden="true"></i></button>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+            {% endif %}
+
         <div class="form-group">
             <label class="col-sm-3 control-label"></label>
             <div class="col-sm-4">

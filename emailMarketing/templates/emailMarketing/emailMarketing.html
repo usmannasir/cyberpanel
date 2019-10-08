@@ -1,0 +1,72 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Email Marketing - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+
+    <div id="page-title">
+       <h2 id="domainNamePage">{% trans "Email Marketing" %}</h2>
+       <p>{% trans "Select users to Enable/Disable Email Marketing feature!" %}</p>
+    </div>
+
+<div ng-controller="emailMarketing" class="panel">
+    <div class="panel-body">
+
+    <h3 class="content-box-header">
+            {% trans "Email Marketing" %} <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+
+    {% if installCheck == 0 %}
+
+        <div class="row">
+            <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                <h3>{% trans "Email Policy Server is not enabled " %}
+                    <a href="{% url 'emailPolicyServer' %}">
+                    <button class="btn btn-alt btn-hover btn-blue-alt">
+                        <span>{% trans "Enable Now." %}</span>
+                        <i class="glyph-icon icon-arrow-right"></i>
+                    </button></a></h3>
+            </div>
+        </div>
+    {% else %}
+        <div class="example-box-wrapper">
+
+                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped" id="datatable-example">
+                <thead>
+                <tr>
+                    <th>{% trans 'ID' %}</th>
+                    <th>{% trans 'Username' %}</th>
+                    <th>{% trans 'Status' %}</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                <tr ng-repeat="user in users track by $index">
+                    <td ><code ng-bind="user.id"></code></td>
+                    <td><code ng-bind="user.userName"></code></td>
+                    <td>
+                       <img style="margin-right: 4%;" ng-show="user.status==1"  title="{% trans 'Email Marketing Enabled.' %}"  src="{% static 'mailServer/vpsON.png' %}">
+                       <button ng-click="enableDisableMarketing(0, user.userName)" ng-show="user.status==1" class="btn ra-100 btn-danger">{% trans 'Disable' %}</button>
+                       <img style="margin-right: 4%;" ng-show="user.status==0"  title="{% trans 'Email Marketing Disabled.' %}"  src="{% static 'mailServer/vpsOff.png' %}">
+                       <button ng-click="enableDisableMarketing(1, user.userName)" ng-show="user.status==0" class="btn ra-100 btn-success">{% trans 'Enable' %}</button>
+                    </td>
+                </tr>
+
+                </tbody>
+                </table>
+
+        </div>
+
+    {% endif %}
+    </div>
+</div>
+
+
+
+{% endblock %}

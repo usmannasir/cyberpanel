@@ -14,13 +14,24 @@
 </div>
 <div ng-controller="createDNSZone" class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Details" %} <img ng-hide="createDNSZoneLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div class="example-box-wrapper">
 
+        {% if not status %}
+            <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                <h3>{% trans "PowerDNS is disabled." %}
+                    <a href="{% url 'managePowerDNS' %}"><button class="btn btn-alt btn-hover btn-blue-alt">
+                        <span>{% trans "Enable Now" %}</span>
+                        <i class="glyph-icon icon-arrow-right"></i>
+                    </button></a></h3>
+            </div>
 
-            <form  action="/" class="form-horizontal bordered-row">
+
+        {% else %}
+
+            <form  action="/" class="form-horizontal bordered-row panel-body">
 
 
                 <div class="form-group">
@@ -29,7 +40,6 @@
                         <input name="dom"  type="text" class="form-control" ng-model="zoneDomain" required>
                     </div>
 
-
                     <div class="current-pack">example.com</div>
 
                 </div>
@@ -37,7 +47,7 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="createDNSZone()" class="btn btn-primary btn-lg btn-block">{% trans "Create DNS Zone" %}</button>
+                         <button type="button" ng-click="createDNSZone()" class="btn btn-primary btn-lg">{% trans "Create DNS Zone" %}</button>
 
                     </div>
                 </div>
@@ -69,6 +79,8 @@
 
 
             </form>
+
+        {% endif %}
 
 
 

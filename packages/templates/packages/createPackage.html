@@ -3,118 +3,127 @@
 {% block title %}{% trans "Create Package - CyberPanel" %}{% endblock %}
 {% block content %}
 
-{% load static %}
-{% get_current_language as LANGUAGE_CODE %}
-<!-- Current language: {{ LANGUAGE_CODE }} -->
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
 
 
-<div class="container">
-<div id="page-title">
-   <h2>{% trans "Create Package" %}</h2>
-   <p>{% trans "Packages define resources for your websites, you need to add package before creating a website." %}</p>
-</div>
-<div class="panel">
-    <div class="panel-body">
-        <h3 class="title-hero">
-            {% trans "Package Details" %}
-        </h3>
-        <div ng-controller="createPackage" class="example-box-wrapper">
-
-
-            <form name="createPackageFrm"  action="/" id="createPackages" class="form-horizontal bordered-row">
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Package Name" %}</label>
-                    <div class="col-sm-6">
-                        <input name="pname"  type="text" class="form-control" ng-model="packageName" required>
-                    </div>
-
-                    <div class="current-pack">{{ admin }}_{$ packageName $}</div>
-                </div>
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Domains" %}</label>
-                    <div class="col-sm-6">
-                        <input name="dspace"  type="number" class="form-control" ng-model="allowedDomains" required>
-                    </div>
-                    <div class="current-pack"> {% trans "(0 = Unlimited)" %} </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Disk Space" %}</label>
-                    <div class="col-sm-6">
-                        <input name="dspace"  type="number" class="form-control" ng-model="diskSpace" required>
-                    </div>
-                    <div class="current-pack"> {% trans "MB (0 = Unlimited)" %} </div>
-                </div>
-
-                 <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Bandwidth" %}</label>
-                    <div class="col-sm-6">
-                        <input name="bwidth"  type="number" class="form-control" ng-model="bandwidth" required>
-                    </div>
-                     <div class="current-pack"> {% trans "MB (0 = Unlimited)" %} </div>
-                </div>
-
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "FTP Accounts" %}</label>
-                    <div class="col-sm-6">
-                        <input name="eaccts" type="number" class="form-control" ng-model="ftpAccounts" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Databases" %}</label>
-                    <div class="col-sm-6">
-                        <input name="dbases" type="number" class="form-control" ng-model="dataBases" required>
-                    </div>
-                </div>
-
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Emails" %}</label>
-                    <div class="col-sm-6">
-                        <input name="emails" type="number" class="form-control" ng-model="emails" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                         <button type="button" ng-click="insertPackInDB()" class="btn btn-primary btn-lg btn-block">{% trans "Create Package" %}</button>
-
-                    </div>
-                </div>
-
-
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                            <div id="packageCreationFailed" class="alert alert-danger">
-                                        <p>{% trans "Cannot create package. Error message:" %} {$ errorMessage $}</p>
-                            </div>
-
-                            <div id="packageCreated" class="alert alert-success">
-                                <p>{% trans "Package" %} <strong>{$ createdPackage $}</strong> {% trans "Successfully Created" %}"</p>
-                            </div>
-                    </div>
-
-
-
-                </div>
-
-
-            </form>
-
-
-
-
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Create Package" %}</h2>
+            <p>{% trans "Packages define resources for your websites, you need to add package before creating a website." %}</p>
         </div>
+        <div class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Package Details" %}
+                </h3>
+                <div ng-controller="createPackage" class="example-box-wrapper">
+
+
+                    <form name="createPackageFrm" action="/" id="createPackages"
+                          class="form-horizontal bordered-row panel-body">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Package Name" %}</label>
+                            <div class="col-sm-6">
+                                <input name="pname" type="text" class="form-control" ng-model="packageName" required>
+                            </div>
+
+                            <div class="current-pack">{{ admin }}_{$ packageName $}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Domains" %}</label>
+                            <div class="col-sm-6">
+                                <input name="dspace" type="number" class="form-control" ng-model="allowedDomains"
+                                       required>
+                            </div>
+                            <div class="current-pack"> {% trans "(0 = Unlimited)" %} </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Disk Space" %}</label>
+                            <div class="col-sm-6">
+                                <input name="dspace" type="number" class="form-control" ng-model="diskSpace" required>
+                            </div>
+                            <div class="current-pack"> {% trans "MB (0 = Unlimited)" %} </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Bandwidth" %}</label>
+                            <div class="col-sm-6">
+                                <input name="bwidth" type="number" class="form-control" ng-model="bandwidth" required>
+                            </div>
+                            <div class="current-pack"> {% trans "MB (0 = Unlimited)" %} </div>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "FTP Accounts" %}</label>
+                            <div class="col-sm-6">
+                                <input name="eaccts" type="number" class="form-control" ng-model="ftpAccounts" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Databases" %}</label>
+                            <div class="col-sm-6">
+                                <input name="dbases" type="number" class="form-control" ng-model="dataBases" required>
+                            </div>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Emails" %}</label>
+                            <div class="col-sm-6">
+                                <input name="emails" type="number" class="form-control" ng-model="emails" required>
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="allowFullDomain" type="checkbox" value="">
+                                        Allow Creation of Fully Qualified Domain as Child-Domains
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="insertPackInDB()"
+                                        class="btn btn-primary btn-lg">{% trans "Create Package" %}</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <div id="packageCreationFailed" class="alert alert-danger">
+                                    <p>{% trans "Cannot create package. Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+                                <div id="packageCreated" class="alert alert-success">
+                                    <p>{% trans "Package" %} <strong>{$ createdPackage
+                                        $}</strong> {% trans "Successfully Created" %}</p>
+                                </div>
+                            </div>
+
+                        </div>
+
+
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+
+
     </div>
-</div>
-
-
-</div>
 {% endblock %}
-

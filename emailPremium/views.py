@@ -15,31 +15,136 @@ from math import ceil
 from postfixSenderPolicy.client import cacheClient
 import thread
 from plogical.mailUtilities import mailUtilities
-import subprocess
-import shlex
 from plogical.virtualHostUtilities import virtualHostUtilities
 from random import randint
-
-
+from plogical.acl import ACLManager
+from plogical.processUtilities import ProcessUtilities
 
 # Create your views here.
 
+## Email Policy Server
+
+def emailPolicyServer(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        return render(request, 'emailPremium/policyServer.html')
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fetchPolicyServerStatus(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+        try:
+            if request.method == 'POST':
+
+                command = 'sudo cat /etc/postfix/main.cf'
+                output = ProcessUtilities.outputExecutioner(command).split('\n')
+
+                installCheck = 0
+
+                for items in output:
+                    if items.find('check_policy_service unix:/var/log/policyServerSocket') > -1:
+                        installCheck = 1
+                        break
+
+
+                data_ret = {'status': 1, 'error_message': 'None', 'installCheck' : installCheck}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+        except BaseException,msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError,msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg))
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def savePolicyServerStatus(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+        try:
+            if request.method == 'POST':
+
+                data = json.loads(request.body)
+
+                policServerStatus = data['policServerStatus']
+
+                install = '0'
+
+                if policServerStatus == True:
+                    install = "1"
+
+                ## save configuration data
+
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                execPath = execPath + " savePolicyServerStatus --install " + install
+                output = ProcessUtilities.outputExecutioner(execPath)
+
+                if output.find("1,None") > -1:
+                    data_ret = {'status': 1, 'error_message': "None"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    data_ret = {'status': 0, 'error_message': output}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+
+        except BaseException,msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError,msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg))
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+## Email Policy Server configs
+
 def listDomains(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         try:
-            admin = Administrator.objects.get(pk=request.session['userID'])
-
-            if admin.type == 1:
-                websites = DomainLimits.objects.all()
-            else:
-                return HttpResponse("Only administrator can view this page.")
+            websites = DomainLimits.objects.all()
 
             ## Check if Policy Server is installed.
 
             command = 'sudo cat /etc/postfix/main.cf'
-            output = subprocess.check_output(shlex.split(command)).split('\n')
+            output = ProcessUtilities.outputExecutioner(command).split('\n')
 
             installCheck = 0
 
@@ -52,8 +157,6 @@ def listDomains(request):
                 return render(request, 'emailPremium/listDomains.html', {"installCheck": installCheck})
 
             ###
-
-
 
             pages = float(len(websites)) / float(10)
             pagination = []
@@ -80,10 +183,16 @@ def listDomains(request):
 
 def getFurtherDomains(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
         try:
 
-            admin = Administrator.objects.get(pk=val)
 
             if request.method == 'POST':
                 try:
@@ -94,16 +203,9 @@ def getFurtherDomains(request):
                 except BaseException, msg:
                     status = str(msg)
 
-
-            if admin.type == 1:
-                finalPageNumber = ((pageNumber * 10))-10
-                endPageNumber = finalPageNumber + 10
-                websites = Websites.objects.all()[finalPageNumber:endPageNumber]
-
-            else:
-                final_dic = {'listWebSiteStatus': 0, 'error_message': "Only administrator can view this page."}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
+            finalPageNumber = ((pageNumber * 10)) - 10
+            endPageNumber = finalPageNumber + 10
+            websites = Websites.objects.all()[finalPageNumber:endPageNumber]
 
             json_data = "["
             checker = 0
@@ -123,7 +225,24 @@ def getFurtherDomains(request):
                     else:
                         json_data = json_data +',' + json.dumps(dic)
                 except BaseException, msg:
-                    pass
+                    try:
+                        domain = Domains.objects.get(domainOwner=items)
+                    except:
+                        domain = Domains(domainOwner=items, domain=items.domain)
+                        domain.save()
+
+                    domainLimits = DomainLimits(domain=domain)
+                    domainLimits.save()
+
+                    dic = {'domain': items.domain, 'emails': domain.eusers_set.all().count(),
+                           'monthlyLimit': domainLimits.monthlyLimit, 'monthlyUsed': domainLimits.monthlyUsed,
+                           'status': domainLimits.limitStatus}
+
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
             final_dic = {'listWebSiteStatus': 1, 'error_message': "None", "data": json_data}
@@ -143,17 +262,17 @@ def getFurtherDomains(request):
 
 def enableDisableEmailLimits(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
+
         try:
             if request.method == 'POST':
-
-                admin = Administrator.objects.get(pk=request.session['userID'])
-
-                if admin.type != 1:
-                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-
 
                 data = json.loads(request.body)
                 operationVal = data['operationVal']
@@ -186,58 +305,52 @@ def enableDisableEmailLimits(request):
 
 def emailLimits(request,domain):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        admin = Administrator.objects.get(pk=request.session['userID'])
-
-        if admin.type != 1:
-            return HttpResponse("Only administrator can view this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
 
         if Websites.objects.filter(domain=domain).exists():
-            if admin.type == 1:
-                website = Websites.objects.get(domain=domain)
-                domainEmail = Domains.objects.get(domainOwner=website)
-                domainLimits = DomainLimits.objects.get(domain=domainEmail)
+            website = Websites.objects.get(domain=domain)
+            domainEmail = Domains.objects.get(domainOwner=website)
+            domainLimits = DomainLimits.objects.get(domain=domainEmail)
 
-                Data = {}
-                Data['domain'] = domain
-                Data['monthlyLimit'] = domainLimits.monthlyLimit
-                Data['monthlyUsed'] = domainLimits.monthlyUsed
-                Data['emailAccounts'] = domainEmail.eusers_set.count()
+            Data = {}
+            Data['domain'] = domain
+            Data['monthlyLimit'] = domainLimits.monthlyLimit
+            Data['monthlyUsed'] = domainLimits.monthlyUsed
+            Data['emailAccounts'] = domainEmail.eusers_set.count()
 
-                if domainLimits.limitStatus == 1:
-                    Data['limitsOn'] = 1
-                    Data['limitsOff'] = 0
-                else:
-                    Data['limitsOn'] = 0
-                    Data['limitsOff'] = 1
-
-                ## Pagination for emails
-
-
-                pages = float(Data['emailAccounts']) / float(10)
-                pagination = []
-
-                if pages <= 1.0:
-                    pages = 1
-                    pagination.append('<li><a href="\#"></a></li>')
-                else:
-                    pages = ceil(pages)
-                    finalPages = int(pages) + 1
-
-                    for i in range(1, finalPages):
-                        pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
-
-                Data['pagination'] = pagination
-
-
-                return render(request, 'emailPremium/emailLimits.html', Data)
+            if domainLimits.limitStatus == 1:
+                Data['limitsOn'] = 1
+                Data['limitsOff'] = 0
             else:
-                return render(request, 'emailPremium/emailLimits.html',
-                                {"error": 1, "domain": "You do not own this domain."})
+                Data['limitsOn'] = 0
+                Data['limitsOff'] = 1
 
+            ## Pagination for emails
+
+
+            pages = float(Data['emailAccounts']) / float(10)
+            pagination = []
+
+            if pages <= 1.0:
+                pages = 1
+                pagination.append('<li><a href="\#"></a></li>')
+            else:
+                pages = ceil(pages)
+                finalPages = int(pages) + 1
+
+                for i in range(1, finalPages):
+                    pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
+
+            Data['pagination'] = pagination
+
+            return render(request, 'emailPremium/emailLimits.html', Data)
         else:
             return render(request, 'emailPremium/emailLimits.html', {"error":1,"domain": "This domain does not exists"})
     except KeyError:
@@ -245,16 +358,15 @@ def emailLimits(request,domain):
 
 def changeDomainLimit(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         try:
             if request.method == 'POST':
-
-                admin = Administrator.objects.get(pk=request.session['userID'])
-
-                if admin.type != 1:
-                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
 
                 data = json.loads(request.body)
                 newLimit = data['newLimit']
@@ -286,15 +398,15 @@ def changeDomainLimit(request):
 
 def getFurtherEmail(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         try:
             if request.method == 'POST':
-                admin = Administrator.objects.get(pk=request.session['userID'])
-
-                if admin.type != 1:
-                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
 
                 data = json.loads(request.body)
                 status = data['page']
@@ -346,16 +458,15 @@ def getFurtherEmail(request):
 
 def enableDisableIndividualEmailLimits(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         try:
             if request.method == 'POST':
-
-                admin = Administrator.objects.get(pk=request.session['userID'])
-
-                if admin.type != 1:
-                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
 
                 data = json.loads(request.body)
                 operationVal = data['operationVal']
@@ -385,11 +496,13 @@ def enableDisableIndividualEmailLimits(request):
 
 def emailPage(request, emailAddress):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        if admin.type != 1:
-            return HttpResponse("Only administrator can view this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         Data = {}
         Data['emailAddress'] = emailAddress
@@ -418,16 +531,15 @@ def emailPage(request, emailAddress):
 
 def getEmailStats(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         try:
             if request.method == 'POST':
-
-                admin = Administrator.objects.get(pk=request.session['userID'])
-
-                if admin.type != 1:
-                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
 
                 data = json.loads(request.body)
                 emailAddress = data['emailAddress']
@@ -459,16 +571,15 @@ def getEmailStats(request):
 
 def enableDisableIndividualEmailLogs(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         try:
             if request.method == 'POST':
-
-                admin = Administrator.objects.get(pk=request.session['userID'])
-
-                if admin.type != 1:
-                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
 
                 data = json.loads(request.body)
                 operationVal = data['operationVal']
@@ -498,16 +609,15 @@ def enableDisableIndividualEmailLogs(request):
 
 def changeDomainEmailLimitsIndividual(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         try:
             if request.method == 'POST':
-
-                admin = Administrator.objects.get(pk=request.session['userID'])
-
-                if admin.type != 1:
-                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
 
                 data = json.loads(request.body)
                 emailAddress = data['emailAddress']
@@ -571,16 +681,15 @@ def changeDomainEmailLimitsIndividual(request):
 
 def getEmailLogs(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         try:
             if request.method == 'POST':
-
-                admin = Administrator.objects.get(pk=request.session['userID'])
-
-                if admin.type != 1:
-                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
 
                 data = json.loads(request.body)
                 status = data['page']
@@ -626,16 +735,15 @@ def getEmailLogs(request):
 
 def flushEmailLogs(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         try:
             if request.method == 'POST':
-
-                admin = Administrator.objects.get(pk=request.session['userID'])
-
-                if admin.type != 1:
-                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
 
                 data = json.loads(request.body)
                 emailAddress = data['emailAddress']
@@ -664,11 +772,13 @@ def flushEmailLogs(request):
 
 def spamAssassinHome(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        if admin.type != 1:
-            return HttpResponse("Only administrator can view this page.")
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         checkIfSpamAssassinInstalled = 0
 
@@ -682,17 +792,19 @@ def spamAssassinHome(request):
 
 def installSpamAssassin(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         try:
 
-            admin = Administrator.objects.get(pk=request.session['userID'])
+            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+            execPath = execPath + " installSpamAssassin"
+            ProcessUtilities.popenExecutioner(execPath)
 
-            if admin.type != 1:
-                dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                json_data = json.dumps(dic)
-                return HttpResponse(json_data)
-
-            thread.start_new_thread(mailUtilities.installSpamAssassin, ('Install','SpamAssassin'))
             final_json = json.dumps({'status': 1, 'error_message': "None"})
             return HttpResponse(final_json)
         except BaseException,msg:
@@ -706,27 +818,18 @@ def installSpamAssassin(request):
 
 def installStatusSpamAssassin(request):
     try:
-        val = request.session['userID']
+        userID = request.session['userID']
         try:
             if request.method == 'POST':
 
-                admin = Administrator.objects.get(pk=request.session['userID'])
-
-                if admin.type != 1:
-                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-
                 command = "sudo cat " + mailUtilities.spamassassinInstallLogPath
-                installStatus = subprocess.check_output(shlex.split(command))
+                installStatus = ProcessUtilities.outputExecutioner(command)
 
                 if installStatus.find("[200]")>-1:
 
-                    execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
-
+                    execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                     execPath = execPath + " configureSpamAssassin"
-
-                    output = subprocess.check_output(shlex.split(execPath))
+                    output = ProcessUtilities.outputExecutioner(execPath)
 
                     if output.find("1,None") > -1:
                         pass
@@ -763,8 +866,6 @@ def installStatusSpamAssassin(request):
                                              'requestStatus': installStatus,
                                              })
                     return HttpResponse(final_json)
-
-
         except BaseException,msg:
             final_dic = {'abort':1,'installed':0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -774,18 +875,18 @@ def installStatusSpamAssassin(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def fetchSpamAssassinSettings(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
+
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    final_dic = {'fetchStatus': 0, 'error_message': 'Not enough privileges.'}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
 
                 report_safe = 0
                 required_hits = '5.0'
@@ -798,7 +899,7 @@ def fetchSpamAssassinSettings(request):
 
                     command = "sudo cat " + confPath
 
-                    data = subprocess.check_output(shlex.split(command)).splitlines()
+                    data = ProcessUtilities.outputExecutioner(command).splitlines()
 
                     for items in data:
                         if items.find('report_safe ') > -1:
@@ -809,7 +910,13 @@ def fetchSpamAssassinSettings(request):
                                 report_safe = 1
                         if items.find('rewrite_header ') > -1:
                             tempData = items.split(' ')
-                            rewrite_header = tempData[1] + " " + tempData[2].strip('\n')
+                            rewrite_header = ''
+                            counter = 0
+                            for headerData in tempData:
+                                if counter == 0:
+                                    counter = counter + 1
+                                    continue
+                                rewrite_header = rewrite_header + headerData.strip('\n') + ' '
                             continue
                         if items.find('required_score ') > -1:
                             required_score = items.split(' ')[1].strip('\n')
@@ -848,16 +955,16 @@ def fetchSpamAssassinSettings(request):
 
 def saveSpamAssassinConfigurations(request):
     try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('saveStatus', 0)
+
         try:
             if request.method == 'POST':
-
-                if admin.type != 1:
-                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-
                 data = json.loads(request.body)
 
                 report_safe = data['report_safe']
@@ -891,11 +998,9 @@ def saveSpamAssassinConfigurations(request):
 
                 ## save configuration data
 
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
-
+                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                 execPath = execPath + " saveSpamAssassinConfigs --tempConfigPath " + tempConfigPath
-
-                output = subprocess.check_output(shlex.split(execPath))
+                output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:
                     data_ret = {'saveStatus': 1, 'error_message': "None"}
@@ -915,110 +1020,5 @@ def saveSpamAssassinConfigurations(request):
     except KeyError,msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         data_ret = {'saveStatus': 0, 'error_message': str(msg)}
-        json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
-
-## Email Policy Server
-
-def emailPolicyServer(request):
-    try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-
-        if admin.type != 1:
-            return HttpResponse("Only administrator can view this page.")
-
-        return render(request, 'emailPremium/policyServer.html')
-
-    except KeyError:
-        return redirect(loadLoginPage)
-
-
-def fetchPolicyServerStatus(request):
-    try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-        try:
-            if request.method == 'POST':
-
-                if admin.type != 1:
-                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-
-                command = 'sudo cat /etc/postfix/main.cf'
-                output = subprocess.check_output(shlex.split(command)).split('\n')
-
-                installCheck = 0
-
-                for items in output:
-                    if items.find('check_policy_service unix:/var/log/policyServerSocket') > -1:
-                        installCheck = 1
-                        break
-
-
-                data_ret = {'status': 1, 'error_message': 'None', 'installCheck' : installCheck}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-
-        except BaseException,msg:
-            data_ret = {'status': 0, 'error_message': str(msg)}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-    except KeyError,msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg))
-        data_ret = {'status': 0, 'error_message': str(msg)}
-        json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
-
-def savePolicyServerStatus(request):
-    try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-        try:
-            if request.method == 'POST':
-
-                if admin.type != 1:
-                    dic = {'status': 0, 'error_message': "Only administrator can view this page."}
-                    json_data = json.dumps(dic)
-                    return HttpResponse(json_data)
-
-                data = json.loads(request.body)
-
-                policServerStatus = data['policServerStatus']
-
-                install = '0'
-
-                if policServerStatus == True:
-                    install = "1"
-
-                ## save configuration data
-
-                execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
-
-                execPath = execPath + " savePolicyServerStatus --install " + install
-
-                output = subprocess.check_output(shlex.split(execPath))
-
-                if output.find("1,None") > -1:
-                    data_ret = {'status': 1, 'error_message': "None"}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-                else:
-                    data_ret = {'status': 0, 'error_message': output}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-
-        except BaseException,msg:
-            data_ret = {'status': 0, 'error_message': str(msg)}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-    except KeyError,msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg))
-        data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

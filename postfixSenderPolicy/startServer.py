@@ -39,7 +39,6 @@ class SetupConn:
             uid = pwd.getpwnam("postfix").pw_uid
             gid = grp.getgrnam("postfix").gr_gid
             os.chown(self.server_addr, uid, gid)
-
             os.chmod(self.server_addr, 0755)
 
             logging.writeToFile('CyberPanel Email Policy Server Successfully started!')
@@ -66,7 +65,6 @@ class SetupConn:
                 background.start()
         except BaseException, msg:
             logging.writeToFile(str(msg) + ' [SetupConn.start_listening]')
-
 
     def __del__(self):
         self.sock.close()

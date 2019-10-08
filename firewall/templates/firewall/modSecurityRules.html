@@ -15,8 +15,8 @@
 </div>
 
 <div ng-controller="modSecRules" class="example-box-wrapper">
-        <div style="border-radius: 25px;border-color:#3498db" class="content-box">
-            <h3 class="content-box-header bg-blue">
+        <div class="panel panel-body">
+            <h3 class="content-box-header">
                 {% trans "ModSecurity Rules" %} <img ng-hide="modsecLoading"  src="/static/images/loading.gif">
             </h3>
 
@@ -39,7 +39,7 @@
                             <div class="form-group">
                                 <label class="col-sm-3 control-label"></label>
                                 <div class="col-sm-4">
-                                     <button type="button" ng-click="saveModSecRules()" class="btn btn-primary btn-lg btn-block">{% trans "Save Rules!" %}</button>
+                                     <button type="button" ng-click="saveModSecRules()" class="btn btn-primary btn-lg">{% trans "Save Rules!" %}</button>
 
                                 </div>
                             </div>
@@ -67,11 +67,12 @@
                 {% else %}
 
                 <div class="col-md-12 text-center" style="margin-bottom: 2%;">
-                                <h3>{% trans "ModSecurity is not installed " %}
+                                <h4 class="mb-10">{% trans "ModSecurity is not installed " %}
+                                    </h4>
                                     <a href="{% url 'modSecurity' %}"><button class="btn btn-alt btn-hover btn-blue-alt">
                                         <span>{% trans "Install Now." %}</span>
                                         <i class="glyph-icon icon-arrow-right"></i>
-                                    </button></a></h3>
+                                    </button></a>
                   </div>
 
                 {% endif %}

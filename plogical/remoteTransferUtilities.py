@@ -1,7 +1,6 @@
 import argparse
 import os
 import CyberCPLogFileWriter as logging
-import remoteBackup as rBackup
 import backupUtilities as backupUtil
 import time
 from multiprocessing import Process
@@ -10,6 +9,10 @@ import requests
 import subprocess
 import shlex
 from shutil import move
+from plogical.virtualHostUtilities import virtualHostUtilities
+from plogical.processUtilities import ProcessUtilities
+from backupSchedule import backupSchedule
+import shutil
 
 class remoteTransferUtilities:
 
@@ -71,7 +74,7 @@ class remoteTransferUtilities:
 
             writeToFile.writelines("############################\n")
             writeToFile.writelines("      Starting remote Backup\n")
-            writeToFile.writelines("      Start date: " + time.strftime("%I-%M-%S-%a-%b-%Y") + "\n")
+            writeToFile.writelines("      Start date: " + time.strftime("%m.%d.%Y_%H-%M-%S") + "\n")
             writeToFile.writelines("############################\n")
             writeToFile.writelines("\n")
             writeToFile.writelines("\n")
@@ -80,16 +83,15 @@ class remoteTransferUtilities:
                 checkConn = backupUtil.backupUtilities.checkConnection(ipAddress)
                 if checkConn[0] == 0:
                     writeToFile.writelines("[" + time.strftime(
-                        "%I-%M-%S-%a-%b-%Y") + "]" + " Connection to:" + ipAddress + " Failed, please resetup this destination from CyberPanel, aborting. [5010]" + "\n")
+                        "%m.%d.%Y_%H-%M-%S") + "]" + " Connection to:" + ipAddress + " Failed, please resetup this destination from CyberPanel, aborting. [5010]" + "\n")
                     writeToFile.close()
                     return
                 else:
                     pass
             else:
                 writeToFile.writelines("[" + time.strftime(
-                    "%I-%M-%S-%a-%b-%Y") + "]" + " Host:" + ipAddress + " is down, aborting. [5010]" + "\n")
+                    "%m.%d.%Y_%H-%M-%S") + "]" + " Host:" + ipAddress + " could be  down, we are continuing..." + "\n")
                 writeToFile.close()
-                return
 
             writeToFile.close()
 
@@ -127,76 +129,52 @@ class remoteTransferUtilities:
                 ## dir is without forward slash
 
                 for virtualHost in accountsToTransfer:
-
                     try:
 
                         writeToFile = open(backupLogPath, "a")
                         writeToFile.writelines("[" + time.strftime(
-                            "%I-%M-%S-%a-%b-%Y") + "]" + " Currently generating local backups for: " + virtualHost + "\n")
+                            "%m.%d.%Y_%H-%M-%S") + "]" + " Currently generating local backups for: " + virtualHost + "\n")
                         writeToFile.close()
 
-                        finalData = json.dumps({'websiteToBeBacked': virtualHost})
-                        r = requests.post("http://localhost:5003/backup/submitBackupCreation", data=finalData,
-                                          verify=False)
+                        retValue = backupSchedule.createLocalBackup(virtualHost, backupLogPath)
 
-                        data = json.loads(r.text)
+                        if retValue[0] == 1:
+                            writeToFile = open(backupLogPath, 'a')
+                            writeToFile.writelines("[" + time.strftime(
+                                "%m.%d.%Y_%H-%M-%S") + "]" + " Local Backup Completed for: " + virtualHost + "\n")
 
-                        fileName = data['tempStorage'] + ".tar.gz"
+                            completePathToBackupFile = retValue[1] + '.tar.gz'
 
-                        completePathToBackupFile = fileName
+                            ## move the generated backup file to specified destination
 
-                        while (1):
-                            time.sleep(2)
-                            r = requests.post("http://localhost:5003/backup/backupStatus", data=finalData, verify=False)
-                            data = json.loads(r.text)
+                            if os.path.exists(completePathToBackupFile):
+                                move(completePathToBackupFile, dir)
 
-                            writeToFile = open(backupLogPath, "a")
+                            completedPathToSend = dir + "/" + completePathToBackupFile.split("/")[-1]
 
                             writeToFile.writelines("[" + time.strftime(
-                                "%I-%M-%S-%a-%b-%Y") + "]" + " Waiting for backup to complete.. " + "\n")
+                                "%m.%d.%Y_%H-%M-%S") + "]" + " Sending " + completedPathToSend + " to " + ipAddress + ".\n")
+
+                            remoteTransferUtilities.sendBackup(completedPathToSend, ipAddress, str(folderNumber),
+                                                               writeToFile)
+                            writeToFile.writelines("[" + time.strftime(
+                                "%m.%d.%Y_%H-%M-%S") + "]" + " Sent " + completedPathToSend + " to " + ipAddress + ".\n")
+
+                            writeToFile.writelines("[" + time.strftime(
+                                "%m.%d.%Y_%H-%M-%S") + "]" + " #############################################" + "\n")
 
                             writeToFile.close()
+                        else:
+                            writeToFile.writelines("[" + time.strftime(
+                                "%m.%d.%Y_%H-%M-%S") + "]" + "Failed to generate local backup for: " + virtualHost + "\n")
 
-                            if data['backupStatus'] == 0:
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + "Failed to generate local backup for: " + virtualHost + ". Error message: " +
-                                                       data['error_message'] + "\n")
-                                break
-
-                            elif data['abort'] == 1:
-
-                                writeToFile = open(backupLogPath, "a")
-
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " Local Backup Completed for: " + virtualHost + " with status: " +
-                                                       data['status'] + "\n")
-
-                                ## move the generated backup file to specified destination
-
-                                if os.path.exists(completePathToBackupFile):
-                                    move(completePathToBackupFile, dir)
-
-                                completedPathToSend = dir + "/" + completePathToBackupFile.split("/")[-1]
-
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " Sending " + completedPathToSend + " to " + ipAddress + ".\n")
-
-                                remoteTransferUtilities.sendBackup(completedPathToSend, ipAddress, str(folderNumber), writeToFile)
-
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " Sent " + completedPathToSend + " to " + ipAddress + ".\n")
-
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " #############################################" + "\n")
-
-                                writeToFile.close()
-                                break
-                    except:
+                    except BaseException, msg:
+                        logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.backupProcess:173]")
                         pass
 
                 writeToFile = open(backupLogPath, "a")
                 writeToFile.writelines("[" + time.strftime(
-                    "%I-%M-%S-%a-%b-%Y") + "]" + " Backups are successfully generated and received on: " + ipAddress + "\n")
+                    "%m.%d.%Y_%H-%M-%S") + "]" + " Backups are successfully generated and received on: " + ipAddress + "\n")
                 writeToFile.close()
 
                 ## removing local directory where backups were generated
@@ -213,6 +191,8 @@ class remoteTransferUtilities:
 
             command = "sudo scp -o StrictHostKeyChecking=no -i /root/.ssh/cyberpanel " + completedPathToSend + " root@" + IPAddress + ":/home/backup/transfer-" + folderNumber + "/"
             subprocess.call(shlex.split(command), stdout=writeToFile)
+
+            os.remove(completedPathToSend)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
@@ -232,7 +212,7 @@ class remoteTransferUtilities:
             writeToFile.writelines("\n")
             writeToFile.writelines("############################\n")
             writeToFile.writelines("      Starting Backup Restore\n")
-            writeToFile.writelines("      Start date: " + time.strftime("%I-%M-%S-%a-%b-%Y") + "\n")
+            writeToFile.writelines("      Start date: " + time.strftime("%m.%d.%Y_%H-%M-%S") + "\n")
             writeToFile.writelines("############################\n")
             writeToFile.writelines("\n")
             writeToFile.writelines("\n")
@@ -278,71 +258,70 @@ class remoteTransferUtilities:
                     writeToFile.writelines("\n")
                     writeToFile.writelines("\n")
                     writeToFile.writelines("[" + time.strftime(
-                        "%I-%M-%S-%a-%b-%Y") + "]" + " Starting restore for: " + backup + ".\n")
+                        "%m.%d.%Y_%H-%M-%S") + "]" + " Starting restore for: " + backup + ".\n")
                     writeToFile.close()
 
-                    finalData = json.dumps({'backupFile': backup, "dir": dir})
-                    r = requests.post("http://localhost:5003/backup/submitRestore", data=finalData, verify=False)
-                    data = json.loads(r.text)
+                    backupFile = backup
+                    execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+                    execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
+                    subprocess.Popen(shlex.split(execPath))
+                    time.sleep(4)
 
-                    if data['restoreStatus'] == 1:
-                        while (1):
-                            time.sleep(1)
-                            finalData = json.dumps({'backupFile': backup, "dir": dir})
-                            r = requests.post("http://localhost:5003/backup/restoreStatus", data=finalData,
-                                              verify=False)
-                            data = json.loads(r.text)
+                    while (1):
+                        time.sleep(1)
 
-                            if data['abort'] == 1 and data['running'] == "Error":
-                                writeToFile = open(backupLogPath, "a")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " Restore aborted for: " + backup + ". Error message: " +
-                                                       data['status'] + "\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " #########################################\n")
-                                writeToFile.close()
-                                break
-                            elif data['abort'] == 1 and data['running'] == "Completed":
-                                writeToFile = open(backupLogPath, "a")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " Restore Completed for: " + backup + ".\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " #########################################\n")
-                                writeToFile.close()
-                                break
-                            else:
-                                writeToFile = open(backupLogPath, "a")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("\n")
-                                writeToFile.writelines("[" + time.strftime(
-                                    "%I-%M-%S-%a-%b-%Y") + "]" + " Waiting for restore to complete.\n")
-                                writeToFile.close()
-                                time.sleep(3)
-                                pass
-                    else:
-                        logging.CyberCPLogFileWriter.writeToFile("Could not start restore process for: " + backup)
-                        writeToFile = open(backupLogPath, "a")
-                        writeToFile.writelines("\n")
-                        writeToFile.writelines("\n")
-                        writeToFile.writelines("[" + time.strftime(
-                            "%I-%M-%S-%a-%b-%Y") + "]" + "Could not start restore process for: " + backup + "\n")
-                        writeToFile.close()
+                        backupFile = backup.strip(".tar.gz")
+                        path = "/home/backup/transfer-" + str(dir) + "/" + backupFile
+                        status = open(path + "/status", 'r').read()
+
+                        if status.find("Done") > -1:
+                            command = "sudo rm -rf " + path
+                            ProcessUtilities.normalExecutioner(command)
+
+                            writeToFile = open(backupLogPath, "a")
+                            writeToFile.writelines("\n")
+                            writeToFile.writelines("\n")
+                            writeToFile.writelines("[" + time.strftime(
+                                "%m.%d.%Y_%H-%M-%S") + "]" + " Restore Completed for: " + backup + ".\n")
+                            writeToFile.writelines("[" + time.strftime(
+                                "%m.%d.%Y_%H-%M-%S") + "]" + " #########################################\n")
+                            writeToFile.close()
+                            break
+                        elif status.find("[5009]") > -1:
+                            ## removing temporarily generated files while restoring
+                            command = "sudo rm -rf " + path
+                            ProcessUtilities.normalExecutioner(command)
+
+                            writeToFile = open(backupLogPath, "a")
+                            writeToFile.writelines("\n")
+                            writeToFile.writelines("\n")
+                            writeToFile.writelines("[" + time.strftime(
+                                "%m.%d.%Y_%H-%M-%S") + "]" + " Restore aborted for: " + backup + ". Error message: " +
+                                                   status + "\n")
+                            writeToFile.writelines("[" + time.strftime(
+                                "%m.%d.%Y_%H-%M-%S") + "]" + " #########################################\n")
+                            writeToFile.close()
+                            break
+                        else:
+                            writeToFile = open(backupLogPath, "a")
+                            writeToFile.writelines("\n")
+                            writeToFile.writelines("\n")
+                            writeToFile.writelines("[" + time.strftime(
+                                "%m.%d.%Y_%H-%M-%S") + "]" + " Waiting for restore to complete.\n")
+                            writeToFile.close()
+                            time.sleep(3)
+                            pass
 
             writeToFile = open(backupLogPath, "a")
 
             writeToFile.writelines("\n")
             writeToFile.writelines("\n")
             writeToFile.writelines("[" + time.strftime(
-                "%I-%M-%S-%a-%b-%Y") + "]" + " Backup Restore complete\n")
+                "%m.%d.%Y_%H-%M-%S") + "]" + " Backup Restore complete\n")
             writeToFile.writelines("completed[success]")
 
-
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateRestore]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.startRestore]")
 
 
 def main():

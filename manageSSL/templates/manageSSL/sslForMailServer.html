@@ -16,14 +16,12 @@
 
 <div ng-controller="sslIssueForMailServer" class="panel">
     <div class="panel-body">
-        <h3 class="title-hero">
+        <h3 class="content-box-header">
             {% trans "Issue SSL For MailServer" %} <img ng-hide="manageSSLLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
-
-            <form  action="/" class="form-horizontal bordered-row">
-
+            <form  action="/" class="form-horizontal bordered-row panel-body">
 
                  <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Select Website" %}</label>
@@ -47,7 +45,7 @@
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
+                    <div class="col-sm-6">
                             <div ng-hide="canNotIssue" class="alert alert-danger">
                                         <p>{% trans "Cannot issue SSL. Error message:" %} {$ errorMessage $}</p>
                             </div>

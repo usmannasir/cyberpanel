@@ -36,4 +36,12 @@ urlpatterns = [
     url(r'^api/',include('api.urls')),
     url(r'^filemanager/',include('filemanager.urls')),
     url(r'^emailPremium/',include('emailPremium.urls')),
+    url(r'^manageservices/',include('manageServices.urls')),
+    url(r'^plugins/',include('pluginHolder.urls')),
+    url(r'^emailMarketing/', include('emailMarketing.urls')),
+    url(r'^cloudAPI/', include('cloudAPI.urls')),
+    url(r'^docker/', include('dockerManager.urls')),
+    url(r'^container/', include('containerization.urls')),
+    url(r'^CloudLinux/', include('CLManager.urls')),
+    url(r'^IncrementalBackups/', include('IncBackups.urls')),
 ]
