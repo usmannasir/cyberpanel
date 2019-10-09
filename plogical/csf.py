@@ -497,7 +497,7 @@ class CSF(multi.Thread):
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[blockIP]")
 
-
+    @staticmethod
     def run_command(command):
         p = subprocess.Popen(command,
                          stdout=subprocess.PIPE,
@@ -507,8 +507,8 @@ class CSF(multi.Thread):
     @staticmethod
     def checkIP(ipAddress):
         try:
-            command = "sudo csf -g ' + ipAddress.split()
-            for line in run_command(command):
+            command = "sudo csf -g ' + ipAddress.split()"
+            for line in CSF.run_command(command):
                 print(line)
 
         except BaseException, msg:

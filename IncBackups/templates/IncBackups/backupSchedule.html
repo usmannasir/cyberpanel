@@ -1,0 +1,136 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Schedule Back up - CyberPanel" %} {% endblock %}
+{% block content %}
+
+    {% load static %}
+
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Schedule Back up" %} - <a target="_blank" href="http://go.cyberpanel.net/remote-backup"
+                                                    style="height: 23px;line-height: 21px;"
+                                                    class="btn btn-border btn-alt border-red btn-link font-red"
+                                                    title=""><span>{% trans "Remote Backups" %}</span></a></h2>
+            <p>{% trans "On this page you can schedule Back ups to localhost or remote server (If you have added one)." %}</p>
+        </div>
+
+        <div ng-controller="scheduleBackup" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "Schedule Back up" %} <img ng-hide="scheduleBackupLoading"
+                                                        src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+
+                    <form action="/" class="form-horizontal bordered-row">
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Destination" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-change="scheduleFreqView()" ng-model="backupDest" class="form-control">
+                                    {% for items in destinations %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div ng-hide="scheduleFreq" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Frequency" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-change="scheduleBtnView()" ng-model="backupFreq" class="form-control">
+                                    <option>Daily</option>
+                                    <option>Weekly</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div ng-hide="localPath" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Local Path" %}</label>
+                            <div class="col-sm-6">
+                                <input name="dom" type="text" class="form-control" ng-model="localPathValue"
+                                       placeholder="{% trans "Local directory where backups will be moved after creation." %}"
+                                       required>
+                            </div>
+                        </div>
+
+
+                        <div ng-hide="scheduleBtn" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="addSchedule()"
+                                        class="btn btn-primary btn-lg btn-block">{% trans "Add Destination" %}</button>
+
+                            </div>
+                        </div>
+
+
+                        <!------ List of Destinations --------------->
+
+
+                        <div class="form-group">
+
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+
+                                <div ng-hide="canNotAddSchedule" class="alert alert-danger">
+                                    <p>{% trans "Cannot add schedule. Error message:" %} {$ errorMessage $} </p>
+                                </div>
+
+                                <div ng-hide="scheduleAdded" class="alert alert-success">
+                                    <p>{% trans "Schedule Added" %}</p>
+                                </div>
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+
+                            <div class="col-sm-12">
+
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "Destination" %}</th>
+                                        <th>{% trans "Frequency" %}</th>
+                                        <th>{% trans "Delete" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat="record in records track by $index">
+                                        <td ng-bind="record.id"></td>
+                                        <td ng-bind="record.destLoc"></td>
+                                        <td ng-bind="record.frequency"></td>
+                                        <td ng-click="delSchedule(record.destLoc,record.frequency)"><img
+                                                src="{% static 'images/delete.png' %}"></td>
+
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!------ List of records --------------->
+
+
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

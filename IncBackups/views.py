@@ -541,3 +541,28 @@ def restorePoint(request):
         final_dic = {'status': 0, 'metaStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
+def scheduleBackups(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            return ACLManager.loadError()
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+
+        destinations = []
+        destinations.append('local')
+
+        path = '/home/cyberpanel/sftp'
+
+        for items in os.listdir(path):
+            destinations.append('sftp:%s' % (items))
+
+        for items in os.listdir(path):
+            destinations.append('s3:s3.amazonaws.com/%s' % (items))
+
+        return defRenderer(request, 'IncBackups/scheduleBackups.html', {'websiteList': websitesName, 'destinations': destinations})
+    except BaseException, msg:
+        return HttpResponse(str(msg))

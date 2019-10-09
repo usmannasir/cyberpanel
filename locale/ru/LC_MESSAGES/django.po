@@ -3801,7 +3801,7 @@ msgstr "Успешно запущен процесс резервного коп
 #: emailPremium/templates/emailPremium/policyServer.html:13
 #, fuzzy
 #| msgid "Email Logs"
-msgid "Email Limits Docs"
+msgid "Emai Limits Docs"
 msgstr "Лог-журнал Эл.почты"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14

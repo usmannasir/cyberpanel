@@ -17,8 +17,8 @@ from os import urandom
 from random import choice
 
 char_set = {'small': 'abcdefghijklmnopqrstuvwxyz',
-             'nums': '0123456789',
-             'big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+            'nums': '0123456789',
+            'big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
             }
 
 
@@ -36,6 +36,7 @@ def generate_pass(length=14):
             else:
                 password.append(a_char)
     return ''.join(password)
+
 
 def check_prev_char(password, current_char_set):
     """Function to ensure that there are no consecutive
@@ -58,6 +59,7 @@ def check_prev_char(password, current_char_set):
 
 centos = 0
 ubuntu = 1
+
 
 def get_distro():
     distro = -1
@@ -174,7 +176,6 @@ class preFlightsChecks:
             preFlightsChecks.call(command, self.distro, '[mountTemp]',
                                   'mountTemp',
                                   1, 0, os.EX_OSERR)
-
 
             tmp = "/usr/.tempdisk /tmp ext4 loop,rw,noexec,nosuid,nodev,nofail 0 0\n"
             varTmp = "/tmp /var/tmp none bind 0 0\n"
@@ -333,7 +334,6 @@ class preFlightsChecks:
             else:
                 command = "adduser docker"
 
-
             preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
                                   'add user cyberpanel',
                                   1, 0, os.EX_OSERR)
@@ -352,7 +352,6 @@ class preFlightsChecks:
             preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
                                   'add user cyberpanel',
                                   1, 0, os.EX_OSERR)
-
 
             ###
 
@@ -943,8 +942,8 @@ class preFlightsChecks:
             if subprocess.check_output('systemd-detect-virt').find("openvz") > -1:
                 command = "pip install --upgrade requests"
                 preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
-                                              'Upgrade requests',
-                                              1, 0, os.EX_OSERR)
+                                      'Upgrade requests',
+                                      1, 0, os.EX_OSERR)
         except:
             pass
 
@@ -953,18 +952,18 @@ class preFlightsChecks:
         os.chdir(self.path)
 
         command = "wget http://cyberpanel.sh/CyberPanel.1.9.0.tar.gz"
-        #command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
+        # command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
-                                      'CyberPanel Download',
-                                      1, 1, os.EX_OSERR)
+                              'CyberPanel Download',
+                              1, 1, os.EX_OSERR)
 
         ##
 
         count = 0
         command = "tar zxf CyberPanel.1.9.0.tar.gz"
-        #command = "tar zxf CyberPanelTemp.tar.gz"
+        # command = "tar zxf CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
-                                      'Extract CyberPanel',1, 1, os.EX_OSERR)
+                              'Extract CyberPanel', 1, 1, os.EX_OSERR)
 
         ### update password:
 
@@ -1016,8 +1015,6 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
-
-
         if self.distro == ubuntu:
             os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
@@ -1029,20 +1026,18 @@ class preFlightsChecks:
 
         ### Applying migrations
 
-
         os.chdir("CyberCP")
 
         command = "/usr/local/CyberCP/bin/python2 manage.py makemigrations"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
-                                      'CyberPanel Make Migrations',
-                                      1, 1, os.EX_OSERR)
+                              'CyberPanel Make Migrations',
+                              1, 1, os.EX_OSERR)
 
         ##
 
         command = "/usr/local/CyberCP/bin/python2 manage.py migrate"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
-                                      'CyberPanel Migrate',1, 1, os.EX_OSERR)
-
+                              'CyberPanel Migrate', 1, 1, os.EX_OSERR)
 
         if not os.path.exists("/usr/local/CyberCP/public"):
             os.mkdir("/usr/local/CyberCP/public")
@@ -1050,7 +1045,7 @@ class preFlightsChecks:
         ## Moving static content to lscpd location
         command = 'mv static /usr/local/CyberCP/public/'
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
-                                      'Move static content', 1, 1, os.EX_OSERR)
+                              'Move static content', 1, 1, os.EX_OSERR)
 
         try:
             path = "/usr/local/CyberCP/version.txt"
@@ -1144,22 +1139,25 @@ class preFlightsChecks:
                               'Change permissions for client.', 1, 0, os.EX_OSERR)
 
         files = ['/etc/yum.repos.d/MariaDB.repo', '/etc/pdns/pdns.conf', '/etc/systemd/system/lscpd.service',
-                 '/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf', '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
-                 '/etc/dovecot/dovecot.conf', '/usr/local/lsws/conf/httpd_config.xml', '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
+                 '/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
+                 '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
+                 '/etc/dovecot/dovecot.conf', '/usr/local/lsws/conf/httpd_config.xml',
+                 '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
 
         for items in files:
             command = 'chmod 644 %s' % (items)
             preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
                                   'Change permissions for client.', 1, 0, os.EX_OSERR)
 
-        impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf', '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
-                 '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf', '/etc/pure-ftpd/db/mysql.conf', '/etc/powerdns/pdns.conf']
+        impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
+                   '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
+                   '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf', '/etc/pure-ftpd/db/mysql.conf',
+                   '/etc/powerdns/pdns.conf']
 
         for items in impFile:
             command = 'chmod 600 %s' % (items)
             preFlightsChecks.call(command, self.distro, '[fixCyberPanelPermissions]',
                                   'Change permissions for client.', 1, 0, os.EX_OSERR)
-
 
         command = 'chmod 640 /etc/postfix/*.cf'
         subprocess.call(command, shell=True)
@@ -1200,7 +1198,7 @@ class preFlightsChecks:
                 command = 'apt-get -y install unzip'
 
             preFlightsChecks.call(command, self.distro, '[install_unzip]',
-                                          'Install unzip', 1, 0, os.EX_OSERR)
+                                  'Install unzip', 1, 0, os.EX_OSERR)
         except BaseException, msg:
             logging.InstallLog.writeToFile(str(msg) + " [install_unzip]")
 
@@ -1213,7 +1211,7 @@ class preFlightsChecks:
                 command = 'apt-get -y install zip'
 
             preFlightsChecks.call(command, self.distro, '[install_zip]',
-                                          'Install zip', 1, 0, os.EX_OSERR)
+                                  'Install zip', 1, 0, os.EX_OSERR)
         except BaseException, msg:
             logging.InstallLog.writeToFile(str(msg) + " [install_zip]")
 
@@ -1227,7 +1225,7 @@ class preFlightsChecks:
 
             command = 'composer create-project phpmyadmin/phpmyadmin'
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
-                                          'Download PHPMYAdmin', 1, 0, os.EX_OSERR)
+                                  'Download PHPMYAdmin', 1, 0, os.EX_OSERR)
 
             ## Write secret phrase
 
@@ -1259,7 +1257,6 @@ class preFlightsChecks:
 
     ###################################################### Email setup
 
-
     def install_postfix_davecot(self):
         self.stdOut("Install dovecot - first remove postfix")
 
@@ -1275,13 +1272,11 @@ enabled=1"""
             writeToFile.write(content)
             writeToFile.close()
 
-
         try:
             if self.distro == centos:
 
                 command = 'yum -y install http://cyberpanel.sh/gf-release-latest.gf.el7.noarch.rpm'
                 subprocess.call(shlex.split(command))
-
 
                 command = 'yum remove postfix -y'
             else:
@@ -1371,7 +1366,6 @@ enabled=1"""
                     logging.InstallLog.writeToFile("Dovecot and Dovecot-MySQL successfully installed!")
                     preFlightsChecks.stdOut("Dovecot and Dovecot-MySQL successfully installed!")
                     break
-
 
             if self.distro != centos:
                 command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
@@ -1600,7 +1594,6 @@ enabled=1"""
 
             if os.path.exists(davecotmysql):
                 os.remove(davecotmysql)
-
 
                 ###############Getting SSL
 
@@ -2104,7 +2097,6 @@ enabled=1"""
                     break
             ##
 
-
             count = 0
 
             while (1):
@@ -2154,7 +2146,6 @@ enabled=1"""
                     break
 
             ##
-
 
             count = 0
 
@@ -2349,12 +2340,10 @@ enabled=1"""
                 else:
                     logging.InstallLog.writeToFile("Rainloop permissions changed!")
                     print(
-                        "[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + "Rainloop permissions changed!")
+                            "[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + "Rainloop permissions changed!")
                     break
 
             #############
-
-
 
             count = 0
 
@@ -2382,7 +2371,6 @@ enabled=1"""
             preFlightsChecks.call(command, self.distro, '[downoad_and_install_rainloop]',
                                   'rainlooop data folder',
                                   1, 0, os.EX_OSERR)
-
 
             ### Enable sub-folders
 
@@ -2428,7 +2416,6 @@ imap_folder_list_limit = 0
         return 1
 
     ###################################################### Email setup ends!
-
 
     def reStartLiteSpeed(self):
         try:
@@ -2491,7 +2478,6 @@ imap_folder_list_limit = 0
                                   'Install FirewallD',
                                   1, 0, os.EX_OSERR)
 
-
             ######
             if self.distro == centos:
                 # Not available in ubuntu
@@ -2510,15 +2496,12 @@ imap_folder_list_limit = 0
                                   'Restart FirewallD',
                                   1, 0, os.EX_OSERR)
 
-
             ##########
 
             command = 'systemctl enable firewalld'
             preFlightsChecks.call(command, self.distro, '[installFirewalld]',
                                   'Install FirewallD',
                                   1, 0, os.EX_OSERR)
-
-
 
             FirewallUtilities.addRule("tcp", "8090")
             FirewallUtilities.addRule("tcp", "80")
@@ -2550,7 +2533,6 @@ imap_folder_list_limit = 0
 
     ## from here
 
-
     def installLSCPD(self):
         try:
 
@@ -2564,8 +2546,8 @@ imap_folder_list_limit = 0
                 command = 'yum -y install gcc gcc-c++ make autoconf glibc rcs'
 
             preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                          'Install LSCPD',
-                                          1, 1, os.EX_OSERR)
+                                  'Install LSCPD',
+                                  1, 1, os.EX_OSERR)
 
             if self.distro == ubuntu:
                 command = "apt-get -y install libpcre3 libpcre3-dev openssl libexpat1 libexpat1-dev libgeoip-dev" \
@@ -2575,24 +2557,22 @@ imap_folder_list_limit = 0
                           ' which curl'
 
             preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                          'Install LSCPD',
-                                          1, 1, os.EX_OSERR)
-
+                                  'Install LSCPD',
+                                  1, 1, os.EX_OSERR)
 
             command = 'tar zxf lscp.tar.gz -C /usr/local/'
             preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                          'Install LSCPD',
-                                          1, 1, os.EX_OSERR)
-
+                                  'Install LSCPD',
+                                  1, 1, os.EX_OSERR)
 
             command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem'
             preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                          'Install LSCPD',
-                                          1, 1, os.EX_OSERR)
+                                  'Install LSCPD',
+                                  1, 1, os.EX_OSERR)
 
             try:
                 os.remove("/usr/local/lscp/fcgi-bin/lsphp")
-                shutil.copy("/usr/local/lsws/lsphp70/bin/lsphp","/usr/local/lscp/fcgi-bin/lsphp")
+                shutil.copy("/usr/local/lsws/lsphp70/bin/lsphp", "/usr/local/lscp/fcgi-bin/lsphp")
             except:
                 pass
 
@@ -2602,25 +2582,25 @@ imap_folder_list_limit = 0
                 command = 'useradd lscpd -M -d /usr/local/lscp'
 
             preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                          'Install LSCPD',
-                                          1, 0, os.EX_OSERR)
+                                  'Install LSCPD',
+                                  1, 0, os.EX_OSERR)
 
             if self.distro == centos:
                 command = 'groupadd lscpd'
                 preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                              'Install LSCPD',
-                                              1, 0, os.EX_OSERR)
+                                      'Install LSCPD',
+                                      1, 0, os.EX_OSERR)
                 # Added group in useradd for Ubuntu
 
             command = 'usermod -a -G lscpd lscpd'
             preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                          'Install LSCPD',
-                                          1, 0, os.EX_OSERR)
+                                  'Install LSCPD',
+                                  1, 0, os.EX_OSERR)
 
             command = 'usermod -a -G lsadm lscpd'
             preFlightsChecks.call(command, self.distro, '[installLSCPD]',
-                                          'Install LSCPD',
-                                          1, 0, os.EX_OSERR)
+                                  'Install LSCPD',
+                                  1, 0, os.EX_OSERR)
             try:
                 os.mkdir('/usr/local/lscp/cyberpanel')
             except:
@@ -2630,7 +2610,7 @@ imap_folder_list_limit = 0
             except:
                 pass
 
-            #self.setupComodoRules()
+            # self.setupComodoRules()
             self.setupPort()
             self.setupPythonWSGI()
 
@@ -2647,8 +2627,8 @@ imap_folder_list_limit = 0
 
             command = "mkdir -p /usr/local/lscp/modsec"
             preFlightsChecks.call(command, self.distro, '[setupComodoRules]',
-                                          'setupComodoRules',
-                                          1, 0, os.EX_OSERR)
+                                  'setupComodoRules',
+                                  1, 0, os.EX_OSERR)
 
             try:
                 if os.path.exists('comodo.tar.gz'):
@@ -2658,13 +2638,13 @@ imap_folder_list_limit = 0
 
             command = "wget https://cyberpanel.net/modsec/comodo.tar.gz"
             result = preFlightsChecks.call(command, self.distro, '[setupComodoRules]',
-                                          'setupComodoRules',
-                                          1, 0, os.EX_OSERR)
+                                           'setupComodoRules',
+                                           1, 0, os.EX_OSERR)
 
             command = "tar -zxf comodo.tar.gz -C /usr/local/lscp/modsec"
             preFlightsChecks.call(command, self.distro, '[setupComodoRules]',
-                                          'setupComodoRules',
-                                          1, 0, os.EX_OSERR)
+                                  'setupComodoRules',
+                                  1, 0, os.EX_OSERR)
 
             ###
 
@@ -2725,8 +2705,8 @@ imap_folder_list_limit = 0
 
             command = "chown -R lscpd:lscpd /usr/local/lscp/modsec"
             preFlightsChecks.call(command, self.distro, '[setupComodoRules]',
-                                          'setupComodoRules',
-                                          1, 0, os.EX_OSERR)
+                                  'setupComodoRules',
+                                  1, 0, os.EX_OSERR)
 
             return 1
 
@@ -2833,7 +2813,6 @@ imap_folder_list_limit = 0
             writeToFile = open(path, "w")
             writeToFile.write("abc\n")
             writeToFile.close()
-
 
             command = "chmod 600 " + path
             cmd = shlex.split(command)
@@ -3261,13 +3240,14 @@ imap_folder_list_limit = 0
     def installPYDNS(self):
         command = "pip install pydns"
         preFlightsChecks.call(command, self.distro, '[installPYDNS]',
-                                      'Install PYDNS',
-                                      1, 0, os.EX_OSERR)
+                              'Install PYDNS',
+                              1, 0, os.EX_OSERR)
+
     def installDockerPY(self):
         command = "pip install docker"
         preFlightsChecks.call(command, self.distro, '[installDockerPY]',
-                                      'Install DockerPY',
-                                      1, 0, os.EX_OSERR)
+                              'Install DockerPY',
+                              1, 0, os.EX_OSERR)
 
     def installOpenDKIM(self):
         try:
@@ -3529,7 +3509,6 @@ milter_default_action = accept
                         break
 
             ##
-
 
             count = 0
             while (1):
@@ -3795,12 +3774,11 @@ def main():
     checks.setup_gunicorn()
 
     import installCyberPanel
-    
+
     if ent == 0:
         installCyberPanel.Main(cwd, mysql, distro, ent, None, port, args.ftp, args.powerdns)
     else:
         installCyberPanel.Main(cwd, mysql, distro, ent, serial, port, args.ftp, args.powerdns)
-
 
     checks.setupPHPAndComposer()
     checks.fix_selinux_issue()
@@ -3821,7 +3799,6 @@ def main():
     checks.install_rsync()
 
     checks.installFirewalld()
-
 
     checks.install_python_requests()
     checks.install_default_keys()
@@ -3853,7 +3830,6 @@ def main():
     checks.setupLSCPDDaemon()
     checks.fixCyberPanelPermissions()
 
-
     if args.postfix != None:
         checks.enableDisableEmail(args.postfix)
     else:
@@ -3871,7 +3847,6 @@ def main():
     else:
         preFlightsChecks.stdOut("Pure-FTPD will be installed and enabled.")
         checks.enableDisableFTP('On', distro)
-
 
     checks.setUpFirstAccount()
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")

@@ -3773,7 +3773,7 @@ msgstr " 已成功创建."
 #: emailPremium/templates/emailPremium/policyServer.html:13
 #, fuzzy
 #| msgid "Email Logs"
-msgid "Email Limits Docs"
+msgid "Emai Limits Docs"
 msgstr "Email日志"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14
