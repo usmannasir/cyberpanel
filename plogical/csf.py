@@ -277,8 +277,6 @@ class CSF(multi.Thread):
                         writeToConf.writelines('POP3D_LOG = "/var/log/mail.log"\n')
                     elif items.find('IMAPD_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                         writeToConf.writelines('IMAPD_LOG = "/var/log/mail.log"\n')
-                    elif items.find('IPTABLES_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
-                        writeToConf.writelines('IPTABLES_LOG = "/var/log/kern.log"\n')
                     elif items.find('SYSLOG_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                         writeToConf.writelines('SYSLOG_LOG = "/var/log/syslog"\n')
                 else:
