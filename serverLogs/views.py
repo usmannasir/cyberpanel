@@ -12,6 +12,7 @@ import shlex
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
+import os
 # Create your views here.
 
 
@@ -130,9 +131,15 @@ def getLogsFromFile(request):
         elif type == "error":
             fileName = installUtilities.Server_root_path + "/logs/error.log"
         elif type == "email":
-            fileName = "/var/log/maillog"
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                fileName = "/var/log/maillog"
+            else:
+                fileName = "/var/log/mail.log"
         elif type == "ftp":
-            fileName = "/var/log/messages"
+	    if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                fileName = "/var/log/messages"
+            else:
+                fileName = "/var/log/syslog"
         elif type == "modSec":
             fileName = "/usr/local/lsws/logs/auditmodsec.log"
         elif type == "cyberpanel":

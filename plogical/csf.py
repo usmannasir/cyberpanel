@@ -64,7 +64,7 @@ class CSF(multi.Thread):
                 command = 'yum install bind-utils perl-libwww-perl net-tools perl-LWP-Protocol-https -y'
                 ProcessUtilities.normalExecutioner(command)
             elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
-                command = 'apt-get install dnsutils libwww-perl -y'
+                command = 'apt-get install dnsutils libwww-perl net-tools -y'
                 ProcessUtilities.normalExecutioner(command)
             else:
 
@@ -266,7 +266,19 @@ class CSF(multi.Thread):
                 #  HTACCESS_LOG is ins main error.log
                 elif items.find('HTACCESS_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('HTACCESS_LOG = "/usr/local/lsws/logs/error.log"\n')
-                elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                else:
+                    writeToConf.writelines(items)
+
+            writeToConf.close()
+
+            ##
+
+            # Some Ubuntu initial configurations
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                data = open('/etc/csf/csf.conf', 'r').readlines()
+                writeToConf = open('/etc/csf/csf.conf', 'w')
+
+                for items in data:
                     if items.find('SSHD_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                         writeToConf.writelines('SSHD_LOG = "/var/log/auth.log"\n')
                     elif items.find('SU_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
@@ -277,14 +289,16 @@ class CSF(multi.Thread):
                         writeToConf.writelines('POP3D_LOG = "/var/log/mail.log"\n')
                     elif items.find('IMAPD_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                         writeToConf.writelines('IMAPD_LOG = "/var/log/mail.log"\n')
+                    elif items.find('IPTABLES_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                        writeToConf.writelines('IPTABLES_LOG = "/var/log/kern.log"\n')
                     elif items.find('SYSLOG_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                         writeToConf.writelines('SYSLOG_LOG = "/var/log/syslog"\n')
-                else:
-                    writeToConf.writelines(items)
+                    else:
+                        writeToConf.writelines(items)
+                writeToConf.close()
 
-            writeToConf.close()
+                ##
 
-            ##
 
             command = 'csf -s'
             ProcessUtilities.normalExecutioner(command)
@@ -496,18 +510,10 @@ class CSF(multi.Thread):
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[blockIP]")
 
     @staticmethod
-    def run_command(command):
-        p = subprocess.Popen(command,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT)
-        return iter(p.stdout.readline, b'')
-
-    @staticmethod
     def checkIP(ipAddress):
         try:
-            command = "sudo csf -g ' + ipAddress.split()"
-            for line in CSF.run_command(command):
-                print(line)
+            command = 'sudo csf -g ' + ipAddress
+            ProcessUtilities.executioner(command)
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[checkIP]")
