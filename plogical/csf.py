@@ -59,6 +59,18 @@ class CSF(multi.Thread):
             command = 'bash install.sh'
             ProcessUtilities.normalExecutioner(command)
 
+            command = 'mv /etc/csf/ui/server.crt /etc/csf/ui/server.crt-bak'
+            ProcessUtilities.normalExecutioner(command)
+
+            command = 'mv /etc/csf/ui/server.key /etc/csf/ui/server.key-bak'
+            ProcessUtilities.normalExecutioner(command)
+
+            command = 'ln -s /usr/local/lscp/conf/cert.pem /etc/csf/ui/server.crt'
+            ProcessUtilities.normalExecutioner(command)
+
+            command = 'ln -s /usr/local/lscp/conf/key.pem /etc/csf/ui/server.key'
+            ProcessUtilities.normalExecutioner(command)
+
             # install required packages for CSF perl and /usr/bin/host
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                 command = 'yum install bind-utils perl-libwww-perl net-tools perl-LWP-Protocol-https -y'
@@ -66,6 +78,8 @@ class CSF(multi.Thread):
             elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
                 command = 'apt-get install dnsutils libwww-perl net-tools -y'
                 ProcessUtilities.normalExecutioner(command)
+		command = 'ln -s /bin/systemctl /usr/bin/systemctl'
+            	ProcessUtilities.normalExecutioner(command)
             else:
 
                 logging.CyberCPLogFileWriter.statusWriter(CSF.installLogPath,
@@ -79,14 +93,16 @@ class CSF(multi.Thread):
             for items in data:
                 if items.find('TCP_IN') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines(
-                        'TCP_IN = "20,21,22,25,53,80,110,143,443,465,587,993,995,7080,8090,40110:40210"\n')
+                        'TCP_IN = "20,21,22,25,53,80,110,143,443,465,587,993,995,1025,7080,8090,40110:40210"\n')
                 elif items.find('TCP_OUT') > -1 and items.find('=') > -1 and (items[0] != '#'):
-                    writeToConf.writelines('TCP_OUT = "20,21,22,25,53,80,110,113,443,587,993,995,8090,40110:40210"\n')
+                    writeToConf.writelines('TCP_OUT = "20,21,22,25,43,53,80,110,113,443,587,993,995,8090,40110:40210"\n')
                 elif items.find('UDP_IN') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('UDP_IN = "20,21,53"\n')
                 elif items.find('UDP_OUT') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('UDP_OUT = "20,21,53,113,123"\n')
-                # setting RESTRICT_SYSLOG to "3" for use with option RESTRICT_SYSLOG_GROUP
+                elif items.find('TESTING =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('TESTING = "0"\n')
+               	# setting RESTRICT_SYSLOG to "3" for use with option RESTRICT_SYSLOG_GROUP
                 elif items.find('RESTRICT_SYSLOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('RESTRICT_SYSLOG = "3"\n')
 
@@ -266,6 +282,18 @@ class CSF(multi.Thread):
                 #  HTACCESS_LOG is ins main error.log
                 elif items.find('HTACCESS_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('HTACCESS_LOG = "/usr/local/lsws/logs/error.log"\n')
+
+		#  CSF UI enable
+                elif items.find('UI = "0"') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('UI = "1"\n')
+                elif items.find('UI_ALLOW') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('UI_ALLOW = "0"\n')
+                elif items.find('UI_PORT =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('UI_PORT = "1025"\n')
+                elif items.find('UI_USER') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('UI_USER = "cyberpanel"\n')
+                elif items.find('UI_PASS') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('UI_PASS = "csfadmin1234567"\n')
                 else:
                     writeToConf.writelines(items)
 
@@ -301,6 +329,12 @@ class CSF(multi.Thread):
 
 
             command = 'csf -s'
+            ProcessUtilities.normalExecutioner(command)
+
+            command = 'sleep 5'
+            ProcessUtilities.normalExecutioner(command)
+
+            command = 'csf -ra'
             ProcessUtilities.normalExecutioner(command)
 
             logging.CyberCPLogFileWriter.statusWriter(CSF.installLogPath, 'CSF successfully Installed.[200]\n', 1)
