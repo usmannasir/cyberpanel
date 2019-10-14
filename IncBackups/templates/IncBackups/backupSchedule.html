@@ -17,10 +17,10 @@
             <p>{% trans "On this page you can schedule Back ups to localhost or remote server (If you have added one)." %}</p>
         </div>
 
-        <div ng-controller="scheduleBackup" class="panel">
+        <div ng-controller="scheduleBackupInc" class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
-                    {% trans "Schedule Back up" %} <img ng-hide="scheduleBackupLoading"
+                    {% trans "Schedule Back up" %} <img ng-hide="cyberpanelLoading"
                                                         src="{% static 'images/loading.gif' %}">
                 </h3>
                 <div class="example-box-wrapper">
@@ -50,17 +50,48 @@
                             </div>
                         </div>
 
-                        <div ng-hide="localPath" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Local Path" %}</label>
-                            <div class="col-sm-6">
-                                <input name="dom" type="text" class="form-control" ng-model="localPathValue"
-                                       placeholder="{% trans "Local directory where backups will be moved after creation." %}"
-                                       required>
+                        <div ng-hide="scheduleFreq" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Backup Content" %}</label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="websiteData" type="checkbox" value="">
+                                        Data
+                                    </label>
+                                </div>
                             </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="websiteDatabases" type="checkbox" value="">
+                                        Databases
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="websiteEmails" type="checkbox" value="">
+                                        Emails
+                                    </label>
+                                </div>
+                            </div>
+                            <!---
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="websiteSSLs" type="checkbox" value="">
+                                        SSL Certificates
+                                    </label>
+                                </div>
+                            </div> -->
                         </div>
 
 
-                        <div ng-hide="scheduleBtn" class="form-group">
+                        <div ng-hide="scheduleFreq" class="form-group">
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-4">
                                 <button type="button" ng-click="addSchedule()"
@@ -72,25 +103,42 @@
 
                         <!------ List of Destinations --------------->
 
+                        <!------ List of Accounts --------------->
 
-                        <div class="form-group">
+                        <div ng-hide="scheduleFreq" class="form-group">
 
-                            <label class="col-sm-3 control-label"></label>
-                            <div class="col-sm-4">
-
-                                <div ng-hide="canNotAddSchedule" class="alert alert-danger">
-                                    <p>{% trans "Cannot add schedule. Error message:" %} {$ errorMessage $} </p>
-                                </div>
-
-                                <div ng-hide="scheduleAdded" class="alert alert-success">
-                                    <p>{% trans "Schedule Added" %}</p>
-                                </div>
-
-                                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                                </div>
+                            <div class="col-sm-12">
+                                <input type="text" ng-model="accountsSearch"
+                                       placeholder="{% trans 'Search Accounts..' %}"
+                                       class="form-control autocomplete-input">
                             </div>
                         </div>
+
+                        <div ng-hide="scheduleFreq" class="form-group">
+
+                            <div class="col-sm-12">
+
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "Select sites to be included in this job" %}</th>
+                                        <th><input ng-model="webSiteStatus" ng-change="allChecked(webSiteStatus)"
+                                                   type="checkbox" value=""></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat="web in WebSitesList | filter:accountsSearch">
+                                        <td ng-bind="web.domain"></td>
+                                        <td ng-click=""><input ng-model="webSiteStatus"
+                                                               ng-change="addRemoveWebsite(web.domain,webSiteStatus)"
+                                                               type="checkbox" value=""></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!------ List of Accounts --------------->
 
                         <div class="form-group">
 
@@ -108,9 +156,9 @@
                                     <tbody>
                                     <tr ng-repeat="record in records track by $index">
                                         <td ng-bind="record.id"></td>
-                                        <td ng-bind="record.destLoc"></td>
+                                        <td ng-bind="record.destination"></td>
                                         <td ng-bind="record.frequency"></td>
-                                        <td ng-click="delSchedule(record.destLoc,record.frequency)"><img
+                                        <td ng-click="delSchedule(record.id)"><img
                                                 src="{% static 'images/delete.png' %}"></td>
 
                                     </tr>

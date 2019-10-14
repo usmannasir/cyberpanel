@@ -249,6 +249,7 @@ password=%s
             return 1
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[restoreDatabaseBackup]")
+            return 0
 
     @staticmethod
     def submitDBCreation(dbName, dbUsername, dbPassword, databaseWebsite):

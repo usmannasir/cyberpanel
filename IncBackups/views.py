@@ -10,7 +10,7 @@ import json
 import os
 from loginSystem.models import Administrator
 from websiteFunctions.models import Websites
-from .models import IncJob, JobSnapshots
+from .models import IncJob, BackupJob, JobSites
 from .IncBackupsControl import IncJobs
 from random import randint
 import time
@@ -38,6 +38,8 @@ def createBackup(request):
 
         for items in os.listdir(path):
             destinations.append('sftp:%s' % (items))
+
+        path = '/home/cyberpanel/aws'
 
         for items in os.listdir(path):
             destinations.append('s3:s3.amazonaws.com/%s' % (items))
@@ -563,6 +565,112 @@ def scheduleBackups(request):
         for items in os.listdir(path):
             destinations.append('s3:s3.amazonaws.com/%s' % (items))
 
-        return defRenderer(request, 'IncBackups/scheduleBackups.html', {'websiteList': websitesName, 'destinations': destinations})
+        return defRenderer(request, 'IncBackups/backupSchedule.html', {'websiteList': websitesName, 'destinations': destinations})
     except BaseException, msg:
         return HttpResponse(str(msg))
+
+def submitBackupSchedule(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            return ACLManager.loadErrorJson('scheduleStatus', 0)
+
+        data = json.loads(request.body)
+
+        backupDest = data['backupDestinations']
+        backupFreq = data['backupFreq']
+        websitesToBeBacked = data['websitesToBeBacked']
+
+        try:
+            websiteData = data['websiteData']
+            websiteData = 1
+        except:
+            websiteData = False
+            websiteData = 0
+
+        try:
+            websiteEmails = data['websiteEmails']
+            websiteEmails = 1
+        except:
+            websiteEmails = False
+            websiteEmails = 0
+
+        try:
+            websiteDatabases = data['websiteDatabases']
+            websiteDatabases = 1
+        except:
+            websiteDatabases = False
+            websiteDatabases = 0
+
+        newJob = BackupJob(websiteData=websiteData, websiteDataEmails=websiteEmails, websiteDatabases=websiteDatabases, destination=backupDest, frequency=backupFreq)
+        newJob.save()
+
+        for items in websitesToBeBacked:
+            jobsite = JobSites(job=newJob, website=items)
+            jobsite.save()
+
+        final_json = json.dumps({'status': 1, 'error_message': "None"})
+        return HttpResponse(final_json)
+
+
+    except BaseException, msg:
+        final_json = json.dumps({'status': 0, 'error_message': str(msg)})
+        return HttpResponse(final_json)
+
+def getCurrentBackupSchedules(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
+
+        records = BackupJob.objects.all()
+
+        json_data = "["
+        checker = 0
+
+        for items in records:
+            dic = {'id': items.id,
+                   'destination': items.destination,
+                   'frequency': items.frequency,
+                   }
+
+            if checker == 0:
+                json_data = json_data + json.dumps(dic)
+                checker = 1
+            else:
+                json_data = json_data + ',' + json.dumps(dic)
+
+        json_data = json_data + ']'
+        final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
+        return HttpResponse(final_json)
+
+    except BaseException, msg:
+        final_dic = {'status': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def scheduleDelete(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            return ACLManager.loadErrorJson('scheduleStatus', 0)
+
+        data = json.loads(request.body)
+
+        id = data['id']
+
+        backupJob = BackupJob.objects.get(id=id)
+        backupJob.delete()
+
+        final_json = json.dumps({'status': 1, 'error_message': "None"})
+        return HttpResponse(final_json)
+
+    except BaseException, msg:
+        final_json = json.dumps({'status': 0, 'error_message': str(msg)})
+        return HttpResponse(final_json)

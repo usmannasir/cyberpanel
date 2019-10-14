@@ -5,6 +5,7 @@ import os
 import socket
 import threading as multi
 import time
+import getpass
 
 class ProcessUtilities(multi.Thread):
     litespeedProcess = "litespeed"
@@ -216,6 +217,10 @@ class ProcessUtilities(multi.Thread):
     @staticmethod
     def executioner(command, user=None):
         try:
+            if getpass.getuser() == 'root':
+                ProcessUtilities.normalExecutioner(command)
+                return 1
+
             ret = ProcessUtilities.sendCommand(command, user)
 
             exitCode = ret[len(ret) -1]
@@ -235,6 +240,9 @@ class ProcessUtilities(multi.Thread):
     @staticmethod
     def outputExecutioner(command, user=None):
         try:
+            if getpass.getuser() == 'root':
+                return subprocess.check_output(shlex.split(command))
+
             if type(command) == str or type(command) == unicode:
                 pass
             else:

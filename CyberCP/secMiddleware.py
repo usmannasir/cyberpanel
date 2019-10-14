@@ -1,6 +1,7 @@
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import json
 from django.shortcuts import HttpResponse
+import re
 
 class secMiddleware:
 
@@ -57,6 +58,14 @@ class secMiddleware:
                         pass
                     else:
                         continue
+
+                    if key == 'backupDestinations':
+                        if re.match('^[a-z|0-9]+:[a-z|0-9|\.]+\/?[A-Z|a-z|0-9|\.]*$', value) == None and value != 'local':
+                            logging.writeToFile(request.body)
+                            final_dic = {'error_message': "Data supplied is not accepted.",
+                                         "errorMessage": "Data supplied is not accepted."}
+                            final_json = json.dumps(final_dic)
+                            return HttpResponse(final_json)
 
                     if request.build_absolute_uri().find('saveSpamAssassinConfigurations') > -1 or request.build_absolute_uri().find('docker') > -1 or request.build_absolute_uri().find('cloudAPI') > -1 or request.build_absolute_uri().find('filemanager') > -1 or request.build_absolute_uri().find('verifyLogin') > -1 or request.build_absolute_uri().find('submitUserCreation') > -1:
                         continue

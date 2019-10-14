@@ -52,6 +52,42 @@ class IncJobs(multi.Thread):
         elif self.function == 'restorePoint':
             self.restorePoint()
 
+    def getAWSData(self):
+        key = self.backupDestinations.split('/')[-1]
+        path = '/home/cyberpanel/aws/%s' % (key)
+        secret = open(path, 'r').read()
+        return key, secret
+
+    def awsFunction(self, fType, backupPath = None, snapshotID = None, bType = None):
+        try:
+            if fType == 'backup':
+                key, secret = self.getAWSData()
+                command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s backup %s --password-file %s' % (
+                key, secret, self.website.domain, backupPath, self.passwordFile)
+                result = ProcessUtilities.outputExecutioner(command)
+                logging.statusWriter(self.statusPath, result, 1)
+                snapShotid = result.split(' ')[-2]
+                if bType == 'database':
+                    newSnapshot = JobSnapshots(job=self.jobid, type='%s:%s' % (bType, backupPath.split('/')[-1].strip('.sql')),
+                                               snapshotid=snapShotid,
+                                               destination=self.backupDestinations)
+                else:
+                    newSnapshot = JobSnapshots(job=self.jobid, type='%s:%s' % (bType, backupPath), snapshotid=snapShotid,
+                                           destination=self.backupDestinations)
+                newSnapshot.save()
+            else:
+                self.backupDestinations = self.jobid.destination
+                key, secret = self.getAWSData()
+                command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s restore %s --password-file %s --target /' % (
+                    key, secret, self.website, snapshotID, self.passwordFile)
+                result = ProcessUtilities.outputExecutioner(command)
+                logging.statusWriter(self.statusPath, result, 1)
+
+
+        except BaseException, msg:
+            logging.statusWriter(self.statusPath, "%s [46][5009]" % (str(msg)), 1)
+            return 0
+
     def restoreData(self):
         try:
 
@@ -65,6 +101,8 @@ class IncJobs(multi.Thread):
                 command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target / --password-file %s' % (self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
                 logging.statusWriter(self.statusPath, result, 1)
+            else:
+                self.awsFunction('restore', '', self.jobid.snapshotid)
 
         except BaseException, msg:
             logging.statusWriter(self.statusPath, "%s [46][5009]" % (str(msg)), 1)
@@ -83,8 +121,10 @@ class IncJobs(multi.Thread):
                 command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target / --password-file %s' % (self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
                 logging.statusWriter(self.statusPath, result, 1)
+            else:
+                self.awsFunction('restore', '', self.jobid.snapshotid)
 
-            if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(self.jobid.type.split(':')[1], '/home/cyberpanel', 'dummy', 'dummy') == 0:
+            if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(self.jobid.type.split(':')[1].rstrip('.sql'), '/home/cyberpanel', 'dummy', 'dummy') == 0:
                 raise BaseException
 
             try:
@@ -109,6 +149,8 @@ class IncJobs(multi.Thread):
                 command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target / --password-file %s' % (self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
                 logging.statusWriter(self.statusPath, result, 1)
+            else:
+                self.awsFunction('restore', '', self.jobid.snapshotid)
 
         except BaseException, msg:
             logging.statusWriter(self.statusPath, "%s [46][5009]" % (str(msg)), 1)
@@ -364,6 +406,9 @@ class IncJobs(multi.Thread):
                 newSnapshot = JobSnapshots(job=self.jobid, type='data:%s' % (remotePath), snapshotid=snapShotid,
                                            destination=self.backupDestinations)
                 newSnapshot.save()
+            else:
+                backupPath = '/home/%s' % (self.website.domain)
+                self.awsFunction('backup', backupPath, '', 'data')
 
             logging.statusWriter(self.statusPath, 'Data for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
             return 1
@@ -402,6 +447,8 @@ class IncJobs(multi.Thread):
                     newSnapshot = JobSnapshots(job=self.jobid, type='database:%s' % (items.dbName), snapshotid=snapShotid,
                                                destination=self.backupDestinations)
                     newSnapshot.save()
+                else:
+                    self.awsFunction('backup', dbPath, '', 'database')
 
                 try:
                     os.remove('/home/cyberpanel/%s' % (items.dbName))
@@ -439,6 +486,8 @@ class IncJobs(multi.Thread):
                 newSnapshot = JobSnapshots(job=self.jobid, type='email:%s' % (backupPath), snapshotid=snapShotid,
                                            destination=self.backupDestinations)
                 newSnapshot.save()
+            else:
+                self.awsFunction('backup', backupPath, '', 'email')
 
 
             logging.statusWriter(self.statusPath, 'Emails for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
@@ -462,8 +511,11 @@ class IncJobs(multi.Thread):
                 result = ProcessUtilities.outputExecutioner(command)
                 logging.statusWriter(self.statusPath, result, 1)
             else:
-                logging.statusWriter(self.statusPath, 'AWS implementation is currently pending. [5009]', 1)
-                return 0
+                key,secret = self.getAWSData()
+                command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s init --password-file %s' % (key, secret, self.website.domain, self.passwordFile)
+                result = ProcessUtilities.outputExecutioner(command)
+                logging.statusWriter(self.statusPath, result, 1)
+                return 1
 
             logging.statusWriter(self.statusPath, 'Repo %s initiated for %s.' % (self.backupDestinations, self.website.domain), 1)
             return 1
