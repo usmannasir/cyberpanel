@@ -951,7 +951,7 @@ class preFlightsChecks:
 
         os.chdir(self.path)
 
-        command = "wget http://cyberpanel.sh/CyberPanel.1.9.0.tar.gz"
+        command = "wget http://cyberpanel.sh/CyberPanel.1.9.1.tar.gz"
         # command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                               'CyberPanel Download',
@@ -960,7 +960,7 @@ class preFlightsChecks:
         ##
 
         count = 0
-        command = "tar zxf CyberPanel.1.9.0.tar.gz"
+        command = "tar zxf CyberPanel.1.9.1.tar.gz"
         # command = "tar zxf CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                               'Extract CyberPanel', 1, 1, os.EX_OSERR)
@@ -1051,7 +1051,7 @@ class preFlightsChecks:
             path = "/usr/local/CyberCP/version.txt"
             writeToFile = open(path, 'w')
             writeToFile.writelines('1.9\n')
-            writeToFile.writelines('0')
+            writeToFile.writelines('1')
             writeToFile.close()
         except:
             pass
@@ -3689,6 +3689,51 @@ milter_default_action = accept
         except:
             pass
 
+    def installRestic(self):
+        try:
+
+            CentOSPath = '/etc/redhat-release'
+
+            if os.path.exists(CentOSPath):
+                command = 'yum-config-manager --add-repo https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo'
+                preFlightsChecks.call(command, self.distro, '[installRestic]',
+                                      'Add restic repo.',
+                                      1, 0, os.EX_OSERR)
+
+                command = 'yum install restic -y'
+                preFlightsChecks.call(command, self.distro, '[installRestic]',
+                                      'Install Restic.',
+                                      1, 0, os.EX_OSERR)
+            else:
+                command = 'apt-get update -y'
+                preFlightsChecks.call(command, self.distro, '[installRestic]',
+                                      'Install Restic.',
+                                      1, 0, os.EX_OSERR)
+
+                command = 'apt-get install restic -y'
+                preFlightsChecks.call(command, self.distro, '[installRestic]',
+                                      'Install Restic.',
+                                      1, 0, os.EX_OSERR)
+
+
+            cronTab = '/etc/crontab'
+
+            data = open(cronTab, 'r').read()
+
+            if data.find('IncScheduler') == -1:
+                cronJob = '0 12 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/IncBackups/IncScheduler.py Daily'
+
+                writeToFile = open(cronTab, 'a')
+                writeToFile.writelines(cronJob)
+
+                cronJob = '0 0 * * 0 root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/IncBackups/IncScheduler.py Daily'
+                writeToFile.writelines(cronJob)
+                writeToFile.close()
+
+
+        except:
+            pass
+
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -3813,6 +3858,7 @@ def main():
     checks.download_install_phpmyadmin()
     checks.setupCLI()
     checks.setup_cron()
+    checks.installRestic()
     # checks.installdnsPython()
 
     ## Install and Configure OpenDKIM.

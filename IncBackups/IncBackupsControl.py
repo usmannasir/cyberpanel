@@ -85,42 +85,78 @@ class IncJobs(multi.Thread):
 
 
         except BaseException, msg:
-            logging.statusWriter(self.statusPath, "%s [46][5009]" % (str(msg)), 1)
+            logging.statusWriter(self.statusPath, "%s [88][5009]" % (str(msg)), 1)
             return 0
+
+    def localFunction(self, backupPath, type, restore = None):
+        if restore == None:
+            command = 'restic -r %s backup %s --password-file %s' % (self.repoPath, backupPath, self.passwordFile)
+            result = ProcessUtilities.outputExecutioner(command)
+            logging.statusWriter(self.statusPath, result, 1)
+            snapShotid = result.split(' ')[-2]
+
+            if type == 'database':
+                newSnapshot = JobSnapshots(job=self.jobid,
+                                           type='%s:%s' % (type, backupPath.split('/')[-1].strip('.sql')),
+                                           snapshotid=snapShotid,
+                                           destination=self.backupDestinations)
+            else:
+                newSnapshot = JobSnapshots(job=self.jobid, type='%s:%s' % (type, backupPath), snapshotid=snapShotid,
+                                           destination=self.backupDestinations)
+            newSnapshot.save()
+        else:
+            repoLocation = '/home/%s/incbackup' % (self.website)
+            command = 'restic -r %s restore %s --target / --password-file %s' % (
+            repoLocation, self.jobid.snapshotid, self.passwordFile)
+            result = ProcessUtilities.outputExecutioner(command)
+            logging.statusWriter(self.statusPath, result, 1)
+
+    def sftpFunction(self, backupPath, type, restore = None):
+        if restore == None:
+            remotePath = '/home/backup/%s' % (self.website.domain)
+            command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s' % (
+                self.backupDestinations, remotePath, backupPath, self.passwordFile, self.repoPath)
+            result = ProcessUtilities.outputExecutioner(command)
+            logging.statusWriter(self.statusPath, result, 1)
+            snapShotid = result.split(' ')[-2]
+
+            if type == 'database':
+                newSnapshot = JobSnapshots(job=self.jobid,
+                                           type='%s:%s' % (type, backupPath.split('/')[-1].strip('.sql')),
+                                           snapshotid=snapShotid,
+                                           destination=self.backupDestinations)
+            else:
+                newSnapshot = JobSnapshots(job=self.jobid, type='%s:%s' % (type, backupPath), snapshotid=snapShotid,
+                                           destination=self.backupDestinations)
+            newSnapshot.save()
+        else:
+            repoLocation = '/home/backup/%s' % (self.website)
+            command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target / --password-file %s' % (
+            self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
+            result = ProcessUtilities.outputExecutioner(command)
+            logging.statusWriter(self.statusPath, result, 1)
 
     def restoreData(self):
         try:
 
             if self.jobid.destination == 'local':
-                repoLocation = '/home/%s/incbackup' % (self.website)
-                command = 'restic -r %s restore %s --target / --password-file %s' % (repoLocation, self.jobid.snapshotid, self.passwordFile)
-                result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
+                self.localFunction('none', 'none', 1)
             elif self.jobid.destination[:4] == 'sftp':
-                repoLocation = '/home/backup/%s' % (self.website)
-                command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target / --password-file %s' % (self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
-                result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
+                self.sftpFunction('none', 'none', 1)
             else:
                 self.awsFunction('restore', '', self.jobid.snapshotid)
 
         except BaseException, msg:
-            logging.statusWriter(self.statusPath, "%s [46][5009]" % (str(msg)), 1)
+            logging.statusWriter(self.statusPath, "%s [138][5009]" % (str(msg)), 1)
             return 0
 
     def restoreDatabase(self):
         try:
 
             if self.jobid.destination == 'local':
-                repoLocation = '/home/%s/incbackup' % (self.website)
-                command = 'restic -r %s restore %s --target / --password-file %s' % (repoLocation, self.jobid.snapshotid, self.passwordFile)
-                result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
+                self.localFunction('none', 'none', 1)
             elif self.jobid.destination[:4] == 'sftp':
-                repoLocation = '/home/backup/%s' % (self.website)
-                command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target / --password-file %s' % (self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
-                result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
+                self.sftpFunction('none', 'none', 1)
             else:
                 self.awsFunction('restore', '', self.jobid.snapshotid)
 
@@ -128,29 +164,44 @@ class IncJobs(multi.Thread):
                 raise BaseException
 
             try:
-                os.remove('/home/cyberpanel/%s' % (self.jobid.type.split(':')[1]))
-            except:
-                pass
+                os.remove('/home/cyberpanel/%s.sql' % (self.jobid.type.split(':')[1]))
+            except BaseException, msg:
+                logging.writeToFile(str(msg))
 
         except BaseException, msg:
-            logging.statusWriter(self.statusPath, "%s [46][5009]" % (str(msg)), 1)
+            logging.statusWriter(self.statusPath, "%s [160][5009]" % (str(msg)), 1)
             return 0
 
     def restoreEmail(self):
         try:
 
             if self.jobid.destination == 'local':
-                repoLocation = '/home/%s/incbackup' % (self.website)
-                command = 'restic -r %s restore %s --target / --password-file %s' % (repoLocation, self.jobid.snapshotid, self.passwordFile)
-                result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
+                self.localFunction('none', 'none', 1)
             elif self.jobid.destination[:4] == 'sftp':
-                repoLocation = '/home/backup/%s' % (self.website)
-                command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target / --password-file %s' % (self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
-                result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
+                self.sftpFunction('none', 'none', 1)
             else:
                 self.awsFunction('restore', '', self.jobid.snapshotid)
+
+        except BaseException, msg:
+            logging.statusWriter(self.statusPath, "%s [46][5009]" % (str(msg)), 1)
+            return 0
+
+    def reconstructWithMeta(self):
+        try:
+
+
+            if self.jobid.destination == 'local':
+                self.localFunction('none', 'none', 1)
+            elif self.jobid.destination[:4] == 'sftp':
+                self.sftpFunction('none', 'none', 1)
+            else:
+                self.awsFunction('restore', '', self.jobid.snapshotid)
+
+            metaPathNew = '/home/%s/meta.xml' % (self.website)
+            execPath = "nice -n 10 /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/IncBackups/restoreMeta.py"
+            execPath = execPath + " submitRestore --metaPath %s --statusFile %s" % (metaPathNew, self.statusPath)
+            result = ProcessUtilities.outputExecutioner(execPath)
+            logging.statusWriter(self.statusPath, result, 1)
 
         except BaseException, msg:
             logging.statusWriter(self.statusPath, "%s [46][5009]" % (str(msg)), 1)
@@ -169,26 +220,6 @@ class IncJobs(multi.Thread):
             self.passwordFile = '/home/%s/%s' % (self.website, self.website)
 
 
-            ## Restore Meta first
-            metaPathNew = '/home/%s/meta.xml' % (self.website)
-            if self.jobid.destination == 'local':
-                repoLocation = '/home/%s/incbackup' % (self.website)
-                command = 'restic -r %s restore latest --target / --password-file %s --include %s' % (repoLocation, self.passwordFile, metaPathNew)
-                result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
-            elif self.jobid.destination[:4] == 'sftp':
-                repoLocation = '/home/backup/%s' % (self.website)
-                command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s restore latest --target / --password-file %s --include %s' % (self.jobid.destination, repoLocation, self.passwordFile, metaPathNew)
-                result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
-
-            ## Reconstruct configs configs
-
-            if self.extraArgs['reconstruct']:
-                execPath = "nice -n 10 /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/IncBackups/restoreMeta.py"
-                execPath = execPath + " submitRestore --metaPath %s --statusFile %s" % (metaPathNew, self.statusPath)
-                ProcessUtilities.outputExecutioner(execPath)
-
             ##
 
             if self.jobid.type[:8] == 'database':
@@ -205,10 +236,18 @@ class IncJobs(multi.Thread):
                 self.restoreEmail()
                 message = 'Emails restored.'
                 logging.statusWriter(self.statusPath, message, 1)
+            elif self.jobid.type[:4] == 'meta':
+                message = 'Reconstructing with meta..'
+                logging.statusWriter(self.statusPath, message, 1)
+                self.reconstructWithMeta()
+                message = 'Reconstructed'
+                logging.statusWriter(self.statusPath, message, 1)
 
             logging.statusWriter(self.statusPath, 'Completed', 1)
         except BaseException, msg:
             logging.statusWriter(self.extraArgs['tempPath'], str(msg), 1)
+
+    ### Backup functions
 
     def prepareBackupMeta(self):
         try:
@@ -385,29 +424,13 @@ class IncJobs(multi.Thread):
     def backupData(self):
         try:
             logging.statusWriter(self.statusPath, 'Backing up data..', 1)
+            backupPath = '/home/%s' % (self.website.domain)
 
             if self.backupDestinations == 'local':
-                backupPath = '/home/%s' % (self.website.domain)
-                command = 'restic -r %s backup %s --password-file %s --exclude %s' % (self.repoPath, backupPath, self.passwordFile, self.repoPath)
-                result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
-                snapShotid = result.split(' ')[-2]
-
-                newSnapshot = JobSnapshots(job=self.jobid, type='data:%s' % (backupPath), snapshotid=snapShotid, destination=self.backupDestinations)
-                newSnapshot.save()
-
+                self.localFunction(backupPath, 'data')
             elif self.backupDestinations[:4] == 'sftp':
-                remotePath = '/home/backup/%s' % (self.website.domain)
-                backupPath = '/home/%s' % (self.website.domain)
-                command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s' % (self.backupDestinations, remotePath, backupPath, self.passwordFile, self.repoPath)
-                result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
-                snapShotid = result.split(' ')[-2]
-                newSnapshot = JobSnapshots(job=self.jobid, type='data:%s' % (remotePath), snapshotid=snapShotid,
-                                           destination=self.backupDestinations)
-                newSnapshot.save()
+                self.sftpFunction(backupPath, 'data')
             else:
-                backupPath = '/home/%s' % (self.website.domain)
                 self.awsFunction('backup', backupPath, '', 'data')
 
             logging.statusWriter(self.statusPath, 'Data for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
@@ -429,31 +452,16 @@ class IncJobs(multi.Thread):
                 dbPath = '/home/cyberpanel/%s.sql' % (items.dbName)
 
                 if self.backupDestinations == 'local':
-                    command = 'restic -r %s backup %s --password-file %s' % (self.repoPath, dbPath, self.passwordFile)
-                    result = ProcessUtilities.outputExecutioner(command)
-                    logging.statusWriter(self.statusPath, result, 1)
-                    snapShotid = result.split(' ')[-2]
-
-                    newSnapshot = JobSnapshots(job=self.jobid, type='database:%s' % (items.dbName), snapshotid=snapShotid, destination=self.backupDestinations)
-                    newSnapshot.save()
-
+                    self.localFunction(dbPath, 'database')
                 elif self.backupDestinations[:4] == 'sftp':
-                    remotePath = '/home/backup/%s' % (self.website.domain)
-                    command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s' % (
-                    self.backupDestinations, remotePath, dbPath, self.passwordFile, self.repoPath)
-                    result = ProcessUtilities.outputExecutioner(command)
-                    logging.statusWriter(self.statusPath, result, 1)
-                    snapShotid = result.split(' ')[-2]
-                    newSnapshot = JobSnapshots(job=self.jobid, type='database:%s' % (items.dbName), snapshotid=snapShotid,
-                                               destination=self.backupDestinations)
-                    newSnapshot.save()
+                    self.sftpFunction(dbPath, 'database')
                 else:
                     self.awsFunction('backup', dbPath, '', 'database')
 
                 try:
-                    os.remove('/home/cyberpanel/%s' % (items.dbName))
-                except:
-                    pass
+                    os.remove('/home/cyberpanel/%s.sql' % (items.dbName))
+                except BaseException, msg:
+                    logging.statusWriter(self.statusPath,'Failed to delete database: %s. [IncJobs.backupDatabases.456]' % str(msg), 1)
             return 1
         except BaseException, msg:
             logging.statusWriter(self.statusPath,'%s. [IncJobs.backupDatabases.269][5009]' % str(msg), 1)
@@ -466,26 +474,9 @@ class IncJobs(multi.Thread):
             backupPath = '/home/vmail/%s' % (self.website.domain)
 
             if self.backupDestinations == 'local':
-                command = 'restic -r %s backup %s --password-file %s' % (
-                    self.repoPath, backupPath, self.passwordFile)
-                result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
-                snapShotid = result.split(' ')[-2]
-
-                newSnapshot = JobSnapshots(job=self.jobid, type='email:%s' % (backupPath), snapshotid=snapShotid,
-                                           destination=self.backupDestinations)
-                newSnapshot.save()
-
+                self.localFunction(backupPath, 'email')
             elif self.backupDestinations[:4] == 'sftp':
-                remotePath = '/home/backup/%s' % (self.website.domain)
-                command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s' % (
-                    self.backupDestinations, remotePath, backupPath, self.passwordFile, self.repoPath)
-                result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
-                snapShotid = result.split(' ')[-2]
-                newSnapshot = JobSnapshots(job=self.jobid, type='email:%s' % (backupPath), snapshotid=snapShotid,
-                                           destination=self.backupDestinations)
-                newSnapshot.save()
+                self.sftpFunction(backupPath, 'email')
             else:
                 self.awsFunction('backup', backupPath, '', 'email')
 
@@ -494,6 +485,26 @@ class IncJobs(multi.Thread):
             return 1
         except BaseException, msg:
             logging.statusWriter(self.statusPath,'%s. [IncJobs.emailBackup.269][5009]' % str(msg), 1)
+            return 0
+
+    def metaBackup(self):
+        try:
+            logging.statusWriter(self.statusPath, 'Backing up meta..', 1)
+
+            backupPath = '/home/%s/meta.xml' % (self.website.domain)
+
+            if self.backupDestinations == 'local':
+                self.localFunction(backupPath, 'meta')
+            elif self.backupDestinations[:4] == 'sftp':
+                self.sftpFunction(backupPath, 'meta')
+            else:
+                self.awsFunction('backup', backupPath, '', 'meta')
+
+
+            logging.statusWriter(self.statusPath, 'Meta for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
+            return 1
+        except BaseException, msg:
+            logging.statusWriter(self.statusPath,'%s. [IncJobs.metaBackup.269][5009]' % str(msg), 1)
             return 0
 
     def initiateRepo(self):
@@ -548,6 +559,9 @@ class IncJobs(multi.Thread):
             command = 'echo "%s" > %s' % (password, self.passwordFile)
             ProcessUtilities.executioner(command, self.website.externalApp)
 
+            command = 'chmod 600 %s' % (self.passwordFile)
+            ProcessUtilities.executioner(command)
+
 
         if self.initiateRepo() == 0:
             return
@@ -567,27 +581,14 @@ class IncJobs(multi.Thread):
             if self.emailBackup() == 0:
                 return
 
-        ## meta generated
-
-        logging.statusWriter(self.statusPath, 'Taking backup of meta file, this file can be used to reconstruct at later point..', 1)
+        self.metaBackup()
 
         metaPathNew = '/home/%s/meta.xml' % (self.website.domain)
 
-        if self.backupDestinations == 'local':
-            command = 'restic -r %s backup %s --password-file %s' % (
-                self.repoPath, metaPathNew, self.passwordFile)
-            result = ProcessUtilities.outputExecutioner(command)
-            logging.statusWriter(self.statusPath, result, 1)
-        elif self.backupDestinations[:4] == 'sftp':
-            remotePath = '/home/backup/%s' % (self.website.domain)
-            command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s' % (
-                self.backupDestinations, remotePath, metaPathNew, self.passwordFile, self.repoPath)
-            result = ProcessUtilities.outputExecutioner(command)
-            logging.statusWriter(self.statusPath, result, 1)
-
         try:
-            os.remove(metaPathNew)
-        except:
-            pass
+            command = 'rm -f %s' % (metaPathNew)
+            ProcessUtilities.executioner(command)
+        except BaseException, msg:
+            logging.statusWriter(self.statusPath,'Failed to delete meta file: %s. [IncJobs.createBackup.591]' % str(msg), 1)
 
         logging.statusWriter(self.statusPath, 'Completed', 1)

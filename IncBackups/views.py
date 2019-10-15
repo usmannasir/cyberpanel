@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.shortcuts import render
 from plogical.acl import ACLManager
-from django.shortcuts import HttpResponse
+from django.shortcuts import HttpResponse, redirect
 from plogical.processUtilities import ProcessUtilities
 from plogical.virtualHostUtilities import virtualHostUtilities
 import json
@@ -15,6 +15,7 @@ from .IncBackupsControl import IncJobs
 from random import randint
 import time
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from loginSystem.views import loadLoginPage
 # Create your views here.
 
 
@@ -36,17 +37,19 @@ def createBackup(request):
 
         path = '/home/cyberpanel/sftp'
 
-        for items in os.listdir(path):
-            destinations.append('sftp:%s' % (items))
+        if os.path.exists(path):
+            for items in os.listdir(path):
+                destinations.append('sftp:%s' % (items))
 
         path = '/home/cyberpanel/aws'
-
-        for items in os.listdir(path):
-            destinations.append('s3:s3.amazonaws.com/%s' % (items))
+        if os.path.exists(path):
+            for items in os.listdir(path):
+                destinations.append('s3:s3.amazonaws.com/%s' % (items))
 
         return defRenderer(request, 'IncBackups/createBackup.html', {'websiteList': websitesName, 'destinations': destinations})
     except BaseException, msg:
-        return HttpResponse(str(msg))
+        logging.writeToFile(str(msg))
+        return redirect(loadLoginPage)
 
 def backupDestinations(request):
     try:
@@ -58,7 +61,8 @@ def backupDestinations(request):
 
         return defRenderer(request, 'IncBackups/incrementalDestinations.html', {})
     except BaseException, msg:
-        return HttpResponse(str(msg))
+        logging.writeToFile(str(msg))
+        return redirect(loadLoginPage)
 
 def addDestination(request):
     try:
@@ -559,15 +563,19 @@ def scheduleBackups(request):
 
         path = '/home/cyberpanel/sftp'
 
-        for items in os.listdir(path):
-            destinations.append('sftp:%s' % (items))
+        if os.path.exists(path):
+            for items in os.listdir(path):
+                destinations.append('sftp:%s' % (items))
 
-        for items in os.listdir(path):
-            destinations.append('s3:s3.amazonaws.com/%s' % (items))
+        path = '/home/cyberpanel/aws'
+        if os.path.exists(path):
+            for items in os.listdir(path):
+                destinations.append('s3:s3.amazonaws.com/%s' % (items))
 
         return defRenderer(request, 'IncBackups/backupSchedule.html', {'websiteList': websitesName, 'destinations': destinations})
     except BaseException, msg:
-        return HttpResponse(str(msg))
+        logging.writeToFile(str(msg))
+        return redirect(loadLoginPage)
 
 def submitBackupSchedule(request):
     try:

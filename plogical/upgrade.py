@@ -1176,6 +1176,73 @@ class Upgrade:
             pass
 
     @staticmethod
+    def IncBackupMigrations():
+        try:
+            connection, cursor = Upgrade.setupConnection('cyberpanel')
+
+            query = """CREATE TABLE `IncBackups_backupjob` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `destination` varchar(300) NOT NULL,
+  `frequency` varchar(50) NOT NULL,
+  `websiteData` int(11) NOT NULL,
+  `websiteDatabases` int(11) NOT NULL,
+  `websiteDataEmails` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+)"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `IncBackups_incjob` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `date` datetime(6) NOT NULL,
+  `website_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `IncBackups_incjob_website_id_aad31bf6_fk_websiteFu` (`website_id`),
+  CONSTRAINT `IncBackups_incjob_website_id_aad31bf6_fk_websiteFu` FOREIGN KEY (`website_id`) REFERENCES `websiteFunctions_websites` (`id`)
+)"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `IncBackups_jobsites` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `website` varchar(300) NOT NULL,
+  `job_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `IncBackups_jobsites_job_id_494a1f69_fk_IncBackups_backupjob_id` (`job_id`),
+  CONSTRAINT `IncBackups_jobsites_job_id_494a1f69_fk_IncBackups_backupjob_id` FOREIGN KEY (`job_id`) REFERENCES `IncBackups_backupjob` (`id`)
+)"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `IncBackups_jobsnapshots` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `type` varchar(300) NOT NULL,
+  `snapshotid` varchar(50) NOT NULL,
+  `job_id` int(11) NOT NULL,
+  `destination` varchar(200) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `IncBackups_jobsnapshots_job_id_a8237ca8_fk_IncBackups_incjob_id` (`job_id`),
+  CONSTRAINT `IncBackups_jobsnapshots_job_id_a8237ca8_fk_IncBackups_incjob_id` FOREIGN KEY (`job_id`) REFERENCES `IncBackups_incjob` (`id`)
+)"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            try:
+                connection.close()
+            except:
+                pass
+        except:
+            pass
+
+    @staticmethod
     def enableServices():
         try:
             servicePath = '/home/cyberpanel/powerdns'
@@ -1267,6 +1334,11 @@ class Upgrade:
                 if items.find('CLManager') > -1:
                     CLManager = 0
 
+            IncBackups = 1
+            for items in data:
+                if items.find('IncBackups') > -1:
+                    IncBackups = 0
+
             Upgrade.stdOut('Restoring settings file!')
 
             writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
@@ -1295,8 +1367,12 @@ class Upgrade:
                     if manageServices == 1:
                         writeToFile.writelines("    'manageServices',\n")
 
+
                     if CLManager == 1:
                         writeToFile.writelines("    'CLManager',\n")
+
+                    if IncBackups == 1:
+                        writeToFile.writelines("    'IncBackups',\n")
 
                 else:
                     writeToFile.writelines(items)
@@ -1542,7 +1618,6 @@ class Upgrade:
             Upgrade.executioner(command, 'Set default PHP 7.0, 0')
 
 
-
     @staticmethod
     def someDirectories():
         command = "mkdir -p /usr/local/lscpd/admin/"
@@ -1742,6 +1817,37 @@ failovermethod=priority
             Upgrade.stdOut(str(msg) + " [upgradeDovecot]")
 
     @staticmethod
+    def installRestic():
+        CentOSPath = '/etc/redhat-release'
+
+        if os.path.exists(CentOSPath):
+            command = 'yum-config-manager --add-repo https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo'
+            Upgrade.executioner(command, 'Add restic repo.')
+
+            command = 'yum install restic -y'
+            Upgrade.executioner(command, 'Install Restic')
+        else:
+            command = 'apt-get update -y'
+            Upgrade.executioner(command, 'Install Restic')
+
+            command = 'apt-get install restic -y'
+            Upgrade.executioner(command, 'Install Restic')
+
+        cronTab = '/etc/crontab'
+
+        data = open(cronTab, 'r').read()
+
+        if data.find('IncScheduler') == -1:
+            cronJob = '0 12 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/IncBackups/IncScheduler.py Daily'
+
+            writeToFile = open(cronTab, 'a')
+            writeToFile.writelines(cronJob)
+
+            cronJob = '0 0 * * 0 root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/IncBackups/IncScheduler.py Daily'
+            writeToFile.writelines(cronJob)
+            writeToFile.close()
+
+    @staticmethod
     def upgrade():
 
         # Upgrade.stdOut("Upgrades are currently disabled")
@@ -1796,6 +1902,8 @@ failovermethod=priority
         Upgrade.emailMarketingMigrationsa()
         Upgrade.dockerMigrations()
         Upgrade.CLMigrations()
+        Upgrade.IncBackupMigrations()
+        Upgrade.installRestic()
 
         ##
 

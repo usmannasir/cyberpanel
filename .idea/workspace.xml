@@ -26,158 +26,75 @@
     <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/install/install.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="330">
+              <caret line="962" column="43" selection-start-line="962" selection-start-column="43" selection-end-line="962" selection-end-column="43" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+                <element signature="e#143696#150827#0" />
+                <element signature="e#150888#151548#0" />
+                <element signature="e#151611#152278#0" />
+                <element signature="e#152347#153095#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/IncBackups/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="220">
-              <caret line="23" column="26" selection-start-line="23" selection-start-column="26" selection-end-line="23" selection-end-column="26" />
+            <state relative-caret-position="338">
+              <caret line="572" column="71" selection-start-line="572" selection-start-column="71" selection-end-line="572" selection-end-column="71" />
               <folding>
-                <element signature="e#24#63#0" expanded="true" />
-                <element signature="e#762#1555#0" />
-                <element signature="e#1594#1977#0" />
-                <element signature="e#2012#5365#0" />
-                <element signature="e#5408#7638#0" />
-                <element signature="e#7676#8529#0" />
-                <element signature="e#8569#10185#0" />
-                <element signature="e#10226#12055#0" />
-                <element signature="e#12091#14087#0" />
-                <element signature="e#14120#14927#0" />
-                <element signature="e#14966#16346#0" />
-                <element signature="e#16379#17556#0" />
-                <element signature="e#17592#18390#0" />
-                <element signature="e#18431#20893#0" />
-                <element signature="e#20940#22006#0" />
-                <element signature="e#22066#23973#0" />
+                <element signature="e#816#1687#0" />
+                <element signature="e#1619#1687#0" />
+                <element signature="e#1739#2040#0" />
+                <element signature="e#2080#2148#0" />
+                <element signature="e#2183#5536#0" />
+                <element signature="e#18532#18600#0" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/IncBackups/static/IncBackups/IncBackups.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="302">
-              <caret line="159" column="48" selection-start-line="159" selection-start-column="48" selection-end-line="159" selection-end-column="48" />
-              <folding>
-                <element signature="e#491#2247#0" />
-                <element signature="e#2295#2339#0" />
-                <element signature="e#2390#3395#0" />
-                <element signature="e#4656#5485#0" />
-                <element signature="e#5523#6688#0" />
-                <element signature="e#6744#7547#0" />
-                <element signature="e#7654#12511#0" />
-                <element signature="e#8121#9397#0" />
-                <element signature="e#9444#11129#0" />
-                <element signature="e#11190#12506#0" />
-                <element signature="e#12577#19273#0" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/IncBackups/templates/IncBackups/incrementalDestinations.html">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="947">
-              <caret line="99" column="77" selection-start-line="99" selection-start-column="77" selection-end-line="99" selection-end-column="77" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/IncBackups/IncBackupsControl.py">
+        <entry file="file://$PROJECT_DIR$/IncBackups/templates/IncBackups/backupSchedule.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="232">
-              <caret line="70" column="125" selection-start-line="70" selection-start-column="125" selection-end-line="70" selection-end-column="125" />
+            <state relative-caret-position="180">
+              <caret line="12" column="97" lean-forward="true" selection-start-line="12" selection-start-column="97" selection-end-line="12" selection-end-column="97" />
               <folding>
-                <element signature="e#907#1022#0" />
-                <element signature="e#1124#1419#0" />
-                <element signature="e#1449#1594#0" />
-                <element signature="e#1631#2625#0" />
-                <element signature="e#2666#3981#0" />
-                <element signature="e#4019#5013#0" />
-                <element signature="e#5051#7775#0" />
-                <element signature="e#5068#7666#0" />
-                <element signature="e#5671#6005#0" />
-                <element signature="e#6077#6467#0" />
-                <element signature="e#6575#6874#0" />
-                <element signature="e#6958#7208#0" />
-                <element signature="e#7357#7599#0" />
-                <element signature="e#7818#13652#0" />
-                <element signature="e#7836#13511#0" />
-                <element signature="e#7836#7861#0" />
-                <element signature="e#8535#8943#0" />
-                <element signature="e#9125#10304#0" />
-                <element signature="e#9150#9242#0" />
-                <element signature="e#9287#9900#0" />
-                <element signature="e#9453#9494#0" />
-                <element signature="e#9729#9900#0" />
-                <element signature="e#9855#9900#0" />
-                <element signature="e#10546#10620#0" />
-                <element signature="e#10678#10693#0" />
-                <element signature="e#10761#11507#0" />
-                <element signature="e#10929#11456#0" />
-                <element signature="e#11709#12320#0" />
-                <element signature="e#11942#12267#0" />
-                <element signature="e#12547#12806#0" />
-                <element signature="e#13560#13652#0" />
-                <element signature="e#13688#15519#0" />
-                <element signature="e#15560#17646#0" />
-                <element signature="e#17683#19518#0" />
-                <element signature="e#19556#20829#0" />
-                <element signature="e#20867#23355#0" />
-                <element signature="e#21629#21817#0" />
-                <element signature="e#21975#22024#0" />
-                <element signature="e#22067#22121#0" />
-                <element signature="e#22161#22211#0" />
-                <element signature="e#22501#22747#0" />
-                <element signature="e#22812#23210#0" />
+                <element signature="e#500#539#0#HTML" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/plogical/mysqlUtilities.py">
+        <entry file="file://$PROJECT_DIR$/baseTemplate/templates/baseTemplate/homePage.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="195" column="12" selection-start-line="195" selection-start-column="12" selection-end-line="195" selection-end-column="12" />
-              <folding>
-                <element signature="e#661#1069#0" />
-                <element signature="e#1135#1274#0" />
-                <element signature="e#1329#1835#0" />
-                <element signature="e#2626#3079#0" />
-                <element signature="e#3158#3589#0" />
-                <element signature="e#3657#4113#0" />
-                <element signature="e#4202#5853#0" />
-                <element signature="e#6277#6680#0" />
-                <element signature="e#8218#9383#0" />
-                <element signature="e#9445#9894#0" />
-                <element signature="e#9961#10109#0" />
-                <element signature="e#10159#12226#0" />
-                <element signature="e#12280#12553#0" />
-                <element signature="e#12614#14004#0" />
-                <element signature="e#14058#14529#0" />
-                <element signature="e#14581#14956#0" />
-                <element signature="e#15010#16208#0" />
-                <element signature="e#16263#17486#0" />
-                <element signature="e#17541#18011#0" />
-                <element signature="e#18069#19856#0" />
-                <element signature="e#19914#21114#0" />
-              </folding>
+            <state relative-caret-position="450">
+              <caret line="30" column="47" selection-start-line="30" selection-start-column="47" selection-end-line="30" selection-end-column="47" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/plogical/processUtilities.py">
+        <entry file="file://$PROJECT_DIR$/baseTemplate/templates/baseTemplate/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="345">
-              <caret line="249" lean-forward="true" selection-start-line="249" selection-end-line="249" />
-              <folding>
-                <element signature="e#0#64#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="8850">
+              <caret line="590" column="104" selection-start-line="590" selection-start-column="104" selection-end-line="590" selection-end-column="104" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/IncBackups/IncScheduler.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="285">
+              <caret line="21" column="8" selection-start-line="21" selection-start-column="8" selection-end-line="21" selection-end-column="8" />
             </state>
           </provider>
         </entry>
@@ -194,16 +111,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>skip</find>
-      <find>email</find>
-      <find>dbuser</find>
-      <find>createBackup</find>
-      <find>restoreData</find>
-      <find>submitBackupCreation</find>
-      <find>changePassword</find>
-      <find>createEmail</find>
-      <find>createDatabase</find>
-      <find>changeEmailPassword</find>
       <find>Backups</find>
       <find>schedule</find>
       <find>schedulebackups</find>
@@ -223,7 +130,17 @@
       <find>re.mat</find>
       <find>Backing up data..</find>
       <find>[46][5009]</find>
+      <find>externalApp</find>
       <find>restoreDatabaseBackup</find>
+      <find>logging.writeToFile</find>
+      <find>build=0</find>
+      <find>version.txt</find>
+      <find>logging</find>
+      <find>Incremen</find>
+      <find>restoreDatabase</find>
+      <find>1.9.0</find>
+      <find>/usr/local/CyberCP/public/rainloop/rainloop/v/1.12.1/include.php</find>
+      <find>CLManager</find>
     </findStrings>
     <replaceStrings>
       <replace>admin.api == 1</replace>
@@ -252,34 +169,26 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/serverStatus/serverStatusUtil.py" />
-        <option value="$PROJECT_DIR$/serverStatus/templates/serverStatus/litespeedStatus.html" />
-        <option value="$PROJECT_DIR$/websiteFunctions/StagingSetup.py" />
         <option value="$PROJECT_DIR$/databases/models.py" />
         <option value="$PROJECT_DIR$/plogical/sslUtilities.py" />
         <option value="$PROJECT_DIR$/plogical/vhost.py" />
         <option value="$PROJECT_DIR$/CyberCP/urls.py" />
         <option value="$PROJECT_DIR$/CyberCP/settings.py" />
         <option value="$PROJECT_DIR$/backup/views.py" />
-        <option value="$PROJECT_DIR$/IncBackups/templates/IncBackups/incrementalDestinations.html" />
         <option value="$PROJECT_DIR$/managePHP/ubuntuphp70.xml" />
         <option value="$PROJECT_DIR$/managePHP/ubuntuphp71.xml" />
         <option value="$PROJECT_DIR$/managePHP/ubuntuphp72.xml" />
         <option value="$PROJECT_DIR$/managePHP/ubuntuphp73.xml" />
         <option value="$PROJECT_DIR$/plogical/applicationInstaller.py" />
-        <option value="$PROJECT_DIR$/IncBackups/templates/IncBackups/createBackup.html" />
         <option value="$PROJECT_DIR$/plogical/cPanelImporter.py" />
         <option value="$PROJECT_DIR$/emailPremium/templates/emailPremium/emailLimits.html" />
         <option value="$PROJECT_DIR$/IncBackups/IncBackups.py" />
         <option value="$PROJECT_DIR$/plogical/mailUtilities.py" />
-        <option value="$PROJECT_DIR$/IncBackups/restoreMeta.py" />
-        <option value="$PROJECT_DIR$/baseTemplate/templates/baseTemplate/index.html" />
         <option value="$PROJECT_DIR$/backup/backupManager.py" />
         <option value="$PROJECT_DIR$/cli/cliLogger.py" />
         <option value="$PROJECT_DIR$/emailPremium/templates/emailPremium/listDomains.html" />
         <option value="$PROJECT_DIR$/emailPremium/templates/emailPremium/policyServer.html" />
         <option value="$PROJECT_DIR$/firewall/templates/firewall/index.html" />
-        <option value="$PROJECT_DIR$/install/install.py" />
         <option value="$PROJECT_DIR$/install/installLog.py" />
         <option value="$PROJECT_DIR$/loginSystem/templates/loginSystem/login.html" />
         <option value="$PROJECT_DIR$/plogical/CyberCPLogFileWriter.py" />
@@ -288,27 +197,35 @@
         <option value="$PROJECT_DIR$/plogical/backupUtilities.py" />
         <option value="$PROJECT_DIR$/plogical/remoteBackup.py" />
         <option value="$PROJECT_DIR$/plogical/remoteTransferUtilities.py" />
-        <option value="$PROJECT_DIR$/plogical/upgrade.py" />
         <option value="$PROJECT_DIR$/pluginInstaller/pluginInstaller.py" />
         <option value="$PROJECT_DIR$/postfixSenderPolicy/accept_traffic.py" />
         <option value="$PROJECT_DIR$/s3Backups/s3Backups.py" />
         <option value="$PROJECT_DIR$/IncBackups/models.py" />
         <option value="$PROJECT_DIR$/plogical/csf.py" />
         <option value="$PROJECT_DIR$/IncBackups/urls.py" />
-        <option value="$PROJECT_DIR$/IncBackups/templates/IncBackups/backupSchedule.html" />
         <option value="$PROJECT_DIR$/IncBackups/IncScheduler.py" />
-        <option value="$PROJECT_DIR$/IncBackups/views.py" />
         <option value="$PROJECT_DIR$/IncBackups/static/IncBackups/IncBackups.js" />
         <option value="$PROJECT_DIR$/CyberCP/secMiddleware.py" />
-        <option value="$PROJECT_DIR$/plogical/processUtilities.py" />
         <option value="$PROJECT_DIR$/plogical/mysqlUtilities.py" />
+        <option value="$PROJECT_DIR$/serverLogs/views.py" />
+        <option value="$PROJECT_DIR$/plogical/processUtilities.py" />
+        <option value="$PROJECT_DIR$/IncBackups/restoreMeta.py" />
+        <option value="$PROJECT_DIR$/IncBackups/templates/IncBackups/incrementalDestinations.html" />
+        <option value="$PROJECT_DIR$/IncBackups/templates/IncBackups/createBackup.html" />
+        <option value="$PROJECT_DIR$/plogical/adminPass.py" />
+        <option value="$PROJECT_DIR$/loginSystem/views.py" />
+        <option value="$PROJECT_DIR$/baseTemplate/templates/baseTemplate/index.html" />
         <option value="$PROJECT_DIR$/IncBackups/IncBackupsControl.py" />
+        <option value="$PROJECT_DIR$/install/install.py" />
+        <option value="$PROJECT_DIR$/plogical/upgrade.py" />
+        <option value="$PROJECT_DIR$/IncBackups/views.py" />
+        <option value="$PROJECT_DIR$/IncBackups/templates/IncBackups/backupSchedule.html" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="1451" />
-    <option name="y" value="27" />
+    <option name="x" value="1511" />
+    <option name="y" value="52" />
     <option name="width" value="1221" />
     <option name="height" value="609" />
   </component>
@@ -317,7 +234,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -328,12 +244,26 @@
             <path>
               <item name="CyberCP" type="b2602c69:ProjectViewProjectNode" />
               <item name="CyberCP" type="462c0819:PsiDirectoryNode" />
-              <item name="plogical" type="462c0819:PsiDirectoryNode" />
+              <item name="IncBackups" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="CyberCP" type="b2602c69:ProjectViewProjectNode" />
+              <item name="CyberCP" type="462c0819:PsiDirectoryNode" />
+              <item name="IncBackups" type="462c0819:PsiDirectoryNode" />
+              <item name="templates" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="CyberCP" type="b2602c69:ProjectViewProjectNode" />
+              <item name="CyberCP" type="462c0819:PsiDirectoryNode" />
+              <item name="IncBackups" type="462c0819:PsiDirectoryNode" />
+              <item name="templates" type="462c0819:PsiDirectoryNode" />
+              <item name="IncBackups" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -515,18 +445,20 @@
       <workItem from="1570351061233" duration="1861000" />
       <workItem from="1570367938280" duration="1753000" />
       <workItem from="1570509489744" duration="3195000" />
-      <workItem from="1570899537960" duration="23792000" />
+      <workItem from="1570899537960" duration="34622000" />
+      <workItem from="1571158869749" duration="705000" />
+      <workItem from="1571160353900" duration="938000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="696373000" />
+    <option name="totallyTimeSpent" value="708846000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1366" y="25" width="1366" height="684" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.03181818" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.19621213" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -607,76 +539,7 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/serverStatus/templates/serverStatus/cybercpmainlogfile.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="26" column="32" lean-forward="true" selection-start-line="26" selection-start-column="32" selection-end-line="28" selection-end-column="38" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/plogical/applicationInstaller.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
-          <caret line="11" selection-start-line="11" selection-end-line="11" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/websiteFunctions/website.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="9435">
-          <caret line="653" column="45" selection-start-line="653" selection-start-column="36" selection-end-line="653" selection-end-column="45" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/CLManager/templates/CLManager/listPackages.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="207">
-          <caret line="196" column="38" lean-forward="true" selection-start-line="55" selection-start-column="32" selection-end-line="196" selection-end-column="38" />
-          <folding>
-            <element signature="e#2494#2881#0#HTML" />
-            <element signature="e#2914#13791#0#HTML" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/plogical/cPanelImporter.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-495">
-          <caret line="3" column="13" selection-start-line="3" selection-start-column="13" selection-end-line="3" selection-end-column="13" />
-          <folding>
-            <element signature="e#33#47#0" expanded="true" />
-            <element signature="e#1202#1501#0" />
-            <element signature="e#1538#2371#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/emailPremium/templates/emailPremium/emailLimits.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="499">
-          <caret line="222" selection-start-line="222" selection-end-line="222" />
-          <folding>
-            <element signature="n#style#0;n#div#0;n#div#1;n#div#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#img#0;n#td#4;n#tr#0;n#tbody#0;n#table#0;n#div#0;n#div#0;n#div#0;n#div#0;n#div#1;n#div#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#img#1;n#td#4;n#tr#0;n#tbody#0;n#table#0;n#div#0;n#div#0;n#div#0;n#div#0;n#div#1;n#div#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#div#1;n#div#0;n#form#0;n#div#1;n#div#0;n#div#0;n#div#0;n#div#1;n#div#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#div#0;n#div#2;n#div#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#div#0;n#div#0;n#div#0;n#div#0;n#div#2;n#div#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#th#5;n#tr#0;n#thead#0;n#table#0;n#div#1;n#div#0;n#div#0;n#div#0;n#div#2;n#div#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#img#0;n#td#5;n#tr#0;n#tbody#0;n#table#0;n#div#1;n#div#0;n#div#0;n#div#0;n#div#2;n#div#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#img#1;n#td#5;n#tr#0;n#tbody#0;n#table#0;n#div#1;n#div#0;n#div#0;n#div#0;n#div#2;n#div#0;n#!!top" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/IncBackups/IncBackups.py" />
-    <entry file="file://$PROJECT_DIR$/baseTemplate/templates/baseTemplate/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="114">
-          <caret line="606" column="33" selection-start-line="606" selection-start-column="33" selection-end-line="606" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/cli/cliLogger.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="420">
@@ -705,16 +568,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="165">
           <caret line="11" selection-start-line="11" selection-end-line="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/install/install.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="472">
-          <caret line="3857" selection-start-line="3857" selection-end-line="3857" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -793,16 +646,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/plogical/upgrade.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="217">
-          <caret line="1824" column="27" lean-forward="true" selection-start-line="1824" selection-start-column="27" selection-end-line="1824" selection-end-column="27" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/plogical/remoteTransferUtilities.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="472">
@@ -841,16 +684,6 @@
             <element signature="e#7013#8796#0" />
             <element signature="e#8866#13377#0" />
             <element signature="e#13468#26129#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/IncBackups/templates/IncBackups/createBackup.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="810">
-          <caret line="92" column="30" lean-forward="true" selection-start-line="54" selection-start-column="24" selection-end-line="92" selection-end-column="30" />
-          <folding>
-            <element signature="e#2627#4736#0#HTML" />
           </folding>
         </state>
       </provider>
@@ -932,23 +765,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/IncBackups/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="22" column="21" selection-start-line="22" selection-start-column="4" selection-end-line="22" selection-end-column="21" />
-          <folding>
-            <element signature="e#0#39#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/IncBackups/templates/IncBackups/backupSchedule.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="367">
-          <caret line="132" column="101" selection-start-line="132" selection-start-column="101" selection-end-line="132" selection-end-column="101" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/plogical/vhost.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-855" />
@@ -998,50 +814,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/IncBackups/restoreMeta.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="19" column="66" lean-forward="true" selection-start-line="19" selection-start-column="66" selection-end-line="19" selection-end-column="66" />
-          <folding>
-            <element signature="e#33#42#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/IncBackups/IncScheduler.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="105">
-          <caret line="21" column="8" selection-start-line="21" selection-start-column="8" selection-end-line="21" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/IncBackups/templates/IncBackups/incrementalDestinations.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="947">
-          <caret line="99" column="77" selection-start-line="99" selection-start-column="77" selection-end-line="99" selection-end-column="77" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/IncBackups/static/IncBackups/IncBackups.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="302">
-          <caret line="159" column="48" selection-start-line="159" selection-start-column="48" selection-end-line="159" selection-end-column="48" />
-          <folding>
-            <element signature="e#491#2247#0" />
-            <element signature="e#2295#2339#0" />
-            <element signature="e#2390#3395#0" />
-            <element signature="e#4656#5485#0" />
-            <element signature="e#5523#6688#0" />
-            <element signature="e#6744#7547#0" />
-            <element signature="e#7654#12511#0" />
-            <element signature="e#8121#9397#0" />
-            <element signature="e#9444#11129#0" />
-            <element signature="e#11190#12506#0" />
-            <element signature="e#12577#19273#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/CyberCP/secMiddleware.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="930">
@@ -1052,37 +824,22 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/IncBackups/views.py">
+    <entry file="file://$PROJECT_DIR$/serverLogs/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="220">
-          <caret line="23" column="26" selection-start-line="23" selection-start-column="26" selection-end-line="23" selection-end-column="26" />
+        <state relative-caret-position="2895">
+          <caret line="205" selection-start-line="205" selection-end-line="205" />
           <folding>
             <element signature="e#24#63#0" expanded="true" />
-            <element signature="e#762#1555#0" />
-            <element signature="e#1594#1977#0" />
-            <element signature="e#2012#5365#0" />
-            <element signature="e#5408#7638#0" />
-            <element signature="e#7676#8529#0" />
-            <element signature="e#8569#10185#0" />
-            <element signature="e#10226#12055#0" />
-            <element signature="e#12091#14087#0" />
-            <element signature="e#14120#14927#0" />
-            <element signature="e#14966#16346#0" />
-            <element signature="e#16379#17556#0" />
-            <element signature="e#17592#18390#0" />
-            <element signature="e#18431#20893#0" />
-            <element signature="e#20940#22006#0" />
-            <element signature="e#22066#23973#0" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/plogical/processUtilities.py">
+    <entry file="file://$PROJECT_DIR$/IncBackups/models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="249" lean-forward="true" selection-start-line="249" selection-end-line="249" />
+        <state relative-caret-position="330">
+          <caret line="22" column="21" selection-start-line="22" selection-start-column="4" selection-end-line="22" selection-end-column="21" />
           <folding>
-            <element signature="e#0#64#0" expanded="true" />
+            <element signature="e#0#39#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1117,53 +874,273 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/templates/IncBackups/incrementalDestinations.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="14" column="159" selection-start-line="14" selection-start-column="159" selection-end-line="14" selection-end-column="159" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/restoreMeta.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="157">
+          <caret line="32" column="67" lean-forward="true" selection-start-line="32" selection-start-column="67" selection-end-line="32" selection-end-column="67" />
+          <folding>
+            <element signature="e#33#42#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/templates/IncBackups/createBackup.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="17" column="14" lean-forward="true" selection-start-line="17" selection-start-column="14" selection-end-line="17" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/processUtilities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="201">
+          <caret line="276" column="31" selection-start-line="276" selection-start-column="12" selection-end-line="276" selection-end-column="31" />
+          <folding>
+            <element signature="e#0#64#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loginSystem/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="194">
+          <caret line="220" column="56" selection-start-line="220" selection-start-column="56" selection-end-line="220" selection-end-column="56" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/adminPass.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="184">
+          <caret line="33" column="52" selection-start-line="33" selection-start-column="52" selection-end-line="33" selection-end-column="52" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/static/IncBackups/IncBackups.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="302">
+          <caret line="159" column="48" selection-start-line="159" selection-start-column="48" selection-end-line="159" selection-end-column="48" />
+          <folding>
+            <element signature="e#491#2247#0" />
+            <element signature="e#2295#2339#0" />
+            <element signature="e#2390#3395#0" />
+            <element signature="e#4656#5485#0" />
+            <element signature="e#5523#6688#0" />
+            <element signature="e#6744#7547#0" />
+            <element signature="e#7654#12511#0" />
+            <element signature="e#8121#9397#0" />
+            <element signature="e#9444#11129#0" />
+            <element signature="e#11190#12506#0" />
+            <element signature="e#12577#19273#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/baseTemplate/templates/baseTemplate/indexJavaFixed.html">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/IncBackups/IncBackupsControl.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="232">
-          <caret line="70" column="125" selection-start-line="70" selection-start-column="125" selection-end-line="70" selection-end-column="125" />
+        <state relative-caret-position="2205">
+          <caret line="166" column="50" selection-start-line="166" selection-start-column="50" selection-end-line="166" selection-end-column="50" />
           <folding>
             <element signature="e#907#1022#0" />
             <element signature="e#1124#1419#0" />
             <element signature="e#1449#1594#0" />
-            <element signature="e#1631#2625#0" />
-            <element signature="e#2666#3981#0" />
-            <element signature="e#4019#5013#0" />
-            <element signature="e#5051#7775#0" />
-            <element signature="e#5068#7666#0" />
-            <element signature="e#5671#6005#0" />
-            <element signature="e#6077#6467#0" />
-            <element signature="e#6575#6874#0" />
-            <element signature="e#6958#7208#0" />
-            <element signature="e#7357#7599#0" />
-            <element signature="e#7818#13652#0" />
-            <element signature="e#7836#13511#0" />
-            <element signature="e#7836#7861#0" />
-            <element signature="e#8535#8943#0" />
-            <element signature="e#9125#10304#0" />
-            <element signature="e#9150#9242#0" />
-            <element signature="e#9287#9900#0" />
-            <element signature="e#9453#9494#0" />
-            <element signature="e#9729#9900#0" />
-            <element signature="e#9855#9900#0" />
-            <element signature="e#10546#10620#0" />
-            <element signature="e#10678#10693#0" />
-            <element signature="e#10761#11507#0" />
-            <element signature="e#10929#11456#0" />
-            <element signature="e#11709#12320#0" />
-            <element signature="e#11942#12267#0" />
-            <element signature="e#12547#12806#0" />
-            <element signature="e#13560#13652#0" />
-            <element signature="e#13688#15519#0" />
-            <element signature="e#15560#17646#0" />
-            <element signature="e#17683#19518#0" />
-            <element signature="e#19556#20829#0" />
-            <element signature="e#20867#23355#0" />
-            <element signature="e#21629#21817#0" />
-            <element signature="e#21975#22024#0" />
-            <element signature="e#22067#22121#0" />
-            <element signature="e#22161#22211#0" />
-            <element signature="e#22501#22747#0" />
-            <element signature="e#22812#23210#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/baseTemplate/templates/baseTemplate/homePage.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="450">
+          <caret line="30" column="47" selection-start-line="30" selection-start-column="47" selection-end-line="30" selection-end-column="47" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/baseTemplate/templates/baseTemplate/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8850">
+          <caret line="590" column="104" selection-start-line="590" selection-start-column="104" selection-end-line="590" selection-end-column="104" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/IncScheduler.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="285">
+          <caret line="21" column="8" selection-start-line="21" selection-start-column="8" selection-end-line="21" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CyberCP/settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="67" column="15" selection-start-line="67" selection-start-column="5" selection-end-line="67" selection-end-column="15" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/upgrade.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="277">
+          <caret line="1374" column="63" selection-start-line="1374" selection-start-column="63" selection-end-line="1374" selection-end-column="63" />
+          <folding>
+            <element signature="e#543#985#0" />
+            <element signature="e#1065#1663#0" />
+            <element signature="e#1082#1626#0" />
+            <element signature="e#1132#1602#0" />
+            <element signature="e#1225#1488#0" />
+            <element signature="e#1404#1488#0" />
+            <element signature="e#1531#1602#0" />
+            <element signature="e#1712#3223#0" />
+            <element signature="e#1730#3130#0" />
+            <element signature="e#3278#3918#0" />
+            <element signature="e#3296#3880#0" />
+            <element signature="e#3969#4406#0" />
+            <element signature="e#4456#5619#0" />
+            <element signature="e#4473#5571#0" />
+            <element signature="e#4565#4947#0" />
+            <element signature="e#4755#4907#0" />
+            <element signature="e#4983#5472#0" />
+            <element signature="e#5008#5423#0" />
+            <element signature="e#5201#5382#0" />
+            <element signature="e#5686#7123#0" />
+            <element signature="e#5703#7012#0" />
+            <element signature="e#6510#6783#0" />
+            <element signature="e#6569#6711#0" />
+            <element signature="e#7176#7423#0" />
+            <element signature="e#7492#11863#0" />
+            <element signature="e#7509#11732#0" />
+            <element signature="e#7604#8608#0" />
+            <element signature="e#7734#8028#0" />
+            <element signature="e#8274#8546#0" />
+            <element signature="e#8344#8466#0" />
+            <element signature="e#8873#9229#0" />
+            <element signature="e#9099#9181#0" />
+            <element signature="e#9320#9672#0" />
+            <element signature="e#9542#9624#0" />
+            <element signature="e#9873#10187#0" />
+            <element signature="e#10057#10139#0" />
+            <element signature="e#10279#10593#0" />
+            <element signature="e#10463#10545#0" />
+            <element signature="e#10929#11185#0" />
+            <element signature="e#10995#11113#0" />
+            <element signature="e#11522#11586#0" />
+            <element signature="e#11915#12656#0" />
+            <element signature="e#11932#12540#0" />
+            <element signature="e#12191#12428#0" />
+            <element signature="e#12588#12656#0" />
+            <element signature="e#12711#14202#0" />
+            <element signature="e#12728#14110#0" />
+            <element signature="e#14253#14969#0" />
+            <element signature="e#14492#14643#0" />
+            <element signature="e#14670#14808#0" />
+            <element signature="e#15017#15406#0" />
+            <element signature="e#15035#15302#0" />
+            <element signature="e#15345#15406#0" />
+            <element signature="e#15460#15783#0" />
+            <element signature="e#15837#16151#0" />
+            <element signature="e#15854#16118#0" />
+            <element signature="e#16213#17520#0" />
+            <element signature="e#16230#17423#0" />
+            <element signature="e#16508#17355#0" />
+            <element signature="e#16635#17355#0" />
+            <element signature="e#16803#17355#0" />
+            <element signature="e#17472#17520#0" />
+            <element signature="e#17586#22883#0" />
+            <element signature="e#17604#22782#0" />
+            <element signature="e#17697#19456#0" />
+            <element signature="e#19981#20113#0" />
+            <element signature="e#20355#20675#0" />
+            <element signature="e#20750#21125#0" />
+            <element signature="e#21526#21696#0" />
+            <element signature="e#21947#22171#0" />
+            <element signature="e#22941#29422#0" />
+            <element signature="e#22959#29321#0" />
+            <element signature="e#23039#23610#0" />
+            <element signature="e#23729#24112#0" />
+            <element signature="e#24231#24675#0" />
+            <element signature="e#24794#25399#0" />
+            <element signature="e#25518#25905#0" />
+            <element signature="e#26024#26472#0" />
+            <element signature="e#26607#27154#0" />
+            <element signature="e#27273#28045#0" />
+            <element signature="e#28164#28557#0" />
+            <element signature="e#28676#29130#0" />
+            <element signature="e#29482#32221#0" />
+            <element signature="e#29499#32188#0" />
+            <element signature="e#29592#29689#0" />
+            <element signature="e#29765#29845#0" />
+            <element signature="e#29921#30008#0" />
+            <element signature="e#30084#30229#0" />
+            <element signature="e#30292#30771#0" />
+            <element signature="e#30889#31451#0" />
+            <element signature="e#31569#31998#0" />
+            <element signature="e#32286#36035#0" />
+            <element signature="e#32303#36002#0" />
+            <element signature="e#32383#32571#0" />
+            <element signature="e#32689#33156#0" />
+            <element signature="e#33274#33819#0" />
+            <element signature="e#33938#34455#0" />
+            <element signature="e#34574#35180#0" />
+            <element signature="e#35299#35811#0" />
+            <element signature="e#36091#37190#0" />
+            <element signature="e#36108#37157#0" />
+            <element signature="e#36188#36816#0" />
+            <element signature="e#37249#38169#0" />
+            <element signature="e#37266#38136#0" />
+            <element signature="e#37346#37946#0" />
+            <element signature="e#38221#39442#0" />
+            <element signature="e#39505#40319#0" />
+            <element signature="e#39522#40286#0" />
+            <element signature="e#39602#39778#0" />
+            <element signature="e#40376#40780#0" />
+            <element signature="e#40394#40746#0" />
+            <element signature="e#57468#64110#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/install/install.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="330">
+          <caret line="962" column="43" selection-start-line="962" selection-start-column="43" selection-end-line="962" selection-end-column="43" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+            <element signature="e#143696#150827#0" />
+            <element signature="e#150888#151548#0" />
+            <element signature="e#151611#152278#0" />
+            <element signature="e#152347#153095#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="338">
+          <caret line="572" column="71" selection-start-line="572" selection-start-column="71" selection-end-line="572" selection-end-column="71" />
+          <folding>
+            <element signature="e#816#1687#0" />
+            <element signature="e#1619#1687#0" />
+            <element signature="e#1739#2040#0" />
+            <element signature="e#2080#2148#0" />
+            <element signature="e#2183#5536#0" />
+            <element signature="e#18532#18600#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/templates/IncBackups/backupSchedule.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="12" column="97" lean-forward="true" selection-start-line="12" selection-start-column="97" selection-end-line="12" selection-end-column="97" />
+          <folding>
+            <element signature="e#500#539#0#HTML" expanded="true" />
           </folding>
         </state>
       </provider>

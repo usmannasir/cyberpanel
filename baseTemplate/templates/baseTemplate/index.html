@@ -588,7 +588,7 @@
 
 
                     <li>
-                        <a href="{% url 'loadBackupHome' %}" title="{% trans 'Incremental Back up' %}">
+                        <a href="{% url 'loadBackupHome' %}" title="{% trans 'Incremental Back up - Beta' %}">
                             <i class="glyph-icon tooltip-button icon-copy" title=".icon-folder"></i>
                             <span>{% trans "Incremental Back up" %}</span>
                         </a>
@@ -596,10 +596,10 @@
 
                             <ul>
                                 <li class="createBackup"><a href="{% url 'createBackupInc' %}"
-                                                            title="{% trans 'Create Back up' %}"><span>{% trans "Create Back up" %}</span></a>
+                                                            title="{% trans 'Create Back up' %}"><span>{% trans "Create/Restore Back up" %}</span></a>
                                 </li>
                                 <li class="restoreBackup"><a href="{% url 'backupDestinationsInc' %}"
-                                                             title="{% trans 'Restore Back up' %}"><span>{% trans "Add Destinations" %}</span></a>
+                                                             title="{% trans 'Restore Back up' %}"><span>{% trans "Add/Remove Destinations" %}</span></a>
                                 </li>
                                 <li class="restoreBackup"><a href="{% url 'scheduleBackupsInc' %}"
                                                              title="{% trans 'Schedule Back ups' %}"><span>{% trans "Schedule Back ups" %}</span></a>
