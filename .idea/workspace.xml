@@ -57,10 +57,10 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/plogical/upgrade.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="233">
+            <state relative-caret-position="368">
               <caret line="432" column="65" lean-forward="true" selection-start-line="432" selection-start-column="65" selection-end-line="432" selection-end-column="65" />
               <folding>
                 <element signature="e#543#985#0" />
@@ -234,6 +234,15 @@
           </provider>
         </entry>
       </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/preUpgrade.sh">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="150">
+              <caret line="10" column="44" selection-start-line="10" selection-start-column="44" selection-end-line="10" selection-end-column="44" />
+            </state>
+          </provider>
+        </entry>
+      </file>
     </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
@@ -272,9 +281,9 @@
       <find>downloadAndUpgrade</find>
       <find>/usr/local/CyberCP</find>
       <find>os.remove</find>
-      <find>firewalld</find>
       <find>shutil.rmtree</find>
       <find>addRule</find>
+      <find>firewalld</find>
       <find>setupVirtualEnv</find>
     </findStrings>
     <replaceStrings>
@@ -353,8 +362,8 @@
         <option value="$PROJECT_DIR$/install/install.py" />
         <option value="$PROJECT_DIR$/install/firewallUtilities.py" />
         <option value="$PROJECT_DIR$/IncBackups/views.py" />
-        <option value="$PROJECT_DIR$/preUpgrade.sh" />
         <option value="$PROJECT_DIR$/plogical/upgrade.py" />
+        <option value="$PROJECT_DIR$/preUpgrade.sh" />
       </list>
     </option>
   </component>
@@ -593,18 +602,18 @@
       <workItem from="1570899537960" duration="34622000" />
       <workItem from="1571158869749" duration="705000" />
       <workItem from="1571160353900" duration="938000" />
-      <workItem from="1571162569598" duration="7824000" />
+      <workItem from="1571162569598" duration="8064000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="716670000" />
+    <option name="totallyTimeSpent" value="716910000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1366" y="25" width="1366" height="684" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.10530303" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.15" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -1121,20 +1130,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/install/install.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="241">
-          <caret line="2505" column="37" selection-start-line="2505" selection-start-column="30" selection-end-line="2505" selection-end-column="37" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-            <element signature="e#143696#150827#0" />
-            <element signature="e#150888#151548#0" />
-            <element signature="e#151611#152278#0" />
-            <element signature="e#152347#153095#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/IncBackups/views.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="337">
@@ -1142,13 +1137,6 @@
           <folding>
             <element signature="e#24#63#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/preUpgrade.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="8" column="6" selection-end-line="11" />
         </state>
       </provider>
     </entry>
@@ -1190,9 +1178,23 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/install/install.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="241">
+          <caret line="2505" column="37" selection-start-line="2505" selection-start-column="30" selection-end-line="2505" selection-end-column="37" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+            <element signature="e#143696#150827#0" />
+            <element signature="e#150888#151548#0" />
+            <element signature="e#151611#152278#0" />
+            <element signature="e#152347#153095#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/plogical/upgrade.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="233">
+        <state relative-caret-position="368">
           <caret line="432" column="65" lean-forward="true" selection-start-line="432" selection-start-column="65" selection-end-line="432" selection-end-column="65" />
           <folding>
             <element signature="e#543#985#0" />
@@ -1362,6 +1364,13 @@
             <element signature="e#66529#66610#0" />
             <element signature="e#67941#67958#0" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/preUpgrade.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="10" column="44" selection-start-line="10" selection-start-column="44" selection-end-line="10" selection-end-column="44" />
         </state>
       </provider>
     </entry>
