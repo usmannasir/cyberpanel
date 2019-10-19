@@ -46,7 +46,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/install/firewallUtilities.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="365">
+            <state relative-caret-position="390">
               <caret line="26" column="28" selection-start-line="26" selection-start-column="28" selection-end-line="26" selection-end-column="28" />
               <folding>
                 <element signature="e#0#17#0" expanded="true" />
@@ -60,8 +60,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/plogical/upgrade.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="166">
-              <caret line="1877" column="21" selection-start-line="1877" selection-start-column="12" selection-end-line="1877" selection-end-column="21" />
+            <state relative-caret-position="233">
+              <caret line="432" column="65" lean-forward="true" selection-start-line="432" selection-start-column="65" selection-end-line="432" selection-end-column="65" />
               <folding>
                 <element signature="e#543#985#0" />
                 <element signature="e#1065#1663#0" />
@@ -108,7 +108,6 @@
                 <element signature="e#11932#12540#0" />
                 <element signature="e#12191#12428#0" />
                 <element signature="e#12588#12656#0" />
-                <element signature="e#12711#14202#0" />
                 <element signature="e#14253#14969#0" />
                 <element signature="e#14492#14643#0" />
                 <element signature="e#14670#14808#0" />
@@ -226,47 +225,11 @@
                 <element signature="e#64506#64806#0" />
                 <element signature="e#64833#65031#0" />
                 <element signature="e#65165#65568#0" />
+                <element signature="e#65616#67922#0" />
                 <element signature="e#65616#65667#0" />
                 <element signature="e#66529#66610#0" />
                 <element signature="e#67941#67958#0" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/IncBackups/IncBackupsControl.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="68">
-              <caret line="152" column="30" selection-start-line="152" selection-start-column="30" selection-end-line="152" selection-end-column="30" />
-              <folding>
-                <element signature="e#907#1022#0" />
-                <element signature="e#1124#1419#0" />
-                <element signature="e#1449#1594#0" />
-                <element signature="e#1886#3617#0" />
-                <element signature="e#3690#4946#0" />
-                <element signature="e#5018#6499#0" />
-                <element signature="e#6536#6983#0" />
-                <element signature="e#7024#7855#0" />
-                <element signature="e#7893#8339#0" />
-                <element signature="e#8384#9269#0" />
-                <element signature="e#9307#10983#0" />
-                <element signature="e#11052#16886#0" />
-                <element signature="e#16922#17672#0" />
-                <element signature="e#17713#18882#0" />
-                <element signature="e#18919#19685#0" />
-                <element signature="e#19721#20482#0" />
-                <element signature="e#20520#22064#0" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/preUpgrade.sh">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="135">
-              <caret line="9" selection-start-line="9" selection-end-line="9" />
             </state>
           </provider>
         </entry>
@@ -283,7 +246,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>scheduleBac</find>
       <find>cyberpanelLoading</find>
       <find>allChecked</find>
       <find>== 'root'</find>
@@ -307,12 +269,13 @@
       <find>chmod</find>
       <find>stat.</find>
       <find>destination</find>
-      <find>firewalld</find>
-      <find>addRule</find>
       <find>downloadAndUpgrade</find>
       <find>/usr/local/CyberCP</find>
-      <find>setupVirtualEnv</find>
       <find>os.remove</find>
+      <find>firewalld</find>
+      <find>shutil.rmtree</find>
+      <find>addRule</find>
+      <find>setupVirtualEnv</find>
     </findStrings>
     <replaceStrings>
       <replace>admin.api == 1</replace>
@@ -396,7 +359,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="163" />
+    <option name="x" value="1347" />
+    <option name="y" value="27" />
     <option name="width" value="1221" />
     <option name="height" value="609" />
   </component>
@@ -455,7 +419,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.cPanelImporter">
+  <component name="RunManager" selected="Python.upgrade">
     <configuration name="cPanelImporter" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="CyberCP" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -470,6 +434,28 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/plogical/cPanelImporter.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="upgrade" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="CyberCP" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/plogical" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/plogical/upgrade.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -503,6 +489,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.upgrade" />
         <item itemvalue="Python.cPanelImporter" />
       </list>
     </recent_temporary>
@@ -606,18 +593,18 @@
       <workItem from="1570899537960" duration="34622000" />
       <workItem from="1571158869749" duration="705000" />
       <workItem from="1571160353900" duration="938000" />
-      <workItem from="1571162569598" duration="6366000" />
+      <workItem from="1571162569598" duration="7824000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="715212000" />
+    <option name="totallyTimeSpent" value="716670000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="-2" width="1366" height="711" extended-state="6" />
+    <frame x="1366" y="25" width="1366" height="684" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.10530303" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.10530303" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -696,6 +683,9 @@
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/CyberCP$upgrade.coverage" NAME="upgrade Coverage Results" MODIFIED="1571472730271" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/plogical" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/emailPremium/templates/emailPremium/listDomains.html">
@@ -1155,6 +1145,13 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/preUpgrade.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="8" column="6" selection-end-line="11" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/IncBackups/IncBackupsControl.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="68">
@@ -1181,16 +1178,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/preUpgrade.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="9" selection-start-line="9" selection-end-line="9" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/install/firewallUtilities.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="365">
+        <state relative-caret-position="390">
           <caret line="26" column="28" selection-start-line="26" selection-start-column="28" selection-end-line="26" selection-end-column="28" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
@@ -1202,8 +1192,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/plogical/upgrade.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="166">
-          <caret line="1877" column="21" selection-start-line="1877" selection-start-column="12" selection-end-line="1877" selection-end-column="21" />
+        <state relative-caret-position="233">
+          <caret line="432" column="65" lean-forward="true" selection-start-line="432" selection-start-column="65" selection-end-line="432" selection-end-column="65" />
           <folding>
             <element signature="e#543#985#0" />
             <element signature="e#1065#1663#0" />
@@ -1250,7 +1240,6 @@
             <element signature="e#11932#12540#0" />
             <element signature="e#12191#12428#0" />
             <element signature="e#12588#12656#0" />
-            <element signature="e#12711#14202#0" />
             <element signature="e#14253#14969#0" />
             <element signature="e#14492#14643#0" />
             <element signature="e#14670#14808#0" />
@@ -1368,6 +1357,7 @@
             <element signature="e#64506#64806#0" />
             <element signature="e#64833#65031#0" />
             <element signature="e#65165#65568#0" />
+            <element signature="e#65616#67922#0" />
             <element signature="e#65616#65667#0" />
             <element signature="e#66529#66610#0" />
             <element signature="e#67941#67958#0" />
