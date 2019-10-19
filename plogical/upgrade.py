@@ -435,10 +435,10 @@ class Upgrade:
             ##
 
             command = "pip install --ignore-installed -r /usr/local/CyberCP/requirments.txt"
-            Upgrade.executioner(command, 'CyberPanel requirements', 1)
+            Upgrade.executioner(command, 'CyberPanel requirements', 0)
 
             command = "virtualenv --system-site-packages /usr/local/CyberCP"
-            Upgrade.executioner(command, 'Setting up VirtualEnv [Two]', 1)
+            Upgrade.executioner(command, 'Setting up VirtualEnv [Two]', 0)
 
             Upgrade.stdOut('Virtual enviroment for CyberPanel successfully installed.')
         except OSError, msg:
@@ -1276,9 +1276,6 @@ class Upgrade:
 
             Upgrade.stdOut("Settings file backed up.")
 
-            if os.path.exists('/usr/local/CyberCP/bin'):
-                shutil.rmtree('/usr/local/CyberCP/bin')
-
             ## Extract Latest files
 
             # command = "tar zxf CyberPanel.1.7.4.tar.gz"
@@ -1617,7 +1614,6 @@ class Upgrade:
             command = 'cp /usr/local/lsws/lsphp71/bin/php /usr/bin/'
             Upgrade.executioner(command, 'Set default PHP 7.0, 0')
 
-
     @staticmethod
     def someDirectories():
         command = "mkdir -p /usr/local/lscpd/admin/"
@@ -1838,12 +1834,12 @@ failovermethod=priority
         data = open(cronTab, 'r').read()
 
         if data.find('IncScheduler') == -1:
-            cronJob = '0 12 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/IncBackups/IncScheduler.py Daily'
+            cronJob = '0 12 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
 
             writeToFile = open(cronTab, 'a')
             writeToFile.writelines(cronJob)
 
-            cronJob = '0 0 * * 0 root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/IncBackups/IncScheduler.py Daily'
+            cronJob = '0 0 * * 0 root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
             writeToFile.writelines(cronJob)
             writeToFile.close()
 

@@ -16,6 +16,7 @@ from random import randint
 import time
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
+import stat
 # Create your views here.
 
 
@@ -117,13 +118,15 @@ def addDestination(request):
                 tmpFile = '/home/cyberpanel/sshconfig'
 
                 writeToFile = open(tmpFile, 'w')
-                writeToFile.write(currentConfig)
+                if currentConfig.find('cat') == -1:
+                    writeToFile.write(currentConfig)
 
                 content = """Host %s
-        IdentityFile ~/.ssh/cyberpanel
-        Port %s
-    """ % (ipAddress, port)
-                writeToFile.write(content)
+    IdentityFile ~/.ssh/cyberpanel
+    Port %s
+""" % (ipAddress, port)
+                if currentConfig.find(ipAddress) == -1:
+                    writeToFile.write(content)
                 writeToFile.close()
 
 
@@ -158,6 +161,8 @@ def addDestination(request):
             writeToFile = open(awsFile, 'w')
             writeToFile.write(AWS_SECRET_ACCESS_KEY)
             writeToFile.close()
+
+            os.chmod(awsFile, stat.S_IRUSR | stat.S_IWUSR)
 
             final_dic = {'status': 1}
             final_json = json.dumps(final_dic)
