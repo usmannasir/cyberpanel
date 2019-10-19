@@ -1164,11 +1164,11 @@ class Upgrade:
             cwd = os.getcwd()
             os.chdir('/usr/local/CyberCP')
 
-            command = 'python manage.py makemigrations'
+            command = '/usr/local/CyberPanel/bin/python2 manage.py makemigrations'
             Upgrade.executioner(command, 'python manage.py makemigrations', 0)
 
-            command = 'python manage.py makemigrations'
-            Upgrade.executioner(command, 'python manage.py migrate', 0)
+            command = '/usr/local/CyberPanel/bin/python2 manage.py makemigrations'
+            Upgrade.executioner(command, '/usr/local/CyberPanel/bin/python2 manage.py migrate', 0)
 
             os.chdir(cwd)
 
