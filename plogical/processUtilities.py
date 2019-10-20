@@ -94,7 +94,11 @@ class ProcessUtilities(multi.Thread):
                 return 1
             else:
                 return 0
+        except subprocess.CalledProcessError, msg:
+            logging.writeToFile('%s. [ProcessUtilities.normalExecutioner]' % (str(msg)))
+            return 0
         except BaseException, msg:
+            logging.writeToFile('%s. [ProcessUtilities.normalExecutioner.Base]' % (str(msg)))
             return 0
 
     @staticmethod

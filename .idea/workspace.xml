@@ -28,217 +28,35 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/install/install.py">
+        <entry file="file://$PROJECT_DIR$/plogical/virtualHostUtilities.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="241">
-              <caret line="2505" column="37" selection-start-line="2505" selection-start-column="30" selection-end-line="2505" selection-end-column="37" />
+            <state relative-caret-position="1381">
+              <caret line="1132" column="43" selection-start-line="1132" selection-start-column="31" selection-end-line="1132" selection-end-column="43" />
               <folding>
-                <element signature="e#0#10#0" expanded="true" />
-                <element signature="e#143696#150827#0" />
-                <element signature="e#150888#151548#0" />
-                <element signature="e#151611#152278#0" />
-                <element signature="e#152347#153095#0" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/install/firewallUtilities.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="390">
-              <caret line="26" column="28" selection-start-line="26" selection-start-column="28" selection-end-line="26" selection-end-column="28" />
-              <folding>
-                <element signature="e#0#17#0" expanded="true" />
-                <element signature="e#818#1904#0" />
-                <element signature="e#1965#3058#0" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/plogical/upgrade.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="368">
-              <caret line="432" column="65" lean-forward="true" selection-start-line="432" selection-start-column="65" selection-end-line="432" selection-end-column="65" />
-              <folding>
-                <element signature="e#543#985#0" />
-                <element signature="e#1065#1663#0" />
-                <element signature="e#1082#1626#0" />
-                <element signature="e#1132#1602#0" />
-                <element signature="e#1225#1488#0" />
-                <element signature="e#1404#1488#0" />
-                <element signature="e#1531#1602#0" />
-                <element signature="e#1712#3223#0" />
-                <element signature="e#1730#3130#0" />
-                <element signature="e#3278#3918#0" />
-                <element signature="e#3296#3880#0" />
-                <element signature="e#3969#4406#0" />
-                <element signature="e#4456#5619#0" />
-                <element signature="e#4473#5571#0" />
-                <element signature="e#4565#4947#0" />
-                <element signature="e#4755#4907#0" />
-                <element signature="e#4983#5472#0" />
-                <element signature="e#5008#5423#0" />
-                <element signature="e#5201#5382#0" />
-                <element signature="e#5686#7123#0" />
-                <element signature="e#5703#7012#0" />
-                <element signature="e#6510#6783#0" />
-                <element signature="e#6569#6711#0" />
-                <element signature="e#7176#7423#0" />
-                <element signature="e#7492#11863#0" />
-                <element signature="e#7509#11732#0" />
-                <element signature="e#7604#8608#0" />
-                <element signature="e#7734#8028#0" />
-                <element signature="e#8274#8546#0" />
-                <element signature="e#8344#8466#0" />
-                <element signature="e#8873#9229#0" />
-                <element signature="e#9099#9181#0" />
-                <element signature="e#9320#9672#0" />
-                <element signature="e#9542#9624#0" />
-                <element signature="e#9873#10187#0" />
-                <element signature="e#10057#10139#0" />
-                <element signature="e#10279#10593#0" />
-                <element signature="e#10463#10545#0" />
-                <element signature="e#10929#11185#0" />
-                <element signature="e#10995#11113#0" />
-                <element signature="e#11522#11586#0" />
-                <element signature="e#11915#12656#0" />
-                <element signature="e#11932#12540#0" />
-                <element signature="e#12191#12428#0" />
-                <element signature="e#12588#12656#0" />
-                <element signature="e#14253#14969#0" />
-                <element signature="e#14492#14643#0" />
-                <element signature="e#14670#14808#0" />
-                <element signature="e#15017#15406#0" />
-                <element signature="e#15035#15302#0" />
-                <element signature="e#15345#15406#0" />
-                <element signature="e#15460#15783#0" />
-                <element signature="e#15837#16151#0" />
-                <element signature="e#15854#16118#0" />
-                <element signature="e#16213#17520#0" />
-                <element signature="e#16230#17423#0" />
-                <element signature="e#16508#17355#0" />
-                <element signature="e#16635#17355#0" />
-                <element signature="e#16803#17355#0" />
-                <element signature="e#17472#17520#0" />
-                <element signature="e#17586#22883#0" />
-                <element signature="e#17604#22782#0" />
-                <element signature="e#17697#19456#0" />
-                <element signature="e#19981#20113#0" />
-                <element signature="e#20355#20675#0" />
-                <element signature="e#20750#21125#0" />
-                <element signature="e#21526#21696#0" />
-                <element signature="e#21947#22171#0" />
-                <element signature="e#22941#29422#0" />
-                <element signature="e#22959#29321#0" />
-                <element signature="e#23039#23610#0" />
-                <element signature="e#23729#24112#0" />
-                <element signature="e#24231#24675#0" />
-                <element signature="e#24794#25399#0" />
-                <element signature="e#25518#25905#0" />
-                <element signature="e#26024#26472#0" />
-                <element signature="e#26607#27154#0" />
-                <element signature="e#27273#28045#0" />
-                <element signature="e#28164#28557#0" />
-                <element signature="e#28676#29130#0" />
-                <element signature="e#29482#32221#0" />
-                <element signature="e#29499#32188#0" />
-                <element signature="e#29592#29689#0" />
-                <element signature="e#29765#29845#0" />
-                <element signature="e#29921#30008#0" />
-                <element signature="e#30084#30229#0" />
-                <element signature="e#30292#30771#0" />
-                <element signature="e#30889#31451#0" />
-                <element signature="e#31569#31998#0" />
-                <element signature="e#32286#36035#0" />
-                <element signature="e#32303#36002#0" />
-                <element signature="e#32383#32571#0" />
-                <element signature="e#32689#33156#0" />
-                <element signature="e#33274#33819#0" />
-                <element signature="e#33938#34455#0" />
-                <element signature="e#34574#35180#0" />
-                <element signature="e#35299#35811#0" />
-                <element signature="e#36091#37190#0" />
-                <element signature="e#36108#37157#0" />
-                <element signature="e#36188#36816#0" />
-                <element signature="e#37249#38169#0" />
-                <element signature="e#37266#38136#0" />
-                <element signature="e#37346#37946#0" />
-                <element signature="e#38221#39442#0" />
-                <element signature="e#38238#39409#0" />
-                <element signature="e#38318#39029#0" />
-                <element signature="e#39505#40319#0" />
-                <element signature="e#39522#40286#0" />
-                <element signature="e#39602#39778#0" />
-                <element signature="e#40376#40780#0" />
-                <element signature="e#40394#40746#0" />
-                <element signature="e#40839#43055#0" />
-                <element signature="e#40856#43022#0" />
-                <element signature="e#40936#41230#0" />
-                <element signature="e#41348#41730#0" />
-                <element signature="e#41848#42243#0" />
-                <element signature="e#42361#42832#0" />
-                <element signature="e#43109#43555#0" />
-                <element signature="e#43126#43522#0" />
-                <element signature="e#43628#48183#0" />
-                <element signature="e#48235#48449#0" />
-                <element signature="e#48252#48342#0" />
-                <element signature="e#48384#48449#0" />
-                <element signature="e#48506#48844#0" />
-                <element signature="e#48523#48732#0" />
-                <element signature="e#48774#48844#0" />
-                <element signature="e#48896#50633#0" />
-                <element signature="e#48914#50540#0" />
-                <element signature="e#50687#55896#0" />
-                <element signature="e#50705#55803#0" />
-                <element signature="e#53499#53963#0" />
-                <element signature="e#54013#54114#0" />
-                <element signature="e#54138#54464#0" />
-                <element signature="e#54516#54617#0" />
-                <element signature="e#54963#55180#0" />
-                <element signature="e#55230#55324#0" />
-                <element signature="e#55948#57151#0" />
-                <element signature="e#55965#56505#0" />
-                <element signature="e#55975#56443#0" />
-                <element signature="e#56534#56927#0" />
-                <element signature="e#56544#56865#0" />
-                <element signature="e#57028#57151#0" />
-                <element signature="e#57207#57393#0" />
-                <element signature="e#57444#57670#0" />
-                <element signature="e#57724#64366#0" />
-                <element signature="e#57741#64271#0" />
-                <element signature="e#57886#61606#0" />
-                <element signature="e#57951#58175#0" />
-                <element signature="e#58788#58987#0" />
-                <element signature="e#58855#58907#0" />
-                <element signature="e#59154#59420#0" />
-                <element signature="e#59931#60518#0" />
-                <element signature="e#61642#64222#0" />
-                <element signature="e#62211#62288#0" />
-                <element signature="e#62380#63134#0" />
-                <element signature="e#63486#63685#0" />
-                <element signature="e#63553#63605#0" />
-                <element signature="e#63852#64118#0" />
-                <element signature="e#64419#65568#0" />
-                <element signature="e#64506#64806#0" />
-                <element signature="e#64833#65031#0" />
-                <element signature="e#65165#65568#0" />
-                <element signature="e#65616#67922#0" />
-                <element signature="e#65616#65667#0" />
-                <element signature="e#66529#66610#0" />
-                <element signature="e#67941#67958#0" />
+                <element signature="e#33#42#0" expanded="true" />
+                <element signature="e#1294#2317#0" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/preUpgrade.sh">
+        <entry file="file://$PROJECT_DIR$/plogical/mailUtilities.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="150">
-              <caret line="10" column="44" selection-start-line="10" selection-start-column="44" selection-end-line="10" selection-end-column="44" />
+            <state relative-caret-position="301">
+              <caret line="222" column="28" selection-start-line="222" selection-start-column="28" selection-end-line="222" selection-end-column="28" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/plogical/processUtilities.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="331">
+              <caret line="100" column="92" selection-start-line="100" selection-start-column="92" selection-end-line="100" selection-end-column="92" />
+              <folding>
+                <element signature="e#0#64#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -255,14 +73,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>cyberpanelLoading</find>
-      <find>allChecked</find>
-      <find>== 'root'</find>
-      <find>check_output</find>
-      <find>split</find>
-      <find>re.mat</find>
-      <find>Backing up data..</find>
-      <find>[46][5009]</find>
       <find>externalApp</find>
       <find>restoreDatabaseBackup</find>
       <find>logging.writeToFile</find>
@@ -282,9 +92,17 @@
       <find>/usr/local/CyberCP</find>
       <find>os.remove</find>
       <find>shutil.rmtree</find>
+      <find>setupVirtualEnv</find>
+      <find>python</find>
+      <find>setupDKIM</find>
+      <find>submitWebsiteCreation</find>
+      <find>submitWebsitecrea</find>
+      <find>createDomain</find>
+      <find>submitDomain</find>
+      <find>getpass</find>
       <find>addRule</find>
       <find>firewalld</find>
-      <find>setupVirtualEnv</find>
+      <find>normal</find>
     </findStrings>
     <replaceStrings>
       <replace>admin.api == 1</replace>
@@ -313,7 +131,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/plogical/vhost.py" />
         <option value="$PROJECT_DIR$/CyberCP/urls.py" />
         <option value="$PROJECT_DIR$/CyberCP/settings.py" />
         <option value="$PROJECT_DIR$/backup/views.py" />
@@ -325,7 +142,6 @@
         <option value="$PROJECT_DIR$/plogical/cPanelImporter.py" />
         <option value="$PROJECT_DIR$/emailPremium/templates/emailPremium/emailLimits.html" />
         <option value="$PROJECT_DIR$/IncBackups/IncBackups.py" />
-        <option value="$PROJECT_DIR$/plogical/mailUtilities.py" />
         <option value="$PROJECT_DIR$/backup/backupManager.py" />
         <option value="$PROJECT_DIR$/cli/cliLogger.py" />
         <option value="$PROJECT_DIR$/emailPremium/templates/emailPremium/listDomains.html" />
@@ -350,7 +166,6 @@
         <option value="$PROJECT_DIR$/CyberCP/secMiddleware.py" />
         <option value="$PROJECT_DIR$/plogical/mysqlUtilities.py" />
         <option value="$PROJECT_DIR$/serverLogs/views.py" />
-        <option value="$PROJECT_DIR$/plogical/processUtilities.py" />
         <option value="$PROJECT_DIR$/IncBackups/restoreMeta.py" />
         <option value="$PROJECT_DIR$/IncBackups/templates/IncBackups/incrementalDestinations.html" />
         <option value="$PROJECT_DIR$/IncBackups/templates/IncBackups/createBackup.html" />
@@ -362,14 +177,16 @@
         <option value="$PROJECT_DIR$/install/install.py" />
         <option value="$PROJECT_DIR$/install/firewallUtilities.py" />
         <option value="$PROJECT_DIR$/IncBackups/views.py" />
-        <option value="$PROJECT_DIR$/plogical/upgrade.py" />
         <option value="$PROJECT_DIR$/preUpgrade.sh" />
+        <option value="$PROJECT_DIR$/plogical/upgrade.py" />
+        <option value="$PROJECT_DIR$/websiteFunctions/website.py" />
+        <option value="$PROJECT_DIR$/plogical/processUtilities.py" />
+        <option value="$PROJECT_DIR$/plogical/mailUtilities.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="1347" />
-    <option name="y" value="27" />
+    <option name="x" value="71" />
     <option name="width" value="1221" />
     <option name="height" value="609" />
   </component>
@@ -602,18 +419,18 @@
       <workItem from="1570899537960" duration="34622000" />
       <workItem from="1571158869749" duration="705000" />
       <workItem from="1571160353900" duration="938000" />
-      <workItem from="1571162569598" duration="8064000" />
+      <workItem from="1571162569598" duration="12777000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="716910000" />
+    <option name="totallyTimeSpent" value="721623000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1366" y="25" width="1366" height="684" extended-state="6" />
+    <frame x="0" y="-2" width="1366" height="711" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.15" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.09772728" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -697,20 +514,6 @@
     <SUITE FILE_PATH="coverage/CyberCP$upgrade.coverage" NAME="upgrade Coverage Results" MODIFIED="1571472730271" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/plogical" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/emailPremium/templates/emailPremium/listDomains.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="457">
-          <caret line="108" column="14" selection-start-line="108" selection-start-column="14" selection-end-line="108" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/emailPremium/templates/emailPremium/policyServer.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="472">
-          <caret line="81" selection-start-line="81" selection-end-line="81" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/install/installLog.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="165">
@@ -810,17 +613,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/plogical/virtualHostUtilities.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="361">
-          <caret line="232" column="36" lean-forward="true" selection-start-line="232" selection-start-column="36" selection-end-line="232" selection-end-column="52" />
-          <folding>
-            <element signature="e#33#42#0" expanded="true" />
-            <element signature="e#1294#2317#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/CLManager/static/CLManager/CLManager.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="30">
@@ -915,13 +707,6 @@
     <entry file="file://$PROJECT_DIR$/plogical/vhost.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-855" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/plogical/mailUtilities.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
-          <caret line="18" selection-start-line="18" selection-end-line="18" selection-end-column="14" />
-        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/backup/static/backup/backup.js">
@@ -1045,16 +830,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/plogical/processUtilities.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="201">
-          <caret line="276" column="31" selection-start-line="276" selection-start-column="12" selection-end-line="276" selection-end-column="31" />
-          <folding>
-            <element signature="e#0#64#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/loginSystem/views.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="194">
@@ -1166,36 +941,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/install/firewallUtilities.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="26" column="28" selection-start-line="26" selection-start-column="28" selection-end-line="26" selection-end-column="28" />
-          <folding>
-            <element signature="e#0#17#0" expanded="true" />
-            <element signature="e#818#1904#0" />
-            <element signature="e#1965#3058#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/install/install.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="241">
-          <caret line="2505" column="37" selection-start-line="2505" selection-start-column="30" selection-end-line="2505" selection-end-column="37" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-            <element signature="e#143696#150827#0" />
-            <element signature="e#150888#151548#0" />
-            <element signature="e#151611#152278#0" />
-            <element signature="e#152347#153095#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/plogical/upgrade.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="368">
-          <caret line="432" column="65" lean-forward="true" selection-start-line="432" selection-start-column="65" selection-end-line="432" selection-end-column="65" />
+        <state relative-caret-position="247">
+          <caret line="1923" column="36" lean-forward="true" selection-start-line="1923" selection-start-column="36" selection-end-line="1923" selection-end-column="36" />
           <folding>
             <element signature="e#543#985#0" />
             <element signature="e#1065#1663#0" />
@@ -1242,6 +991,7 @@
             <element signature="e#11932#12540#0" />
             <element signature="e#12191#12428#0" />
             <element signature="e#12588#12656#0" />
+            <element signature="e#12711#14202#0" />
             <element signature="e#14253#14969#0" />
             <element signature="e#14492#14643#0" />
             <element signature="e#14670#14808#0" />
@@ -1359,7 +1109,6 @@
             <element signature="e#64506#64806#0" />
             <element signature="e#64833#65031#0" />
             <element signature="e#65165#65568#0" />
-            <element signature="e#65616#67922#0" />
             <element signature="e#65616#65667#0" />
             <element signature="e#66529#66610#0" />
             <element signature="e#67941#67958#0" />
@@ -1367,10 +1116,80 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="n#style#0;n#div#0;n#!!top" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/websiteFunctions/website.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="301">
+          <caret line="265" column="47" selection-start-line="265" selection-start-column="47" selection-end-line="265" selection-end-column="47" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/preUpgrade.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="150">
           <caret line="10" column="44" selection-start-line="10" selection-start-column="44" selection-end-line="10" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/install/firewallUtilities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="390">
+          <caret line="26" column="28" selection-start-line="26" selection-start-column="28" selection-end-line="26" selection-end-column="28" />
+          <folding>
+            <element signature="e#0#17#0" expanded="true" />
+            <element signature="e#818#1904#0" />
+            <element signature="e#1965#3058#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/install/install.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="241">
+          <caret line="2505" column="37" selection-start-line="2505" selection-start-column="30" selection-end-line="2505" selection-end-column="37" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+            <element signature="e#143696#150827#0" />
+            <element signature="e#150888#151548#0" />
+            <element signature="e#151611#152278#0" />
+            <element signature="e#152347#153095#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/virtualHostUtilities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1381">
+          <caret line="1132" column="43" selection-start-line="1132" selection-start-column="31" selection-end-line="1132" selection-end-column="43" />
+          <folding>
+            <element signature="e#33#42#0" expanded="true" />
+            <element signature="e#1294#2317#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/processUtilities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="331">
+          <caret line="100" column="92" selection-start-line="100" selection-start-column="92" selection-end-line="100" selection-end-column="92" />
+          <folding>
+            <element signature="e#0#64#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/mailUtilities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="301">
+          <caret line="222" column="28" selection-start-line="222" selection-start-column="28" selection-end-line="222" selection-end-column="28" />
         </state>
       </provider>
     </entry>

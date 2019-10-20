@@ -213,27 +213,28 @@ class mailUtilities:
             if os.path.exists("/etc/opendkim/keys/" + virtualHostName):
                 return 1, "None"
 
-            os.mkdir("/etc/opendkim/keys/" + virtualHostName)
+
+            path = '/etc/opendkim/keys/%s' % (virtualHostName)
+            command = 'mkdir %s' % (path)
+            ProcessUtilities.normalExecutioner(command)
 
             ## Generate keys
 
-            FNULL = open(os.devnull, 'w')
-
-            command = "opendkim-genkey -D /etc/opendkim/keys/" + virtualHostName + " -d " + virtualHostName + " -s default"
-            subprocess.call(shlex.split(command),stdout=FNULL, stderr=subprocess.STDOUT)
-
+            command = "sudo opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (virtualHostName, virtualHostName)
+            ProcessUtilities.normalExecutioner(command)
             ## Fix permissions
 
             command = "chown -R root:opendkim /etc/opendkim/keys/" + virtualHostName
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.normalExecutioner(command)
 
             command = "chmod 640 /etc/opendkim/keys/" + virtualHostName + "/default.private"
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.normalExecutioner(command)
 
             command = "chmod 644 /etc/opendkim/keys/" + virtualHostName + "/default.txt"
-            subprocess.call(shlex.split(command))
+            ProcessUtilities.normalExecutioner(command)
 
             ## Edit key file
+
 
             keyTable = "/etc/opendkim/KeyTable"
             configToWrite = "default._domainkey." + virtualHostName + " " + virtualHostName + ":default:/etc/opendkim/keys/" + virtualHostName + "/default.private\n"
@@ -272,7 +273,7 @@ class mailUtilities:
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
-                str(msg) + "  [setupDKIM]")
+                str(msg) + "  [setupDKIM:275]")
             return 0, str(msg)
 
     @staticmethod
