@@ -553,6 +553,12 @@ class virtualHostUtilities:
 
             destPrivKey = "/usr/local/lscp/conf/key.pem"
             destCert = "/usr/local/lscp/conf/cert.pem"
+            
+            lswsAdminPrivKey = "/usr/local/lsws/admin/conf/cert/admin.key"
+            lswsAdminCert = "/usr/local/lsws/admin/conf/cert/admin.crt"
+
+            olsAdminPrivKey = "/usr/local/lsws/admin/conf/webadmin.key"
+            olsAdminCert = "/usr/local/lsws/admin/conf/webadmin.crt"
 
             pathToStoreSSLFullChain = '/etc/letsencrypt/live/' + virtualHost + '/fullchain.pem'
             pathToStoreSSLPrivKey = '/etc/letsencrypt/live/' + virtualHost + '/privkey.pem'
@@ -562,6 +568,29 @@ class virtualHostUtilities:
                 os.remove(destPrivKey)
             if os.path.exists(destCert):
                 os.remove(destCert)
+            
+            ## removing self signed certs for lsws webadmin
+            if os.path.exists(lswsAdminCert):
+                os.remove(lswsAdminCert)
+            if os.path.exists(lswsAdminPrivKey):
+                os.remove(lswsAdminPrivKey)
+            ## create symlink for hostname SSL for lsws webadmin SSL
+            command = 'ln -s /usr/local/lscp/conf/cert.pem /usr/local/lsws/admin/conf/cert/admin.crt'
+            ProcessUtilities.normalExecutioner(command)
+            command = 'ln -s /usr/local/lscp/conf/key.pem /usr/local/lsws/admin/conf/cert/admin.key'
+            ProcessUtilities.normalExecutioner(command)
+
+            ## removing self signed certs for ols webadmin
+            if os.path.exists(olsAdminCert):
+                os.remove(olsAdminCert)
+            if os.path.exists(olsAdminPrivKey):
+                os.remove(olsAdminPrivKey)
+            ## create symlink for hostname SSL for lsws webadmin SSL
+            command = 'ln -s /usr/local/lscp/conf/cert.pem /usr/local/lsws/admin/conf/webadmin.crt'
+            ProcessUtilities.normalExecutioner(command)
+            command = 'ln -s /usr/local/lscp/conf/key.pem /usr/local/lsws/admin/conf/webadmin.key'
+            ProcessUtilities.normalExecutioner(command)
+                
 
             adminEmail = "email@" + virtualHost
 
