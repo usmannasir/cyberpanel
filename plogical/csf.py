@@ -282,7 +282,11 @@ class CSF(multi.Thread):
                 #  HTACCESS_LOG is ins main error.log
                 elif items.find('HTACCESS_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('HTACCESS_LOG = "/usr/local/lsws/logs/error.log"\n')
-
+		
+                #  SYSLOG_CHECK Check whether syslog is running
+                elif items.find('SYSLOG_CHECK =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('SYSLOG_CHECK = "300"\n')
+		
 		#  CSF UI enable
                 #elif items.find('UI = "0"') > -1 and items.find('=') > -1 and (items[0] != '#'):
                 #    writeToConf.writelines('UI = "1"\n')
