@@ -73,10 +73,10 @@ class CSF(multi.Thread):
 
             # install required packages for CSF perl and /usr/bin/host
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                command = 'yum install bind-utils perl-libwww-perl net-tools perl-LWP-Protocol-https -y'
+                command = 'yum install bind-utils net-tools perl-libwww-perl.noarch perl-LWP-Protocol-https.noarch perl-GDGraph -y'
                 ProcessUtilities.normalExecutioner(command)
             elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
-                command = 'apt-get install dnsutils libwww-perl net-tools -y'
+                command = 'apt-get install dnsutils libwww-perl liblwp-protocol-https-perl libgd-graph-perl net-tools -y'
                 ProcessUtilities.normalExecutioner(command)
 		command = 'ln -s /bin/systemctl /usr/bin/systemctl'
             	ProcessUtilities.normalExecutioner(command)
@@ -284,16 +284,16 @@ class CSF(multi.Thread):
                     writeToConf.writelines('HTACCESS_LOG = "/usr/local/lsws/logs/error.log"\n')
 
 		#  CSF UI enable
-                elif items.find('UI = "0"') > -1 and items.find('=') > -1 and (items[0] != '#'):
-                    writeToConf.writelines('UI = "1"\n')
-                elif items.find('UI_ALLOW') > -1 and items.find('=') > -1 and (items[0] != '#'):
-                    writeToConf.writelines('UI_ALLOW = "0"\n')
-                elif items.find('UI_PORT =') > -1 and items.find('=') > -1 and (items[0] != '#'):
-                    writeToConf.writelines('UI_PORT = "1025"\n')
-                elif items.find('UI_USER') > -1 and items.find('=') > -1 and (items[0] != '#'):
-                    writeToConf.writelines('UI_USER = "cyberpanel"\n')
-                elif items.find('UI_PASS') > -1 and items.find('=') > -1 and (items[0] != '#'):
-                    writeToConf.writelines('UI_PASS = "csfadmin1234567"\n')
+                #elif items.find('UI = "0"') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                #    writeToConf.writelines('UI = "1"\n')
+                #elif items.find('UI_ALLOW') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                #    writeToConf.writelines('UI_ALLOW = "0"\n')
+                #elif items.find('UI_PORT =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                #    writeToConf.writelines('UI_PORT = "1025"\n')
+                #elif items.find('UI_USER') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                #    writeToConf.writelines('UI_USER = "cyberpanel"\n')
+                #elif items.find('UI_PASS') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                #    writeToConf.writelines('UI_PASS = "csfadmin1234567"\n')
                 else:
                     writeToConf.writelines(items)
 
