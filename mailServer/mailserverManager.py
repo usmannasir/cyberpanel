@@ -89,7 +89,7 @@ class MailServerManager:
 
             data = json.loads(self.request.body)
             domainName = data['domain']
-            userName = data['username']
+            userName = data['username'].lower()
             password = data['passwordByPass']
 
 
@@ -102,7 +102,7 @@ class MailServerManager:
 
             ## Create email entry
 
-            result = mailUtilities.createEmailAccount(domainName, userName, password)
+            result = mailUtilities.createEmailAccount(domainName, userName.lower(), password)
 
             if result[0] == 1:
                 data_ret = {'status': 1, 'createEmailStatus': 1, 'error_message': "None"}
