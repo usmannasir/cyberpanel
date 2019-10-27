@@ -78,8 +78,8 @@ class CSF(multi.Thread):
             elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
                 command = 'apt-get install dnsutils libwww-perl liblwp-protocol-https-perl libgd-graph-perl net-tools -y'
                 ProcessUtilities.normalExecutioner(command)
-		command = 'ln -s /bin/systemctl /usr/bin/systemctl'
-            	ProcessUtilities.normalExecutioner(command)
+                command = 'ln -s /bin/systemctl /usr/bin/systemctl'
+                ProcessUtilities.normalExecutioner(command)
             else:
 
                 logging.CyberCPLogFileWriter.statusWriter(CSF.installLogPath,
@@ -95,14 +95,15 @@ class CSF(multi.Thread):
                     writeToConf.writelines(
                         'TCP_IN = "20,21,22,25,53,80,110,143,443,465,587,993,995,1025,7080,8090,40110:40210"\n')
                 elif items.find('TCP_OUT') > -1 and items.find('=') > -1 and (items[0] != '#'):
-                    writeToConf.writelines('TCP_OUT = "20,21,22,25,43,53,80,110,113,443,587,993,995,8090,40110:40210"\n')
+                    writeToConf.writelines(
+                        'TCP_OUT = "20,21,22,25,43,53,80,110,113,443,587,993,995,8090,40110:40210"\n')
                 elif items.find('UDP_IN') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('UDP_IN = "20,21,53"\n')
                 elif items.find('UDP_OUT') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('UDP_OUT = "20,21,53,113,123"\n')
                 elif items.find('TESTING =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('TESTING = "0"\n')
-               	# setting RESTRICT_SYSLOG to "3" for use with option RESTRICT_SYSLOG_GROUP
+                # setting RESTRICT_SYSLOG to "3" for use with option RESTRICT_SYSLOG_GROUP
                 elif items.find('RESTRICT_SYSLOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('RESTRICT_SYSLOG = "3"\n')
 
@@ -282,21 +283,21 @@ class CSF(multi.Thread):
                 #  HTACCESS_LOG is ins main error.log
                 elif items.find('HTACCESS_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('HTACCESS_LOG = "/usr/local/lsws/logs/error.log"\n')
-		
+
                 #  SYSLOG_CHECK Check whether syslog is running
                 elif items.find('SYSLOG_CHECK =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('SYSLOG_CHECK = "300"\n')
-		
-		#  CSF UI enable
-                #elif items.find('UI = "0"') > -1 and items.find('=') > -1 and (items[0] != '#'):
+
+                #  CSF UI enable
+                # elif items.find('UI = "0"') > -1 and items.find('=') > -1 and (items[0] != '#'):
                 #    writeToConf.writelines('UI = "1"\n')
-                #elif items.find('UI_ALLOW') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                # elif items.find('UI_ALLOW') > -1 and items.find('=') > -1 and (items[0] != '#'):
                 #    writeToConf.writelines('UI_ALLOW = "0"\n')
-                #elif items.find('UI_PORT =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                # elif items.find('UI_PORT =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                 #    writeToConf.writelines('UI_PORT = "1025"\n')
-                #elif items.find('UI_USER') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                # elif items.find('UI_USER') > -1 and items.find('=') > -1 and (items[0] != '#'):
                 #    writeToConf.writelines('UI_USER = "cyberpanel"\n')
-                #elif items.find('UI_PASS') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                # elif items.find('UI_PASS') > -1 and items.find('=') > -1 and (items[0] != '#'):
                 #    writeToConf.writelines('UI_PASS = "csfadmin1234567"\n')
                 else:
                     writeToConf.writelines(items)
@@ -330,7 +331,6 @@ class CSF(multi.Thread):
                 writeToConf.close()
 
                 ##
-
 
             command = 'csf -s'
             ProcessUtilities.normalExecutioner(command)
@@ -555,6 +555,7 @@ class CSF(multi.Thread):
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[checkIP]")
+
 
 def main():
     parser = argparse.ArgumentParser(description='CSF Manager')

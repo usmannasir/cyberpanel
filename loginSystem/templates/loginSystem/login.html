@@ -3,43 +3,93 @@
 <head>
     <style>
         /* Loading Spinner */
-        .spinner{margin:0;width:70px;height:18px;margin:-35px 0 0 -9px;position:absolute;top:50%;left:50%;text-align:center}.spinner > div{width:18px;height:18px;background-color:#333;border-radius:100%;display:inline-block;-webkit-animation:bouncedelay 1.4s infinite ease-in-out;animation:bouncedelay 1.4s infinite ease-in-out;-webkit-animation-fill-mode:both;animation-fill-mode:both}.spinner .bounce1{-webkit-animation-delay:-.32s;animation-delay:-.32s}.spinner .bounce2{-webkit-animation-delay:-.16s;animation-delay:-.16s}@-webkit-keyframes bouncedelay{0%,80%,100%{-webkit-transform:scale(0.0)}40%{-webkit-transform:scale(1.0)}}@keyframes bouncedelay{0%,80%,100%{transform:scale(0.0);-webkit-transform:scale(0.0)}40%{transform:scale(1.0);-webkit-transform:scale(1.0)}}
+        .spinner {
+            margin: 0;
+            width: 70px;
+            height: 18px;
+            margin: -35px 0 0 -9px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            text-align: center
+        }
+
+        .spinner > div {
+            width: 18px;
+            height: 18px;
+            background-color: #333;
+            border-radius: 100%;
+            display: inline-block;
+            -webkit-animation: bouncedelay 1.4s infinite ease-in-out;
+            animation: bouncedelay 1.4s infinite ease-in-out;
+            -webkit-animation-fill-mode: both;
+            animation-fill-mode: both
+        }
+
+        .spinner .bounce1 {
+            -webkit-animation-delay: -.32s;
+            animation-delay: -.32s
+        }
+
+        .spinner .bounce2 {
+            -webkit-animation-delay: -.16s;
+            animation-delay: -.16s
+        }
+
+        @-webkit-keyframes bouncedelay {
+            0%, 80%, 100% {
+                -webkit-transform: scale(0.0)
+            }
+            40% {
+                -webkit-transform: scale(1.0)
+            }
+        }
+
+        @keyframes bouncedelay {
+            0%, 80%, 100% {
+                transform: scale(0.0);
+                -webkit-transform: scale(0.0)
+            }
+            40% {
+                transform: scale(1.0);
+                -webkit-transform: scale(1.0)
+            }
+        }
     </style>
     <meta charset="UTF-8">
-<!--[if IE]><meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
-<title> Login - CyberPanel </title>
-<meta name="description" content="">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!--[if IE]><meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
+    <title> Login - CyberPanel </title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<!-- Favicons -->
-{% load static %}
+    <!-- Favicons -->
+    {% load static %}
 
-<link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/finalLoginPageCSS/allCss.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/finalLoginPageCSS/allCss.css' %}">
 
-<!-- HELPERS -->
+    <!-- HELPERS -->
 
-<!-- ELEMENTS -->
+    <!-- ELEMENTS -->
 
-<!-- ICONS -->
+    <!-- ICONS -->
 
-<!-- Admin theme -->
+    <!-- Admin theme -->
 
-<!-- Components theme -->
+    <!-- Components theme -->
 
-<!-- JS Core -->
+    <!-- JS Core -->
 
-<script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-core.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-core.min.js' %}"></script>
 
-<script type="text/javascript">
-    $(window).load(function(){
-        setTimeout(function() {
-            $('#loading').fadeOut( 400, "linear" );
-        }, 300);
-    });
-</script>
+    <script type="text/javascript">
+        $(window).load(function () {
+            setTimeout(function () {
+                $('#loading').fadeOut(400, "linear");
+            }, 300);
+        });
+    </script>
 
-<!-- JS Ends -->
-
+    <!-- JS Ends -->
 
 
 </head>
@@ -54,14 +104,14 @@
 
 <style type="text/css">
 
-    html,body {
+    html, body {
         height: 100%;
         background: #fafafa;
     }
 
 </style>
 
-<div  class="center-vertical">
+<div class="center-vertical">
     <div class="center-content row">
 
         <div class="col-md-8 col-lg-6 clearfix center-margin">
@@ -105,7 +155,8 @@
                                 <div class="form-group">
 
                                     <div class="input-group">
-                                        <input ng-model="username" type="text" class="form-control" name="username" placeholder="Enter username" required>
+                                        <input ng-model="username" type="text" class="form-control" name="username"
+                                               placeholder="Enter username" required>
                                         <span class="input-group-addon bg-blue">
                                             <i class="glyph-icon icon-envelope-o"></i>
                                         </span>
@@ -113,45 +164,50 @@
                                 </div>
                                 <div class="form-group">
                                     <div class="input-group">
-                                        <input ng-keypress="initiateLogin($event)" ng-model="password" type="password" class="form-control" id="password" placeholder="Password" required>
+                                        <input ng-keypress="initiateLogin($event)" ng-model="password" type="password"
+                                               class="form-control" id="password" placeholder="Password" required>
                                         <span class="input-group-addon bg-blue">
                                             <i class="glyph-icon icon-unlock-alt"></i>
                                         </span>
                                     </div>
-                                    <img id="verifyingLogin" class="center-block" src="{% static 'images/loading.gif' %}">
+                                    <img id="verifyingLogin" class="center-block"
+                                         src="{% static 'images/loading.gif' %}">
                                 </div>
 
                                 <div class="form-group">
                                     <div class="input-group">
-                                        <select ng-model="languageSelection" ng-init="languageSelection='english'" class="form-control">
-                                                <option value="english">English</option>
-                                                <option>Chinese</option>
-                                                <option>Italian</option>
-                                                <option>French</option>
-                                                <option>Bulgarian</option>
-                                                <option>Portuguese</option>
-                                                <option>Japanese</option>
-                                                <option>Bosnian</option>
-                                                <option>Greek</option>
-                                                <option>Russian</option>
-                                                <option>Turkish</option>
-                                                <option>Spanish</option>
-                                                <option>Polish</option>
-                                                <option>Vietnamese</option>
+                                        <select ng-model="languageSelection" ng-init="languageSelection='english'"
+                                                class="form-control">
+                                            <option value="english">English</option>
+                                            <option>Chinese</option>
+                                            <option>Italian</option>
+                                            <option>French</option>
+                                            <option>Bulgarian</option>
+                                            <option>Portuguese</option>
+                                            <option>Japanese</option>
+                                            <option>Bosnian</option>
+                                            <option>Greek</option>
+                                            <option>Russian</option>
+                                            <option>Turkish</option>
+                                            <option>Spanish</option>
+                                            <option>Polish</option>
+                                            <option>Vietnamese</option>
+                                            <option>German</option>
                                         </select>
                                     </div>
                                 </div>
 
 
-                                <button type="button" ng-click="verifyLoginCredentials()" class="btn btn-success btn-block">Sign In</button>
+                                <button type="button" ng-click="verifyLoginCredentials()"
+                                        class="btn btn-success btn-block">Sign In
+                                </button>
                             </div>
                         </div>
                     </form>
                     <div id="loginFailed" class="alert alert-danger">
                         <p>Could Not Login, Error message: {$ errorMessage $}</p>
+                    </div>
                 </div>
-                </div>
-
 
 
             </div>
@@ -160,7 +216,7 @@
     </div>
 </div>
 
-<script src = "https://code.angularjs.org/1.6.5/angular.min.js"></script>
+<script src="https://code.angularjs.org/1.6.5/angular.min.js"></script>
 <script src="https://code.angularjs.org/1.6.5/angular-route.min.js"></script>
 <script src="{% static 'loginSystem/login-systen.js' %}"></script>
 

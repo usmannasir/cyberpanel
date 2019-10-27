@@ -51,8 +51,18 @@
                 <div ng-hide="emailDetails" class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Select Email" %} </label>
                     <div class="col-sm-6">
-                        <select ng-change="selectForwardingEmail()" ng-model="selectedEmail" class="form-control">
+                        <select ng-model="selectedEmail" class="form-control">
                                 <option ng-repeat="email in emails track by $index">{$ email.email $}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div ng-hide="emailDetails" class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Forwarding Options" %} </label>
+                    <div class="col-sm-6">
+                        <select ng-change="selectForwardingEmail()" ng-model="forwardingOption" class="form-control">
+                                <option>Forward to email</option>
+                                <option>Pipe to program</option>
                         </select>
                     </div>
                 </div>
@@ -88,7 +98,7 @@
                     </div>
 
                     <div class="col-sm-4">
-                        <input placeholder="{% trans 'Destination' %}"   type="email" class="form-control" ng-model="destinationEmail" required>
+                        <input placeholder="{% trans 'Destination' %} {% trans 'or path to the program' %}"   type="text" class="form-control" ng-model="destinationEmail" required>
                     </div>
 
 

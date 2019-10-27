@@ -18,7 +18,7 @@ from plogical.mailUtilities import mailUtilities
 import thread
 from dns.models import Domains as dnsDomains
 from dns.models import Records as dnsRecords
-from mailServer.models import Forwardings
+from mailServer.models import Forwardings, Pipeprograms
 from plogical.acl import ACLManager
 import os
 from plogical.dnsUtilities import DNS
@@ -255,40 +255,69 @@ class MailServerManager:
 
             data = json.loads(self.request.body)
             emailAddress = data['emailAddress']
+            forwardingOption = data['forwardingOption']
 
-            eUser = EUsers.objects.get(email=emailAddress)
+            if forwardingOption != "Pipe to program":
+                eUser = EUsers.objects.get(email=emailAddress)
 
-            admin = Administrator.objects.get(pk=userID)
-            if ACLManager.checkOwnership(eUser.emailOwner.domainOwner.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadErrorJson()
-
-            currentForwardings = Forwardings.objects.filter(source=emailAddress)
-
-            json_data = "["
-            checker = 0
-            id = 1
-            for items in currentForwardings:
-                if items.source == items.destination:
-                    continue
-                dic = {'id': id,
-                       'source': items.source,
-                       'destination': items.destination}
-
-                id = id + 1
-
-                if checker == 0:
-                    json_data = json_data + json.dumps(dic)
-                    checker = 1
+                admin = Administrator.objects.get(pk=userID)
+                if ACLManager.checkOwnership(eUser.emailOwner.domainOwner.domain, admin, currentACL) == 1:
+                    pass
                 else:
-                    json_data = json_data + ',' + json.dumps(dic)
+                    return ACLManager.loadErrorJson()
 
-            json_data = json_data + ']'
-            final_dic = {'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data}
-            final_json = json.dumps(final_dic)
+                currentForwardings = Forwardings.objects.filter(source=emailAddress)
 
-            return HttpResponse(final_json)
+                json_data = "["
+                checker = 0
+                id = 1
+                for items in currentForwardings:
+                    if items.source == items.destination:
+                        continue
+                    dic = {'id': id,
+                           'source': items.source,
+                           'destination': items.destination}
+
+                    id = id + 1
+
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
+
+                json_data = json_data + ']'
+                final_dic = {'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data}
+                final_json = json.dumps(final_dic)
+
+                return HttpResponse(final_json)
+            else:
+
+                currentForwardings = Pipeprograms.objects.filter(source=emailAddress)
+
+                json_data = "["
+                checker = 0
+                id = 1
+                for items in currentForwardings:
+                    if items.source == items.destination:
+                        continue
+                    dic = {'id': id,
+                           'source': items.source,
+                           'destination': items.destination}
+
+                    id = id + 1
+
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
+
+                json_data = json_data + ']'
+                final_dic = {'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data}
+                final_json = json.dumps(final_dic)
+
+                return HttpResponse(final_json)
 
 
         except BaseException, msg:
@@ -306,6 +335,7 @@ class MailServerManager:
             data = json.loads(self.request.body)
             destination = data['destination']
             source = data['source']
+            forwardingOption = data['forwardingOption']
 
             eUser = EUsers.objects.get(email=source)
 
@@ -315,8 +345,15 @@ class MailServerManager:
             else:
                 return ACLManager.loadErrorJson()
 
-            for items in Forwardings.objects.filter(destination=destination, source=source):
-                items.delete()
+            if forwardingOption == 'Forward to email':
+                for items in Forwardings.objects.filter(destination=destination, source=source):
+                    items.delete()
+            else:
+                for items in Pipeprograms.objects.filter(destination=destination, source=source):
+                    items.delete()
+
+                    ### Michael Ramsey
+                    ## Treat your path deletion code here.
 
             data_ret = {'status': 1, 'deleteForwardingStatus': 1, 'error_message': "None",
                         'successMessage': 'Successfully deleted!'}
@@ -338,6 +375,7 @@ class MailServerManager:
             data = json.loads(self.request.body)
             source = data['source']
             destination = data['destination']
+            forwardingOption = data['forwardingOption']
 
             eUser = EUsers.objects.get(email=source)
 
@@ -353,12 +391,19 @@ class MailServerManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            if Forwardings.objects.filter(source=source).count() == 0:
-                forwarding = Forwardings(source=source, destination=source)
+            if forwardingOption == 'Forward to email':
+                if Forwardings.objects.filter(source=source).count() == 0:
+                    forwarding = Forwardings(source=source, destination=source)
+                    forwarding.save()
+
+                forwarding = Forwardings(source=source, destination=destination)
+                forwarding.save()
+            else:
+                forwarding = Pipeprograms(source=source, destination=destination)
                 forwarding.save()
 
-            forwarding = Forwardings(source=source, destination=destination)
-            forwarding.save()
+                ### Michael Ramsey
+                ## Treat your path creation code here.
 
             data_ret = {'status': 1, 'createStatus': 1, 'error_message': "None", 'successMessage': 'Successfully Created!'}
             json_data = json.dumps(data_ret)
@@ -368,7 +413,6 @@ class MailServerManager:
             data_ret = {'status': 0, 'createStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-
 
     def fetchEmails(self):
         try:

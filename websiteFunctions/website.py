@@ -712,6 +712,8 @@ class WebsiteManager:
                 execPath = execPath + " findDomainBW --virtualHostName " + self.domain + " --bandwidth " + str(
                     website.package.bandwidth)
 
+                logging.CyberCPLogFileWriter.writeToFile(execPath)
+
                 output = ProcessUtilities.outputExecutioner(execPath)
                 bwData = output.split(",")
             except BaseException, msg:
@@ -2078,6 +2080,10 @@ StrictHostKeyChecking no
             data['adminEmail'] = data['ownerEmail']
             data['phpSelection'] = "PHP 7.0"
             data['package'] = data['packageName']
+            try:
+                websitesLimit = data['websitesLimit']
+            except:
+                websitesLimit = 1
 
             admin = Administrator.objects.get(userName=adminUser)
 
@@ -2091,7 +2097,7 @@ StrictHostKeyChecking no
                     websiteOwn = Administrator(userName=websiteOwner,
                                                password=hashPassword.hash_password(ownerPassword),
                                                email=adminEmail, type=3, owner=admin.pk,
-                                               initWebsitesLimit=1, acl=acl, api=1)
+                                               initWebsitesLimit=websitesLimit, acl=acl, api=1)
                     websiteOwn.save()
                 except BaseException:
                     pass

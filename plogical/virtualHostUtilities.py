@@ -3,6 +3,7 @@ import os
 import os.path
 import sys
 import django
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 try:
@@ -37,6 +38,7 @@ try:
     from CLManager.models import CLPackages
 except:
     pass
+
 
 ## If you want justice, you have come to the wrong place.
 
@@ -77,12 +79,13 @@ class virtualHostUtilities:
 
             writeToFile.close()
 
-
     Server_root = "/usr/local/lsws"
     cyberPanel = "/usr/local/CyberCP"
+
     @staticmethod
     def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHostUser, ssl,
-                          dkimCheck, openBasedir, websiteOwner, packageName, apache, tempStatusPath = '/home/cyberpanel/fakePath'):
+                          dkimCheck, openBasedir, websiteOwner, packageName, apache,
+                          tempStatusPath='/home/cyberpanel/fakePath'):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -92,7 +95,8 @@ class virtualHostUtilities:
             admin = Administrator.objects.get(userName=websiteOwner)
 
             if ACLManager.websitesLimitCheck(admin, 1) == 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'You\'ve reached maximum websites limit as a reseller. [404]')
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                          'You\'ve reached maximum websites limit as a reseller. [404]')
                 return 0, 'You\'ve reached maximum websites limit as a reseller.'
 
             ####### Limitations Check End
@@ -102,7 +106,8 @@ class virtualHostUtilities:
                 return 0, "This website already exists."
 
             if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This website already exists as child domain. [404]')
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                          'This website already exists as child domain. [404]')
                 return 0, "This website already exists as child domain."
 
             ####### Limitations Check End
@@ -118,7 +123,8 @@ class virtualHostUtilities:
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Setting up directories..,25')
 
             if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Virtual Host Directory already exists. [404]')
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                          'Virtual Host Directory already exists. [404]')
                 return 0, "Virtual Host Directory already exists!"
 
             if vhost.checkIfAliasExists(virtualHostName) == 1:
@@ -130,7 +136,7 @@ class virtualHostUtilities:
                 raise BaseException(retValues[1])
 
             retValues = vhost.createDirectoryForVirtualHost(virtualHostName, administratorEmail,
-                                                                           virtualHostUser, phpVersion, openBasedir)
+                                                            virtualHostUser, phpVersion, openBasedir)
             if retValues[0] == 0:
                 raise BaseException(retValues[1])
 
@@ -147,7 +153,6 @@ class virtualHostUtilities:
                                phpSelection=phpVersion, ssl=ssl, externalApp=virtualHostUser)
 
             website.save()
-
 
             if ssl == 1:
                 sslPath = "/home/" + virtualHostName + "/public_html"
@@ -177,7 +182,7 @@ class virtualHostUtilities:
                             raise BaseException(result[1])
 
                     result = ApacheVhost.setupApacheVhost(administratorEmail, virtualHostUser, virtualHostUser,
-                                                              phpVersion, virtualHostName)
+                                                          phpVersion, virtualHostName)
                     if result[0] == 0:
                         raise BaseException(result[1])
                     else:
@@ -190,7 +195,6 @@ class virtualHostUtilities:
             ## Create Configurations ends here
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'DKIM Setup..,90')
-
 
             ## DKIM Check
 
@@ -236,14 +240,13 @@ class virtualHostUtilities:
                     try:
                         clPackage = CLPackages.objects.get(owner=selectedPackage)
                         command = 'sudo lvectl package-set %s --speed=%s --pmem=%s --io=%s --nproc=%s --iops=%s --vmem=%s --ep=%s' % (
-                            clPackage.name, clPackage.speed, clPackage.pmem, clPackage.io, clPackage.np, clPackage.iops, clPackage.vmem, clPackage.ep)
+                            clPackage.name, clPackage.speed, clPackage.pmem, clPackage.io, clPackage.np, clPackage.iops,
+                            clPackage.vmem, clPackage.ep)
                         ProcessUtilities.normalExecutioner(command)
                         command = 'sudo lvectl apply all'
                         ProcessUtilities.normalExecutioner(command)
                     except:
                         pass
-
-
 
             return 1, 'None'
 
@@ -424,7 +427,6 @@ class virtualHostUtilities:
 
             ## Get wordpress
 
-
             if not os.path.exists("latest.tar.gz"):
                 command = 'wget --no-check-certificate http://wordpress.org/latest.tar.gz -O latest.tar.gz'
                 cmd = shlex.split(command)
@@ -553,7 +555,7 @@ class virtualHostUtilities:
 
             destPrivKey = "/usr/local/lscp/conf/key.pem"
             destCert = "/usr/local/lscp/conf/cert.pem"
-            
+
             lswsAdminPrivKey = "/usr/local/lsws/admin/conf/cert/admin.key"
             lswsAdminCert = "/usr/local/lsws/admin/conf/cert/admin.crt"
 
@@ -568,7 +570,7 @@ class virtualHostUtilities:
                 os.remove(destPrivKey)
             if os.path.exists(destCert):
                 os.remove(destCert)
-            
+
             ## removing self signed certs for lsws webadmin
             if os.path.exists(lswsAdminCert):
                 os.remove(lswsAdminCert)
@@ -590,7 +592,6 @@ class virtualHostUtilities:
             ProcessUtilities.normalExecutioner(command)
             command = 'ln -s /usr/local/lscp/conf/key.pem /usr/local/lsws/admin/conf/webadmin.key'
             ProcessUtilities.normalExecutioner(command)
-                
 
             adminEmail = "email@" + virtualHost
 
@@ -609,7 +610,7 @@ class virtualHostUtilities:
             subprocess.call(cmd)
 
             print "1,None"
-            return 1,'None'
+            return 1, 'None'
 
 
         except BaseException, msg:
@@ -703,13 +704,13 @@ class virtualHostUtilities:
             p.start()
 
             print "1,None"
-            return 1,'None'
+            return 1, 'None'
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [issueSSLForHostName]")
             print "0," + str(msg)
-            return 0,str(msg)
+            return 0, str(msg)
 
     @staticmethod
     def createAlias(masterDomain, aliasDomain, ssl, sslPath, administratorEmail, owner=None):
@@ -717,7 +718,6 @@ class virtualHostUtilities:
 
             admin = Administrator.objects.get(userName=owner)
             DNS.dnsTemplate(aliasDomain, admin)
-
 
             if vhost.checkIfAliasExists(aliasDomain) == 1:
                 print "0, This domain already exists as vHost or Alias."
@@ -774,7 +774,7 @@ class virtualHostUtilities:
 
             website = Websites.objects.get(domain=masterDomain)
 
-            newAlias = aliasDomains(master=website, aliasDomain = aliasDomain)
+            newAlias = aliasDomains(master=website, aliasDomain=aliasDomain)
             newAlias.save()
 
             print "1,None"
@@ -888,7 +888,6 @@ class virtualHostUtilities:
 
                 data = open(completePathToConfigFile, 'r').readlines()
 
-
                 if openBasedirValue == 'Disable':
                     writeToFile = open(completePathToConfigFile, 'w')
                     for items in data:
@@ -913,7 +912,8 @@ class virtualHostUtilities:
                         if items.find('phpIniOverride') > -1:
                             writeToFile.writelines(items)
                             if fileManagerCheck == 1:
-                                writeToFile.writelines('php_admin_value open_basedir "/tmp:/usr/local/lsws/Example/html/FileManager:$VH_ROOT"\n')
+                                writeToFile.writelines(
+                                    'php_admin_value open_basedir "/tmp:/usr/local/lsws/Example/html/FileManager:$VH_ROOT"\n')
                                 fileManagerCheck = 0
                                 continue
                             else:
@@ -1006,7 +1006,6 @@ class virtualHostUtilities:
             os.remove(keyPath)
             os.remove(certPath)
 
-
             sslUtilities.sslUtilities.installSSLForDomain(virtualHost)
 
             installUtilities.installUtilities.reStartLiteSpeed()
@@ -1025,7 +1024,8 @@ class virtualHostUtilities:
             print "0," + str(msg)
 
     @staticmethod
-    def createDomain(masterDomain, virtualHostName, phpVersion, path, ssl, dkimCheck, openBasedir, owner, apache, tempStatusPath = '/home/cyberpanel/fakePath'):
+    def createDomain(masterDomain, virtualHostName, phpVersion, path, ssl, dkimCheck, openBasedir, owner, apache,
+                     tempStatusPath='/home/cyberpanel/fakePath'):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -1035,13 +1035,14 @@ class virtualHostUtilities:
             admin = Administrator.objects.get(userName=owner)
             DNS.dnsTemplate(virtualHostName, admin)
 
-
             if Websites.objects.filter(domain=virtualHostName).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This Domain already exists as a website. [404]')
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                          'This Domain already exists as a website. [404]')
                 return 0, "This Domain already exists as a website."
 
             if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain already exists as child domain. [404]')
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                          'This domain already exists as child domain. [404]')
                 return 0, "This domain already exists as child domain."
 
             ####### Limitations check
@@ -1057,7 +1058,6 @@ class virtualHostUtilities:
                                                               'Fully qualified domain is not allowed in the package. [404]')
                     return 0, "Fully qualified domain is not allowed in the package."
 
-
             if domainsInPackage == 0:
                 pass
             elif domainsInPackage > master.childdomains_set.all().count():
@@ -1067,18 +1067,16 @@ class virtualHostUtilities:
                                                           'Exceeded maximum number of domains for this package. [404]')
                 return 0, "Exceeded maximum number of domains for this package"
 
-
             ####### Limitations Check End
 
-
             if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,'Virtual Host Directory already exists. [404]')
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                          'Virtual Host Directory already exists. [404]')
                 return 0, "Virtual Host Directory already exists!"
 
             if vhost.checkIfAliasExists(virtualHostName) == 1:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,'This domain exists as Alias. [404]')
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
                 return 0, "This domain exists as Alias."
-
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'DKIM Setup..,30')
 
@@ -1091,7 +1089,7 @@ class virtualHostUtilities:
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating configurations..,50')
 
             retValues = vhost.createDirectoryForDomain(masterDomain, virtualHostName, phpVersion, path,
-                                                             master.adminEmail, master.externalApp, openBasedir)
+                                                       master.adminEmail, master.externalApp, openBasedir)
             if retValues[0] == 0:
                 raise BaseException(retValues[1])
 
@@ -1132,7 +1130,7 @@ class virtualHostUtilities:
                             raise BaseException(result[1])
 
                     result = ApacheVhost.setupApacheVhostChild(master.adminEmail, master.externalApp,
-                                                                   master.externalApp, phpVersion, virtualHostName, path)
+                                                               master.externalApp, phpVersion, virtualHostName, path)
                     if result[0] == 0:
                         raise BaseException(result[1])
                     else:
@@ -1149,7 +1147,6 @@ class virtualHostUtilities:
             if os.path.exists(postFixPath):
                 if dkimCheck == 1:
                     DNS.createDKIMRecords(virtualHostName)
-
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Domain successfully created. [200]')
             return 1, "None"
@@ -1173,13 +1170,13 @@ class virtualHostUtilities:
             installUtilities.installUtilities.reStartLiteSpeed()
 
             print "1,None"
-            return 1,'None'
+            return 1, 'None'
 
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [deleteDomain]")
             print "0," + str(msg)
-            return 0,str(msg)
+            return 0, str(msg)
 
     @staticmethod
     def switchServer(virtualHostName, phpVersion, server, tempStatusPath):
@@ -1212,10 +1209,12 @@ class virtualHostUtilities:
                     ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, website.adminEmail)
 
                 if child:
-                    ApacheVhost.setupApacheVhostChild(website.master.adminEmail, website.master.externalApp, website.master.externalApp,
+                    ApacheVhost.setupApacheVhostChild(website.master.adminEmail, website.master.externalApp,
+                                                      website.master.externalApp,
                                                       phpVersion, virtualHostName, website.path)
                 else:
-                    ApacheVhost.setupApacheVhost(website.adminEmail, website.externalApp, website.externalApp, phpVersion, virtualHostName)
+                    ApacheVhost.setupApacheVhost(website.adminEmail, website.externalApp, website.externalApp,
+                                                 phpVersion, virtualHostName)
 
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Restarting servers and phps..,90')
 
@@ -1229,10 +1228,12 @@ class virtualHostUtilities:
                 ApacheVhost.DeleteApacheVhost(virtualHostName)
 
                 if child:
-                    vhost.perHostDomainConf(website.path, website.master.domain, virtualHostName, completePathToConfigFile,
+                    vhost.perHostDomainConf(website.path, website.master.domain, virtualHostName,
+                                            completePathToConfigFile,
                                             website.master.adminEmail, phpVersion, website.master.externalApp, 0)
                 else:
-                    vhost.perHostVirtualConf(completePathToConfigFile, website.adminEmail, website.externalApp, phpVersion, virtualHostName, 0)
+                    vhost.perHostVirtualConf(completePathToConfigFile, website.adminEmail, website.externalApp,
+                                             phpVersion, virtualHostName, 0)
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Restarting server..,90')
                 installUtilities.installUtilities.reStartLiteSpeed()
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Successfully converted. [200]')
@@ -1245,7 +1246,8 @@ class virtualHostUtilities:
     def getDiskUsage(path, totalAllowed):
         try:
 
-            totalUsageInMB = ProcessUtilities.outputExecutioner(["sudo", "du", "-hs", path, "--block-size=1M"]).split()[0]
+            totalUsageInMB = ProcessUtilities.outputExecutioner(["sudo", "du", "-hs", path, "--block-size=1M"]).split()[
+                0]
 
             percentage = float(100) / float(totalAllowed)
 
@@ -1283,8 +1285,8 @@ class virtualHostUtilities:
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
-def main():
 
+def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('function', help='Specific a function to call!')
     parser.add_argument('--virtualHostName', help='Domain name!')
@@ -1301,7 +1303,6 @@ def main():
     parser.add_argument('--restore', help='Restore Check.')
     parser.add_argument('--apache', help='Enable/Disable Apache as backend')
 
-
     ## arguments for creation child domains
 
     parser.add_argument('--masterDomain', help='Master Domain Needed While Creating Child Domains!')
@@ -1315,7 +1316,6 @@ def main():
     ## arguments for configuration files
 
     parser.add_argument('--tempPath', help='Temporary path where configuration data is placed!')
-
 
     ## save ssl arguments
 
@@ -1375,7 +1375,9 @@ def main():
         except:
             tempStatusPath = '/home/cyberpanel/fakePath'
 
-        virtualHostUtilities.createVirtualHost(args.virtualHostName, args.administratorEmail, args.phpVersion, args.virtualHostUser, int(args.ssl), dkimCheck, openBasedir, args.websiteOwner, args.package, apache, tempStatusPath)
+        virtualHostUtilities.createVirtualHost(args.virtualHostName, args.administratorEmail, args.phpVersion,
+                                               args.virtualHostUser, int(args.ssl), dkimCheck, openBasedir,
+                                               args.websiteOwner, args.package, apache, tempStatusPath)
     elif args.function == "deleteVirtualHostConfigurations":
         vhost.deleteVirtualHostConfigurations(args.virtualHostName)
     elif args.function == "createDomain":
@@ -1399,33 +1401,39 @@ def main():
         except:
             tempStatusPath = '/home/cyberpanel/fakePath'
 
-        virtualHostUtilities.createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path, int(args.ssl), dkimCheck, openBasedir, args.websiteOwner, apache, tempStatusPath)
+        virtualHostUtilities.createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path,
+                                          int(args.ssl), dkimCheck, openBasedir, args.websiteOwner, apache,
+                                          tempStatusPath)
     elif args.function == "issueSSL":
-        virtualHostUtilities.issueSSL(args.virtualHostName,args.path,args.administratorEmail)
+        virtualHostUtilities.issueSSL(args.virtualHostName, args.path, args.administratorEmail)
     elif args.function == "changePHP":
-        vhost.changePHP(args.path,args.phpVersion)
+        vhost.changePHP(args.path, args.phpVersion)
     elif args.function == "getAccessLogs":
-        virtualHostUtilities.getAccessLogs(args.path,int(args.page))
+        virtualHostUtilities.getAccessLogs(args.path, int(args.page))
     elif args.function == "getErrorLogs":
-        virtualHostUtilities.getErrorLogs(args.path,int(args.page))
+        virtualHostUtilities.getErrorLogs(args.path, int(args.page))
     elif args.function == "saveVHostConfigs":
-        virtualHostUtilities.saveVHostConfigs(args.path,args.tempPath)
+        virtualHostUtilities.saveVHostConfigs(args.path, args.tempPath)
     elif args.function == "saveRewriteRules":
-        virtualHostUtilities.saveRewriteRules(args.virtualHostName,args.path,args.tempPath)
+        virtualHostUtilities.saveRewriteRules(args.virtualHostName, args.path, args.tempPath)
     elif args.function == "saveSSL":
-        virtualHostUtilities.saveSSL(args.virtualHostName,args.tempKeyPath,args.tempCertPath)
+        virtualHostUtilities.saveSSL(args.virtualHostName, args.tempKeyPath, args.tempCertPath)
     elif args.function == "installWordPress":
-        virtualHostUtilities.installWordPress(args.virtualHostName,args.path,args.virtualHostUser,args.dbName,args.dbUser,args.dbPassword)
+        virtualHostUtilities.installWordPress(args.virtualHostName, args.path, args.virtualHostUser, args.dbName,
+                                              args.dbUser, args.dbPassword)
     elif args.function == "installJoomla":
-        virtualHostUtilities.installJoomla(args.virtualHostName,args.path,args.virtualHostUser,args.dbName,args.dbUser,args.dbPassword,args.username,args.password,args.prefix,args.sitename, args.tempStatusPath)
+        virtualHostUtilities.installJoomla(args.virtualHostName, args.path, args.virtualHostUser, args.dbName,
+                                           args.dbUser, args.dbPassword, args.username, args.password, args.prefix,
+                                           args.sitename, args.tempStatusPath)
     elif args.function == "issueSSLForHostName":
-        virtualHostUtilities.issueSSLForHostName(args.virtualHostName,args.path)
+        virtualHostUtilities.issueSSLForHostName(args.virtualHostName, args.path)
     elif args.function == "issueSSLForMailServer":
-        virtualHostUtilities.issueSSLForMailServer(args.virtualHostName,args.path)
+        virtualHostUtilities.issueSSLForMailServer(args.virtualHostName, args.path)
     elif args.function == "findDomainBW":
         vhost.findDomainBW(args.virtualHostName, int(args.bandwidth))
     elif args.function == 'createAlias':
-        virtualHostUtilities.createAlias(args.masterDomain,args.aliasDomain,int(args.ssl),args.sslPath, args.administratorEmail, args.websiteOwner)
+        virtualHostUtilities.createAlias(args.masterDomain, args.aliasDomain, int(args.ssl), args.sslPath,
+                                         args.administratorEmail, args.websiteOwner)
     elif args.function == 'issueAliasSSL':
         virtualHostUtilities.issueAliasSSL(args.masterDomain, args.aliasDomain, args.sslPath, args.administratorEmail)
     elif args.function == 'deleteAlias':
@@ -1436,6 +1444,7 @@ def main():
         virtualHostUtilities.deleteDomain(args.virtualHostName)
     elif args.function == 'switchServer':
         virtualHostUtilities.switchServer(args.virtualHostName, args.phpVersion, int(args.server), args.tempStatusPath)
+
 
 if __name__ == "__main__":
     main()
