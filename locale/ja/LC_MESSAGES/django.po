@@ -3,20 +3,12 @@
 # This file is distributed under the same license as the CyberPanel package.
 # FIRST AUTHOR <unasir@litespeedtech.com>, 2017.
 #
-#: baseTemplate/templates/baseTemplate/index.html:221
-#: baseTemplate/templates/baseTemplate/index.html:274
-#: baseTemplate/templates/baseTemplate/index.html:281
-#: baseTemplate/templates/baseTemplate/index.html:288
-#: baseTemplate/templates/baseTemplate/index.html:295
-#: baseTemplate/templates/baseTemplate/index.html:302
-#: baseTemplate/templates/baseTemplate/index.html:309
-#: emailMarketing/templates/emailMarketing/sendEmails.html:93
 msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-08-13 16:26+0500\n"
-"PO-Revision-Date: 2018-09-21 15:46+0900\n"
+"PO-Revision-Date: 2019-10-27 23:29+0900\n"
 "Last-Translator: @ kazuo210 <kazu.nito@gmail.com>\n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
 "Language: ja\n"
@@ -24,19 +16,15 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 2.1.1\n"
+"X-Generator: Poedit 2.2.4\n"
 
 #: CLManager/templates/CLManager/createPackage.html:3
-#, fuzzy
-#| msgid "Create Package - CyberPanel"
 msgid "Create Cloud Linux Package - CyberPanel"
-msgstr "パッケージの作成 - Cyber​​Panel"
+msgstr "Cloud Linux パッケージの作成 - Cyber​​Panel"
 
 #: CLManager/templates/CLManager/createPackage.html:9
-#, fuzzy
-#| msgid "Create Package"
 msgid "Create CloudLinux Package."
-msgstr "パッケージの作成"
+msgstr "CloudLinux パッケージを作成します。"
 
 #: CLManager/templates/CLManager/createPackage.html:10
 msgid ""
@@ -44,6 +32,9 @@ msgid ""
 "During website creation associated CloudLinux package will be assigned to "
 "website user."
 msgstr ""
+"各CloudLinuxパッケージには、1つの関連付けられた（所有者）CyberPanelパッケージ"
+"があります。 Webサイトの作成中に、関連するCloudLinuxパッケージがWebサイトユー"
+"ザーに割り当てられます。"
 
 #: CLManager/templates/CLManager/createPackage.html:15
 #: CLManager/templates/CLManager/createPackage.html:130
@@ -74,65 +65,62 @@ msgstr "パッケージ名"
 #: CLManager/templates/CLManager/createPackage.html:47
 #: CLManager/templates/CLManager/listPackages.html:87
 msgid "SPEED"
-msgstr ""
+msgstr "速度"
 
 #: CLManager/templates/CLManager/createPackage.html:56
 #: CLManager/templates/CLManager/listPackages.html:98
 msgid "VMEM"
-msgstr ""
+msgstr "VMEM"
 
 #: CLManager/templates/CLManager/createPackage.html:64
 #: CLManager/templates/CLManager/listPackages.html:109
 msgid "PMEM"
-msgstr ""
+msgstr "PMEM"
 
 #: CLManager/templates/CLManager/createPackage.html:73
 #: CLManager/templates/CLManager/listPackages.html:120
 msgid "IO"
-msgstr ""
+msgstr "IO"
 
 #: CLManager/templates/CLManager/createPackage.html:81
 #: CLManager/templates/CLManager/listPackages.html:131
 #: containerization/templates/containerization/websiteContainerLimit.html:52
 #: containerization/templates/containerization/websiteContainerLimit.html:99
 msgid "IOPS"
-msgstr ""
+msgstr "IOPS"
 
 #: CLManager/templates/CLManager/createPackage.html:89
 #: CLManager/templates/CLManager/listPackages.html:142
 msgid "EP"
-msgstr ""
+msgstr "EP"
 
 #: CLManager/templates/CLManager/createPackage.html:97
 #: CLManager/templates/CLManager/listPackages.html:153
 msgid "NPROC"
-msgstr ""
+msgstr "NPROC"
 
 #: CLManager/templates/CLManager/createPackage.html:105
 #: CLManager/templates/CLManager/listPackages.html:164
 msgid "INODES soft"
-msgstr ""
+msgstr "INODES ソフト"
 
 #: CLManager/templates/CLManager/createPackage.html:113
 #: CLManager/templates/CLManager/listPackages.html:175
 msgid "INODES hard"
-msgstr ""
+msgstr "INODES ハード"
 
 #: CLManager/templates/CLManager/listPackages.html:3
-#, fuzzy
 #| msgid "Modify Package - CyberPanel"
 msgid "Manage CloudLinux Packages - CyberPanel"
-msgstr "パッケージの変更 - Cyber​​Panel"
+msgstr "CloudLinux パッケージの管理 - CyberPanel"
 
 #: CLManager/templates/CLManager/listPackages.html:14
-#, fuzzy
-#| msgid "Manage Services"
 msgid "Manage CloudLinux Packages"
-msgstr "サービスの管理"
+msgstr "CloudLinux パッケージの管理"
 
 #: CLManager/templates/CLManager/listPackages.html:15
 msgid "Manage/Delete CloudLinux Packages."
-msgstr ""
+msgstr "CloudLinux パッケージを管理/削除します。"
 
 #: CLManager/templates/CLManager/listPackages.html:76
 #: dns/templates/dns/addDeleteDNSRecords.html:74
@@ -170,10 +158,9 @@ msgid "Cannot list websites. Error message:"
 msgstr "Web サイトの一覧が表示できません。エラーメッセージ:"
 
 #: CLManager/templates/CLManager/listWebsites.html:3
-#, fuzzy
 #| msgid "Manage SSL - CyberPanel"
 msgid "CageFS - CyberPanel"
-msgstr "SSL の管理 - Cyber​​Panel"
+msgstr "CageFS - CyberPanel"
 
 #: CLManager/templates/CLManager/listWebsites.html:14
 #: CLManager/templates/CLManager/monitorUsage.html:14
@@ -187,23 +174,20 @@ msgstr "Webサイトの一覧"
 
 #: CLManager/templates/CLManager/listWebsites.html:15
 msgid "Enable/Disable and view CageFS status for websites."
-msgstr ""
+msgstr "Web サイトの CageFS ステータスを有効/無効にして表示します。"
 
 #: CLManager/templates/CLManager/listWebsites.html:28
 msgid "Default: "
-msgstr ""
+msgstr "デフォルト: "
 
 #: CLManager/templates/CLManager/monitorUsage.html:3
-#, fuzzy
 #| msgid "Modify User - CyberPanel"
 msgid "Monitor Usage - CyberPanel"
-msgstr "ユーザーの変更 - Cyber​​Panel"
+msgstr "使用状況の監視 - CyberPanel"
 
 #: CLManager/templates/CLManager/monitorUsage.html:15
-#, fuzzy
-#| msgid "Attach git to your websites."
 msgid "Monitor usage of your websites."
-msgstr "あなたのウェブサイトにgitをアタッチしてください。"
+msgstr "Web サイトの使用状況を監視します。"
 
 #: CLManager/templates/CLManager/monitorUsage.html:21
 #: baseTemplate/templates/baseTemplate/homePage.html:42
@@ -217,45 +201,42 @@ msgstr "Web サイト"
 
 #: CLManager/templates/CLManager/notAvailable.html:3
 #: containerization/templates/containerization/notAvailable.html:3
-#, fuzzy
-#| msgid "Domain Aliases - CyberPanel"
 msgid "Not available - CyberPanel"
-msgstr "ドメインエイリアス- CyberPanel"
+msgstr "利用不可 - CyberPanel"
 
 #: CLManager/templates/CLManager/notAvailable.html:13
 #: containerization/templates/containerization/notAvailable.html:13
 msgid "Not available"
-msgstr ""
+msgstr "利用できません"
 
 #: CLManager/templates/CLManager/notAvailable.html:14
 msgid "Either CageFS is not installed or you are not on CloudLinux OS."
 msgstr ""
+"CageFS がインストールされていないか、CloudLinux OS を使用していません。"
 
 #: CLManager/templates/CLManager/notAvailable.html:22
 msgid "CageFS is only available with CloudLinux OS. "
-msgstr ""
+msgstr "CageFS は CloudLinux OS でのみ使用可能です。 "
 
 #: CLManager/templates/CLManager/notAvailable.html:24
 #: containerization/templates/containerization/notAvailable.html:24
 msgid " for conversion details."
-msgstr ""
+msgstr " 変換の詳細について。"
 
 #: CLManager/templates/CLManager/notAvailable.html:34
 #: containerization/templates/containerization/notAvailable.html:34
-#, fuzzy
-#| msgid "Packages"
 msgid "Install Packages"
-msgstr "パッケージ"
+msgstr "パッケージをインストールする"
 
 #: CLManager/templates/CLManager/notAvailable.html:39
 msgid "CageFS is not installed on this server. Please proceed to installation."
 msgstr ""
+"CageFS はこのサーバーにインストールされていません。 インストールに進んでくだ"
+"さい。"
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:3
-#, fuzzy
-#| msgid "Packages - CyberPanel"
 msgid " usage - CyberPanel"
-msgstr "パッケージ - Cyber​​Panel"
+msgstr " 使用法 - CyberPanel"
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:14
 #: emailMarketing/templates/emailMarketing/website.html:40
@@ -266,28 +247,22 @@ msgstr "使用量"
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:15
 msgid "View CPU, Memory and Disk usage for "
-msgstr ""
+msgstr "CPU、メモリ、およびディスクの使用状況を表示する "
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:21
 #: containerization/templates/containerization/websiteContainerLimit.html:155
-#, fuzzy
-#| msgid "CPU Usage"
 msgid "CPU Usage of"
-msgstr "CPU の使用量"
+msgstr "CPU 使用率"
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:30
 #: containerization/templates/containerization/websiteContainerLimit.html:164
-#, fuzzy
-#| msgid "Resource Usage"
 msgid "Memory Usage of"
-msgstr "リソースの使用量"
+msgstr "メモリの使用量"
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:39
 #: containerization/templates/containerization/websiteContainerLimit.html:173
-#, fuzzy
-#| msgid "Disk Usage"
 msgid "Disk Usage of"
-msgstr "ディスクの使用量"
+msgstr "ディスクの使用"
 
 #: CyberCP/settings.py:174
 msgid "English"
@@ -334,20 +309,16 @@ msgid "French"
 msgstr "フランス語"
 
 #: CyberCP/settings.py:185
-#, fuzzy
-#| msgid "Policy"
 msgid "Polish"
-msgstr "ポリシ"
+msgstr "ポーランド語"
 
 #: CyberCP/settings.py:186
-#, fuzzy
-#| msgid "Filename"
 msgid "Vietnamese"
-msgstr "ファイル名"
+msgstr "ベトナム語"
 
 #: CyberCP/settings.py:187
 msgid "Italian"
-msgstr ""
+msgstr "イタリア語"
 
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
@@ -895,7 +866,7 @@ msgstr "タブを使用して、コントロール パネルを操作します�
 #: baseTemplate/templates/baseTemplate/homePage.html:29
 #: userManagment/templates/userManagment/index.html:13
 msgid "User Functions"
-msgstr "ユーザ機能"
+msgstr "ユーザーの機能"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:31
 #: baseTemplate/templates/baseTemplate/index.html:363
@@ -1014,8 +985,6 @@ msgid "Security"
 msgstr "セキュリティ"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:188
-#, fuzzy
-#| msgid "Resource"
 msgid "Resources"
 msgstr "リソース"
 
@@ -1124,10 +1093,8 @@ msgstr "バージョン管理"
 #: baseTemplate/templates/baseTemplate/index.html:353
 #: baseTemplate/templates/baseTemplate/index.html:354
 #: baseTemplate/templates/baseTemplate/index.html:356
-#, fuzzy
-#| msgid "Connection to"
 msgid "Connect"
-msgstr "接続"
+msgstr "接続する"
 
 #: baseTemplate/templates/baseTemplate/index.html:360
 msgid "Main"
@@ -1145,10 +1112,8 @@ msgstr "新しいユーザーの作成"
 #: userManagment/templates/userManagment/listUsers.html:13
 #: userManagment/templates/userManagment/listUsers.html:19
 #: userManagment/templates/userManagment/modifyACL.html:77
-#, fuzzy
-#| msgid "Login User"
 msgid "List Users"
-msgstr "ログインユーザー"
+msgstr "ユーザーの一覧"
 
 #: baseTemplate/templates/baseTemplate/index.html:380
 #: userManagment/templates/userManagment/index.html:46
@@ -1203,10 +1168,8 @@ msgstr "ACL の変更"
 #: baseTemplate/templates/baseTemplate/index.html:400
 #: userManagment/templates/userManagment/apiAccess.html:13
 #: userManagment/templates/userManagment/apiAccess.html:20
-#, fuzzy
-#| msgid "Access Log"
 msgid "API Access"
-msgstr "アクセスログ"
+msgstr "API アクセス"
 
 #: baseTemplate/templates/baseTemplate/index.html:416
 #: userManagment/templates/userManagment/createACL.html:112
@@ -1253,10 +1216,8 @@ msgstr "Web サイトの削除"
 #: packages/templates/packages/listPackages.html:19
 #: userManagment/templates/userManagment/createACL.html:161
 #: userManagment/templates/userManagment/modifyACL.html:165
-#, fuzzy
-#| msgid "Packages"
 msgid "List Packages"
-msgstr "パッケージ"
+msgstr "パッケージの一覧"
 
 #: baseTemplate/templates/baseTemplate/index.html:449
 #: packages/templates/packages/deletePackage.html:12
@@ -1369,10 +1330,8 @@ msgstr "メールの作成"
 #: baseTemplate/templates/baseTemplate/index.html:521
 #: userManagment/templates/userManagment/createACL.html:271
 #: userManagment/templates/userManagment/modifyACL.html:275
-#, fuzzy
-#| msgid "List Domains"
 msgid "List Emails"
-msgstr "ドメインの一覧"
+msgstr "メールの一覧"
 
 #: baseTemplate/templates/baseTemplate/index.html:524
 #: mailServer/templates/mailServer/deleteEmailAccount.html:12
@@ -1393,7 +1352,7 @@ msgstr "メールの削除"
 #: userManagment/templates/userManagment/createACL.html:289
 #: userManagment/templates/userManagment/modifyACL.html:293
 msgid "Email Forwarding"
-msgstr "Eメール転送"
+msgstr "メール転送"
 
 #: baseTemplate/templates/baseTemplate/index.html:530
 #: databases/templates/databases/listDataBases.html:90
@@ -1498,7 +1457,7 @@ msgstr "サーバー"
 #: baseTemplate/templates/baseTemplate/index.html:619
 #: baseTemplate/templates/baseTemplate/index.html:621
 msgid "CloudLinux"
-msgstr ""
+msgstr "CloudLinux"
 
 #: baseTemplate/templates/baseTemplate/index.html:622
 #: baseTemplate/templates/baseTemplate/index.html:650
@@ -1508,96 +1467,70 @@ msgid "NEW"
 msgstr "新規"
 
 #: baseTemplate/templates/baseTemplate/index.html:628
-#, fuzzy
-#| msgid "Create Package"
 msgid "Create Cloud Linux Package"
-msgstr "パッケージの作成"
+msgstr "Cloud Linux パッケージの作成"
 
 #: baseTemplate/templates/baseTemplate/index.html:633
 msgid "List Cloud Linux Package"
-msgstr ""
+msgstr "Cloud Linux パッケージの一覧"
 
 #: baseTemplate/templates/baseTemplate/index.html:638
-#, fuzzy
-#| msgid "Attach git to your websites."
 msgid "Monitor Usage of your Websites"
-msgstr "あなたのウェブサイトにgitをアタッチしてください。"
+msgstr "Web サイトの使用状況を監視する"
 
 #: baseTemplate/templates/baseTemplate/index.html:638
-#, fuzzy
-#| msgid "Resource Usage"
 msgid "Monitor Usage"
-msgstr "リソースの使用量"
+msgstr "使用状況の監視"
 
 #: baseTemplate/templates/baseTemplate/index.html:647
 #: baseTemplate/templates/baseTemplate/index.html:649
-#, fuzzy
-#| msgid "Configurations"
 msgid "Containerization"
-msgstr "設定"
+msgstr "コンテナ化"
 
 #: baseTemplate/templates/baseTemplate/index.html:656
-#, fuzzy
-#| msgid "Create Website"
 msgid "Create Website Limits"
-msgstr "Web サイトの作成"
+msgstr "Web サイトの制限を作成"
 
 #: baseTemplate/templates/baseTemplate/index.html:656
-#, fuzzy
-#| msgid "Create Alias"
 msgid "Create Limits"
-msgstr "エイリアスの作成"
+msgstr "制限を作成する"
 
 #: baseTemplate/templates/baseTemplate/index.html:664
 msgid "Docker"
-msgstr ""
+msgstr "Docker"
 
 #: baseTemplate/templates/baseTemplate/index.html:666
-#, fuzzy
-#| msgid "DKIM Manager"
 msgid "Docker Manager"
-msgstr "DKIM マネージャ"
+msgstr "Docker マネージャー"
 
 #: baseTemplate/templates/baseTemplate/index.html:673
-#, fuzzy
-#| msgid "Manage Services"
 msgid "Manage Docker Images"
-msgstr "サービスの管理"
+msgstr "Docker イメージの管理"
 
 #: baseTemplate/templates/baseTemplate/index.html:673
 #: dockerManager/templates/dockerManager/index.html:49
 #: dockerManager/templates/dockerManager/index.html:51
 #: dockerManager/templates/dockerManager/manageImages.html:14
-#, fuzzy
-#| msgid "Change Email Password"
 msgid "Manage Images"
-msgstr "メール パスワードの変更"
+msgstr "イメージの管理"
 
 #: baseTemplate/templates/baseTemplate/index.html:676
-#, fuzzy
-#| msgid "Manage Services"
 msgid "Manage Docker Containers"
-msgstr "サービスの管理"
+msgstr "Docker コンテナの管理"
 
 #: baseTemplate/templates/baseTemplate/index.html:676
 #: dockerManager/templates/dockerManager/index.html:29
 #: dockerManager/templates/dockerManager/index.html:31
-#, fuzzy
-#| msgid "Manage Postfix"
 msgid "Manage Containers"
-msgstr "postfixの管理"
+msgstr "コンテナの管理"
 
 #: baseTemplate/templates/baseTemplate/index.html:679
-#, fuzzy
-#| msgid "Create New User - CyberPanel"
 msgid "Create New Docker Container"
-msgstr "新しいユーザーの作成する - Cyber​​Panel"
+msgstr "新しい Docker コンテナを作成"
 
 #: baseTemplate/templates/baseTemplate/index.html:679
-#, fuzzy
-#| msgid "Create New User"
 msgid "Create New Container"
-msgstr "新しいユーザーの作成"
+msgstr "新しいコンテナを作成します"
 
 #: baseTemplate/templates/baseTemplate/index.html:695
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
@@ -1615,10 +1548,8 @@ msgstr "PHP チューニング"
 #: baseTemplate/templates/baseTemplate/index.html:713
 #: serverStatus/templates/serverStatus/topProcesses.html:14
 #: serverStatus/templates/serverStatus/topProcesses.html:179
-#, fuzzy
-#| msgid "LiteSpeed Processes"
 msgid "Top Processes"
-msgstr "LiteSpeed 操作"
+msgstr "上位プロセス"
 
 #: baseTemplate/templates/baseTemplate/index.html:716
 #: serverStatus/templates/serverStatus/index.html:25
@@ -1743,14 +1674,12 @@ msgid "CSF"
 msgstr "CSF"
 
 #: baseTemplate/templates/baseTemplate/index.html:797
-#, fuzzy
-#| msgid "Configurations"
 msgid "CageFS Configurations"
-msgstr "設定"
+msgstr "CageFS の構成"
 
 #: baseTemplate/templates/baseTemplate/index.html:797
 msgid "CageFS"
-msgstr ""
+msgstr "CageFS"
 
 #: baseTemplate/templates/baseTemplate/index.html:805
 #: baseTemplate/templates/baseTemplate/index.html:807
@@ -1760,11 +1689,11 @@ msgstr "メール設定"
 #: baseTemplate/templates/baseTemplate/index.html:814
 #: emailPremium/templates/emailPremium/policyServer.html:20
 msgid "Email Policy Server"
-msgstr "Eメールポリシーサーバー"
+msgstr "メールポリシーサーバー"
 
 #: baseTemplate/templates/baseTemplate/index.html:817
 msgid "Email Limits"
-msgstr "Eメール制限"
+msgstr "メール制限"
 
 #: baseTemplate/templates/baseTemplate/index.html:820
 msgid "SpamAssassin Configurations"
@@ -1781,10 +1710,8 @@ msgstr "Spamassassin"
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:22
 #: emailMarketing/templates/emailMarketing/website.html:978
 #: websiteFunctions/templates/websiteFunctions/website.html:909
-#, fuzzy
-#| msgid "Email Forwarding"
 msgid "Email Marketing"
-msgstr "Eメール転送"
+msgstr "メールマーケティング"
 
 #: baseTemplate/templates/baseTemplate/index.html:831
 #: baseTemplate/templates/baseTemplate/index.html:833
@@ -1799,7 +1726,7 @@ msgstr "PowerDNS の管理"
 #: baseTemplate/templates/baseTemplate/index.html:842
 #: manageServices/templates/manageServices/managePostfix.html:22
 msgid "Manage Postfix"
-msgstr "postfixの管理"
+msgstr "Postfix の管理"
 
 #: baseTemplate/templates/baseTemplate/index.html:845
 msgid "Manage FTP"
@@ -1810,19 +1737,15 @@ msgstr "FTP の管理"
 #: pluginHolder/templates/pluginHolder/plugins.html:14
 #: pluginHolder/templates/pluginHolder/plugins.html:21
 msgid "Plugins"
-msgstr ""
+msgstr "プラグイン"
 
 #: baseTemplate/templates/baseTemplate/index.html:860
-#, fuzzy
-#| msgid "Install Extensions"
 msgid "Installed Plugins"
-msgstr "拡張機能のインストール"
+msgstr "インストール済みプラグイン"
 
 #: baseTemplate/templates/baseTemplate/index.html:860
-#, fuzzy
-#| msgid "Install"
 msgid "Installed"
-msgstr "インストール"
+msgstr "インストールされました"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
@@ -1833,8 +1756,8 @@ msgid ""
 "On this page you can manage versions and or upgrade to latest version of "
 "CyberPanel"
 msgstr ""
-"このページでは、バージョン管理や CyberPanel の最新バージョンへのアップグレー"
-"ドが可能です"
+"このページでは、バージョンの管理や CyberPanel の最新バージョンへのアップグ"
+"レードが可能です"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:25
 msgid "Current Version"
@@ -1853,53 +1776,50 @@ msgid "Latest Build"
 msgstr "最新のビルド"
 
 #: containerization/templates/containerization/listWebsites.html:3
-#, fuzzy
-#| msgid "Domains - CyberPanel"
 msgid "Limits - CyberPanel"
-msgstr "ドメイン - CyberPanel"
+msgstr "制限 - CyberPanel"
 
 #: containerization/templates/containerization/listWebsites.html:15
 msgid "Launch and set limits for the websites."
-msgstr ""
+msgstr "Web サイトの起動と制限の設定をします。"
 
 #: containerization/templates/containerization/notAvailable.html:14
 msgid "CyberPanel Ent is required for Containerization."
-msgstr ""
+msgstr "CyberPanel Ent はコンテナ化に必要です。"
 
 #: containerization/templates/containerization/notAvailable.html:22
 msgid "Containerization is only available on CyberPanel Ent. "
-msgstr ""
+msgstr "コンテナ化は CyberPanel Ent でのみ利用可能です。 "
 
 #: containerization/templates/containerization/notAvailable.html:39
 msgid ""
 "Required packages are not installed on this server. Please proceed to "
 "installation."
 msgstr ""
+"必要なパッケージがこのサーバーにインストールされていません。 インストールに進"
+"んでください。"
 
 #: containerization/templates/containerization/websiteContainerLimit.html:3
-#, fuzzy
-#| msgid "Domains - CyberPanel"
 msgid " limits - CyberPanel"
-msgstr "ドメイン - CyberPanel"
+msgstr " 制限- CyberPanel"
 
 #: containerization/templates/containerization/websiteContainerLimit.html:14
-#, fuzzy
-#| msgid "Disk Usage"
 msgid "Limits/Usage"
-msgstr "ディスクの使用量"
+msgstr "制限/使用法"
 
 #: containerization/templates/containerization/websiteContainerLimit.html:16
 msgid "Set limits and view usage for "
-msgstr ""
+msgstr "制限の設定と、使用状況を表示 "
 
 #: containerization/templates/containerization/websiteContainerLimit.html:25
 msgid ""
 "Limits are not being inforced, click Edit Limits to inforace the limits."
 msgstr ""
+"制限が適用されていない場合は、制限の編集をクリックして制限を適用します。"
 
 #: containerization/templates/containerization/websiteContainerLimit.html:33
 msgid "Limit"
-msgstr ""
+msgstr "制限"
 
 #: containerization/templates/containerization/websiteContainerLimit.html:34
 #: dns/templates/dns/addDeleteDNSRecords.html:330
@@ -1908,31 +1828,27 @@ msgstr "値"
 
 #: containerization/templates/containerization/websiteContainerLimit.html:40
 #: containerization/templates/containerization/websiteContainerLimit.html:77
-#, fuzzy
-#| msgid "CPU Usage"
 msgid "CPU Percentage"
-msgstr "CPU の使用量"
+msgstr "CPU 使用率"
 
 #: containerization/templates/containerization/websiteContainerLimit.html:44
 #: serverStatus/templates/serverStatus/topProcesses.html:131
 msgid "Memory"
-msgstr ""
+msgstr "メモリ"
 
 #: containerization/templates/containerization/websiteContainerLimit.html:48
 #: containerization/templates/containerization/websiteContainerLimit.html:91
 msgid "I/O"
-msgstr ""
+msgstr "入出力"
 
 #: containerization/templates/containerization/websiteContainerLimit.html:56
 #: containerization/templates/containerization/websiteContainerLimit.html:107
 msgid "Network Speed"
-msgstr ""
+msgstr "ネットワーク速度"
 
 #: containerization/templates/containerization/websiteContainerLimit.html:84
-#, fuzzy
-#| msgid "Memory Soft Limit"
 msgid "Memory Limit"
-msgstr "メモリ使用量のソフトリミット"
+msgstr "メモリ制限"
 
 #: databases/templates/databases/createDatabase.html:3
 msgid "Create New Database - CyberPanel"
@@ -1964,10 +1880,8 @@ msgstr "ユーザー名"
 #: mailServer/templates/mailServer/createEmailAccount.html:74
 #: userManagment/templates/userManagment/createUser.html:90
 #: userManagment/templates/userManagment/modifyUser.html:68
-#, fuzzy
-#| msgid "Generate Now"
 msgid "Generate"
-msgstr "今すぐ生成する"
+msgstr "生成する"
 
 #: databases/templates/databases/createDatabase.html:66
 #: databases/templates/databases/listDataBases.html:77
@@ -1977,10 +1891,8 @@ msgstr "今すぐ生成する"
 #: mailServer/templates/mailServer/createEmailAccount.html:79
 #: userManagment/templates/userManagment/createUser.html:95
 #: userManagment/templates/userManagment/modifyUser.html:73
-#, fuzzy
-#| msgid "Change Password"
 msgid "Generated Password"
-msgstr "パスワードの変更"
+msgstr "生成されたパスワード"
 
 #: databases/templates/databases/createDatabase.html:71
 #: databases/templates/databases/listDataBases.html:84
@@ -1990,10 +1902,8 @@ msgstr "パスワードの変更"
 #: mailServer/templates/mailServer/createEmailAccount.html:86
 #: userManagment/templates/userManagment/createUser.html:101
 #: userManagment/templates/userManagment/modifyUser.html:79
-#, fuzzy
-#| msgid "User"
 msgid "Use"
-msgstr "ユーザー"
+msgstr "使用"
 
 #: databases/templates/databases/createDatabase.html:89
 #: databases/templates/databases/phpMyAdmin.html:41
@@ -2076,14 +1986,13 @@ msgid "Change"
 msgstr "変更"
 
 #: databases/templates/databases/phpMyAdmin.html:3
-#, fuzzy
 #| msgid "Domains - CyberPanel"
 msgid "phpMyAdmin - CyberPanel"
-msgstr "ドメイン - CyberPanel"
+msgstr "phpMyAdmin - CyberPanel"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:3
 msgid "Add/Modify DNS Records - CyberPanel"
-msgstr "追加/変更 DNS レコード - CyberPanel"
+msgstr "DNS レコードの追加/変更 - CyberPanel"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:13
 msgid "Add/Modify DNS Zone"
@@ -2349,114 +2258,100 @@ msgstr "削除/レコードを追加"
 
 #: dockerManager/templates/dockerManager/images.html:3
 #: dockerManager/templates/dockerManager/manageImages.html:3
-#, fuzzy
-#| msgid "Cron Management - CyberPanel"
 msgid "Docker Manage Images - CyberPanel"
-msgstr "Cron 管理 - CyberPanel"
+msgstr "Docker イメージ管理 - CyberPanel"
 
 #: dockerManager/templates/dockerManager/images.html:14
 #: dockerManager/templates/dockerManager/index.html:39
-#, fuzzy
-#| msgid "Create new folder!"
 msgid "Create new container"
-msgstr "新しいフォルダを作成します！"
+msgstr "新しいコンテナを作成"
 
 #: dockerManager/templates/dockerManager/images.html:15
 msgid "Search new images and manage existing ones"
-msgstr ""
+msgstr "新しいイメージを検索し、既存のものを管理する"
 
 #: dockerManager/templates/dockerManager/images.html:22
 msgid "Locally Available Images"
-msgstr ""
+msgstr "ローカルで使用可能なイメージ"
 
 #: dockerManager/templates/dockerManager/images.html:48
-#, fuzzy
-#| msgid "Create FTP"
 msgid "Create"
-msgstr "FTPアカウント の作成"
+msgstr "新規作成"
 
 #: dockerManager/templates/dockerManager/index.html:3
-#, fuzzy
-#| msgid "Cron Management - CyberPanel"
 msgid "Docker Container Management - CyberPanel"
-msgstr "Cron 管理 - CyberPanel"
+msgstr "Docker コンテナ管理 - CyberPanel"
 
 #: dockerManager/templates/dockerManager/index.html:13
-#, fuzzy
-#| msgid "Version Management"
 msgid "Docker Container Management"
-msgstr "バージョン管理"
+msgstr "Docker コンテナ管理"
 
 #: dockerManager/templates/dockerManager/index.html:41
-#, fuzzy
-#| msgid "New Owner"
 msgid "New Container"
-msgstr "新しい所有者"
+msgstr "新しいコンテナ"
 
 #: dockerManager/templates/dockerManager/install.html:3
-#, fuzzy
-#| msgid "Install Joomla - CyberPanel"
 msgid "Install Docker - CyberPanel"
-msgstr "Joomla をインストールする - CyberPanel"
+msgstr "Docker をインストール - CyberPanel"
 
 #: dockerManager/templates/dockerManager/install.html:12
 #: dockerManager/templates/dockerManager/install.html:18
-#, fuzzy
-#| msgid "Install Now"
 msgid "Install Docker"
-msgstr "今すぐにインストールする"
+msgstr "Docker をインストール"
 
 #: dockerManager/templates/dockerManager/install.html:26
 msgid ""
 "Unable to connect to docker daemon, please try restarting docker from "
 "service page"
 msgstr ""
+"Docker デーモンに接続できません。サービスページからdockerを再起動してください"
 
 #: dockerManager/templates/dockerManager/install.html:28
 msgid "You do not have sufficient permissions to access this page"
-msgstr ""
+msgstr "このページにアクセスするための十分な権限がありません"
 
 #: dockerManager/templates/dockerManager/install.html:32
 msgid ""
 "Docker is currently not installed on this server. To manage containers, you "
 "must first install it."
 msgstr ""
+"Docker は現在このサーバにインストールされていません。 コンテナを管理するに"
+"は、まずインストールする必要があります。"
 
 #: dockerManager/templates/dockerManager/install.html:53
 msgid ""
 "You do not have permissions to install Docker. Please contact your system "
 "administrator"
 msgstr ""
+"Docker をインストールする権限がありません。 システム管理者に連絡してください"
 
 #: dockerManager/templates/dockerManager/listContainers.html:3
-#, fuzzy
-#| msgid "Create Email Account - CyberPanel"
 msgid "Containers List - CyberPanel"
-msgstr "メールアカウントの作成 - Cyber​​Panel"
+msgstr "コンテナ一覧 - CyberPanel"
 
 #: dockerManager/templates/dockerManager/listContainers.html:14
-#, fuzzy
-#| msgid "List Domains"
 msgid "List Containers"
-msgstr "ドメインの一覧"
+msgstr "コンテナの一覧"
 
 #: dockerManager/templates/dockerManager/listContainers.html:17
 msgid "Manage containers on server"
-msgstr ""
+msgstr "サーバ上のコンテナを管理する"
 
 #: dockerManager/templates/dockerManager/listContainers.html:23
 msgid "Containers"
-msgstr ""
+msgstr "コンテナ"
 
 #: dockerManager/templates/dockerManager/listContainers.html:85
 msgid "Unlisted Containers"
-msgstr ""
+msgstr "リストにないコンテナ"
 
 #: dockerManager/templates/dockerManager/listContainers.html:85
 msgid ""
 "Containers listed below were either not created through panel or were not "
 "saved to database properly"
 msgstr ""
+"以下にリストされているコンテナは、パネルを介して作成されていないか、データ"
+"ベースに適切に保存されていません"
 
 #: dockerManager/templates/dockerManager/listContainers.html:148
 #: dockerManager/templates/dockerManager/runContainer.html:52
@@ -2466,94 +2361,78 @@ msgid "Select Owner"
 msgstr "所有者を選択"
 
 #: dockerManager/templates/dockerManager/manageImages.html:17
-#, fuzzy
-#| msgid "On this page you can configure ModSecurity settings."
 msgid "On this page you can manage docker images."
-msgstr "このページでは、ModSecurity 設定を構成できます。"
+msgstr "このページでは 、docker イメージを管理できます。"
 
 #: dockerManager/templates/dockerManager/manageImages.html:65
 #: dockerManager/templates/dockerManager/manageImages.html:66
 msgid "Images"
-msgstr ""
+msgstr "イメージ"
 
 #: dockerManager/templates/dockerManager/manageImages.html:67
-#, fuzzy
-#| msgid "Delete Website"
 msgid "Delete unused images"
-msgstr "Web サイトの削除"
+msgstr "未使用のイメージを削除する"
 
 #: dockerManager/templates/dockerManager/manageImages.html:95
 msgid "Official image"
-msgstr ""
+msgstr "公式イメージ"
 
 #: dockerManager/templates/dockerManager/manageImages.html:104
 msgid "Pull"
-msgstr ""
+msgstr "Pull"
 
 #: dockerManager/templates/dockerManager/runContainer.html:3
-#, fuzzy
-#| msgid "File Manager - CyberPanel"
 msgid "Run new container - CyberPanel"
-msgstr "ファイル管理 - CyberPanel"
+msgstr "新しいコンテナを起動 - CyberPanel"
 
 #: dockerManager/templates/dockerManager/runContainer.html:12
 msgid "Run Container"
-msgstr ""
+msgstr "コンテナの実行"
 
 #: dockerManager/templates/dockerManager/runContainer.html:13
 msgid "Modify parameters for your new container"
-msgstr ""
+msgstr "新しいコンテナのパラメーターを変更する"
 
 #: dockerManager/templates/dockerManager/runContainer.html:20
-#, fuzzy
-#| msgid "Tuning Details"
 msgid "Container Details"
-msgstr "チューニングの詳細"
+msgstr "コンテナの詳細"
 
 #: dockerManager/templates/dockerManager/runContainer.html:36
 #: dockerManager/templates/dockerManager/viewContainer.html:70
 msgid "Image"
-msgstr ""
+msgstr "イメージ"
 
 #: dockerManager/templates/dockerManager/runContainer.html:44
 msgid "Tag"
-msgstr ""
+msgstr "タグ"
 
 #: dockerManager/templates/dockerManager/runContainer.html:64
 #: dockerManager/templates/dockerManager/viewContainer.html:206
-#, fuzzy
-#| msgid "memory_limit"
 msgid "Memory limit"
-msgstr "memory_limit"
+msgstr "メモリ制限"
 
 #: dockerManager/templates/dockerManager/runContainer.html:104
 #: dockerManager/templates/dockerManager/viewContainer.html:250
 msgid "ENV"
-msgstr ""
+msgstr "ENV"
 
 #: dockerManager/templates/dockerManager/runContainer.html:125
 #: dockerManager/templates/dockerManager/viewContainer.html:283
 msgid "Map Volumes"
-msgstr ""
+msgstr "Map Volumes"
 
 #: dockerManager/templates/dockerManager/runContainer.html:153
 #: dockerManager/templates/dockerManager/viewContainer.html:310
-#, fuzzy
-#| msgid "Add Key"
 msgid "Add field"
-msgstr "キーを追加"
+msgstr "フィールドを追加"
 
 #: dockerManager/templates/dockerManager/runContainer.html:161
-#, fuzzy
-#| msgid "Create Domain"
 msgid "Create Container"
-msgstr "ドメインの作成"
+msgstr "コンテナの作成"
 
 #: dockerManager/templates/dockerManager/runContainer.html:180
-#, fuzzy
-#| msgid "is successfully created."
 msgid "Container succesfully created."
-msgstr "作成されました。"
+msgstr "コンテナが作成されました。"
 
 #: dockerManager/templates/dockerManager/runContainer.html:196
 #: emailMarketing/templates/emailMarketing/createEmailList.html:59
@@ -2573,50 +2452,36 @@ msgid "Go Back"
 msgstr "前に戻る"
 
 #: dockerManager/templates/dockerManager/viewContainer.html:3
-#, fuzzy
-#| msgid "Home - CyberPanel"
 msgid "Container Home - CyberPanel"
-msgstr "ホーム - CyberPanel"
+msgstr "コンテナホーム - CyberPanel"
 
 #: dockerManager/templates/dockerManager/viewContainer.html:14
-#, fuzzy
-#| msgid "Manage Postfix"
 msgid "Manage Container"
-msgstr "postfixの管理"
+msgstr "コンテナの管理"
 
 #: dockerManager/templates/dockerManager/viewContainer.html:15
-#, fuzzy
-#| msgid "Currently:"
 msgid "Currently managing: "
-msgstr "現在:"
+msgstr "現在管理中: "
 
 #: dockerManager/templates/dockerManager/viewContainer.html:24
 msgid "Container Information"
-msgstr ""
+msgstr "コンテナの情報"
 
 #: dockerManager/templates/dockerManager/viewContainer.html:37
-#, fuzzy
-#| msgid "Resource Usage"
 msgid "Memory Usage"
-msgstr "リソースの使用量"
+msgstr "メモリの使用量"
 
 #: dockerManager/templates/dockerManager/viewContainer.html:68
-#, fuzzy
-#| msgid "Control DNS"
 msgid "Container ID"
-msgstr "DNS制御"
+msgstr "コンテナ ID"
 
 #: dockerManager/templates/dockerManager/viewContainer.html:77
-#, fuzzy
-#| msgid "Port"
 msgid "Ports"
 msgstr "ポート"
 
 #: dockerManager/templates/dockerManager/viewContainer.html:79
-#, fuzzy
-#| msgid "Stop"
 msgid "to"
-msgstr "停止"
+msgstr "から"
 
 #: dockerManager/templates/dockerManager/viewContainer.html:108
 #: emailMarketing/templates/emailMarketing/manageLists.html:145
@@ -2632,84 +2497,64 @@ msgid "Actions"
 msgstr "操作"
 
 #: dockerManager/templates/dockerManager/viewContainer.html:227
-#, fuzzy
-#| msgid "Configurations"
 msgid "Confirmation"
-msgstr "設定"
+msgstr "確認"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:3
-#, fuzzy
-#| msgid "Change Email Password - CyberPanel"
 msgid "Compose Email Message - CyberPanel"
-msgstr "メール パスワードの変更 - CyberPanel"
+msgstr "メールメッセージを作成 - CyberPanel"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:13
 #: emailMarketing/templates/emailMarketing/composeMessages.html:19
 msgid "Compose Email Message"
-msgstr ""
+msgstr "メールメッセージを作成する"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:14
-#, fuzzy
-#| msgid "On this page you can configure SpamAssassin settings."
 msgid "On this page you can compose email message to be sent out later."
-msgstr "このページでは、SpamAssassin の設定を構成できます。"
+msgstr "このページでは、後で送信するメールメッセージを作成することができます。"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:29
-#, fuzzy
-#| msgid "Site Name"
 msgid "Template Name"
-msgstr "サイト名"
+msgstr "テンプレート名"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:36
 msgid "Email Subject"
-msgstr ""
+msgstr "メールの件名"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:43
-#, fuzzy
-#| msgid "First Name"
 msgid "From Name"
-msgstr "名"
+msgstr "送信者名"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:50
-#, fuzzy
-#| msgid "Forward Email"
 msgid "From Email"
-msgstr "Eメール転送"
+msgstr "送信者メールアドレス"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:57
-#, fuzzy
-#| msgid "Delete Email"
 msgid "Reply Email"
-msgstr "メールの削除"
+msgstr "返信 メール"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:73
-#, fuzzy
-#| msgid "Save edits"
 msgid "Save Template"
-msgstr "編集の保存"
+msgstr "テンプレートを保存"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:3
-#, fuzzy
-#| msgid "Create Email Account - CyberPanel"
 msgid "Create Email List - CyberPanel"
-msgstr "メールアカウントの作成 - Cyber​​Panel"
+msgstr "メールリストの作成 - Cyber​​Panel"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:13
 #: emailMarketing/templates/emailMarketing/createEmailList.html:19
-#, fuzzy
-#| msgid "Create Email"
 msgid "Create Email List"
-msgstr "メールの作成"
+msgstr "メールリストの作成"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:14
 msgid "Create email list, to send out news letters and marketing emails."
 msgstr ""
+"ニュースレターやマーケティングメールを送信するためのメーリングリストを作成し"
+"ます。"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:26
-#, fuzzy
-#| msgid "Last Name"
 msgid "List Name"
-msgstr "姓"
+msgstr "リスト名"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:33
 #: emailMarketing/templates/emailMarketing/manageLists.html:74
@@ -2722,25 +2567,21 @@ msgid "Path"
 msgstr "パス"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:42
-#, fuzzy
-#| msgid "Create Alias"
 msgid "Create List"
-msgstr "エイリアスの作成"
+msgstr "リストの作成"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:3
-#, fuzzy
-#| msgid "Setup Email Forwarding - CyberPanel"
 msgid "Email Marketing - CyberPanel"
-msgstr "Eメール転送の設定 - CyberPanel"
+msgstr "メールマーケティング - CyberPanel"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:15
 msgid "Select users to Enable/Disable Email Marketing feature!"
-msgstr ""
+msgstr "メールマーケティング機能を有効/無効にするユーザーを選択してください！"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:29
 #: emailPremium/templates/emailPremium/listDomains.html:29
 msgid "Email Policy Server is not enabled "
-msgstr "Eメールポリシーサーバーが有効になっていません "
+msgstr "メールポリシーサーバーが有効になっていません "
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:32
 #: emailPremium/templates/emailPremium/listDomains.html:33
@@ -2759,7 +2600,7 @@ msgstr "ユーザー名"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:54
 msgid "Email Marketing Enabled."
-msgstr ""
+msgstr "メールマーケティングが有効です。"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:55
 #: emailPremium/templates/emailPremium/emailLimits.html:53
@@ -2774,7 +2615,7 @@ msgstr "無効化"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:56
 msgid "Email Marketing Disabled."
-msgstr ""
+msgstr "メールマーケティングが無効です。"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:57
 #: emailPremium/templates/emailPremium/emailLimits.html:55
@@ -2788,42 +2629,33 @@ msgid "Enable"
 msgstr "有効化"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:3
-#, fuzzy
-#| msgid "Change Email Password - CyberPanel"
 msgid "Manage Email Lists - CyberPanel"
-msgstr "メール パスワードの変更 - CyberPanel"
+msgstr "メールリストの管理 - CyberPanel"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:13
 #: emailMarketing/templates/emailMarketing/manageLists.html:19
-#, fuzzy
-#| msgid "Change Email Password"
 msgid "Manage Email Lists"
-msgstr "メール パスワードの変更"
+msgstr "メールリストの管理"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:14
-#, fuzzy
-#| msgid "On this page you manage emails limits for Domains/Email Addresses"
 msgid ""
 "On this page you can manage your email lists (Delete, Verify, Add More "
 "Emails)."
-msgstr "このページでは、ドメイン/EメールアドレスのEメールの制限を管理します"
+msgstr ""
+"このページでは、メールリストを管理できます（削除、検証、メールの追加）。"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:28
 #: emailMarketing/templates/emailMarketing/sendEmails.html:71
-#, fuzzy
-#| msgid "Select ACL"
 msgid "Select List"
-msgstr "ACL を選択"
+msgstr "リストを選択"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:41
-#, fuzzy
-#| msgid "Delete Website"
 msgid "Delete This List"
-msgstr "Web サイトの削除"
+msgstr "このリストを削除する"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:48
 msgid "You are doing to delete this list.."
-msgstr ""
+msgstr "このリストを削除しています.."
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:54
 #: emailMarketing/templates/emailMarketing/sendEmails.html:54
@@ -2846,91 +2678,70 @@ msgstr "確認"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:63
 msgid "Verify This List"
-msgstr ""
+msgstr "このリストを確認する"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:66
-#, fuzzy
-#| msgid "Add Domains"
 msgid "Add More Emails"
-msgstr "ドメインの追加"
+msgstr "メールを追加する"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:83
-#, fuzzy
-#| msgid "Forward Email"
 msgid "Load Emails"
-msgstr "Eメール転送"
+msgstr "メールの読み込み"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:142
-#, fuzzy
-#| msgid "Email"
 msgid "email"
 msgstr "メール"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:143
-#, fuzzy
-#| msgid "Services Status"
 msgid "Verification Status"
-msgstr "サービスの状態"
+msgstr "検証ステータス"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:144
 msgid "Date Created"
-msgstr ""
+msgstr "作成日"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:3
-#, fuzzy
 #| msgid "Manage SSL - CyberPanel"
 msgid "Manage SMTP Hosts - CyberPanel"
-msgstr "SSL の管理 - Cyber​​Panel"
+msgstr "SMTP ホストの管理 - CyberPanel"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:13
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:19
-#, fuzzy
-#| msgid "Manage Postfix"
 msgid "Manage SMTP Hosts"
-msgstr "postfixの管理"
+msgstr "SMTP ホストの管理"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:14
-#, fuzzy
-#| msgid ""
-#| "On this page you can manage versions and or upgrade to latest version of "
-#| "CyberPanel"
 msgid ""
 "On this page you can manage STMP Host. (SMTP hosts are used to send emails)"
 msgstr ""
-"このページでは、バージョン管理や CyberPanel の最新バージョンへのアップグレー"
-"ドが可能です"
+"このページでは、 SMTP ホストを管理できます。 （SMTP ホストはメールの送信に使"
+"用されます）"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:29
 #: emailMarketing/templates/emailMarketing/sendEmails.html:153
 msgid "SMTP Host"
-msgstr ""
+msgstr "SMTP ホスト"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:59
-#, fuzzy
-#| msgid "Save edits"
 msgid "Save Host"
-msgstr "編集の保存"
+msgstr "ホストを保存"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:75
 #: userManagment/templates/userManagment/listUsers.html:36
-#, fuzzy
-#| msgid "New Owner"
 msgid "Owner"
-msgstr "新しい所有者"
+msgstr "所有者"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:76
 msgid "Host"
-msgstr ""
+msgstr "ホスト"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:91
 msgid "Verify Host"
-msgstr ""
+msgstr "ホストを確認する"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:3
-#, fuzzy
-#| msgid "Domains - CyberPanel"
 msgid "Send Emails - CyberPanel"
-msgstr "ドメイン - CyberPanel"
+msgstr "メールを送信 - CyberPanel"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:13
 #: emailMarketing/templates/emailMarketing/sendEmails.html:19
@@ -2941,74 +2752,63 @@ msgstr "ドメイン - CyberPanel"
 #: websiteFunctions/templates/websiteFunctions/website.html:956
 #: websiteFunctions/templates/websiteFunctions/website.html:960
 #: websiteFunctions/templates/websiteFunctions/website.html:961
-#, fuzzy
-#| msgid "Emails"
 msgid "Send Emails"
-msgstr "メール"
+msgstr "メールを送信"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:14
 msgid ""
 "On this page you can send emails to the lists you created using SMTP Hosts."
 msgstr ""
+"このページでは、SMTPホストを使用して作成したリストにメールを送信できます。"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:28
 #: websiteFunctions/templates/websiteFunctions/website.html:677
-#, fuzzy
-#| msgid "Select Website"
 msgid "Select Template"
-msgstr "Web サイトを選択"
+msgstr "テンプレートの選択"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:41
 msgid "Delete This Template"
-msgstr ""
+msgstr "このテンプレートを削除します"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:48
 msgid "You are doing to delete this template.."
-msgstr ""
+msgstr "このテンプレートを削除しています.."
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:63
-#, fuzzy
-#| msgid "Preview"
 msgid "Preview Template"
-msgstr "プレビュー"
+msgstr "テンプレートのプレビュー"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:82
-#, fuzzy
-#| msgid "Select FTP Account"
 msgid "Select STMP Host"
-msgstr "FTP アカウントを選択"
+msgstr "STMP ホストの選択"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:98
 msgid "Send to un-verified email addresses."
-msgstr ""
+msgstr "未確認のメールアドレスに送信します。"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:107
 msgid "Include unsubscribe link."
-msgstr ""
+msgstr "購読解除リンクを含めます。"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:116
-#, fuzzy
-#| msgid "Start"
 msgid "Start Job"
-msgstr "起動"
+msgstr "ジョブの開始"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:151
 msgid "Job ID"
-msgstr ""
+msgstr "ジョブ ID"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:154
-#, fuzzy
-#| msgid "Emails"
 msgid "Total Emails"
-msgstr "メール"
+msgstr "メール総数"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:155
 msgid "Sent"
-msgstr ""
+msgstr "送信"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:156
 msgid "Failed"
-msgstr ""
+msgstr "失敗しました"
 
 #: emailMarketing/templates/emailMarketing/website.html:16
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:17
@@ -3383,7 +3183,7 @@ msgstr "現在の rewrite ルールを取得できませんでした。エラー
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:440
 #: websiteFunctions/templates/websiteFunctions/website.html:703
 msgid "Could not save rewrite rules. Error message:"
-msgstr "rewrite ルールを保存できませんでした。エラー メッセージ:"
+msgstr "Rewrite ルールを保存できませんでした。エラー メッセージ:"
 
 #: emailMarketing/templates/emailMarketing/website.html:776
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:459
@@ -3419,7 +3219,7 @@ msgstr "ファイル"
 #: websiteFunctions/templates/websiteFunctions/website.html:803
 #: websiteFunctions/templates/websiteFunctions/website.html:804
 msgid "File Manager"
-msgstr "ファイル 管理"
+msgstr "ファイル管理"
 
 #: emailMarketing/templates/emailMarketing/website.html:874
 #: emailMarketing/templates/emailMarketing/website.html:877
@@ -3469,10 +3269,8 @@ msgstr "変更は保存されました。"
 #: websiteFunctions/templates/websiteFunctions/website.html:915
 #: websiteFunctions/templates/websiteFunctions/website.html:919
 #: websiteFunctions/templates/websiteFunctions/website.html:920
-#, fuzzy
-#| msgid "Create Alias"
 msgid "Create Lists"
-msgstr "エイリアスの作成"
+msgstr "リストの作成"
 
 #: emailMarketing/templates/emailMarketing/website.html:997
 #: emailMarketing/templates/emailMarketing/website.html:1000
@@ -3480,10 +3278,8 @@ msgstr "エイリアスの作成"
 #: websiteFunctions/templates/websiteFunctions/website.html:925
 #: websiteFunctions/templates/websiteFunctions/website.html:929
 #: websiteFunctions/templates/websiteFunctions/website.html:930
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage Lists"
-msgstr "SSL の管理"
+msgstr "リストを管理"
 
 #: emailMarketing/templates/emailMarketing/website.html:1008
 #: emailMarketing/templates/emailMarketing/website.html:1011
@@ -3492,23 +3288,19 @@ msgstr "SSL の管理"
 #: websiteFunctions/templates/websiteFunctions/website.html:939
 #: websiteFunctions/templates/websiteFunctions/website.html:940
 msgid "SMTP Hosts"
-msgstr ""
+msgstr "SMTP ホスト"
 
 #: emailMarketing/templates/emailMarketing/website.html:1019
 #: emailMarketing/templates/emailMarketing/website.html:1022
 #: websiteFunctions/templates/websiteFunctions/website.html:945
 #: websiteFunctions/templates/websiteFunctions/website.html:950
-#, fuzzy
-#| msgid "Compress"
 msgid "Compose Message"
-msgstr "圧縮"
+msgstr "メッセージを作成します"
 
 #: emailMarketing/templates/emailMarketing/website.html:1023
 #: websiteFunctions/templates/websiteFunctions/website.html:951
-#, fuzzy
-#| msgid "Compress"
 msgid "Compose"
-msgstr "圧縮"
+msgstr "構成"
 
 #: emailMarketing/templates/emailMarketing/website.html:1050
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:14
@@ -3683,11 +3475,11 @@ msgstr "SpamAssassin 設定が保存されました。"
 #: emailPremium/templates/emailPremium/listDomains.html:14
 #: emailPremium/templates/emailPremium/policyServer.html:13
 msgid "Emai Limits Docs"
-msgstr "Eメールの制限ドキュメント"
+msgstr "メールの制限ドキュメント"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14
 msgid "View and change email limits for a domain name."
-msgstr "ドメイン名のEメールの制限を表示および変更します。"
+msgstr "ドメイン名のメールの制限を表示および変更します。"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:25
 msgid "Domain Resource Usage"
@@ -3739,11 +3531,11 @@ msgstr "制限が正常に変更され、3秒後に再表示されます。"
 #: emailPremium/templates/emailPremium/emailLimits.html:126
 #: emailPremium/templates/emailPremium/emailPage.html:25
 msgid "Email Resource Usage"
-msgstr "Eメールリソースの使用状況"
+msgstr "メールリソースの使用状況"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:133
 msgid "Search Emails.."
-msgstr "Eメールを検索.."
+msgstr "メールを検索.."
 
 #: emailPremium/templates/emailPremium/emailLimits.html:164
 #: emailPremium/templates/emailPremium/listDomains.html:67
@@ -3753,7 +3545,7 @@ msgstr "管理"
 
 #: emailPremium/templates/emailPremium/emailPage.html:14
 msgid "View and change limits for an Email Address."
-msgstr "Eメールアドレスの制限を表示および変更します。"
+msgstr "メールアドレスの制限を表示および変更します。"
 
 #: emailPremium/templates/emailPremium/emailPage.html:60
 msgid "Logging in ON!"
@@ -3785,29 +3577,26 @@ msgstr "ドメイン - CyberPanel"
 
 #: emailPremium/templates/emailPremium/listDomains.html:15
 msgid "On this page you manage emails limits for Domains/Email Addresses"
-msgstr "このページでは、ドメイン/EメールアドレスのEメールの制限を管理します"
+msgstr "このページでは、ドメイン/メールアドレスのメールの制限を管理します"
 
 #: emailPremium/templates/emailPremium/policyServer.html:3
 msgid "Email Policy Server - CyberPanel"
-msgstr "Eメールポリシーサーバー - CyberPanel"
+msgstr "メールポリシーサーバー - CyberPanel"
 
 #: emailPremium/templates/emailPremium/policyServer.html:13
 msgid "Email Policy Server Configurations!"
-msgstr "Eメールポリシーサーバー構成する！"
+msgstr "メールポリシーサーバー構成する！"
 
 #: emailPremium/templates/emailPremium/policyServer.html:14
 msgid "Turn ON Email Policy Server to use Email Limits Feature. "
-msgstr ""
-"Eメール制限機能を使用するには、Eメールポリシーサーバーをオンにします。 "
+msgstr "メール制限機能を使用するには、メールポリシーサーバーをオンにします。 "
 
 #: emailPremium/templates/emailPremium/policyServer.html:40
 #: manageServices/templates/manageServices/managePostfix.html:41
 #: manageServices/templates/manageServices/managePowerDNS.html:112
 #: manageServices/templates/manageServices/managePureFtpd.html:41
-#, fuzzy
-#| msgid "Save changes."
 msgid "Save changes"
-msgstr "変更を保存する。"
+msgstr "変更を保存する"
 
 #: emailPremium/templates/emailPremium/policyServer.html:52
 #: firewall/templates/firewall/secureSSH.html:78
@@ -4429,7 +4218,7 @@ msgid ""
 "Before disabling root login, make sure you have another account with sudo "
 "priviliges on server."
 msgstr ""
-"root ログインを無効にする前に、サーバーに sudo 権限を持つ別のアカウントがある"
+"Root ログインを無効にする前に、サーバーに sudo 権限を持つ別のアカウントがある"
 "ことを確認してください。"
 
 #: firewall/templates/firewall/secureSSH.html:82
@@ -4567,7 +4356,7 @@ msgstr "メール パスワードの変更"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:13
 msgid "Select a website from the list, to change its password."
-msgstr "リストボックスから Web サイトを選択し、パスワードを変更します。"
+msgstr "一覧から Web サイトを選択し、パスワードを変更します。"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:27
 #: mailServer/templates/mailServer/createEmailAccount.html:27
@@ -4603,8 +4392,7 @@ msgstr "メールアカウントの作成 - Cyber​​Panel"
 
 #: mailServer/templates/mailServer/createEmailAccount.html:13
 msgid "Select a website from the list, to create an email account."
-msgstr ""
-"メールアカウントを作成するには、リストボックスから Web サイトを選択します。"
+msgstr "メールアカウントを作成するには、一覧から Web サイトを選択します。"
 
 #: mailServer/templates/mailServer/createEmailAccount.html:106
 msgid "Cannot create email account. Error message:"
@@ -4624,8 +4412,7 @@ msgstr "メールアカウントの削除 - Cyber​​Panel"
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:13
 msgid "Select a website from the list, to delete an email account."
-msgstr ""
-"メールアカウントを削除するには、リストボックスから Web サイトを選択します。"
+msgstr "メールアカウントを削除するには、一覧から Web サイトを選択します。"
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:95
 msgid "Email with id : {$ deletedID $} is successfully deleted."
@@ -4681,12 +4468,12 @@ msgstr "公開鍵"
 
 #: mailServer/templates/mailServer/emailForwarding.html:3
 msgid "Setup Email Forwarding - CyberPanel"
-msgstr "Eメール転送の設定 - CyberPanel"
+msgstr "メール転送の設定 - CyberPanel"
 
 #: mailServer/templates/mailServer/emailForwarding.html:12
 #: mailServer/templates/mailServer/emailForwarding.html:19
 msgid "Setup Email Forwarding"
-msgstr "Eメール転送のセットアップ"
+msgstr "メール転送のセットアップ"
 
 #: mailServer/templates/mailServer/emailForwarding.html:12
 msgid "Forwarding Docs"
@@ -4694,7 +4481,7 @@ msgstr "ドキュメントの転送"
 
 #: mailServer/templates/mailServer/emailForwarding.html:13
 msgid "This page help you setup email forwarding for your emails."
-msgstr "このページは、EメールのEメール転送を設定するのに役立ちます。"
+msgstr "このページは、メールのメール転送を設定するのに役立ちます。"
 
 #: mailServer/templates/mailServer/emailForwarding.html:87
 #: mailServer/templates/mailServer/emailForwarding.html:108
@@ -4703,7 +4490,7 @@ msgstr "送信元"
 
 #: mailServer/templates/mailServer/emailForwarding.html:96
 msgid "Forward Email"
-msgstr "Eメール転送"
+msgstr "メール転送"
 
 #: mailServer/templates/mailServer/index.html:3
 msgid "Mail Functions - CyberPanel"
@@ -4718,23 +4505,17 @@ msgid "Manage email accounts on this page."
 msgstr "このページでメールアカウントを管理します。"
 
 #: mailServer/templates/mailServer/listEmails.html:3
-#, fuzzy
-#| msgid "List FTP Accounts - CyberPanel"
 msgid "List Email Accounts - CyberPanel"
-msgstr "FTP アカウントの一覧 - CyberPanel"
+msgstr "メールアカウントの一覧 - CyberPanel"
 
 #: mailServer/templates/mailServer/listEmails.html:13
 #: mailServer/templates/mailServer/listEmails.html:19
-#, fuzzy
-#| msgid "List FTP Accounts"
 msgid "List Email Accounts"
-msgstr "FTP アカウントの一覧"
+msgstr "メールアカウントの一覧"
 
 #: mailServer/templates/mailServer/listEmails.html:14
-#, fuzzy
-#| msgid "List FTP Accounts or change their passwords."
 msgid "List Emails Accounts. Change their passwords or delete them."
-msgstr "FTP アカウントを一覧表示するか、パスワードを変更します。"
+msgstr "メールアカウントを一覧表示します。パスワードを変更するか削除します。"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:3
 msgid "Edit PHP Configurations - CyberPanel"
@@ -4800,7 +4581,7 @@ msgstr "PHPインストールの管理 - Cyber​​Panel"
 
 #: managePHP/templates/managePHP/index.html:12
 msgid "Manage PHP Installations"
-msgstr "PHP インストール管理"
+msgstr "PHP インストールの管理"
 
 #: managePHP/templates/managePHP/index.html:13
 msgid "Edit your PHP Configurations to suit your needs."
@@ -4943,11 +4724,11 @@ msgstr "サーバーに接続できませんでした。 ページを更新し�
 
 #: manageServices/templates/manageServices/managePostfix.html:3
 msgid "Manage Email Server (Postfix) - CyberPanel"
-msgstr "Eメールサーバの管理 (Postfix) - CyberPanel"
+msgstr "メールサーバの管理 (Postfix) - CyberPanel"
 
 #: manageServices/templates/manageServices/managePostfix.html:13
 msgid "Manage Email Server (Postfix)!"
-msgstr "Eメールサーバの管理 (Postfix)する！"
+msgstr "メールサーバの管理 (Postfix)する！"
 
 #: manageServices/templates/manageServices/managePostfix.html:13
 #: manageServices/templates/manageServices/managePowerDNS.html:16
@@ -4957,7 +4738,7 @@ msgstr "サービスのドキュメント"
 
 #: manageServices/templates/manageServices/managePostfix.html:14
 msgid "Enable or disable Email services. "
-msgstr "Eメールサービスを有効または無効にします。 "
+msgstr "メールサービスを有効または無効にします。 "
 
 #: manageServices/templates/manageServices/managePostfix.html:79
 #: manageServices/templates/manageServices/managePowerDNS.html:149
@@ -4978,50 +4759,40 @@ msgid "Enable or disable DNS services. "
 msgstr "DNS サービスを有効または無効にします。 "
 
 #: manageServices/templates/manageServices/managePowerDNS.html:42
-#, fuzzy
-#| msgid "Security Functions"
 msgid "Select Function Mode"
-msgstr "セキュリティ機能"
+msgstr "機能モードの選択"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:53
-#, fuzzy
-#| msgid "Name server"
 msgid "Slave Server"
-msgstr "ネームサーバ"
+msgstr "スレーブサーバー"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:60
-#, fuzzy
-#| msgid "MailServer SSL"
 msgid "Master Server IP"
-msgstr "MailServer SSL"
+msgstr "マスタ サーバー IP"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:67
-#, fuzzy
-#| msgid "Name server"
 msgid "Slave Server 1"
-msgstr "ネームサーバ"
+msgstr "スレーブサーバー 1"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:74
-#, fuzzy
-#| msgid "Name server"
 msgid "Slave Server IP"
-msgstr "ネームサーバ"
+msgstr "スレーブ サーバーのIP"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:81
 msgid "Slave Server 2 (Optional)"
-msgstr ""
+msgstr "スレーブサーバー 2 (オプション)"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:88
 msgid "Slave Server IP 2 (Optional)"
-msgstr ""
+msgstr "スレーブサーバー IP 2 (オプション)"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:95
 msgid "Slave Server 3 (Optional)"
-msgstr ""
+msgstr "スレーブサーバー 3 (オプション)"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:102
 msgid "Slave Server IP 3 (Optional)"
-msgstr ""
+msgstr "スレーブサーバー IP 3 (オプション)"
 
 #: manageServices/templates/manageServices/managePureFtpd.html:3
 msgid "Manage FTP Server (Pure FTPD) - CyberPanel"
@@ -5110,56 +4881,44 @@ msgid "Cannot delete package. Error message:"
 msgstr "パッケージを削除できません。エラーメッセージ:"
 
 #: packages/templates/packages/deletePackage.html:60
-#, fuzzy
-#| msgid " Successfully Deleted"
 msgid " Successfully Deleted."
-msgstr " 削除されました"
+msgstr " 削除されました。"
 
 #: packages/templates/packages/index.html:3
 msgid "Packages - CyberPanel"
 msgstr "パッケージ - Cyber​​Panel"
 
 #: packages/templates/packages/listPackages.html:3
-#, fuzzy
-#| msgid "Packages - CyberPanel"
 msgid "List Packages  - CyberPanel"
-msgstr "パッケージ - Cyber​​Panel"
+msgstr "パッケージの一覧 - Cyber​​Panel"
 
 #: packages/templates/packages/listPackages.html:14
 msgid "List Packages and delete or edit them."
-msgstr ""
+msgstr "パッケージをリストを削除または編集します。"
 
 #: packages/templates/packages/listPackages.html:34
-#, fuzzy
-#| msgid "Disk Space"
 msgid "Diskspace"
-msgstr "ディスクスの容量"
+msgstr "ディスク容量"
 
 #: packages/templates/packages/listPackages.html:36
-#, fuzzy
-#| msgid "Create Email Account"
 msgid "Email Accounts"
-msgstr "メールアカウントの作成"
+msgstr "メールアカウント"
 
 #: packages/templates/packages/listPackages.html:38
 msgid "FTPs"
-msgstr ""
+msgstr "FTPs"
 
 #: packages/templates/packages/listPackages.html:39
-#, fuzzy
-#| msgid "Add Domains"
 msgid "Child Domains"
-msgstr "ドメインの追加"
+msgstr "子ドメイン"
 
 #: packages/templates/packages/listPackages.html:40
 msgid "Allow FQDN as Childs"
-msgstr ""
+msgstr "FQDNを子として許可する"
 
 #: packages/templates/packages/listPackages.html:152
-#, fuzzy
-#| msgid "Additional Features"
 msgid "Additional"
-msgstr "その他の機能"
+msgstr "追加"
 
 #: packages/templates/packages/modifyPackage.html:3
 msgid "Modify Package - CyberPanel"
@@ -5178,16 +4937,12 @@ msgid "Successfully Modified"
 msgstr "更新されました"
 
 #: pluginHolder/templates/pluginHolder/plugins.html:15
-#, fuzzy
-#| msgid "List Databases  - CyberPanel"
 msgid "List of installed plugins on your CyberPanel."
-msgstr "データベースの一覧 - Cyber​​Panel"
+msgstr "CyberPanel にインストールされているプラグインの一覧です。"
 
 #: pluginHolder/templates/pluginHolder/plugins.html:31
-#, fuzzy
-#| msgid "Latest Version"
 msgid "Version"
-msgstr "最新バージョン"
+msgstr "バージョン"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:3
 msgid "Access Logs - CyberPanel"
@@ -5300,10 +5055,8 @@ msgid "View LiteSpeed status and log files."
 msgstr "LiteSpeed の状態とログファイルを表示します。"
 
 #: serverStatus/templates/serverStatus/index.html:41
-#, fuzzy
-#| msgid "CyberPanel Main Log File"
 msgid "CyberPanel Main Log"
-msgstr "Cyber​​Panel メインログファイル"
+msgstr "Cyber​​Panel メインログ"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:3
 msgid "LiteSpeed Status - CyberPanel"
@@ -5368,53 +5121,43 @@ msgstr "サーバーに接続できませんでした。"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:138
 msgid "Switch to LiteSpeed Enterprise Web Server"
-msgstr ""
+msgstr "LiteSpeed Enterprise Web Server に切り替えます"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:149
 msgid "License Key"
-msgstr ""
+msgstr "ライセンスキー"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:160
 msgid "Switch"
-msgstr ""
+msgstr "切り替え"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:176
 msgid "With great wisdom comes great responsibility."
-msgstr ""
+msgstr "大いなる知恵には大きな責任が伴います。"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:292
-#, fuzzy
-#| msgid "File Manager"
 msgid "License Manager"
-msgstr "ファイル 管理"
+msgstr "ライセンスの管理"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:299
 #: serverStatus/templates/serverStatus/litespeedStatus.html:303
 #: serverStatus/templates/serverStatus/litespeedStatus.html:304
-#, fuzzy
-#| msgid "Services Status"
 msgid "License Status"
-msgstr "サービスの状態"
+msgstr "ライセンスの状態"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:309
 #: serverStatus/templates/serverStatus/litespeedStatus.html:313
 #: serverStatus/templates/serverStatus/litespeedStatus.html:314
-#, fuzzy
-#| msgid "Change Limits"
 msgid "Change License"
-msgstr "制限の変更する"
+msgstr "ライセンスの変更"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:341
-#, fuzzy
-#| msgid "New File"
 msgid "New key"
-msgstr "新しいファイル"
+msgstr "新しいキー"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:351
-#, fuzzy
-#| msgid "Change"
 msgid "Change Key"
-msgstr "変更"
+msgstr "キーの変更"
 
 #: serverStatus/templates/serverStatus/services.html:3
 msgid "Services - CyberPanel"
@@ -5425,141 +5168,125 @@ msgid "Show stats for services and actions (Start, Stop, Restart)"
 msgstr "サービスと操作の統計情報を表示する（開始、停止、再起動）"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:3
-#, fuzzy
-#| msgid "Packages - CyberPanel"
 msgid "Top Processes - CyberPanel"
-msgstr "パッケージ - Cyber​​Panel"
+msgstr "上位プロセス - CyberPanel"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:16
 msgid "List of top processes on your server. (Refresh every 3 seconds)"
-msgstr ""
+msgstr "サーバーの上位プロセスの一覧。 （3秒ごとに更新）"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:27
 msgid "Cores"
-msgstr ""
+msgstr "コア"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:28
-#, fuzzy
-#| msgid "New Name"
 msgid "Model Name"
-msgstr "新しい名前"
+msgstr "モデル名"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:29
 msgid "CPU Mhz"
-msgstr ""
+msgstr "CPU Mhz"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:30
-#, fuzzy
-#| msgid "Cache Size in memory"
 msgid "Cache Size"
-msgstr "メモリ内のキャッシュサイズ"
+msgstr "キャッシュサイズ"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:51
-#, fuzzy
-#| msgid "Process ID"
 msgid "Processes"
-msgstr "プロセス ID"
+msgstr "プロセス"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:53
 msgid "Sleeping"
-msgstr ""
+msgstr "待機中"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:54
-#, fuzzy
-#| msgid "Stop"
 msgid "Stopped"
-msgstr "停止"
+msgstr "停止しました"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:55
 msgid "Zombie"
-msgstr ""
+msgstr "ゾンビ"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:80
-#, fuzzy
-#| msgid "CPU Load Average"
 msgid "CPU Load"
-msgstr "CPU 負荷平均"
+msgstr "CPU負荷"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:81
 msgid "1 Min"
-msgstr ""
+msgstr "1 分"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:82
 msgid "5 Min"
-msgstr ""
+msgstr "5 分"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:83
 msgid "15 Min"
-msgstr ""
+msgstr "15 分"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:104
 msgid "I/O Wait"
-msgstr ""
+msgstr "入出力待ち"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:105
 msgid "Idle Time"
-msgstr ""
+msgstr "アイドル時間"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:106
 msgid "HW Interrupts"
-msgstr ""
+msgstr "HW 割り込み"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:107
 msgid "Softirqs"
-msgstr ""
+msgstr "ソフトウェア割込み"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:132
 #: serverStatus/templates/serverStatus/topProcesses.html:156
 msgid "Free"
-msgstr ""
+msgstr "未使用"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:133
 #: serverStatus/templates/serverStatus/topProcesses.html:157
 msgid "Used"
-msgstr ""
+msgstr "使用済み"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:134
 #: serverStatus/templates/serverStatus/topProcesses.html:158
 msgid "buff/cache"
-msgstr ""
+msgstr "バッファ / キャッシュ"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:155
 msgid "SWAP"
-msgstr ""
+msgstr "スワップ"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:192
-#, fuzzy
-#| msgid "ID"
 msgid "PID"
-msgstr "ID"
+msgstr "PID"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:194
 msgid "VIRT"
-msgstr ""
+msgstr "VIRT"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:195
 msgid "RES"
-msgstr ""
+msgstr "RES"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:196
-#, fuzzy
-#| msgid "Status"
 msgid "State"
 msgstr "状態"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:197
 #, python-format
 msgid "%%CPU"
-msgstr ""
+msgstr "%%CPU"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:198
 #, python-format
 msgid "%%MEM"
-msgstr ""
+msgstr "%%MEM"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:199
 msgid "Time"
-msgstr ""
+msgstr "時間"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:200
 #: websiteFunctions/templates/websiteFunctions/listCron.html:51
@@ -5715,16 +5442,17 @@ msgid "Successfully tuned."
 msgstr "調整されました。"
 
 #: userManagment/templates/userManagment/apiAccess.html:3
-#, fuzzy
 #| msgid "Access Logs - CyberPanel"
 msgid "API Access for User - CyberPanel"
-msgstr "アクセスログ - CyberPanel"
+msgstr "ユーザーの API アクセス - CyberPanel"
 
 #: userManagment/templates/userManagment/apiAccess.html:14
 msgid ""
 "Allow/Remove API access for account, this effects Cloud Platform Connection "
 "and Third Party Modules."
 msgstr ""
+"アカウントの削除 API アクセスを許可します。これは、クラウドプラットフォーム接"
+"続とサードパーティモジュールに影響します。"
 
 #: userManagment/templates/userManagment/apiAccess.html:29
 #: userManagment/templates/userManagment/changeUserACL.html:28
@@ -5734,10 +5462,8 @@ msgid "Select User"
 msgstr "ユーザーを選択"
 
 #: userManagment/templates/userManagment/apiAccess.html:40
-#, fuzzy
-#| msgid "Access Log"
 msgid "Access"
-msgstr "アクセスログ"
+msgstr "アクセス"
 
 #: userManagment/templates/userManagment/changeUserACL.html:3
 msgid "Change User ACL - CyberPanel"
@@ -5778,7 +5504,7 @@ msgstr "ACL の詳細"
 
 #: userManagment/templates/userManagment/createACL.html:26
 msgid "ACL Name"
-msgstr "ACL名"
+msgstr "ACL 名"
 
 #: userManagment/templates/userManagment/createACL.html:40
 #: userManagment/templates/userManagment/modifyACL.html:44
@@ -5788,7 +5514,7 @@ msgstr "管理者に設定"
 #: userManagment/templates/userManagment/createACL.html:59
 #: userManagment/templates/userManagment/modifyACL.html:63
 msgid "User Management"
-msgstr "ユーザー管理"
+msgstr "ユーザーの管理"
 
 #: userManagment/templates/userManagment/createACL.html:107
 #: userManagment/templates/userManagment/modifyACL.html:111
@@ -5803,7 +5529,7 @@ msgstr "Web サイトを一時停止"
 #: userManagment/templates/userManagment/createACL.html:147
 #: userManagment/templates/userManagment/modifyACL.html:151
 msgid "Package Management"
-msgstr "パッケージ管理"
+msgstr "パッケージの管理"
 
 #: userManagment/templates/userManagment/createACL.html:186
 #: userManagment/templates/userManagment/modifyACL.html:190
@@ -5813,7 +5539,7 @@ msgstr "データベース管理"
 #: userManagment/templates/userManagment/createACL.html:216
 #: userManagment/templates/userManagment/modifyACL.html:220
 msgid "DNS Management"
-msgstr "DNS 管理"
+msgstr "DNS の管理"
 
 #: userManagment/templates/userManagment/createACL.html:249
 #: userManagment/templates/userManagment/modifyACL.html:253
@@ -5823,7 +5549,7 @@ msgstr "追加/削除"
 #: userManagment/templates/userManagment/createACL.html:257
 #: userManagment/templates/userManagment/modifyACL.html:261
 msgid "Email Management"
-msgstr "Eメール管理"
+msgstr "メールの管理"
 
 #: userManagment/templates/userManagment/createACL.html:317
 #: userManagment/templates/userManagment/modifyACL.html:321
@@ -5838,7 +5564,7 @@ msgstr "バックアップ管理"
 #: userManagment/templates/userManagment/createACL.html:399
 #: userManagment/templates/userManagment/modifyACL.html:403
 msgid "SSL Management"
-msgstr "SSL管理"
+msgstr "SSL の管理"
 
 #: userManagment/templates/userManagment/createACL.html:432
 msgid "Create ACL"
@@ -5854,7 +5580,7 @@ msgstr "このページで root 、代理店、または通常のユーザーを
 
 #: userManagment/templates/userManagment/createUser.html:19
 msgid "User Details"
-msgstr "ユーザー詳細"
+msgstr "ユーザーの詳細"
 
 #: userManagment/templates/userManagment/createUser.html:25
 #: userManagment/templates/userManagment/modifyUser.html:39
@@ -5941,25 +5667,23 @@ msgstr " 削除されました"
 
 #: userManagment/templates/userManagment/index.html:3
 msgid "User Functions - CyberPanel"
-msgstr "ユーザ機能 - Cyber​​Panel"
+msgstr "ユーザーの機能 - Cyber​​Panel"
 
 #: userManagment/templates/userManagment/index.html:14
 msgid "Create, edit and delete users on this page."
 msgstr "このページでユーザーを作成、編集、削除を行います。"
 
 #: userManagment/templates/userManagment/listUsers.html:3
-#, fuzzy
-#| msgid "List Databases  - CyberPanel"
 msgid "List Users  - CyberPanel"
-msgstr "データベースの一覧 - Cyber​​Panel"
+msgstr "ユーザーの一覧 - Cyber​​Panel"
 
 #: userManagment/templates/userManagment/listUsers.html:14
 msgid "List Users that you own."
-msgstr ""
+msgstr "所有しているユーザーを一覧にします。"
 
 #: userManagment/templates/userManagment/listUsers.html:35
 msgid "ACL"
-msgstr ""
+msgstr "ACL"
 
 #: userManagment/templates/userManagment/listUsers.html:84
 #: userManagment/templates/userManagment/resellerCenter.html:37
@@ -6153,8 +5877,6 @@ msgstr "Web サイト機能 - Cyber​​Panel"
 
 #: websiteFunctions/templates/websiteFunctions/index.html:33
 #: websiteFunctions/templates/websiteFunctions/index.html:57
-#, fuzzy
-#| msgid "List Websites"
 msgid "List Website"
 msgstr "Webサイトの一覧"
 
@@ -6247,22 +5969,22 @@ msgstr "ブログタイトル"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:29
 msgid "Copy/Sync to Master"
-msgstr ""
+msgstr "マスターへのコピー/同期"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:670
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:675
 #: websiteFunctions/templates/websiteFunctions/website.html:990
 msgid "WP + LSCache"
-msgstr ""
+msgstr "WP + LSCache"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:3
 msgid "Cron Management - CyberPanel"
-msgstr "Cron 管理 - CyberPanel"
+msgstr "Cron の管理 - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:12
 #: websiteFunctions/templates/websiteFunctions/listCron.html:19
 msgid "Cron Management"
-msgstr "Cron 管理"
+msgstr "Cron の管理"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:12
 msgid "Cron Docs"
@@ -6353,7 +6075,7 @@ msgstr "編集の保存"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:142
 msgid "Add cron"
-msgstr "cron を追加"
+msgstr "Cron を追加"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:152
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:102
@@ -6406,7 +6128,7 @@ msgstr "あなたのウェブサイトにgitをアタッチしてください。
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:21
 msgid "Attach Git"
-msgstr "Git アタッチ"
+msgstr "Gitを添付"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:29
 msgid "Providers"
@@ -6476,73 +6198,66 @@ msgid "Branch successfully changed."
 msgstr "ブランチが変更されました。"
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:3
-#, fuzzy
-#| msgid "Git Management - CyberPanel"
 msgid "Set up Staging Enviroment - CyberPanel"
-msgstr "Git の管理 - CyberPanel"
+msgstr "ステージング環境の設定 - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:12
 msgid "Set up Staging Enviroment"
-msgstr ""
+msgstr "ステージング環境の設定"
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:13
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:20
 msgid "Set up staging enviroment for "
-msgstr ""
+msgstr "ステージング環境の設定する "
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:13
 msgid ""
 ". Any domain that you will choose here will be created as child-domain for "
 "this master site."
 msgstr ""
+". ここで選択するドメインはすべて、このマスターサイトの子ドメインとして作成さ"
+"れます。"
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:31
 msgid "Domain that you will enter below will be created as child-domain to "
-msgstr ""
+msgstr "以下に入力するドメインは、子ドメインとして作成されます "
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:33
 msgid "."
-msgstr ""
+msgstr "."
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:47
-#, fuzzy
-#| msgid "Start"
 msgid "Start Cloning"
-msgstr "起動"
+msgstr "クローン作成を開始"
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:3
-#, fuzzy
 #| msgid "Manage SSL - CyberPanel"
 msgid "SSH and CageFS - CyberPanel"
-msgstr "SSL の管理 - Cyber​​Panel"
+msgstr "SSH と CageFS - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:12
-#, fuzzy
-#| msgid "SSH Docs"
 msgid "SSH Access"
-msgstr "SSH のドキュメント"
+msgstr "SSH アクセス"
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:13
 msgid "Set up SSH access and enable/disable CageFS for "
-msgstr ""
+msgstr "SSHアクセスをセットアップし、CageFSを有効/無効にします "
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:13
 msgid " CageFS require CloudLinux OS."
-msgstr ""
+msgstr " CageFS には CloudLinux OS が必要です。"
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:20
 msgid "Set up SSH access for "
-msgstr ""
+msgstr "SSH アクセスの設定 "
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:29
-#, fuzzy
-#| msgid "SSL Issued for"
 msgid "SSH user for "
-msgstr "SSLが発行されました"
+msgstr "SSH ユーザー "
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:29
 msgid " is "
-msgstr ""
+msgstr " は "
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:3
 msgid "Suspend/Unsuspend Website - CyberPanel"
@@ -6577,52 +6292,49 @@ msgid "Successfully "
 msgstr "成功しました "
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:3
-#, fuzzy
 #| msgid "DNS Functions - CyberPanel"
 msgid "Sync to Master - CyberPanel"
-msgstr "DNS 機能 - Cyber​​Panel"
+msgstr "マスターに同期 - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:12
 msgid "Sync your site to Master"
-msgstr ""
+msgstr "サイトをマスターに同期する"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:13
 msgid "Right now you can only sync your child domains to master domains."
-msgstr ""
+msgstr "現在、子ドメインをマスタードメインにのみ同期できます。"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:13
 msgid " will be synced to "
-msgstr ""
+msgstr " に同期されます "
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:20
 msgid "Sync "
-msgstr ""
+msgstr "同期 "
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:20
-#, fuzzy
-#| msgid "Stop"
 msgid "to "
-msgstr "停止"
+msgstr "to "
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:30
 msgid "What to Sync"
-msgstr ""
+msgstr "同期する内容"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:63
 msgid "Start Syncing"
-msgstr ""
+msgstr "同期の開始"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:29
 msgid "Clone/Staging"
-msgstr ""
+msgstr "クローン/ステージング"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:30
 msgid "Set up SSH Access"
-msgstr ""
+msgstr "SSH アクセスの設定"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:665
 msgid "It is not required to modify rules if you are using OpenLiteSpeed."
-msgstr ""
+msgstr "OpenLiteSpeed を使用している場合は、ルールを変更する必要はありません。"
 
 #, fuzzy
 #~| msgid "Last Name"
