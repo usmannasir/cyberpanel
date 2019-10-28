@@ -48,3 +48,6 @@ class Transport(models.Model):
 class Pipeprograms(models.Model):
     source = models.CharField(max_length=80)
     destination = models.TextField()
+    
+    class Meta:
+        db_table = 'e_pipeprograms'
