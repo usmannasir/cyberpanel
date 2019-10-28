@@ -2,10 +2,12 @@
 import os
 import os.path
 import sys
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 
 import django
+
 try:
     django.setup()
 except:
@@ -25,11 +27,15 @@ from plogical.backupUtilities import backupUtilities
 from plogical.dnsUtilities import DNS
 from mailServer.models import Domains as eDomains
 from random import randint
+import json
+from django.shortcuts import HttpResponse
+
 try:
     from plogical.virtualHostUtilities import virtualHostUtilities
     from plogical.mailUtilities import mailUtilities
 except:
     pass
+
 
 class IncJobs(multi.Thread):
 
@@ -51,6 +57,72 @@ class IncJobs(multi.Thread):
             self.createBackup()
         elif self.function == 'restorePoint':
             self.restorePoint()
+        elif self.function == 'remoteRestore':
+            self.restorePoint()
+
+    def getRemoteBackups(self):
+        if self.jobid.destination == 'local':
+            path = '/home/%s/incbackup' % (self.website)
+            command = 'export RESTIC_PASSWORD=%s && restic -r %s snapshots' % (self.passwordFile, path)
+            return ProcessUtilities.outputExecutioner(command).split('\n')
+        elif self.jobid.destination[:4] == 'sftp':
+            path = '/home/backup/%s' % (self.website)
+            command = 'export RESTIC_PASSWORD=%s PATH=${PATH}:/usr/bin && restic -r %s:%s snapshots' % (
+                self.passwordFile, self.backupDestinations, path)
+            return ProcessUtilities.outputExecutioner(command).split('\n')
+        else:
+            path = '/home/%s/incbackup' % (self.website)
+            command = 'export RESTIC_PASSWORD=%s && restic -r %s snapshots' % (self.passwordFile, path)
+            return ProcessUtilities.outputExecutioner(command).split('\n')
+
+    def fetchCurrentBackups(self):
+        try:
+            self.website = self.extraArgs['website']
+            self.backupDestinations = self.extraArgs['backupDestinations']
+            self.passwordFile = self.extraArgs['password']
+
+            remotePath = '/home/backup/%s' % (self.website)
+
+            command = 'export RESTIC_PASSWORD=%s PATH=${PATH}:/usr/bin && restic -r %s:%s snapshots' % (
+            self.passwordFile, self.backupDestinations, remotePath)
+            result = ProcessUtilities.outputExecutioner(command).split('\n')
+
+            activator = 0
+            json_data = "["
+            checker = 0
+
+            for items in result:
+                if items.find('---------------') > -1:
+                    if activator == 0:
+                        activator = 1
+                        continue
+                    else:
+                        activator = 0
+
+                if activator:
+                    entry = items.split(' ')
+                    logging.writeToFile(str(entry))
+
+                    dic = {'id': entry[0],
+                           'date': "%s %s" % (entry[2], entry[3]),
+                           'host': entry[5],
+                           'path': entry[-1]
+                           }
+
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
+
+            json_data = json_data + ']'
+            final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
+            return HttpResponse(final_json)
+
+        except BaseException, msg:
+            logging.writeToFile(str(msg))
+
+    ####
 
     def getAWSData(self):
         key = self.backupDestinations.split('/')[-1]
@@ -58,22 +130,24 @@ class IncJobs(multi.Thread):
         secret = open(path, 'r').read()
         return key, secret
 
-    def awsFunction(self, fType, backupPath = None, snapshotID = None, bType = None):
+    def awsFunction(self, fType, backupPath=None, snapshotID=None, bType=None):
         try:
             if fType == 'backup':
                 key, secret = self.getAWSData()
                 command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s backup %s --password-file %s' % (
-                key, secret, self.website.domain, backupPath, self.passwordFile)
+                    key, secret, self.website.domain, backupPath, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
                 logging.statusWriter(self.statusPath, result, 1)
                 snapShotid = result.split(' ')[-2]
                 if bType == 'database':
-                    newSnapshot = JobSnapshots(job=self.jobid, type='%s:%s' % (bType, backupPath.split('/')[-1].strip('.sql')),
+                    newSnapshot = JobSnapshots(job=self.jobid,
+                                               type='%s:%s' % (bType, backupPath.split('/')[-1].strip('.sql')),
                                                snapshotid=snapShotid,
                                                destination=self.backupDestinations)
                 else:
-                    newSnapshot = JobSnapshots(job=self.jobid, type='%s:%s' % (bType, backupPath), snapshotid=snapShotid,
-                                           destination=self.backupDestinations)
+                    newSnapshot = JobSnapshots(job=self.jobid, type='%s:%s' % (bType, backupPath),
+                                               snapshotid=snapShotid,
+                                               destination=self.backupDestinations)
                 newSnapshot.save()
             else:
                 self.backupDestinations = self.jobid.destination
@@ -88,9 +162,9 @@ class IncJobs(multi.Thread):
             logging.statusWriter(self.statusPath, "%s [88][5009]" % (str(msg)), 1)
             return 0
 
-    def localFunction(self, backupPath, type, restore = None):
+    def localFunction(self, backupPath, type, restore=None):
         if restore == None:
-            command = 'restic -r %s backup %s --password-file %s' % (self.repoPath, backupPath, self.passwordFile)
+            command = 'restic -r %s backup %s --password-file %s --exclude %s' % (self.repoPath, backupPath, self.passwordFile, self.repoPath)
             result = ProcessUtilities.outputExecutioner(command)
             logging.statusWriter(self.statusPath, result, 1)
             snapShotid = result.split(' ')[-2]
@@ -107,11 +181,11 @@ class IncJobs(multi.Thread):
         else:
             repoLocation = '/home/%s/incbackup' % (self.website)
             command = 'restic -r %s restore %s --target / --password-file %s' % (
-            repoLocation, self.jobid.snapshotid, self.passwordFile)
+                repoLocation, self.jobid.snapshotid, self.passwordFile)
             result = ProcessUtilities.outputExecutioner(command)
             logging.statusWriter(self.statusPath, result, 1)
 
-    def sftpFunction(self, backupPath, type, restore = None):
+    def sftpFunction(self, backupPath, type, restore=None):
         if restore == None:
             remotePath = '/home/backup/%s' % (self.website.domain)
             command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s' % (
@@ -132,7 +206,7 @@ class IncJobs(multi.Thread):
         else:
             repoLocation = '/home/backup/%s' % (self.website)
             command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target / --password-file %s' % (
-            self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
+                self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
             result = ProcessUtilities.outputExecutioner(command)
             logging.statusWriter(self.statusPath, result, 1)
 
@@ -160,7 +234,8 @@ class IncJobs(multi.Thread):
             else:
                 self.awsFunction('restore', '', self.jobid.snapshotid)
 
-            if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(self.jobid.type.split(':')[1].rstrip('.sql'), '/home/cyberpanel', 'dummy', 'dummy') == 0:
+            if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(self.jobid.type.split(':')[1].rstrip('.sql'),
+                                                                   '/home/cyberpanel', 'dummy', 'dummy') == 0:
                 raise BaseException
 
             try:
@@ -188,7 +263,6 @@ class IncJobs(multi.Thread):
 
     def reconstructWithMeta(self):
         try:
-
 
             if self.jobid.destination == 'local':
                 self.localFunction('none', 'none', 1)
@@ -218,7 +292,6 @@ class IncJobs(multi.Thread):
             message = 'Starting restore of %s for %s.' % (self.jobid.snapshotid, self.website)
             logging.statusWriter(self.statusPath, message, 1)
             self.passwordFile = '/home/%s/%s' % (self.website, self.website)
-
 
             ##
 
@@ -433,10 +506,11 @@ class IncJobs(multi.Thread):
             else:
                 self.awsFunction('backup', backupPath, '', 'data')
 
-            logging.statusWriter(self.statusPath, 'Data for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
+            logging.statusWriter(self.statusPath,
+                                 'Data for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
             return 1
         except BaseException, msg:
-            logging.statusWriter(self.statusPath,'%s. [IncJobs.backupData.223][5009]' % str(msg), 1)
+            logging.statusWriter(self.statusPath, '%s. [IncJobs.backupData.223][5009]' % str(msg), 1)
             return 0
 
     def backupDatabases(self):
@@ -461,10 +535,11 @@ class IncJobs(multi.Thread):
                 try:
                     os.remove('/home/cyberpanel/%s.sql' % (items.dbName))
                 except BaseException, msg:
-                    logging.statusWriter(self.statusPath,'Failed to delete database: %s. [IncJobs.backupDatabases.456]' % str(msg), 1)
+                    logging.statusWriter(self.statusPath,
+                                         'Failed to delete database: %s. [IncJobs.backupDatabases.456]' % str(msg), 1)
             return 1
         except BaseException, msg:
-            logging.statusWriter(self.statusPath,'%s. [IncJobs.backupDatabases.269][5009]' % str(msg), 1)
+            logging.statusWriter(self.statusPath, '%s. [IncJobs.backupDatabases.269][5009]' % str(msg), 1)
             return 0
 
     def emailBackup(self):
@@ -480,11 +555,11 @@ class IncJobs(multi.Thread):
             else:
                 self.awsFunction('backup', backupPath, '', 'email')
 
-
-            logging.statusWriter(self.statusPath, 'Emails for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
+            logging.statusWriter(self.statusPath,
+                                 'Emails for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
             return 1
         except BaseException, msg:
-            logging.statusWriter(self.statusPath,'%s. [IncJobs.emailBackup.269][5009]' % str(msg), 1)
+            logging.statusWriter(self.statusPath, '%s. [IncJobs.emailBackup.269][5009]' % str(msg), 1)
             return 0
 
     def metaBackup(self):
@@ -500,11 +575,11 @@ class IncJobs(multi.Thread):
             else:
                 self.awsFunction('backup', backupPath, '', 'meta')
 
-
-            logging.statusWriter(self.statusPath, 'Meta for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
+            logging.statusWriter(self.statusPath,
+                                 'Meta for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
             return 1
         except BaseException, msg:
-            logging.statusWriter(self.statusPath,'%s. [IncJobs.metaBackup.269][5009]' % str(msg), 1)
+            logging.statusWriter(self.statusPath, '%s. [IncJobs.metaBackup.269][5009]' % str(msg), 1)
             return 0
 
     def initiateRepo(self):
@@ -518,20 +593,23 @@ class IncJobs(multi.Thread):
 
             elif self.backupDestinations[:4] == 'sftp':
                 remotePath = '/home/backup/%s' % (self.website.domain)
-                command = 'export PATH=${PATH}:/usr/bin && restic init --repo %s:%s --password-file %s' % (self.backupDestinations, remotePath, self.passwordFile)
+                command = 'export PATH=${PATH}:/usr/bin && restic init --repo %s:%s --password-file %s' % (
+                self.backupDestinations, remotePath, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
                 logging.statusWriter(self.statusPath, result, 1)
             else:
-                key,secret = self.getAWSData()
-                command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s init --password-file %s' % (key, secret, self.website.domain, self.passwordFile)
+                key, secret = self.getAWSData()
+                command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s init --password-file %s' % (
+                key, secret, self.website.domain, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
                 logging.statusWriter(self.statusPath, result, 1)
                 return 1
 
-            logging.statusWriter(self.statusPath, 'Repo %s initiated for %s.' % (self.backupDestinations, self.website.domain), 1)
+            logging.statusWriter(self.statusPath,
+                                 'Repo %s initiated for %s.' % (self.backupDestinations, self.website.domain), 1)
             return 1
         except BaseException, msg:
-            logging.statusWriter(self.statusPath,'%s. [IncJobs.initiateRepo.47][5009]' % str(msg), 1)
+            logging.statusWriter(self.statusPath, '%s. [IncJobs.initiateRepo.47][5009]' % str(msg), 1)
             return 0
 
     def createBackup(self):
@@ -562,7 +640,6 @@ class IncJobs(multi.Thread):
             command = 'chmod 600 %s' % (self.passwordFile)
             ProcessUtilities.executioner(command)
 
-
         if self.initiateRepo() == 0:
             return
 
@@ -589,6 +666,7 @@ class IncJobs(multi.Thread):
             command = 'rm -f %s' % (metaPathNew)
             ProcessUtilities.executioner(command)
         except BaseException, msg:
-            logging.statusWriter(self.statusPath,'Failed to delete meta file: %s. [IncJobs.createBackup.591]' % str(msg), 1)
+            logging.statusWriter(self.statusPath,
+                                 'Failed to delete meta file: %s. [IncJobs.createBackup.591]' % str(msg), 1)
 
         logging.statusWriter(self.statusPath, 'Completed', 1)

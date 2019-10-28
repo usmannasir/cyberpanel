@@ -288,36 +288,55 @@ def fetchCurrentBackups(request):
         else:
             return ACLManager.loadErrorJson()
 
-        website = Websites.objects.get(domain=backupDomain)
+        try:
+            backupDestinations = data['backupDestinations']
 
-        backups = website.incjob_set.all()
+            extraArgs = {}
+            extraArgs['website'] = backupDomain
+            extraArgs['backupDestinations'] = backupDestinations
+            try:
+                extraArgs['password'] = data['password']
+            except:
+                final_json = json.dumps({'status': 0, 'error_message': "Please supply the password."})
+                return HttpResponse(final_json)
 
-        json_data = "["
-        checker = 0
+            startJob = IncJobs('Dummpy', extraArgs)
+            return startJob.fetchCurrentBackups()
 
-        for items in reversed(backups):
+        except:
 
-            includes = ""
+            website = Websites.objects.get(domain=backupDomain)
 
-            jobs = items.jobsnapshots_set.all()
+            backups = website.incjob_set.all()
 
-            for job in jobs:
-                includes = '%s,%s:%s' % (includes, job.type, job.snapshotid)
+            json_data = "["
+            checker = 0
 
-            dic = {'id': items.id,
-                   'date': str(items.date),
-                   'includes': includes
-                   }
+            for items in reversed(backups):
 
-            if checker == 0:
-                json_data = json_data + json.dumps(dic)
-                checker = 1
-            else:
-                json_data = json_data + ',' + json.dumps(dic)
+                includes = ""
 
-        json_data = json_data + ']'
-        final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
-        return HttpResponse(final_json)
+                jobs = items.jobsnapshots_set.all()
+
+                for job in jobs:
+                    includes = '%s,%s:%s' % (includes, job.type, job.snapshotid)
+
+                dic = {'id': items.id,
+                       'date': str(items.date),
+                       'includes': includes
+                       }
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+            json_data = json_data + ']'
+            final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
+            return HttpResponse(final_json)
+
+
     except BaseException, msg:
         final_dic = {'status': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
@@ -687,3 +706,32 @@ def scheduleDelete(request):
     except BaseException, msg:
         final_json = json.dumps({'status': 0, 'error_message': str(msg)})
         return HttpResponse(final_json)
+
+def restoreRemoteBackups(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if ACLManager.currentContextPermission(currentACL, 'createBackup') == 0:
+            return ACLManager.loadError()
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+
+        destinations = []
+        destinations.append('local')
+
+        path = '/home/cyberpanel/sftp'
+
+        if os.path.exists(path):
+            for items in os.listdir(path):
+                destinations.append('sftp:%s' % (items))
+
+        path = '/home/cyberpanel/aws'
+        if os.path.exists(path):
+            for items in os.listdir(path):
+                destinations.append('s3:s3.amazonaws.com/%s' % (items))
+
+        return defRenderer(request, 'IncBackups/restoreRemoteBackups.html', {'websiteList': websitesName, 'destinations': destinations})
+    except BaseException, msg:
+        logging.writeToFile(str(msg))
+        return redirect(loadLoginPage)
