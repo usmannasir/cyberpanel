@@ -1,4 +1,5 @@
 #!/usr/local/CyberCP/bin/python2
+# coding=utf-8
 import os.path
 import sys
 import django
@@ -352,8 +353,26 @@ class MailServerManager:
                 for items in Pipeprograms.objects.filter(destination=destination, source=source):
                     items.delete()
 
-                    ### Michael Ramsey
-                    ## Treat your path deletion code here.
+                    ## Delete Email PIPE
+                    sourceusername = source.split("@")[0]
+                    virtualalias = '%s %salias' % (source, sourceusername)
+                    pipealias = '%salias:  "|%s"' % (sourceusername, destination)
+                    command = "sed -i 's/^" + source + ".*//g' /etc/postfix/virtual"
+                    ProcessUtilities.executioner(command)
+                    command = "sed -i 's/^" + sourceusername + ".*//g' /etc/aliases"
+                    ProcessUtilities.executioner(command)
+
+                    #### Restarting Postfix and newalias
+
+                    command = "postmap /etc/postfix/virtual"
+                    ProcessUtilities.executioner(command)
+
+                    command = "systemctl restart postfix"
+                    ProcessUtilities.executioner(command)
+                    ##
+
+                    command = "newaliases"
+                    ProcessUtilities.executioner(command)
 
             data_ret = {'status': 1, 'deleteForwardingStatus': 1, 'error_message': "None",
                         'successMessage': 'Successfully deleted!'}
@@ -387,7 +406,7 @@ class MailServerManager:
 
             if Forwardings.objects.filter(source=source, destination=destination).count() > 0:
                 data_ret = {'status': 0, 'createStatus': 0,
-                            'error_message': "You have already forwared to this destination."}
+                            'error_message': "You have already forwarded to this destination."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -402,8 +421,29 @@ class MailServerManager:
                 forwarding = Pipeprograms(source=source, destination=destination)
                 forwarding.save()
 
-                ### Michael Ramsey
-                ## Treat your path creation code here.
+                ## Create Email PIPE
+                ## example@domain.com examplealias
+                sourceusername = source.split("@")[0]
+                virtualalias = '%s %salias' % (source, sourceusername)
+                command = "echo '" + virtualalias + "' >> /etc/postfix/virtual"
+                ProcessUtilities.executioner(command)
+
+                ## examplealias: "|/usr/bin/php -q /home/domain.com/public_html/ticket/api/pipe.php"
+                pipealias = '%salias:  "|%s"' % (sourceusername, destination)
+                command = "echo '" + pipealias + "' >> /etc/aliases"
+                ProcessUtilities.executioner(command)
+
+                #### Restarting Postfix and newalias
+
+                command = "postmap /etc/postfix/virtual"
+                ProcessUtilities.executioner(command)
+
+                command = "systemctl restart postfix"
+                ProcessUtilities.executioner(command)
+                ##
+
+                command = "newaliases"
+                ProcessUtilities.executioner(command)
 
             data_ret = {'status': 1, 'createStatus': 1, 'error_message': "None", 'successMessage': 'Successfully Created!'}
             json_data = json.dumps(data_ret)
@@ -724,3 +764,4 @@ class MailServerManager:
             final_dic = {'abort': 1, 'installed': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
