@@ -157,7 +157,7 @@ class DNSManager:
             if not os.path.exists('/home/cyberpanel/powerdns'):
                 return render(request, 'dns/addDeleteDNSRecords.html', {"status": 0})
 
-            domainsList = ACLManager.findAllWebsites(currentACL, userID)
+            domainsList = ACLManager.findAllDomains(currentACL, userID)
 
             return render(request, 'dns/addDeleteDNSRecords.html', {"domainsList": domainsList, "status": 1})
 
