@@ -177,7 +177,7 @@ class DNSManager:
             currentSelection = data['currentSelection']
 
             admin = Administrator.objects.get(pk=userID)
-            if ACLManager.checkOwnership(zoneDomain, admin, currentACL) == 1:
+            if ACLManager.checkOwnershipZone(zoneDomain, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson()
