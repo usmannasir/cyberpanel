@@ -1882,7 +1882,7 @@ failovermethod=priority
             activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
             execfile(activate_this, dict(__file__=activate_this))
 
-            command = "pip install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
+            command = "pip3 install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
             Upgrade.executioner(command, 0)
 
         else:
