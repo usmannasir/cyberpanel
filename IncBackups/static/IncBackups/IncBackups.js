@@ -759,7 +759,6 @@ app.controller('restoreRemoteBackupsInc', function ($scope, $http, $timeout) {
     };
 
     $scope.fetchDetails = function () {
-        getBackupStatus();
         $scope.populateCurrentRecords();
     };
 
@@ -806,7 +805,12 @@ app.controller('restoreRemoteBackupsInc', function ($scope, $http, $timeout) {
                     $scope.runningBackup = false;
 
                     $scope.fileName = response.data.fileName;
-                    $scope.status = response.data.status;
+                    if(response.data.status === 1){
+                        $scope.status = 'Fetching status..'
+                    }else{
+                        $scope.status = response.data.status;
+                    }
+
                     $timeout(getBackupStatus, 2000);
 
                 }
@@ -870,54 +874,7 @@ app.controller('restoreRemoteBackupsInc', function ($scope, $http, $timeout) {
 
     };
 
-    $scope.restore = function (id) {
-
-        $scope.cyberpanelLoading = false;
-
-
-        url = "/IncrementalBackups/fetchRestorePoints";
-
-        var data = {
-            id: id,
-            websiteToBeBacked: $scope.websiteToBeBacked
-        };
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-        function ListInitialDatas(response) {
-            $scope.cyberpanelLoading = true;
-            if (response.data.status === 1) {
-                $scope.jobs = JSON.parse(response.data.data);
-            } else {
-                new PNotify({
-                    title: 'Operation Failed!',
-                    text: response.data.error_message,
-                    type: 'error'
-                });
-            }
-
-        }
-
-        function cantLoadInitialDatas(response) {
-            $scope.cyberpanelLoading = true;
-            new PNotify({
-                title: 'Operation Failed!',
-                text: 'Could not connect to server, please refresh this page',
-                type: 'error'
-            });
-        }
-
-    };
-
-    $scope.restorePoint = function (id, reconstruct) {
+    $scope.restorePoint = function (id, path) {
 
         $scope.status = '';
 
@@ -930,7 +887,10 @@ app.controller('restoreRemoteBackupsInc', function ($scope, $http, $timeout) {
         var data = {
             websiteToBeBacked: $scope.websiteToBeBacked,
             jobid: id,
-            reconstruct: reconstruct
+            reconstruct: 'remote',
+            path: path,
+            backupDestinations: $scope.backupDestinations,
+            password: $scope.password
 
         };
 

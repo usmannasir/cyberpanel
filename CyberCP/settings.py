@@ -65,7 +65,8 @@ INSTALLED_APPS = [
     'dockerManager',
     'containerization',
     'CLManager',
-    'IncBackups'
+    'IncBackups',
+    'WebTerminal'
 ]
 
 MIDDLEWARE = [

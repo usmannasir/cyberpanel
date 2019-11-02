@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-21 19:18+0500\n"
+"POT-Creation-Date: 2019-10-30 00:05+0500\n"
 "PO-Revision-Date: 2017-10-29 19:32+0100\n"
 "Last-Translator: \n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
@@ -48,7 +48,7 @@ msgstr ""
 #: CLManager/templates/CLManager/createPackage.html:15
 #: CLManager/templates/CLManager/createPackage.html:130
 #: baseTemplate/templates/baseTemplate/index.html:436
-#: baseTemplate/templates/baseTemplate/index.html:647
+#: baseTemplate/templates/baseTemplate/index.html:650
 #: packages/templates/packages/createPackage.html:13
 #: packages/templates/packages/createPackage.html:100
 #: packages/templates/packages/index.html:25
@@ -433,7 +433,7 @@ msgstr ""
 #: firewall/templates/firewall/firewall.html:119
 #: firewall/templates/firewall/modSecurityRulesPacks.html:109
 #: ftp/templates/ftp/listFTPAccounts.html:122
-#: mailServer/templates/mailServer/emailForwarding.html:107
+#: mailServer/templates/mailServer/emailForwarding.html:117
 #: managePHP/templates/managePHP/installExtensions.html:60
 msgid "ID"
 msgstr "ID"
@@ -441,10 +441,11 @@ msgstr "ID"
 #: IncBackups/templates/IncBackups/backupSchedule.html:151
 #: IncBackups/templates/IncBackups/createBackup.html:44
 #: IncBackups/templates/IncBackups/createBackup.html:164
+#: IncBackups/templates/IncBackups/restoreRemoteBackups.html:46
 #: backup/templates/backup/backup.html:41
 #: backup/templates/backup/backupSchedule.html:103
-#: mailServer/templates/mailServer/emailForwarding.html:91
-#: mailServer/templates/mailServer/emailForwarding.html:109
+#: mailServer/templates/mailServer/emailForwarding.html:101
+#: mailServer/templates/mailServer/emailForwarding.html:119
 msgid "Destination"
 msgstr "远程目录"
 
@@ -487,12 +488,14 @@ msgstr "取消备份"
 
 #: IncBackups/templates/IncBackups/createBackup.html:13
 #: IncBackups/templates/IncBackups/createBackup.html:23
+#: IncBackups/templates/IncBackups/restoreRemoteBackups.html:25
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
 msgid "Back up Website"
 msgstr "备份网站"
 
 #: IncBackups/templates/IncBackups/createBackup.html:15
+#: IncBackups/templates/IncBackups/restoreRemoteBackups.html:17
 #: backup/templates/backup/backup.html:14
 #: backup/templates/backup/restore.html:14
 #, fuzzy
@@ -507,6 +510,7 @@ msgid "This page can be used to create incremental backups for your websites."
 msgstr "这里是网站备份界面"
 
 #: IncBackups/templates/IncBackups/createBackup.html:33
+#: IncBackups/templates/IncBackups/restoreRemoteBackups.html:35
 #: backup/templates/backup/backup.html:30
 #: databases/templates/databases/createDatabase.html:26
 #: databases/templates/databases/deleteDatabase.html:26
@@ -537,6 +541,7 @@ msgid "Create Back up"
 msgstr "创建备份"
 
 #: IncBackups/templates/IncBackups/createBackup.html:128
+#: IncBackups/templates/IncBackups/restoreRemoteBackups.html:98
 #: backup/templates/backup/backup.html:104
 #: emailMarketing/templates/emailMarketing/sendEmails.html:152
 msgid "Date"
@@ -554,6 +559,7 @@ msgid "Job ID"
 msgstr ""
 
 #: IncBackups/templates/IncBackups/createBackup.html:162
+#: IncBackups/templates/IncBackups/restoreRemoteBackups.html:97
 msgid "Snapshot ID"
 msgstr ""
 
@@ -611,6 +617,7 @@ msgid "IP Address"
 msgstr "IP地址"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:54
+#: IncBackups/templates/IncBackups/restoreRemoteBackups.html:58
 #: backup/templates/backup/backupDestinations.html:38
 #: backup/templates/backup/remoteBackups.html:37
 #: databases/templates/databases/createDatabase.html:56
@@ -655,6 +662,57 @@ msgstr ""
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:124
 msgid "AWS_SECRET_ACCESS_KEY"
 msgstr ""
+
+#: IncBackups/templates/IncBackups/restoreRemoteBackups.html:3
+#: IncBackups/templates/IncBackups/restoreRemoteBackups.html:13
+#, fuzzy
+#| msgid "Cancel Backup"
+msgid "Restore Remote Incremental Backups"
+msgstr "取消备份"
+
+#: IncBackups/templates/IncBackups/restoreRemoteBackups.html:19
+#, fuzzy
+#| msgid "This page can be used to Back up your websites"
+msgid ""
+"This page can be used to restore remote incremental backups for your "
+"websites."
+msgstr "这里是网站备份界面"
+
+#: IncBackups/templates/IncBackups/restoreRemoteBackups.html:69
+msgid "Fetch Restore Points"
+msgstr ""
+
+#: IncBackups/templates/IncBackups/restoreRemoteBackups.html:99
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:76
+msgid "Host"
+msgstr ""
+
+#: IncBackups/templates/IncBackups/restoreRemoteBackups.html:100
+#: emailMarketing/templates/emailMarketing/createEmailList.html:33
+#: emailMarketing/templates/emailMarketing/manageLists.html:74
+#: emailMarketing/templates/emailMarketing/website.html:330
+#: websiteFunctions/templates/websiteFunctions/installJoomla.html:56
+#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:70
+#: websiteFunctions/templates/websiteFunctions/installWordPress.html:56
+#: websiteFunctions/templates/websiteFunctions/website.html:293
+msgid "Path"
+msgstr "路径"
+
+#: IncBackups/templates/IncBackups/restoreRemoteBackups.html:101
+#: dockerManager/templates/dockerManager/viewContainer.html:108
+#: emailMarketing/templates/emailMarketing/manageLists.html:145
+#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:79
+#: emailMarketing/templates/emailMarketing/sendEmails.html:157
+#: filemanager/templates/filemanager/index.html:207
+#: mailServer/templates/mailServer/emailForwarding.html:120
+#: mailServer/templates/mailServer/listEmails.html:65
+#: packages/templates/packages/listPackages.html:41
+#: serverStatus/templates/serverStatus/topProcesses.html:201
+#: userManagment/templates/userManagment/listUsers.html:37
+#, fuzzy
+#| msgid "FTP Functions"
+msgid "Actions"
+msgstr "FTP功能"
 
 #: backup/templates/backup/backup.html:15
 msgid "This page can be used to Back up your websites"
@@ -768,7 +826,7 @@ msgstr "远程目录已添加"
 #: mailServer/templates/mailServer/createEmailAccount.html:115
 #: mailServer/templates/mailServer/deleteEmailAccount.html:98
 #: mailServer/templates/mailServer/dkimManager.html:156
-#: mailServer/templates/mailServer/emailForwarding.html:73
+#: mailServer/templates/mailServer/emailForwarding.html:83
 #: manageSSL/templates/manageSSL/manageSSL.html:60
 #: userManagment/templates/userManagment/createUser.html:126
 #: userManagment/templates/userManagment/modifyUser.html:107
@@ -828,7 +886,7 @@ msgstr "备份 - CyberPanel"
 #: baseTemplate/templates/baseTemplate/homePage.html:97
 #: baseTemplate/templates/baseTemplate/index.html:562
 #: baseTemplate/templates/baseTemplate/index.html:564
-#: baseTemplate/templates/baseTemplate/index.html:614
+#: baseTemplate/templates/baseTemplate/index.html:617
 msgid "Back up"
 msgstr "备份"
 
@@ -941,8 +999,8 @@ msgstr "网站"
 
 #: backup/templates/backup/remoteBackups.html:108
 #: baseTemplate/templates/baseTemplate/homePage.html:143
-#: baseTemplate/templates/baseTemplate/index.html:749
-#: baseTemplate/templates/baseTemplate/index.html:751
+#: baseTemplate/templates/baseTemplate/index.html:752
+#: baseTemplate/templates/baseTemplate/index.html:754
 #: managePHP/templates/managePHP/installExtensions.html:61
 msgid "PHP"
 msgstr "PHP"
@@ -1113,16 +1171,16 @@ msgstr "Emails"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:117
 #: baseTemplate/templates/baseTemplate/homePage.html:119
-#: baseTemplate/templates/baseTemplate/index.html:615
-#: baseTemplate/templates/baseTemplate/index.html:616
+#: baseTemplate/templates/baseTemplate/index.html:618
+#: baseTemplate/templates/baseTemplate/index.html:619
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:39
 msgid "SSL"
 msgstr "SSL"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:130
-#: baseTemplate/templates/baseTemplate/index.html:724
-#: baseTemplate/templates/baseTemplate/index.html:726
-#: baseTemplate/templates/baseTemplate/index.html:768
+#: baseTemplate/templates/baseTemplate/index.html:727
+#: baseTemplate/templates/baseTemplate/index.html:729
+#: baseTemplate/templates/baseTemplate/index.html:771
 #: emailPremium/templates/emailPremium/policyServer.html:30
 #: serverStatus/templates/serverStatus/index.html:13
 msgid "Server Status"
@@ -1134,7 +1192,7 @@ msgstr "设置PHP参数"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:152
 #: baseTemplate/templates/baseTemplate/homePage.html:154
-#: baseTemplate/templates/baseTemplate/index.html:770
+#: baseTemplate/templates/baseTemplate/index.html:773
 #: dockerManager/templates/dockerManager/viewContainer.html:174
 #: emailMarketing/templates/emailMarketing/website.html:117
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:115
@@ -1144,8 +1202,8 @@ msgstr "日志"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:163
 #: baseTemplate/templates/baseTemplate/homePage.html:165
-#: baseTemplate/templates/baseTemplate/index.html:792
-#: baseTemplate/templates/baseTemplate/index.html:794
+#: baseTemplate/templates/baseTemplate/index.html:795
+#: baseTemplate/templates/baseTemplate/index.html:797
 msgid "Security"
 msgstr "安全"
 
@@ -1227,8 +1285,8 @@ msgid "Dashboard Quick Menu"
 msgstr "仪表盘"
 
 #: baseTemplate/templates/baseTemplate/index.html:305
-#: baseTemplate/templates/baseTemplate/index.html:706
-#: baseTemplate/templates/baseTemplate/index.html:708
+#: baseTemplate/templates/baseTemplate/index.html:709
+#: baseTemplate/templates/baseTemplate/index.html:711
 msgid "Tuning"
 msgstr "服务器设置"
 
@@ -1377,7 +1435,7 @@ msgid "Delete Website"
 msgstr "删除网站"
 
 #: baseTemplate/templates/baseTemplate/index.html:439
-#: baseTemplate/templates/baseTemplate/index.html:652
+#: baseTemplate/templates/baseTemplate/index.html:655
 #: packages/templates/packages/listPackages.html:13
 #: packages/templates/packages/listPackages.html:19
 #: userManagment/templates/userManagment/createACL.html:161
@@ -1638,7 +1696,19 @@ msgstr "添加/删除远程目录"
 msgid "Schedule Back ups"
 msgstr "备份计划"
 
-#: baseTemplate/templates/baseTemplate/index.html:622
+#: baseTemplate/templates/baseTemplate/index.html:608
+#, fuzzy
+#| msgid "Transfer Websites from Remote Server - CyberPanel"
+msgid "Restore from Remote Server"
+msgstr "从远程服务器恢复网站 - CyberPanel"
+
+#: baseTemplate/templates/baseTemplate/index.html:608
+#, fuzzy
+#| msgid "Restore Website"
+msgid "Restore from Remote"
+msgstr "还原网站"
+
+#: baseTemplate/templates/baseTemplate/index.html:625
 #: manageSSL/templates/manageSSL/index.html:29
 #: manageSSL/templates/manageSSL/index.html:31
 #: manageSSL/templates/manageSSL/manageSSL.html:13
@@ -1648,7 +1718,7 @@ msgstr "备份计划"
 msgid "Manage SSL"
 msgstr "管理SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:625
+#: baseTemplate/templates/baseTemplate/index.html:628
 #: manageSSL/templates/manageSSL/index.html:45
 #: manageSSL/templates/manageSSL/index.html:47
 #: userManagment/templates/userManagment/createACL.html:413
@@ -1656,7 +1726,7 @@ msgstr "管理SSL"
 msgid "Hostname SSL"
 msgstr "面板SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:628
+#: baseTemplate/templates/baseTemplate/index.html:631
 #: manageSSL/templates/manageSSL/index.html:60
 #: manageSSL/templates/manageSSL/index.html:62
 #: userManagment/templates/userManagment/createACL.html:422
@@ -1666,78 +1736,78 @@ msgstr "面板SSL"
 msgid "MailServer SSL"
 msgstr "服务器日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:635
+#: baseTemplate/templates/baseTemplate/index.html:638
 msgid "Server"
 msgstr "服务器设置"
 
-#: baseTemplate/templates/baseTemplate/index.html:638
-#: baseTemplate/templates/baseTemplate/index.html:640
+#: baseTemplate/templates/baseTemplate/index.html:641
+#: baseTemplate/templates/baseTemplate/index.html:643
 msgid "CloudLinux"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:641
-#: baseTemplate/templates/baseTemplate/index.html:669
-#: baseTemplate/templates/baseTemplate/index.html:686
-#: baseTemplate/templates/baseTemplate/index.html:827
+#: baseTemplate/templates/baseTemplate/index.html:644
+#: baseTemplate/templates/baseTemplate/index.html:672
+#: baseTemplate/templates/baseTemplate/index.html:689
+#: baseTemplate/templates/baseTemplate/index.html:830
 msgid "NEW"
 msgstr "新功能"
 
-#: baseTemplate/templates/baseTemplate/index.html:647
+#: baseTemplate/templates/baseTemplate/index.html:650
 #, fuzzy
 #| msgid "Create Package"
 msgid "Create Cloud Linux Package"
 msgstr "创建套餐"
 
-#: baseTemplate/templates/baseTemplate/index.html:652
+#: baseTemplate/templates/baseTemplate/index.html:655
 msgid "List Cloud Linux Package"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:657
+#: baseTemplate/templates/baseTemplate/index.html:660
 msgid "Monitor Usage of your Websites"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:657
+#: baseTemplate/templates/baseTemplate/index.html:660
 #, fuzzy
 #| msgid "Resource Usage"
 msgid "Monitor Usage"
 msgstr "资源使用量"
 
-#: baseTemplate/templates/baseTemplate/index.html:666
-#: baseTemplate/templates/baseTemplate/index.html:668
+#: baseTemplate/templates/baseTemplate/index.html:669
+#: baseTemplate/templates/baseTemplate/index.html:671
 #, fuzzy
 #| msgid "Configurations"
 msgid "Containerization"
 msgstr "配置"
 
-#: baseTemplate/templates/baseTemplate/index.html:675
+#: baseTemplate/templates/baseTemplate/index.html:678
 #, fuzzy
 #| msgid "Create Website"
 msgid "Create Website Limits"
 msgstr "创建网站"
 
-#: baseTemplate/templates/baseTemplate/index.html:675
+#: baseTemplate/templates/baseTemplate/index.html:678
 #, fuzzy
 #| msgid "Create Email"
 msgid "Create Limits"
 msgstr "创建Email"
 
-#: baseTemplate/templates/baseTemplate/index.html:683
+#: baseTemplate/templates/baseTemplate/index.html:686
 msgid "Docker"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:685
+#: baseTemplate/templates/baseTemplate/index.html:688
 #, fuzzy
 #| msgid "File Manager"
 msgid "Docker Manager"
 msgstr "文件管理"
 
-#: baseTemplate/templates/baseTemplate/index.html:692
+#: baseTemplate/templates/baseTemplate/index.html:695
 #, fuzzy
 #| msgid "Manage SSL"
 msgid "Manage Docker Images"
 msgstr "管理SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:692
+#: baseTemplate/templates/baseTemplate/index.html:695
 #: dockerManager/templates/dockerManager/index.html:49
 #: dockerManager/templates/dockerManager/index.html:51
 #: dockerManager/templates/dockerManager/manageImages.html:14
@@ -1746,13 +1816,13 @@ msgstr "管理SSL"
 msgid "Manage Images"
 msgstr "修改Email密码"
 
-#: baseTemplate/templates/baseTemplate/index.html:695
+#: baseTemplate/templates/baseTemplate/index.html:698
 #, fuzzy
 #| msgid "Manage SSL"
 msgid "Manage Docker Containers"
 msgstr "管理SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:695
+#: baseTemplate/templates/baseTemplate/index.html:698
 #: dockerManager/templates/dockerManager/index.html:29
 #: dockerManager/templates/dockerManager/index.html:31
 #, fuzzy
@@ -1760,32 +1830,32 @@ msgstr "管理SSL"
 msgid "Manage Containers"
 msgstr "管理PHP"
 
-#: baseTemplate/templates/baseTemplate/index.html:698
+#: baseTemplate/templates/baseTemplate/index.html:701
 #, fuzzy
 #| msgid "Create New User - CyberPanel"
 msgid "Create New Docker Container"
 msgstr "创建新用户 - CyberPanel"
 
-#: baseTemplate/templates/baseTemplate/index.html:698
+#: baseTemplate/templates/baseTemplate/index.html:701
 #, fuzzy
 #| msgid "Create New User"
 msgid "Create New Container"
 msgstr "创建新用户"
 
-#: baseTemplate/templates/baseTemplate/index.html:714
+#: baseTemplate/templates/baseTemplate/index.html:717
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
 #: tuning/templates/tuning/liteSpeedTuning.html:12
 msgid "LiteSpeed Tuning"
 msgstr "LiteSpeed设置"
 
-#: baseTemplate/templates/baseTemplate/index.html:717
+#: baseTemplate/templates/baseTemplate/index.html:720
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13
 #: tuning/templates/tuning/phpTuning.html:149
 msgid "PHP Tuning"
 msgstr "PHP设置"
 
-#: baseTemplate/templates/baseTemplate/index.html:732
+#: baseTemplate/templates/baseTemplate/index.html:735
 #: serverStatus/templates/serverStatus/topProcesses.html:14
 #: serverStatus/templates/serverStatus/topProcesses.html:179
 #, fuzzy
@@ -1793,46 +1863,46 @@ msgstr "PHP设置"
 msgid "Top Processes"
 msgstr "LiteSpeed进程"
 
-#: baseTemplate/templates/baseTemplate/index.html:735
+#: baseTemplate/templates/baseTemplate/index.html:738
 #: serverStatus/templates/serverStatus/index.html:25
 #: serverStatus/templates/serverStatus/index.html:28
 msgid "LiteSpeed Status"
 msgstr "LiteSpeed状态"
 
-#: baseTemplate/templates/baseTemplate/index.html:738
+#: baseTemplate/templates/baseTemplate/index.html:741
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:13
 #: serverStatus/templates/serverStatus/index.html:38
 msgid "CyberPanel Main Log File"
 msgstr "Cybapenl主日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:741
+#: baseTemplate/templates/baseTemplate/index.html:744
 #, fuzzy
 #| msgid "Server Status"
 msgid "Services Status"
 msgstr "服务器状态"
 
-#: baseTemplate/templates/baseTemplate/index.html:757
+#: baseTemplate/templates/baseTemplate/index.html:760
 #: managePHP/templates/managePHP/installExtensions.html:13
 msgid "Install PHP Extensions"
 msgstr "安装PHP扩展"
 
-#: baseTemplate/templates/baseTemplate/index.html:757
+#: baseTemplate/templates/baseTemplate/index.html:760
 #: managePHP/templates/managePHP/index.html:24
 #: managePHP/templates/managePHP/index.html:26
 msgid "Install Extensions"
 msgstr "安装扩展"
 
-#: baseTemplate/templates/baseTemplate/index.html:760
+#: baseTemplate/templates/baseTemplate/index.html:763
 #: managePHP/templates/managePHP/index.html:35
 #: managePHP/templates/managePHP/index.html:37
 msgid "Edit PHP Configs"
 msgstr "编辑PHP配置"
 
-#: baseTemplate/templates/baseTemplate/index.html:776
+#: baseTemplate/templates/baseTemplate/index.html:779
 msgid "Access Log"
 msgstr "访问日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:778
+#: baseTemplate/templates/baseTemplate/index.html:781
 #: emailMarketing/templates/emailMarketing/website.html:139
 #: serverLogs/templates/serverLogs/errorLogs.html:13
 #: serverLogs/templates/serverLogs/index.html:37
@@ -1842,7 +1912,7 @@ msgstr "访问日志"
 msgid "Error Logs"
 msgstr "错误日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:780
+#: baseTemplate/templates/baseTemplate/index.html:783
 #: emailPremium/templates/emailPremium/emailPage.html:144
 #: serverLogs/templates/serverLogs/emailLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:49
@@ -1850,40 +1920,40 @@ msgstr "错误日志"
 msgid "Email Logs"
 msgstr "Email日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:780
+#: baseTemplate/templates/baseTemplate/index.html:783
 msgid "Email Log"
 msgstr "Email日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:782
+#: baseTemplate/templates/baseTemplate/index.html:785
 #: serverLogs/templates/serverLogs/ftplogs.html:13
 #: serverLogs/templates/serverLogs/index.html:61
 #: serverLogs/templates/serverLogs/index.html:64
 msgid "FTP Logs"
 msgstr "FTP日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:784
+#: baseTemplate/templates/baseTemplate/index.html:787
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:14
 #, fuzzy
 #| msgid "Security Functions"
 msgid "ModSecurity Audit Logs"
 msgstr "安全"
 
-#: baseTemplate/templates/baseTemplate/index.html:784
+#: baseTemplate/templates/baseTemplate/index.html:787
 msgid "ModSec Audit Logs"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:800
+#: baseTemplate/templates/baseTemplate/index.html:803
 msgid "Firewall Home"
 msgstr "防火墙"
 
-#: baseTemplate/templates/baseTemplate/index.html:800
+#: baseTemplate/templates/baseTemplate/index.html:803
 #: firewall/templates/firewall/csf.html:119
 #: firewall/templates/firewall/index.html:25
 #: firewall/templates/firewall/index.html:27
 msgid "Firewall"
 msgstr "防火墙"
 
-#: baseTemplate/templates/baseTemplate/index.html:802
+#: baseTemplate/templates/baseTemplate/index.html:805
 #: firewall/templates/firewall/index.html:36
 #: firewall/templates/firewall/index.html:38
 #: firewall/templates/firewall/secureSSH.html:13
@@ -1891,21 +1961,21 @@ msgstr "防火墙"
 msgid "Secure SSH"
 msgstr "SSH加固"
 
-#: baseTemplate/templates/baseTemplate/index.html:804
+#: baseTemplate/templates/baseTemplate/index.html:807
 #: firewall/templates/firewall/index.html:58
 #, fuzzy
 #| msgid "Edit PHP Configurations"
 msgid "ModSecurity Configurations"
 msgstr "设置PHP参数"
 
-#: baseTemplate/templates/baseTemplate/index.html:804
+#: baseTemplate/templates/baseTemplate/index.html:807
 #: firewall/templates/firewall/index.html:60
 #, fuzzy
 #| msgid "Security"
 msgid "ModSecurity Conf"
 msgstr "安全"
 
-#: baseTemplate/templates/baseTemplate/index.html:807
+#: baseTemplate/templates/baseTemplate/index.html:810
 #: firewall/templates/firewall/index.html:69
 #: firewall/templates/firewall/index.html:71
 #: firewall/templates/firewall/modSecurityRules.html:20
@@ -1914,18 +1984,18 @@ msgstr "安全"
 msgid "ModSecurity Rules"
 msgstr "安全"
 
-#: baseTemplate/templates/baseTemplate/index.html:810
+#: baseTemplate/templates/baseTemplate/index.html:813
 #: firewall/templates/firewall/index.html:80
 #: firewall/templates/firewall/index.html:82
 msgid "ModSecurity Rules Packs"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:813
+#: baseTemplate/templates/baseTemplate/index.html:816
 #: firewall/templates/firewall/index.html:47
 msgid "ConfigServer Security & Firewall (CSF)"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:813
+#: baseTemplate/templates/baseTemplate/index.html:816
 #: firewall/templates/firewall/csf.html:21
 #: firewall/templates/firewall/csf.html:86
 #: firewall/templates/firewall/csf.html:95
@@ -1933,47 +2003,47 @@ msgstr ""
 msgid "CSF"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:816
+#: baseTemplate/templates/baseTemplate/index.html:819
 #, fuzzy
 #| msgid "Configurations"
 msgid "CageFS Configurations"
 msgstr "配置"
 
-#: baseTemplate/templates/baseTemplate/index.html:816
+#: baseTemplate/templates/baseTemplate/index.html:819
 msgid "CageFS"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:824
-#: baseTemplate/templates/baseTemplate/index.html:826
+#: baseTemplate/templates/baseTemplate/index.html:827
+#: baseTemplate/templates/baseTemplate/index.html:829
 #, fuzzy
 #| msgid "Mail Functions"
 msgid "Mail Settings"
 msgstr "邮件功能"
 
-#: baseTemplate/templates/baseTemplate/index.html:833
+#: baseTemplate/templates/baseTemplate/index.html:836
 #: emailPremium/templates/emailPremium/policyServer.html:20
 msgid "Email Policy Server"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:836
+#: baseTemplate/templates/baseTemplate/index.html:839
 #, fuzzy
 #| msgid "Email Logs"
 msgid "Email Limits"
 msgstr "Email日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:839
+#: baseTemplate/templates/baseTemplate/index.html:842
 #, fuzzy
 #| msgid "Configurations"
 msgid "SpamAssassin Configurations"
 msgstr "配置"
 
-#: baseTemplate/templates/baseTemplate/index.html:839
+#: baseTemplate/templates/baseTemplate/index.html:842
 #: emailPremium/templates/emailPremium/SpamAssassin.html:25
 #: firewall/templates/firewall/spamassassin.html:20
 msgid "SpamAssassin"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:842
+#: baseTemplate/templates/baseTemplate/index.html:845
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:14
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:22
 #: emailMarketing/templates/emailMarketing/website.html:978
@@ -1983,45 +2053,45 @@ msgstr ""
 msgid "Email Marketing"
 msgstr "Email日志"
 
-#: baseTemplate/templates/baseTemplate/index.html:850
-#: baseTemplate/templates/baseTemplate/index.html:852
+#: baseTemplate/templates/baseTemplate/index.html:853
+#: baseTemplate/templates/baseTemplate/index.html:855
 #, fuzzy
 #| msgid "Manage SSL"
 msgid "Manage Services"
 msgstr "管理SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:858
+#: baseTemplate/templates/baseTemplate/index.html:861
 #: manageServices/templates/manageServices/managePowerDNS.html:25
 #, fuzzy
 #| msgid "Manage SSL"
 msgid "Manage PowerDNS"
 msgstr "管理SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:861
+#: baseTemplate/templates/baseTemplate/index.html:864
 #: manageServices/templates/manageServices/managePostfix.html:22
 msgid "Manage Postfix"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:864
+#: baseTemplate/templates/baseTemplate/index.html:867
 #, fuzzy
 #| msgid "Manage SSL"
 msgid "Manage FTP"
 msgstr "管理SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:871
-#: baseTemplate/templates/baseTemplate/index.html:873
+#: baseTemplate/templates/baseTemplate/index.html:874
+#: baseTemplate/templates/baseTemplate/index.html:876
 #: pluginHolder/templates/pluginHolder/plugins.html:14
 #: pluginHolder/templates/pluginHolder/plugins.html:21
 msgid "Plugins"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:879
+#: baseTemplate/templates/baseTemplate/index.html:882
 #, fuzzy
 #| msgid "Install Extensions"
 msgid "Installed Plugins"
 msgstr "安装扩展"
 
-#: baseTemplate/templates/baseTemplate/index.html:879
+#: baseTemplate/templates/baseTemplate/index.html:882
 #, fuzzy
 #| msgid "Install"
 msgid "Installed"
@@ -2862,21 +2932,6 @@ msgstr "端口"
 msgid "to"
 msgstr "停止"
 
-#: dockerManager/templates/dockerManager/viewContainer.html:108
-#: emailMarketing/templates/emailMarketing/manageLists.html:145
-#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:79
-#: emailMarketing/templates/emailMarketing/sendEmails.html:157
-#: filemanager/templates/filemanager/index.html:207
-#: mailServer/templates/mailServer/emailForwarding.html:110
-#: mailServer/templates/mailServer/listEmails.html:65
-#: packages/templates/packages/listPackages.html:41
-#: serverStatus/templates/serverStatus/topProcesses.html:201
-#: userManagment/templates/userManagment/listUsers.html:37
-#, fuzzy
-#| msgid "FTP Functions"
-msgid "Actions"
-msgstr "FTP功能"
-
 #: dockerManager/templates/dockerManager/viewContainer.html:227
 #, fuzzy
 #| msgid "Configurations"
@@ -2956,16 +3011,6 @@ msgstr ""
 #| msgid "Last Name"
 msgid "List Name"
 msgstr "姓"
-
-#: emailMarketing/templates/emailMarketing/createEmailList.html:33
-#: emailMarketing/templates/emailMarketing/manageLists.html:74
-#: emailMarketing/templates/emailMarketing/website.html:330
-#: websiteFunctions/templates/websiteFunctions/installJoomla.html:56
-#: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:70
-#: websiteFunctions/templates/websiteFunctions/installWordPress.html:56
-#: websiteFunctions/templates/websiteFunctions/website.html:293
-msgid "Path"
-msgstr "路径"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:42
 #, fuzzy
@@ -3161,10 +3206,6 @@ msgstr "保存Rewrite rules"
 #| msgid "Select Owner"
 msgid "Owner"
 msgstr "选择拥有者"
-
-#: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:76
-msgid "Host"
-msgstr ""
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:91
 msgid "Verify Host"
@@ -5120,14 +5161,22 @@ msgstr ""
 msgid "This page help you setup email forwarding for your emails."
 msgstr ""
 
-#: mailServer/templates/mailServer/emailForwarding.html:87
-#: mailServer/templates/mailServer/emailForwarding.html:108
+#: mailServer/templates/mailServer/emailForwarding.html:61
+msgid "Forwarding Options"
+msgstr ""
+
+#: mailServer/templates/mailServer/emailForwarding.html:97
+#: mailServer/templates/mailServer/emailForwarding.html:118
 #, fuzzy
 #| msgid "Resource"
 msgid "Source"
 msgstr "资源"
 
-#: mailServer/templates/mailServer/emailForwarding.html:96
+#: mailServer/templates/mailServer/emailForwarding.html:101
+msgid "or path to the program"
+msgstr ""
+
+#: mailServer/templates/mailServer/emailForwarding.html:106
 #, fuzzy
 #| msgid "Create Email"
 msgid "Forward Email"

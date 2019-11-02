@@ -3612,6 +3612,65 @@ milter_default_action = accept
 
 
 
+            ### Virtual Env 3
+
+            if distro == centos:
+                command = 'yum -y install python36 -y'
+                preFlightsChecks.call(command, distro, '[install python36]',
+                                      'install python36',
+                                      1, 0, os.EX_OSERR)
+
+                command = 'virtualenv -p python3 /usr/local/CyberPanel/p3'
+                preFlightsChecks.call(command, distro, '[install python36]',
+                                      'install python36',
+                                      1, 0, os.EX_OSERR)
+
+                env_path = '/usr/local/CyberPanel/p3'
+                subprocess.call(['virtualenv', env_path])
+                activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
+                execfile(activate_this, dict(__file__=activate_this))
+
+                command = "pip install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
+                preFlightsChecks.call(command, distro, '[install python36]',
+                                      'install python36',
+                                      1, 0, os.EX_OSERR)
+
+            else:
+                command = 'apt install -y python3-pip'
+                preFlightsChecks.call(command, distro, '[install python36]',
+                                      'install python36',
+                                      1, 0, os.EX_OSERR)
+
+                command = 'apt install build-essential libssl-dev libffi-dev python3-dev -y'
+                preFlightsChecks.call(command, distro, '[install python36]',
+                                      'install python36',
+                                      1, 0, os.EX_OSERR)
+
+                command = 'apt install -y python3-venv'
+                preFlightsChecks.call(command, distro, '[install python36]',
+                                      'install python36',
+                                      1, 0, os.EX_OSERR)
+
+                command = '/usr/local/CyberPanel/p3'
+                preFlightsChecks.call(command, distro, '[install python36]',
+                                      'install python36',
+                                      1, 0, os.EX_OSERR)
+
+                env_path = '/usr/local/CyberPanel/p3'
+                subprocess.call(['virtualenv', env_path])
+                activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
+                execfile(activate_this, dict(__file__=activate_this))
+
+                command = "pip3 install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
+                preFlightsChecks.call(command, distro, '[install python36]',
+                                      'install python36',
+                                      1, 0, os.EX_OSERR)
+
+
+
+
+
+
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [setupVirtualEnv]")
             return 0

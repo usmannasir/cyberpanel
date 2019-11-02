@@ -220,7 +220,27 @@
             <div id="page-title">
                 <h2>{% trans "LiteSpeed Status:" %} <img src="{% static 'images/lsON.png' %}"></h2>
                 <p>{% trans "On this page you can get information regarding your LiteSpeed processes." %}</p>
+                {% if message != 0 %}
+                    {% if message == 2 %}
+                        <div style="margin-top: 2%" class="alert alert-danger">
+                            <div class="alert-content">
+                                <h4 class="alert-title">Warning</h4>
+                                <p>It looks like your license does not include CyberPanel bundle. <a
+                                        href="https://cyberpanel.net/cyberpanel-enterprise/">Click here</a> to see the
+                                    packages and upgrade to CyberPanel bundle.</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div style="margin-top: 2%" class="alert alert-danger">
+                            <div class="alert-content">
+                                <h4 class="alert-title">Warning</h4>
+                                <p>It looks like your license has expired. Kindly renew your license.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
             </div>
+
             {% if processList %}
 
                 <div class="example-box-wrapper">

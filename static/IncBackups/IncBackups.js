@@ -743,3 +743,180 @@ app.controller('scheduleBackupInc', function ($scope, $http) {
 
 
 });
+
+
+app.controller('restoreRemoteBackupsInc', function ($scope, $http, $timeout) {
+
+    $scope.destination = true;
+    $scope.backupButton = true;
+    $scope.cyberpanelLoading = true;
+    $scope.runningBackup = true;
+    $scope.restoreSt = true;
+
+    $scope.showThings = function () {
+        $scope.destination = false;
+        $scope.runningBackup = true;
+    };
+
+    $scope.fetchDetails = function () {
+        $scope.populateCurrentRecords();
+    };
+
+    function getBackupStatus() {
+
+        $scope.cyberpanelLoadingBottom = false;
+
+        url = "/IncrementalBackups/getBackupStatus";
+
+        var data = {
+            websiteToBeBacked: $scope.websiteToBeBacked,
+            tempPath: $scope.tempPath
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.backupStatus === 1) {
+
+                if (response.data.abort === 1) {
+                    $timeout.cancel();
+                    $scope.cyberpanelLoadingBottom = true;
+                    $scope.destination = false;
+                    $scope.runningBackup = false;
+                    $scope.backupButton = false;
+                    $scope.cyberpanelLoading = true;
+                    $scope.fileName = response.data.fileName;
+                    $scope.status = response.data.status;
+                    $scope.populateCurrentRecords();
+                    return;
+                } else {
+                    $scope.destination = true;
+                    $scope.backupButton = true;
+                    $scope.runningBackup = false;
+
+                    $scope.fileName = response.data.fileName;
+                    if(response.data.status === 1){
+                        $scope.status = 'Fetching status..'
+                    }else{
+                        $scope.status = response.data.status;
+                    }
+
+                    $timeout(getBackupStatus, 2000);
+
+                }
+            } else {
+                $timeout.cancel();
+                $scope.cyberpanelLoadingBottom = true;
+                $scope.cyberpanelLoading = true;
+                $scope.backupButton = false;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+        }
+
+    }
+
+    $scope.populateCurrentRecords = function () {
+        $scope.cyberpanelLoading = false;
+
+        url = "/IncrementalBackups/fetchCurrentBackups";
+
+        var data = {
+            websiteToBeBacked: $scope.websiteToBeBacked,
+            backupDestinations: $scope.backupDestinations,
+            password: $scope.password
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.records = JSON.parse(response.data.data);
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
+    $scope.restorePoint = function (id, path) {
+
+        $scope.status = '';
+
+        $scope.cyberpanelLoading = false;
+        $scope.restoreSt = false;
+
+
+        url = "/IncrementalBackups/restorePoint";
+
+        var data = {
+            websiteToBeBacked: $scope.websiteToBeBacked,
+            jobid: id,
+            reconstruct: 'remote',
+            path: path,
+            backupDestinations: $scope.backupDestinations,
+            password: $scope.password
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                $scope.tempPath = response.data.tempPath;
+                getBackupStatus();
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+        }
+
+    };
+
+
+});

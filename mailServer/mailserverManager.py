@@ -356,7 +356,7 @@ class MailServerManager:
                     ## Delete Email PIPE
                     sourceusername = source.split("@")[0]
                     virtualalias = '%s %salias' % (source, sourceusername)
-                    pipealias = '%salias:  "|%s"' % (sourceusername, destination)
+                    pipealias = '%salias:  "|%s"' % (sourceusername, destination)
                     command = "sed -i 's/^" + source + ".*//g' /etc/postfix/virtual"
                     ProcessUtilities.executioner(command)
                     command = "sed -i 's/^" + sourceusername + ".*//g' /etc/aliases"
@@ -429,7 +429,7 @@ class MailServerManager:
                 ProcessUtilities.executioner(command)
 
                 ## examplealias: "|/usr/bin/php -q /home/domain.com/public_html/ticket/api/pipe.php"
-                pipealias = '%salias:  "|%s"' % (sourceusername, destination)
+                pipealias = '%salias:  "|%s"' % (sourceusername, destination)
                 command = "echo '" + pipealias + "' >> /etc/aliases"
                 ProcessUtilities.executioner(command)
 

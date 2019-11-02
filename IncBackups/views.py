@@ -550,11 +550,21 @@ def restorePoint(request):
 
         tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-        extraArgs = {}
-        extraArgs['website'] = backupDomain
-        extraArgs['jobid'] = jobid
-        extraArgs['tempPath'] = tempPath
-        extraArgs['reconstruct'] = data['reconstruct']
+        if data['reconstruct'] == 'remote':
+            extraArgs = {}
+            extraArgs['website'] = backupDomain
+            extraArgs['jobid'] = jobid
+            extraArgs['tempPath'] = tempPath
+            extraArgs['reconstruct'] = data['reconstruct']
+            extraArgs['backupDestinations'] = data['backupDestinations']
+            extraArgs['password'] = data['password']
+            extraArgs['path'] = data['path']
+        else:
+            extraArgs = {}
+            extraArgs['website'] = backupDomain
+            extraArgs['jobid'] = jobid
+            extraArgs['tempPath'] = tempPath
+            extraArgs['reconstruct'] = data['reconstruct']
 
 
         startJob = IncJobs('restorePoint', extraArgs)
@@ -718,7 +728,6 @@ def restoreRemoteBackups(request):
         websitesName = ACLManager.findAllSites(currentACL, userID)
 
         destinations = []
-        destinations.append('local')
 
         path = '/home/cyberpanel/sftp'
 

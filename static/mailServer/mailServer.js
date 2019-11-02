@@ -898,6 +898,7 @@ app.controller('emailForwarding', function ($scope, $http) {
 
 
         var data = {
+            forwardingOption: $scope.forwardingOption,
             emailAddress: $scope.selectedEmail
         };
 
@@ -971,6 +972,7 @@ app.controller('emailForwarding', function ($scope, $http) {
 
 
         var data = {
+            forwardingOption: $scope.forwardingOption,
             destination: destination,
             source: source
         };
@@ -1045,6 +1047,7 @@ app.controller('emailForwarding', function ($scope, $http) {
 
 
         var data = {
+            forwardingOption: $scope.forwardingOption,
             source: $scope.selectedEmail,
             destination: $scope.destinationEmail
         };

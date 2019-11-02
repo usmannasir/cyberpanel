@@ -72,6 +72,19 @@
                             </div>
                         </div>
 
+                        <!---- if Back up is running ----->
+
+                        <div ng-hide="runningBackup" class="form-group">
+                            <div class="col-sm-12">
+                                <div class="col-sm-12">
+                                    <textarea ng-model="status" class="form-control" rows="10"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!---- if Back up is running------>
+
                         <!------ List of records --------------->
 
                         <div class="form-group">
@@ -95,8 +108,7 @@
                                         <td ng-bind="record.host"></td>
                                         <td ng-bind="record.path"></td>
                                         <td>
-                                            <a ng-click="restore(record.id)" data-toggle="modal" data-target="#settings"
-                                               ng-click='deleteCLPackage()'
+                                            <a ng-click="restorePoint(record.id, record.path)"
                                                class="btn btn-border btn-alt border-green btn-link font-green"
                                                title=""><span>Restore</span></a>
                                         </td>

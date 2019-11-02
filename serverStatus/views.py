@@ -21,6 +21,10 @@ from plogical.installUtilities import installUtilities
 
 # Create your views here.
 
+NOTHING = 0
+BUNDLE = 2
+EXPIRE = 3
+
 def serverStatusHome(request):
     try:
         userID = request.session['userID']
@@ -44,6 +48,17 @@ def litespeedStatus(request):
         OLS = 0
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             OLS = 1
+
+        message = 0
+
+        if request.META['QUERY_STRING'] == 'bundle':
+            message = ''
+            message = BUNDLE
+        elif request.META['QUERY_STRING'] == 'expire':
+            message = 'It looks like your license has expired. Kindly renew your license.'
+            message = EXPIRE
+        else:
+            message = NOTHING
         try:
 
             versionInformation = ProcessUtilities.outputExecutioner(["/usr/local/lsws/bin/lshttpd", "-v"]).split("\n")
@@ -64,14 +79,14 @@ def litespeedStatus(request):
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
             return render(request, "serverStatus/litespeedStatus.html", {"processList": processList,
                                                                          "liteSpeedVersionStatus": "For some reaons not able to load version details, see CyberCP main log file.",
-                                                                         'OLS': OLS})
+                                                                         'OLS': OLS , 'message': message})
         if (processList != 0):
             dataForHtml = {"processList": processList, "lsversion": lsversion, "modules": modules,
-                           "loadedModules": loadedModules, 'OLS': OLS}
+                           "loadedModules": loadedModules, 'OLS': OLS, 'message': message}
             return render(request, "serverStatus/litespeedStatus.html", dataForHtml)
         else:
             dataForHtml = {"lsversion": lsversion, "modules": modules,
-                           "loadedModules": loadedModules, 'OLS': OLS}
+                           "loadedModules": loadedModules, 'OLS': OLS, 'message': message}
             return render(request, "serverStatus/litespeedStatus.html", dataForHtml)
 
     except KeyError, msg:

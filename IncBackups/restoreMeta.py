@@ -127,6 +127,12 @@ class restoreMeta():
                     else:
                         logging.statusWriter(statusPath, 'Database: %s successfully created.' % (dbName))
 
+                    mysqlUtilities.mysqlUtilities.changePassword(dbUser, dbPassword, 1)
+                    if mysqlUtilities.mysqlUtilities.changePassword(dbUser, dbPassword, 1) == 0:
+                        logging.statusWriter(statusPath, 'Failed changing password for database: %s' % (dbName))
+                    else:
+                        logging.statusWriter(statusPath, 'Password successfully changed for database: %s.' % (dbName))
+
 
                     try:
                         newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)

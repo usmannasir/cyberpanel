@@ -1007,6 +1007,18 @@ class Upgrade:
             except:
                 pass
 
+            query = """CREATE TABLE `mailServer_pipeprograms` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `source` varchar(80) NOT NULL,
+  `destination` longtext NOT NULL,
+  PRIMARY KEY (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             try:
                 connection.close()
             except:
@@ -1844,6 +1856,49 @@ failovermethod=priority
             writeToFile.close()
 
     @staticmethod
+    def p3():
+
+        ### Virtual Env 3
+
+        CentOSPath = '/etc/redhat-release'
+
+        if os.path.exists(CentOSPath):
+            command = 'yum -y install python36 -y'
+            Upgrade.executioner(command, 0)
+
+            command = 'virtualenv -p python3 /usr/local/CyberPanel/p3'
+            Upgrade.executioner(command, 0)
+
+            env_path = '/usr/local/CyberPanel/p3'
+            subprocess.call(['virtualenv', env_path])
+            activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
+            execfile(activate_this, dict(__file__=activate_this))
+
+            command = "pip install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
+            Upgrade.executioner(command, 0)
+
+        else:
+            command = 'apt install -y python3-pip'
+            Upgrade.executioner(command, 0)
+
+            command = 'apt install build-essential libssl-dev libffi-dev python3-dev -y'
+            Upgrade.executioner(command, 0)
+
+            command = 'apt install -y python3-venv'
+            Upgrade.executioner(command, 0)
+
+            command = '/usr/local/CyberPanel/p3'
+            Upgrade.executioner(command, 0)
+
+            env_path = '/usr/local/CyberPanel/p3'
+            subprocess.call(['virtualenv', env_path])
+            activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
+            execfile(activate_this, dict(__file__=activate_this))
+
+            command = "pip3 install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
+            Upgrade.executioner(command, 0)
+
+    @staticmethod
     def upgrade():
 
         # Upgrade.stdOut("Upgrades are currently disabled")
@@ -1919,6 +1974,7 @@ failovermethod=priority
         Upgrade.someDirectories()
         Upgrade.installLSCPD()
         Upgrade.GeneralMigrations()
+        Upgrade.p3()
 
         if os.path.exists(postfixPath):
             Upgrade.upgradeDovecot()

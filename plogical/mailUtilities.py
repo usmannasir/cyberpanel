@@ -17,6 +17,7 @@ import os, getpass
 import hashlib
 import bcrypt
 import getpass
+import smtplib
 
 try:
     from mailServer.models import Domains, EUsers
@@ -31,6 +32,14 @@ class mailUtilities:
     spamassassinInstallLogPath = "/home/cyberpanel/spamassassinInstallLogPath"
     cyberPanelHome = "/home/cyberpanel"
 
+    @staticmethod
+    def SendEmail(sender, receivers, message):
+        try:
+            smtpObj = smtplib.SMTP('localhost')
+            smtpObj.sendmail(sender, receivers, message)
+            print "Successfully sent email"
+        except BaseException, msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
     @staticmethod
     def AfterEffects(domain):
         path = "/usr/local/CyberCP/install/rainloop/cyberpanel.net.ini"

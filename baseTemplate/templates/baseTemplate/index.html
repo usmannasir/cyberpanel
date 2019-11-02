@@ -98,7 +98,6 @@
     <link rel="stylesheet" type="text/css" href="{% static 'websiteFunctions/websiteFunctions.css' %}">
     <link rel="stylesheet" type="text/css" href="https://www.jsdelivr.com/package/npm/fontawesome">
 
-
     <script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-core.min.js' %}"></script>
     <script type="text/javascript">
         $(window).load(function () {
@@ -486,7 +485,7 @@
                                                                 title="{% trans 'Create Nameserver' %}"><span>{% trans "Create Nameserver" %}</span></a>
                                 </li>
                                 <li class="serverACL"><a href="{% url 'configureDefaultNameServers' %}"
-                                                                title="{% trans 'Configure Default Nameservers' %}"><span>{% trans "Config Default Nameservers" %}</span></a>
+                                                         title="{% trans 'Configure Default Nameservers' %}"><span>{% trans "Config Default Nameservers" %}</span></a>
                                 </li>
                                 <li class="createDNSZone"><a href="{% url 'createDNSZone' %}"
                                                              title="{% trans 'Create DNS Zone' %}"><span>{% trans "Create DNS Zone" %}</span></a>
@@ -636,6 +635,23 @@
                     </li>
 
                     <li class="header serverACL"><span>{% trans "Server" %}</span></li>
+
+
+                    <li class="serverACL">
+                        <a href="#" title="{% trans 'Terminal' %}">
+                            <i class="glyph-icon icon-linecons-fire"></i>
+                            <span>{% trans "Web Based Terminal" %}</span>
+                            <span class="bs-label badge-yellow">{% trans "NEW" %}</span>
+                        </a>
+                        <div class="sidebar-submenu">
+
+                            <ul>
+                                <li><a href="{% url 'terminal' %}"
+                                       title="{% trans 'Web Terminal' %}"><span>{% trans "Terminal" %}</span></a>
+                                </li>
+                            </ul>
+                        </div><!-- .sidebar-submenu -->
+                    </li>
 
                     <li class="serverACL">
                         <a href="#" title="{% trans 'CloudLinux' %}">
@@ -934,6 +950,10 @@
     <script src="{% static 'containerization/containerization.js' %}"></script>
     <script src="{% static 'CLManager/CLManager.js' %}"></script>
     <script src="{% static 'IncBackups/IncBackups.js' %}"></script>
+    <script src="{% static 'WebTerminal/term.js' %}"></script>
+    <script src="{% static 'WebTerminal/ws.js' %}"></script>
+    <script src="{% static 'WebTerminal/main.js' %}"></script>
+
 </div>
 </body>
 </html>

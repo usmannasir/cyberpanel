@@ -1070,6 +1070,7 @@ class WebsiteManager:
 
         execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
         execPath = execPath + " saveRewriteRules --virtualHostName " + self.domain + " --path " + filePath + " --tempPath " + tempPath
+        logging.CyberCPLogFileWriter.writeToFile(execPath)
 
         output = ProcessUtilities.outputExecutioner(execPath, externalApp)
 
