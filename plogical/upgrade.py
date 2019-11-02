@@ -1348,6 +1348,11 @@ class Upgrade:
                 if items.find('IncBackups') > -1:
                     IncBackups = 0
 
+            WebTerminal = 1
+            for items in data:
+                if items.find('WebTerminal') > -1:
+                    WebTerminal = 0
+
             Upgrade.stdOut('Restoring settings file!')
 
             writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
@@ -1382,6 +1387,9 @@ class Upgrade:
 
                     if IncBackups == 1:
                         writeToFile.writelines("    'IncBackups',\n")
+
+                    if WebTerminal == 1:
+                        writeToFile.writelines("    'WebTerminal',\n")
 
                 else:
                     writeToFile.writelines(items)
