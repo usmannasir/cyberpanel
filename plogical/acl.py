@@ -468,7 +468,7 @@ class ACLManager:
         domainsList = []
 
         if currentACL['admin'] == 1:
-            domains = Websites.objects.all()
+            domains = Websites.objects.order_by('domain').all()
             for items in domains:
                 domainsList.append(items.domain)
         else:
