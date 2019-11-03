@@ -6,21 +6,22 @@ import json
 import ssl
 
 
-class WebSocketServer():
+class WebSocketServer:
 
     def loadPublicKey(self):
         pubkey = '/root/.ssh/cyberpanel.pub'
-
         data = open(pubkey, 'r').read()
-
         authFile = '/root/.ssh/authorized_keys'
-
-        authData = open(authFile, 'r').read()
 
         checker = 1
 
-        if authData.find(data) > -1:
-            checker = 0
+        try:
+            authData = open(authFile, 'r').read()
+            if authData.find(data) > -1:
+                checker = 0
+        except:
+            pass
+
 
         if checker:
             writeToFile = open(authFile, 'a')
@@ -119,16 +120,16 @@ class WebSocketServer():
 
 def main():
     pidfile = '/usr/local/CyberCP/WebTerminal/pid'
-    machineIP = open('/etc/cyberpanel/machineIP', 'r').read()
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    context.load_cert_chain('/usr/local/lscp/conf/cert.pem', '/usr/local/lscp/conf/key.pem')
-    start_server = websockets.serve(WebSocketServer.initialize, machineIP, 5678, ssl=context)
-    asyncio.get_event_loop().run_until_complete(start_server)
-    asyncio.get_event_loop().run_forever()
 
-    writeToFile = open(pidfile, 'r')
+    writeToFile = open(pidfile, 'w')
     writeToFile.write(str(os.getpid()))
     writeToFile.close()
+
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain('/usr/local/lscp/conf/cert.pem', '/usr/local/lscp/conf/key.pem')
+    start_server = websockets.serve(WebSocketServer.initialize, '', 5678, ssl=context)
+    asyncio.get_event_loop().run_until_complete(start_server)
+    asyncio.get_event_loop().run_forever()
 
 
 

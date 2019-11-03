@@ -3630,7 +3630,7 @@ milter_default_action = accept
                 activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
                 execfile(activate_this, dict(__file__=activate_this))
 
-                command = "pip install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
+                command = "pip3 install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
                 preFlightsChecks.call(command, distro, '[install python36]',
                                       'install python36',
                                       1, 0, os.EX_OSERR)

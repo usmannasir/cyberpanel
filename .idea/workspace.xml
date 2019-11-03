@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BookmarkManager">
+    <bookmark url="file://$PROJECT_DIR$/WebTerminal/CPWebSocket.py" line="7" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="1cc52d7e-f2fd-4205-b67b-8dfa17896fab" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -27,11 +30,80 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/mailServer/mailserverManager.py">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/WebTerminal/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-653">
-              <caret line="328" column="21" selection-start-line="328" selection-start-column="8" selection-end-line="328" selection-end-column="21" />
+            <state relative-caret-position="307">
+              <caret line="68" selection-start-line="68" selection-end-line="68" />
+              <folding>
+                <element signature="e#24#63#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/WebTerminal/static/WebTerminal/main.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="179">
+              <caret line="36" column="51" selection-start-line="36" selection-start-column="24" selection-end-line="36" selection-end-column="51" />
+              <folding>
+                <element signature="n#!!block;n#store#0" />
+                <element signature="n#!!block;n#check#0" />
+                <element signature="n#!!block;n#connect#0" />
+                <element signature="e#2453#3769#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/WebTerminal/urls.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="75">
+              <caret line="5" column="50" selection-start-line="5" selection-start-column="50" selection-end-line="5" selection-end-column="50" />
+              <folding>
+                <element signature="e#0#32#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/loginSystem/static/loginSystem/login-systen.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="300">
+              <caret line="80" column="57" lean-forward="true" selection-start-line="80" selection-start-column="24" selection-end-line="80" selection-end-column="57" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/WebTerminal/CPWebSocket.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-1440">
+              <caret line="12" column="39" selection-start-line="12" selection-start-column="39" selection-end-line="12" selection-end-column="39" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/WebTerminal/templates/WebTerminal/WebTerminal.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="270">
+              <caret line="18" column="64" lean-forward="true" selection-start-line="18" selection-start-column="64" selection-end-line="18" selection-end-column="64" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/WebTerminal/cpssh.service">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="165">
+              <caret line="11" column="23" lean-forward="true" selection-start-line="11" selection-start-column="23" selection-end-line="11" selection-end-column="23" />
             </state>
           </provider>
         </entry>
@@ -48,15 +120,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>restoreRemoteBackupsInc</find>
-      <find>status</find>
-      <find>liteSpeedStatus</find>
-      <find>saveRewrite</find>
-      <find>Dashboard</find>
-      <find>onerror</find>
-      <find>sendCommand</find>
-      <find>trans_forward</find>
-      <find>invoke_shell</find>
       <find>self.ssh</find>
       <find>webssh</find>
       <find>_shell</find>
@@ -78,6 +141,15 @@
       <find>emailMig</find>
       <find>apt install build-essential libssl-dev libffi-dev python3-dev</find>
       <find>python4</find>
+      <find>submitForward</find>
+      <find>IncBackup</find>
+      <find>pip install --ignore-installed</find>
+      <find>-r</find>
+      <find>websockets</find>
+      <find>addRule</find>
+      <find>websocket</find>
+      <find>conf/key</find>
+      <find>addRUle</find>
     </findStrings>
     <replaceStrings>
       <replace>admin.api == 1</replace>
@@ -95,6 +167,7 @@
       <replace>cyberpanelLoading</replace>
       <replace>cyberpanel.sh</replace>
       <replace>https</replace>
+      <replace>self.websocket</replace>
     </replaceStrings>
     <dirStrings>
       <dir>$PROJECT_DIR$/backup</dir>
@@ -108,9 +181,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/IncBackups/templates/IncBackups/incrementalDestinations.html" />
-        <option value="$PROJECT_DIR$/IncBackups/templates/IncBackups/createBackup.html" />
-        <option value="$PROJECT_DIR$/plogical/adminPass.py" />
         <option value="$PROJECT_DIR$/IncBackups/templates/IncBackups/backupSchedule.html" />
         <option value="$PROJECT_DIR$/install/firewallUtilities.py" />
         <option value="$PROJECT_DIR$/preUpgrade.sh" />
@@ -134,10 +204,8 @@
         <option value="$PROJECT_DIR$/locale/ja/LC_MESSAGES/django.po" />
         <option value="$PROJECT_DIR$/serverStatus/views.py" />
         <option value="$PROJECT_DIR$/serverStatus/templates/serverStatus/litespeedStatus.html" />
-        <option value="$PROJECT_DIR$/WebTerminal/urls.py" />
         <option value="$PROJECT_DIR$/xterm_django/templates/index.html" />
         <option value="$PROJECT_DIR$/xterm_django/static/js/main.js" />
-        <option value="$PROJECT_DIR$/loginSystem/urls.py" />
         <option value="$PROJECT_DIR$/websiteFunctions/website.py" />
         <option value="$PROJECT_DIR$/plogical/processUtilities.py" />
         <option value="$PROJECT_DIR$/xterm_django/urls.py" />
@@ -146,27 +214,32 @@
         <option value="$PROJECT_DIR$/CyberCP/settings.py" />
         <option value="$PROJECT_DIR$/CyberCP/urls.py" />
         <option value="$PROJECT_DIR$/xterm_django/utils/daemon.py" />
-        <option value="$PROJECT_DIR$/WebTerminal/templates/WebTerminal/WebTerminal.html" />
         <option value="$PROJECT_DIR$/WebTerminal/static/WebTerminal/ws.js" />
-        <option value="$PROJECT_DIR$/WebTerminal/static/WebTerminal/main.js" />
         <option value="$PROJECT_DIR$/WebTerminal/requirments.txt" />
         <option value="$PROJECT_DIR$/postfixSenderPolicy/cpecs.service" />
-        <option value="$PROJECT_DIR$/WebTerminal/CPWebSocket.py" />
         <option value="$PROJECT_DIR$/WebTerminal/servCTRL.py" />
         <option value="$PROJECT_DIR$/WebTerminal/cpssh.service" />
-        <option value="$PROJECT_DIR$/baseTemplate/templates/baseTemplate/index.html" />
-        <option value="$PROJECT_DIR$/WebTerminal/views.py" />
         <option value="$PROJECT_DIR$/install/installCyberPanel.py" />
-        <option value="$PROJECT_DIR$/install/install.py" />
+        <option value="$PROJECT_DIR$/loginSystem/urls.py" />
         <option value="$PROJECT_DIR$/plogical/upgrade.py" />
+        <option value="$PROJECT_DIR$/install/install.py" />
+        <option value="$PROJECT_DIR$/baseTemplate/templates/baseTemplate/index.html" />
+        <option value="$PROJECT_DIR$/plogical/test1.py" />
+        <option value="$PROJECT_DIR$/plogical/test.py" />
+        <option value="$PROJECT_DIR$/WebTerminal/CPWebSocket.py" />
+        <option value="$PROJECT_DIR$/firewall/firewallManager.py" />
+        <option value="$PROJECT_DIR$/WebTerminal/urls.py" />
+        <option value="$PROJECT_DIR$/WebTerminal/views.py" />
+        <option value="$PROJECT_DIR$/WebTerminal/static/WebTerminal/main.js" />
+        <option value="$PROJECT_DIR$/WebTerminal/templates/WebTerminal/WebTerminal.html" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="145" />
-    <option name="y" value="27" />
-    <option name="width" value="1221" />
-    <option name="height" value="609" />
+    <option name="x" value="1366" />
+    <option name="y" value="-2" />
+    <option name="width" value="1366" />
+    <option name="height" value="770" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -183,7 +256,7 @@
             <path>
               <item name="CyberCP" type="b2602c69:ProjectViewProjectNode" />
               <item name="CyberCP" type="462c0819:PsiDirectoryNode" />
-              <item name="mailServer" type="462c0819:PsiDirectoryNode" />
+              <item name="WebTerminal" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -194,21 +267,21 @@
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/WebTerminal/static/WebTerminal" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/plogical" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/websiteFunctions" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/plogical" />
       <recent name="$PROJECT_DIR$/WebTerminal/static/WebTerminal" />
       <recent name="$PROJECT_DIR$/WebTerminal/templates/WebTerminal" />
       <recent name="$PROJECT_DIR$/IncBackups/templates/IncBackups" />
       <recent name="$PROJECT_DIR$/IncBackups" />
-      <recent name="$PROJECT_DIR$/dns/templates/dns" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/websiteFunctions" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -223,7 +296,29 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.upgrade">
+  <component name="RunManager" selected="Python.test1">
+    <configuration name="CPWebSocket" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="CyberCP" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/WebTerminal" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/WebTerminal/CPWebSocket.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="cPanelImporter" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="CyberCP" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -238,6 +333,50 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/plogical/cPanelImporter.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="test" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="CyberCP" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/plogical" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/plogical/test.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="test1" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="CyberCP" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/plogical" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/plogical/test1.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -293,6 +432,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.test1" />
+        <item itemvalue="Python.CPWebSocket" />
+        <item itemvalue="Python.test" />
         <item itemvalue="Python.upgrade" />
         <item itemvalue="Python.cPanelImporter" />
       </list>
@@ -399,24 +541,25 @@
       <workItem from="1571160353900" duration="938000" />
       <workItem from="1571162569598" duration="21905000" />
       <workItem from="1572178630393" duration="66499000" />
-      <workItem from="1572682508890" duration="18025000" />
+      <workItem from="1572682508890" duration="28775000" />
+      <workItem from="1572769299920" duration="13431000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="815275000" />
+    <option name="totallyTimeSpent" value="839456000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="25" width="1366" height="684" extended-state="6" />
+    <frame x="1366" y="25" width="1366" height="684" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.20151515" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.1969697" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.3270548" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.32854578" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.24775584" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.40933573" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -477,6 +620,11 @@
           <line>489</line>
           <option name="timeStamp" value="4" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/WebTerminal/CPWebSocket.py</url>
+          <line>100</line>
+          <option name="timeStamp" value="18" />
+        </line-breakpoint>
         <line-breakpoint enabled="true" type="django-line">
           <url>file://$PROJECT_DIR$/CLManager/templates/CLManager/createPackage.html</url>
           <line>46</line>
@@ -491,133 +639,13 @@
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/CyberCP$CPWebSocket.coverage" NAME="CPWebSocket Coverage Results" MODIFIED="1572774251768" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/WebTerminal" />
     <SUITE FILE_PATH="coverage/CyberCP$upgrade.coverage" NAME="upgrade Coverage Results" MODIFIED="1571472730271" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/plogical" />
+    <SUITE FILE_PATH="coverage/CyberCP$test1.coverage" NAME="test1 Coverage Results" MODIFIED="1572774273995" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/plogical" />
+    <SUITE FILE_PATH="coverage/CyberCP$test.coverage" NAME="test Coverage Results" MODIFIED="1572772283909" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/plogical" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/IncBackups/static/IncBackups/IncBackups.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="760" column="38" selection-start-line="760" selection-start-column="38" selection-end-line="760" selection-end-column="38" />
-          <folding>
-            <element signature="e#104#7601#0" />
-            <element signature="e#491#2247#0" />
-            <element signature="e#2295#2339#0" />
-            <element signature="e#2390#3395#0" />
-            <element signature="e#7703#12595#0" />
-            <element signature="e#12661#19357#0" />
-            <element signature="e#19645#19793#0" />
-            <element signature="e#19762#19837#0" />
-            <element signature="e#19827#21583#0" />
-            <element signature="e#21726#22731#0" />
-            <element signature="e#26129#26932#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/IncBackups/templates/IncBackups/restoreRemoteBackups.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="349">
-          <caret line="82" column="30" selection-start-line="82" selection-start-column="30" selection-end-line="82" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/CyberCP/secMiddleware.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1035">
-          <caret line="69" column="51" lean-forward="true" selection-start-line="69" selection-start-column="23" selection-end-line="69" selection-end-column="51" />
-          <folding>
-            <element signature="e#0#73#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/IncBackups/IncBackupsControl.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="142">
-          <caret line="226" lean-forward="true" selection-start-line="226" selection-end-line="226" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/serverStatus/templates/serverStatus/litespeedStatus.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="364">
-          <caret line="236" column="101" selection-start-line="236" selection-start-column="101" selection-end-line="236" selection-end-column="101" />
-          <folding>
-            <element signature="n#style#0;n#img#0;n#h2#0;n#div#0;n#div#0;n#!!top" expanded="true" />
-            <element signature="n#div#1;n#div#0;n#!!top" />
-            <element signature="n#div#1;n#!!top" />
-            <element signature="n#style#0;n#div#0;n#div#0;n#div#2;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#div#1;n#div#0;n#div#2;n#!!top" expanded="true" />
-            <element signature="n#div#1;n#div#2;n#!!top" />
-            <element signature="n#div#0;n#div#0;n#div#0;n#div#0;n#div#2;n#div#2;n#!!top" />
-            <element signature="n#div#2;n#div#0;n#div#0;n#div#0;n#div#2;n#div#2;n#!!top" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/serverStatus/views.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="57" column="89" selection-start-line="57" selection-start-column="23" selection-end-line="57" selection-end-column="89" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/firewall/views.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/IncBackups/views.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="196">
-          <caret line="25" selection-start-line="25" selection-end-line="52" selection-end-column="38" />
-          <folding>
-            <element signature="e#24#63#0" expanded="true" />
-            <element signature="e#828#1780#0" />
-            <element signature="e#1819#2241#0" />
-            <element signature="e#2276#5793#0" />
-            <element signature="e#5836#8066#0" />
-            <element signature="e#8104#8957#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/serverLogs/templates/serverLogs/accessLogs.html">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/xterm_django/static/js/formvalid.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-29">
-          <folding>
-            <element signature="n#!!doc" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/loginSystem/views.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1065">
-          <caret line="108" column="61" selection-start-line="108" selection-start-column="55" selection-end-line="108" selection-end-column="61" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/loginSystem/urls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="8" column="1" lean-forward="true" selection-start-line="8" selection-start-column="1" selection-end-line="8" selection-end-column="1" />
-          <folding>
-            <element signature="e#0#32#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/xterm_django/wsgi.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
+    <entry file="file://$PROJECT_DIR$/xterm_django/wsgi.py" />
     <entry file="file://$PROJECT_DIR$/plogical/processUtilities.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="292">
@@ -635,43 +663,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/xterm_django/websocket_handler.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="27" column="25" selection-start-line="27" selection-start-column="8" selection-end-line="27" selection-end-column="25" />
-          <folding>
-            <element signature="e#0#14#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/xterm_django/utils/data_type.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/xterm_django/urls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
-          <caret line="21" column="42" selection-start-line="21" selection-start-column="42" selection-end-line="21" selection-end-column="42" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/xterm_django/static/js/ws.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="735">
-          <caret line="49" column="20" selection-start-line="49" selection-start-column="9" selection-end-line="49" selection-end-column="20" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/xterm_django/views.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="945">
-          <caret line="74" column="28" selection-start-line="74" selection-start-column="18" selection-end-line="74" selection-end-column="28" />
-          <folding>
-            <element signature="e#0#14#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/xterm_django/websocket_handler.py" />
+    <entry file="file://$PROJECT_DIR$/xterm_django/utils/data_type.py" />
+    <entry file="file://$PROJECT_DIR$/xterm_django/urls.py" />
+    <entry file="file://$PROJECT_DIR$/xterm_django/static/js/ws.js" />
+    <entry file="file://$PROJECT_DIR$/xterm_django/views.py" />
     <entry file="file://$PROJECT_DIR$/CyberCP/urls.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="407">
@@ -679,26 +675,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/CyberCP/settings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="377">
-          <caret line="68" column="16" selection-start-line="68" selection-start-column="16" selection-end-line="68" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/xterm_django/static/js/main.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret line="9" column="29" selection-start-line="9" selection-start-column="15" selection-end-line="9" selection-end-column="29" />
-          <folding>
-            <element signature="n#!!block;n#getTerminalSize#0" />
-            <element signature="n#!!block;n#store#0" />
-            <element signature="n#!!block;n#check#0" />
-            <element signature="n#!!block;n#connect#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/xterm_django/static/js/main.js" />
     <entry file="file://$PROJECT_DIR$/plogical/applicationInstaller.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="315">
@@ -706,29 +683,8 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/xterm_django/templates/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="427">
-          <caret line="53" column="13" selection-start-line="53" selection-start-column="9" selection-end-line="53" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/xterm_django/utils/daemon.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="292">
-          <caret line="73" column="41" selection-start-line="73" selection-start-column="30" selection-end-line="73" selection-end-column="41" />
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-            <element signature="e#981#1015#0" />
-            <element signature="e#1057#1397#0" />
-            <element signature="e#2622#3275#0" />
-            <element signature="e#3323#3533#0" />
-            <element signature="e#3569#4300#0" />
-            <element signature="e#4358#5320#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/xterm_django/templates/index.html" />
+    <entry file="file://$PROJECT_DIR$/xterm_django/utils/daemon.py" />
     <entry file="file://$PROJECT_DIR$/tuning/tuning.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="315">
@@ -745,51 +701,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-765">
           <caret line="21" selection-start-line="21" selection-end-line="21" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/WebTerminal/static/WebTerminal/main.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="143">
-          <caret line="23" selection-start-line="23" selection-end-line="23" />
-          <folding>
-            <element signature="n#!!block;n#store#0" />
-            <element signature="n#!!block;n#check#0" />
-            <element signature="n#!!block;n#connect#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/websiteFunctions/static/websiteFunctions/websiteFunctions.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-963">
-          <caret line="1" column="31" selection-start-line="1" selection-start-column="30" selection-end-line="1" selection-end-column="31" />
-          <folding>
-            <element signature="e#753#6549#0" />
-            <element signature="e#6726#10431#0" />
-            <element signature="e#10728#12044#0" />
-            <element signature="e#12472#16224#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/WebTerminal/urls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" column="45" selection-start-line="4" selection-start-column="45" selection-end-line="4" selection-end-column="45" />
-          <folding>
-            <element signature="e#0#32#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/WebTerminal/templates/WebTerminal/WebTerminal.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="233">
-          <caret line="36" column="61" selection-start-line="36" selection-start-column="51" selection-end-line="36" selection-end-column="61" />
-          <folding>
-            <element signature="n#style#0;n#div#1;n#div#0;n#div#0;n#div#1;n#div#0;n#!!top" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -845,20 +756,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/WebTerminal/cpssh.service">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
-          <caret line="11" column="23" lean-forward="true" selection-start-line="11" selection-start-column="23" selection-end-line="11" selection-end-column="23" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/WebTerminal/servCTRL.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-180">
-          <caret column="17" selection-start-column="17" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/WebTerminal/requirments.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="105">
@@ -869,67 +766,6 @@
     <entry file="file://$PROJECT_DIR$/mailServer/models.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-308" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/baseTemplate/templates/baseTemplate/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="235">
-          <caret line="649" column="59" selection-start-line="649" selection-start-column="59" selection-end-line="649" selection-end-column="59" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/WebTerminal/views.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="33" column="49" lean-forward="true" selection-start-line="33" selection-start-column="49" selection-end-line="33" selection-end-column="49" />
-          <folding>
-            <element signature="e#24#63#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/plogical/upgrade.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-9106">
-          <caret line="1014" column="4" lean-forward="true" selection-start-line="1014" selection-start-column="4" selection-end-line="1014" selection-end-column="4" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-            <element signature="e#57690#64332#0" />
-            <element signature="e#64385#65534#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/WebTerminal/CPWebSocket.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-90">
-          <caret line="6" lean-forward="true" selection-start-line="6" selection-end-line="6" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-            <element signature="e#146#542#0" />
-            <element signature="e#594#1147#0" />
-            <element signature="e#1195#1384#0" />
-            <element signature="e#1432#1801#0" />
-            <element signature="e#1841#2277#0" />
-            <element signature="e#2326#2850#0" />
-            <element signature="e#2921#3498#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/install/install.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="368">
-          <caret line="3666" column="56" lean-forward="true" selection-start-line="3614" selection-start-column="12" selection-end-line="3666" selection-end-column="56" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-            <element signature="e#3081#3260#0" />
-            <element signature="e#3346#3859#0" />
-            <element signature="e#3894#6735#0" />
-            <element signature="e#6800#6878#0" />
-            <element signature="e#144363#146125#0" />
-          </folding>
-        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/install/installCyberPanel.py">
@@ -946,6 +782,216 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-653">
           <caret line="328" column="21" selection-start-line="328" selection-start-column="8" selection-end-line="328" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/lib/python3.6/dist-packages/websockets/server.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1260">
+          <caret line="55" column="57" lean-forward="true" selection-start-line="55" selection-start-column="57" selection-end-line="55" selection-end-column="57" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/upgrade.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="28215">
+          <caret line="1884" column="112" selection-start-line="1884" selection-start-column="66" selection-end-line="1884" selection-end-column="112" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loginSystem/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="1" column="12" selection-start-line="1" selection-start-column="12" selection-end-line="1" selection-end-column="12" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CyberCP/settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1005">
+          <caret line="68" column="16" selection-start-line="68" selection-start-column="5" selection-end-line="68" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/lib/python3.6/asyncio/base_events.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="1070" selection-start-line="1070" selection-end-line="1070" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/baseTemplate/templates/baseTemplate/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="235">
+          <caret line="649" column="65" selection-start-line="649" selection-start-column="65" selection-end-line="649" selection-end-column="65" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/test1.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/test.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WebTerminal/servCTRL.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="22">
+          <caret line="12" column="20" lean-forward="true" selection-start-line="12" selection-start-column="20" selection-end-line="12" selection-end-column="20" />
+          <folding>
+            <element signature="e#0#17#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cloudAPI/cloudManager.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="175">
+          <caret line="755" column="22" selection-start-line="755" selection-start-column="22" selection-end-line="755" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/firewall/firewallManager.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="270">
+          <caret line="21" lean-forward="true" selection-start-line="21" selection-end-line="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/websiteFunctions/static/websiteFunctions/websiteFunctions.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="392" selection-start-line="392" selection-end-line="453" selection-end-column="3" />
+          <folding>
+            <element signature="e#753#6549#0" />
+            <element signature="e#6726#10431#0" />
+            <element signature="e#10728#12044#0" />
+            <element signature="e#12472#16224#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CLManager/static/CLManager/CLManager.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="367">
+          <caret line="324" column="66" selection-start-line="324" selection-start-column="66" selection-end-line="324" selection-end-column="66" />
+          <folding>
+            <element signature="e#234#1404#0" />
+            <element signature="e#1439#2712#0" />
+            <element signature="e#2867#4025#0" />
+            <element signature="e#4146#5355#0" />
+            <element signature="e#5428#6838#0" />
+            <element signature="e#7217#8792#0" />
+            <element signature="e#8866#13377#0" />
+            <element signature="e#8947#10020#0" />
+            <element signature="e#10097#11349#0" />
+            <element signature="e#13468#26129#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/install/install.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="337">
+          <caret line="2580" column="215" lean-forward="true" selection-start-line="2580" selection-start-column="23" selection-end-line="2580" selection-end-column="215" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+            <element signature="e#3081#3260#0" />
+            <element signature="e#3346#3859#0" />
+            <element signature="e#3894#6735#0" />
+            <element signature="e#6800#6878#0" />
+            <element signature="e#144363#146125#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loginSystem/static/loginSystem/login-systen.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="300">
+          <caret line="80" column="57" lean-forward="true" selection-start-line="80" selection-start-column="24" selection-end-line="80" selection-end-column="57" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CLManager/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="27" selection-start-line="27" selection-end-line="48" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WebTerminal/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="5" column="50" selection-start-line="5" selection-start-column="50" selection-end-line="5" selection-end-column="50" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/serverStatus/templates/serverStatus/litespeedStatus.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="165">
+          <caret line="68" column="49" lean-forward="true" selection-start-line="64" selection-start-column="40" selection-end-line="68" selection-end-column="49" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IncBackups/templates/IncBackups/createBackup.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="14" column="162" lean-forward="true" selection-start-line="12" selection-start-column="48" selection-end-line="14" selection-end-column="162" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WebTerminal/templates/WebTerminal/WebTerminal.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="270">
+          <caret line="18" column="64" lean-forward="true" selection-start-line="18" selection-start-column="64" selection-end-line="18" selection-end-column="64" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WebTerminal/cpssh.service">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="165">
+          <caret line="11" column="23" lean-forward="true" selection-start-line="11" selection-start-column="23" selection-end-line="11" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WebTerminal/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="307">
+          <caret line="68" selection-start-line="68" selection-end-line="68" />
+          <folding>
+            <element signature="e#24#63#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WebTerminal/CPWebSocket.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1440">
+          <caret line="12" column="39" selection-start-line="12" selection-start-column="39" selection-end-line="12" selection-end-column="39" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WebTerminal/static/WebTerminal/main.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="179">
+          <caret line="36" column="51" selection-start-line="36" selection-start-column="24" selection-end-line="36" selection-end-column="51" />
+          <folding>
+            <element signature="n#!!block;n#store#0" />
+            <element signature="n#!!block;n#check#0" />
+            <element signature="n#!!block;n#connect#0" />
+            <element signature="e#2453#3769#0" />
+          </folding>
         </state>
       </provider>
     </entry>
