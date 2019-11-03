@@ -613,10 +613,3 @@ class ACLManager:
                 childDomains.append(childDomain.domain)
 
         return childDomains
-
-
-
-
-
-
-

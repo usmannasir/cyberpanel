@@ -30,6 +30,35 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/plogical/upgrade.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="302">
+              <caret line="1898" column="36" selection-start-line="1898" selection-start-column="36" selection-end-line="1898" selection-end-column="36" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/install/install.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="292">
+              <caret line="3655" column="49" selection-start-line="3655" selection-start-column="49" selection-end-line="3655" selection-end-column="49" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+                <element signature="e#3081#3260#0" />
+                <element signature="e#3346#3859#0" />
+                <element signature="e#3894#6735#0" />
+                <element signature="e#6800#6878#0" />
+                <element signature="e#144363#146125#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/WebTerminal/views.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -42,11 +71,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/WebTerminal/static/WebTerminal/main.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="179">
-              <caret line="36" column="51" selection-start-line="36" selection-start-column="24" selection-end-line="36" selection-end-column="51" />
+            <state relative-caret-position="299">
+              <caret line="44" column="46" selection-start-line="44" selection-start-column="28" selection-end-line="44" selection-end-column="46" />
               <folding>
                 <element signature="n#!!block;n#store#0" />
                 <element signature="n#!!block;n#check#0" />
@@ -58,22 +87,20 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/WebTerminal/urls.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="75">
-              <caret line="5" column="50" selection-start-line="5" selection-start-column="50" selection-end-line="5" selection-end-column="50" />
-              <folding>
-                <element signature="e#0#32#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
+        <entry file="file://$PROJECT_DIR$/plogical/test1.py">
+          <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/loginSystem/static/loginSystem/login-systen.js">
+        <entry file="file://$PROJECT_DIR$/plogical/test.py">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/plogical/acl.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="300">
-              <caret line="80" column="57" lean-forward="true" selection-start-line="80" selection-start-column="24" selection-end-line="80" selection-end-column="57" />
+            <state relative-caret-position="412">
+              <caret line="614" column="27" selection-start-line="614" selection-start-column="27" selection-end-line="614" selection-end-column="27" />
             </state>
           </provider>
         </entry>
@@ -120,7 +147,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>self.ssh</find>
       <find>webssh</find>
       <find>_shell</find>
       <find>[</find>
@@ -150,6 +176,7 @@
       <find>websocket</find>
       <find>conf/key</find>
       <find>addRUle</find>
+      <find>virtualenv -p python3 /usr/local/CyberPanel/p3</find>
     </findStrings>
     <replaceStrings>
       <replace>admin.api == 1</replace>
@@ -181,7 +208,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/IncBackups/templates/IncBackups/backupSchedule.html" />
         <option value="$PROJECT_DIR$/install/firewallUtilities.py" />
         <option value="$PROJECT_DIR$/preUpgrade.sh" />
         <option value="$PROJECT_DIR$/loginSystem/views.py" />
@@ -221,8 +247,6 @@
         <option value="$PROJECT_DIR$/WebTerminal/cpssh.service" />
         <option value="$PROJECT_DIR$/install/installCyberPanel.py" />
         <option value="$PROJECT_DIR$/loginSystem/urls.py" />
-        <option value="$PROJECT_DIR$/plogical/upgrade.py" />
-        <option value="$PROJECT_DIR$/install/install.py" />
         <option value="$PROJECT_DIR$/baseTemplate/templates/baseTemplate/index.html" />
         <option value="$PROJECT_DIR$/plogical/test1.py" />
         <option value="$PROJECT_DIR$/plogical/test.py" />
@@ -232,6 +256,9 @@
         <option value="$PROJECT_DIR$/WebTerminal/views.py" />
         <option value="$PROJECT_DIR$/WebTerminal/static/WebTerminal/main.js" />
         <option value="$PROJECT_DIR$/WebTerminal/templates/WebTerminal/WebTerminal.html" />
+        <option value="$PROJECT_DIR$/plogical/acl.py" />
+        <option value="$PROJECT_DIR$/plogical/upgrade.py" />
+        <option value="$PROJECT_DIR$/install/install.py" />
       </list>
     </option>
   </component>
@@ -256,7 +283,7 @@
             <path>
               <item name="CyberCP" type="b2602c69:ProjectViewProjectNode" />
               <item name="CyberCP" type="462c0819:PsiDirectoryNode" />
-              <item name="WebTerminal" type="462c0819:PsiDirectoryNode" />
+              <item name="install" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -542,12 +569,12 @@
       <workItem from="1571162569598" duration="21905000" />
       <workItem from="1572178630393" duration="66499000" />
       <workItem from="1572682508890" duration="28775000" />
-      <workItem from="1572769299920" duration="13431000" />
+      <workItem from="1572769299920" duration="15026000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="839456000" />
+    <option name="totallyTimeSpent" value="841051000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1366" y="25" width="1366" height="684" extended-state="6" />
@@ -645,7 +672,6 @@
     <SUITE FILE_PATH="coverage/CyberCP$test.coverage" NAME="test Coverage Results" MODIFIED="1572772283909" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/plogical" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/xterm_django/wsgi.py" />
     <entry file="file://$PROJECT_DIR$/plogical/processUtilities.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="292">
@@ -792,16 +818,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/plogical/upgrade.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="28215">
-          <caret line="1884" column="112" selection-start-line="1884" selection-start-column="66" selection-end-line="1884" selection-end-column="112" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/loginSystem/urls.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="15">
@@ -832,12 +848,6 @@
           <caret line="649" column="65" selection-start-line="649" selection-start-column="65" selection-end-line="649" selection-end-column="65" />
         </state>
       </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/plogical/test1.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/plogical/test.py">
-      <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/WebTerminal/servCTRL.py">
       <provider selected="true" editor-type-id="text-editor">
@@ -891,21 +901,6 @@
             <element signature="e#8947#10020#0" />
             <element signature="e#10097#11349#0" />
             <element signature="e#13468#26129#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/install/install.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="337">
-          <caret line="2580" column="215" lean-forward="true" selection-start-line="2580" selection-start-column="23" selection-end-line="2580" selection-end-column="215" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-            <element signature="e#3081#3260#0" />
-            <element signature="e#3346#3859#0" />
-            <element signature="e#3894#6735#0" />
-            <element signature="e#6800#6878#0" />
-            <element signature="e#144363#146125#0" />
           </folding>
         </state>
       </provider>
@@ -984,13 +979,51 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/WebTerminal/static/WebTerminal/main.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="179">
-          <caret line="36" column="51" selection-start-line="36" selection-start-column="24" selection-end-line="36" selection-end-column="51" />
+        <state relative-caret-position="299">
+          <caret line="44" column="46" selection-start-line="44" selection-start-column="28" selection-end-line="44" selection-end-column="46" />
           <folding>
             <element signature="n#!!block;n#store#0" />
             <element signature="n#!!block;n#check#0" />
             <element signature="n#!!block;n#connect#0" />
             <element signature="e#2453#3769#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/test1.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/test.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/acl.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="412">
+          <caret line="614" column="27" selection-start-line="614" selection-start-column="27" selection-end-line="614" selection-end-column="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/install/install.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="292">
+          <caret line="3655" column="49" selection-start-line="3655" selection-start-column="49" selection-end-line="3655" selection-end-column="49" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+            <element signature="e#3081#3260#0" />
+            <element signature="e#3346#3859#0" />
+            <element signature="e#3894#6735#0" />
+            <element signature="e#6800#6878#0" />
+            <element signature="e#144363#146125#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plogical/upgrade.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="302">
+          <caret line="1898" column="36" selection-start-line="1898" selection-start-column="36" selection-end-line="1898" selection-end-column="36" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
           </folding>
         </state>
       </provider>

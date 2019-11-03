@@ -3651,7 +3651,7 @@ milter_default_action = accept
                                       'install python36',
                                       1, 0, os.EX_OSERR)
 
-                command = '/usr/local/CyberPanel/p3'
+                command = 'virtualenv -p python3 /usr/local/CyberPanel/p3'
                 preFlightsChecks.call(command, distro, '[install python36]',
                                       'install python36',
                                       1, 0, os.EX_OSERR)

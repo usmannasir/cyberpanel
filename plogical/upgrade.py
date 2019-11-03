@@ -1895,7 +1895,7 @@ failovermethod=priority
             command = 'apt install -y python3-venv'
             Upgrade.executioner(command, 0)
 
-            command = '/usr/local/CyberPanel/p3'
+            command = 'virtualenv -p python3 /usr/local/CyberPanel/p3'
             Upgrade.executioner(command, 0)
 
             env_path = '/usr/local/CyberPanel/p3'
