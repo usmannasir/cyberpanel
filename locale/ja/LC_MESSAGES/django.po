@@ -3,20 +3,12 @@
 # This file is distributed under the same license as the CyberPanel package.
 # FIRST AUTHOR <unasir@litespeedtech.com>, 2017.
 #
-#: baseTemplate/templates/baseTemplate/index.html:220
-#: baseTemplate/templates/baseTemplate/index.html:273
-#: baseTemplate/templates/baseTemplate/index.html:280
-#: baseTemplate/templates/baseTemplate/index.html:287
-#: baseTemplate/templates/baseTemplate/index.html:294
-#: baseTemplate/templates/baseTemplate/index.html:301
-#: baseTemplate/templates/baseTemplate/index.html:308
-#: emailMarketing/templates/emailMarketing/sendEmails.html:93
 msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-10-30 00:05+0500\n"
-"PO-Revision-Date: 2019-10-27 23:29+0900\n"
+"PO-Revision-Date: 2019-11-04 01:13+0900\n"
 "Last-Translator: @ kazuo210 <kazu.nito@gmail.com>\n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
 "Language: ja\n"
@@ -327,7 +319,7 @@ msgstr "イタリア語"
 
 #: CyberCP/settings.py:189
 msgid "Deutsch"
-msgstr ""
+msgstr "ドイツ語"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:3
 #: backup/templates/backup/backupSchedule.html:3
@@ -375,10 +367,8 @@ msgstr "実行間隔を選択"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:54
 #: IncBackups/templates/IncBackups/createBackup.html:56
-#, fuzzy
-#| msgid "Backup Management"
 msgid "Backup Content"
-msgstr "バックアップ管理"
+msgstr "バックアップコンテンツ"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:98
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:72
@@ -396,7 +386,7 @@ msgstr "アカウントを検索。"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:124
 msgid "Select sites to be included in this job"
-msgstr ""
+msgstr "このジョブに含めるサイトを選択してください"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:150
 #: IncBackups/templates/IncBackups/createBackup.html:127
@@ -459,10 +449,8 @@ msgid "Delete"
 msgstr "削除"
 
 #: IncBackups/templates/IncBackups/createBackup.html:3
-#, fuzzy
-#| msgid "Cancel Backup"
 msgid "Create Incremental Backup"
-msgstr "バックアップを中止"
+msgstr "増分バックアップを作成します"
 
 #: IncBackups/templates/IncBackups/createBackup.html:13
 #: IncBackups/templates/IncBackups/createBackup.html:23
@@ -480,10 +468,8 @@ msgid "Backup Docs"
 msgstr "バックアップのドキュメント"
 
 #: IncBackups/templates/IncBackups/createBackup.html:17
-#, fuzzy
-#| msgid "This page can be used to Back up your websites"
 msgid "This page can be used to create incremental backups for your websites."
-msgstr "このページは、Web サイトをバックアップするために使用することができます"
+msgstr "このページを使用して、Web サイトの増分バックアップを作成できます。"
 
 #: IncBackups/templates/IncBackups/createBackup.html:33
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:35
@@ -537,7 +523,7 @@ msgstr "ジョブ ID"
 #: IncBackups/templates/IncBackups/createBackup.html:162
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:97
 msgid "Snapshot ID"
-msgstr ""
+msgstr "スナップショット ID"
 
 #: IncBackups/templates/IncBackups/createBackup.html:163
 #: dns/templates/dns/addDeleteDNSRecords.html:327
@@ -557,28 +543,20 @@ msgid "Set up Back up Destinations"
 msgstr "バックアップ先の設定"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:14
-#, fuzzy
-#| msgid "Set up Back up Destinations"
 msgid "Set up Incremental Back up Destinations"
-msgstr "バックアップ先の設定"
+msgstr "増分バックアップ先を設定します"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:20
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can set up your Back up destinations. (SFTP and AWS)"
-msgstr "このページでは、バックアップ先を設定できます。 （SFTP）"
+msgstr "このページでは、バックアップ先を設定できます。 （SFTPおよびAWS）"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:26
-#, fuzzy
-#| msgid "Set up Back up Destinations"
 msgid "Set up Back up Destinations."
-msgstr "バックアップ先の設定"
+msgstr "バックアップ先を設定します。"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:35
-#, fuzzy
-#| msgid "Select Template"
 msgid "Select Type"
-msgstr "テンプレートの選択"
+msgstr "種類の選択"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:47
 #: backup/templates/backup/backupDestinations.html:30
@@ -631,28 +609,27 @@ msgstr "IP"
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:117
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:153
 msgid "AWS_ACCESS_KEY_ID"
-msgstr ""
+msgstr "AWS_ACCESS_KEY_ID"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:124
 msgid "AWS_SECRET_ACCESS_KEY"
-msgstr ""
+msgstr "AWS_SECRET_ACCESS_KEY"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:3
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:13
 msgid "Restore Remote Incremental Backups"
-msgstr ""
+msgstr "リモート増分バックアップの復元"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:19
-#, fuzzy
-#| msgid "This page can be used to Back up your websites"
 msgid ""
 "This page can be used to restore remote incremental backups for your "
 "websites."
-msgstr "このページは、Web サイトをバックアップするために使用することができます"
+msgstr ""
+"このページを使用して、Web サイトのリモート増分バックアップを復元できます。"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:69
 msgid "Fetch Restore Points"
-msgstr ""
+msgstr "復元ポイントの取得"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:99
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:76
@@ -832,11 +809,11 @@ msgstr "接続を確認"
 
 #: backup/templates/backup/backupSchedule.html:54
 msgid "Local Path"
-msgstr ""
+msgstr "ローカルパス"
 
 #: backup/templates/backup/backupSchedule.html:57
 msgid "Local directory where backups will be moved after creation."
-msgstr ""
+msgstr "作成後にバックアップを移動するローカルディレクトリ。"
 
 #: backup/templates/backup/backupSchedule.html:82
 msgid "Cannot add schedule. Error message:"
@@ -1460,16 +1437,12 @@ msgid "Create Nameserver"
 msgstr "ネームサーバーの作成"
 
 #: baseTemplate/templates/baseTemplate/index.html:489
-#, fuzzy
-#| msgid "Create Nameserver"
 msgid "Configure Default Nameservers"
-msgstr "ネームサーバーの作成"
+msgstr "デフォルトネームサーバーの設定"
 
 #: baseTemplate/templates/baseTemplate/index.html:489
-#, fuzzy
-#| msgid "Create Nameserver"
 msgid "Config Default Nameservers"
-msgstr "ネームサーバーの作成"
+msgstr "デフォルトネームサーバーの設定"
 
 #: baseTemplate/templates/baseTemplate/index.html:492
 #: dns/templates/dns/createDNSZone.html:12
@@ -1606,43 +1579,31 @@ msgstr "バックアップ先の追加/削除"
 
 #: baseTemplate/templates/baseTemplate/index.html:591
 msgid "Incremental Back up - Beta"
-msgstr ""
+msgstr "増分バックアップ - ベータ版"
 
 #: baseTemplate/templates/baseTemplate/index.html:593
-#, fuzzy
-#| msgid "Cancel Backup"
 msgid "Incremental Back up"
-msgstr "バックアップを中止"
+msgstr "増分バックアップ"
 
 #: baseTemplate/templates/baseTemplate/index.html:599
-#, fuzzy
-#| msgid "Restore Back up"
 msgid "Create/Restore Back up"
-msgstr "バックアップの復元"
+msgstr "バックアップの作成/復元"
 
 #: baseTemplate/templates/baseTemplate/index.html:602
-#, fuzzy
-#| msgid "Add/Delete Destinations"
 msgid "Add/Remove Destinations"
 msgstr "宛先の追加/削除"
 
 #: baseTemplate/templates/baseTemplate/index.html:605
-#, fuzzy
-#| msgid "Schedule Back up"
 msgid "Schedule Back ups"
 msgstr "バックアップスケジュール"
 
 #: baseTemplate/templates/baseTemplate/index.html:608
-#, fuzzy
-#| msgid "Transfer Websites from Remote Server - CyberPanel"
 msgid "Restore from Remote Server"
-msgstr "リモートサーバーからWebサイトを転送 - Cyber​​Panel"
+msgstr "リモート サーバーからの復元"
 
 #: baseTemplate/templates/baseTemplate/index.html:608
-#, fuzzy
-#| msgid "Restore Website"
 msgid "Restore from Remote"
-msgstr "Web サイトの復元"
+msgstr "リモートから復元"
 
 #: baseTemplate/templates/baseTemplate/index.html:625
 #: manageSSL/templates/manageSSL/index.html:29
@@ -2361,16 +2322,12 @@ msgid "Record Successfully Added."
 msgstr "レコードが追加されました。"
 
 #: dns/templates/dns/configureDefaultNameServers.html:3
-#, fuzzy
-#| msgid "Create Nameserver - CyberPanel"
 msgid "Configure Default Nameserver - CyberPanel"
-msgstr "ネームサーバーの作成 - Cyber​​Panel"
+msgstr "デフォルトネームサーバーの設定 - Cyber​​Panel"
 
 #: dns/templates/dns/configureDefaultNameServers.html:12
-#, fuzzy
-#| msgid "Create Nameserver"
 msgid "Configure Default Nameserver"
-msgstr "ネームサーバーの作成"
+msgstr "デフォルトネームサーバーの設定"
 
 #: dns/templates/dns/configureDefaultNameServers.html:13
 #: dns/templates/dns/createNameServer.html:13
@@ -2394,22 +2351,16 @@ msgid "First Nameserver"
 msgstr "ファーストネームサーバー"
 
 #: dns/templates/dns/configureDefaultNameServers.html:45
-#, fuzzy
-#| msgid "Second Nameserver (Back up)"
 msgid "Second Nameserver"
-msgstr "セカンドネームサーバー（バックアップ）"
+msgstr "セカンドネームサーバー"
 
 #: dns/templates/dns/configureDefaultNameServers.html:52
-#, fuzzy
-#| msgid "First Nameserver"
 msgid "Third Nameserver"
-msgstr "ファーストネームサーバー"
+msgstr "サードネームサーバー"
 
 #: dns/templates/dns/configureDefaultNameServers.html:59
-#, fuzzy
-#| msgid "First Nameserver"
 msgid "Forth Nameserver"
-msgstr "ファーストネームサーバー"
+msgstr "前のネームサーバー"
 
 #: dns/templates/dns/configureDefaultNameServers.html:68
 #: emailMarketing/templates/emailMarketing/website.html:656
@@ -3700,10 +3651,8 @@ msgstr "SpamAssassin 設定が保存されました。"
 #: emailPremium/templates/emailPremium/emailLimits.html:13
 #: emailPremium/templates/emailPremium/listDomains.html:14
 #: emailPremium/templates/emailPremium/policyServer.html:13
-#, fuzzy
-#| msgid "Emai Limits Docs"
 msgid "Email Limits Docs"
-msgstr "メールの制限ドキュメント"
+msgstr "メール制限のドキュメント"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14
 msgid "View and change email limits for a domain name."
@@ -4716,10 +4665,8 @@ msgid "This page help you setup email forwarding for your emails."
 msgstr "このページは、メールのメール転送を設定するのに役立ちます。"
 
 #: mailServer/templates/mailServer/emailForwarding.html:61
-#, fuzzy
-#| msgid "Forwarding Docs"
 msgid "Forwarding Options"
-msgstr "ドキュメントの転送"
+msgstr "転送オプション"
 
 #: mailServer/templates/mailServer/emailForwarding.html:97
 #: mailServer/templates/mailServer/emailForwarding.html:118
@@ -4728,7 +4675,7 @@ msgstr "送信元"
 
 #: mailServer/templates/mailServer/emailForwarding.html:101
 msgid "or path to the program"
-msgstr ""
+msgstr "またはプログラムへのパス"
 
 #: mailServer/templates/mailServer/emailForwarding.html:106
 msgid "Forward Email"
@@ -5366,10 +5313,8 @@ msgid "Switch to LiteSpeed Enterprise Web Server"
 msgstr "LiteSpeed Enterprise Web Server に切り替えます"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:149
-#, fuzzy
-#| msgid "LiteSpeed Processes"
 msgid "LiteSpeed Serial No. (License Key)"
-msgstr "LiteSpeed 操作"
+msgstr "LiteSpeed シリアル番号（ライセンスキー）"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:160
 msgid "Switch"
@@ -5377,7 +5322,7 @@ msgstr "切り替え"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:162
 msgid "Get 15 Days Trial"
-msgstr ""
+msgstr "15日間のトライアルを取得する"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:175
 msgid ""
@@ -5385,6 +5330,9 @@ msgid ""
 "CyberPanel will auto fetch 15 days trial key for you. Make sure this server "
 "have not used trial already."
 msgstr ""
+"注：15 日間のトライアルを選択した場合、シリアルキーを入力する必要はありませ"
+"ん。CyberPanel は15日間の試用版キーを自動的に取得します。 このサーバーがまだ"
+"試用版を使用していないことを確認してください。"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:193
 msgid "With great wisdom comes great responsibility."
