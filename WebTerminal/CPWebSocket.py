@@ -1,12 +1,14 @@
-import os
-import asyncio
-import websockets
-import paramiko
-import json
+import signal
+import sys
 import ssl
+from SimpleWebSocketServer import WebSocket, SimpleSSLWebSocketServer
+import paramiko
+import os
+import json
+import threading as multi
+import time
 
-
-class WebSocketServer:
+class SSHServer(multi.Thread):
 
     def loadPublicKey(self):
         pubkey = '/root/.ssh/cyberpanel.pub'
@@ -22,16 +24,13 @@ class WebSocketServer:
         except:
             pass
 
-
         if checker:
             writeToFile = open(authFile, 'a')
             writeToFile.writelines(data)
             writeToFile.close()
 
-
-    def __init__(self, websocket, path):
-        self.websockets = websocket
-        self.path = path
+    def __init__(self, websocket):
+        multi.Thread.__init__(self)
         self.sshclient = paramiko.SSHClient()
         self.sshclient.load_system_host_keys()
         self.sshclient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -43,96 +42,64 @@ class WebSocketServer:
         self.sshclient.connect('127.0.0.1', 22, username='root', pkey=k)
         self.shell = self.sshclient.invoke_shell(term='xterm')
         self.shell.settimeout(0)
-        self.verifyPath = ''
 
-    async def consumer_handler(self):
-        try:
-            async for message in self.websockets:
-                await self.sendData(message)
-        except:
-            print(self.verifyPath)
-            os.remove(self.verifyPath)
+        self.websocket = websocket
 
-    async def producer_handler(self):
-        try:
-            while True:
-                message = await self.recvData()
-                if os.path.exists(self.verifyPath):
-                    await self.websockets.send(message)
-                else:
-                    await self.websockets.send('Authentication failed.')
-        except:
-            print(self.verifyPath)
-            os.remove(self.verifyPath)
-
-    async def recvData(self):
-        try:
-            print ('recvData')
+    def recvData(self):
+        while True:
             try:
-                while True:
+                if os.path.exists(self.websocket.verifyPath):
                     if self.shell.recv_ready():
-                        return self.shell.recv(9000).decode("utf-8")
+                        self.websocket.sendMessage(self.shell.recv(9000).decode("utf-8"))
                     else:
-                        await asyncio.sleep(0.1)
-                        continue
-            except:
-                pass
-        except:
-            print(self.verifyPath)
-            os.remove(self.verifyPath)
+                        time.sleep(0.1)
+            except BaseException, msg:
+                time.sleep(2)
 
-    async def sendData(self, message):
+    def run(self):
         try:
-            print ('sendData')
-            print (str(message))
-            try:
-                data = json.loads(message)
-                if str(message).find('"tp":"init"') > -1:
-                    self.verifyPath = str(data['data']['verifyPath'])
-                else:
-                    if os.path.exists(self.verifyPath):
-                        self.shell.send(str(data['data']))
-            except:
-                pass
-        except:
-            print(self.verifyPath)
-            os.remove(self.verifyPath)
-
-    @staticmethod
-    async def initialize(websocket, path):
-        try:
-            webshell = WebSocketServer(websocket, path)
-
-            consumer_task = asyncio.ensure_future(
-                webshell.consumer_handler())
-            producer_task = asyncio.ensure_future(
-                webshell.producer_handler())
-            done, pending = await asyncio.wait(
-                [consumer_task, producer_task],
-                return_when=asyncio.FIRST_COMPLETED,
-            )
-            for task in pending:
-                task.cancel()
-        except:
-            print(webshell.verifyPath)
-            os.remove(webshell.verifyPath)
+            self.recvData()
+        except BaseException, msg:
+            print(str(msg))
 
 
-def main():
-    pidfile = '/usr/local/CyberCP/WebTerminal/pid'
+class WebTerminalServer(WebSocket):
 
-    writeToFile = open(pidfile, 'w')
-    writeToFile.write(str(os.getpid()))
-    writeToFile.close()
+   def handleMessage(self):
+       try:
+           data = json.loads(self.data)
+           if str(self.data).find('"tp":"init"') > -1:
+               self.verifyPath = str(data['data']['verifyPath'])
+           else:
+               if os.path.exists(self.verifyPath):
+                   self.shell.send(str(data['data']))
+       except:
+           pass
 
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    context.load_cert_chain('/usr/local/lscp/conf/cert.pem', '/usr/local/lscp/conf/key.pem')
-    start_server = websockets.serve(WebSocketServer.initialize, '', 5678, ssl=context)
-    asyncio.get_event_loop().run_until_complete(start_server)
-    asyncio.get_event_loop().run_forever()
+   def handleConnected(self):
+      self.sh = SSHServer(self)
+      self.shell = self.sh.shell
+      self.sh.start()
 
-
+   def handleClose(self):
+      try:
+          os.remove(self.verifyPath)
+      except:
+          pass
 
 
 if __name__ == "__main__":
-    main()
+   pidfile = '/usr/local/CyberCP/WebTerminal/pid'
+
+   writeToFile = open(pidfile, 'w')
+   writeToFile.write(str(os.getpid()))
+   writeToFile.close()
+
+   server = SimpleSSLWebSocketServer('0.0.0.0', '5678', WebTerminalServer,  '/usr/local/lscp/conf/cert.pem', '/usr/local/lscp/conf/key.pem', version=ssl.PROTOCOL_TLSv1)
+
+   def close_sig_handler(signal, frame):
+      server.close()
+      sys.exit()
+
+   signal.signal(signal.SIGINT, close_sig_handler)
+   server.serveforever()

@@ -11,7 +11,7 @@ cffi==1.11.5
 chardet==3.0.4
 ConfigArgParse==0.13.0
 configobj==4.7.2
-cryptography==2.2.2
+cryptography==2.8
 decorator==3.4.0
 docker==3.6.0
 docker-pycreds==0.4.0
@@ -47,6 +47,8 @@ pyliblzma==0.5.3
 pyOpenSSL==17.5.0
 pyRFC3339==1.1
 pyserial==2.6
+paramiko==2.6.0
+SimpleWebSocketServer==0.1.1
 python-dateutil==2.7.5
 pytz==2018.4
 pyudev==0.15

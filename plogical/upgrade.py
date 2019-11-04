@@ -1982,7 +1982,7 @@ failovermethod=priority
         Upgrade.someDirectories()
         Upgrade.installLSCPD()
         Upgrade.GeneralMigrations()
-        Upgrade.p3()
+        #Upgrade.p3()
 
         if os.path.exists(postfixPath):
             Upgrade.upgradeDovecot()
