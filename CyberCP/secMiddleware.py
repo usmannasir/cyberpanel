@@ -92,5 +92,12 @@ class secMiddleware:
                 logging.writeToFile(str(msg))
                 response = self.get_response(request)
                 return response
+
+
         response = self.get_response(request)
+        
+        response['X-XSS-Protection'] = "1; mode=block"
+        response['Strict-Transport-Security'] = "max-age=31536000; includeSubDomains; preload"
+        response['X-Frame-Options'] = "DENY"
+
         return response

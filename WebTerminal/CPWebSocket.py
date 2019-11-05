@@ -9,6 +9,8 @@ import threading as multi
 import time
 
 class SSHServer(multi.Thread):
+    OKGREEN = '\033[92m'
+    ENDC = '\033[0m'
 
     def loadPublicKey(self):
         pubkey = '/root/.ssh/cyberpanel.pub'
@@ -44,17 +46,25 @@ class SSHServer(multi.Thread):
         self.shell.settimeout(0)
 
         self.websocket = websocket
+        self.color = 0
 
     def recvData(self):
         while True:
             try:
                 if os.path.exists(self.websocket.verifyPath):
-                    if self.shell.recv_ready():
-                        self.websocket.sendMessage(self.shell.recv(9000).decode("utf-8"))
-                    else:
-                        time.sleep(0.1)
+                    if self.websocket.filePassword == self.websocket.filePassword:
+                        if self.shell.recv_ready():
+                            if self.color == 0:
+                                text = '%sEnjoy your accelerated Internet by CyberPanel and LiteSpeed%s' % (SSHServer.OKGREEN, SSHServer.ENDC)
+                                nText = 'Enjoy your accelerated Internet by CyberPanel'
+                                self.websocket.sendMessage(self.shell.recv(9000).decode("utf-8").replace(nText, text))
+                                self.color = 1
+                            else:
+                                self.websocket.sendMessage(self.shell.recv(9000).decode("utf-8"))
+                        else:
+                            time.sleep(0.01)
             except BaseException, msg:
-                time.sleep(2)
+                time.sleep(0.1)
 
     def run(self):
         try:
@@ -70,9 +80,12 @@ class WebTerminalServer(WebSocket):
            data = json.loads(self.data)
            if str(self.data).find('"tp":"init"') > -1:
                self.verifyPath = str(data['data']['verifyPath'])
+               self.password = str(data['data']['password'])
+               self.filePassword = open(self.verifyPath, 'r').read()
            else:
                if os.path.exists(self.verifyPath):
-                   self.shell.send(str(data['data']))
+                   if self.filePassword == self.filePassword:
+                    self.shell.send(str(data['data']))
        except:
            pass
 

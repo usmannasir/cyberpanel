@@ -1353,6 +1353,12 @@ class Upgrade:
                 if items.find('WebTerminal') > -1:
                     WebTerminal = 0
 
+            SESSION_COOKIE_SECURE = 1
+
+            for items in data:
+                if items.find('SESSION_COOKIE_SECURE') > -1:
+                    SESSION_COOKIE_SECURE = 0
+
             Upgrade.stdOut('Restoring settings file!')
 
             writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
@@ -1361,6 +1367,13 @@ class Upgrade:
                 if items.find("CommonMiddleware") > -1:
                     if csrfCheck == 1:
                         writeToFile.writelines("    'django.middleware.csrf.CsrfViewMiddleware',\n")
+
+                if items.find('DATABASE_ROUTERS') > -1:
+                    if SESSION_COOKIE_SECURE == 1:
+                        con = """SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+"""
+                        writeToFile.writelines(con)
 
                 elif items.find("'filemanager',") > -1:
                     writeToFile.writelines(items)

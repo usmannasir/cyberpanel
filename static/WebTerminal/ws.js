@@ -58,7 +58,7 @@ WSSHClient.prototype.sendInitData = function (options) {
 }
 
 WSSHClient.prototype.sendClientData = function (data) {
-    this._connection.send(JSON.stringify({"tp": "client", "data": data, 'verifyPath': $("#verifyPath").text()}))
+    this._connection.send(JSON.stringify({"tp": "client", "data": data, 'verifyPath': $("#verifyPath").text(), 'password': $("#password").text()}))
 }
 
 var client = new WSSHClient();

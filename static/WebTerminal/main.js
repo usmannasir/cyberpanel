@@ -67,14 +67,9 @@ function check() {
 function connect() {
     var remember = $("#remember").is(":checked");
     var options = {
-        host: $("#host").val(),
-        port: $("#port").val(),
-        username: $("#username").val(),
-        ispwd: $("input[name=ispwd]:checked").val(),
-        secret: $("#secret").val(),
-        verifyPath: $("#verifyPath").text()
-    }
-    console.debug(options);
+        verifyPath: $("#verifyPath").text(),
+        password: $("#password").text()
+    };
     if (remember) {
         store(options)
     }

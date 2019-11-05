@@ -11,6 +11,7 @@ from plogical.processUtilities import ProcessUtilities
 from plogical.firewallUtilities import FirewallUtilities
 from firewall.models import FirewallRules
 import json
+import plogical.randomPassword
 
 # Create your views here.
 
@@ -24,11 +25,12 @@ def terminal(request):
         else:
             return ACLManager.loadError()
 
+        password = plogical.randomPassword.generate_pass()
+
         verifyPath = "/home/cyberpanel/" + str(randint(100000, 999999))
         writeToFile = open(verifyPath, 'w')
-        writeToFile.writelines('code')
+        writeToFile.write(password)
         writeToFile.close()
-
 
         ## setting up ssh server
         path = '/etc/systemd/system/cpssh.service'
@@ -46,7 +48,7 @@ def terminal(request):
             newFWRule = FirewallRules(name='terminal', proto='tcp', port='5678', ipAddress='0.0.0.0/0')
             newFWRule.save()
 
-        return render(request, 'WebTerminal/WebTerminal.html', {'verifyPath': verifyPath})
+        return render(request, 'WebTerminal/WebTerminal.html', {'verifyPath': verifyPath, 'password': password})
     except BaseException, msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
