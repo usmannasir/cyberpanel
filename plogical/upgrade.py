@@ -1359,6 +1359,12 @@ class Upgrade:
                 if items.find('SESSION_COOKIE_SECURE') > -1:
                     SESSION_COOKIE_SECURE = 0
 
+            DATABASE_ROUTERS = 1
+
+            for items in data:
+                if items.find('DATABASE_ROUTERS') > -1:
+                    DATABASE_ROUTERS = 0
+
             Upgrade.stdOut('Restoring settings file!')
 
             writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
@@ -1369,6 +1375,7 @@ class Upgrade:
                         writeToFile.writelines("    'django.middleware.csrf.CsrfViewMiddleware',\n")
 
                 if items.find('DATABASE_ROUTERS') > -1:
+                    writeToFile.writelines(items)
                     if SESSION_COOKIE_SECURE == 1:
                         con = """SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
@@ -1415,6 +1422,9 @@ CSRF_COOKIE_SECURE = True
             if MEDIA_URL == 1:
                 writeToFile.writelines("MEDIA_URL = '/home/cyberpanel/media/'\n")
                 writeToFile.writelines('MEDIA_ROOT = MEDIA_URL\n')
+
+            if DATABASE_ROUTERS == 1:
+                writeToFile.writelines("DATABASE_ROUTERS = ['backup.backupRouter.backupRouter']\n")
 
             writeToFile.close()
 
