@@ -51,18 +51,21 @@ class SSHServer(multi.Thread):
     def recvData(self):
         while True:
             try:
-                if os.path.exists(self.websocket.verifyPath):
-                    if self.websocket.filePassword == self.websocket.filePassword:
-                        if self.shell.recv_ready():
-                            if self.color == 0:
-                                text = '%sEnjoy your accelerated Internet by CyberPanel and LiteSpeed%s' % (SSHServer.OKGREEN, SSHServer.ENDC)
-                                nText = 'Enjoy your accelerated Internet by CyberPanel'
-                                self.websocket.sendMessage(self.shell.recv(9000).decode("utf-8").replace(nText, text))
-                                self.color = 1
+                if self.websocket.running:
+                    if os.path.exists(self.websocket.verifyPath):
+                        if self.websocket.filePassword == self.websocket.password:
+                            if self.shell.recv_ready():
+                                if self.color == 0:
+                                    text = '%sEnjoy your accelerated Internet by CyberPanel and LiteSpeed%s' % (SSHServer.OKGREEN, SSHServer.ENDC)
+                                    nText = 'Enjoy your accelerated Internet by CyberPanel'
+                                    self.websocket.sendMessage(self.shell.recv(9000).decode("utf-8").replace(nText, text))
+                                    self.color = 1
+                                else:
+                                    self.websocket.sendMessage(self.shell.recv(9000).decode("utf-8"))
                             else:
-                                self.websocket.sendMessage(self.shell.recv(9000).decode("utf-8"))
-                        else:
-                            time.sleep(0.01)
+                                time.sleep(0.01)
+                else:
+                    return 0
             except BaseException, msg:
                 time.sleep(0.1)
 
@@ -84,12 +87,13 @@ class WebTerminalServer(WebSocket):
                self.filePassword = open(self.verifyPath, 'r').read()
            else:
                if os.path.exists(self.verifyPath):
-                   if self.filePassword == self.filePassword:
+                   if self.filePassword == self.password:
                     self.shell.send(str(data['data']))
        except:
            pass
 
    def handleConnected(self):
+      self.running = 1
       self.sh = SSHServer(self)
       self.shell = self.sh.shell
       self.sh.start()
@@ -97,6 +101,7 @@ class WebTerminalServer(WebSocket):
    def handleClose(self):
       try:
           os.remove(self.verifyPath)
+          self.running = 0
       except:
           pass
 

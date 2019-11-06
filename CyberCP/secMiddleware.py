@@ -95,9 +95,10 @@ class secMiddleware:
 
 
         response = self.get_response(request)
-        
+
+        #response['Strict-Transport-Security'] = "max-age=31536000; includeSubDomains; preload"
         response['X-XSS-Protection'] = "1; mode=block"
-        response['Strict-Transport-Security'] = "max-age=31536000; includeSubDomains; preload"
-        response['X-Frame-Options'] = "DENY"
+        response['X-Frame-Options'] = "sameorigin"
+        response['Content-Security-Policy'] = "frame-ancestors jsdelivr.com"
 
         return response

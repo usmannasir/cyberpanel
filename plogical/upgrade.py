@@ -2011,6 +2011,9 @@ failovermethod=priority
         except:
             pass
 
+        command = 'csf -uf'
+        Upgrade.executioner(command, 'fix csf if there', 0)
+
         Upgrade.stdOut("Upgrade Completed.")
 
 
