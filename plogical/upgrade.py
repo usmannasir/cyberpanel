@@ -1925,6 +1925,9 @@ failovermethod=priority
         # Upgrade.stdOut("Upgrades are currently disabled")
         # return 0
 
+        command = 'systemctl stop cpssh'
+        Upgrade.executioner(command, 'fix csf if there', 0)
+
         postfixPath = '/home/cyberpanel/postfix'
         pdns = '/home/cyberpanel/pdns'
         pureftpd = '/home/cyberpanel/ftp'
@@ -2012,6 +2015,8 @@ failovermethod=priority
             pass
 
         command = 'csf -uf'
+        Upgrade.executioner(command, 'fix csf if there', 0)
+        command = 'systemctl start cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
 
         Upgrade.stdOut("Upgrade Completed.")
