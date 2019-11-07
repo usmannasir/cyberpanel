@@ -14,7 +14,7 @@ except:
     pass
 import threading as multi
 from plogical.processUtilities import ProcessUtilities
-from IncBackups.models import IncJob, JobSnapshots
+from .models import IncJob, JobSnapshots
 from websiteFunctions.models import Websites
 import plogical.randomPassword as randomPassword
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
@@ -29,7 +29,6 @@ from mailServer.models import Domains as eDomains
 from random import randint
 import json
 from django.shortcuts import HttpResponse
-from plogical.mailUtilities import mailUtilities
 
 try:
     from plogical.virtualHostUtilities import virtualHostUtilities

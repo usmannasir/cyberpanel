@@ -956,12 +956,12 @@ class preFlightsChecks:
                                       'Install Git',
                                       1, 1, os.EX_OSERR)
             else:
-                command = 'sudo yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
+                command = 'yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
                 preFlightsChecks.call(command, self.distro, '[installGit]',
                                       'Install Git',
-                                      1, 1, os.EX_OSERR)
+                                      1, 0, os.EX_OSERR)
 
-                command = 'sudo yum install git -y'
+                command = 'yum install git -y'
                 preFlightsChecks.call(command, self.distro, '[installGit]',
                                       'Install Git',
                                       1, 1, os.EX_OSERR)
