@@ -948,6 +948,27 @@ class preFlightsChecks:
                 preFlightsChecks.stdOut("psmisc successfully installed!")
                 break
 
+    def installGit(self):
+        try:
+            if os.path.exists("/etc/lsb-release"):
+                command = 'apt -y install git'
+                preFlightsChecks.call(command, self.distro, '[installGit]',
+                                      'Install Git',
+                                      1, 1, os.EX_OSERR)
+            else:
+                command = 'sudo yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
+                preFlightsChecks.call(command, self.distro, '[installGit]',
+                                      'Install Git',
+                                      1, 1, os.EX_OSERR)
+
+                command = 'sudo yum install git -y'
+                preFlightsChecks.call(command, self.distro, '[installGit]',
+                                      'Install Git',
+                                      1, 1, os.EX_OSERR)
+
+        except BaseException, msg:
+            pass
+
     def download_install_CyberPanel(self, mysqlPassword, mysql):
         try:
             ## On OpenVZ there is an issue with requests module, which needs to upgrade requests module
@@ -964,19 +985,19 @@ class preFlightsChecks:
 
         os.chdir(self.path)
 
-        command = "wget http://cyberpanel.sh/CyberPanel.1.9.1.tar.gz"
+        self.installGit()
+
+        os.chdir('/usr/local')
+
+        command = "git clone https://github.com/usmannasir/cyberpanel"
         # command = "wget http://cyberpanel.sh/CyberPanelTemp.tar.gz"
         preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
                               'CyberPanel Download',
                               1, 1, os.EX_OSERR)
 
-        ##
+        shutil.move('cyberpanel', 'CyberCP')
 
-        count = 0
-        command = "tar zxf CyberPanel.1.9.1.tar.gz"
-        # command = "tar zxf CyberPanelTemp.tar.gz"
-        preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
-                              'Extract CyberPanel', 1, 1, os.EX_OSERR)
+        ##
 
         ### update password:
 

@@ -1272,13 +1272,27 @@ class Upgrade:
             pass
 
     @staticmethod
+    def installGit():
+        try:
+            if os.path.exists("/etc/lsb-release"):
+                command = 'apt -y install git'
+                Upgrade.executioner(command, 'installGit', 0)
+            else:
+                command = 'sudo yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
+                Upgrade.executioner(command, 'installGit', 0)
+
+                command = 'sudo yum install git -y'
+                Upgrade.executioner(command, 'installGit', 0)
+
+        except BaseException, msg:
+            pass
+
+    @staticmethod
     def downloadAndUpgrade(versionNumbring):
         try:
             ## Download latest version.
 
-            command = "wget https://cyberpanel.net/CyberPanel." + versionNumbring
-            # command = "wget https://cyberpanel.net/CyberPanel.1.7.4.tar.gz"
-            Upgrade.executioner(command, 'Download latest version', 1)
+            Upgrade.installGit()
 
             ## Backup settings file.
 
@@ -1290,9 +1304,16 @@ class Upgrade:
 
             ## Extract Latest files
 
-            # command = "tar zxf CyberPanel.1.7.4.tar.gz"
-            command = "tar zxf CyberPanel." + versionNumbring
-            Upgrade.executioner(command, 'Extract latest version', 1)
+            os.chdir('/usr/local')
+
+            if os.path.exists('cyberpanel'):
+                shutil.rmtree('cyberpanel')
+
+            command = 'git clone https://github.com/usmannasir/cyberpanel'
+            Upgrade.executioner(command, 'Download CyberPanel', 1)
+
+            shutil.move('cyberpanel', 'CyberCP')
+
 
             ## Copy settings file
 
