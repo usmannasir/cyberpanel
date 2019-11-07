@@ -1082,10 +1082,13 @@ class preFlightsChecks:
                               'Move static content', 1, 1, os.EX_OSERR)
 
         try:
+            import requests
+            getVersion = requests.get('https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/version.txt')
+            latest = getVersion.json()
             path = "/usr/local/CyberCP/version.txt"
             writeToFile = open(path, 'w')
-            writeToFile.writelines('1.9\n')
-            writeToFile.writelines('1')
+            writeToFile.writelines('%s\n' % (str(latest['version'])))
+            writeToFile.writelines(str(latest['build']))
             writeToFile.close()
         except:
             pass
