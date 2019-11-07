@@ -1,0 +1,459 @@
+<?xml version="1.0" ?>
+<php>
+     <extension>
+         <extensionName>php%s-php-zstd</extensionName>
+         <extensionDescription>: Zstd Extension for PHP</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-zephir-parser</extensionName>
+         <extensionDescription>Zephir parser extension</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-xmlrpc</extensionName>
+         <extensionDescription>A module for PHP applications which use the XML-RPC</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-xml</extensionName>
+         <extensionDescription>A module for PHP applications which use XML</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-xcache</extensionName>
+         <extensionDescription>Fast, stable PHP opcode cacher</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-twig</extensionName>
+         <extensionDescription>The flexible, fast, and secure template engine for PHP</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-tidy</extensionName>
+         <extensionDescription>Standard PHP module provides tidy library support</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-tarantool</extensionName>
+         <extensionDescription>PHP driver for Tarantool/Box</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-suhosin</extensionName>
+         <extensionDescription>Suhosin is an advanced protection system for PHP</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-soap</extensionName>
+         <extensionDescription>A module for PHP applications that use the SOAP protocol</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-snmp</extensionName>
+         <extensionDescription>A module for PHP applications that query SNMP-managed devices</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-snappy</extensionName>
+         <extensionDescription>Snappy Extension for PHP</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-smbclient</extensionName>
+         <extensionDescription>PHP wrapper for libsmbclient</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-recode</extensionName>
+         <extensionDescription>A module for PHP applications for using the recode library</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-pspell</extensionName>
+         <extensionDescription>A module for PHP applications for using pspell interfaces</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-process</extensionName>
+         <extensionDescription>Modules for PHP script using system process interfaces</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-pimple</extensionName>
+         <extensionDescription>A simple dependency injection container for PHP Extensions</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-phurple</extensionName>
+         <extensionDescription>PHP bindings for libpurple</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-phpiredis</extensionName>
+         <extensionDescription>Client extension for Redis</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-phalcon3</extensionName>
+         <extensionDescription>Phalcon Framework</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-pgsql</extensionName>
+         <extensionDescription>A PostgreSQL database module for PHP</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-pecl-zmq</extensionName>
+         <extensionDescription>ZeroMQ messaging</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-pecl-zip</extensionName>
+         <extensionDescription>Une extension de gestion des ZIP</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>php%s-php-pecl-yp</extensionName>
+         <extensionDescription>YP/NIS functions</extensionDescription>
+         <status>0</status>
+     </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-yaz</extensionName>
+         <extensionDescription>Z39.50/SRU client</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-yar</extensionName>
+         <extensionDescription>Light, concurrent RPC framework</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-yaml</extensionName>
+         <extensionDescription>PHP Bindings for yaml</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-yaf</extensionName>
+         <extensionDescription>Extension to work with the Memcached caching daemon.</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-yac</extensionName>
+         <extensionDescription>Yet Another Framework</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-yac</extensionName>
+         <extensionDescription>Lockless user data cache</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-xxtea</extensionName>
+         <extensionDescription>XXTEA encryption algorithm extension for PHP</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-xslcache</extensionName>
+         <extensionDescription>XSL extension that caches the parsed XSL style sheet</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-xrange</extensionName>
+         <extensionDescription>Numeric iterator primitives</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-xmp</extensionName>
+         <extensionDescription>Bindings for the libxmp library</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-xmldiff</extensionName>
+         <extensionDescription>XML diff and merge.</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-xhprof</extensionName>
+         <extensionDescription>PHP extension for XHProf, a Hierarchical Profiler</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-xdiff</extensionName>
+         <extensionDescription> File differences/patches.</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-xdebug</extensionName>
+         <extensionDescription>PECL package for debugging PHP scripts</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-xattr</extensionName>
+         <extensionDescription> Extended attributes</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-wxwidgets</extensionName>
+         <extensionDescription>Cross-platform widget toolkit</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-weakref</extensionName>
+         <extensionDescription>Implementation of weak references</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pecl-vld</extensionName>
+         <extensionDescription>Dump the internal representation of PHP scripts</extensionDescription>
+         <status>0</status>
+    </extension>
+
+	<extension>
+         <extensionName>php%s-php-pecl-varnish</extensionName>
+         <extensionDescription>Varnish Cache bindings</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pear.noarch</extensionName>
+         <extensionDescription>PHP Extension and Application Repository framework</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-pdo</extensionName>
+         <extensionDescription>A database access abstraction module for PHP applications</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-opcache</extensionName>
+         <extensionDescription>The Zend OPcache</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-odbc</extensionName>
+         <extensionDescription>A module for PHP applications that use ODBC databases</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-oci8</extensionName>
+         <extensionDescription>A module for PHP applications that use OCI8 databases</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-mysqlnd</extensionName>
+         <extensionDescription> A module for PHP applications that use MySQL Database</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-mssql</extensionName>
+         <extensionDescription>MSSQL database module for PHP</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-mcrypt</extensionName>
+         <extensionDescription>Standard PHP module provides mcrypt library support</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-mbstring</extensionName>
+         <extensionDescription>A module for PHP applications which need multi-byte String handle</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-maxminddb</extensionName>
+         <extensionDescription>MaxMind DB Reader extension</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-magickwand</extensionName>
+         <extensionDescription>PHP API for ImageMagick</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-lz4</extensionName>
+         <extensionDescription>LZ4 Extension for PHP</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-libvirt-doc</extensionName>
+         <extensionDescription>Document of php-libvirt</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-libvirt</extensionName>
+         <extensionDescription>PHP language binding for Libvirt</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-ldap</extensionName>
+         <extensionDescription>A module for PHP applications that use LDAP</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-ioncube-loader</extensionName>
+         <extensionDescription>Loader for ionCube Encoded Files with ionCube</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-intl</extensionName>
+         <extensionDescription>Internationalization extension for PHP applications</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-interbase</extensionName>
+         <extensionDescription> A module for PHP applications that use Interbase/Firebird databases</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-imap</extensionName>
+         <extensionDescription>A module for PHP applications that use IMAPs</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-horde-horde-lz4</extensionName>
+         <extensionDescription>Horde LZ4 Compression Extension</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-gmp</extensionName>
+         <extensionDescription>A module for PHP applications for using the GNU MP library</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-geos</extensionName>
+         <extensionDescription>PHP module for GEOS</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-gd</extensionName>
+         <extensionDescription> A module for PHP applications for using the gd graphics library</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-enchant</extensionName>
+         <extensionDescription> Enchant spelling extension for PHP applications</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-embedded</extensionName>
+         <extensionDescription>PHP library for embedding in applications</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-devel</extensionName>
+         <extensionDescription>Files needed for building PHP extensions</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-dbg</extensionName>
+         <extensionDescription>The interactive PHP debugger</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-dba</extensionName>
+         <extensionDescription>A database abstraction layer module for PHP applications</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-common</extensionName>
+         <extensionDescription>Common files for PHP</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-cli</extensionName>
+         <extensionDescription>Command-line interface for PHP</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-channel-horde.noarch</extensionName>
+         <extensionDescription>Adds pear.horde.org channel to PEAR</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-brotli</extensionName>
+         <extensionDescription>Brotli Extension for PHP</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>php%s-php-bcmath</extensionName>
+         <extensionDescription>A module for PHP applications for using the bcmath library</extensionDescription>
+         <status>1</status>
+    </extension>
+
+</php>
