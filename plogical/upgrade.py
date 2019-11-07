@@ -1309,11 +1309,13 @@ class Upgrade:
             if os.path.exists('cyberpanel'):
                 shutil.rmtree('cyberpanel')
 
+            if os.path.exists('CyberCP'):
+                shutil.rmtree('CyberCP')
+
             command = 'git clone https://github.com/usmannasir/cyberpanel'
             Upgrade.executioner(command, 'Download CyberPanel', 1)
 
             shutil.move('cyberpanel', 'CyberCP')
-
 
             ## Copy settings file
 
