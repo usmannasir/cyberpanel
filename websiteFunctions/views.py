@@ -606,6 +606,22 @@ def installPrestaShop(request, domain):
     except KeyError:
         return redirect(loadLoginPage)
 
+def installMagento(request, domain):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        return wm.installMagento(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def magentoInstall(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.magentoInstall(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def prestaShopInstall(request):
     try:
         userID = request.session['userID']

@@ -88,6 +88,11 @@ urlpatterns = [
     url(r'^prestaShopInstall$', views.prestaShopInstall, name='prestaShopInstall'),
     url(r'^(?P<domain>(.*))/installPrestaShop$', views.installPrestaShop, name='installPrestaShop'),
 
+    ## magento
+
+    url(r'^(?P<domain>(.*))/installMagento$', views.installMagento, name='installMagento'),
+    url(r'^magentoInstall$', views.magentoInstall, name='magentoInstall'),
+
 
     ## Git
     url(r'^(?P<domain>(.*))/setupGit$', views.setupGit, name='setupGit'),

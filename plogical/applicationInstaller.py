@@ -1,7 +1,9 @@
 #!/usr/local/CyberCP/bin/python2
-import os,sys
+import os, sys
+
 sys.path.append('/usr/local/CyberCP')
 import django
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import threading as multi
@@ -16,6 +18,7 @@ from installUtilities import installUtilities
 import shutil
 from plogical.mailUtilities import mailUtilities
 from plogical.processUtilities import ProcessUtilities
+
 
 class ApplicationInstaller(multi.Thread):
 
@@ -40,9 +43,11 @@ class ApplicationInstaller(multi.Thread):
                 self.changeBranch()
             elif self.installApp == 'prestashop':
                 self.installPrestaShop()
+            elif self.installApp == 'magento':
+                self.installMagento()
 
         except BaseException, msg:
-            logging.writeToFile( str(msg) + ' [ApplicationInstaller.run]')
+            logging.writeToFile(str(msg) + ' [ApplicationInstaller.run]')
 
     def installWPCLI(self):
         try:
@@ -56,7 +61,7 @@ class ApplicationInstaller(multi.Thread):
             ProcessUtilities.executioner(command)
 
         except BaseException, msg:
-            logging.writeToFile( str(msg) + ' [ApplicationInstaller.installWPCLI]')
+            logging.writeToFile(str(msg) + ' [ApplicationInstaller.installWPCLI]')
 
     def dataLossCheck(self, finalPath, tempStatusPath):
 
@@ -102,7 +107,7 @@ class ApplicationInstaller(multi.Thread):
                 ProcessUtilities.executioner(command)
 
         except BaseException, msg:
-            logging.writeToFile( str(msg) + ' [ApplicationInstaller.installGit]')
+            logging.writeToFile(str(msg) + ' [ApplicationInstaller.installGit]')
 
     def dbCreation(self, tempStatusPath, website):
         try:
@@ -182,7 +187,6 @@ class ApplicationInstaller(multi.Thread):
                 else:
                     finalPath = website.path
 
-
                 if website.master.package.dataBases > website.master.databases_set.all().count():
                     pass
                 else:
@@ -208,13 +212,12 @@ class ApplicationInstaller(multi.Thread):
                 else:
                     finalPath = "/home/" + domainName + "/public_html/"
 
-
                 if website.package.dataBases > website.databases_set.all().count():
                     pass
                 else:
                     statusFile = open(tempStatusPath, 'w')
                     statusFile.writelines(
-                            "Maximum database limit reached for this website." + " [404]")
+                        "Maximum database limit reached for this website." + " [404]")
                     statusFile.close()
                     return 0
 
@@ -286,7 +289,6 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-
             command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
@@ -303,7 +305,6 @@ class ApplicationInstaller(multi.Thread):
             homeDir = "/home/" + domainName + "/public_html"
 
             if not os.path.exists(homeDir):
-
                 command = "sudo chown -R " + externalApp + ":" + externalApp + " " + homeDir
                 ProcessUtilities.executioner(command, externalApp)
 
@@ -383,7 +384,7 @@ class ApplicationInstaller(multi.Thread):
                 else:
                     statusFile = open(tempStatusPath, 'w')
                     statusFile.writelines(
-                            "Maximum database limit reached for this website." + " [404]")
+                        "Maximum database limit reached for this website." + " [404]")
                     statusFile.close()
                     return 0
 
@@ -416,7 +417,8 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Downloading and extracting PrestaShop Core..,30')
             statusFile.close()
 
-            command = "sudo wget https://download.prestashop.com/download/releases/prestashop_1.7.4.2.zip -P %s" % (finalPath)
+            command = "sudo wget https://download.prestashop.com/download/releases/prestashop_1.7.4.2.zip -P %s" % (
+                finalPath)
             ProcessUtilities.executioner(command, externalApp)
 
             command = "sudo unzip -o %sprestashop_1.7.4.2.zip -d " % (finalPath) + finalPath
@@ -433,7 +435,7 @@ class ApplicationInstaller(multi.Thread):
 
             if home == '0':
                 path = self.extraArgs['path']
-                #finalURL = domainName + '/' + path
+                # finalURL = domainName + '/' + path
                 finalURL = domainName
             else:
                 finalURL = domainName
@@ -541,8 +543,6 @@ class ApplicationInstaller(multi.Thread):
                 externalApp = website.externalApp
                 finalPath = "/home/" + domainName + "/public_html/"
 
-
-
             ## Security Check
 
             if finalPath.find("..") > -1:
@@ -550,7 +550,6 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
                 statusFile.close()
                 return 0
-
 
             command = 'sudo mkdir -p ' + finalPath
             ProcessUtilities.executioner(command, externalApp)
@@ -567,11 +566,12 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             try:
-                command = 'git clone --depth 1 --no-single-branch git@' + defaultProvider +'.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
+                command = 'git clone --depth 1 --no-single-branch git@' + defaultProvider + '.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
                 ProcessUtilities.executioner(command, externalApp)
             except subprocess.CalledProcessError, msg:
                 statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines('Failed to clone repository, make sure you deployed your key to repository. [404]')
+                statusFile.writelines(
+                    'Failed to clone repository, make sure you deployed your key to repository. [404]')
                 statusFile.close()
                 return 0
 
@@ -622,7 +622,7 @@ class ApplicationInstaller(multi.Thread):
                 logging.writeToFile('Git is not setup for this website.')
                 return 0
 
-            command = 'sudo git --git-dir=' + finalPath + '.git --work-tree=' + finalPath +'  pull'
+            command = 'sudo git --git-dir=' + finalPath + '.git --work-tree=' + finalPath + '  pull'
             ProcessUtilities.executioner(command, externalApp)
 
             ##
@@ -637,7 +637,7 @@ class ApplicationInstaller(multi.Thread):
 
 
         except BaseException, msg:
-            logging.writeToFile(str(msg)+ " [ApplicationInstaller.gitPull]")
+            logging.writeToFile(str(msg) + " [ApplicationInstaller.gitPull]")
             return 0
 
     def detachRepo(self):
@@ -661,7 +661,6 @@ class ApplicationInstaller(multi.Thread):
                 childDomain = ChildDomains.objects.get(domain=domain)
                 finalPath = childDomain.path
 
-
             command = 'sudo rm -rf ' + finalPath
             ProcessUtilities.executioner(command, website.externalApp)
 
@@ -681,7 +680,7 @@ class ApplicationInstaller(multi.Thread):
 
 
         except BaseException, msg:
-            logging.writeToFile(str(msg)+ " [ApplicationInstaller.gitPull]")
+            logging.writeToFile(str(msg) + " [ApplicationInstaller.gitPull]")
             return 0
 
     def installJoomla(self):
@@ -871,9 +870,185 @@ class ApplicationInstaller(multi.Thread):
                     command = 'sudo git --git-dir=' + finalPath + '/.git  checkout ' + githubBranch
                     ProcessUtilities.executioner(command, externalApp)
                 except subprocess.CalledProcessError, msg:
-                    logging.writeToFile('Failed to change branch: ' +  str(msg))
+                    logging.writeToFile('Failed to change branch: ' + str(msg))
                     return 0
             return 0
         except BaseException, msg:
             logging.writeToFile('Failed to change branch: ' + str(msg))
+            return 0
+
+    def installMagento(self):
+        try:
+
+            username = self.extraArgs['username']
+            domainName = self.extraArgs['domainName']
+            home = self.extraArgs['home']
+            firstName = self.extraArgs['firstName']
+            lastName = self.extraArgs['lastName']
+            email = self.extraArgs['email']
+            password = self.extraArgs['password']
+            tempStatusPath = self.extraArgs['tempStatusPath']
+            sampleData = self.extraArgs['sampleData']
+
+            FNULL = open(os.devnull, 'w')
+
+            ## Open Status File
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Setting up paths,0')
+            statusFile.close()
+
+            finalPath = ''
+
+            try:
+                website = ChildDomains.objects.get(domain=domainName)
+                externalApp = website.master.externalApp
+
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = website.path.rstrip('/') + "/" + path + "/"
+                else:
+                    finalPath = website.path + "/"
+
+                if website.master.package.dataBases > website.master.databases_set.all().count():
+                    pass
+                else:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines(
+                        "Maximum database limit reached for this website." + " [404]")
+                    statusFile.close()
+                    return 0
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+
+            except:
+                website = Websites.objects.get(domain=domainName)
+                externalApp = website.externalApp
+
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = "/home/" + domainName + "/public_html/" + path + "/"
+                else:
+                    finalPath = "/home/" + domainName + "/public_html/"
+
+                if website.package.dataBases > website.databases_set.all().count():
+                    pass
+                else:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines(
+                        "Maximum database limit reached for this website." + " [404]")
+                    statusFile.close()
+                    return 0
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
+
+            ## Security Check
+
+            if finalPath.find("..") > -1:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
+                statusFile.close()
+                return 0
+
+            if not os.path.exists(finalPath):
+                command = 'sudo mkdir -p ' + finalPath
+                ProcessUtilities.executioner(command, externalApp)
+
+            ## checking for directories/files
+
+            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
+                return 0
+
+            ####
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Downloading and extracting Magento Core..,30')
+            statusFile.close()
+
+            if sampleData:
+                command = "sudo wget http://cyberpanelsh.b-cdn.net/latest-sample.tar.gz -P %s" % (finalPath)
+            else:
+                command = "sudo wget http://cyberpanelsh.b-cdn.net/latest.tar.gz -P %s" % (finalPath)
+
+            ProcessUtilities.executioner(command, externalApp)
+
+            if sampleData:
+                command = 'tar -xf %slatest-sample.tar.gz --directory %s' % (finalPath, finalPath)
+            else:
+                command = 'tar -xf %slatest.tar.gz --directory %s' % (finalPath, finalPath)
+
+            ProcessUtilities.executioner(command, externalApp)
+
+            ##
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Configuring the installation,40')
+            statusFile.close()
+
+            if home == '0':
+                path = self.extraArgs['path']
+                # finalURL = domainName + '/' + path
+                finalURL = domainName
+            else:
+                finalURL = domainName
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Installing and configuring Magento..,60')
+            statusFile.close()
+
+            command = '/usr/local/lsws/lsphp72/bin/php -d memory_limit=512M %sbin/magento setup:install --backend-frontname="admin" ' \
+                      '--db-host="localhost" --db-name="%s" --db-user="%s" --db-password="%s" ' \
+                      '--base-url="http://%s" --base-url-secure="https://%s/" --admin-user="%s" ' \
+                      '--admin-password="%s" --admin-email="%s" --admin-firstname="%s" --admin-lastname="%s"' \
+                      % (finalPath, dbName, dbUser, dbPassword, finalURL, finalURL, username, password, email, firstName, lastName)
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
+            logging.writeToFile(result)
+
+            ##
+
+            if sampleData:
+                command = 'rm -rf %slatest-sample.tar.gz' % (finalPath)
+            else:
+                command = 'rm -rf %slatest.tar.gz' % (finalPath)
+
+            ProcessUtilities.executioner(command, externalApp)
+
+            ##
+
+            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            ProcessUtilities.executioner(command, externalApp)
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines("Successfully Installed. [200]")
+            statusFile.close()
+            return 0
+
+
+        except BaseException, msg:
+            # remove the downloaded files
+
+            homeDir = "/home/" + domainName + "/public_html"
+
+            if not os.path.exists(homeDir):
+                command = "sudo chown -R " + externalApp + ":" + externalApp + " " + homeDir
+                ProcessUtilities.executioner(command, externalApp)
+
+            try:
+                mysqlUtilities.deleteDatabase(dbName, dbUser)
+                db = Databases.objects.get(dbName=dbName)
+                db.delete()
+            except:
+                pass
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines(str(msg) + " [404]")
+            statusFile.close()
             return 0

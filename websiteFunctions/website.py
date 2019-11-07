@@ -2020,6 +2020,68 @@ StrictHostKeyChecking no
         except BaseException, msg:
             return HttpResponse(str(msg))
 
+    def installMagento(self, request=None, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            return render(request, 'websiteFunctions/installMagento.html', {'domainName': self.domain})
+        except BaseException, msg:
+            return HttpResponse(str(msg))
+
+
+    def magentoInstall(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('installStatus', 0)
+
+            mailUtilities.checkHome()
+
+            extraArgs = {}
+            extraArgs['admin'] = admin
+            extraArgs['domainName'] = data['domain']
+            extraArgs['home'] = data['home']
+            extraArgs['firstName'] = data['firstName']
+            extraArgs['lastName'] = data['lastName']
+            extraArgs['username'] = data['username']
+            extraArgs['email'] = data['email']
+            extraArgs['password'] = data['passwordByPass']
+            extraArgs['sampleData'] = data['sampleData']
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            if data['home'] == '0':
+                extraArgs['path'] = data['path']
+
+            background = ApplicationInstaller('magento', extraArgs)
+            background.start()
+
+            time.sleep(2)
+
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                        'tempStatusPath': extraArgs['tempStatusPath']}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+            ## Installation ends
+
+        except BaseException, msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
     def prestaShopInstall(self, userID=None, data=None):
         try:
 
@@ -2086,6 +2148,11 @@ StrictHostKeyChecking no
             except:
                 websitesLimit = 1
 
+            try:
+                apiACL = data['acl']
+            except:
+                apiACL = 'user'
+
             admin = Administrator.objects.get(userName=adminUser)
 
             if hashPassword.check_password(admin.password, adminPass):
@@ -2094,7 +2161,7 @@ StrictHostKeyChecking no
                     data['adminEmail'] = "usman@cyberpersons.com"
 
                 try:
-                    acl = ACL.objects.get(name='user')
+                    acl = ACL.objects.get(name=apiACL)
                     websiteOwn = Administrator(userName=websiteOwner,
                                                password=hashPassword.hash_password(ownerPassword),
                                                email=adminEmail, type=3, owner=admin.pk,
