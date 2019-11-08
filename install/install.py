@@ -3786,6 +3786,12 @@ milter_default_action = accept
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
+
+                command = 'yum install yum-utils -y'
+                preFlightsChecks.call(command, self.distro, '[installRestic]',
+                                      'Add restic repo.',
+                                      1, 0, os.EX_OSERR)
+
                 command = 'yum-config-manager --add-repo https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo'
                 preFlightsChecks.call(command, self.distro, '[installRestic]',
                                       'Add restic repo.',
