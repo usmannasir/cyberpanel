@@ -56,8 +56,7 @@ class MailServerManager:
             return render(self.request, 'mailServer/createEmailAccount.html',
                           {'websiteList': websitesName, "status": 1})
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse(str(msg))
+            return redirect(loadLoginPage)
 
 
     def listEmails(self):
@@ -138,8 +137,7 @@ class MailServerManager:
             return render(self.request, 'mailServer/deleteEmailAccount.html',
                           {'websiteList': websitesName, "status": 1})
         except BaseException, msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse(str(msg))
+            return redirect(loadLoginPage)
 
     def getEmailsForDomain(self):
         try:
@@ -243,7 +241,7 @@ class MailServerManager:
 
             return render(self.request, 'mailServer/emailForwarding.html', {'websiteList': websitesName, "status": 1})
         except BaseException, msg:
-            return HttpResponse(str(msg))
+            return redirect(loadLoginPage)
 
     def fetchCurrentForwardings(self):
         try:
@@ -519,7 +517,7 @@ class MailServerManager:
             return render(self.request, 'mailServer/changeEmailPassword.html',
                           {'websiteList': websitesName, "status": 1})
         except BaseException, msg:
-            return HttpResponse(str(msg))
+            return redirect(loadLoginPage)
 
     def submitPasswordChange(self):
         try:
@@ -587,7 +585,7 @@ class MailServerManager:
                           {'websiteList': websitesName, 'openDKIMInstalled': openDKIMInstalled})
 
         except BaseException, msg:
-            return HttpResponse(str(msg))
+            return redirect(loadLoginPage)
 
     def fetchDKIMKeys(self):
         try:
