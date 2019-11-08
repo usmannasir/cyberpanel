@@ -26,6 +26,7 @@ from plogical.dnsUtilities import DNS
 from loginSystem.models import Administrator
 from plogical.processUtilities import ProcessUtilities
 import bcrypt
+from websiteFunctions.models import Websites
 
 class MailServerManager:
 
@@ -355,24 +356,19 @@ class MailServerManager:
 
                     ## Delete Email PIPE
                     sourceusername = source.split("@")[0]
-                    virtualalias = '%s %salias' % (source, sourceusername)
-                    pipealias = '%salias:  "|%s"' % (sourceusername, destination)
-                    command = "sed -i 's/^" + source + ".*//g' /etc/postfix/virtual"
+                    virtualfilter = '%s FILTER %spipe:dummy' % (source, sourceusername)
+                    command = "sed -i 's/^" + source + ".*//g' /etc/postfix/script_filter"
                     ProcessUtilities.executioner(command)
-                    command = "sed -i 's/^" + sourceusername + ".*//g' /etc/aliases"
-                    ProcessUtilities.executioner(command)
-
-                    #### Restarting Postfix and newalias
-
-                    command = "postmap /etc/postfix/virtual"
+                    command = "sed -i 's/^" + sourceusername + "pipe.*//g' /etc/postfix/master.cf"
                     ProcessUtilities.executioner(command)
 
-                    command = "systemctl restart postfix"
+                    #### Hashing filter Reloading Postfix
+                    command = "postmap /etc/postfix/script_filter"
+                    ProcessUtilities.executioner(command)
+                    command = "postfix reload"
                     ProcessUtilities.executioner(command)
                     ##
 
-                    command = "newaliases"
-                    ProcessUtilities.executioner(command)
 
             data_ret = {'status': 1, 'deleteForwardingStatus': 1, 'error_message': "None",
                         'successMessage': 'Successfully deleted!'}
@@ -421,29 +417,35 @@ class MailServerManager:
                 forwarding = Pipeprograms(source=source, destination=destination)
                 forwarding.save()
 
-                ## Create Email PIPE
-                ## example@domain.com examplealias
+                ## Create Email PIPE filter
+                ## example@domain.com FILTER support:dummy
                 sourceusername = source.split("@")[0]
-                virtualalias = '%s %salias' % (source, sourceusername)
-                command = "echo '" + virtualalias + "' >> /etc/postfix/virtual"
+                virtualfilter = '%s FILTER %spipe:dummy' % (source, sourceusername)
+                command = "echo '" + virtualfilter + "' >> /etc/postfix/script_filter"
                 ProcessUtilities.executioner(command)
 
-                ## examplealias: "|/usr/bin/php -q /home/domain.com/public_html/ticket/api/pipe.php"
-                pipealias = '%salias:  "|%s"' % (sourceusername, destination)
-                command = "echo '" + pipealias + "' >> /etc/aliases"
+                ## support unix - n n - - pipe flags=Rq user=domain argv=/usr/bin/php -q /home/domain.com/public_html/ticket/api/pipe.php
+                ## Find Unix file owner of provided pipe
+                domainName = source.split("@")[1]
+                website = Websites.objects.get(domain=domainName)
+                externalApp = website.externalApp
+                pipeowner = externalApp
+                ## Add Filter pipe to postfix /etc/postfix/master.cf
+                filterpipe = '%spipe unix - n n - - pipe flags=Rq user=%s  argv=%s -f  $(sender) -- $(recipient)' % (sourceusername, pipeowner, destination)
+                command = "echo '" + filterpipe + "' >> /etc/postfix/master.cf"
+                ProcessUtilities.executioner(command)
+                ## Add Check Recipient Hash to postfix /etc/postfix/main.cf
+                command = "sed -i 's|^smtpd_recipient_restrictions =.*|smtpd_recipient_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination, check_recipient_access hash:/etc/postfix/script_filter, permit|' /etc/postfix/main.cf"
                 ProcessUtilities.executioner(command)
 
-                #### Restarting Postfix and newalias
-
-                command = "postmap /etc/postfix/virtual"
+                #### Hashing filter Reloading Postfix
+                command = "postmap /etc/postfix/script_filter"
                 ProcessUtilities.executioner(command)
-
-                command = "systemctl restart postfix"
+                command = "postfix reload"
                 ProcessUtilities.executioner(command)
                 ##
 
-                command = "newaliases"
-                ProcessUtilities.executioner(command)
+
 
             data_ret = {'status': 1, 'createStatus': 1, 'error_message': "None", 'successMessage': 'Successfully Created!'}
             json_data = json.dumps(data_ret)
