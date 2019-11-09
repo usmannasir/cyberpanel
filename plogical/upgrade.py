@@ -1447,7 +1447,7 @@ CSRF_COOKIE_SECURE = True
                 writeToFile.writelines('MEDIA_ROOT = MEDIA_URL\n')
 
             if DATABASE_ROUTERS == 1:
-                writeToFile.writelines("DATABASE_ROUTERS = ['backup.backupRouter.backupRouter']\n")
+                writeToFile.writelines("\nDATABASE_ROUTERS = ['backup.backupRouter.backupRouter']\n")
 
             writeToFile.close()
 
