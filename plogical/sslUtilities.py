@@ -80,7 +80,14 @@ class sslUtilities:
                     keyFile = "  keyFile                  /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
                     certFile = "  certFile                 /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
                     certChain = "  certChain               1" + "\n"
-                    sslProtocol = "  sslProtocol             30" + "\n"
+                    sslProtocol = "  sslProtocol             24" + "\n"
+                    ciphers = "  ciphers                 EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH:ECDHE-RSA-AES128-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA128:DHE-RSA-AES128-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA128:ECDHE-RSA-AES128-SHA384:ECDHE-RSA-AES128-SHA128:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA384:AES128-GCM-SHA128:AES128-SHA128:AES128-SHA128:AES128-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4" + "\n"
+                    enableECDHE = "  enableECDHE             1" + "\n"
+                    renegProtection = "  renegProtection         1" + "\n"
+                    sslSessionCache = "  sslSessionCache         1" + "\n"
+                    enableSpdy = "  enableSpdy              15" + "\n"
+                    enableStapling = "  enableStapling           1" + "\n"
+                    ocspRespMaxAge = "  ocspRespMaxAge           86400" + "\n"
                     map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
                     final = "}" + "\n" + "\n"
 
@@ -92,6 +99,13 @@ class sslUtilities:
                     writeDataToFile.writelines(certFile)
                     writeDataToFile.writelines(certChain)
                     writeDataToFile.writelines(sslProtocol)
+                    writeDataToFile.writelines(ciphers)
+                    writeDataToFile.writelines(enableECDHE) 
+                    writeDataToFile.writelines(renegProtection)
+                    writeDataToFile.writelines(sslSessionCache)
+                    writeDataToFile.writelines(enableSpdy)
+                    writeDataToFile.writelines(enableStapling)
+                    writeDataToFile.writelines(ocspRespMaxAge)
                     writeDataToFile.writelines(map)
                     writeDataToFile.writelines(final)
                     writeDataToFile.writelines("\n")
@@ -137,7 +151,14 @@ class sslUtilities:
                         keyFile = "  keyFile                 /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
                         certFile = "  certFile                /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
                         certChain = "  certChain               1" + "\n"
-                        sslProtocol = "  sslProtocol             30" + "\n"
+                        sslProtocol = "  sslProtocol             24" + "\n"
+                        ciphers = "  ciphers                 EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH:ECDHE-RSA-AES128-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA128:DHE-RSA-AES128-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA128:ECDHE-RSA-AES128-SHA384:ECDHE-RSA-AES128-SHA128:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA384:AES128-GCM-SHA128:AES128-SHA128:AES128-SHA128:AES128-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4" + "\n"
+                        enableECDHE = "  enableECDHE             1" + "\n"
+                        renegProtection = "  renegProtection         1" + "\n"
+                        sslSessionCache = "  sslSessionCache         1" + "\n"
+                        enableSpdy = "  enableSpdy              15" + "\n"
+                        enableStapling = "  enableStapling           1" + "\n"
+                        ocspRespMaxAge = "  ocspRespMaxAge           86400" + "\n"
                         final = "}"
 
                         writeSSLConfig.writelines("\n")
@@ -147,6 +168,13 @@ class sslUtilities:
                         writeSSLConfig.writelines(certFile)
                         writeSSLConfig.writelines(certChain)
                         writeSSLConfig.writelines(sslProtocol)
+                        writeSSLConfig.writelines(ciphers)
+                        writeSSLConfig.writelines(enableECDHE)
+                        writeSSLConfig.writelines(renegProtection)
+                        writeSSLConfig.writelines(sslSessionCache)
+                        writeSSLConfig.writelines(enableSpdy)
+                        writeSSLConfig.writelines(enableStapling)
+                        writeSSLConfig.writelines(ocspRespMaxAge)
                         writeSSLConfig.writelines(final)
 
                         writeSSLConfig.writelines("\n")
@@ -324,3 +352,4 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain = None):
 
     except BaseException,msg:
         return [0, "347 "+ str(msg)+ " [issueSSLForDomain]"]
+
