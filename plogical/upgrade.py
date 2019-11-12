@@ -201,7 +201,7 @@ class Upgrade:
 
             os.chdir("/usr/local/CyberCP/public")
 
-            command = '/usr/local/lsws/lsphp70/bin/php /usr/bin/composer create-project phpmyadmin/phpmyadmin'
+            command = '/usr/local/lsws/lsphp71/bin/php /usr/bin/composer create-project phpmyadmin/phpmyadmin'
             Upgrade.executioner(command, 0)
 
             ## Write secret phrase
