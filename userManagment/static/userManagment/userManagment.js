@@ -42,7 +42,8 @@ app.controller('createUserCtr', function ($scope, $http) {
             selectedACL: selectedACL,
             websitesLimit: websitesLimits,
             userName: userName,
-            password: password
+            password: password,
+            securityLevel: $scope.securityLevel
         };
 
         var config = {
@@ -171,6 +172,7 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.firstName = userDetails.firstName;
                 $scope.lastName = userDetails.lastName;
                 $scope.email = userDetails.email;
+                $scope.secLevel = userDetails.securityLevel;
 
                 $scope.userModificationLoading = true;
                 $scope.acctDetailsFetched = false;
@@ -181,6 +183,7 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.detailsFetched = false;
                 $scope.userAccountsLimit = true;
                 $scope.websitesLimit = true;
+
             } else {
                 $scope.userModificationLoading = true;
                 $scope.acctDetailsFetched = true;
@@ -248,7 +251,8 @@ app.controller('modifyUser', function ($scope, $http) {
             firstName: firstName,
             lastName: lastName,
             email: email,
-            password: password
+            password: password,
+            securityLevel: $scope.securityLevel
         };
 
         var config = {

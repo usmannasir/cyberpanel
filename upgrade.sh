@@ -6,7 +6,7 @@
 ## Then run it like below.
 ## /usr/local/CyberCP/upgrade.sh
 
-cd /usr/local/CyberCP && python manage.py collectstatic --no-input
+cd /usr/local/CyberCP && /usr/local/CyberCP/bin/python2 manage.py collectstatic --no-input
 rm -rf /usr/local/CyberCP/public/static/*
 cp -R  /usr/local/CyberCP/static/* /usr/local/CyberCP/public/static/
 find /usr/local/CyberCP -type d -exec chmod 0755 {} \;

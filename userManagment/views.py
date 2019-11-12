@@ -10,6 +10,7 @@ from plogical import hashPassword
 from plogical import CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
 from plogical.virtualHostUtilities import virtualHostUtilities
+from CyberCP.secMiddleware import secMiddleware
 
 # Create your views here.
 
@@ -138,6 +139,7 @@ def submitUserCreation(request):
             password = data['password']
             websitesLimit = data['websitesLimit']
             selectedACL = data['selectedACL']
+            securityLevel = data['securityLevel']
 
             selectedACL = ACL.objects.get(name=selectedACL)
 
@@ -145,6 +147,11 @@ def submitUserCreation(request):
                 type = 1
             else:
                 type = 3
+
+            if securityLevel == 'LOW':
+                securityLevel = secMiddleware.LOW
+            else:
+                securityLevel = secMiddleware.HIGH
 
             token = hashPassword.generateToken(userName, password)
             password = hashPassword.hash_password(password)
@@ -168,7 +175,8 @@ def submitUserCreation(request):
                                          initWebsitesLimit=websitesLimit,
                                          owner=currentAdmin.pk,
                                          acl=selectedACL,
-                                         token=token
+                                         token=token,
+                                         securityLevel=securityLevel,
                                          )
                 newAdmin.save()
 
@@ -183,7 +191,8 @@ def submitUserCreation(request):
                                          initWebsitesLimit=websitesLimit,
                                          owner=currentAdmin.pk,
                                          acl=selectedACL,
-                                         token=token
+                                         token=token,
+                                         securityLevel=securityLevel,
                                          )
                 newAdmin.save()
             elif currentACL['createNewUser'] == 1:
@@ -197,7 +206,8 @@ def submitUserCreation(request):
                                          initWebsitesLimit=websitesLimit,
                                          owner=currentAdmin.pk,
                                          acl=selectedACL,
-                                         token=token
+                                         token=token,
+                                         securityLevel=securityLevel,
                                          )
                 newAdmin.save()
             else:
@@ -261,6 +271,12 @@ def fetchUserDetails(request):
                 email = user.email
 
                 websitesLimit = user.initWebsitesLimit
+                securityLevel = ''
+
+                if user.securityLevel == secMiddleware.LOW:
+                    securityLevel = 'Low'
+                else:
+                    securityLevel = 'High'
 
                 userDetails = {
                     "id": user.id,
@@ -268,7 +284,8 @@ def fetchUserDetails(request):
                     "lastName": lastName,
                     "email": email,
                     "acl": user.acl.name,
-                    "websitesLimit": websitesLimit
+                    "websitesLimit": websitesLimit,
+                    "securityLevel": securityLevel
                 }
 
                 data_ret = {'fetchStatus': 1, 'error_message': 'None', "userDetails": userDetails}
@@ -296,6 +313,7 @@ def saveModifications(request):
                 firstName = data['firstName']
                 lastName = data['lastName']
                 email = data['email']
+                securityLevel = data['securityLevel']
 
                 user = Administrator.objects.get(userName=accountUsername)
 
@@ -322,6 +340,11 @@ def saveModifications(request):
                 user.password = password
                 user.token = token
                 user.type = 0
+
+                if securityLevel == 'LOW':
+                    user.securityLevel = secMiddleware.LOW
+                else:
+                    user.securityLevel = secMiddleware.HIGH
 
                 user.save()
 

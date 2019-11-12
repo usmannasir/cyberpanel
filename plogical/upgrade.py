@@ -554,6 +554,11 @@ class Upgrade:
                 pass
 
             try:
+                cursor.execute('ALTER TABLE loginSystem_administrator ADD securityLevel integer')
+            except:
+                pass
+
+            try:
                 cursor.execute('ALTER TABLE loginSystem_administrator ADD api integer')
             except:
                 pass
