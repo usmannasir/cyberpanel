@@ -12,6 +12,22 @@ class SSHServer(multi.Thread):
     OKGREEN = '\033[92m'
     ENDC = '\033[0m'
 
+    DEFAULT_PORT = 22
+
+    @staticmethod
+    def findSSHPort():
+        try:
+            sshData = open('/etc/ssh/sshd_config', 'r').readlines()
+
+            for items in sshData:
+                if items.find('Port') > -1:
+                    if items[0] == 0:
+                        pass
+                    else:
+                        SSHServer.DEFAULT_PORT = int(items.split(' ')[1])
+        except:
+            pass
+
     def loadPublicKey(self):
         pubkey = '/root/.ssh/cyberpanel.pub'
         data = open(pubkey, 'r').read()
@@ -41,7 +57,7 @@ class SSHServer(multi.Thread):
         ## Load Public Key
         self.loadPublicKey()
 
-        self.sshclient.connect('127.0.0.1', 22, username='root', pkey=k)
+        self.sshclient.connect('127.0.0.1', SSHServer.DEFAULT_PORT, username='root', pkey=k)
         self.shell = self.sshclient.invoke_shell(term='xterm')
         self.shell.settimeout(0)
 
@@ -112,6 +128,8 @@ if __name__ == "__main__":
    writeToFile = open(pidfile, 'w')
    writeToFile.write(str(os.getpid()))
    writeToFile.close()
+
+   SSHServer.findSSHPort()
 
    server = SimpleSSLWebSocketServer('0.0.0.0', '5678', WebTerminalServer,  '/usr/local/lscp/conf/cert.pem', '/usr/local/lscp/conf/key.pem', version=ssl.PROTOCOL_TLSv1)
 
