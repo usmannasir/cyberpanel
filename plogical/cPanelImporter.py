@@ -25,6 +25,7 @@ from plogical.vhost import vhost
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.mailUtilities import mailUtilities
 from mailServer.models import EUsers
+import time
 
 class ChildDomains:
 
@@ -48,6 +49,7 @@ class cPanelImporter:
         self.homeDir = ''
         self.documentRoot = ''
         self.mailFormat = 1
+        self.externalApp = ''
 
     def PHPDecider(self):
 
@@ -209,18 +211,21 @@ class cPanelImporter:
             message = 'Calling core to create %s.' % (DomainName)
             logging.statusWriter(self.logFile, message, 1)
 
-            externalApp = "".join(re.findall("[a-zA-Z]+", DomainName))[:7]
+            self.externalApp = "".join(re.findall("[a-zA-Z]+", DomainName))[:7]
 
             try:
                 counter = 0
-                while 1:
-                    tWeb = Websites.objects.get(externalApp=externalApp)
-                    externalApp = '%s%s' % (tWeb.externalApp, str(counter))
+                while True:
+                    tWeb = Websites.objects.get(externalApp=self.externalApp)
+                    self.externalApp = '%s%s' % (tWeb.externalApp, str(counter))
                     counter = counter + 1
-            except:
-                pass
+                    print self.externalApp
+            except BaseException, msg:
+                logging.statusWriter(self.logFile, str(msg), 1)
+                time.sleep(2)
 
-            result = virtualHostUtilities.createVirtualHost(DomainName, self.email, self.PHPVersion, externalApp, 0, 0,
+
+            result = virtualHostUtilities.createVirtualHost(DomainName, self.email, self.PHPVersion, self.externalApp, 0, 0,
                                                             0, 'admin', 'Default', 0)
 
             if result[0] == 1:
@@ -278,7 +283,7 @@ class cPanelImporter:
 
             shutil.copytree(movePath, nowPath, symlinks=True)
 
-            command = 'chown -R %s:%s %s' % (externalApp, externalApp, nowPath)
+            command = 'chown -R %s:%s %s' % (self.externalApp, self.externalApp, nowPath)
             ProcessUtilities.normalExecutioner(command)
 
             message = 'Main site %s created from archive file: %s' % (DomainName, self.backupFile)
@@ -708,7 +713,7 @@ class cPanelImporter:
             return 0
 
     def FixPermissions(self):
-        externalApp = "".join(re.findall("[a-zA-Z]+", self.mainDomain))[:7]
+        externalApp = self.externalApp
         command = "sudo chown -R " + externalApp + ":" + externalApp + " /home/" + self.mainDomain
         ProcessUtilities.normalExecutioner(command)
 
