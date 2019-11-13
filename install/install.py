@@ -132,6 +132,7 @@ class preFlightsChecks:
         if log:
             logging.InstallLog.writeToFile(message)
         if do_exit:
+            logging.InstallLog.writeToFile(message)
             sys.exit(code)
 
     def mountTemp(self):
