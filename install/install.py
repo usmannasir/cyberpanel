@@ -468,7 +468,7 @@ class preFlightsChecks:
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
         else:
             command = 'yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = 'yum install git -y'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
