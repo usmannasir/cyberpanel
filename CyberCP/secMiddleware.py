@@ -2,8 +2,12 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import json
 from django.shortcuts import HttpResponse
 import re
+from loginSystem.models import Administrator
 
 class secMiddleware:
+
+    HIGH = 0
+    LOW = 1
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -11,10 +15,11 @@ class secMiddleware:
     def __call__(self, request):
         try:
             uID = request.session['userID']
+            admin = Administrator.objects.get(pk=uID)
             ipAddr = request.META.get('REMOTE_ADDR')
 
             if ipAddr.find('.') > -1:
-                if request.session['ipAddr'] == ipAddr:
+                if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
                     pass
                 else:
                     del request.session['userID']
@@ -27,7 +32,7 @@ class secMiddleware:
             else:
                 ipAddr = request.META.get('REMOTE_ADDR').split(':')[:3]
 
-                if request.session['ipAddr'] == ipAddr:
+                if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
                     pass
                 else:
                     del request.session['userID']

@@ -279,8 +279,6 @@ class preFlightsChecks:
 
             ##
 
-            count = 0
-
             if self.distro == ubuntu:
                 # self.stdOut("Fix sudoers")
                 # try:

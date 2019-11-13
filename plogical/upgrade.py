@@ -201,7 +201,7 @@ class Upgrade:
 
             os.chdir("/usr/local/CyberCP/public")
 
-            command = '/usr/local/lsws/lsphp70/bin/php /usr/bin/composer create-project phpmyadmin/phpmyadmin'
+            command = '/usr/local/lsws/lsphp71/bin/php /usr/bin/composer create-project phpmyadmin/phpmyadmin'
             Upgrade.executioner(command, 0)
 
             ## Write secret phrase
@@ -494,7 +494,7 @@ class Upgrade:
     def upgradeVersion():
         try:
             vers = version.objects.get(pk=1)
-            getVersion = requests.get('https://cyberpanel.net/version.txt')
+            getVersion = requests.get('https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/version.txt')
             latest = getVersion.json()
             vers.currentVersion = latest['version']
             vers.build = latest['build']
@@ -550,6 +550,11 @@ class Upgrade:
                 pass
             try:
                 cursor.execute('ALTER TABLE loginSystem_administrator ADD token varchar(500)')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE loginSystem_administrator ADD securityLevel integer DEFAULT 1')
             except:
                 pass
 

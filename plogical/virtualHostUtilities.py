@@ -105,7 +105,17 @@ class virtualHostUtilities:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This website already exists. [404]')
                 return 0, "This website already exists."
 
+
+            if Websites.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This website already exists. [404]')
+                return 0, "This website already exists."
+
             if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                          'This website already exists as child domain. [404]')
+                return 0, "This website already exists as child domain."
+
+            if ChildDomains.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
                                                           'This website already exists as child domain. [404]')
                 return 0, "This website already exists as child domain."
@@ -1040,7 +1050,18 @@ class virtualHostUtilities:
                                                           'This Domain already exists as a website. [404]')
                 return 0, "This Domain already exists as a website."
 
+            if Websites.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                          'This Domain already exists as a website. [404]')
+                return 0, "This Domain already exists as a website."
+
             if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                          'This domain already exists as child domain. [404]')
+                return 0, "This domain already exists as child domain."
+
+
+            if ChildDomains.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
                                                           'This domain already exists as child domain. [404]')
                 return 0, "This domain already exists as child domain."
