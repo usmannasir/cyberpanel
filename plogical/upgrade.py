@@ -1444,6 +1444,8 @@ CSRF_COOKIE_SECURE = True
 
             MEDIA_URL = 1
             for items in data:
+                if items.find('csf') > -1:
+                    continue
                 if items.find('MEDIA_URL') > -1:
                     MEDIA_URL = 0
 

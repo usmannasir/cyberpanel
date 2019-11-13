@@ -2177,6 +2177,10 @@ milter_default_action = accept
         except:
             pass
 
+    def installAcme(self):
+        command = 'wget -O -  https://get.acme.sh | sh'
+        subprocess.call(command, shell=True)
+
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -2292,6 +2296,7 @@ def main():
     checks.setupCLI()
     checks.setup_cron()
     checks.installRestic()
+    checks.installAcme()
     # checks.installdnsPython()
 
     ## Install and Configure OpenDKIM.
