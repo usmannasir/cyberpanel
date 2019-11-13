@@ -151,44 +151,44 @@ class preFlightsChecks:
 
                 command = "dd if=/dev/zero of=/usr/.tempdisk bs=100M count=15"
                 preFlightsChecks.call(command, self.distro, '[mountTemp]',
-                                    'mountTemp',
-                                    1, 0, os.EX_OSERR)
+                                      'mountTemp',
+                                      1, 0, os.EX_OSERR)
 
                 command = "mkfs.ext4 -F /usr/.tempdisk"
                 preFlightsChecks.call(command, self.distro, '[mountTemp]',
-                                    'mountTemp',
-                                    1, 0, os.EX_OSERR)
+                                      'mountTemp',
+                                      1, 0, os.EX_OSERR)
 
                 command = "mkdir -p /usr/.tmpbak/"
                 preFlightsChecks.call(command, self.distro, '[mountTemp]',
-                                    'mountTemp',
-                                    1, 0, os.EX_OSERR)
+                                      'mountTemp',
+                                      1, 0, os.EX_OSERR)
 
                 command = "cp -pr /tmp/* /usr/.tmpbak/"
                 subprocess.call(command, shell=True)
 
                 command = "mount -o loop,rw,nodev,nosuid,noexec,nofail /usr/.tempdisk /tmp"
                 preFlightsChecks.call(command, self.distro, '[mountTemp]',
-                                    'mountTemp',
-                                    1, 0, os.EX_OSERR)
+                                      'mountTemp',
+                                      1, 0, os.EX_OSERR)
 
                 command = "chmod 1777 /tmp"
                 preFlightsChecks.call(command, self.distro, '[mountTemp]',
-                                    'mountTemp',
-                                    1, 0, os.EX_OSERR)
+                                      'mountTemp',
+                                      1, 0, os.EX_OSERR)
 
                 command = "cp -pr /usr/.tmpbak/* /tmp/"
                 subprocess.call(command, shell=True)
 
                 command = "rm -rf /usr/.tmpbak"
                 preFlightsChecks.call(command, self.distro, '[mountTemp]',
-                                    'mountTemp',
-                                    1, 0, os.EX_OSERR)
+                                      'mountTemp',
+                                      1, 0, os.EX_OSERR)
 
                 command = "mount --bind /tmp /var/tmp"
                 preFlightsChecks.call(command, self.distro, '[mountTemp]',
-                                    'mountTemp',
-                                    1, 0, os.EX_OSERR)
+                                      'mountTemp',
+                                      1, 0, os.EX_OSERR)
 
                 tmp = "/usr/.tempdisk /tmp ext4 loop,rw,noexec,nosuid,nodev,nofail 0 0\n"
                 varTmp = "/tmp /var/tmp none bind 0 0\n"
@@ -376,26 +376,10 @@ class preFlightsChecks:
 
     def yum_update(self):
         try:
-            count = 0
-            while (1):
-
-                command = 'yum update -y'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut("YUM UPDATE FAILED, trying again, try number: " + str(count) + "\n")
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "YUM update failed to run, we are being optimistic that installer will still be able to complete installation. [yum_update]")
-                        break
-                else:
-                    logging.InstallLog.writeToFile("YUM UPDATE ran successfully.")
-                    preFlightsChecks.stdOut("YUM UPDATE ran successfully.")
-                    break
-
-
+            command = 'yum update -y'
+            preFlightsChecks.call(command, self.distro, '[yum_update]',
+                                  'yum_update',
+                                  1, 0, os.EX_OSERR)
         except OSError, msg:
             logging.InstallLog.writeToFile(str(msg) + " [yum_update]")
             return 0
@@ -408,34 +392,21 @@ class preFlightsChecks:
     def installCyberPanelRepo(self):
         self.stdOut("Install Cyberpanel repo")
         cmd = []
-        count = 0
 
         if self.distro == ubuntu:
             try:
                 filename = "enable_lst_debain_repo.sh"
                 command = "wget http://rpms.litespeedtech.com/debian/" + filename
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-                if res != 0:
-                    logging.InstallLog.writeToFile(
-                        "Unable to download Ubuntu CyberPanel installer! [installCyberPanelRepo]:"
-                        " Error #" + str(res))
-                    preFlightsChecks.stdOut("Unable to download Ubuntu CyberPanel installer! [installCyberPanelRepo]:"
-                                            " Error #" + str(res))
-                    os._exit(os.EX_NOINPUT)
+                preFlightsChecks.call(command, self.distro, '[installCyberPanelRepo]',
+                                      'installCyberPanelRepo',
+                                      1, 1, os.EX_OSERR)
 
                 os.chmod(filename, S_IRWXU | S_IRWXG)
 
                 command = "./" + filename
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-
-                if res != 0:
-                    logging.InstallLog.writeToFile("Unable to install Ubuntu CyberPanel! [installCyberPanelRepo]:"
-                                                   " Error #" + str(res))
-                    preFlightsChecks.stdOut("Unable to install Ubuntu CyberPanel! [installCyberPanelRepo]:"
-                                            " Error #" + str(res))
-                    os._exit(os.EX_NOINPUT)
+                preFlightsChecks.call(command, self.distro, '[installCyberPanelRepo]',
+                                      'installCyberPanelRepo [407]',
+                                      1, 1, os.EX_OSERR)
 
             except OSError as err:
                 logging.InstallLog.writeToFile("Exception during CyberPanel install: " + str(err))
@@ -448,464 +419,77 @@ class preFlightsChecks:
                 os._exit(os.EX_SOFTWARE)
 
         else:
-            while (1):
-                cmd.append("rpm")
-                cmd.append("-ivh")
-                cmd.append("http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm")
-                res = subprocess.call(cmd)
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut(
-                        "Unable to add CyberPanel official repository, trying again, try number: " + str(count) + "\n")
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to add CyberPanel official repository, exiting installer! [installCyberPanelRepo]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("CyberPanel Repo added!")
-                    preFlightsChecks.stdOut("CyberPanel Repo added!")
-                    break
+            command = 'rpm -ivh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm'
+            preFlightsChecks.call(command, self.distro, '[installCyberPanelRepo]',
+                                  'installCyberPanelRepo [407]',
+                                  1, 1, os.EX_OSERR)
 
     def enableEPELRepo(self):
-        try:
-            cmd = []
-            count = 0
-
-            while (1):
-                cmd.append("yum")
-                cmd.append("-y")
-                cmd.append("install")
-                cmd.append("epel-release")
-                res = subprocess.call(cmd)
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut(
-                        "Unable to add EPEL repository, trying again, try number: " + str(count) + "\n")
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to add EPEL repository, exiting installer! [enableEPELRepo]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("EPEL Repo added!")
-                    preFlightsChecks.stdOut("EPEL Repo added!")
-                    break
-
-        except OSError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [enableEPELRepo]")
-            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-            os._exit(0)
-            return 0
-        except ValueError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [enableEPELRepo]")
-            preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-            os._exit(0)
-            return 0
-
-        return 1
+        command = 'yum -y install epel-release'
+        preFlightsChecks.call(command, self.distro, '[enableEPELRepo]',
+                              'enableEPELRepo',
+                              1, 1, os.EX_OSERR)
 
     def install_pip(self):
         self.stdOut("Install pip")
-        count = 0
-        while (1):
-            if self.distro == ubuntu:
-                command = "apt-get -y install python-pip"
-            else:
-                command = "yum -y install python-pip"
-            res = subprocess.call(shlex.split(command))
+        if self.distro == ubuntu:
+            command = "apt-get -y install python-pip"
+        else:
+            command = "yum -y install python-pip"
 
-            if preFlightsChecks.resFailed(self.distro, res):
-                count = count + 1
-                preFlightsChecks.stdOut("Unable to install PIP, trying again, try number: " + str(count))
-                if count == 3:
-                    logging.InstallLog.writeToFile("Unable to install PIP, exiting installer! [install_pip]")
-                    preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    os._exit(0)
-            else:
-                logging.InstallLog.writeToFile("PIP successfully installed!")
-                preFlightsChecks.stdOut("PIP successfully installed!")
-                break
+        preFlightsChecks.call(command, self.distro, '[install_pip]',
+                              'install_pip',
+                              1, 1, os.EX_OSERR)
 
     def install_python_dev(self):
         self.stdOut("Install python development environment")
-        count = 0
-        while (1):
-            if self.distro == centos:
-                command = "yum -y install python-devel"
-            else:
-                command = "apt-get -y install python-dev"
-            res = subprocess.call(shlex.split(command))
 
-            if preFlightsChecks.resFailed(self.distro, res):
-                count = count + 1
-                preFlightsChecks.stdOut(
-                    "We are trying to install python development tools, trying again, try number: " + str(count))
-                if count == 3:
-                    logging.InstallLog.writeToFile(
-                        "Unable to install python development tools, exiting installer! [install_python_dev]")
-                    preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    os._exit(0)
-            else:
-                logging.InstallLog.writeToFile("Python development tools successfully installed!")
-                preFlightsChecks.stdOut("Python development tools successfully installed!")
-                break
+        if self.distro == centos:
+            command = "yum -y install python-devel"
+        else:
+            command = "apt-get -y install python-dev"
+
+        preFlightsChecks.call(command, self.distro, '[install_python_dev]',
+                              'install_python_dev',
+                              1, 1, os.EX_OSERR)
+
 
     def install_gcc(self):
         self.stdOut("Install gcc")
-        count = 0
 
-        while (1):
-            if self.distro == centos:
-                command = "yum -y install gcc"
-            else:
-                command = "apt-get -y install gcc"
-            res = subprocess.call(shlex.split(command))
+        if self.distro == centos:
+            command = "yum -y install gcc"
+        else:
+            command = "apt-get -y install gcc"
 
-            if preFlightsChecks.resFailed(self.distro, res):
-                count = count + 1
-                preFlightsChecks.stdOut("Unable to install GCC, trying again, try number: " + str(count))
-                if count == 3:
-                    logging.InstallLog.writeToFile("Unable to install GCC, exiting installer! [install_gcc]")
-                    preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    os._exit(0)
-            else:
-                logging.InstallLog.writeToFile("GCC Successfully installed!")
-                preFlightsChecks.stdOut("GCC Successfully installed!")
-                break
+        preFlightsChecks.call(command, self.distro, '[install_gcc]',
+                              'install_gcc',
+                              1, 1, os.EX_OSERR)
+
 
     def install_python_setup_tools(self):
-        count = 0
-        while (1):
-            command = "yum -y install python-setuptools"
-            res = subprocess.call(shlex.split(command))
-
-            if preFlightsChecks.resFailed(self.distro, res):
-                count = count + 1
-                print("[" + time.strftime(
-                    "%m.%d.%Y_%H-%M-%S") + "] " + "Unable to install Python setup tools, trying again, try number: " + str(
-                    count) + "\n")
-                if count == 3:
-                    logging.InstallLog.writeToFile(
-                        "Unable to install Python setup tools, exiting installer! [install_python_setup_tools]")
-                    preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    os._exit(0)
-            else:
-                logging.InstallLog.writeToFile("Python setup tools Successfully installed!")
-                print("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + "Python setup tools Successfully installed!")
-                break
-
-    def install_python_requests(self):
-        try:
-            import requests
-
-            ## Un-install ULRLIB3 and requests
-
-            command = "pip uninstall --yes urllib3"
-            res = subprocess.call(shlex.split(command))
-
-            command = "pip uninstall --yes requests"
-            res = subprocess.call(shlex.split(command))
-
-            ## Install specific versions
-
-            count = 0
-            while (1):
-
-                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/urllib3-1.22.tar.gz"
-
-                res = subprocess.call(shlex.split(command))
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut(
-                        "Unable to install urllib3 module, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to install urllib3 module, exiting installer! [install_python_requests]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("urllib3 module Successfully installed!")
-                    preFlightsChecks.stdOut("urllib3 module Successfully installed!")
-                    break
-
-            count = 0
-            while (1):
-
-                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/requests-2.18.4.tar.gz"
-
-                res = subprocess.call(shlex.split(command))
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut(
-                        "Unable to install requests module, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to install requests module, exiting installer! [install_python_requests]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("Requests module Successfully installed!")
-                    preFlightsChecks.stdOut("Requests module Successfully installed!")
-                    break
-
-        except:
-
-            count = 0
-            while (1):
-
-                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/urllib3-1.22.tar.gz"
-
-                res = subprocess.call(shlex.split(command))
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut(
-                        "Unable to install urllib3 module, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to install urllib3 module, exiting installer! [install_python_requests]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("urllib3 module Successfully installed!")
-                    preFlightsChecks.stdOut("urllib3 module Successfully installed!")
-                    break
-
-            count = 0
-            while (1):
-
-                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/requests-2.18.4.tar.gz"
-
-                res = subprocess.call(shlex.split(command))
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut(
-                        "Unable to install requests module, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to install requests module, exiting installer! [install_python_requests]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("Requests module Successfully installed!")
-                    preFlightsChecks.stdOut("Requests module Successfully installed!")
-                    break
-
-    def install_pexpect(self):
-        try:
-            import pexpect
-
-            command = "pip uninstall --yes pexpect"
-            res = subprocess.call(shlex.split(command))
-
-            count = 0
-
-            while (1):
-                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/pexpect-4.4.0.tar.gz"
-
-                res = subprocess.call(shlex.split(command))
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut("Unable to install pexpect, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to install pexpect, exiting installer! [install_pexpect]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("pexpect successfully installed!")
-                    preFlightsChecks.stdOut("pexpect successfully installed!")
-                    break
-
-        except:
-            count = 0
-            while (1):
-                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/pexpect-4.4.0.tar.gz"
-
-                res = subprocess.call(shlex.split(command))
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut("Unable to install pexpect, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to install pexpect, exiting installer! [install_pexpect]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("pexpect successfully installed!")
-                    preFlightsChecks.stdOut("pexpect successfully installed!")
-                    break
-
-    def install_django(self):
-        count = 0
-        while (1):
-            command = "pip install django==1.11"
-
-            res = subprocess.call(shlex.split(command))
-
-            if preFlightsChecks.resFailed(self.distro, res):
-                count = count + 1
-                preFlightsChecks.stdOut("Unable to install DJANGO, trying again, try number: " + str(count))
-                if count == 3:
-                    logging.InstallLog.writeToFile("Unable to install DJANGO, exiting installer! [install_django]")
-                    preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    os._exit(0)
-            else:
-                logging.InstallLog.writeToFile("DJANGO successfully installed!")
-                preFlightsChecks.stdOut("DJANGO successfully installed!")
-                break
+        command = "yum -y install python-setuptools"
+        preFlightsChecks.call(command, self.distro, '[install_python_setup_tools]',
+                              'install_python_setup_tools',
+                              1, 1, os.EX_OSERR)
 
     def install_python_mysql_library(self):
         self.stdOut("Install MySQL python library")
-        count = 0
-        while (1):
-            if self.distro == centos:
-                command = "yum -y install MySQL-python"
-            else:
-                command = "apt-get -y install libmysqlclient-dev"
-            res = subprocess.call(shlex.split(command))
-            if preFlightsChecks.resFailed(self.distro, res):
-                count = count + 1
-                preFlightsChecks.stdOut("Unable to install MySQL-python, trying again, try number: " + str(count))
-                if count == 3:
-                    logging.InstallLog.writeToFile(
-                        "Unable to install MySQL-python, exiting installer! [install_python_mysql_library]")
-                    preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    os._exit(0)
-            else:
-                logging.InstallLog.writeToFile("MySQL-python successfully installed!")
-                preFlightsChecks.stdOut("MySQL-python successfully installed!")
-                break
+
+        if self.distro == centos:
+            command = "yum -y install MySQL-python"
+        else:
+            command = "apt-get -y install libmysqlclient-dev"
+
+        preFlightsChecks.call(command, self.distro, '[install_python_mysql_library]',
+                              'install_python_mysql_library',
+                              1, 1, os.EX_OSERR)
 
         if self.distro == ubuntu:
             command = "pip install MySQL-python"
-            res = subprocess.call(shlex.split(command))
-            if res != 0:
-                logging.InstallLog.writeToFile(
-                    "Unable to install MySQL-python, exiting installer! [install_python_mysql_library] Error: " + str(
-                        res))
-                preFlightsChecks.stdOut(
-                    "Unable to install MySQL-python, exiting installer! [install_python_mysql_library] Error: " + str(
-                        res))
-                os._exit(os.EX_OSERR)
-
-    def install_gunicorn(self):
-        self.stdOut("Install Gunicorn")
-        count = 0
-        # while (1):
-        #     if self.distro == ubuntu:
-        #         command = "pip install gunicorn"
-        #     else:
-        #         command = "easy_install gunicorn"
-        #     res = subprocess.call(shlex.split(command))
-        #     if preFlightsChecks.resFailed(self.distro, res):
-        #         count = count + 1
-        #         preFlightsChecks.stdOut("Unable to install GUNICORN, trying again, try number: " + str(count))
-        #         if count == 3:
-        #             logging.InstallLog.writeToFile("Unable to install GUNICORN, exiting installer! [install_gunicorn]")
-        #             preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-        #             os._exit(0)
-        #     else:
-        #         logging.InstallLog.writeToFile("GUNICORN successfully installed!")
-        #         preFlightsChecks.stdOut("GUNICORN successfully installed!")
-        #         break
-
-    def setup_gunicorn(self):
-        try:
-
-            os.chdir(self.cwd)
-            #
-            # ##
-            #
-            # logging.InstallLog.writeToFile("Configuring Gunicorn..")
-            #
-            # service = "/etc/systemd/system/gunicorn.service"
-            # socket = "/etc/systemd/system/gunicorn.socket"
-            # conf = "/etc/tmpfiles.d/gunicorn.conf"
-            #
-            # shutil.copy("gun-configs/gunicorn.service", service)
-            # shutil.copy("gun-configs/gunicorn.socket", socket)
-            # shutil.copy("gun-configs/gunicorn.conf", conf)
-            #
-            # logging.InstallLog.writeToFile("Gunicorn Configured!")
-            #
-            # ### Enable at system startup
-            #
-            # count = 0
-            #
-            # while (1):
-            #     command = "systemctl enable gunicorn.socket"
-            #     res = subprocess.call(shlex.split(command))
-            #
-            #     if preFlightsChecks.resFailed(self.distro, res):
-            #         count = count + 1
-            #         preFlightsChecks.stdOut("Trying to enable Gunicorn at system startup, try number: " + str(count))
-            #         if count == 3:
-            #             logging.InstallLog.writeToFile(
-            #                 "Gunicorn will not start after system restart, you can manually enable using systemctl enable gunicorn.socket! [setup_gunicorn]")
-            #             preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-            #             break
-            #     else:
-            #         logging.InstallLog.writeToFile("Gunicorn can now start after system restart!")
-            #         preFlightsChecks.stdOut("Gunicorn can now start after system restart!")
-            #         break
-
-        except BaseException, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [setup_gunicorn]")
-            preFlightsChecks.stdOut("Not able to setup gunicorn, see install log.")
-
-    def install_psutil(self):
-
-        try:
-            import psutil
-
-            ##
-
-            command = "pip uninstall --yes psutil"
-            res = subprocess.call(shlex.split(command))
-
-            count = 0
-            while (1):
-                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/psutil-5.4.3.tar.gz"
-                res = subprocess.call(shlex.split(command))
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut("Unable to install psutil, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Unable to install psutil, exiting installer! [install_psutil]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("psutil successfully installed!")
-                    preFlightsChecks.stdOut("psutil successfully installed!")
-                    break
-
-        except:
-            count = 0
-            while (1):
-                command = "pip install http://" + preFlightsChecks.cyberPanelMirror + "/psutil-5.4.3.tar.gz"
-                res = subprocess.call(shlex.split(command))
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut("Unable to install psutil, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile("Unable to install psutil, exiting installer! [install_psutil]")
-                        preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                        os._exit(0)
-                else:
-                    logging.InstallLog.writeToFile("psutil successfully installed!")
-                    preFlightsChecks.stdOut("psutil successfully installed!")
-                    break
+            preFlightsChecks.call(command, self.distro, '[install_python_mysql_library]',
+                                  'install_python_mysql_library',
+                                  1, 1, os.EX_OSERR)
 
     def fix_selinux_issue(self):
         try:
@@ -927,58 +511,35 @@ class preFlightsChecks:
 
     def install_psmisc(self):
         self.stdOut("Install psmisc")
-        count = 0
-        while (1):
-            if self.distro == centos:
-                command = "yum -y install psmisc"
-            else:
-                command = "apt-get -y install psmisc"
-            res = subprocess.call(shlex.split(command))
-            if preFlightsChecks.resFailed(self.distro, res):
-                count = count + 1
-                preFlightsChecks.stdOut("Unable to install psmisc, trying again, try number: " + str(count))
-                if count == 3:
-                    logging.InstallLog.writeToFile("Unable to install psmisc, exiting installer! [install_psmisc]")
-                    preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
-                    os._exit(0)
-            else:
-                logging.InstallLog.writeToFile("psmisc successfully installed!")
-                preFlightsChecks.stdOut("psmisc successfully installed!")
-                break
+
+        if self.distro == centos:
+            command = "yum -y install psmisc"
+        else:
+            command = "apt-get -y install psmisc"
+
+        preFlightsChecks.call(command, self.distro, '[install_psmisc]',
+                              'install_psmisc',
+                              1, 1, os.EX_OSERR)
+
 
     def installGit(self):
-        try:
-            if os.path.exists("/etc/lsb-release"):
-                command = 'apt -y install git'
-                preFlightsChecks.call(command, self.distro, '[installGit]',
-                                      'Install Git',
-                                      1, 1, os.EX_OSERR)
-            else:
-                command = 'yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
-                preFlightsChecks.call(command, self.distro, '[installGit]',
-                                      'Install Git',
-                                      1, 0, os.EX_OSERR)
+        if os.path.exists("/etc/lsb-release"):
+            command = 'apt -y install git'
+            preFlightsChecks.call(command, self.distro, '[installGit]',
+                                  'Install Git',
+                                  1, 1, os.EX_OSERR)
+        else:
+            command = 'yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
+            preFlightsChecks.call(command, self.distro, '[installGit]',
+                                  'Install Git',
+                                  1, 0, os.EX_OSERR)
 
-                command = 'yum install git -y'
-                preFlightsChecks.call(command, self.distro, '[installGit]',
-                                      'Install Git',
-                                      1, 1, os.EX_OSERR)
-
-        except BaseException, msg:
-            pass
+            command = 'yum install git -y'
+            preFlightsChecks.call(command, self.distro, '[installGit]',
+                                  'Install Git',
+                                  1, 1, os.EX_OSERR)
 
     def download_install_CyberPanel(self, mysqlPassword, mysql):
-        try:
-            ## On OpenVZ there is an issue with requests module, which needs to upgrade requests module
-
-            if subprocess.check_output('systemd-detect-virt').find("openvz") > -1:
-                command = "pip install --upgrade requests"
-                preFlightsChecks.call(command, self.distro, '[download_install_CyberPanel]',
-                                      'Upgrade requests',
-                                      1, 0, os.EX_OSERR)
-        except:
-            pass
-
         ##
 
         os.chdir(self.path)
@@ -1320,87 +881,45 @@ enabled=1"""
             subprocess.call(shlex.split(command))
 
             self.stdOut("Install dovecot - do the install")
-            count = 0
-            while (1):
-                if self.distro == centos:
-                    command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
-                else:
-                    command = 'apt-get -y debconf-utils'
-                    subprocess.call(shlex.split(command))
-                    file_name = self.cwd + '/pf.unattend.text'
-                    pf = open(file_name, 'w')
-                    pf.write('postfix postfix/mailname string ' + str(socket.getfqdn() + '\n'))
-                    pf.write('postfix postfix/main_mailer_type string "Internet Site"\n')
-                    pf.close()
-                    command = 'debconf-set-selections ' + file_name
-                    subprocess.call(shlex.split(command))
-                    command = 'apt-get -y install postfix'
-                    # os.remove(file_name)
 
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
+            if self.distro == centos:
+                command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
+            else:
+                command = 'apt-get -y debconf-utils'
+                subprocess.call(shlex.split(command))
+                file_name = self.cwd + '/pf.unattend.text'
+                pf = open(file_name, 'w')
+                pf.write('postfix postfix/mailname string ' + str(socket.getfqdn() + '\n'))
+                pf.write('postfix postfix/main_mailer_type string "Internet Site"\n')
+                pf.close()
+                command = 'debconf-set-selections ' + file_name
+                subprocess.call(shlex.split(command))
+                command = 'apt-get -y install postfix'
+                # os.remove(file_name)
 
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut("Unable to install Postfix, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to install Postfix, you will not be able to send mails and rest should work fine! [install_postfix_davecot]")
-                        break
-                else:
-                    logging.InstallLog.writeToFile("Postfix successfully installed!")
-                    preFlightsChecks.stdOut("Postfix successfully installed!")
-                    break
+            preFlightsChecks.call(command, self.distro, '[install postfix]',
+                                  'Download install postfix', 1, 1, os.EX_OSERR)
 
-            count = 0
+            if self.distro == centos:
+                pass
+            else:
+                command = 'apt-get -y install dovecot-imapd dovecot-pop3d postfix-mysql'
 
-            while (1):
-                if self.distro == centos:
-                    break
-                else:
-                    command = 'apt-get -y install dovecot-imapd dovecot-pop3d postfix-mysql'
+            preFlightsChecks.call(command, self.distro,
+                                  '[apt-get -y install dovecot-imapd dovecot-pop3d postfix-mysql]',
+                                  'apt-get -y install dovecot-imapd dovecot-pop3d postfix-mysql', 1, 1, os.EX_OSERR)
 
-                cmd = shlex.split(command)
+            ##
 
-                res = subprocess.call(cmd)
+            if self.distro == centos:
+                command = 'yum -y install dovecot dovecot-mysql'
+            else:
+                command = 'apt-get -y install dovecot-mysql'
 
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut("Unable to install Postfix agent, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to install Postfix agent, you will not be able to send mails and rest should work fine! [install_postfix_davecot]")
-                        break
-                else:
-                    logging.InstallLog.writeToFile("Postfix successfully installed!")
-                    preFlightsChecks.stdOut("Postfix successfully installed!")
-                    break
+            preFlightsChecks.call(command, self.distro, '[install dovecot-mysql]',
+                                  'install dovecot-mysql', 1, 1, os.EX_OSERR)
 
-            count = 0
 
-            while (1):
-
-                if self.distro == centos:
-                    command = 'yum -y install dovecot dovecot-mysql'
-                else:
-                    command = 'apt-get -y install dovecot-mysql'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut(
-                        "Unable to install Dovecot and Dovecot-MySQL, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to install install Dovecot and Dovecot-MySQL, you will not be able to send mails and rest should work fine! [install_postfix_davecot]")
-                        break
-                else:
-                    logging.InstallLog.writeToFile("Dovecot and Dovecot-MySQL successfully installed!")
-                    preFlightsChecks.stdOut("Dovecot and Dovecot-MySQL successfully installed!")
-                    break
 
             if self.distro != centos:
                 command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
@@ -2307,49 +1826,17 @@ enabled=1"""
 
             os.chdir("/usr/local/CyberCP/public")
 
-            count = 1
+            command = 'wget https://www.rainloop.net/repository/webmail/rainloop-community-latest.zip'
+            preFlightsChecks.call(command, self.distro, '[downoad_and_install_raindloop]',
+                                  'downoad_and_install_raindloop', 1, 1, os.EX_OSERR)
 
-            while (1):
-                command = 'wget https://www.rainloop.net/repository/webmail/rainloop-community-latest.zip'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut("Trying to download Rainloop, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Unable to download Rainloop, installation can continue but you will not be able to send emails! [downoad_and_install_raindloop]")
-                        return
-                else:
-                    logging.InstallLog.writeToFile("Rainloop Downloaded!")
-                    preFlightsChecks.stdOut("Rainloop Downloaded!")
-                    break
 
             #############
 
-            count = 0
+            command = 'unzip rainloop-community-latest.zip -d /usr/local/CyberCP/public/rainloop'
+            preFlightsChecks.call(command, self.distro, '[downoad_and_install_raindloop]',
+                                  'downoad_and_install_raindloop', 1, 1, os.EX_OSERR)
 
-            while (1):
-                command = 'unzip rainloop-community-latest.zip -d /usr/local/CyberCP/public/rainloop'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd)
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut("Trying to unzip rainloop, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "We could not unzip Rainloop, so you will not be able to send emails! [downoad_and_install_raindloop]")
-                        return
-                else:
-                    logging.InstallLog.writeToFile("Rainloop successfully unzipped!")
-                    preFlightsChecks.stdOut("Rainloop successfully unzipped!")
-                    break
 
             os.remove("rainloop-community-latest.zip")
 
@@ -2357,49 +1844,18 @@ enabled=1"""
 
             os.chdir("/usr/local/CyberCP/public/rainloop")
 
-            count = 0
+            command = 'find . -type d -exec chmod 755 {} \;'
+            preFlightsChecks.call(command, self.distro, '[downoad_and_install_raindloop]',
+                                  'downoad_and_install_raindloop', 1, 0, os.EX_OSERR)
 
-            while (1):
-                command = 'find . -type d -exec chmod 755 {} \;'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut(
-                        "Trying to change permissions for Rainloop, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Failed to change permissions for Rainloop, so you will not be able to send emails!! [downoad_and_install_raindloop]")
-                        break
-                else:
-                    logging.InstallLog.writeToFile("Rainloop permissions changed!")
-                    print(
-                            "[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + "Rainloop permissions changed!")
-                    break
 
             #############
 
-            count = 0
+            command = 'find . -type f -exec chmod 644 {} \;'
+            preFlightsChecks.call(command, self.distro, '[downoad_and_install_raindloop]',
+                                  'downoad_and_install_raindloop', 1, 0, os.EX_OSERR)
 
-            while (1):
 
-                command = 'find . -type f -exec chmod 644 {} \;'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd)
-
-                if preFlightsChecks.resFailed(self.distro, res):
-                    count = count + 1
-                    preFlightsChecks.stdOut(
-                        "Trying to change permissions for Rainloop, trying again, try number: " + str(count))
-                    if count == 3:
-                        logging.InstallLog.writeToFile(
-                            "Failed to change permissions for Rainloop, so you will not be able to send emails!! [downoad_and_install_raindloop]")
-                        break
-                else:
-                    logging.InstallLog.writeToFile("Rainloop permissions changed!")
-                    preFlightsChecks.stdOut("Rainloop permissions changed!")
-                    break
             ######
 
             command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data"
@@ -3810,7 +3266,6 @@ milter_default_action = accept
                                       'Install Restic.',
                                       1, 0, os.EX_OSERR)
 
-
             cronTab = '/etc/crontab'
 
             data = open(cronTab, 'r').read()
@@ -3990,7 +3445,7 @@ def main():
         checks.enableDisableFTP('On', distro)
 
     checks.setUpFirstAccount()
-    #checks.p3(distro)
+    # checks.p3(distro)
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
     checks.installation_successfull()
 
