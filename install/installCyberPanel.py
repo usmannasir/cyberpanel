@@ -87,11 +87,8 @@ class InstallCyberPanel:
                 command = 'chown -R lsadm:lsadm ' + confPath
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            except OSError, msg:
-                logging.InstallLog.writeToFile(str(msg) + " [installLiteSpeed]")
-                return 0
-            except ValueError, msg:
-                logging.InstallLog.writeToFile(str(msg) + " [installLiteSpeed]")
+            except BaseException, msg:
+                logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installLiteSpeed]")
                 return 0
 
             return 1
@@ -121,7 +118,7 @@ class InstallCyberPanel:
 
             InstallCyberPanel.stdOut("OpenLiteSpeed Configurations fixed!", 1)
         except IOError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [fix_ols_configs]")
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [fix_ols_configs]")
             return 0
 
         return self.reStartLiteSpeed()
@@ -145,7 +142,7 @@ class InstallCyberPanel:
             InstallCyberPanel.stdOut("Default port is now 80 for OpenLiteSpeed!", 1)
 
         except IOError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [changePortTo80]")
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [changePortTo80]")
             return 0
 
         return self.reStartLiteSpeed()
@@ -213,7 +210,7 @@ class InstallCyberPanel:
 
 
         except BaseException, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [setup_mariadb_repo]")
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_mariadb_repo]")
             return 0
 
     def installMySQL(self, mysql):
@@ -325,7 +322,7 @@ class InstallCyberPanel:
                 writeDataToFile.write(line.replace('utf8mb4', 'utf8'))
             writeDataToFile.close()
         except IOError as err:
-            self.stdOut("Error in setting: " + fileName + ": " + str(err), 1, 1, os.EX_OSERR)
+            self.stdOut("[ERROR] Error in setting: " + fileName + ": " + str(err), 1, 1, os.EX_OSERR)
 
         os.system('systemctl restart mysql')
 
@@ -369,7 +366,7 @@ class InstallCyberPanel:
             try:
                 os.mkdir("/etc/ssl/private")
             except:
-                logging.InstallLog.writeToFile("Could not create directory for FTP SSL")
+                logging.InstallLog.writeToFile("[ERROR] Could not create directory for FTP SSL")
 
 
             command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
@@ -396,7 +393,7 @@ class InstallCyberPanel:
                     os.mkdir('/etc/pure-ftpd/auth')
                     os.mkdir('/etc/pure-ftpd/db')
                 except OSError as err:
-                    self.stdOut("Error creating extra pure-ftpd directories: " + str(err), ".  Should be ok", 1)
+                    self.stdOut("[ERROR] Error creating extra pure-ftpd directories: " + str(err), ".  Should be ok", 1)
 
             data = open(ftpdPath+"/pureftpd-mysql.conf","r").readlines()
 
@@ -431,7 +428,7 @@ class InstallCyberPanel:
             InstallCyberPanel.stdOut("PureFTPD configured!", 1)
 
         except IOError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [installPureFTPDConfigurations]")
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installPureFTPDConfigurations]")
             return 0
 
     def installPowerDNS(self):
@@ -448,12 +445,12 @@ class InstallCyberPanel:
                     os.rename('/etc/resolv.conf', 'etc/resolved.conf')
                 except OSError as e:
                     if e.errno != errno.EEXIST and e.errno != errno.ENOENT:
-                        InstallCyberPanel.stdOut("Unable to rename /etc/resolv.conf to install PowerDNS: " +
+                        InstallCyberPanel.stdOut("[ERROR] Unable to rename /etc/resolv.conf to install PowerDNS: " +
                                                  str(e), 1, 1, os.EX_OSERR)
                     try:
                         os.remove('/etc/resolv.conf')
                     except OSError as e1:
-                        InstallCyberPanel.stdOut("Unable to remove existing /etc/resolv.conf to install PowerDNS: " +
+                        InstallCyberPanel.stdOut("[ERROR] Unable to remove existing /etc/resolv.conf to install PowerDNS: " +
                                                  str(e1), 1, 1, os.EX_OSERR)
 
 
@@ -463,7 +460,7 @@ class InstallCyberPanel:
                     f.write('nameserver 8.8.8.8')
                     f.close()
                 except IOError as e:
-                    InstallCyberPanel.stdOut("Unable to create /etc/resolv.conf: " + str(e) +
+                    InstallCyberPanel.stdOut("[ERROR] Unable to create /etc/resolv.conf: " + str(e) +
                                              ".  This may need to be fixed manually as 'echo \"nameserver 8.8.8.8\"> "
                                              "/etc/resolv.conf'", 1, 1, os.EX_OSERR)
 
@@ -485,7 +482,7 @@ class InstallCyberPanel:
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         except BaseException, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [powerDNS]")
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [powerDNS]")
 
     def installPowerDNSConfigurations(self, mysqlPassword, mysql):
         try:
@@ -530,7 +527,7 @@ class InstallCyberPanel:
             InstallCyberPanel.stdOut("PowerDNS configured!", 1)
 
         except IOError, msg:
-            logging.InstallLog.writeToFile(str(msg) + " [installPowerDNSConfigurations]")
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installPowerDNSConfigurations]")
             return 0
         return 1
 
