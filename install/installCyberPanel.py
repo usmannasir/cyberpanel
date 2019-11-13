@@ -454,7 +454,7 @@ class InstallCyberPanel:
                         os.remove('/etc/resolv.conf')
                     except OSError as e1:
                         InstallCyberPanel.stdOut("Unable to remove existing /etc/resolv.conf to install PowerDNS: " +
-                                                 str(e1), 1, 1, os.EX_OSERR)+
+                                                 str(e1), 1, 1, os.EX_OSERR)
 
 
 

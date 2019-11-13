@@ -219,25 +219,28 @@ class preFlightsChecks:
 
     @staticmethod
     def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK):
-        preFlightsChecks.stdOut(message + " " + bracket, log)
+        finalMessage = 'Running: %s' % (message)
+        preFlightsChecks.stdOut(finalMessage, log)
         count = 0
         while True:
             res = subprocess.call(shlex.split(command))
 
             if preFlightsChecks.resFailed(distro, res):
                 count = count + 1
-                preFlightsChecks.stdOut(message + " failed, trying again, try number: " + str(count))
+                finalMessage = 'Running %s failed. Running again, try number %s' % (message, str(count))
+                preFlightsChecks.stdOut(finalMessage)
                 if count == 3:
                     fatal_message = ''
                     if do_exit:
                         fatal_message = '.  Fatal error, see /var/log/installLogs.txt for full details'
 
-                    preFlightsChecks.stdOut("[ERROR] We are not able to " + message + ' return code: ' + str(res) +
-                                            fatal_message + " " + bracket, 1, do_exit, code)
+                    preFlightsChecks.stdOut("[ERROR] We are not able to run " + message + ' return code: ' + str(res) +
+                                            fatal_message + ".", 1, do_exit, code)
                     return False
             else:
-                preFlightsChecks.stdOut(message + ' successful', log)
+                preFlightsChecks.stdOut('%s ran successfully.' % (message), log)
                 break
+
         return True
 
     def checkIfSeLinuxDisabled(self):
