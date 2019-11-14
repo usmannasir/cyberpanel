@@ -244,7 +244,7 @@
 
     <extension>
          <extensionName>lsphp70-zip</extensionName>
-         <extensionDescription>LSPHP70 Json PHP Extension</extensionDescription>
+         <extensionDescription>ZIP archive management extension for PHP</extensionDescription>
          <status>0</status>
     </extension>
 
