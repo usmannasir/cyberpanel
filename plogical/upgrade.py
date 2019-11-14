@@ -1398,6 +1398,8 @@ class Upgrade:
             writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
 
             for items in data:
+                if items.find('csf') > -1:
+                    continue
                 if items.find("CommonMiddleware") > -1:
                     if csrfCheck == 1:
                         writeToFile.writelines("    'django.middleware.csrf.CsrfViewMiddleware',\n")
@@ -1444,8 +1446,6 @@ CSRF_COOKIE_SECURE = True
 
             MEDIA_URL = 1
             for items in data:
-                if items.find('csf') > -1:
-                    continue
                 if items.find('MEDIA_URL') > -1:
                     MEDIA_URL = 0
 
