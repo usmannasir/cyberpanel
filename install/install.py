@@ -2336,7 +2336,7 @@ def main():
     checks.setUpFirstAccount()
     # checks.p3(distro)
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
-    checks.installation_successfull()
+    #checks.installation_successfull()
 
 
 if __name__ == "__main__":
