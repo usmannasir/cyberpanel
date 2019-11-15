@@ -132,6 +132,7 @@ class preFlightsChecks:
         if log:
             logging.InstallLog.writeToFile(message)
         if do_exit:
+            logging.InstallLog.writeToFile(message)
             sys.exit(code)
 
     def mountTemp(self):
@@ -468,7 +469,7 @@ class preFlightsChecks:
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
         else:
             command = 'yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = 'yum install git -y'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -2335,7 +2336,7 @@ def main():
     checks.setUpFirstAccount()
     # checks.p3(distro)
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
-    checks.installation_successfull()
+    #checks.installation_successfull()
 
 
 if __name__ == "__main__":

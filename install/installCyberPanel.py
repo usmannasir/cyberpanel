@@ -3,7 +3,6 @@ import subprocess
 import os
 from mysqlUtilities import mysqlUtilities
 import installLog as logging
-import shlex
 import randomPassword
 import errno
 import MySQLdb as mariadb
@@ -279,7 +278,7 @@ class InstallCyberPanel:
 
         command = 'mysql -u root -e "' + passwordCMD + '"'
 
-        install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        install.preFlightsChecks.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
 
     def startMariaDB(self):
 
