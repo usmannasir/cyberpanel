@@ -1026,6 +1026,8 @@ class ApplicationInstaller(multi.Thread):
             command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
+            installUtilities.reStartLiteSpeed()
+
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
             statusFile.close()
