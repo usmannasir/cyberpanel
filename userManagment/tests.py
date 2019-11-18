@@ -31,6 +31,7 @@ class TestUserManagement(TestCase):
         self.fetchUserDetails = reverse('fetchUserDetails')
         self.saveResellerChanges = reverse('saveResellerChanges')
         self.createACLFunc = reverse('createACLFunc')
+        self.deleteACLFunc = reverse('deleteACLFunc')
 
         ## Verify login
 
@@ -116,7 +117,6 @@ class TestUserManagement(TestCase):
 
         self.assertEqual(Administrator.objects.get(userName='usman').initWebsitesLimit, 100)
 
-
     def test_createACLFunc(self):
 
         data_ret = {'aclName': 'hello', 'makeAdmin':1,
@@ -167,12 +167,20 @@ class TestUserManagement(TestCase):
 
         self.assertEqual(json_data['status'], 1)
 
-        ## Check Modification
-        # response = self.client.post(self.fetchUserDetails, json_data, content_type="application/json")
-        # logging.writeToFile(response.content)
-        # json_data = json.loads(response.content)
-
         self.assertEqual(ACL.objects.filter(name='hello').count(), 1)
+
+    def test_deleteACLFunc(self):
+        self.test_createACLFunc()
+
+        data_ret = {'aclToBeDeleted': 'hello'}
+        json_data = json.dumps(data_ret)
+
+        response = self.client.post(self.deleteACLFunc, json_data, content_type="application/json")
+        json_data = json.loads(response.content)
+
+        self.assertEqual(json_data['status'], 1)
+
+        self.assertEqual(ACL.objects.filter(name='hello').count(), 0)
 
 
 
