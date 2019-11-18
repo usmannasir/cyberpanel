@@ -32,6 +32,8 @@ class TestUserManagement(TestCase):
         self.saveResellerChanges = reverse('saveResellerChanges')
         self.createACLFunc = reverse('createACLFunc')
         self.deleteACLFunc = reverse('deleteACLFunc')
+        self.submitACLModifications = reverse('submitACLModifications')
+        self.saveChangesAPIAccess = reverse('saveChangesAPIAccess')
 
         ## Verify login
 
@@ -181,6 +183,80 @@ class TestUserManagement(TestCase):
         self.assertEqual(json_data['status'], 1)
 
         self.assertEqual(ACL.objects.filter(name='hello').count(), 0)
+
+    def test_submitACLModifications(self):
+        self.test_createACLFunc()
+        data_ret = {'aclToModify': 'hello',
+                    'adminStatus':1,
+                    'createNewUser': 1,
+                    'versionManagement': 1,
+                    'listUsers': 1,
+                    'resellerCenter': 1,
+                    'deleteUser': 1,
+                    'changeUserACL': 1,
+                    'createWebsite': 1,
+                    'modifyWebsite': 1,
+                    'suspendWebsite': 1,
+                    'deleteWebsite': 1,
+                    'createPackage': 1,
+                    'listPackages': 1,
+                    'deletePackage': 1,
+                    'modifyPackage': 1,
+                    'createDatabase': 1,
+                    'deleteDatabase': 1,
+                    'listDatabases': 1,
+                    'createNameServer': 1,
+                    'createDNSZone': 1,
+                    'deleteZone': 1,
+                    'addDeleteRecords': 1,
+                    'createEmail': 1,
+                    'listEmails': 1,
+                    'deleteEmail': 1,
+                    'emailForwarding': 1,
+                    'changeEmailPassword': 1,
+                    'dkimManager': 1,
+                    'createFTPAccount': 1,
+                    'deleteFTPAccount': 1,
+                    'listFTPAccounts': 1,
+                    'createBackup': 1,
+                    'restoreBackup': 1,
+                    'addDeleteDestinations': 1,
+                    'scheDuleBackups': 1,
+                    'remoteBackups': 1,
+                    'manageSSL': 1,
+                    'hostnameSSL': 1,
+                    'mailServerSSL': 0}
+        json_data = json.dumps(data_ret)
+
+
+        ## Modification
+        response = self.client.post(self.submitACLModifications, json_data, content_type="application/json")
+        logging.writeToFile(response.content)
+        json_data = json.loads(response.content)
+
+        self.assertEqual(json_data['status'], 1)
+
+        self.assertEqual(ACL.objects.get(name='hello').mailServerSSL, 0)
+        self.assertEqual(ACL.objects.get(name='hello').hostnameSSL, 1)
+
+    def test_saveChangesAPIAccess(self):
+        self.test_submitUserCreation()
+
+        data_ret = {'accountUsername': 'usman', 'access': 'Enable'}
+        json_data = json.dumps(data_ret)
+
+        ## Modification
+        response = self.client.post(self.saveChangesAPIAccess, json_data, content_type="application/json")
+        json_data = json.loads(response.content)
+
+        self.assertEqual(json_data['status'], 1)
+
+        ## Check Modification
+        # response = self.client.post(self.fetchUserDetails, json_data, content_type="application/json")
+        # logging.writeToFile(response.content)
+        # json_data = json.loads(response.content)
+
+        self.assertEqual(Administrator.objects.get(userName='usman').api, 1)
 
 
 
