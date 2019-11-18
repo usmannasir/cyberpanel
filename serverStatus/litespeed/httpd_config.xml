@@ -49,8 +49,8 @@
   </expires>
   <tuning>
     <eventDispatcher>best</eventDispatcher>
-    <maxConnections>2000</maxConnections>
-    <maxSSLConnections>200</maxSSLConnections>
+    <maxConnections>10000</maxConnections>
+    <maxSSLConnections>10000</maxSSLConnections>
     <connTimeout>300</connTimeout>
     <maxKeepAliveReq>1000</maxKeepAliveReq>
     <smartKeepAlive>0</smartKeepAlive>
