@@ -4,9 +4,8 @@ from __future__ import unicode_literals
 from django.test import TestCase, Client
 from django.urls import reverse
 import json
+from loginSystem.models import Administrator, ACL
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-from loginSystem.models import Administrator
-
 # Create your tests here.
 
 
@@ -31,6 +30,7 @@ class TestUserManagement(TestCase):
         self.saveModifications = reverse('saveModifications')
         self.fetchUserDetails = reverse('fetchUserDetails')
         self.saveResellerChanges = reverse('saveResellerChanges')
+        self.createACLFunc = reverse('createACLFunc')
 
         ## Verify login
 
@@ -115,6 +115,64 @@ class TestUserManagement(TestCase):
         # json_data = json.loads(response.content)
 
         self.assertEqual(Administrator.objects.get(userName='usman').initWebsitesLimit, 100)
+
+
+    def test_createACLFunc(self):
+
+        data_ret = {'aclName': 'hello', 'makeAdmin':1,
+                    'createNewUser': 1,
+                    'versionManagement': 1,
+                    'listUsers': 1,
+                    'resellerCenter': 1,
+                    'deleteUser': 1,
+                    'changeUserACL': 1,
+                    'createWebsite': 1,
+                    'modifyWebsite': 1,
+                    'suspendWebsite': 1,
+                    'deleteWebsite': 1,
+                    'createPackage': 1,
+                    'listPackages': 1,
+                    'deletePackage': 1,
+                    'modifyPackage': 1,
+                    'createDatabase': 1,
+                    'deleteDatabase': 1,
+                    'listDatabases': 1,
+                    'createNameServer': 1,
+                    'createDNSZone': 1,
+                    'deleteZone': 1,
+                    'addDeleteRecords': 1,
+                    'createEmail': 1,
+                    'listEmails': 1,
+                    'deleteEmail': 1,
+                    'emailForwarding': 1,
+                    'changeEmailPassword': 1,
+                    'dkimManager': 1,
+                    'createFTPAccount': 1,
+                    'deleteFTPAccount': 1,
+                    'listFTPAccounts': 1,
+                    'createBackup': 1,
+                    'restoreBackup': 1,
+                    'addDeleteDestinations': 1,
+                    'scheDuleBackups': 1,
+                    'remoteBackups': 1,
+                    'manageSSL': 1,
+                    'hostnameSSL': 1,
+                    'mailServerSSL': 1}
+        json_data = json.dumps(data_ret)
+
+
+        ## Modification
+        response = self.client.post(self.createACLFunc, json_data, content_type="application/json")
+        json_data = json.loads(response.content)
+
+        self.assertEqual(json_data['status'], 1)
+
+        ## Check Modification
+        # response = self.client.post(self.fetchUserDetails, json_data, content_type="application/json")
+        # logging.writeToFile(response.content)
+        # json_data = json.loads(response.content)
+
+        self.assertEqual(ACL.objects.filter(name='hello').count(), 1)
 
 
 
