@@ -2474,7 +2474,13 @@ StrictHostKeyChecking no
 
             website = Websites.objects.get(domain=self.domain)
 
-            command = 'echo "%s" | passwd --stdin %s' % (data['password'], data['externalApp'])
+            uBuntuPath = '/etc/lsb-release'
+
+            if os.path.exists(uBuntuPath):
+                command = "echo '%s:%s' | chpasswd" % (data['externalApp'], data['password'])
+            else:
+                command = 'echo "%s" | passwd --stdin %s' % (data['password'], data['externalApp'])
+
             ProcessUtilities.executioner(command)
 
             data_ret = {'status': 1, 'error_message': 'None'}
