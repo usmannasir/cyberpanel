@@ -672,18 +672,27 @@ class virtualHostUtilities:
 
             ## Postfix
 
-            shutil.copy(srcPrivKey, "/etc/postfix/key.pem")
-            shutil.copy(srcFullChain, "/etc/postfix/cert.pem")
+            command = 'ln -s %s /etc/postfix/key.pem' % (srcPrivKey)
+            ProcessUtilities.executioner(command)
+
+            command = 'ln -s %s /etc/postfix/cert.pem' % (srcFullChain)
+            ProcessUtilities.executioner(command)
 
             ## Dovecot
 
-            shutil.copy(srcPrivKey, "/etc/pki/dovecot/private/dovecot.pem")
-            shutil.copy(srcFullChain, "/etc/pki/dovecot/certs/dovecot.pem")
+            command = 'ln -s %s /etc/pki/dovecot/private/dovecot.pem' % (srcPrivKey)
+            ProcessUtilities.executioner(command)
+
+            command = 'ln -s %s /etc/pki/dovecot/certs/dovecot.pem' % (srcFullChain)
+            ProcessUtilities.executioner(command)
 
             ## Dovecot 2ND
 
-            shutil.copy(srcPrivKey, "/etc/dovecot/key.pem")
-            shutil.copy(srcFullChain, "/etc/dovecot/cert.pem")
+            command = 'ln -s %s /etc/dovecot/key.pem' % (srcPrivKey)
+            ProcessUtilities.executioner(command)
+
+            command = 'ln -s %s /etc/dovecot/cert.pem' % (srcFullChain)
+            ProcessUtilities.executioner(command)
 
             ## Update postmaster address dovecot
 
