@@ -575,6 +575,15 @@ class virtualHostUtilities:
             pathToStoreSSLFullChain = '/etc/letsencrypt/live/' + virtualHost + '/fullchain.pem'
             pathToStoreSSLPrivKey = '/etc/letsencrypt/live/' + virtualHost + '/privkey.pem'
 
+            adminEmail = "email@" + virtualHost
+
+            if not os.path.exists(pathToStoreSSLFullChain):
+                retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
+
+                if retValues[0] == 0:
+                    print "0," + str(retValues[1])
+                    return 0, retValues[1]
+
             ## removing old certs for lscpd
             if os.path.exists(destPrivKey):
                 os.remove(destPrivKey)
@@ -586,10 +595,11 @@ class virtualHostUtilities:
                 os.remove(lswsAdminCert)
             if os.path.exists(lswsAdminPrivKey):
                 os.remove(lswsAdminPrivKey)
+
             ## create symlink for hostname SSL for lsws webadmin SSL
-            command = 'ln -s /usr/local/lscp/conf/cert.pem /usr/local/lsws/admin/conf/cert/admin.crt'
+            command = 'ln -s %s /usr/local/lsws/admin/conf/cert/admin.crt' % (pathToStoreSSLFullChain)
             ProcessUtilities.normalExecutioner(command)
-            command = 'ln -s /usr/local/lscp/conf/key.pem /usr/local/lsws/admin/conf/cert/admin.key'
+            command = 'ln -s %s /usr/local/lsws/admin/conf/cert/admin.key' % (pathToStoreSSLPrivKey)
             ProcessUtilities.normalExecutioner(command)
 
             ## removing self signed certs for ols webadmin
@@ -597,23 +607,20 @@ class virtualHostUtilities:
                 os.remove(olsAdminCert)
             if os.path.exists(olsAdminPrivKey):
                 os.remove(olsAdminPrivKey)
+
             ## create symlink for hostname SSL for lsws webadmin SSL
-            command = 'ln -s /usr/local/lscp/conf/cert.pem /usr/local/lsws/admin/conf/webadmin.crt'
+            command = 'ln -s %s /usr/local/lsws/admin/conf/webadmin.crt' % (pathToStoreSSLFullChain)
             ProcessUtilities.normalExecutioner(command)
-            command = 'ln -s /usr/local/lscp/conf/key.pem /usr/local/lsws/admin/conf/webadmin.key'
+            command = 'ln -s %s /usr/local/lsws/admin/conf/webadmin.key' % (pathToStoreSSLPrivKey)
             ProcessUtilities.normalExecutioner(command)
 
-            adminEmail = "email@" + virtualHost
+            ##
 
-            if not os.path.exists(pathToStoreSSLFullChain):
-                retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
+            command = 'ln -s %s %s' % (pathToStoreSSLFullChain, destCert)
+            ProcessUtilities.executioner(command)
 
-                if retValues[0] == 0:
-                    print "0," + str(retValues[1])
-                    return 0, retValues[1]
-
-            shutil.copy(pathToStoreSSLPrivKey, destPrivKey)
-            shutil.copy(pathToStoreSSLFullChain, destCert)
+            command = 'ln -s %s %s' % (pathToStoreSSLPrivKey, destPrivKey)
+            ProcessUtilities.executioner(command)
 
             command = 'systemctl restart lscpd'
             cmd = shlex.split(command)
