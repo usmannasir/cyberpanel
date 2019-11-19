@@ -57,7 +57,7 @@ class ServerStatusUtil:
             except:
                 pass
 
-            command = 'wget https://www.litespeedtech.com/packages/5.0/lsws-5.3.8-ent-x86_64-linux.tar.gz'
+            command = 'wget https://www.litespeedtech.com/packages/5.0/lsws-5.4.2-ent-x86_64-linux.tar.gz'
             if ServerStatusUtil.executioner(command, statusFile) == 0:
                 return 0
 
@@ -65,23 +65,27 @@ class ServerStatusUtil:
                 shutil.rmtree('/usr/local/CyberCP/lsws-5.3.8')
 
 
-            command = 'tar zxf lsws-5.3.8-ent-x86_64-linux.tar.gz -C /usr/local/CyberCP'
+            if os.path.exists('/usr/local/CyberCP/lsws-5.4.2/'):
+                shutil.rmtree('/usr/local/CyberCP/lsws-5.4.2/')
+
+
+            command = 'tar zxf lsws-5.4.2-ent-x86_64-linux.tar.gz -C /usr/local/CyberCP'
             if ServerStatusUtil.executioner(command, statusFile) == 0:
                 return 0
 
             if licenseKey == 'trial':
-                command = 'wget -q --output-document=/usr/local/CyberCP/lsws-5.3.8/trial.key http://license.litespeedtech.com/reseller/trial.key'
+                command = 'wget -q --output-document=/usr/local/CyberCP/lsws-5.4.2/trial.key http://license.litespeedtech.com/reseller/trial.key'
                 if ServerStatusUtil.executioner(command, statusFile) == 0:
                     return 0
             else:
-                writeSerial = open('/usr/local/CyberCP/lsws-5.3.8/serial.no', 'w')
+                writeSerial = open('/usr/local/CyberCP/lsws-5.4.2/serial.no', 'w')
                 writeSerial.writelines(licenseKey)
                 writeSerial.close()
 
-            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/install.sh', '/usr/local/CyberCP/lsws-5.3.8/')
-            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/functions.sh', '/usr/local/CyberCP/lsws-5.3.8/')
+            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/install.sh', '/usr/local/CyberCP/lsws-5.4.2/')
+            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/functions.sh', '/usr/local/CyberCP/lsws-5.4.2/')
 
-            os.chdir('/usr/local/CyberCP/lsws-5.3.8/')
+            os.chdir('/usr/local/CyberCP/lsws-5.4.2/')
 
             command = 'chmod +x install.sh'
             if ServerStatusUtil.executioner(command, statusFile) == 0:
@@ -108,7 +112,7 @@ class ServerStatusUtil:
                 pass
 
             try:
-                os.rmdir("/usr/local/CyberCP/lsws-5.3.8")
+                os.rmdir("/usr/local/CyberCP/lsws-5.4.2")
             except:
                 pass
 
