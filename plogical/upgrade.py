@@ -1960,6 +1960,16 @@ failovermethod=priority
             Upgrade.executioner(command, 0)
 
     @staticmethod
+    def UpdateMaxSSLCons():
+        command = "sed -i 's|<maxConnections>2000</maxConnections>|<maxConnections>10000</maxConnections>|g' /usr/local/lsws/conf/httpd_config.xml"
+        Upgrade.executioner(command, 0)
+
+        command = "sed -i 's|<maxSSLConnections>200</maxSSLConnections>|<maxSSLConnections>10000</maxSSLConnections>|g' /usr/local/lsws/conf/httpd_config.xml"
+        Upgrade.executioner(command, 0)
+
+
+
+    @staticmethod
     def upgrade():
 
         # Upgrade.stdOut("Upgrades are currently disabled")
@@ -2047,6 +2057,7 @@ failovermethod=priority
         ## Upgrade version
         Upgrade.fixPermissions()
         Upgrade.upgradeVersion()
+        Upgrade.UpdateMaxSSLCons()
 
         try:
             command = "systemctl start lscpd"
