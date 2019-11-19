@@ -8,6 +8,7 @@ from loginSystem.models import Administrator, ACL
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import requests
 import time
+import ftp
 # Create your tests here.
 
 
@@ -50,6 +51,18 @@ class TestWebsiteManagement(TestCase):
             exists = 1
 
         self.assertEqual(exists, 1)
+
+
+    def test_submitWebsiteDeletion(self):
+
+        ## Login
+
+        data_ret = {'websiteName': 'hello.cyberpanel.xyz'}
+
+        response = self.MakeRequest('websites/submitWebsiteDeletion', data_ret)
+        time.sleep(5)
+
+        self.assertEqual(response['status'], 1)
 
 
 
