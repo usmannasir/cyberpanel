@@ -57,6 +57,11 @@ class TestWebsiteManagement(TestCase):
                     'package': 'Default', 'websiteOwner': 'admin', 'ssl': 0, 'dkimCheck': 0, 'openBasedir': 0}
         self.MakeRequest('websites/submitWebsiteCreation', data_ret)
 
+        data_ret = {'domainName': 'suspend.cyberpanel.xyz', 'adminEmail': 'usman@cyberpersons.com',
+                    'phpSelection': 'PHP 7.1',
+                    'package': 'Default', 'websiteOwner': 'admin', 'ssl': 0, 'dkimCheck': 0, 'openBasedir': 0}
+        self.MakeRequest('websites/submitWebsiteCreation', data_ret)
+
     def test_submitWebsiteModify(self):
 
         ## Login
@@ -65,7 +70,6 @@ class TestWebsiteManagement(TestCase):
                     'packForWeb': 'Default', 'admin': 'admin'}
 
         response = self.MakeRequest('websites/saveWebsiteChanges', data_ret)
-        logging.writeToFile(response['error_message'])
 
         time.sleep(5)
 
@@ -100,6 +104,57 @@ phpinfo();
         time.sleep(5)
 
         self.assertEqual(response['status'], 1)
+
+    def test_submitWebsiteStatus(self):
+
+        ## Suspend  check
+        data_ret = {'websiteName': 'suspend.cyberpanel.xyz', 'state': 'Suspend'}
+
+        response = self.MakeRequest('websites/submitWebsiteStatus', data_ret)
+
+        time.sleep(5)
+
+        self.assertEqual(response['websiteStatus'], 1)
+
+        exists = 0
+
+        if self.MakeRequestRaw('http://suspend.cyberpanel.xyz').find('404') > -1 or self.MakeRequestRaw('http://suspend.cyberpanel.xyz').find('Access to this resource on the server is denied!') > -1:
+            exists = 1
+
+        self.assertEqual(exists, 1)
+
+        suspend = 0
+        import os
+        if os.path.exists('/usr/local/lsws/conf/vhosts/suspend.cyberpanel.xyz-suspended'):
+            suspend = 1
+
+        self.assertEqual(suspend, 1)
+
+        ## Unsuspend  check
+
+        data_ret = {'websiteName': 'suspend.cyberpanel.xyz', 'state': 'Unsuspend'}
+
+        response = self.MakeRequest('websites/submitWebsiteStatus', data_ret)
+
+        time.sleep(5)
+
+        self.assertEqual(response['websiteStatus'], 1)
+
+        exists = 0
+
+        if self.MakeRequestRaw('http://suspend.cyberpanel.xyz').find('CyberPanel') > -1:
+            exists = 1
+
+        self.assertEqual(exists, 1)
+
+        suspend = 0
+        import os
+        if os.path.exists('/usr/local/lsws/conf/vhosts/suspend.cyberpanel.xyz'):
+            suspend = 1
+
+        self.assertEqual(suspend, 1)
+
+
 
 
 
