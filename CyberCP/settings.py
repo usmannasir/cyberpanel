@@ -127,8 +127,6 @@ DATABASES = {
 }
 
 DATABASE_ROUTERS = ['backup.backupRouter.backupRouter']
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators

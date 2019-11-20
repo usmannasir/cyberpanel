@@ -1381,7 +1381,7 @@ class Upgrade:
                 if items.find('WebTerminal') > -1:
                     WebTerminal = 0
 
-            SESSION_COOKIE_SECURE = 1
+            SESSION_COOKIE_SECURE = 0
 
             for items in data:
                 if items.find('SESSION_COOKIE_SECURE') > -1:

@@ -65,4 +65,24 @@ class TestWebsiteManagement(TestCase):
         self.assertEqual(response['status'], 1)
 
 
+    def test_submitWebsiteModify(self):
+
+        ## Login
+
+        data_ret = {'domainName': 'hello.cyberpanel.xyz', 'adminEmail': 'usman@cyberpersons.com' , 'phpSelection': 'PHP 7.1',
+                    'package': 'Default', 'websiteOwner': 'admin', 'ssl': 0, 'dkimCheck': 0, 'openBasedir': 0}
+        response = self.MakeRequest('websites/submitWebsiteCreation', data_ret)
+
+        time.sleep(10)
+
+        self.assertEqual(response['status'], 1)
+
+        exists = 0
+
+        if self.MakeRequestRaw('http://hello.cyberpanel.xyz').find('CyberPanel') > -1:
+            exists = 1
+
+        self.assertEqual(exists, 1)
+
+
 
