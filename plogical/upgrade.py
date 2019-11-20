@@ -1398,7 +1398,7 @@ class Upgrade:
             writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
 
             for items in data:
-                if items.find('csf') > -1:
+                if items.find('csf') > -1 or items.find('SESSION_COOKIE_SECURE') > -1 or items.find('CSRF_COOKIE_SECURE') > -1:
                     continue
                 if items.find("CommonMiddleware") > -1:
                     if csrfCheck == 1:
