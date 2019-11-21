@@ -25,11 +25,10 @@ class TestWebsiteManagement(TestCase):
         result = requests.get(path)
         return str(result.text)
 
-
     def setUp(self):
         ## Verify login
 
-        data_ret = {'username': 'admin', 'password': '1234567'}
+        data_ret = {'username': 'admin', 'password': 'hello122'}
         response = self.MakeRequest('verifyLogin', data_ret)
         self.assertEqual(response['loginStatus'], 1)
 
@@ -93,7 +92,6 @@ phpinfo();
 
         self.assertEqual(exists, 1)
 
-
     def test_submitWebsiteDeletion(self):
 
         ## Login
@@ -154,6 +152,40 @@ phpinfo();
 
         self.assertEqual(suspend, 1)
 
+    def test_installWordpress(self):
+
+        ## Suspend  check
+        data_ret = {'domain': 'cyberpanel.xyz', 'home': '1', 'blogTitle': 'Unit Test', 'adminUser': 'cyberpanel',
+                    'passwordByPass': 'helloworld', 'adminEmail': 'usman@cyberpersons.com'}
+
+        response = self.MakeRequest('websites/installWordpress', data_ret)
+        logging.writeToFile(str(response))
+
+        time.sleep(2)
+
+        self.assertEqual(response['status'], 1)
+        tempStatusPath = response['tempStatusPath']
+
+        ## Wait for install to complete
+
+        data_ret = {'statusFile': tempStatusPath}
+
+        while True:
+            response = self.MakeRequest('websites/installWordpressStatus', data_ret)
+            if response['abort'] == 1:
+                if response['installStatus']:
+                    break
+                else:
+                    logging.writeToFile(response['error_message'])
+                    break
+
+
+        exists = 0
+
+        if self.MakeRequestRaw('http://cyberpanel.xyz').find('Unit Test') > -1:
+            exists = 1
+
+        self.assertEqual(exists, 1)
 
 
 
