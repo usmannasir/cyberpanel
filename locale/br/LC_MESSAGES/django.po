@@ -3,19 +3,19 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#: baseTemplate/templates/baseTemplate/index.html:220
-#: baseTemplate/templates/baseTemplate/index.html:273
-#: baseTemplate/templates/baseTemplate/index.html:280
-#: baseTemplate/templates/baseTemplate/index.html:287
-#: baseTemplate/templates/baseTemplate/index.html:294
-#: baseTemplate/templates/baseTemplate/index.html:301
-#: baseTemplate/templates/baseTemplate/index.html:308
+#: baseTemplate/templates/baseTemplate/index.html:219
+#: baseTemplate/templates/baseTemplate/index.html:272
+#: baseTemplate/templates/baseTemplate/index.html:279
+#: baseTemplate/templates/baseTemplate/index.html:286
+#: baseTemplate/templates/baseTemplate/index.html:293
+#: baseTemplate/templates/baseTemplate/index.html:300
+#: baseTemplate/templates/baseTemplate/index.html:307
 #: emailMarketing/templates/emailMarketing/sendEmails.html:93
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-30 00:05+0500\n"
+"POT-Creation-Date: 2019-11-21 19:54+0500\n"
 "PO-Revision-Date: 2018-10-09 15:48+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -46,8 +46,8 @@ msgstr ""
 
 #: CLManager/templates/CLManager/createPackage.html:15
 #: CLManager/templates/CLManager/createPackage.html:130
-#: baseTemplate/templates/baseTemplate/index.html:436
-#: baseTemplate/templates/baseTemplate/index.html:650
+#: baseTemplate/templates/baseTemplate/index.html:435
+#: baseTemplate/templates/baseTemplate/index.html:666
 #: packages/templates/packages/createPackage.html:13
 #: packages/templates/packages/createPackage.html:100
 #: packages/templates/packages/index.html:25
@@ -151,7 +151,7 @@ msgstr ""
 #: packages/templates/packages/listPackages.html:84
 #: pluginHolder/templates/pluginHolder/plugins.html:28
 #: serverStatus/templates/serverStatus/litespeedStatus.html:38
-#: serverStatus/templates/serverStatus/litespeedStatus.html:242
+#: serverStatus/templates/serverStatus/litespeedStatus.html:262
 #: userManagment/templates/userManagment/listUsers.html:75
 msgid "Name"
 msgstr "Име"
@@ -176,7 +176,7 @@ msgstr "SSL - CyberPanel"
 
 #: CLManager/templates/CLManager/listWebsites.html:14
 #: CLManager/templates/CLManager/monitorUsage.html:14
-#: baseTemplate/templates/baseTemplate/index.html:412
+#: baseTemplate/templates/baseTemplate/index.html:411
 #: containerization/templates/containerization/listWebsites.html:14
 #: websiteFunctions/templates/websiteFunctions/index.html:31
 #: websiteFunctions/templates/websiteFunctions/index.html:55
@@ -206,10 +206,10 @@ msgstr "Прикачи Git за тази страница."
 
 #: CLManager/templates/CLManager/monitorUsage.html:21
 #: baseTemplate/templates/baseTemplate/homePage.html:42
-#: baseTemplate/templates/baseTemplate/index.html:277
+#: baseTemplate/templates/baseTemplate/index.html:276
+#: baseTemplate/templates/baseTemplate/index.html:400
 #: baseTemplate/templates/baseTemplate/index.html:401
 #: baseTemplate/templates/baseTemplate/index.html:402
-#: baseTemplate/templates/baseTemplate/index.html:403
 #: containerization/templates/containerization/listWebsites.html:21
 msgid "Websites"
 msgstr "Страница"
@@ -258,7 +258,7 @@ msgstr "Пакети - CyberPanel"
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:14
 #: emailMarketing/templates/emailMarketing/website.html:40
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:40
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:43
 #: websiteFunctions/templates/websiteFunctions/website.html:43
 msgid "Usage"
 msgstr "Използване"
@@ -362,7 +362,7 @@ msgstr "Планирано Архивиране - CyberPanel"
 #: backup/templates/backup/backupSchedule.html:13
 #: backup/templates/backup/backupSchedule.html:23
 #: backup/templates/backup/index.html:75 backup/templates/backup/index.html:77
-#: baseTemplate/templates/baseTemplate/index.html:579
+#: baseTemplate/templates/baseTemplate/index.html:578
 #: userManagment/templates/userManagment/createACL.html:381
 #: userManagment/templates/userManagment/modifyACL.html:385
 msgid "Schedule Back up"
@@ -408,7 +408,7 @@ msgstr "Git Мениджър"
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:134
 #: backup/templates/backup/backupDestinations.html:55
 #: backup/templates/backup/backupSchedule.html:67
-#: baseTemplate/templates/baseTemplate/index.html:576
+#: baseTemplate/templates/baseTemplate/index.html:575
 msgid "Add Destination"
 msgstr "Добави дестинация"
 
@@ -532,8 +532,8 @@ msgstr "Избери Страница"
 
 #: IncBackups/templates/IncBackups/createBackup.html:113
 #: backup/templates/backup/backup.html:81
-#: baseTemplate/templates/baseTemplate/index.html:570
-#: baseTemplate/templates/baseTemplate/index.html:599
+#: baseTemplate/templates/baseTemplate/index.html:569
+#: baseTemplate/templates/baseTemplate/index.html:598
 #: userManagment/templates/userManagment/createACL.html:352
 #: userManagment/templates/userManagment/modifyACL.html:356
 msgid "Create Back up"
@@ -626,6 +626,7 @@ msgstr "IP Адрес"
 #: mailServer/templates/mailServer/listEmails.html:113
 #: userManagment/templates/userManagment/createUser.html:83
 #: userManagment/templates/userManagment/modifyUser.html:62
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:58
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:56
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:33
 msgid "Password"
@@ -689,6 +690,7 @@ msgstr ""
 #: emailMarketing/templates/emailMarketing/manageLists.html:74
 #: emailMarketing/templates/emailMarketing/website.html:330
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:56
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:67
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:70
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:56
 #: websiteFunctions/templates/websiteFunctions/website.html:293
@@ -708,6 +710,35 @@ msgstr "Път"
 #: userManagment/templates/userManagment/listUsers.html:37
 msgid "Actions"
 msgstr "Действия"
+
+#: WebTerminal/templates/WebTerminal/WebTerminal.html:3
+#, fuzzy
+#| msgid "Domains - CyberPanel"
+msgid "Terminal - CyberPanel"
+msgstr "Домейни - CyberPanel"
+
+#: WebTerminal/templates/WebTerminal/WebTerminal.html:16
+#: baseTemplate/templates/baseTemplate/index.html:641
+#: baseTemplate/templates/baseTemplate/index.html:650
+msgid "Terminal"
+msgstr ""
+
+#: WebTerminal/templates/WebTerminal/WebTerminal.html:18
+msgid "Web Terminal Docs"
+msgstr ""
+
+#: WebTerminal/templates/WebTerminal/WebTerminal.html:19
+msgid "Execute your terminal commands."
+msgstr ""
+
+#: WebTerminal/templates/WebTerminal/WebTerminal.html:26
+#: baseTemplate/templates/baseTemplate/index.html:643
+msgid "Web Terminal"
+msgstr ""
+
+#: WebTerminal/templates/WebTerminal/WebTerminal.html:28
+msgid "Reboot SSH Server"
+msgstr ""
 
 #: backup/templates/backup/backup.html:15
 msgid "This page can be used to Back up your websites"
@@ -729,7 +760,7 @@ msgstr "Първо Име"
 #: backup/templates/backup/backup.html:106
 #: backup/templates/backup/restore.html:63
 #: baseTemplate/templates/baseTemplate/homePage.html:132
-#: baseTemplate/templates/baseTemplate/index.html:312
+#: baseTemplate/templates/baseTemplate/index.html:311
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:45
 #: filemanager/templates/filemanager/index.html:206
 #: firewall/templates/firewall/firewall.html:35
@@ -821,19 +852,20 @@ msgstr "Дестинацията е добавена"
 #: mailServer/templates/mailServer/dkimManager.html:156
 #: mailServer/templates/mailServer/emailForwarding.html:83
 #: manageSSL/templates/manageSSL/manageSSL.html:60
-#: userManagment/templates/userManagment/createUser.html:126
-#: userManagment/templates/userManagment/modifyUser.html:107
+#: userManagment/templates/userManagment/createUser.html:137
+#: userManagment/templates/userManagment/modifyUser.html:121
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:145
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:126
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:101
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:135
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:115
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:101
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:155
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:320
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:376
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:432
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:518
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:641
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:158
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:323
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:379
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:435
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:521
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:644
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:127
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:247
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:293
@@ -877,9 +909,9 @@ msgstr "Архив - CyberPanel"
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:30
 #: baseTemplate/templates/baseTemplate/homePage.html:95
 #: baseTemplate/templates/baseTemplate/homePage.html:97
-#: baseTemplate/templates/baseTemplate/index.html:562
-#: baseTemplate/templates/baseTemplate/index.html:564
-#: baseTemplate/templates/baseTemplate/index.html:617
+#: baseTemplate/templates/baseTemplate/index.html:561
+#: baseTemplate/templates/baseTemplate/index.html:563
+#: baseTemplate/templates/baseTemplate/index.html:616
 msgid "Back up"
 msgstr "Архив"
 
@@ -909,8 +941,8 @@ msgid "Back up Site"
 msgstr "Архивирай Страница"
 
 #: backup/templates/backup/index.html:44
-#: baseTemplate/templates/baseTemplate/index.html:573
-#: baseTemplate/templates/baseTemplate/index.html:602
+#: baseTemplate/templates/baseTemplate/index.html:572
+#: baseTemplate/templates/baseTemplate/index.html:601
 #: userManagment/templates/userManagment/createACL.html:361
 #: userManagment/templates/userManagment/modifyACL.html:365
 msgid "Restore Back up"
@@ -923,7 +955,7 @@ msgid "Add/Delete Destinations"
 msgstr "Добави/Премахни Дестинация"
 
 #: backup/templates/backup/index.html:90 backup/templates/backup/index.html:92
-#: baseTemplate/templates/baseTemplate/index.html:582
+#: baseTemplate/templates/baseTemplate/index.html:581
 #: userManagment/templates/userManagment/createACL.html:391
 #: userManagment/templates/userManagment/modifyACL.html:395
 msgid "Remote Back ups"
@@ -957,8 +989,8 @@ msgstr "Стартирай трансфер"
 #: emailPremium/templates/emailPremium/emailPage.html:83
 #: emailPremium/templates/emailPremium/emailPage.html:93
 #: filemanager/templates/filemanager/index.html:230
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:487
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:614
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:490
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:617
 #: websiteFunctions/templates/websiteFunctions/website.html:286
 #: websiteFunctions/templates/websiteFunctions/website.html:747
 #: websiteFunctions/templates/websiteFunctions/website.html:858
@@ -988,8 +1020,8 @@ msgstr "Страница"
 
 #: backup/templates/backup/remoteBackups.html:108
 #: baseTemplate/templates/baseTemplate/homePage.html:143
-#: baseTemplate/templates/baseTemplate/index.html:752
-#: baseTemplate/templates/baseTemplate/index.html:754
+#: baseTemplate/templates/baseTemplate/index.html:768
+#: baseTemplate/templates/baseTemplate/index.html:770
 #: managePHP/templates/managePHP/installExtensions.html:61
 msgid "PHP"
 msgstr "PHP"
@@ -1003,13 +1035,14 @@ msgid "Package"
 msgstr "Пакети"
 
 #: backup/templates/backup/remoteBackups.html:110
-#: baseTemplate/templates/baseTemplate/index.html:506
-#: baseTemplate/templates/baseTemplate/index.html:508
+#: baseTemplate/templates/baseTemplate/index.html:505
+#: baseTemplate/templates/baseTemplate/index.html:507
 #: mailServer/templates/mailServer/listEmails.html:101
 #: userManagment/templates/userManagment/createUser.html:45
 #: userManagment/templates/userManagment/modifyUser.html:54
 #: userManagment/templates/userManagment/userProfile.html:41
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:61
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:44
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:49
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:49
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:67
@@ -1053,7 +1086,7 @@ msgstr "Състояние"
 #: firewall/templates/firewall/firewall.html:152
 #: managePHP/templates/managePHP/editPHPConfig.html:214
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:136
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:633
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:636
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:117
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:237
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:283
@@ -1080,9 +1113,9 @@ msgid "User Functions"
 msgstr "Функции на Потребителите"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:31
+#: baseTemplate/templates/baseTemplate/index.html:361
 #: baseTemplate/templates/baseTemplate/index.html:362
 #: baseTemplate/templates/baseTemplate/index.html:363
-#: baseTemplate/templates/baseTemplate/index.html:364
 msgid "Users"
 msgstr "Потребители"
 
@@ -1096,9 +1129,9 @@ msgid "Add/Modify Packages"
 msgstr "Добави/Промени Пакет"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:53
-#: baseTemplate/templates/baseTemplate/index.html:284
-#: baseTemplate/templates/baseTemplate/index.html:428
-#: baseTemplate/templates/baseTemplate/index.html:430
+#: baseTemplate/templates/baseTemplate/index.html:283
+#: baseTemplate/templates/baseTemplate/index.html:427
+#: baseTemplate/templates/baseTemplate/index.html:429
 #: packages/templates/packages/index.html:13
 msgid "Packages"
 msgstr "Пакети"
@@ -1109,15 +1142,15 @@ msgid "Database Functions"
 msgstr "Функции на Бази от Данни"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:64
+#: baseTemplate/templates/baseTemplate/index.html:452
 #: baseTemplate/templates/baseTemplate/index.html:453
 #: baseTemplate/templates/baseTemplate/index.html:454
-#: baseTemplate/templates/baseTemplate/index.html:455
 #: emailMarketing/templates/emailMarketing/website.html:51
 #: packages/templates/packages/createPackage.html:69
 #: packages/templates/packages/listPackages.html:37
 #: packages/templates/packages/listPackages.html:134
 #: packages/templates/packages/modifyPackage.html:73
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:51
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:54
 #: websiteFunctions/templates/websiteFunctions/website.html:54
 msgid "Databases"
 msgstr "База от Данни"
@@ -1127,9 +1160,9 @@ msgid "Control DNS"
 msgstr "Контрол на DNS"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:75
-#: baseTemplate/templates/baseTemplate/index.html:291
-#: baseTemplate/templates/baseTemplate/index.html:478
-#: baseTemplate/templates/baseTemplate/index.html:480
+#: baseTemplate/templates/baseTemplate/index.html:290
+#: baseTemplate/templates/baseTemplate/index.html:477
+#: baseTemplate/templates/baseTemplate/index.html:479
 msgid "DNS"
 msgstr "DNS"
 
@@ -1139,11 +1172,11 @@ msgid "FTP Functions"
 msgstr "FTP Функции"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:86
-#: baseTemplate/templates/baseTemplate/index.html:298
-#: baseTemplate/templates/baseTemplate/index.html:540
-#: baseTemplate/templates/baseTemplate/index.html:542
+#: baseTemplate/templates/baseTemplate/index.html:297
+#: baseTemplate/templates/baseTemplate/index.html:539
+#: baseTemplate/templates/baseTemplate/index.html:541
 #: emailMarketing/templates/emailMarketing/website.html:46
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:46
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:49
 #: websiteFunctions/templates/websiteFunctions/website.html:49
 msgid "FTP"
 msgstr "FTP"
@@ -1159,16 +1192,16 @@ msgstr "Emails"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:117
 #: baseTemplate/templates/baseTemplate/homePage.html:119
+#: baseTemplate/templates/baseTemplate/index.html:617
 #: baseTemplate/templates/baseTemplate/index.html:618
-#: baseTemplate/templates/baseTemplate/index.html:619
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:39
 msgid "SSL"
 msgstr "SSL"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:130
-#: baseTemplate/templates/baseTemplate/index.html:727
-#: baseTemplate/templates/baseTemplate/index.html:729
-#: baseTemplate/templates/baseTemplate/index.html:771
+#: baseTemplate/templates/baseTemplate/index.html:743
+#: baseTemplate/templates/baseTemplate/index.html:745
+#: baseTemplate/templates/baseTemplate/index.html:787
 #: emailPremium/templates/emailPremium/policyServer.html:30
 #: serverStatus/templates/serverStatus/index.html:13
 msgid "Server Status"
@@ -1180,18 +1213,18 @@ msgstr "PHP Конфигурация"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:152
 #: baseTemplate/templates/baseTemplate/homePage.html:154
-#: baseTemplate/templates/baseTemplate/index.html:773
+#: baseTemplate/templates/baseTemplate/index.html:789
 #: dockerManager/templates/dockerManager/viewContainer.html:174
 #: emailMarketing/templates/emailMarketing/website.html:117
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:115
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:118
 #: websiteFunctions/templates/websiteFunctions/website.html:106
 msgid "Logs"
 msgstr "Логове"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:163
 #: baseTemplate/templates/baseTemplate/homePage.html:165
-#: baseTemplate/templates/baseTemplate/index.html:795
-#: baseTemplate/templates/baseTemplate/index.html:797
+#: baseTemplate/templates/baseTemplate/index.html:811
+#: baseTemplate/templates/baseTemplate/index.html:813
 msgid "Security"
 msgstr "Сигурност"
 
@@ -1202,13 +1235,13 @@ msgid "Resources"
 msgstr "Ресурси"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:197
-#: baseTemplate/templates/baseTemplate/index.html:140
+#: baseTemplate/templates/baseTemplate/index.html:139
 #: dockerManager/templates/dockerManager/viewContainer.html:48
 msgid "CPU Usage"
 msgstr "CPU Използване"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:218
-#: baseTemplate/templates/baseTemplate/index.html:151
+#: baseTemplate/templates/baseTemplate/index.html:150
 msgid "Ram Usage"
 msgstr "Използване на RAM"
 
@@ -1216,85 +1249,85 @@ msgstr "Използване на RAM"
 msgid "Disk Usage '/'"
 msgstr "Зает Диск"
 
-#: baseTemplate/templates/baseTemplate/index.html:160
+#: baseTemplate/templates/baseTemplate/index.html:159
 #: emailMarketing/templates/emailMarketing/website.html:58
 #: emailMarketing/templates/emailMarketing/website.html:78
 #: userManagment/templates/userManagment/listUsers.html:34
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:58
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:78
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:61
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:81
 #: websiteFunctions/templates/websiteFunctions/website.html:59
 #: websiteFunctions/templates/websiteFunctions/website.html:77
 msgid "Disk Usage"
 msgstr "Използван диск"
 
-#: baseTemplate/templates/baseTemplate/index.html:193
-#: baseTemplate/templates/baseTemplate/index.html:196
-#: baseTemplate/templates/baseTemplate/index.html:200
+#: baseTemplate/templates/baseTemplate/index.html:192
+#: baseTemplate/templates/baseTemplate/index.html:195
+#: baseTemplate/templates/baseTemplate/index.html:199
 msgid "CyberPanel"
 msgstr "CyberPanel"
 
-#: baseTemplate/templates/baseTemplate/index.html:198
-#: baseTemplate/templates/baseTemplate/index.html:202
+#: baseTemplate/templates/baseTemplate/index.html:197
+#: baseTemplate/templates/baseTemplate/index.html:201
 msgid "Web Hosting Control Panel"
 msgstr "Уеб Хостинг Панел"
 
-#: baseTemplate/templates/baseTemplate/index.html:204
+#: baseTemplate/templates/baseTemplate/index.html:203
 msgid "Close sidebar"
 msgstr "Затвори страничен бар"
 
-#: baseTemplate/templates/baseTemplate/index.html:210
+#: baseTemplate/templates/baseTemplate/index.html:209
 msgid "My Account"
 msgstr "Моят Акаунт"
 
-#: baseTemplate/templates/baseTemplate/index.html:229
+#: baseTemplate/templates/baseTemplate/index.html:228
 msgid "Edit profile"
 msgstr "Промени профил"
 
-#: baseTemplate/templates/baseTemplate/index.html:231
-#: baseTemplate/templates/baseTemplate/index.html:370
+#: baseTemplate/templates/baseTemplate/index.html:230
+#: baseTemplate/templates/baseTemplate/index.html:369
 #: userManagment/templates/userManagment/index.html:24
 #: userManagment/templates/userManagment/index.html:27
 msgid "View Profile"
 msgstr "Преглед на профил"
 
-#: baseTemplate/templates/baseTemplate/index.html:238
-#: baseTemplate/templates/baseTemplate/index.html:320
+#: baseTemplate/templates/baseTemplate/index.html:237
+#: baseTemplate/templates/baseTemplate/index.html:319
 msgid "Logout"
 msgstr "Излез"
 
-#: baseTemplate/templates/baseTemplate/index.html:250
-#: baseTemplate/templates/baseTemplate/index.html:255
-#: baseTemplate/templates/baseTemplate/index.html:260
+#: baseTemplate/templates/baseTemplate/index.html:249
+#: baseTemplate/templates/baseTemplate/index.html:254
+#: baseTemplate/templates/baseTemplate/index.html:259
 msgid "CPU Load Average"
 msgstr "Средно CPU Натоварване"
 
-#: baseTemplate/templates/baseTemplate/index.html:266
+#: baseTemplate/templates/baseTemplate/index.html:265
 msgid "Dashboard Quick Menu"
 msgstr "Бързо Меню"
 
-#: baseTemplate/templates/baseTemplate/index.html:305
-#: baseTemplate/templates/baseTemplate/index.html:709
-#: baseTemplate/templates/baseTemplate/index.html:711
+#: baseTemplate/templates/baseTemplate/index.html:304
+#: baseTemplate/templates/baseTemplate/index.html:725
+#: baseTemplate/templates/baseTemplate/index.html:727
 msgid "Tuning"
 msgstr "Настройка"
 
-#: baseTemplate/templates/baseTemplate/index.html:333
+#: baseTemplate/templates/baseTemplate/index.html:332
 msgid "Overview"
 msgstr "Преглед"
 
+#: baseTemplate/templates/baseTemplate/index.html:334
 #: baseTemplate/templates/baseTemplate/index.html:335
-#: baseTemplate/templates/baseTemplate/index.html:336
 msgid "Server IP Address"
 msgstr "Сървърен IP Адрес"
 
-#: baseTemplate/templates/baseTemplate/index.html:340
-#: baseTemplate/templates/baseTemplate/index.html:342
+#: baseTemplate/templates/baseTemplate/index.html:339
+#: baseTemplate/templates/baseTemplate/index.html:341
 msgid "Dashboard"
 msgstr "Начало"
 
-#: baseTemplate/templates/baseTemplate/index.html:345
-#: baseTemplate/templates/baseTemplate/index.html:347
-#: baseTemplate/templates/baseTemplate/index.html:349
+#: baseTemplate/templates/baseTemplate/index.html:344
+#: baseTemplate/templates/baseTemplate/index.html:346
+#: baseTemplate/templates/baseTemplate/index.html:348
 #: baseTemplate/templates/baseTemplate/versionManagment.html:10
 #: userManagment/templates/userManagment/createACL.html:47
 #: userManagment/templates/userManagment/createACL.html:52
@@ -1303,26 +1336,26 @@ msgstr "Начало"
 msgid "Version Management"
 msgstr "Мениджър на Версия"
 
+#: baseTemplate/templates/baseTemplate/index.html:351
 #: baseTemplate/templates/baseTemplate/index.html:352
-#: baseTemplate/templates/baseTemplate/index.html:353
-#: baseTemplate/templates/baseTemplate/index.html:355
+#: baseTemplate/templates/baseTemplate/index.html:354
 #, fuzzy
 #| msgid "Connection to"
 msgid "Connect"
 msgstr "Връзка към"
 
-#: baseTemplate/templates/baseTemplate/index.html:359
+#: baseTemplate/templates/baseTemplate/index.html:358
 msgid "Main"
 msgstr "Главно"
 
-#: baseTemplate/templates/baseTemplate/index.html:373
+#: baseTemplate/templates/baseTemplate/index.html:372
 #: userManagment/templates/userManagment/createACL.html:64
 #: userManagment/templates/userManagment/createUser.html:12
 #: userManagment/templates/userManagment/modifyACL.html:68
 msgid "Create New User"
 msgstr "Нов Потребител"
 
-#: baseTemplate/templates/baseTemplate/index.html:376
+#: baseTemplate/templates/baseTemplate/index.html:375
 #: userManagment/templates/userManagment/createACL.html:73
 #: userManagment/templates/userManagment/index.html:36
 #: userManagment/templates/userManagment/index.html:39
@@ -1334,15 +1367,15 @@ msgstr "Нов Потребител"
 msgid "List Users"
 msgstr "Потребителско име"
 
-#: baseTemplate/templates/baseTemplate/index.html:379
+#: baseTemplate/templates/baseTemplate/index.html:378
 #: userManagment/templates/userManagment/index.html:61
 #: userManagment/templates/userManagment/index.html:64
 #: userManagment/templates/userManagment/modifyUser.html:12
-#: userManagment/templates/userManagment/modifyUser.html:88
+#: userManagment/templates/userManagment/modifyUser.html:102
 msgid "Modify User"
 msgstr "Промени Потребител"
 
-#: baseTemplate/templates/baseTemplate/index.html:381
+#: baseTemplate/templates/baseTemplate/index.html:380
 #: userManagment/templates/userManagment/createACL.html:82
 #: userManagment/templates/userManagment/modifyACL.html:86
 #: userManagment/templates/userManagment/resellerCenter.html:12
@@ -1352,14 +1385,14 @@ msgstr "Промени Потребител"
 msgid "Reseller Center"
 msgstr "Resseler"
 
-#: baseTemplate/templates/baseTemplate/index.html:384
+#: baseTemplate/templates/baseTemplate/index.html:383
 #: userManagment/templates/userManagment/createACL.html:12
 #, fuzzy
 #| msgid "Create New User"
 msgid "Create New ACL"
 msgstr "Нов Потребител"
 
-#: baseTemplate/templates/baseTemplate/index.html:387
+#: baseTemplate/templates/baseTemplate/index.html:386
 #: userManagment/templates/userManagment/deleteACL.html:12
 #: userManagment/templates/userManagment/deleteACL.html:40
 #, fuzzy
@@ -1367,13 +1400,13 @@ msgstr "Нов Потребител"
 msgid "Delete ACL"
 msgstr "Изтрий"
 
-#: baseTemplate/templates/baseTemplate/index.html:390
+#: baseTemplate/templates/baseTemplate/index.html:389
 #, fuzzy
 #| msgid "Modify User"
 msgid "Modify ACL"
 msgstr "Промени Потребител"
 
-#: baseTemplate/templates/baseTemplate/index.html:393
+#: baseTemplate/templates/baseTemplate/index.html:392
 #: userManagment/templates/userManagment/apiAccess.html:13
 #: userManagment/templates/userManagment/apiAccess.html:20
 #, fuzzy
@@ -1381,7 +1414,7 @@ msgstr "Промени Потребител"
 msgid "API Access"
 msgstr "Access Лог"
 
-#: baseTemplate/templates/baseTemplate/index.html:409
+#: baseTemplate/templates/baseTemplate/index.html:408
 #: userManagment/templates/userManagment/createACL.html:112
 #: userManagment/templates/userManagment/modifyACL.html:116
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:12
@@ -1391,7 +1424,7 @@ msgstr "Access Лог"
 msgid "Create Website"
 msgstr "Нова Страница"
 
-#: baseTemplate/templates/baseTemplate/index.html:415
+#: baseTemplate/templates/baseTemplate/index.html:414
 #: userManagment/templates/userManagment/createACL.html:121
 #: userManagment/templates/userManagment/modifyACL.html:125
 #: websiteFunctions/templates/websiteFunctions/index.html:67
@@ -1402,13 +1435,13 @@ msgstr "Нова Страница"
 msgid "Modify Website"
 msgstr "Промени Страница"
 
-#: baseTemplate/templates/baseTemplate/index.html:418
+#: baseTemplate/templates/baseTemplate/index.html:417
 #: websiteFunctions/templates/websiteFunctions/index.html:81
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:41
 msgid "Suspend/Unsuspend"
 msgstr "Пусни/Спри"
 
-#: baseTemplate/templates/baseTemplate/index.html:421
+#: baseTemplate/templates/baseTemplate/index.html:420
 #: userManagment/templates/userManagment/createACL.html:139
 #: userManagment/templates/userManagment/deleteACL.html:19
 #: userManagment/templates/userManagment/modifyACL.html:143
@@ -1420,8 +1453,8 @@ msgstr "Пусни/Спри"
 msgid "Delete Website"
 msgstr "Изтрий Страница"
 
-#: baseTemplate/templates/baseTemplate/index.html:439
-#: baseTemplate/templates/baseTemplate/index.html:655
+#: baseTemplate/templates/baseTemplate/index.html:438
+#: baseTemplate/templates/baseTemplate/index.html:671
 #: packages/templates/packages/listPackages.html:13
 #: packages/templates/packages/listPackages.html:19
 #: userManagment/templates/userManagment/createACL.html:161
@@ -1431,7 +1464,7 @@ msgstr "Изтрий Страница"
 msgid "List Packages"
 msgstr "Пакети"
 
-#: baseTemplate/templates/baseTemplate/index.html:442
+#: baseTemplate/templates/baseTemplate/index.html:441
 #: packages/templates/packages/deletePackage.html:12
 #: packages/templates/packages/deletePackage.html:18
 #: packages/templates/packages/deletePackage.html:39
@@ -1442,7 +1475,7 @@ msgstr "Пакети"
 msgid "Delete Package"
 msgstr "Изтрий Пакет"
 
-#: baseTemplate/templates/baseTemplate/index.html:445
+#: baseTemplate/templates/baseTemplate/index.html:444
 #: packages/templates/packages/index.html:51
 #: packages/templates/packages/index.html:54
 #: packages/templates/packages/modifyPackage.html:9
@@ -1453,7 +1486,7 @@ msgstr "Изтрий Пакет"
 msgid "Modify Package"
 msgstr "Промени Пакет"
 
-#: baseTemplate/templates/baseTemplate/index.html:461
+#: baseTemplate/templates/baseTemplate/index.html:460
 #: databases/templates/databases/createDatabase.html:12
 #: databases/templates/databases/createDatabase.html:19
 #: databases/templates/databases/createDatabase.html:79
@@ -1466,7 +1499,7 @@ msgstr "Промени Пакет"
 msgid "Create Database"
 msgstr "Нова База от Данни"
 
-#: baseTemplate/templates/baseTemplate/index.html:464
+#: baseTemplate/templates/baseTemplate/index.html:463
 #: databases/templates/databases/deleteDatabase.html:12
 #: databases/templates/databases/deleteDatabase.html:19
 #: databases/templates/databases/deleteDatabase.html:51
@@ -1477,7 +1510,7 @@ msgstr "Нова База от Данни"
 msgid "Delete Database"
 msgstr "Изтрий База от Данни"
 
-#: baseTemplate/templates/baseTemplate/index.html:467
+#: baseTemplate/templates/baseTemplate/index.html:466
 #: databases/templates/databases/index.html:48
 #: databases/templates/databases/index.html:50
 #: databases/templates/databases/listDataBases.html:13
@@ -1487,14 +1520,14 @@ msgstr "Изтрий База от Данни"
 msgid "List Databases"
 msgstr "Преглед на Бази от Данни"
 
+#: baseTemplate/templates/baseTemplate/index.html:468
 #: baseTemplate/templates/baseTemplate/index.html:469
-#: baseTemplate/templates/baseTemplate/index.html:470
 #: databases/templates/databases/index.html:59
 #: databases/templates/databases/index.html:61
 msgid "PHPMYAdmin"
 msgstr "PhpMyAdmin"
 
-#: baseTemplate/templates/baseTemplate/index.html:486
+#: baseTemplate/templates/baseTemplate/index.html:485
 #: dns/templates/dns/createNameServer.html:12
 #: dns/templates/dns/createNameServer.html:80 dns/templates/dns/index.html:72
 #: dns/templates/dns/index.html:74
@@ -1503,19 +1536,19 @@ msgstr "PhpMyAdmin"
 msgid "Create Nameserver"
 msgstr "Създай Nameserver"
 
-#: baseTemplate/templates/baseTemplate/index.html:489
+#: baseTemplate/templates/baseTemplate/index.html:488
 #, fuzzy
 #| msgid "Create Nameserver"
 msgid "Configure Default Nameservers"
 msgstr "Създай Nameserver"
 
-#: baseTemplate/templates/baseTemplate/index.html:489
+#: baseTemplate/templates/baseTemplate/index.html:488
 #, fuzzy
 #| msgid "Create Nameserver"
 msgid "Config Default Nameservers"
 msgstr "Създай Nameserver"
 
-#: baseTemplate/templates/baseTemplate/index.html:492
+#: baseTemplate/templates/baseTemplate/index.html:491
 #: dns/templates/dns/createDNSZone.html:12
 #: dns/templates/dns/createDNSZone.html:50 dns/templates/dns/index.html:29
 #: dns/templates/dns/index.html:31 dns/templates/dns/index.html:84
@@ -1523,7 +1556,7 @@ msgstr "Създай Nameserver"
 msgid "Create DNS Zone"
 msgstr "Създай DNS Зона"
 
-#: baseTemplate/templates/baseTemplate/index.html:495
+#: baseTemplate/templates/baseTemplate/index.html:494
 #: dns/templates/dns/deleteDNSZone.html:50 dns/templates/dns/index.html:41
 #: dns/templates/dns/index.html:43 dns/templates/dns/index.html:96
 #: dns/templates/dns/index.html:98
@@ -1532,17 +1565,17 @@ msgstr "Създай DNS Зона"
 msgid "Delete Zone"
 msgstr "Изтрий Зона"
 
-#: baseTemplate/templates/baseTemplate/index.html:498
+#: baseTemplate/templates/baseTemplate/index.html:497
 msgid "Add/Delete Records"
 msgstr "Добави/Премахни Записи"
 
-#: baseTemplate/templates/baseTemplate/index.html:514
+#: baseTemplate/templates/baseTemplate/index.html:513
 #: mailServer/templates/mailServer/createEmailAccount.html:12
 #: mailServer/templates/mailServer/createEmailAccount.html:19
 msgid "Create Email Account"
 msgstr "Създай Email Акаунт"
 
-#: baseTemplate/templates/baseTemplate/index.html:514
+#: baseTemplate/templates/baseTemplate/index.html:513
 #: mailServer/templates/mailServer/createEmailAccount.html:98
 #: mailServer/templates/mailServer/index.html:25
 #: mailServer/templates/mailServer/index.html:28
@@ -1551,7 +1584,7 @@ msgstr "Създай Email Акаунт"
 msgid "Create Email"
 msgstr "Създай Email"
 
-#: baseTemplate/templates/baseTemplate/index.html:517
+#: baseTemplate/templates/baseTemplate/index.html:516
 #: userManagment/templates/userManagment/createACL.html:271
 #: userManagment/templates/userManagment/modifyACL.html:275
 #, fuzzy
@@ -1559,13 +1592,13 @@ msgstr "Създай Email"
 msgid "List Emails"
 msgstr "Списък с Домейн"
 
-#: baseTemplate/templates/baseTemplate/index.html:520
+#: baseTemplate/templates/baseTemplate/index.html:519
 #: mailServer/templates/mailServer/deleteEmailAccount.html:12
 #: mailServer/templates/mailServer/deleteEmailAccount.html:19
 msgid "Delete Email Account"
 msgstr "Изтрий Email Акаунт"
 
-#: baseTemplate/templates/baseTemplate/index.html:520
+#: baseTemplate/templates/baseTemplate/index.html:519
 #: mailServer/templates/mailServer/deleteEmailAccount.html:73
 #: mailServer/templates/mailServer/index.html:38
 #: mailServer/templates/mailServer/index.html:41
@@ -1574,13 +1607,13 @@ msgstr "Изтрий Email Акаунт"
 msgid "Delete Email"
 msgstr "Изтрий Email"
 
-#: baseTemplate/templates/baseTemplate/index.html:523
+#: baseTemplate/templates/baseTemplate/index.html:522
 #: userManagment/templates/userManagment/createACL.html:289
 #: userManagment/templates/userManagment/modifyACL.html:293
 msgid "Email Forwarding"
 msgstr "Email пренасочване"
 
-#: baseTemplate/templates/baseTemplate/index.html:526
+#: baseTemplate/templates/baseTemplate/index.html:525
 #: databases/templates/databases/listDataBases.html:90
 #: ftp/templates/ftp/listFTPAccounts.html:108
 #: mailServer/templates/mailServer/changeEmailPassword.html:97
@@ -1590,7 +1623,7 @@ msgstr "Email пренасочване"
 msgid "Change Password"
 msgstr "Промени Парола"
 
-#: baseTemplate/templates/baseTemplate/index.html:529
+#: baseTemplate/templates/baseTemplate/index.html:528
 #: mailServer/templates/mailServer/dkimManager.html:13
 #: mailServer/templates/mailServer/dkimManager.html:22
 #: mailServer/templates/mailServer/dkimManager.html:75
@@ -1599,12 +1632,12 @@ msgstr "Промени Парола"
 msgid "DKIM Manager"
 msgstr "DKIM Мениджър"
 
+#: baseTemplate/templates/baseTemplate/index.html:530
 #: baseTemplate/templates/baseTemplate/index.html:531
-#: baseTemplate/templates/baseTemplate/index.html:532
 msgid "Access Webmail"
 msgstr "Webmail"
 
-#: baseTemplate/templates/baseTemplate/index.html:548
+#: baseTemplate/templates/baseTemplate/index.html:547
 #: emailMarketing/templates/emailMarketing/website.html:886
 #: emailMarketing/templates/emailMarketing/website.html:889
 #: ftp/templates/ftp/createFTPAccount.html:12
@@ -1612,14 +1645,14 @@ msgstr "Webmail"
 #: ftp/templates/ftp/index.html:26
 #: userManagment/templates/userManagment/createACL.html:322
 #: userManagment/templates/userManagment/modifyACL.html:326
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:570
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:573
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:576
 #: websiteFunctions/templates/websiteFunctions/website.html:821
 #: websiteFunctions/templates/websiteFunctions/website.html:824
 msgid "Create FTP Account"
 msgstr "Създай FTP Акаунт"
 
-#: baseTemplate/templates/baseTemplate/index.html:551
+#: baseTemplate/templates/baseTemplate/index.html:550
 #: emailMarketing/templates/emailMarketing/website.html:898
 #: emailMarketing/templates/emailMarketing/website.html:901
 #: ftp/templates/ftp/deleteFTPAccount.html:12
@@ -1628,14 +1661,14 @@ msgstr "Създай FTP Акаунт"
 #: ftp/templates/ftp/index.html:37
 #: userManagment/templates/userManagment/createACL.html:331
 #: userManagment/templates/userManagment/modifyACL.html:335
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:582
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:585
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:588
 #: websiteFunctions/templates/websiteFunctions/website.html:830
 #: websiteFunctions/templates/websiteFunctions/website.html:833
 msgid "Delete FTP Account"
 msgstr "Изтрий FTP Акаунт"
 
-#: baseTemplate/templates/baseTemplate/index.html:554
+#: baseTemplate/templates/baseTemplate/index.html:553
 #: ftp/templates/ftp/index.html:46 ftp/templates/ftp/index.html:48
 #: ftp/templates/ftp/listFTPAccounts.html:13
 #: ftp/templates/ftp/listFTPAccounts.html:19
@@ -1644,53 +1677,53 @@ msgstr "Изтрий FTP Акаунт"
 msgid "List FTP Accounts"
 msgstr "Преглед FTP Акаунти"
 
-#: baseTemplate/templates/baseTemplate/index.html:576
+#: baseTemplate/templates/baseTemplate/index.html:575
 #: userManagment/templates/userManagment/createACL.html:370
 #: userManagment/templates/userManagment/modifyACL.html:374
 msgid "Add/Delete Destination"
 msgstr "Добави/Премахни Дестинация"
 
-#: baseTemplate/templates/baseTemplate/index.html:591
+#: baseTemplate/templates/baseTemplate/index.html:590
 msgid "Incremental Back up - Beta"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:593
+#: baseTemplate/templates/baseTemplate/index.html:592
 #, fuzzy
 #| msgid "Cancel Backup"
 msgid "Incremental Back up"
 msgstr "Откажи Архив"
 
-#: baseTemplate/templates/baseTemplate/index.html:599
+#: baseTemplate/templates/baseTemplate/index.html:598
 #, fuzzy
 #| msgid "Restore Back up"
 msgid "Create/Restore Back up"
 msgstr "Възстанови Архив"
 
-#: baseTemplate/templates/baseTemplate/index.html:602
+#: baseTemplate/templates/baseTemplate/index.html:601
 #, fuzzy
 #| msgid "Add/Delete Destination"
 msgid "Add/Remove Destinations"
 msgstr "Добави/Премахни Дестинация"
 
-#: baseTemplate/templates/baseTemplate/index.html:605
+#: baseTemplate/templates/baseTemplate/index.html:604
 #, fuzzy
 #| msgid "Schedule Back up"
 msgid "Schedule Back ups"
 msgstr "Планирано Архивиране "
 
-#: baseTemplate/templates/baseTemplate/index.html:608
+#: baseTemplate/templates/baseTemplate/index.html:607
 #, fuzzy
 #| msgid "Transfer Websites from Remote Server - CyberPanel"
 msgid "Restore from Remote Server"
 msgstr "Премести страница от отдалечен сървър - CyberPanel"
 
-#: baseTemplate/templates/baseTemplate/index.html:608
+#: baseTemplate/templates/baseTemplate/index.html:607
 #, fuzzy
 #| msgid "Restore Website"
 msgid "Restore from Remote"
 msgstr "Възстанови Страница"
 
-#: baseTemplate/templates/baseTemplate/index.html:625
+#: baseTemplate/templates/baseTemplate/index.html:624
 #: manageSSL/templates/manageSSL/index.html:29
 #: manageSSL/templates/manageSSL/index.html:31
 #: manageSSL/templates/manageSSL/manageSSL.html:13
@@ -1700,7 +1733,7 @@ msgstr "Възстанови Страница"
 msgid "Manage SSL"
 msgstr "Нов SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:628
+#: baseTemplate/templates/baseTemplate/index.html:627
 #: manageSSL/templates/manageSSL/index.html:45
 #: manageSSL/templates/manageSSL/index.html:47
 #: userManagment/templates/userManagment/createACL.html:413
@@ -1708,7 +1741,7 @@ msgstr "Нов SSL"
 msgid "Hostname SSL"
 msgstr "Hostname SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:631
+#: baseTemplate/templates/baseTemplate/index.html:630
 #: manageSSL/templates/manageSSL/index.html:60
 #: manageSSL/templates/manageSSL/index.html:62
 #: userManagment/templates/userManagment/createACL.html:422
@@ -1716,80 +1749,85 @@ msgstr "Hostname SSL"
 msgid "MailServer SSL"
 msgstr "MailServer SSL"
 
-#: baseTemplate/templates/baseTemplate/index.html:638
+#: baseTemplate/templates/baseTemplate/index.html:637
 msgid "Server"
 msgstr "Сървър"
 
-#: baseTemplate/templates/baseTemplate/index.html:641
-#: baseTemplate/templates/baseTemplate/index.html:643
-msgid "CloudLinux"
-msgstr ""
-
 #: baseTemplate/templates/baseTemplate/index.html:644
-#: baseTemplate/templates/baseTemplate/index.html:672
-#: baseTemplate/templates/baseTemplate/index.html:689
-#: baseTemplate/templates/baseTemplate/index.html:830
+#: baseTemplate/templates/baseTemplate/index.html:660
+#: baseTemplate/templates/baseTemplate/index.html:688
+#: baseTemplate/templates/baseTemplate/index.html:705
+#: baseTemplate/templates/baseTemplate/index.html:846
 msgid "NEW"
 msgstr "НОВ"
 
 #: baseTemplate/templates/baseTemplate/index.html:650
+msgid "Web Based Terminal"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:657
+#: baseTemplate/templates/baseTemplate/index.html:659
+msgid "CloudLinux"
+msgstr ""
+
+#: baseTemplate/templates/baseTemplate/index.html:666
 #, fuzzy
 #| msgid "Create Package"
 msgid "Create Cloud Linux Package"
 msgstr "Създай Пакет"
 
-#: baseTemplate/templates/baseTemplate/index.html:655
+#: baseTemplate/templates/baseTemplate/index.html:671
 msgid "List Cloud Linux Package"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:660
+#: baseTemplate/templates/baseTemplate/index.html:676
 #, fuzzy
 #| msgid "Attach git to your websites."
 msgid "Monitor Usage of your Websites"
 msgstr "Прикачи Git за тази страница."
 
-#: baseTemplate/templates/baseTemplate/index.html:660
+#: baseTemplate/templates/baseTemplate/index.html:676
 #, fuzzy
 #| msgid "Resource Usage"
 msgid "Monitor Usage"
 msgstr "Използвани ресурси"
 
-#: baseTemplate/templates/baseTemplate/index.html:669
-#: baseTemplate/templates/baseTemplate/index.html:671
+#: baseTemplate/templates/baseTemplate/index.html:685
+#: baseTemplate/templates/baseTemplate/index.html:687
 #, fuzzy
 #| msgid "Configurations"
 msgid "Containerization"
 msgstr "Конфигурация"
 
-#: baseTemplate/templates/baseTemplate/index.html:678
+#: baseTemplate/templates/baseTemplate/index.html:694
 #, fuzzy
 #| msgid "Create Website"
 msgid "Create Website Limits"
 msgstr "Нова Страница"
 
-#: baseTemplate/templates/baseTemplate/index.html:678
+#: baseTemplate/templates/baseTemplate/index.html:694
 #, fuzzy
 #| msgid "Create Alias"
 msgid "Create Limits"
 msgstr "Паркирай Домейн"
 
-#: baseTemplate/templates/baseTemplate/index.html:686
+#: baseTemplate/templates/baseTemplate/index.html:702
 msgid "Docker"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:688
+#: baseTemplate/templates/baseTemplate/index.html:704
 #, fuzzy
 #| msgid "DKIM Manager"
 msgid "Docker Manager"
 msgstr "DKIM Мениджър"
 
-#: baseTemplate/templates/baseTemplate/index.html:695
+#: baseTemplate/templates/baseTemplate/index.html:711
 #, fuzzy
 #| msgid "Manage Services"
 msgid "Manage Docker Images"
 msgstr "Manage Services"
 
-#: baseTemplate/templates/baseTemplate/index.html:695
+#: baseTemplate/templates/baseTemplate/index.html:711
 #: dockerManager/templates/dockerManager/index.html:49
 #: dockerManager/templates/dockerManager/index.html:51
 #: dockerManager/templates/dockerManager/manageImages.html:14
@@ -1798,13 +1836,13 @@ msgstr "Manage Services"
 msgid "Manage Images"
 msgstr "Промени Email Парола"
 
-#: baseTemplate/templates/baseTemplate/index.html:698
+#: baseTemplate/templates/baseTemplate/index.html:714
 #, fuzzy
 #| msgid "Manage Services"
 msgid "Manage Docker Containers"
 msgstr "Manage Services"
 
-#: baseTemplate/templates/baseTemplate/index.html:698
+#: baseTemplate/templates/baseTemplate/index.html:714
 #: dockerManager/templates/dockerManager/index.html:29
 #: dockerManager/templates/dockerManager/index.html:31
 #, fuzzy
@@ -1812,32 +1850,32 @@ msgstr "Manage Services"
 msgid "Manage Containers"
 msgstr "Управлявай Postfix"
 
-#: baseTemplate/templates/baseTemplate/index.html:701
+#: baseTemplate/templates/baseTemplate/index.html:717
 #, fuzzy
 #| msgid "Create New User - CyberPanel"
 msgid "Create New Docker Container"
 msgstr "Създай Потребител - CyberPanel"
 
-#: baseTemplate/templates/baseTemplate/index.html:701
+#: baseTemplate/templates/baseTemplate/index.html:717
 #, fuzzy
 #| msgid "Create New User"
 msgid "Create New Container"
 msgstr "Нов Потребител"
 
-#: baseTemplate/templates/baseTemplate/index.html:717
+#: baseTemplate/templates/baseTemplate/index.html:733
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
 #: tuning/templates/tuning/liteSpeedTuning.html:12
 msgid "LiteSpeed Tuning"
 msgstr "LiteSpeed Настройки"
 
-#: baseTemplate/templates/baseTemplate/index.html:720
+#: baseTemplate/templates/baseTemplate/index.html:736
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13
 #: tuning/templates/tuning/phpTuning.html:149
 msgid "PHP Tuning"
 msgstr "PHP Настройки"
 
-#: baseTemplate/templates/baseTemplate/index.html:735
+#: baseTemplate/templates/baseTemplate/index.html:751
 #: serverStatus/templates/serverStatus/topProcesses.html:14
 #: serverStatus/templates/serverStatus/topProcesses.html:179
 #, fuzzy
@@ -1845,54 +1883,54 @@ msgstr "PHP Настройки"
 msgid "Top Processes"
 msgstr "LiteSpeed Processes"
 
-#: baseTemplate/templates/baseTemplate/index.html:738
+#: baseTemplate/templates/baseTemplate/index.html:754
 #: serverStatus/templates/serverStatus/index.html:25
 #: serverStatus/templates/serverStatus/index.html:28
 msgid "LiteSpeed Status"
 msgstr "LiteSpeed Статус"
 
-#: baseTemplate/templates/baseTemplate/index.html:741
+#: baseTemplate/templates/baseTemplate/index.html:757
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:13
 #: serverStatus/templates/serverStatus/index.html:38
 msgid "CyberPanel Main Log File"
 msgstr "Главен CyberPanel Лог"
 
-#: baseTemplate/templates/baseTemplate/index.html:744
+#: baseTemplate/templates/baseTemplate/index.html:760
 msgid "Services Status"
 msgstr "Сървър Статус"
 
-#: baseTemplate/templates/baseTemplate/index.html:760
+#: baseTemplate/templates/baseTemplate/index.html:776
 #: managePHP/templates/managePHP/installExtensions.html:13
 msgid "Install PHP Extensions"
 msgstr "Инсталирай PHP Модул"
 
-#: baseTemplate/templates/baseTemplate/index.html:760
+#: baseTemplate/templates/baseTemplate/index.html:776
 #: managePHP/templates/managePHP/index.html:24
 #: managePHP/templates/managePHP/index.html:26
 msgid "Install Extensions"
 msgstr "Инсталирай Модул"
 
-#: baseTemplate/templates/baseTemplate/index.html:763
+#: baseTemplate/templates/baseTemplate/index.html:779
 #: managePHP/templates/managePHP/index.html:35
 #: managePHP/templates/managePHP/index.html:37
 msgid "Edit PHP Configs"
 msgstr "Промени PHP Config"
 
-#: baseTemplate/templates/baseTemplate/index.html:779
+#: baseTemplate/templates/baseTemplate/index.html:795
 msgid "Access Log"
 msgstr "Access Лог"
 
-#: baseTemplate/templates/baseTemplate/index.html:781
+#: baseTemplate/templates/baseTemplate/index.html:797
 #: emailMarketing/templates/emailMarketing/website.html:139
 #: serverLogs/templates/serverLogs/errorLogs.html:13
 #: serverLogs/templates/serverLogs/index.html:37
 #: serverLogs/templates/serverLogs/index.html:40
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:135
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:138
 #: websiteFunctions/templates/websiteFunctions/website.html:126
 msgid "Error Logs"
 msgstr "Error Логове"
 
-#: baseTemplate/templates/baseTemplate/index.html:783
+#: baseTemplate/templates/baseTemplate/index.html:799
 #: emailPremium/templates/emailPremium/emailPage.html:144
 #: serverLogs/templates/serverLogs/emailLogs.html:14
 #: serverLogs/templates/serverLogs/index.html:49
@@ -1900,38 +1938,38 @@ msgstr "Error Логове"
 msgid "Email Logs"
 msgstr "Email Логове"
 
-#: baseTemplate/templates/baseTemplate/index.html:783
+#: baseTemplate/templates/baseTemplate/index.html:799
 msgid "Email Log"
 msgstr "Email Лог"
 
-#: baseTemplate/templates/baseTemplate/index.html:785
+#: baseTemplate/templates/baseTemplate/index.html:801
 #: serverLogs/templates/serverLogs/ftplogs.html:13
 #: serverLogs/templates/serverLogs/index.html:61
 #: serverLogs/templates/serverLogs/index.html:64
 msgid "FTP Logs"
 msgstr "FTP Логове"
 
-#: baseTemplate/templates/baseTemplate/index.html:787
+#: baseTemplate/templates/baseTemplate/index.html:803
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:14
 msgid "ModSecurity Audit Logs"
 msgstr "ModSecurity Audit логове"
 
-#: baseTemplate/templates/baseTemplate/index.html:787
+#: baseTemplate/templates/baseTemplate/index.html:803
 msgid "ModSec Audit Logs"
 msgstr "ModSec Audit логове"
 
-#: baseTemplate/templates/baseTemplate/index.html:803
+#: baseTemplate/templates/baseTemplate/index.html:819
 msgid "Firewall Home"
 msgstr "Защитна Стена"
 
-#: baseTemplate/templates/baseTemplate/index.html:803
+#: baseTemplate/templates/baseTemplate/index.html:819
 #: firewall/templates/firewall/csf.html:119
 #: firewall/templates/firewall/index.html:25
 #: firewall/templates/firewall/index.html:27
 msgid "Firewall"
 msgstr "Защитна Стена"
 
-#: baseTemplate/templates/baseTemplate/index.html:805
+#: baseTemplate/templates/baseTemplate/index.html:821
 #: firewall/templates/firewall/index.html:36
 #: firewall/templates/firewall/index.html:38
 #: firewall/templates/firewall/secureSSH.html:13
@@ -1939,35 +1977,35 @@ msgstr "Защитна Стена"
 msgid "Secure SSH"
 msgstr "Сигурен SSH"
 
-#: baseTemplate/templates/baseTemplate/index.html:807
+#: baseTemplate/templates/baseTemplate/index.html:823
 #: firewall/templates/firewall/index.html:58
 msgid "ModSecurity Configurations"
 msgstr "Редактирай ModSecurity Конфигурация"
 
-#: baseTemplate/templates/baseTemplate/index.html:807
+#: baseTemplate/templates/baseTemplate/index.html:823
 #: firewall/templates/firewall/index.html:60
 msgid "ModSecurity Conf"
 msgstr "ModSecurity Conf"
 
-#: baseTemplate/templates/baseTemplate/index.html:810
+#: baseTemplate/templates/baseTemplate/index.html:826
 #: firewall/templates/firewall/index.html:69
 #: firewall/templates/firewall/index.html:71
 #: firewall/templates/firewall/modSecurityRules.html:20
 msgid "ModSecurity Rules"
 msgstr "ModSecurity Rules"
 
-#: baseTemplate/templates/baseTemplate/index.html:813
+#: baseTemplate/templates/baseTemplate/index.html:829
 #: firewall/templates/firewall/index.html:80
 #: firewall/templates/firewall/index.html:82
 msgid "ModSecurity Rules Packs"
 msgstr "ModSecurity Rules Packs"
 
-#: baseTemplate/templates/baseTemplate/index.html:816
+#: baseTemplate/templates/baseTemplate/index.html:832
 #: firewall/templates/firewall/index.html:47
 msgid "ConfigServer Security & Firewall (CSF)"
 msgstr "ConfigServer Security & Firewall (CSF)"
 
-#: baseTemplate/templates/baseTemplate/index.html:816
+#: baseTemplate/templates/baseTemplate/index.html:832
 #: firewall/templates/firewall/csf.html:21
 #: firewall/templates/firewall/csf.html:86
 #: firewall/templates/firewall/csf.html:95
@@ -1975,41 +2013,41 @@ msgstr "ConfigServer Security & Firewall (CSF)"
 msgid "CSF"
 msgstr "CSF"
 
-#: baseTemplate/templates/baseTemplate/index.html:819
+#: baseTemplate/templates/baseTemplate/index.html:835
 #, fuzzy
 #| msgid "Configurations"
 msgid "CageFS Configurations"
 msgstr "Конфигурация"
 
-#: baseTemplate/templates/baseTemplate/index.html:819
+#: baseTemplate/templates/baseTemplate/index.html:835
 msgid "CageFS"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:827
-#: baseTemplate/templates/baseTemplate/index.html:829
+#: baseTemplate/templates/baseTemplate/index.html:843
+#: baseTemplate/templates/baseTemplate/index.html:845
 msgid "Mail Settings"
 msgstr "Mail Настройки"
 
-#: baseTemplate/templates/baseTemplate/index.html:836
+#: baseTemplate/templates/baseTemplate/index.html:852
 #: emailPremium/templates/emailPremium/policyServer.html:20
 msgid "Email Policy Server"
 msgstr "Email Policy Server"
 
-#: baseTemplate/templates/baseTemplate/index.html:839
+#: baseTemplate/templates/baseTemplate/index.html:855
 msgid "Email Limits"
 msgstr "Email Лимити"
 
-#: baseTemplate/templates/baseTemplate/index.html:842
+#: baseTemplate/templates/baseTemplate/index.html:858
 msgid "SpamAssassin Configurations"
 msgstr "SpamAssassin  Конфигурация"
 
-#: baseTemplate/templates/baseTemplate/index.html:842
+#: baseTemplate/templates/baseTemplate/index.html:858
 #: emailPremium/templates/emailPremium/SpamAssassin.html:25
 #: firewall/templates/firewall/spamassassin.html:20
 msgid "SpamAssassin"
 msgstr "SpamAssassin"
 
-#: baseTemplate/templates/baseTemplate/index.html:845
+#: baseTemplate/templates/baseTemplate/index.html:861
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:14
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:22
 #: emailMarketing/templates/emailMarketing/website.html:978
@@ -2019,39 +2057,39 @@ msgstr "SpamAssassin"
 msgid "Email Marketing"
 msgstr "Email пренасочване"
 
-#: baseTemplate/templates/baseTemplate/index.html:853
-#: baseTemplate/templates/baseTemplate/index.html:855
+#: baseTemplate/templates/baseTemplate/index.html:869
+#: baseTemplate/templates/baseTemplate/index.html:871
 msgid "Manage Services"
 msgstr "Manage Services"
 
-#: baseTemplate/templates/baseTemplate/index.html:861
+#: baseTemplate/templates/baseTemplate/index.html:877
 #: manageServices/templates/manageServices/managePowerDNS.html:25
 msgid "Manage PowerDNS"
 msgstr "Управлявай PowerDNS"
 
-#: baseTemplate/templates/baseTemplate/index.html:864
+#: baseTemplate/templates/baseTemplate/index.html:880
 #: manageServices/templates/manageServices/managePostfix.html:22
 msgid "Manage Postfix"
 msgstr "Управлявай Postfix"
 
-#: baseTemplate/templates/baseTemplate/index.html:867
+#: baseTemplate/templates/baseTemplate/index.html:883
 msgid "Manage FTP"
 msgstr "Управлявай FTP"
 
-#: baseTemplate/templates/baseTemplate/index.html:874
-#: baseTemplate/templates/baseTemplate/index.html:876
+#: baseTemplate/templates/baseTemplate/index.html:890
+#: baseTemplate/templates/baseTemplate/index.html:892
 #: pluginHolder/templates/pluginHolder/plugins.html:14
 #: pluginHolder/templates/pluginHolder/plugins.html:21
 msgid "Plugins"
 msgstr ""
 
-#: baseTemplate/templates/baseTemplate/index.html:882
+#: baseTemplate/templates/baseTemplate/index.html:898
 #, fuzzy
 #| msgid "Install Extensions"
 msgid "Installed Plugins"
 msgstr "Инсталирай Модул"
 
-#: baseTemplate/templates/baseTemplate/index.html:882
+#: baseTemplate/templates/baseTemplate/index.html:898
 #, fuzzy
 #| msgid "Install"
 msgid "Installed"
@@ -2510,8 +2548,8 @@ msgstr "Първи Nameserver"
 #: emailMarketing/templates/emailMarketing/website.html:656
 #: emailMarketing/templates/emailMarketing/website.html:716
 #: firewall/templates/firewall/secureSSH.html:158
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:343
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:403
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:346
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:406
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:55
 #: websiteFunctions/templates/websiteFunctions/website.html:604
 #: websiteFunctions/templates/websiteFunctions/website.html:654
@@ -2837,6 +2875,7 @@ msgstr "е успешно създаден."
 #: managePHP/templates/managePHP/installExtensions.html:103
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:156
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:111
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:146
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:125
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:111
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:137
@@ -3272,21 +3311,21 @@ msgid "Resource Usage"
 msgstr "Използвани ресурси"
 
 #: emailMarketing/templates/emailMarketing/website.html:39
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:39
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:42
 #: websiteFunctions/templates/websiteFunctions/website.html:42
 msgid "Resource"
 msgstr "Ресурси"
 
 #: emailMarketing/templates/emailMarketing/website.html:41
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:41
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:44
 #: websiteFunctions/templates/websiteFunctions/website.html:44
 msgid "Allowed"
 msgstr "Позволено"
 
 #: emailMarketing/templates/emailMarketing/website.html:63
 #: emailMarketing/templates/emailMarketing/website.html:89
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:63
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:89
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:66
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:92
 #: websiteFunctions/templates/websiteFunctions/website.html:64
 #: websiteFunctions/templates/websiteFunctions/website.html:86
 msgid "Bandwidth Usage"
@@ -3294,8 +3333,8 @@ msgstr "Използван Трафик"
 
 #: emailMarketing/templates/emailMarketing/website.html:124
 #: emailMarketing/templates/emailMarketing/website.html:127
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:120
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:124
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:123
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:127
 #: websiteFunctions/templates/websiteFunctions/website.html:112
 #: websiteFunctions/templates/websiteFunctions/website.html:116
 msgid "Load Access Logs"
@@ -3305,28 +3344,28 @@ msgstr "Зареди Access Логове"
 #: serverLogs/templates/serverLogs/accessLogs.html:16
 #: serverLogs/templates/serverLogs/index.html:25
 #: serverLogs/templates/serverLogs/index.html:28
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:125
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:128
 #: websiteFunctions/templates/websiteFunctions/website.html:117
 msgid "Access Logs"
 msgstr "Access Логове"
 
 #: emailMarketing/templates/emailMarketing/website.html:135
 #: emailMarketing/templates/emailMarketing/website.html:138
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:130
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:134
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:133
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:137
 #: websiteFunctions/templates/websiteFunctions/website.html:121
 #: websiteFunctions/templates/websiteFunctions/website.html:125
 msgid "Load Error Logs"
 msgstr "Зареди Error Логове"
 
 #: emailMarketing/templates/emailMarketing/website.html:150
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:144
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:147
 #: websiteFunctions/templates/websiteFunctions/website.html:133
 msgid "Logs Fetched"
 msgstr "Логовете са изтеглени"
 
 #: emailMarketing/templates/emailMarketing/website.html:155
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:149
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:152
 #: websiteFunctions/templates/websiteFunctions/website.html:136
 msgid ""
 "Could not fetch logs, see the logs file through command line. Error message:"
@@ -3336,8 +3375,8 @@ msgstr ""
 
 #: emailMarketing/templates/emailMarketing/website.html:179
 #: emailMarketing/templates/emailMarketing/website.html:221
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:173
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:216
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:176
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:219
 #: websiteFunctions/templates/websiteFunctions/website.html:154
 #: websiteFunctions/templates/websiteFunctions/website.html:199
 msgid "Next"
@@ -3345,8 +3384,8 @@ msgstr "Следваща"
 
 #: emailMarketing/templates/emailMarketing/website.html:181
 #: emailMarketing/templates/emailMarketing/website.html:223
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:175
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:218
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:178
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:221
 #: websiteFunctions/templates/websiteFunctions/website.html:156
 #: websiteFunctions/templates/websiteFunctions/website.html:201
 msgid "Previous"
@@ -3439,7 +3478,7 @@ msgstr ""
 #: managePHP/templates/managePHP/installExtensions.html:29
 #: tuning/templates/tuning/phpTuning.html:166
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:70
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:477
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:480
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:74
 #: websiteFunctions/templates/websiteFunctions/website.html:304
 #: websiteFunctions/templates/websiteFunctions/website.html:737
@@ -3451,6 +3490,7 @@ msgstr "Избери PHP"
 #: packages/templates/packages/modifyPackage.html:87
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:81
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:86
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:75
 #: websiteFunctions/templates/websiteFunctions/website.html:317
 msgid "Additional Features"
 msgstr "Допълнителни функции"
@@ -3493,63 +3533,63 @@ msgid "Issue"
 msgstr "Издаден"
 
 #: emailMarketing/templates/emailMarketing/website.html:558
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:248
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:251
 #: websiteFunctions/templates/websiteFunctions/website.html:520
 msgid "Configurations"
 msgstr "Конфигурация"
 
 #: emailMarketing/templates/emailMarketing/website.html:568
 #: emailMarketing/templates/emailMarketing/website.html:572
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:256
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:260
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:259
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:263
 #: websiteFunctions/templates/websiteFunctions/website.html:526
 #: websiteFunctions/templates/websiteFunctions/website.html:530
 msgid "Edit vHost Main Configurations"
 msgstr "Редактирай vHost Main Configurations"
 
 #: emailMarketing/templates/emailMarketing/website.html:573
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:261
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:264
 #: websiteFunctions/templates/websiteFunctions/website.html:531
 msgid "vHost Conf"
 msgstr "vHost Conf"
 
 #: emailMarketing/templates/emailMarketing/website.html:582
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:269
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:272
 #: websiteFunctions/templates/websiteFunctions/website.html:537
 msgid "Add Rewrite Rules (.htaccess)"
 msgstr "Добави Rewrite Rules (.htaccess)"
 
 #: emailMarketing/templates/emailMarketing/website.html:586
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:273
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:276
 #: websiteFunctions/templates/websiteFunctions/website.html:541
 msgid "Rewrite Rules (.htaccess)"
 msgstr "Rewrite Rules (.htaccess)"
 
 #: emailMarketing/templates/emailMarketing/website.html:587
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:274
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:277
 #: websiteFunctions/templates/websiteFunctions/website.html:542
 msgid "Rewrite Rules"
 msgstr "Rewrite Rules"
 
 #: emailMarketing/templates/emailMarketing/website.html:595
 #: emailMarketing/templates/emailMarketing/website.html:598
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:281
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:285
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:284
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:288
 #: websiteFunctions/templates/websiteFunctions/website.html:547
 #: websiteFunctions/templates/websiteFunctions/website.html:550
 msgid "Add Your Own SSL"
 msgstr "Добави свой SSL"
 
 #: emailMarketing/templates/emailMarketing/website.html:599
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:286
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:289
 #: websiteFunctions/templates/websiteFunctions/website.html:551
 msgid "Add SSL"
 msgstr "Добави SSL"
 
 #: emailMarketing/templates/emailMarketing/website.html:607
 #: emailMarketing/templates/emailMarketing/website.html:610
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:293
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:297
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:296
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:300
 #: websiteFunctions/templates/websiteFunctions/website.html:556
 #: websiteFunctions/templates/websiteFunctions/website.html:559
 msgid "Change PHP Version"
@@ -3557,35 +3597,35 @@ msgstr "Промени PHP Версия"
 
 #: emailMarketing/templates/emailMarketing/website.html:611
 #: emailMarketing/templates/emailMarketing/website.html:815
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:298
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:498
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:301
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:501
 #: websiteFunctions/templates/websiteFunctions/website.html:560
 #: websiteFunctions/templates/websiteFunctions/website.html:758
 msgid "Change PHP"
 msgstr "Промени PHP"
 
 #: emailMarketing/templates/emailMarketing/website.html:623
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:310
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:313
 #: websiteFunctions/templates/websiteFunctions/website.html:571
 msgid "SSL Saved"
 msgstr "SSL Запазен"
 
 #: emailMarketing/templates/emailMarketing/website.html:628
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:315
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:318
 #: websiteFunctions/templates/websiteFunctions/website.html:576
 msgid "Could not save SSL. Error message:"
 msgstr "SSL не е запазен, защото:"
 
 #: emailMarketing/templates/emailMarketing/website.html:678
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:365
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:368
 #: websiteFunctions/templates/websiteFunctions/website.html:619
 msgid "Current configuration in the file fetched."
 msgstr "Текущата конфигурация във файла е изтеглена"
 
 #: emailMarketing/templates/emailMarketing/website.html:683
 #: emailMarketing/templates/emailMarketing/website.html:697
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:370
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:384
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:373
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:387
 #: websiteFunctions/templates/websiteFunctions/website.html:623
 #: websiteFunctions/templates/websiteFunctions/website.html:636
 msgid "Could not fetch current configuration. Error message:"
@@ -3593,50 +3633,50 @@ msgstr "Текущата конфигурация не е изтеглена, з
 
 #: emailMarketing/templates/emailMarketing/website.html:693
 #: emailMarketing/templates/emailMarketing/website.html:753
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:380
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:436
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:383
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:439
 #: websiteFunctions/templates/websiteFunctions/website.html:632
 #: websiteFunctions/templates/websiteFunctions/website.html:699
 msgid "Configurations saved."
 msgstr "Конфигурацията е запазена."
 
 #: emailMarketing/templates/emailMarketing/website.html:734
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:421
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:424
 msgid "Current rewrite rules in the file fetched."
 msgstr "Наличните  rewrite rules са изтеглени."
 
 #: emailMarketing/templates/emailMarketing/website.html:743
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:426
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:429
 #: websiteFunctions/templates/websiteFunctions/website.html:690
 msgid "Could not fetch current rewrite rules. Error message:"
 msgstr "Наличните  rewrite rules не са изтеглени, защото:"
 
 #: emailMarketing/templates/emailMarketing/website.html:757
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:440
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:443
 #: websiteFunctions/templates/websiteFunctions/website.html:703
 msgid "Could not save rewrite rules. Error message:"
 msgstr "Новите  rewrite rules не са запаметени, защото:"
 
 #: emailMarketing/templates/emailMarketing/website.html:776
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:459
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:462
 #: websiteFunctions/templates/websiteFunctions/website.html:721
 msgid "Save Rewrite Rules"
 msgstr "Запази Rewrite Rules"
 
 #: emailMarketing/templates/emailMarketing/website.html:825
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:508
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:511
 #: websiteFunctions/templates/websiteFunctions/website.html:768
 msgid "Failed to change PHP version. Error message:"
 msgstr "PHP Версията не е променена. Съобщение за грешка:"
 
 #: emailMarketing/templates/emailMarketing/website.html:830
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:513
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:516
 #: websiteFunctions/templates/websiteFunctions/website.html:773
 msgid "PHP successfully changed for: "
 msgstr "PHP е успешно сменена за:"
 
 #: emailMarketing/templates/emailMarketing/website.html:855
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:538
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:541
 #: websiteFunctions/templates/websiteFunctions/website.html:795
 msgid "Files"
 msgstr "Файлове"
@@ -3644,9 +3684,9 @@ msgstr "Файлове"
 #: emailMarketing/templates/emailMarketing/website.html:863
 #: emailMarketing/templates/emailMarketing/website.html:866
 #: emailMarketing/templates/emailMarketing/website.html:867
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:546
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:549
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:550
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:552
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:553
 #: websiteFunctions/templates/websiteFunctions/website.html:800
 #: websiteFunctions/templates/websiteFunctions/website.html:803
 #: websiteFunctions/templates/websiteFunctions/website.html:804
@@ -3656,9 +3696,9 @@ msgstr "Файл Мениджър"
 #: emailMarketing/templates/emailMarketing/website.html:874
 #: emailMarketing/templates/emailMarketing/website.html:877
 #: emailMarketing/templates/emailMarketing/website.html:915
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:557
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:560
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:601
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:563
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:604
 #: websiteFunctions/templates/websiteFunctions/website.html:809
 #: websiteFunctions/templates/websiteFunctions/website.html:812
 #: websiteFunctions/templates/websiteFunctions/website.html:845
@@ -3666,31 +3706,31 @@ msgid "open_basedir Protection"
 msgstr "open_basedir Защита"
 
 #: emailMarketing/templates/emailMarketing/website.html:878
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:561
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:564
 #: websiteFunctions/templates/websiteFunctions/website.html:813
 msgid "open_basedir"
 msgstr "open_basedir"
 
 #: emailMarketing/templates/emailMarketing/website.html:890
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:574
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:577
 #: websiteFunctions/templates/websiteFunctions/website.html:825
 msgid "Create FTP Acct"
 msgstr "Създай FTP Акаунт"
 
 #: emailMarketing/templates/emailMarketing/website.html:902
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:586
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:589
 #: websiteFunctions/templates/websiteFunctions/website.html:834
 msgid "Delete FTP Acct"
 msgstr "Изтрий FTP Акаунт"
 
 #: emailMarketing/templates/emailMarketing/website.html:939
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:625
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:628
 #: websiteFunctions/templates/websiteFunctions/website.html:868
 msgid "Apply Changes"
 msgstr "Запази промените"
 
 #: emailMarketing/templates/emailMarketing/website.html:951
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:637
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:640
 #: websiteFunctions/templates/websiteFunctions/website.html:880
 msgid "Changes successfully saved."
 msgstr "Промените са успешно добавени."
@@ -3745,7 +3785,7 @@ msgstr "Компресирай"
 #: emailMarketing/templates/emailMarketing/website.html:1050
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:14
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:22
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:663
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:666
 #: websiteFunctions/templates/websiteFunctions/website.html:977
 msgid "Application Installer"
 msgstr "Инсталатор на Приложения"
@@ -3755,7 +3795,7 @@ msgstr "Инсталатор на Приложения"
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:28
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:31
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:34
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:674
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:677
 #: websiteFunctions/templates/websiteFunctions/website.html:985
 #: websiteFunctions/templates/websiteFunctions/website.html:989
 msgid "Install wordpress with LSCache"
@@ -3770,8 +3810,8 @@ msgstr "Wordpress с LSCache"
 #: emailMarketing/templates/emailMarketing/website.html:1079
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:44
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:47
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:682
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:686
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:685
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:689
 #: websiteFunctions/templates/websiteFunctions/website.html:996
 #: websiteFunctions/templates/websiteFunctions/website.html:1000
 msgid "Install Joomla with LSCache"
@@ -3779,37 +3819,37 @@ msgstr "Инсталирай Joomla с LSCache"
 
 #: emailMarketing/templates/emailMarketing/website.html:1080
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:48
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:687
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:690
 #: websiteFunctions/templates/websiteFunctions/website.html:1001
 msgid "Joomla"
 msgstr "Joomla"
 
 #: emailMarketing/templates/emailMarketing/website.html:1089
 #: emailMarketing/templates/emailMarketing/website.html:1093
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:694
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:698
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:697
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:701
 #: websiteFunctions/templates/websiteFunctions/website.html:1007
 #: websiteFunctions/templates/websiteFunctions/website.html:1011
 msgid "Attach Git with this website!"
 msgstr "Закачи Git към този уебсайт!"
 
 #: emailMarketing/templates/emailMarketing/website.html:1094
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:699
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:702
 #: websiteFunctions/templates/websiteFunctions/website.html:1012
 msgid "Git"
 msgstr "Git"
 
 #: emailMarketing/templates/emailMarketing/website.html:1103
 #: emailMarketing/templates/emailMarketing/website.html:1107
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:708
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:712
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:711
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:715
 #: websiteFunctions/templates/websiteFunctions/website.html:1018
 #: websiteFunctions/templates/websiteFunctions/website.html:1022
 msgid "Install Prestashop"
 msgstr "Инсталирай Prestashop"
 
 #: emailMarketing/templates/emailMarketing/website.html:1108
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:713
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:716
 #: websiteFunctions/templates/websiteFunctions/website.html:1023
 msgid "Prestashop"
 msgstr "Prestashop"
@@ -4493,7 +4533,7 @@ msgstr "Действието не е изпълнено, защото:"
 
 #: firewall/templates/firewall/firewall.html:61
 #: serverStatus/templates/serverStatus/litespeedStatus.html:82
-#: serverStatus/templates/serverStatus/litespeedStatus.html:285
+#: serverStatus/templates/serverStatus/litespeedStatus.html:305
 msgid "Action successful."
 msgstr "Действието е успешно изпълнено."
 
@@ -4734,7 +4774,7 @@ msgstr "FTP Акаунт с Име:"
 
 #: ftp/templates/ftp/createFTPAccount.html:119
 #: ftp/templates/ftp/createFTPAccount.html:123
-#: userManagment/templates/userManagment/createUser.html:118
+#: userManagment/templates/userManagment/createUser.html:129
 msgid "is successfully created."
 msgstr "е успешно създаден."
 
@@ -4888,6 +4928,7 @@ msgstr "OpenDKIM не е инсталиран."
 
 #: mailServer/templates/mailServer/dkimManager.html:28
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:67
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:104
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:81
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:67
 msgid "Install Now"
@@ -5096,7 +5137,7 @@ msgstr "Де-Инсталирай"
 #: managePHP/templates/managePHP/installExtensions.html:115
 #: tuning/templates/tuning/phpTuning.html:115
 #: tuning/templates/tuning/phpTuning.html:255
-#: userManagment/templates/userManagment/modifyUser.html:112
+#: userManagment/templates/userManagment/modifyUser.html:126
 msgid "Cannot fetch details. Error message:"
 msgstr "Детайлите не са извлечени, защото:"
 
@@ -5566,47 +5607,47 @@ msgstr ""
 "На тази страница може да разгледате информация за OpenLiteSpeed процесите"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:30
-#: serverStatus/templates/serverStatus/litespeedStatus.html:234
+#: serverStatus/templates/serverStatus/litespeedStatus.html:254
 msgid "LiteSpeed Processes"
 msgstr "LiteSpeed Processes"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:37
-#: serverStatus/templates/serverStatus/litespeedStatus.html:241
+#: serverStatus/templates/serverStatus/litespeedStatus.html:261
 msgid "Process ID"
 msgstr "Process ID"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:49
-#: serverStatus/templates/serverStatus/litespeedStatus.html:253
+#: serverStatus/templates/serverStatus/litespeedStatus.html:273
 msgid "Main Process"
 msgstr "Main Процес"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:52
-#: serverStatus/templates/serverStatus/litespeedStatus.html:256
+#: serverStatus/templates/serverStatus/litespeedStatus.html:276
 msgid "lscgid Process"
 msgstr "lscgid Процес"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:55
-#: serverStatus/templates/serverStatus/litespeedStatus.html:259
+#: serverStatus/templates/serverStatus/litespeedStatus.html:279
 msgid "Worker Process"
 msgstr "Worker Process"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:67
-#: serverStatus/templates/serverStatus/litespeedStatus.html:271
+#: serverStatus/templates/serverStatus/litespeedStatus.html:291
 msgid "Reboot Litespeed"
 msgstr "Рестартирай LiteSpeed"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:73
-#: serverStatus/templates/serverStatus/litespeedStatus.html:277
+#: serverStatus/templates/serverStatus/litespeedStatus.html:297
 msgid "Stop LiteSpeed"
 msgstr "Спри LiteSpeed"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:87
-#: serverStatus/templates/serverStatus/litespeedStatus.html:290
+#: serverStatus/templates/serverStatus/litespeedStatus.html:310
 msgid "Error Occurred. See CyberPanel main log file."
 msgstr "Възникна проблем. Прегледайте главния лог на CyberPanel"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:92
-#: serverStatus/templates/serverStatus/litespeedStatus.html:295
+#: serverStatus/templates/serverStatus/litespeedStatus.html:315
 msgid "Could not connect to server."
 msgstr "Няма връзка със сървъра."
 
@@ -5639,35 +5680,35 @@ msgstr ""
 msgid "With great wisdom comes great responsibility."
 msgstr ""
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:309
+#: serverStatus/templates/serverStatus/litespeedStatus.html:329
 #, fuzzy
 #| msgid "File Manager"
 msgid "License Manager"
 msgstr "Файл Мениджър"
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:316
-#: serverStatus/templates/serverStatus/litespeedStatus.html:320
-#: serverStatus/templates/serverStatus/litespeedStatus.html:321
+#: serverStatus/templates/serverStatus/litespeedStatus.html:336
+#: serverStatus/templates/serverStatus/litespeedStatus.html:340
+#: serverStatus/templates/serverStatus/litespeedStatus.html:341
 #, fuzzy
 #| msgid "Services Status"
 msgid "License Status"
 msgstr "Сървър Статус"
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:326
-#: serverStatus/templates/serverStatus/litespeedStatus.html:330
-#: serverStatus/templates/serverStatus/litespeedStatus.html:331
+#: serverStatus/templates/serverStatus/litespeedStatus.html:346
+#: serverStatus/templates/serverStatus/litespeedStatus.html:350
+#: serverStatus/templates/serverStatus/litespeedStatus.html:351
 #, fuzzy
 #| msgid "Change Limits"
 msgid "Change License"
 msgstr "Промени лимити"
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:358
+#: serverStatus/templates/serverStatus/litespeedStatus.html:378
 #, fuzzy
 #| msgid "New File"
 msgid "New key"
 msgstr "Нов файл"
 
-#: serverStatus/templates/serverStatus/litespeedStatus.html:368
+#: serverStatus/templates/serverStatus/litespeedStatus.html:388
 #, fuzzy
 #| msgid "Change"
 msgid "Change Key"
@@ -6174,6 +6215,7 @@ msgstr "Детайли"
 #: userManagment/templates/userManagment/createUser.html:25
 #: userManagment/templates/userManagment/modifyUser.html:39
 #: userManagment/templates/userManagment/userProfile.html:24
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:30
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:35
 msgid "First Name"
 msgstr "Име"
@@ -6185,6 +6227,7 @@ msgstr "Името е необходимо да съдържа само букв
 #: userManagment/templates/userManagment/createUser.html:35
 #: userManagment/templates/userManagment/modifyUser.html:46
 #: userManagment/templates/userManagment/userProfile.html:29
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:37
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:42
 msgid "Last Name"
 msgstr "Фанилия"
@@ -6205,22 +6248,29 @@ msgstr "Невалиден Email"
 msgid "Websites Limit"
 msgstr "Лимити за страници"
 
-#: userManagment/templates/userManagment/createUser.html:109
+#: userManagment/templates/userManagment/createUser.html:107
+#: userManagment/templates/userManagment/modifyUser.html:85
+#, fuzzy
+#| msgid "Security"
+msgid "Security Level"
+msgstr "Сигурност"
+
+#: userManagment/templates/userManagment/createUser.html:120
 #: userManagment/templates/userManagment/index.html:49
 #: userManagment/templates/userManagment/index.html:52
 msgid "Create User"
 msgstr "Създай Потребител"
 
-#: userManagment/templates/userManagment/createUser.html:117
-#: userManagment/templates/userManagment/modifyUser.html:98
+#: userManagment/templates/userManagment/createUser.html:128
+#: userManagment/templates/userManagment/modifyUser.html:112
 msgid "Account with username:"
 msgstr "Акаунт с Потребителско име:"
 
-#: userManagment/templates/userManagment/createUser.html:122
+#: userManagment/templates/userManagment/createUser.html:133
 msgid "Cannot create user. Error message:"
 msgstr "Потребителя не е създаден. Съобщение за грешка:"
 
-#: userManagment/templates/userManagment/createUser.html:130
+#: userManagment/templates/userManagment/createUser.html:141
 msgid ""
 "Length of first and last name combined should be less than or equal to 20 "
 "characters"
@@ -6318,15 +6368,15 @@ msgstr "Променяйте настройките за съществуващ 
 msgid "Select Account"
 msgstr "Избери Акаунт"
 
-#: userManagment/templates/userManagment/modifyUser.html:99
+#: userManagment/templates/userManagment/modifyUser.html:113
 msgid " is successfully modified."
 msgstr "е успешно променен."
 
-#: userManagment/templates/userManagment/modifyUser.html:103
+#: userManagment/templates/userManagment/modifyUser.html:117
 msgid "Cannot modify user. Error message:"
 msgstr "Потребителя не е променен. Съобщение за грешка:"
 
-#: userManagment/templates/userManagment/modifyUser.html:116
+#: userManagment/templates/userManagment/modifyUser.html:130
 msgid "Details fetched."
 msgstr "Детайлите са изтеглени."
 
@@ -6511,6 +6561,7 @@ msgid "One-click Joomla Install!"
 msgstr "Инсталирай Joomla!"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:20
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:20
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:20
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:20
 msgid "Installation Details"
@@ -6536,16 +6587,52 @@ msgid "Database Prefix"
 msgstr "База от данни prefix"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:91
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:126
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:105
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:91
 msgid "Installation failed. Error message:"
 msgstr "Инсталацията Не завърши, защото:"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:95
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:130
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:109
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:95
 msgid "Installation successful. Visit:"
 msgstr "Инсталацията завърши успешно.  Посети: "
+
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:3
+#, fuzzy
+#| msgid "Install PrestaShop - CyberPanel"
+msgid "Install Magento - CyberPanel"
+msgstr "Инсталирай PrestaShop -CyberPanel"
+
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:12
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:724
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:728
+#: websiteFunctions/templates/websiteFunctions/website.html:1029
+#: websiteFunctions/templates/websiteFunctions/website.html:1033
+#, fuzzy
+#| msgid "Packages"
+msgid "Install Magento"
+msgstr "Пакети"
+
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:13
+#, fuzzy
+#| msgid "One-click PrestaShop Install!"
+msgid "One-click Magento Install!"
+msgstr "Инсталирай PrestaShop!"
+
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:51
+#, fuzzy
+#| msgid "Username"
+msgid "Admin Username"
+msgstr "Потребителско Име"
+
+#: websiteFunctions/templates/websiteFunctions/installMagento.html:93
+msgid ""
+"does not work on OpenLiteSpeed. It is highly recommended to use this "
+"installer with LiteSpeed Enterprise only."
+msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:3
 msgid "Install PrestaShop - CyberPanel"
@@ -6579,14 +6666,19 @@ msgstr "Wordpress с LSCache"
 msgid "Blog Title"
 msgstr "Име на Блог"
 
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:29
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:32
 msgid "Copy/Sync to Master"
 msgstr ""
 
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:670
-#: websiteFunctions/templates/websiteFunctions/launchChild.html:675
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:673
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:678
 #: websiteFunctions/templates/websiteFunctions/website.html:990
 msgid "WP + LSCache"
+msgstr ""
+
+#: websiteFunctions/templates/websiteFunctions/launchChild.html:729
+#: websiteFunctions/templates/websiteFunctions/website.html:1034
+msgid "Magento"
 msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:3
@@ -7025,11 +7117,6 @@ msgstr ""
 
 #~ msgid "Installation successful. To complete the setup visit:"
 #~ msgstr "Инсталацията завърши успешно. "
-
-#, fuzzy
-#~| msgid "Username"
-#~ msgid "Admin Username"
-#~ msgstr "Потребителско Име"
 
 #, fuzzy
 #~| msgid "Password"
