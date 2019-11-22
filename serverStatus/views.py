@@ -214,7 +214,7 @@ def servicesStatus(request):
         mailStatus = []
         dockerStatus = []
 
-        processlist = subprocess.check_output(['ps', '-A'])
+        processlist = ProcessUtilities.outputExecutioner('ps -A')
 
         def getServiceStats(service):
             if service in processlist:
