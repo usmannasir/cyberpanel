@@ -1068,21 +1068,16 @@ class WebsiteManager:
 
         ## save configuration data
 
-        execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-        execPath = execPath + " saveRewriteRules --virtualHostName " + self.domain + " --path " + filePath + " --tempPath " + tempPath
-        logging.CyberCPLogFileWriter.writeToFile(execPath)
+        command = 'cp %s %s' % (tempPath, filePath)
+        ProcessUtilities.executioner(command, externalApp)
 
-        output = ProcessUtilities.outputExecutioner(execPath, externalApp)
+        command = 'rm -f %s' % (tempPath)
+        ProcessUtilities.executioner(command, 'cyberpanel')
 
-        if output.find("1,None") > -1:
-            installUtilities.reStartLiteSpeedSocket()
-            status = {"rewriteStatus": 1, 'error_message': output}
-            final_json = json.dumps(status)
-            return HttpResponse(final_json)
-        else:
-            data_ret = {'rewriteStatus': 0, 'error_message': output}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+        installUtilities.reStartLiteSpeedSocket()
+        status = {"rewriteStatus": 1, 'error_message': 'None'}
+        final_json = json.dumps(status)
+        return HttpResponse(final_json)
 
     def saveSSL(self, userID=None, data=None):
 
