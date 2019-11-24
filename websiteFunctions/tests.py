@@ -401,6 +401,24 @@ phpinfo();
 
         self.assertEqual(exists, 1)
 
+    def test_saveSSL(self):
+
+        ## Inserting something in rewrite file
+
+        data_ret = {'virtualHost': 'cyberpanel.xyz', 'key': 'hello world', 'cert': 'hello world'}
+
+        response = self.MakeRequest('websites/saveSSL', data_ret)
+
+        self.assertEqual(response['sslStatus'], 1)
+
+        ## Check again
+
+        certPath = '/etc/letsencrypt/live/cyberpanel.xyz/fullchain.pem'
+        keyPath = '/etc/letsencrypt/live/cyberpanel.xyz/privkey.pem'
+
+        self.assertGreater(open(certPath, 'r').read().find('hello world'), -1)
+        self.assertGreater(open(keyPath, 'r').read().find('hello world'), -1)
+
 
 
 
