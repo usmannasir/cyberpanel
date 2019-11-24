@@ -327,6 +327,55 @@ phpinfo();
 
         self.assertEqual(exists, 1)
 
+    def test_checkConfigFile(self):
+        ##
+
+        data_ret = {'virtualHost': 'cyberpanel.xyz'}
+
+        response = self.MakeRequest('websites/getDataFromConfigFile', data_ret)
+
+        self.assertEqual(response['status'], 1)
+
+        exists = 0
+
+        if response['configData'].find('phpIniOverride') > -1:
+            exists = 1
+
+        self.assertEqual(exists, 1)
+
+        ## Inserting something in config file
+
+        data_ret = {'virtualHost': 'cyberpanel.xyz', 'configData': response['configData'] + '\nhello world'}
+
+        response = self.MakeRequest('websites/saveConfigsToFile', data_ret)
+
+        self.assertEqual(response['configstatus'], 1)
+
+        ## Check again
+
+        data_ret = {'virtualHost': 'cyberpanel.xyz'}
+
+        response = self.MakeRequest('websites/getDataFromConfigFile', data_ret)
+
+        self.assertEqual(response['status'], 1)
+
+        exists = 0
+
+        if response['configData'].find('hello world') > -1:
+            exists = 1
+
+        self.assertEqual(exists, 1)
+
+        ## Inserting again
+
+        ## Inserting something in config file
+
+        data_ret = {'virtualHost': 'cyberpanel.xyz', 'configData': response['configData']}
+
+        response = self.MakeRequest('websites/saveConfigsToFile', data_ret)
+
+        self.assertEqual(response['configstatus'], 1)
+
 
 
 
