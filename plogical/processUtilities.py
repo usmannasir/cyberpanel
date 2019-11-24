@@ -169,6 +169,11 @@ class ProcessUtilities(multi.Thread):
     @staticmethod
     def sendCommand(command, user=None):
         try:
+            # if user == None:
+            #     pass
+            # else:
+            #     cmd = 'usermod -a -G %s %s' % ('cyberpanel', user)
+            #     ProcessUtilities.executioner(cmd)
 
             ret = ProcessUtilities.setupUDSConnection()
 
@@ -181,26 +186,12 @@ class ProcessUtilities(multi.Thread):
 
             sock = ret[0]
 
-            # SplittedCommand = command.split(' ')
-            # if SplittedCommand[0] == 'sudo':
-            #     finalCommand = SplittedCommand[1:]
-            # else:
-            #     finalCommand = SplittedCommand
-            #
-            # CommandArgs = finalCommand[1:]
-            #
-            # finalCommand = finalCommand[0]
-            #
-            # for items in CommandArgs:
-            #     finalCommand = '%s %s' % (finalCommand, items)
-
-
             if user == None:
                 #logging.writeToFile(ProcessUtilities.token + command)
                 sock.sendall(ProcessUtilities.token + command)
             else:
                 command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
-                #logging.writeToFile(command)
+                #logging.writeToFile(ProcessUtilities.token + command)
                 command = command.replace('sudo', '')
                 sock.sendall(command)
 
@@ -213,6 +204,13 @@ class ProcessUtilities(multi.Thread):
                 data = data + currentData
 
             sock.close()
+
+            # if user == None:
+            #     pass
+            # else:
+            #     cmd = 'deluser %s cyberpanel' % (user)
+            #     ProcessUtilities.executioner(cmd)
+
             return data
         except BaseException, msg:
             logging.writeToFile(str(msg) + " [sendCommand]")
@@ -231,10 +229,8 @@ class ProcessUtilities(multi.Thread):
             exitCode = int(exitCode.encode('hex'), 16)
 
             if exitCode == 0:
-                #logging.writeToFile("Command: " + command + ", resturn code: " + str(exitCode) + ".")
                 return 1
             else:
-                #logging.writeToFile("Command: " + command + ", resturn code: " + str(exitCode) + ".")
                 return 0
 
         except BaseException, msg:
@@ -279,7 +275,6 @@ class ProcessUtilities(multi.Thread):
             pu.start()
         except BaseException, msg:
             logging.writeToFile(str(msg) + " [popenExecutioner]")
-
 
     @staticmethod
     def BuildCommand(path, functionName, parameters):

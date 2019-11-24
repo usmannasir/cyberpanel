@@ -1804,17 +1804,7 @@ class WebsiteManager:
             statusFile.writelines('Downloading Joomla Core..,20')
             statusFile.close()
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-
-            execPath = execPath + " installJoomla --virtualHostName " + domainName + \
-                       " --virtualHostUser " + externalApp + " --path " + finalPath + " --dbName " + dbName + \
-                       " --dbUser " + dbUser + " --dbPassword " + dbPassword + " --username " + username + \
-                       " --password " + password + " --prefix " + prefix + " --sitename '" + sitename + "'" \
-                       + " --tempStatusPath " + tempStatusPath
-
-            # return execPath
-
-            ProcessUtilities.popenExecutioner(execPath, externalApp)
+            virtualHostUtilities.installJoomla(domainName, finalPath, externalApp, dbName, dbUser, dbPassword, username, password, prefix, sitename, tempStatusPath)
 
             data_ret = {'status': 1, "installStatus": 1, 'tempStatusPath': tempStatusPath}
             json_data = json.dumps(data_ret)

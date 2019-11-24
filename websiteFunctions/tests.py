@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.test import TestCase, Client
-from django.urls import reverse
+from django.test import TestCase
 import json
-from loginSystem.models import Administrator, ACL
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import requests
 import time
-import ftp
+from plogical.processUtilities import ProcessUtilities
+import urllib3
+urllib3.disable_warnings()
 # Create your tests here.
 
 
@@ -28,7 +28,7 @@ class TestWebsiteManagement(TestCase):
     def setUp(self):
         ## Verify login
 
-        data_ret = {'username': 'admin', 'password': 'hello122'}
+        data_ret = {'username': 'admin', 'password': '1234567'}
         response = self.MakeRequest('verifyLogin', data_ret)
         self.assertEqual(response['loginStatus'], 1)
 
@@ -51,19 +51,27 @@ class TestWebsiteManagement(TestCase):
 
         self.assertEqual(exists, 1)
 
+    def test_submitWebsiteDeletion(self):
+
+        ## Login
+
+        data_ret = {'websiteName': 'hello.cyberpanel.xyz'}
+
+        response = self.MakeRequest('websites/submitWebsiteDeletion', data_ret)
+        time.sleep(10)
+
+        self.assertEqual(response['status'], 1)
+
+    def test_submitWebsiteModify(self):
+
         data_ret = {'domainName': 'hey.cyberpanel.xyz', 'adminEmail': 'usman@cyberpersons.com',
                     'phpSelection': 'PHP 7.1',
                     'package': 'Default', 'websiteOwner': 'admin', 'ssl': 0, 'dkimCheck': 0, 'openBasedir': 0}
         self.MakeRequest('websites/submitWebsiteCreation', data_ret)
 
-        data_ret = {'domainName': 'suspend.cyberpanel.xyz', 'adminEmail': 'usman@cyberpersons.com',
-                    'phpSelection': 'PHP 7.1',
-                    'package': 'Default', 'websiteOwner': 'admin', 'ssl': 0, 'dkimCheck': 0, 'openBasedir': 0}
-        self.MakeRequest('websites/submitWebsiteCreation', data_ret)
+        time.sleep(10)
 
-    def test_submitWebsiteModify(self):
-
-        ## Login
+        ##
 
         data_ret = {'domain': 'hey.cyberpanel.xyz', 'email': 'usman@cyberpersons.com' , 'phpVersion': 'PHP 7.3',
                     'packForWeb': 'Default', 'admin': 'admin'}
@@ -92,18 +100,12 @@ phpinfo();
 
         self.assertEqual(exists, 1)
 
-    def test_submitWebsiteDeletion(self):
-
-        ## Login
-
-        data_ret = {'websiteName': 'hello.cyberpanel.xyz'}
-
-        response = self.MakeRequest('websites/submitWebsiteDeletion', data_ret)
-        time.sleep(5)
-
-        self.assertEqual(response['status'], 1)
-
     def test_submitWebsiteStatus(self):
+
+        data_ret = {'domainName': 'suspend.cyberpanel.xyz', 'adminEmail': 'usman@cyberpersons.com',
+                    'phpSelection': 'PHP 7.1',
+                    'package': 'Default', 'websiteOwner': 'admin', 'ssl': 0, 'dkimCheck': 0, 'openBasedir': 0}
+        self.MakeRequest('websites/submitWebsiteCreation', data_ret)
 
         ## Suspend  check
         data_ret = {'websiteName': 'suspend.cyberpanel.xyz', 'state': 'Suspend'}
@@ -154,12 +156,20 @@ phpinfo();
 
     def test_installWordpress(self):
 
+        command = 'rm -rf /home/%s/public_html/' % ('cyberpanel.xyz')
+        ProcessUtilities.normalExecutioner(command)
+
+        command = 'mkdir /home/%s/public_html/' % ('cyberpanel.xyz')
+        ProcessUtilities.normalExecutioner(command)
+
+        command = 'chown cyberpa:cyberpa /home/%s/public_html/' % ('cyberpanel.xyz')
+        ProcessUtilities.normalExecutioner(command)
+
         ## Suspend  check
         data_ret = {'domain': 'cyberpanel.xyz', 'home': '1', 'blogTitle': 'Unit Test', 'adminUser': 'cyberpanel',
                     'passwordByPass': 'helloworld', 'adminEmail': 'usman@cyberpersons.com'}
 
         response = self.MakeRequest('websites/installWordpress', data_ret)
-        logging.writeToFile(str(response))
 
         time.sleep(2)
 
@@ -168,7 +178,7 @@ phpinfo();
 
         ## Wait for install to complete
 
-        data_ret = {'statusFile': tempStatusPath}
+        data_ret = {'statusFile': tempStatusPath, 'domainName': 'cyberpanel.xyz'}
 
         while True:
             response = self.MakeRequest('websites/installWordpressStatus', data_ret)
@@ -183,6 +193,50 @@ phpinfo();
         exists = 0
 
         if self.MakeRequestRaw('http://cyberpanel.xyz').find('Unit Test') > -1:
+            exists = 1
+
+        self.assertEqual(exists, 1)
+
+    def test_installJoomla(self):
+
+        command = 'rm -rf /home/%s/public_html/' % ('cyberpanel.xyz')
+        ProcessUtilities.normalExecutioner(command)
+
+        command = 'mkdir /home/%s/public_html/' % ('cyberpanel.xyz')
+        ProcessUtilities.normalExecutioner(command)
+
+        command = 'chown cyberpa:cyberpa /home/%s/public_html/' % ('cyberpanel.xyz')
+        ProcessUtilities.normalExecutioner(command)
+
+        ## Suspend  check
+        data_ret = {'domain': 'cyberpanel.xyz', 'home': '1', 'sitename': 'Unit Test Joomla', 'username': 'cyberpanel',
+                    'passwordByPass': 'helloworld', 'prefix': 'db_'}
+
+        response = self.MakeRequest('websites/installJoomla', data_ret)
+        logging.writeToFile('jl: ' + str(response))
+        time.sleep(2)
+
+        self.assertEqual(response['status'], 1)
+        tempStatusPath = response['tempStatusPath']
+
+        ## Wait for install to complete
+
+        data_ret = {'statusFile': tempStatusPath, 'domainName': 'cyberpanel.xyz'}
+
+        while True:
+            response = self.MakeRequest('websites/installWordpressStatus', data_ret)
+            time.sleep(1)
+            if response['abort'] == 1:
+                if response['installStatus'] == 1:
+                    break
+                else:
+                    logging.writeToFile(response['error_message'])
+                    break
+
+
+        exists = 0
+
+        if self.MakeRequestRaw('http://cyberpanel.xyz').find('Unit Test Joomla') > -1:
             exists = 1
 
         self.assertEqual(exists, 1)

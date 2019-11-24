@@ -6,10 +6,12 @@ import django
 
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+
 try:
     django.setup()
 except:
     pass
+
 import shutil
 import argparse
 import installUtilities

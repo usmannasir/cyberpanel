@@ -236,7 +236,7 @@ class ApplicationInstaller(multi.Thread):
                 return 0
 
             if not os.path.exists(finalPath):
-                command = 'sudo mkdir -p ' + finalPath
+                command = 'mkdir -p ' + finalPath
                 ProcessUtilities.executioner(command, externalApp)
 
             ## checking for directories/files
@@ -250,7 +250,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Downloading WordPress Core,30')
             statusFile.close()
 
-            command = "sudo wp core download --allow-root --path=" + finalPath
+            command = "wp core download --allow-root --path=" + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             ##
@@ -259,7 +259,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Configuring the installation,40')
             statusFile.close()
 
-            command = "sudo wp core config --dbname=" + dbName + " --dbuser=" + dbUser + " --dbpass=" + dbPassword + " --dbhost=localhost --dbprefix=wp_ --allow-root --path=" + finalPath
+            command = "wp core config --dbname=" + dbName + " --dbuser=" + dbUser + " --dbpass=" + dbPassword + " --dbhost=localhost --dbprefix=wp_ --allow-root --path=" + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             if home == '0':
@@ -268,7 +268,7 @@ class ApplicationInstaller(multi.Thread):
             else:
                 finalURL = domainName
 
-            command = 'sudo wp core install --url="http://' + finalURL + '" --title="' + blogTitle + '" --admin_user="' + adminUser + '" --admin_password="' + adminPassword + '" --admin_email="' + adminEmail + '" --allow-root --path=' + finalPath
+            command = 'wp core install --url="http://' + finalURL + '" --title="' + blogTitle + '" --admin_user="' + adminUser + '" --admin_password="' + adminPassword + '" --admin_email="' + adminEmail + '" --allow-root --path=' + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             ##
@@ -277,19 +277,19 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Installing LSCache Plugin,80')
             statusFile.close()
 
-            command = "sudo wp plugin install litespeed-cache --allow-root --path=" + finalPath
+            command = "wp plugin install litespeed-cache --allow-root --path=" + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Activating LSCache Plugin,90')
             statusFile.close()
 
-            command = "sudo wp plugin activate litespeed-cache --allow-root --path=" + finalPath
+            command = "wp plugin activate litespeed-cache --allow-root --path=" + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             ##
 
-            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            command = "chown -R " + externalApp + ":" + externalApp + " " + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             statusFile = open(tempStatusPath, 'w')
@@ -305,7 +305,7 @@ class ApplicationInstaller(multi.Thread):
             homeDir = "/home/" + domainName + "/public_html"
 
             if not os.path.exists(homeDir):
-                command = "sudo chown -R " + externalApp + ":" + externalApp + " " + homeDir
+                command = "chown -R " + externalApp + ":" + externalApp + " " + homeDir
                 ProcessUtilities.executioner(command, externalApp)
 
             try:
@@ -715,7 +715,7 @@ class ApplicationInstaller(multi.Thread):
 
             if not os.path.exists("staging.zip"):
                 command = 'wget --no-check-certificate https://github.com/joomla/joomla-cms/archive/staging.zip -P ' + finalPath
-                ProcessUtilities.normalExecutioner(command)
+                ProcessUtilities.executioner(command, virtualHostUser)
             else:
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines("File already exists." + " [404]")
@@ -723,12 +723,16 @@ class ApplicationInstaller(multi.Thread):
                 return 0
 
             command = 'unzip ' + finalPath + 'staging.zip -d ' + finalPath
-            ProcessUtilities.normalExecutioner(command)
+            ProcessUtilities.executioner(command, virtualHostUser)
 
-            os.remove(finalPath + 'staging.zip')
+            command = 'rm -f %s' % (finalPath + 'staging.zip')
+            ProcessUtilities.executioner(command, virtualHostUser)
 
             command = 'cp -r ' + finalPath + 'joomla-cms-staging/. ' + finalPath
-            ProcessUtilities.normalExecutioner(command)
+            ProcessUtilities.executioner(command, virtualHostUser)
+
+            command = 'chown -R cyberpanel:cyberpanel %s' % (finalPath)
+            ProcessUtilities.executioner(command)
 
             shutil.rmtree(finalPath + "joomla-cms-staging")
             os.rename(finalPath + "installation/configuration.php-dist", finalPath + "configuration.php")
@@ -791,7 +795,7 @@ class ApplicationInstaller(multi.Thread):
             # Rename SQL db prefix
 
             f1 = open(finalPath + 'installation/sql/mysql/joomla.sql', 'r')
-            f2 = open('installation/sql/mysql/joomlaInstall.sql', 'w')
+            f2 = open(finalPath + 'installation/sql/mysql/joomlaInstall.sql', 'w')
             for line in f1:
                 f2.write(line.replace('#__', prefix))
             f1.close()
@@ -813,12 +817,12 @@ class ApplicationInstaller(multi.Thread):
 
             shutil.rmtree(finalPath + "installation")
 
-            command = "sudo chown -R " + virtualHostUser + ":" + virtualHostUser + " " + finalPath
-            ProcessUtilities.normalExecutioner(command)
+            command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + finalPath
+            ProcessUtilities.executioner(command)
 
             vhost.addRewriteRules(domainName)
 
-            installUtilities.reStartLiteSpeed()
+            installUtilities.reStartLiteSpeedSocket()
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
@@ -831,7 +835,7 @@ class ApplicationInstaller(multi.Thread):
             homeDir = "/home/" + domainName + "/public_html"
 
             if not os.path.exists(homeDir):
-                command = "sudo chown -R " + virtualHostUser + ":" + virtualHostUser + " " + homeDir
+                command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + homeDir
                 ProcessUtilities.executioner(command)
 
             try:
