@@ -213,7 +213,6 @@ phpinfo();
                     'passwordByPass': 'helloworld', 'prefix': 'db_'}
 
         response = self.MakeRequest('websites/installJoomla', data_ret)
-        logging.writeToFile('jl: ' + str(response))
         time.sleep(2)
 
         self.assertEqual(response['status'], 1)
@@ -237,6 +236,50 @@ phpinfo();
         exists = 0
 
         if self.MakeRequestRaw('http://cyberpanel.xyz').find('Unit Test Joomla') > -1:
+            exists = 1
+
+        self.assertEqual(exists, 1)
+
+    def test_prestaShopInstall(self):
+
+        command = 'rm -rf /home/%s/public_html/' % ('cyberpanel.xyz')
+        ProcessUtilities.normalExecutioner(command)
+
+        command = 'mkdir /home/%s/public_html/' % ('cyberpanel.xyz')
+        ProcessUtilities.normalExecutioner(command)
+
+        command = 'chown cyberpa:cyberpa /home/%s/public_html/' % ('cyberpanel.xyz')
+        ProcessUtilities.normalExecutioner(command)
+
+        ## Suspend  check
+        data_ret = {'domain': 'cyberpanel.xyz', 'home': '1', 'shopName': 'Unit Test PrestaShop', 'firstName': 'Usman', 'lastName': 'Nasir',
+                    'passwordByPass': 'helloworld', 'databasePrefix': 'db_', 'email': 'usman@cyberpersons.com'}
+
+        response = self.MakeRequest('websites/prestaShopInstall', data_ret)
+        logging.writeToFile('ps: ' + str(response))
+        time.sleep(2)
+
+        self.assertEqual(response['status'], 1)
+        tempStatusPath = response['tempStatusPath']
+
+        ## Wait for install to complete
+
+        data_ret = {'statusFile': tempStatusPath, 'domainName': 'cyberpanel.xyz'}
+
+        while True:
+            response = self.MakeRequest('websites/installWordpressStatus', data_ret)
+            time.sleep(1)
+            if response['abort'] == 1:
+                if response['installStatus'] == 1:
+                    break
+                else:
+                    logging.writeToFile(response['error_message'])
+                    break
+
+
+        exists = 0
+
+        if self.MakeRequestRaw('http://cyberpanel.xyz').find('Unit Test PrestaShop') > -1:
             exists = 1
 
         self.assertEqual(exists, 1)

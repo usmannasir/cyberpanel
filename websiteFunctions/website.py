@@ -2024,7 +2024,6 @@ StrictHostKeyChecking no
         except BaseException, msg:
             return HttpResponse(str(msg))
 
-
     def magentoInstall(self, userID=None, data=None):
         try:
 
