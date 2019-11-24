@@ -376,6 +376,31 @@ phpinfo();
 
         self.assertEqual(response['configstatus'], 1)
 
+    def test_checkRewriteFile(self):
+
+        ## Inserting something in rewrite file
+
+        data_ret = {'virtualHost': 'cyberpanel.xyz', 'rewriteRules': 'hello world'}
+
+        response = self.MakeRequest('websites/saveRewriteRules', data_ret)
+
+        self.assertEqual(response['rewriteStatus'], 1)
+
+        ## Check again
+
+        data_ret = {'virtualHost': 'cyberpanel.xyz'}
+
+        response = self.MakeRequest('websites/getRewriteRules', data_ret)
+
+        self.assertEqual(response['rewriteStatus'], 1)
+
+        exists = 0
+
+        if response['rewriteRules'].find('hello world') > -1:
+            exists = 1
+
+        self.assertEqual(exists, 1)
+
 
 
 
