@@ -422,7 +422,6 @@ phpinfo();
     def test_changePHP(self):
         data_ret = {'childDomain': 'hey.cyberpanel.xyz', 'phpSelection': 'PHP 7.0',}
 
-        self.MakeRequest('websites/changePHP', data_ret)
         response = self.MakeRequest('websites/changePHP', data_ret)
 
         self.assertEqual(response['status'], 1)
@@ -441,6 +440,46 @@ phpinfo();
             exists = 1
 
         self.assertEqual(exists, 1)
+
+    def test_changeOpenBasedir(self):
+
+        ## Check enable
+
+        data_ret = {'domainName': 'hey.cyberpanel.xyz', 'openBasedirValue': 'Enable'}
+        response = self.MakeRequest('websites/changeOpenBasedir', data_ret)
+
+        self.assertEqual(response['status'], 1)
+
+        time.sleep(3)
+
+        completePathToConfigFile = '/usr/local/lsws/conf/vhosts/%s/vhost.conf' % ('hey.cyberpanel.xyz')
+
+        exists = 0
+
+        if open(completePathToConfigFile, 'r').read().find('open_basedir') > -1:
+            exists = 1
+
+        self.assertEqual(exists, 1)
+
+        ## Check disable
+
+        data_ret = {'domainName': 'hey.cyberpanel.xyz', 'openBasedirValue': 'Disable'}
+        response = self.MakeRequest('websites/changeOpenBasedir', data_ret)
+
+        self.assertEqual(response['status'], 1)
+
+        time.sleep(3)
+
+        completePathToConfigFile = '/usr/local/lsws/conf/vhosts/%s/vhost.conf' % ('hey.cyberpanel.xyz')
+
+        exists = 0
+
+        if open(completePathToConfigFile, 'r').read().find('open_basedir') > -1:
+            exists = 1
+
+        self.assertEqual(exists, 0)
+
+
 
 
 
