@@ -157,7 +157,7 @@ class DNSManager:
             if not os.path.exists('/home/cyberpanel/powerdns'):
                 return render(request, 'dns/addDeleteDNSRecords.html', {"status": 0})
 
-            domainsList = ACLManager.findAllWebsites(currentACL, userID)
+            domainsList = ACLManager.findAllDomains(currentACL, userID)
 
             return render(request, 'dns/addDeleteDNSRecords.html', {"domainsList": domainsList, "status": 1})
 
@@ -177,7 +177,7 @@ class DNSManager:
             currentSelection = data['currentSelection']
 
             admin = Administrator.objects.get(pk=userID)
-            if ACLManager.checkOwnership(zoneDomain, admin, currentACL) == 1:
+            if ACLManager.checkOwnershipZone(zoneDomain, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson()
@@ -254,7 +254,7 @@ class DNSManager:
             ttl = int(data['ttl'])
 
             admin = Administrator.objects.get(pk=userID)
-            if ACLManager.checkOwnership(zoneDomain, admin, currentACL) == 1:
+            if ACLManager.checkOwnershipZone(zoneDomain, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson()
@@ -424,7 +424,7 @@ class DNSManager:
 
             admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnership(delRecord.domainOwner.name, admin, currentACL) == 1:
+            if ACLManager.checkOwnershipZone(delRecord.domainOwner.name, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadError()
