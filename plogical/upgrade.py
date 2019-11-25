@@ -55,6 +55,32 @@ class Upgrade:
             return 0
 
     @staticmethod
+    def updateRepoURL():
+        command = "sed -i 's|sgp.cyberpanel.sh|cdn.cyberpanel.sh|g' /etc/yum.repos.d/MariaDB.repo"
+        Upgrade.executioner(command, command, 0)
+
+        command = "sed -i 's|lax.cyberpanel.sh|cdn.cyberpanel.sh|g' /etc/yum.repos.d/MariaDB.repo"
+        Upgrade.executioner(command, command, 0)
+
+        command = "sed -i 's|fra.cyberpanel.sh|cdn.cyberpanel.sh|g' /etc/yum.repos.d/MariaDB.repo"
+        Upgrade.executioner(command, command, 0)
+
+        command = "sed -i 's|mirror.cyberpanel.net|cdn.cyberpanel.sh|g' /etc/yum.repos.d/MariaDB.repo"
+        Upgrade.executioner(command, command, 0)
+
+        command = "sed -i 's|sgp.cyberpanel.sh|cdn.cyberpanel.sh|g' /etc/yum.repos.d/litespeed.repo"
+        Upgrade.executioner(command, command, 0)
+
+        command = "sed -i 's|lax.cyberpanel.sh|cdn.cyberpanel.sh|g' /etc/yum.repos.d/litespeed.repo"
+        Upgrade.executioner(command, command, 0)
+
+        command = "sed -i 's|fra.cyberpanel.sh|cdn.cyberpanel.sh|g' /etc/yum.repos.d/litespeed.repo"
+        Upgrade.executioner(command, command, 0)
+
+        command = "sed -i 's|mirror.cyberpanel.net|cdn.cyberpanel.sh|g' /etc/yum.repos.d/litespeed.repo"
+        Upgrade.executioner(command, command, 0)
+
+    @staticmethod
     def mountTemp():
         try:
 
@@ -1981,6 +2007,8 @@ failovermethod=priority
         postfixPath = '/home/cyberpanel/postfix'
         pdns = '/home/cyberpanel/pdns'
         pureftpd = '/home/cyberpanel/ftp'
+
+        Upgrade.updateRepoURL()
 
         os.chdir("/usr/local")
 

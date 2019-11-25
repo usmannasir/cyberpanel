@@ -1,13 +1,5 @@
-import CyberCPLogFileWriter as logging
-import subprocess
-import shlex
-import thread
-import installUtilities
 import argparse
-import os
-from mailUtilities import mailUtilities
 from processUtilities import ProcessUtilities
-from random import randint
 
 class CronUtil:
 

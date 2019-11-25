@@ -513,8 +513,38 @@ phpinfo();
 
         self.assertEqual(exists, 1)
 
+    def test_addNewCron(self):
 
+        ## Check cron creation
 
+        data_ret = {'domain': 'cyberpanel.xyz', 'cronCommand': 'touch /home/cyberpanel.xyz/cron.txt' , 'hour': '*', 'minute': '*', 'month': '*', 'monthday': '*', 'weekday': '*'}
+        response = self.MakeRequest('websites/addNewCron', data_ret)
+
+        time.sleep(65)
+
+        self.assertEqual(response['addNewCron'], 1)
+
+        import os
+        self.assertEqual(os.path.exists('/home/cyberpanel.xyz/cron.txt'), True)
+
+        ##
+
+        data_ret = {'domain': 'cyberpanel.xyz', 'line': 1}
+        response = self.MakeRequest('websites/remCronbyLine', data_ret)
+
+        self.assertEqual(response['remCronbyLine'], 1)
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            cronPath = "/var/spool/cron/cyberpa"
+        else:
+            cronPath = "/var/spool/cron/crontabs/cyberpa"
+
+        exists = 0
+
+        if open(cronPath, 'r').read().find('cron.txt') > -1:
+            exists = 1
+
+        self.assertEqual(exists, 0)
 
 
 
