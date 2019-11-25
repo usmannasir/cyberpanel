@@ -3,11 +3,9 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 import json
-from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import requests
-import time
-from plogical.processUtilities import ProcessUtilities
 import urllib3
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 urllib3.disable_warnings()
 # Create your tests here.
 
@@ -32,21 +30,46 @@ class TestPackages(TestCase):
         response = self.MakeRequest('verifyLogin', data_ret)
         self.assertEqual(response['loginStatus'], 1)
 
-    def test_submitPackage(self):
+    def test_CheckPackage(self):
 
-        ## Login
+        ## Create Package
 
-        data_ret = {'domainName': 'hello.cyberpanel.xyz', 'adminEmail': 'usman@cyberpersons.com' , 'phpSelection': 'PHP 7.1',
-                    'package': 'Default', 'websiteOwner': 'admin', 'ssl': 0, 'dkimCheck': 0, 'openBasedir': 0}
+        data_ret = {'packageName': 'HelloWorld', 'diskSpace': 50 , 'bandwidth': 50,
+                    'dataBases': 50, 'ftpAccounts': 50, 'emails': 50, 'allowedDomains': 50, 'allowFullDomain': 1}
+
         response = self.MakeRequest('packages/submitPackage', data_ret)
-
-        time.sleep(10)
+        logging.writeToFile(str(response))
 
         self.assertEqual(response['status'], 1)
 
-        exists = 0
+        ## Modify Package
 
-        if self.MakeRequestRaw('http://hello.cyberpanel.xyz').find('CyberPanel') > -1:
-            exists = 1
+        data_ret = {'packageName': 'admin_HelloWorld', 'diskSpace': 500, 'bandwidth': 50,
+                    'dataBases': 500, 'ftpAccounts': 50, 'emails': 50, 'allowedDomains': 50, 'allowFullDomain': 1}
 
-        self.assertEqual(exists, 1)
+        response = self.MakeRequest('packages/saveChanges', data_ret)
+        logging.writeToFile(str(response))
+
+        self.assertEqual(response['status'], 1)
+
+        ## Modify Confirm
+
+        data_ret = {'packageName': 'admin_HelloWorld'}
+
+        response = self.MakeRequest('packages/submitModify', data_ret)
+        logging.writeToFile(str(response))
+
+        self.assertEqual(response['modifyStatus'], 1)
+        self.assertEqual(response['dataBases'], 500)
+        self.assertEqual(response['diskSpace'], 500)
+
+        ## Delete Package
+
+        data_ret = {'packageName': 'admin_HelloWorld'}
+
+        response = self.MakeRequest('packages/submitDelete', data_ret)
+        logging.writeToFile(str(response))
+
+        self.assertEqual(response['status'], 1)
+
+

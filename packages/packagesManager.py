@@ -69,6 +69,7 @@ class PackagesManager:
             ftpAccounts = int(data['ftpAccounts'])
             emails = int(data['emails'])
             allowedDomains = int(data['allowedDomains'])
+
             try:
                 api = data['api']
             except:
