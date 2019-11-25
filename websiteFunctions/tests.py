@@ -479,6 +479,40 @@ phpinfo();
 
         self.assertEqual(exists, 0)
 
+    def test_submitDomainCreation(self):
+
+        ## Check creation
+
+        data_ret = {'masterDomain': 'cyberpanel.xyz', 'domainName': 'child.cyberpanel.xyz' , 'phpSelection': 'PHP 7.1', 'ssl': 0, 'dkimCheck': 0, 'openBasedir': 0, 'path': ''}
+        response = self.MakeRequest('websites/submitDomainCreation', data_ret)
+
+        time.sleep(10)
+
+        self.assertEqual(response['status'], 1)
+
+        exists = 0
+
+        if self.MakeRequestRaw('http://child.cyberpanel.xyz').find('CyberPanel') > -1:
+            exists = 1
+
+        self.assertEqual(exists, 1)
+
+        ## Check deletion
+
+        data_ret = {'websiteName': 'child.cyberpanel.xyz'}
+        response = self.MakeRequest('websites/submitDomainDeletion', data_ret)
+
+        time.sleep(10)
+
+        self.assertEqual(response['status'], 1)
+
+        exists = 0
+
+        if self.MakeRequestRaw('http://child.cyberpanel.xyz').find('404') > -1:
+            exists = 1
+
+        self.assertEqual(exists, 1)
+
 
 
 
