@@ -95,7 +95,7 @@ phpinfo();
 
         exists = 0
 
-        if self.MakeRequestRaw('http://hey.cyberpanel.xyz/info.php').find('PHP 7.3') > -1:
+        if self.MakeRequestRaw('http://hey.cyberpanel.xyz/info.php').find('lsphp73') > -1:
             exists = 1
 
         self.assertEqual(exists, 1)
@@ -405,7 +405,7 @@ phpinfo();
 
         ## Inserting something in rewrite file
 
-        data_ret = {'virtualHost': 'cyberpanel.xyz', 'key': 'hello world', 'cert': 'hello world'}
+        data_ret = {'virtualHost': 'hey.cyberpanel.xyz', 'key': 'hello world', 'cert': 'hello world'}
 
         response = self.MakeRequest('websites/saveSSL', data_ret)
 
@@ -413,11 +413,34 @@ phpinfo();
 
         ## Check again
 
-        certPath = '/etc/letsencrypt/live/cyberpanel.xyz/fullchain.pem'
-        keyPath = '/etc/letsencrypt/live/cyberpanel.xyz/privkey.pem'
+        certPath = '/etc/letsencrypt/live/hey.cyberpanel.xyz/fullchain.pem'
+        keyPath = '/etc/letsencrypt/live/hey.cyberpanel.xyz/privkey.pem'
 
         self.assertGreater(open(certPath, 'r').read().find('hello world'), -1)
         self.assertGreater(open(keyPath, 'r').read().find('hello world'), -1)
+
+    def test_changePHP(self):
+        data_ret = {'childDomain': 'hey.cyberpanel.xyz', 'phpSelection': 'PHP 7.0',}
+
+        self.MakeRequest('websites/changePHP', data_ret)
+        response = self.MakeRequest('websites/changePHP', data_ret)
+
+        self.assertEqual(response['status'], 1)
+
+        phpInfoPath = '/home/hey.cyberpanel.xyz/public_html/info.php'
+        content = "<?php phpinfo(); ?>"
+        writeToFile = open(phpInfoPath, 'w')
+        writeToFile.write(content)
+        writeToFile.close()
+
+        time.sleep(2)
+
+        exists = 0
+
+        if self.MakeRequestRaw('http://hey.cyberpanel.xyz/info.php').find('lsphp70') > -1:
+            exists = 1
+
+        self.assertEqual(exists, 1)
 
 
 
