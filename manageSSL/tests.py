@@ -27,16 +27,6 @@ class TestManageSSL(TestCase):
         result = requests.get(path)
         return str(result.text)
 
-    def setupConnection(self):
-        try:
-            import MySQLdb as mysql
-            import MySQLdb.cursors as cursors
-            conn = mysql.connect(user='admin_hello', passwd='helloworld', cursorclass=cursors.SSCursor)
-            cursor = conn.cursor()
-            return conn, cursor
-        except:
-            return 0, 0
-
     def setUp(self):
         ## Verify login
 
@@ -75,6 +65,26 @@ class TestManageSSL(TestCase):
             exists = 1
 
         self.assertEqual(exists, 1)
+
+    def test_obtainHostNameSSL(self):
+        ## Issue SSL
+
+        data_ret = {'virtualHost': 'cyberpanel.xyz'}
+
+        try:
+            self.MakeRequest('manageSSL/obtainHostNameSSL', data_ret)
+        except:
+            pass
+
+        import time
+        time.sleep(2)
+
+        ## Verify SSL
+
+        path = '/usr/local/lscp/conf/key.pem'
+
+        import os
+        self.assertEqual(os.path.islink(path), True)
 
 
 
