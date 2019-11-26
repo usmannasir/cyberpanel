@@ -26,6 +26,16 @@ class TestDatabases(TestCase):
         result = requests.get(path)
         return str(result.text)
 
+    def setupConnection(self):
+        try:
+            import MySQLdb as mysql
+            import MySQLdb.cursors as cursors
+            conn = mysql.connect(user='admin_hello', passwd='helloworld', cursorclass=cursors.SSCursor)
+            cursor = conn.cursor()
+            return conn, cursor
+        except:
+            return 0, 0
+
     def setUp(self):
         ## Verify login
 
@@ -34,42 +44,31 @@ class TestDatabases(TestCase):
         self.assertEqual(response['loginStatus'], 1)
 
     def test_submitDBCreation(self):
-        ## Create Package
+        ## Create DB
 
         data_ret = {'databaseWebsite': 'cyberpanel.xyz', 'dbName': 'hello', 'dbUsername': 'hello',
                     'dbPassword': 'helloworld', 'webUserName': 'admin'}
 
         response = self.MakeRequest('dataBases/submitDBCreation', data_ret)
-        logging.writeToFile(str(response))
 
         self.assertEqual(response['status'], 1)
 
-        ## Modify Package
+        ## Check connection to database
 
-        data_ret = {'packageName': 'admin_HelloWorld', 'diskSpace': 500, 'bandwidth': 50,
-                    'dataBases': 500, 'ftpAccounts': 50, 'emails': 50, 'allowedDomains': 50, 'allowFullDomain': 1}
+        connection, cursor = self.setupConnection()
 
-        response = self.MakeRequest('packages/saveChanges', data_ret)
-        logging.writeToFile(str(response))
+        self.assertNotEqual(connection, 0)
 
+        ## Delete db
+
+        data_ret = {'dbName': 'admin_hello'}
+        response = self.MakeRequest('dataBases/submitDatabaseDeletion', data_ret)
         self.assertEqual(response['status'], 1)
 
-        ## Modify Confirm
+        ## Check connection to database
 
-        data_ret = {'packageName': 'admin_HelloWorld'}
+        connection, cursor = self.setupConnection()
 
-        response = self.MakeRequest('packages/submitModify', data_ret)
-        logging.writeToFile(str(response))
+        self.assertEqual(connection, 0)
 
-        self.assertEqual(response['modifyStatus'], 1)
-        self.assertEqual(response['dataBases'], 500)
-        self.assertEqual(response['diskSpace'], 500)
 
-        ## Delete Package
-
-        data_ret = {'packageName': 'admin_HelloWorld'}
-
-        response = self.MakeRequest('packages/submitDelete', data_ret)
-        logging.writeToFile(str(response))
-
-        self.assertEqual(response['status'], 1)
