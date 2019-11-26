@@ -856,9 +856,7 @@ class WebsiteManager:
         ## get Logs
         website = Websites.objects.get(domain=self.domain)
 
-        execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-        execPath = execPath + " getAccessLogs --path " + fileName + " --page " + str(page)
-        output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+        output = virtualHostUtilities.getAccessLogs(fileName, page, website.externalApp)
 
         if output.find("1,None") > -1:
             final_json = json.dumps(
@@ -916,10 +914,7 @@ class WebsiteManager:
         ## get Logs
         website = Websites.objects.get(domain=self.domain)
 
-        execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-        execPath = execPath + " getErrorLogs --path " + fileName + " --page " + str(page)
-
-        output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+        output = virtualHostUtilities.getErrorLogs(fileName, page, website.externalApp)
 
         if output.find("1,None") > -1:
             final_json = json.dumps(

@@ -290,17 +290,17 @@ class virtualHostUtilities:
             return 0, str(msg)
 
     @staticmethod
-    def getAccessLogs(fileName, page):
+    def getAccessLogs(fileName, page, externalApp):
         try:
 
             if os.path.islink(fileName):
                 print "0, %s file is symlinked." % (fileName)
                 return 0
 
-            numberOfTotalLines = int(subprocess.check_output(["wc", "-l", fileName]).split(" ")[0])
+            numberOfTotalLines = int(ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), externalApp).split(" ")[0])
 
             if numberOfTotalLines < 25:
-                data = subprocess.check_output(["cat", fileName])
+                data = ProcessUtilities.outputExecutioner('cat %s' % (fileName), externalApp)
             else:
                 if page == 1:
                     end = numberOfTotalLines
@@ -309,8 +309,7 @@ class virtualHostUtilities:
                         start = 1
                     startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
                     command = "sed -n " + startingAndEnding + " " + fileName
-                    proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
-                    data = proc.stdout.read()
+                    data = ProcessUtilities.outputExecutioner(command, externalApp)
                 else:
                     end = numberOfTotalLines - ((page - 1) * 25)
                     start = end - 24
@@ -318,26 +317,28 @@ class virtualHostUtilities:
                         start = 1
                     startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
                     command = "sed -n " + startingAndEnding + " " + fileName
-                    proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
-                    data = proc.stdout.read()
+                    data = ProcessUtilities.outputExecutioner(command, externalApp)
             print data
+            return data
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [getAccessLogs]")
             print "1,None"
+            return "1,None"
 
     @staticmethod
-    def getErrorLogs(fileName, page):
+    def getErrorLogs(fileName, page, externalApp):
         try:
 
             if os.path.islink(fileName):
                 print "0, %s file is symlinked." % (fileName)
                 return 0
 
-            numberOfTotalLines = int(subprocess.check_output(["wc", "-l", fileName]).split(" ")[0])
+            numberOfTotalLines = int(
+                ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), externalApp).split(" ")[0])
 
             if numberOfTotalLines < 25:
-                data = subprocess.check_output(["cat", fileName])
+                data = ProcessUtilities.outputExecutioner('cat %s' % (fileName), externalApp)
             else:
                 if page == 1:
                     end = numberOfTotalLines
@@ -346,8 +347,7 @@ class virtualHostUtilities:
                         start = 1
                     startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
                     command = "sed -n " + startingAndEnding + " " + fileName
-                    proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
-                    data = proc.stdout.read()
+                    data = ProcessUtilities.outputExecutioner(command, externalApp)
                 else:
                     end = numberOfTotalLines - ((page - 1) * 25)
                     start = end - 24
@@ -355,13 +355,14 @@ class virtualHostUtilities:
                         start = 1
                     startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
                     command = "sed -n " + startingAndEnding + " " + fileName
-                    proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
-                    data = proc.stdout.read()
+                    data = ProcessUtilities.outputExecutioner(command, externalApp)
             print data
+            return data
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [getErrorLogs]")
             print "1,None"
+            return "1,None"
 
     @staticmethod
     def saveVHostConfigs(fileName, tempPath):

@@ -5,7 +5,7 @@ import django
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.http import HttpResponse
 import json
 from plogical.acl import ACLManager
