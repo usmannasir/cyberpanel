@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from loginSystem.views import loadLoginPage
-from websiteFunctions.models import Websites,ChildDomains
+from websiteFunctions.models import Websites, ChildDomains
 from loginSystem.models import Administrator
 from plogical.virtualHostUtilities import virtualHostUtilities
 from django.http import HttpResponse
@@ -13,6 +13,8 @@ import subprocess
 from plogical.acl import ACLManager
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
+
+
 # Create your views here.
 
 
@@ -23,6 +25,7 @@ def loadSSLHome(request):
         return render(request, 'manageSSL/index.html', currentACL)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def manageSSL(request):
     try:
@@ -38,9 +41,10 @@ def manageSSL(request):
 
         websitesName = ACLManager.findAllSites(currentACL, userID)
 
-        return render(request, 'manageSSL/manageSSL.html',{'websiteList':websitesName})
+        return render(request, 'manageSSL/manageSSL.html', {'websiteList': websitesName})
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def issueSSL(request):
     try:
@@ -65,10 +69,6 @@ def issueSSL(request):
                 else:
                     return ACLManager.loadErrorJson()
 
-
-                adminEmail = ""
-                path = ""
-
                 try:
                     website = ChildDomains.objects.get(domain=virtualHost)
                     adminEmail = website.master.adminEmail
@@ -87,7 +87,7 @@ def issueSSL(request):
                 if output.find("1,None") > -1:
                     pass
                 else:
-                    data_ret = {'status': 0 ,"SSL": 0,
+                    data_ret = {'status': 0, "SSL": 0,
                                 'error_message': output}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
@@ -102,7 +102,7 @@ def issueSSL(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException, msg:
             data_ret = {'status': 0, "SSL": 0,
                         'error_message': str(msg)}
             json_data = json.dumps(data_ret)
@@ -112,6 +112,7 @@ def issueSSL(request):
                     'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def sslForHostName(request):
     try:
@@ -127,9 +128,10 @@ def sslForHostName(request):
 
         websitesName = ACLManager.findAllSites(currentACL, userID)
 
-        return render(request, 'manageSSL/sslForHostName.html',{'websiteList':websitesName})
+        return render(request, 'manageSSL/sslForHostName.html', {'websiteList': websitesName})
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def obtainHostNameSSL(request):
     try:
@@ -178,7 +180,7 @@ def obtainHostNameSSL(request):
 
                     ## ssl issue ends
 
-        except BaseException,msg:
+        except BaseException, msg:
             data_ret = {"status": 0, "SSL": 0,
                         'error_message': str(msg)}
             json_data = json.dumps(data_ret)
@@ -188,6 +190,7 @@ def obtainHostNameSSL(request):
                     'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def sslForMailServer(request):
     try:
@@ -204,9 +207,10 @@ def sslForMailServer(request):
         websitesName = ACLManager.findAllSites(currentACL, userID)
         websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
-        return render(request, 'manageSSL/sslForMailServer.html',{'websiteList':websitesName})
+        return render(request, 'manageSSL/sslForMailServer.html', {'websiteList': websitesName})
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def obtainMailServerSSL(request):
     try:
@@ -254,12 +258,12 @@ def obtainMailServerSSL(request):
                     ## ssl issue ends
 
 
-        except BaseException,msg:
+        except BaseException, msg:
             data_ret = {"status": 0, "SSL": 0,
                         'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-    except KeyError,msg:
+    except KeyError, msg:
         data_ret = {"status": 0, "SSL": 0,
                     'error_message': str(msg)}
         json_data = json.dumps(data_ret)
