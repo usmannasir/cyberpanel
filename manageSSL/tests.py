@@ -86,6 +86,22 @@ class TestManageSSL(TestCase):
         import os
         self.assertEqual(os.path.islink(path), True)
 
+    def test_obtainMailServerSSL(self):
+        ## Issue SSL
+
+        data_ret = {'virtualHost': 'cyberpanel.xyz'}
+
+        response = self.MakeRequest('manageSSL/obtainMailServerSSL', data_ret)
+
+        self.assertEqual(response['status'], 1)
+
+        ## Verify SSL
+
+        path = '/etc/postfix/key.pem'
+
+        import os
+        self.assertEqual(os.path.islink(path), True)
+
 
 
 
