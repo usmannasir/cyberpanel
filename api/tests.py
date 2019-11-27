@@ -96,7 +96,6 @@ class TestAPI(TestCase):
 
         self.assertEqual(response['changePackage'], 1)
 
-
     def test_submitWebsiteStatus(self):
 
         ## Suspend  check
