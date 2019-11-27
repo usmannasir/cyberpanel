@@ -93,7 +93,7 @@ def getUserInfo(request):
 
             try:
                 user = Administrator.objects.get(userName=username)
-                data_ret = {'status': 0,
+                data_ret = {'status': 1,
                             'firstName': user.firstName,
                             'lastName': user.lastName,
                             'email': user.email,
@@ -144,8 +144,6 @@ def changeUserPassAPI(request):
             websiteOwn = Administrator.objects.get(userName=websiteOwner)
             websiteOwn.password = hashPassword.hash_password(ownerPassword)
             websiteOwn.save()
-
-
 
             data_ret = {'changeStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
