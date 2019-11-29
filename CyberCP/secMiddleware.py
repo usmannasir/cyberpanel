@@ -3,46 +3,42 @@ import json
 from django.shortcuts import HttpResponse
 import re
 
-# Create option to enable/disable sessionIPValidation for Dynamic IP's
-sessionIPValidation = 'true'
-
 class secMiddleware:
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        if sessionIPValidation == 'true':
-            try:
-                uID = request.session['userID']
-                ipAddr = request.META.get('REMOTE_ADDR')
+        try:
+            uID = request.session['userID']
+            ipAddr = request.META.get('REMOTE_ADDR')
 
-                if ipAddr.find('.') > -1:
-                    if request.session['ipAddr'] == ipAddr:
-                        pass
-                    else:
-                        del request.session['userID']
-                        del request.session['ipAddr']
-                        logging.writeToFile(request.META.get('REMOTE_ADDR'))
-                        final_dic = {'error_message': "Session reuse detected, IPAddress logged. Toggle off sessionIPValidation in secMiddleware.py if seeing this frequently with Dynamic IP",
-                                     "errorMessage": "Session reuse detected, IPAddress logged. Toggle off sessionIPValidation in secMiddleware.py if seeing this frequently with Dynamic IP"}
-                        final_json = json.dumps(final_dic)
-                        return HttpResponse(final_json)
+            if ipAddr.find('.') > -1:
+                if request.session['ipAddr'] == ipAddr:
+                    pass
                 else:
-                    ipAddr = request.META.get('REMOTE_ADDR').split(':')[:3]
+                    del request.session['userID']
+                    del request.session['ipAddr']
+                    logging.writeToFile(request.META.get('REMOTE_ADDR'))
+                    final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
+                                 "errorMessage": "Session reuse detected, IPAddress logged."}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+            else:
+                ipAddr = request.META.get('REMOTE_ADDR').split(':')[:3]
 
-                    if request.session['ipAddr'] == ipAddr:
-                        pass
-                    else:
-                        del request.session['userID']
-                        del request.session['ipAddr']
-                        logging.writeToFile(request.META.get('REMOTE_ADDR'))
-                        final_dic = {'error_message': "Session reuse detected, IPAddress logged. Toggle off sessionIPValidation in secMiddleware.py if seeing this frequently with Dynamic IP",
-                                     "errorMessage": "Session reuse detected, IPAddress logged. Toggle off sessionIPValidation in secMiddleware.py if seeing this frequently with Dynamic IP"}
-                        final_json = json.dumps(final_dic)
-                        return HttpResponse(final_json)
-            except:
-                pass
+                if request.session['ipAddr'] == ipAddr:
+                    pass
+                else:
+                    del request.session['userID']
+                    del request.session['ipAddr']
+                    logging.writeToFile(request.META.get('REMOTE_ADDR'))
+                    final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
+                                 "errorMessage": "Session reuse detected, IPAddress logged."}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+        except:
+            pass
         if request.method == 'POST':
             try:
                 #logging.writeToFile(request.body)
