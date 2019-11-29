@@ -73,10 +73,10 @@ class CSF(multi.Thread):
 
             # install required packages for CSF perl and /usr/bin/host
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                command = 'yum install bind-utils net-tools perl-libwww-perl.noarch perl-LWP-Protocol-https.noarch perl-GDGraph -y'
+                command = 'yum install bind-utils net-tools perl-libwww-perl.noarch perl-LWP-Protocol-https.noarch perl-GDGraph ipset -y'
                 ProcessUtilities.normalExecutioner(command)
             elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
-                command = 'apt-get install dnsutils libwww-perl liblwp-protocol-https-perl libgd-graph-perl net-tools -y'
+                command = 'apt-get install dnsutils libwww-perl liblwp-protocol-https-perl libgd-graph-perl net-tools ipset -y'
                 ProcessUtilities.normalExecutioner(command)
                 command = 'ln -s /bin/systemctl /usr/bin/systemctl'
                 ProcessUtilities.normalExecutioner(command)
@@ -279,6 +279,10 @@ class CSF(multi.Thread):
                 #  Check the PT_LOAD_AVG minute Load Average (can be set to 1 5 or 15 and defaults to 5 if set otherwise) on the server every PT_LOAD seconds. Disabled
                 elif items.find('PT_LOAD =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('PT_LOAD = "0"\n')
+
+                #  Enable LF_IPSET for CSF for more efficient ipables rules with ipset
+                elif items.find('LF_IPSET =') > -1 and items.find('=') > -1 and (items[0] != '#'):
+                    writeToConf.writelines('LF_IPSET = "1"\n')
 
                 #  HTACCESS_LOG is ins main error.log
                 elif items.find('HTACCESS_LOG =') > -1 and items.find('=') > -1 and (items[0] != '#'):
