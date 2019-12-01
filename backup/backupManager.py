@@ -757,15 +757,18 @@ class BackupManager:
             findTxt = ""
 
             if backupDest == "Home" and backupFreq == "Daily":
-                findTxt = "0-6"
+                findTxt = "0 3"
             elif backupDest == "Home" and backupFreq == "Weekly":
-                findTxt = "* 3"
+                findTxt = "0 0"
             elif backupDest != "Home" and backupFreq == "Daily":
-                findTxt = "0-6"
+                findTxt = "0 3"
             elif backupDest != "Home" and backupFreq == "Weekly":
-                findTxt = "* 3"
+                findTxt = "0 0"
 
             ###
+
+            logging.CyberCPLogFileWriter.writeToFile(findTxt)
+            logging.CyberCPLogFileWriter.writeToFile(backupFreq)
 
             path = "/etc/crontab"
 
@@ -776,7 +779,7 @@ class BackupManager:
             writeToFile = open(tempCronPath, 'w')
 
             for items in output:
-                if items.find(findTxt) > -1 and items.find("backupScheduleLocal.py") > -1:
+                if (items.find(findTxt) > -1 and items.find("backupScheduleLocal.py") > -1) or (items.find(findTxt) > -1 and items.find('backupSchedule.py')):
                     continue
                 else:
                     writeToFile.writelines(items + '\n')
