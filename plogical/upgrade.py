@@ -1625,7 +1625,7 @@ CSRF_COOKIE_SECURE = True
             command = "chmod 700 /usr/local/CyberCP/plogical/upgradeCritical.py"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            command = "chmod 700 /usr/local/CyberCP/postfixSenderPolicy/client.py"
+            command = "chmod 755 /usr/local/CyberCP/postfixSenderPolicy/client.py"
             Upgrade.executioner(command, 'chown core code', 0)
 
             command = "chmod 640 /usr/local/CyberCP/CyberCP/settings.py"

@@ -635,7 +635,7 @@ class preFlightsChecks:
         command = "chmod 700 /usr/local/CyberCP/plogical/upgradeCritical.py"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        command = "chmod 700 /usr/local/CyberCP/postfixSenderPolicy/client.py"
+        command = "chmod 755 /usr/local/CyberCP/postfixSenderPolicy/client.py"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         command = "chmod 640 /usr/local/CyberCP/CyberCP/settings.py"
