@@ -1693,7 +1693,7 @@ imap_folder_list_limit = 0
             cronFile.writelines("0 * * * * root /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup" + "\n")
             cronFile.writelines("0 0 1 * * root /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup" + "\n")
             cronFile.writelines("0 2 * * * root /usr/local/CyberCP/plogical/upgradeCritical.py" + "\n")
-            cronFile.writelines("/usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/renew.py\n")
+            cronFile.writelines("0 2 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/renew.py\n")
             cronFile.close()
 
             command = 'chmod +x /usr/local/CyberCP/plogical/findBWUsage.py'

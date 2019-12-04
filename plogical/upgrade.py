@@ -1953,7 +1953,7 @@ failovermethod=priority
 
         if data.find('renew.py') == -1:
             writeToFile = open(cronTab, 'a')
-            writeToFile.writelines("/usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/renew.py\n")
+            writeToFile.writelines("0 2 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/renew.py\n")
             writeToFile.close()
 
 
