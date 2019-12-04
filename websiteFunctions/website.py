@@ -856,7 +856,7 @@ class WebsiteManager:
             try:
                 import OpenSSL
                 from datetime import datetime
-                filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.domain)
+                filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.childDomain)
                 x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
                                                        open(filePath, 'r').read())
                 expireData = x509.get_notAfter().decode('ascii')
@@ -869,7 +869,7 @@ class WebsiteManager:
                 Data['authority'] = x509.get_issuer().get_components()[1][1]
 
                 if Data['authority'] == 'Denial':
-                    Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.domain)
+                    Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.childDomain)
                 else:
                     Data['authority'] = '%s has SSL from %s.' % (self.domain, Data['authority'])
 
