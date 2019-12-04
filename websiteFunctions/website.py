@@ -871,7 +871,7 @@ class WebsiteManager:
                 if Data['authority'] == 'Denial':
                     Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.childDomain)
                 else:
-                    Data['authority'] = '%s has SSL from %s.' % (self.domain, Data['authority'])
+                    Data['authority'] = '%s has SSL from %s.' % (self.childDomain, Data['authority'])
 
             except BaseException, msg:
                 Data['viewSSL'] = 0
