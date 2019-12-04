@@ -759,6 +759,12 @@ class WebsiteManager:
                 Data['viewSSL'] = 1
                 Data['days'] = str(diff.days)
                 Data['authority'] = x509.get_issuer().get_components()[1][1]
+
+                if Data['authority'] == 'Denial':
+                    Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.domain)
+                else:
+                    Data['authority'] = '%s has SSL from %s.' % (self.domain, Data['authority'])
+
             except BaseException, msg:
                 Data['viewSSL'] = 0
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -861,6 +867,12 @@ class WebsiteManager:
                 Data['viewSSL'] = 1
                 Data['days'] = str(diff.days)
                 Data['authority'] = x509.get_issuer().get_components()[1][1]
+
+                if Data['authority'] == 'Denial':
+                    Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.domain)
+                else:
+                    Data['authority'] = '%s has SSL from %s.' % (self.domain, Data['authority'])
+
             except BaseException, msg:
                 Data['viewSSL'] = 0
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))

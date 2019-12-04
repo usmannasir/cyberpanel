@@ -348,7 +348,19 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain = None):
             else:
                 return [0, "210 Failed to install SSL for domain. [issueSSLForDomain]"]
         else:
-            return [0, "283 Failed to obtain SSL for domain. [issueSSLForDomain]"]
+
+            pathToStoreSSLPrivKey = "/etc/letsencrypt/live/%s/privkey.pem" % (domain)
+            pathToStoreSSLFullChain = "/etc/letsencrypt/live/%s/fullchain.pem" % (domain)
+
+            command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
+
+            if sslUtilities.installSSLForDomain(domain) == 1:
+                logging.CyberCPLogFileWriter.writeToFile("Self signed SSL issued for " + domain + ".")
+                return [1, "None"]
+            else:
+                return [0, "210 Failed to install SSL for domain. [issueSSLForDomain]"]
 
     except BaseException,msg:
         return [0, "347 "+ str(msg)+ " [issueSSLForDomain]"]

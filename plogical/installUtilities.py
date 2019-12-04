@@ -138,9 +138,9 @@ class installUtilities:
         try:
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                command = "sudo systemctl restart lsws"
+                command = "systemctl restart lsws"
             else:
-                command = "sudo /usr/local/lsws/bin/lswsctrl restart"
+                command = "/usr/local/lsws/bin/lswsctrl restart"
 
             ProcessUtilities.normalExecutioner(command)
 
