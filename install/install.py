@@ -693,6 +693,9 @@ class preFlightsChecks:
         command = 'chmod 755 /etc/pure-ftpd/'
         subprocess.call(command, shell=True)
 
+        command = 'chmod +x /usr/local/CyberCP/plogical/renew.py'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
     def install_unzip(self):
         self.stdOut("Install unzip")
         try:
@@ -1690,6 +1693,7 @@ imap_folder_list_limit = 0
             cronFile.writelines("0 * * * * root /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup" + "\n")
             cronFile.writelines("0 0 1 * * root /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup" + "\n")
             cronFile.writelines("0 2 * * * root /usr/local/CyberCP/plogical/upgradeCritical.py" + "\n")
+            cronFile.writelines("/usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/renew.py\n")
             cronFile.close()
 
             command = 'chmod +x /usr/local/CyberCP/plogical/findBWUsage.py'
@@ -2181,6 +2185,10 @@ milter_default_action = accept
     def installAcme(self):
         command = 'wget -O -  https://get.acme.sh | sh'
         subprocess.call(command, shell=True)
+
+        command = '/root/.acme.sh/acme.sh --upgrade --auto-upgrade'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
 
 
 def main():

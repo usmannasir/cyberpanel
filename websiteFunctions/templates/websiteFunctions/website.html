@@ -26,10 +26,12 @@
 
                     <h3 class="content-box-header">
                         {% trans "Resource Usage" %} <img ng-hide="domainLoading" src="/static/images/loading.gif">
-                        <a style="float: right; margin-left: 2%" class="btn btn-border btn-alt border-azure btn-link font-azure" href="/websites/{{ domain }}/setupStaging" title=""><span>{% trans "Clone/Staging" %}</span></a>
-                        <a style="float: right" class="btn btn-border btn-alt border-blue-alt btn-link font-blue-alt" href="/websites/{{ domain }}/sshAccess" title=""><span>{% trans "Set up SSH Access" %}</span></a>
+                        <a style="float: right; margin-left: 2%"
+                           class="btn btn-border btn-alt border-azure btn-link font-azure"
+                           href="/websites/{{ domain }}/setupStaging" title=""><span>{% trans "Clone/Staging" %}</span></a>
+                        <a style="float: right" class="btn btn-border btn-alt border-blue-alt btn-link font-blue-alt"
+                           href="/websites/{{ domain }}/sshAccess" title=""><span>{% trans "Set up SSH Access" %}</span></a>
                     </h3>
-
 
 
                     <div class="content-box-wrapper">
@@ -72,6 +74,14 @@
                             <div class="col-md-6">
                                 <div style="margin-top: 4%" class="content-box mt-5 mx-10">
                                     <div class="panel-body">
+                                        {% if viewSSL == 1 %}
+                                            <div style="margin-top: 2%" class="alert alert-success">
+                                                <div class="alert-content">
+                                                    <h4 class="alert-title">Certificate from {{ authority }}</h4>
+                                                    <p>Your SSL will expire in {{ days }} days.</p>
+                                                </div>
+                                            </div>
+                                        {% endif %}
                                         <div class="example-box-wrapper">
                                             <h3 class="title-hero">
                                                 {% trans "Disk Usage" %}

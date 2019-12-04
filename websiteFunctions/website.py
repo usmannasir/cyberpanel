@@ -712,8 +712,6 @@ class WebsiteManager:
                 execPath = execPath + " findDomainBW --virtualHostName " + self.domain + " --bandwidth " + str(
                     website.package.bandwidth)
 
-                logging.CyberCPLogFileWriter.writeToFile(execPath)
-
                 output = ProcessUtilities.outputExecutioner(execPath)
                 bwData = output.split(",")
             except BaseException, msg:
@@ -745,6 +743,25 @@ class WebsiteManager:
                 Data['email'] = 1
             else:
                 Data['email'] = 0
+
+            ## Getting SSL Information
+            try:
+                import OpenSSL
+                from datetime import datetime
+                filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.domain)
+                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
+                                                       open(filePath, 'r').read())
+                expireData = x509.get_notAfter().decode('ascii')
+                finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
+
+                now = datetime.now()
+                diff = finalDate - now
+                Data['viewSSL'] = 1
+                Data['days'] = str(diff.days)
+                Data['authority'] = x509.get_issuer().get_components()[1][1]
+            except BaseException, msg:
+                Data['viewSSL'] = 0
+                logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
             servicePath = '/home/cyberpanel/pureftpd'
             if os.path.exists(servicePath):
@@ -828,6 +845,26 @@ class WebsiteManager:
                 Data['ftp'] = 1
             else:
                 Data['ftp'] = 0
+
+            ## Getting SSL Information
+            try:
+                import OpenSSL
+                from datetime import datetime
+                filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.domain)
+                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
+                                                       open(filePath, 'r').read())
+                expireData = x509.get_notAfter().decode('ascii')
+                finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
+
+                now = datetime.now()
+                diff = finalDate - now
+                Data['viewSSL'] = 1
+                Data['days'] = str(diff.days)
+                Data['authority'] = x509.get_issuer().get_components()[1][1]
+            except BaseException, msg:
+                Data['viewSSL'] = 0
+                logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
 
             return render(request, 'websiteFunctions/launchChild.html', Data)
         else:

@@ -1687,10 +1687,18 @@ CSRF_COOKIE_SECURE = True
             command = 'chmod 644 /etc/postfix/dynamicmaps.cf'
             subprocess.call(command, shell=True)
 
+            command = 'chmod +x /usr/local/CyberCP/plogical/renew.py'
+            Upgrade.executioner(command, command, 0)
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException, msg:
             Upgrade.stdOut(str(msg) + " [installLSCPD]")
+
+    @staticmethod
+    def AutoUpgradeAcme():
+        command = '/root/.acme.sh/acme.sh --upgrade --auto-upgrade'
+        Upgrade.executioner(command, command, 0)
 
     @staticmethod
     def installPHP73():
@@ -1942,6 +1950,13 @@ failovermethod=priority
             writeToFile.writelines(cronJob)
             writeToFile.close()
 
+
+        if data.find('renew.py') == -1:
+            writeToFile = open(cronTab, 'a')
+            writeToFile.writelines("/usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/renew.py\n")
+            writeToFile.close()
+
+
     @staticmethod
     def p3():
 
@@ -2097,6 +2112,7 @@ failovermethod=priority
         Upgrade.executioner(command, 'fix csf if there', 0)
         command = 'systemctl start cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
+        Upgrade.AutoUpgradeAcme()
 
         Upgrade.stdOut("Upgrade Completed.")
 
