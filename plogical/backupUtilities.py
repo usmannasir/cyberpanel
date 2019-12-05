@@ -106,32 +106,44 @@ class backupUtilities:
                     dbuser = DBUsers.objects.get(user=items.dbUser)
                     userToTry = items.dbUser
                 except:
-                    dbusers = DBUsers.objects.all().filter(user=items.dbUser)
-                    userToTry = items.dbUser
-                    for it in dbusers:
-                        dbuser = it
-                        break
-
-                    userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbUser)
-
                     try:
-                        dbuser = DBUsers.objects.get(user=userToTry)
-                    except:
-                        dbusers = DBUsers.objects.all().filter(user=userToTry)
+                        dbusers = DBUsers.objects.all().filter(user=items.dbUser)
+                        userToTry = items.dbUser
                         for it in dbusers:
                             dbuser = it
                             break
+
+                        userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbUser)
+
+                        try:
+                            dbuser = DBUsers.objects.get(user=userToTry)
+                        except:
+                            try:
+                                dbusers = DBUsers.objects.all().filter(user=userToTry)
+                                for it in dbusers:
+                                    dbuser = it
+                                    break
+                            except BaseException, msg:
+                                logging.CyberCPLogFileWriter.writeToFile(
+                                    'While creating backup for %s, we failed to backup database %s. Error message: %s' % (
+                                        backupDomain, items.dbName, str(msg)))
+                                continue
+                    except BaseException, msg:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            'While creating backup for %s, we failed to backup database %s. Error message: %s' % (
+                            backupDomain, items.dbName, str(msg)))
+                        continue
 
 
 
                 databaseXML = Element('database')
 
                 child = SubElement(databaseXML, 'dbName')
-                child.text = items.dbName
+                child.text = str(items.dbName)
                 child = SubElement(databaseXML, 'dbUser')
-                child.text = userToTry
+                child.text = str(userToTry)
                 child = SubElement(databaseXML, 'password')
-                child.text = dbuser.password
+                child.text = str(dbuser.password)
 
                 databasesXML.append(databaseXML)
 
@@ -139,15 +151,20 @@ class backupUtilities:
 
             ## Get Aliases
 
-            aliasesXML = Element('Aliases')
+            try:
 
-            aliases = backupUtilities.getAliases(backupDomain)
+                aliasesXML = Element('Aliases')
 
-            for items in aliases:
-                child = SubElement(aliasesXML, 'alias')
-                child.text = items
+                aliases = backupUtilities.getAliases(backupDomain)
 
-            metaFileXML.append(aliasesXML)
+                for items in aliases:
+                    child = SubElement(aliasesXML, 'alias')
+                    child.text = items
+
+                metaFileXML.append(aliasesXML)
+
+            except BaseException, msg:
+                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [167:prepMeta]' % (str(msg)))
 
             ## Finish Alias
 
@@ -208,6 +225,8 @@ class backupUtilities:
                 reparsed = minidom.parseString(rough_string)
                 return reparsed.toprettyxml(indent="  ")
 
+
+
             ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52/meta.xml -- metaPath
 
             metaPath = '/tmp/%s' % (str(randint(1000, 9999)))
@@ -225,7 +244,7 @@ class backupUtilities:
                                 size=0, status=1)
             newBackup.save()
 
-            logging.CyberCPLogFileWriter.statusWriter(status, 'Meta data us ready..')
+            logging.CyberCPLogFileWriter.statusWriter(status, 'Meta data is ready..')
 
             return 1,'None', metaPath
 
@@ -362,7 +381,7 @@ class backupUtilities:
 
         if os.path.islink(status) or os.path.islink(tempStoragePath or os.path.islink(backupPath)) or os.path.islink(metaPath):
             logging.CyberCPLogFileWriter.writeToFile('symlinked.')
-            logging.CyberCPLogFileWriter.statusWriter(status, 'Symlink attack. [5009]')
+            logging.CyberCPLogFileWriter.statusWriter(status, 'Symlink attack. [365][5009]')
             return 0
 
         ## backup email accounts
@@ -572,7 +591,7 @@ class backupUtilities:
                         logging.CyberCPLogFileWriter.writeToFile('%s. [555:startRestore]' % (str(msg)))
 
             else:
-                logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + result[1] + ". Not able to create Account, Databases and DNS Records, aborting. [5009]")
+                logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + result[1] + ". Not able to create Account, Databases and DNS Records, aborting. [575][5009]")
                 return 0
 
             ########### Creating child/sub/addon/parked domains
@@ -632,11 +651,11 @@ class backupUtilities:
 
                         continue
                     else:
-                        logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + retValues[1] + ". Not able to create child domains, aborting. [5009]")
+                        logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + retValues[1] + ". Not able to create child domains, aborting. [635][5009]")
                         return 0
             except BaseException, msg:
                 status = open(os.path.join(completPath,'status'), "w")
-                status.write("Error Message: " + str(msg) +". Not able to create child domains, aborting. [5009]")
+                status.write("Error Message: " + str(msg) +". Not able to create child domains, aborting. [638][5009]")
                 status.close()
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
                 return 0
@@ -668,7 +687,7 @@ class backupUtilities:
                         raise BaseException(result[1])
 
             except BaseException, msg:
-                logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + str(msg) +". Not able to create email accounts, aborting. [5009]")
+                logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + str(msg) +". Not able to create email accounts, aborting. [671][5009]")
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
                 return 0
 
@@ -733,7 +752,7 @@ class backupUtilities:
 
         except BaseException, msg:
             status = os.path.join(completPath, 'status')
-            logging.CyberCPLogFileWriter.statusWriter(status, str(msg) + " [5009]")
+            logging.CyberCPLogFileWriter.statusWriter(status, str(msg) + " [736][5009]")
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
 
     @staticmethod
@@ -1081,7 +1100,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
 
         if result[0] == 0:
-            logging.CyberCPLogFileWriter.statusWriter(status, str(result[1]) + ' [5009]')
+            logging.CyberCPLogFileWriter.statusWriter(status, str(result[1]) + ' [1084][5009]')
             return 0
 
         command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, status)
@@ -1162,7 +1181,7 @@ def cancelBackupCreation(backupCancellationDomain,fileName):
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
 
         status = open(backupPath + 'status', "w")
-        status.write("Aborted manually. [5009]")
+        status.write("Aborted manually. [1165][5009]")
         status.close()
     except BaseException,msg:
         logging.CyberCPLogFileWriter.writeToFile(
