@@ -612,6 +612,7 @@ def submitUserCreation(request):
                 return HttpResponse(json_data)
 
             if hashPassword.check_password(admin.password, adminPass):
+                request.session['userID'] = admin.pk
                 return submitUserCreation(request)
             else:
                 data_ret = {"status": 0,
