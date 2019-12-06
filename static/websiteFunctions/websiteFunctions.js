@@ -1345,7 +1345,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
         function ListInitialDatas(response) {
 
-            if (response.data.installStatus == 1) {
+            if (response.data.installStatus === 1) {
                 if (typeof path != 'undefined') {
                     $scope.installationURL = "http://" + domain + "/" + path;
                 } else {
@@ -1432,7 +1432,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
         function ListInitialDatas(response) {
 
-            if (response.data.installStatus == 1) {
+            if (response.data.installStatus === 1) {
                 if (typeof path != 'undefined') {
                     $scope.installationURL = "http://" + domain + "/" + path;
                 } else {

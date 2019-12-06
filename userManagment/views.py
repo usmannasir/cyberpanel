@@ -331,8 +331,8 @@ def saveModifications(request):
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
-                token = hashPassword.generateToken(accountUsername, data['password'])
-                password = hashPassword.hash_password(data['password'])
+                token = hashPassword.generateToken(accountUsername, data['passwordByPass'])
+                password = hashPassword.hash_password(data['passwordByPass'])
 
                 user.firstName = firstName
                 user.lastName = lastName

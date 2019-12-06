@@ -251,7 +251,7 @@ app.controller('modifyUser', function ($scope, $http) {
             firstName: firstName,
             lastName: lastName,
             email: email,
-            password: password,
+            passwordByPass: password,
             securityLevel: $scope.securityLevel
         };
 
