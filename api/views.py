@@ -18,6 +18,7 @@ from s3Backups.s3Backups import S3Backups
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
 from django.views.decorators.csrf import csrf_exempt
+from userManagment.views import submitUserCreation
 # Create your views here.
 
 @csrf_exempt
@@ -591,3 +592,34 @@ def runAWSBackups(request):
             s3.start()
     except BaseException, msg:
         logging.writeToFile(str(msg) + ' [API.runAWSBackups]')
+
+
+@csrf_exempt
+def submitUserCreation(request):
+    try:
+        if request.method == 'POST':
+
+            data = json.loads(request.body)
+
+            adminUser = data['adminUser']
+            adminPass = data['adminPass']
+
+            admin = Administrator.objects.get(userName=adminUser)
+
+            if admin.api == 0:
+                data_ret = {"status": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            if hashPassword.check_password(admin.password, adminPass):
+                return submitUserCreation(request)
+            else:
+                data_ret = {"status": 0,
+                            'error_message': "Could not authorize access to API"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+    except BaseException, msg:
+        data_ret = {'changeStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)

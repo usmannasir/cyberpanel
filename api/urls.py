@@ -23,5 +23,6 @@ urlpatterns = [
 
     url(r'^cyberPanelVersion', views.cyberPanelVersion, name='cyberPanelVersion'),
     url(r'^runAWSBackups$', views.runAWSBackups, name='runAWSBackups'),
+    url(r'^submitUserCreation$', views.submitUserCreation, name='submitUserCreation'),
 
 ]
