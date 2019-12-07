@@ -18,7 +18,7 @@ from s3Backups.s3Backups import S3Backups
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
 from django.views.decorators.csrf import csrf_exempt
-from userManagment.views import submitUserCreation
+from userManagment.views import submitUserCreation as suc
 # Create your views here.
 
 @csrf_exempt
@@ -613,7 +613,7 @@ def submitUserCreation(request):
 
             if hashPassword.check_password(admin.password, adminPass):
                 request.session['userID'] = admin.pk
-                return submitUserCreation(request)
+                return suc(request)
             else:
                 data_ret = {"status": 0,
                             'error_message': "Could not authorize access to API"}

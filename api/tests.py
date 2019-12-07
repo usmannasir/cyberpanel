@@ -146,4 +146,25 @@ class TestAPI(TestCase):
 
         self.assertEqual(suspend, 1)
 
+    def test_submitUserCreation(self):
+
+        ## Login
+
+        data_ret = {
+            "adminUser": "admin",
+            "adminPass": "1234567",
+            "firstName": "Usman",
+            "lastName": "Nasir",
+            "email": "usman@cyberpersons.com",
+            "userName": "usman",
+            "password": "helloworld123",
+            "websitesLimit": 50,
+            "selectedACL": "user",
+            "securityLevel": "HIGH",
+        }
+        response = self.MakeRequest('submitUserCreation', data_ret)
+        logging.writeToFile(str(response))
+
+        self.assertEqual(response['status'], 1)
+
 
