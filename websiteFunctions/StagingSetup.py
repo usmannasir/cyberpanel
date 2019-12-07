@@ -29,6 +29,7 @@ class StagingSetup(multi.Thread):
     def startCloning(self):
         try:
             tempStatusPath = self.extraArgs['tempStatusPath']
+            self.tempStatusPath = tempStatusPath
             masterDomain = self.extraArgs['masterDomain']
             domain = self.extraArgs['domain']
             admin = self.extraArgs['admin']
@@ -102,7 +103,6 @@ class StagingSetup(multi.Thread):
                         else:
                             raise BaseException('Failed to create database backup.')
 
-
             databasePath = '%s/%s.sql' % ('/home/cyberpanel', dbName)
 
             command = "sed -i 's/%s/%s/g' %s" % (masterDomain, domain, databasePath)
@@ -145,12 +145,15 @@ class StagingSetup(multi.Thread):
             writeToFile.close()
 
             command = 'mv %s %s' % (tmp, pathFinalConfig)
-            ProcessUtilities.executioner(command, website.externalApp)
+            ProcessUtilities.executioner(command)
+
+            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, pathFinalConfig)
+            ProcessUtilities.executioner(command)
 
             logging.statusWriter(tempStatusPath, 'Database synced..,100')
 
             try:
-                os.path.remove(databasePath)
+                os.remove(databasePath)
             except:
                 pass
 
@@ -159,7 +162,7 @@ class StagingSetup(multi.Thread):
             return 0
         except BaseException, msg:
             mesg = '%s. [404]' % (str(msg))
-            logging.statusWriter(tempStatusPath, mesg)
+            logging.statusWriter(self.tempStatusPath, mesg)
 
     def startSyncing(self):
         try:

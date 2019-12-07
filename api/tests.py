@@ -163,7 +163,6 @@ class TestAPI(TestCase):
             "securityLevel": "HIGH",
         }
         response = self.MakeRequest('submitUserCreation', data_ret)
-        logging.writeToFile(str(response))
 
         self.assertEqual(response['status'], 1)
 
