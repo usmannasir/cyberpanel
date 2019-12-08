@@ -98,9 +98,9 @@ class CSF(multi.Thread):
                     writeToConf.writelines(
                         'TCP_OUT = "20,21,22,25,43,53,80,110,113,443,587,993,995,8090,40110:40210"\n')
                 elif items.find('UDP_IN') > -1 and items.find('=') > -1 and (items[0] != '#'):
-                    writeToConf.writelines('UDP_IN = "20,21,53"\n')
+                    writeToConf.writelines('UDP_IN = "20,21,53,443"\n')
                 elif items.find('UDP_OUT') > -1 and items.find('=') > -1 and (items[0] != '#'):
-                    writeToConf.writelines('UDP_OUT = "20,21,53,113,123"\n')
+                    writeToConf.writelines('UDP_OUT = "20,21,53,113,123,443"\n')
                 elif items.find('TESTING =') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('TESTING = "0"\n')
                 # setting RESTRICT_SYSLOG to "3" for use with option RESTRICT_SYSLOG_GROUP
