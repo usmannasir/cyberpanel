@@ -190,7 +190,7 @@ def saveSSHConfigs(request):
         if result != 200:
             return result
 
-        fm = FirewallManager()
+        fm = FirewallManager(request)
         coreResult = fm.saveSSHConfigs(userID, json.loads(request.body))
 
         result = pluginManager.postSaveSSHConfigs(request, coreResult)
@@ -520,7 +520,7 @@ def modifyPorts(request):
             return result
 
         fm = FirewallManager(request)
-        coreResult = fm.modifyPorts()
+        coreResult = fm.modifyPorts(json.loads(request.body))
 
         result = pluginManager.postModifyPorts(request, coreResult)
         if result != 200:

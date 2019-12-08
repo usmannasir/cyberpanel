@@ -378,21 +378,29 @@ class FirewallManager:
 
             if output.find("1,None") > -1:
 
-                try:
-                    updateFW = FirewallRules.objects.get(name="SSHCustom")
-                    FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0")
-                    updateFW.port = sshPort
-                    updateFW.save()
-                    FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
-                except:
+                csfPath = '/etc/csf'
+
+                if os.path.exists(csfPath):
+                    dataIn = {'protocol': 'TCP_IN', 'ports': sshPort}
+                    self.modifyPorts(dataIn)
+                    dataIn = {'protocol': 'TCP_OUT', 'ports': sshPort}
+                    self.modifyPorts(dataIn)
+                else:
                     try:
-                        newFireWallRule = FirewallRules(name="SSHCustom", port=sshPort, proto="tcp")
-                        newFireWallRule.save()
+                        updateFW = FirewallRules.objects.get(name="SSHCustom")
+                        FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0")
+                        updateFW.port = sshPort
+                        updateFW.save()
                         FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
-                        command = 'firewall-cmd --permanent --remove-service=ssh'
-                        ProcessUtilities.executioner(command)
-                    except BaseException, msg:
-                        logging.CyberCPLogFileWriter.writeToFile(str(msg))
+                    except:
+                        try:
+                            newFireWallRule = FirewallRules(name="SSHCustom", port=sshPort, proto="tcp")
+                            newFireWallRule.save()
+                            FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
+                            command = 'firewall-cmd --permanent --remove-service=ssh'
+                            ProcessUtilities.executioner(command)
+                        except BaseException, msg:
+                            logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
                 final_dic = {'status': 1, 'saveStatus': 1}
                 final_json = json.dumps(final_dic)
@@ -1463,7 +1471,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def modifyPorts(self):
+    def modifyPorts(self, data = None):
         try:
 
             userID = self.request.session['userID']
@@ -1473,8 +1481,6 @@ class FirewallManager:
                 pass
             else:
                 return ACLManager.loadErrorJson()
-
-            data = json.loads(self.request.body)
 
             protocol = data['protocol']
             ports = data['ports']

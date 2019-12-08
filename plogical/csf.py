@@ -486,14 +486,22 @@ class CSF(multi.Thread):
             if protocol == 'TCP_IN':
                 for items in data:
                     if items.find('TCP_IN') > -1 and items.find('=') > -1 and (items[0] != '#'):
-                        writeToFile.writelines('TCP_IN = "' + ports + '"\n')
+                        if ports.find(',') > -1:
+                            writeToFile.writelines('TCP_IN = "' + ports + '"\n')
+                        else:
+                            content = '%s,%s\n' % (items, ports)
+                            writeToFile.writelines(content)
                     else:
                         writeToFile.writelines(items)
                 writeToFile.close()
             elif protocol == 'TCP_OUT':
                 for items in data:
                     if items.find('TCP_OUT') > -1 and items.find('=') > -1 and (items[0] != '#'):
-                        writeToFile.writelines('TCP_OUT = "' + ports + '"\n')
+                        if ports.find(',') > -1:
+                            writeToFile.writelines('TCP_OUT = "' + ports + '"\n')
+                        else:
+                            content = '%s,%s\n' % (items, ports)
+                            writeToFile.writelines(content)
                     else:
                         writeToFile.writelines(items)
                 writeToFile.close()
