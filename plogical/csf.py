@@ -489,7 +489,7 @@ class CSF(multi.Thread):
                         if ports.find(',') > -1:
                             writeToFile.writelines('TCP_IN = "' + ports + '"\n')
                         else:
-                            content = '%s,%s\n' % (items, ports)
+                            content = '%s,%s"\n' % (items.rstrip('\n"'), ports)
                             writeToFile.writelines(content)
                     else:
                         writeToFile.writelines(items)
@@ -500,7 +500,7 @@ class CSF(multi.Thread):
                         if ports.find(',') > -1:
                             writeToFile.writelines('TCP_OUT = "' + ports + '"\n')
                         else:
-                            content = '%s,%s\n' % (items, ports)
+                            content = '%s,%s"\n' % (items.rstrip('\n"'), ports)
                             writeToFile.writelines(content)
                     else:
                         writeToFile.writelines(items)
