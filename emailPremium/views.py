@@ -827,12 +827,18 @@ def installStatusSpamAssassin(request):
 
                 if installStatus.find("[200]")>-1:
 
-                    execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                    execPath = "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin  && /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                     execPath = execPath + " configureSpamAssassin"
                     output = ProcessUtilities.outputExecutioner(execPath)
 
                     if output.find("1,None") > -1:
-                        pass
+                        final_json = json.dumps({
+                            'error_message': "None",
+                            'requestStatus': installStatus,
+                            'abort': 1,
+                            'installed': 1,
+                        })
+                        return HttpResponse(final_json)
                     else:
                         final_json = json.dumps({
                             'error_message': "Failed to install SpamAssassin configurations.",
@@ -842,13 +848,6 @@ def installStatusSpamAssassin(request):
                         })
                         return HttpResponse(final_json)
 
-                    final_json = json.dumps({
-                                             'error_message': "None",
-                                             'requestStatus': installStatus,
-                                             'abort':1,
-                                             'installed': 1,
-                                             })
-                    return HttpResponse(final_json)
                 elif installStatus.find("[404]") > -1:
 
                     final_json = json.dumps({

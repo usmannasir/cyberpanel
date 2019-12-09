@@ -2240,8 +2240,8 @@ def main():
     checks = preFlightsChecks("/usr/local/lsws/", args.publicip, "/usr/local", cwd, "/usr/local/CyberCP", distro)
     checks.mountTemp()
 
-    if distro == ubuntu:
-        os.chdir("/etc/cyberpanel")
+#    if distro == ubuntu:
+#        os.chdir("/etc/cyberpanel")
 
     if args.port == None:
         port = "8090"

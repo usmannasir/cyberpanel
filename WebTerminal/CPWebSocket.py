@@ -79,7 +79,7 @@ class SSHServer(multi.Thread):
                                 else:
                                     self.websocket.sendMessage(self.shell.recv(9000).decode("utf-8"))
                             else:
-                                time.sleep(0.01)
+                                pass
                 else:
                     return 0
             except BaseException, msg:
