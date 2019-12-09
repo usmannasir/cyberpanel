@@ -91,6 +91,14 @@
 
     <!-- JS Ends -->
 
+    <style type="text/css">
+
+        html, body {
+            height: 100%;
+            background: #ffffff;
+        }
+
+    </style>
 
 </head>
 <body>
@@ -102,120 +110,125 @@
     </div>
 </div>
 
-<style type="text/css">
+<div class>
+    <div class="col-md-6 col-sm-12 hidden-md" style="background: #00007A;">
+        <div class="row panel-body style=" padding-bottom: 0px;>
+        <div class="col-lg-6 col-md-12 panel-body">
+            <h2 class="text-transform-upr text-white my-30 text-bold">WEB HOSTING CONTROL PANEL
+                </br/>FOR EVERYONE
 
-    html, body {
-        height: 100%;
-        background: #fafafa;
-    }
-
-</style>
-
-<div class="center-vertical">
-    <div class="center-content row">
-
-        <div class="col-md-8 col-lg-6 clearfix center-margin">
-            <div class="row">
-                <div class="col-md-5">
-                    <h3 class="text-transform-upr font-size-17">CyberPanel <span class="opacity-80">v 1.9</span></h3>
-                    <p class="font-gray">Web Hosting Control Panel</p>
-                    <div class="divider"></div>
-                    <ul class="reset-ul">
-                        <li class="pad10A font-size-16">
-                            <i class="glyph-icon icon-camera mrg10R font-green"></i>
-                            LiteSpeed
-                        </li>
-                        <li class="pad10A font-size-16">
-                            <i class="glyph-icon icon-cog mrg10R font-red"></i>
-                            Multiple PHPs
-                        </li>
-                        <li class="pad10A font-size-16">
-                            <i class="glyph-icon icon-bullhorn mrg10R font-orange"></i>
-                            Request throttling.
-                        </li>
-                    </ul>
-                    <div class="divider"></div>
-                    <br>
-                </div>
-
-                <div ng-app="loginSystem" ng-controller="loginSystem" class="col-md-7">
-
-                    <form id="loginForm" action="/">
-                        <div class="content-box">
-                            <h3 class="content-box-header content-box-header-alt bg-default">
-                                <span class="icon-separator">
-                                    <i class="glyph-icon icon-cog"></i>
-                                </span>
-                                <span class="header-wrapper">
-                                    Administrative area
-                                    <small>Provide username and password to login.</small>
-                                </span>
-                            </h3>
-                            <div class="content-box-wrapper">
-                                <div class="form-group">
-
-                                    <div class="input-group">
-                                        <input ng-model="username" type="text" class="form-control" name="username"
-                                               placeholder="Enter username" required>
-                                        <span class="input-group-addon bg-blue">
-                                            <i class="glyph-icon icon-envelope-o"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="input-group">
-                                        <input ng-keypress="initiateLogin($event)" ng-model="password" type="password"
-                                               class="form-control" id="password" placeholder="Password" required name="password">
-                                        <span class="input-group-addon bg-blue">
-                                            <i class="glyph-icon icon-unlock-alt"></i>
-                                        </span>
-                                    </div>
-                                    <img id="verifyingLogin" class="center-block"
-                                         src="{% static 'images/loading.gif' %}">
-                                </div>
-
-                                <div class="form-group">
-                                    <div class="input-group">
-                                        <select ng-model="languageSelection" ng-init="languageSelection='english'"
-                                                class="form-control">
-                                            <option value="english">English</option>
-                                            <option>Chinese</option>
-                                            <option>Italian</option>
-                                            <option>French</option>
-                                            <option>Bulgarian</option>
-                                            <option>Portuguese</option>
-                                            <option>Japanese</option>
-                                            <option>Bosnian</option>
-                                            <option>Greek</option>
-                                            <option>Russian</option>
-                                            <option>Turkish</option>
-                                            <option>Spanish</option>
-                                            <option>Polish</option>
-                                            <option>Vietnamese</option>
-                                            <option>German</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-
-                                <button type="button" ng-click="verifyLoginCredentials()"
-                                        class="btn btn-success btn-block">Sign In
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                    <div id="loginFailed" class="alert alert-danger">
-                        <p>Could Not Login, Error message: {$ errorMessage $}</p>
-                    </div>
-                </div>
-
-
-            </div>
+            </h2>
+            <h4 class="text-white">Powered By OpenLiteSpeed/LiteSpeed Enterprise. Built For Speed, Security and
+                Reliability.</h4>
         </div>
-
+        <div class="col-lg-6 col-md-12 text-center panel-body">
+            <img class="" src="/static/images/cyberpanel-banner-graphics.png" alt="" width="96%">
+        </div>
+    </div>
+    <div class="row panel-body">
+        <div class="row panel-body">
+            <ul class="reset-ul">
+                <li class="row my-30">
+                    <div class="col-lg-3 col-md-12 text-center">
+                        <img class="img-thumbnail mb-20" src="/static/images/new-design-list-websites-square.png" alt=""
+                             width="150">
+                    </div>
+                    <div class="col-lg-6 col-md-12 mb-20">
+                        <h3 class="text-white mb-5">
+                            Change Logs
+                        </h3>
+                        <p class="text-white mt-10">
+                            Learn about new releases and features.
+                        </p>
+                    </div>
+                    <div class="col-lg-3 col-md-12 text-center">
+                        <a href="https://go.cyberpanel.net/updates"
+                           target='_blank'>
+                            <button type="button" class="btn btn-outline-light mb-30 rounded mt-5">
+                                Learn More
+                            </button>
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </div>
     </div>
 </div>
 
+<div ng-app="loginSystem" ng-controller="loginSystem" class="col-md-6 col-sm-12" style="background: #ffffff;">
+    <br/>
+    <div>
+        <form id="loginForm" action="/" class="col-md-8 col-md-offset-2">
+            <h1 class="text-transform-upr text-center panel-body text-bold"
+                style="padding-bottom: 0px; color: #33CCCC;">
+                <img class="center-block text-center my-20" src="{% static 'images/cyber-panel-logo.svg' %}">
+                CyberPanel
+                <span class="opacity-80">v 1.9</span>
+            </h1>
+            <h4 class="text-muted text-center mb-10">Web Hosting Control Panel</h4>
+            <div class="">
+                <div class="mx-30">
+                    <div class="content-box-wrapper panel-body my-10 mx-30">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <input ng-model="username" type="text" class="form-control" name="username"
+                                       placeholder="Enter username" required style="height: 45px;">
+                                <span class="input-group-addon bg-blue">
+                                            <i class="glyph-icon icon-envelope-o"></i>
+                                            </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-group">
+                                <input ng-keypress="initiateLogin($event)" ng-model="password" type="password"
+                                       class="form-control" id="password" placeholder="Password" required
+                                       name="password">
+                                <span class="input-group-addon bg-blue">
+                                            <i class="glyph-icon icon-unlock-alt"></i>
+                                        </span>
+                            </div>
+                            <img id="verifyingLogin" class="center-block"
+                                 src="{% static 'images/loading.gif' %}">
+                        </div>
+
+
+                        <div class="form-group">
+                            <div class="input-group">
+                                <select ng-model="languageSelection" ng-init="languageSelection='english'"
+                                        class="form-control">
+                                    <option value="english">English</option>
+                                    <option>Chinese</option>
+                                    <option>Italian</option>
+                                    <option>French</option>
+                                    <option>Bulgarian</option>
+                                    <option>Portuguese</option>
+                                    <option>Japanese</option>
+                                    <option>Bosnian</option>
+                                    <option>Greek</option>
+                                    <option>Russian</option>
+                                    <option>Turkish</option>
+                                    <option>Spanish</option>
+                                    <option>Polish</option>
+                                    <option>Vietnamese</option>
+                                    <option>German</option>
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <button type="button" ng-click="verifyLoginCredentials()"
+                                class="btn btn-success btn-block">Sign In
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <div id="loginFailed" class="alert alert-danger">
+            <p>Could Not Login, Error message: {$ errorMessage $}</p>
+        </div>
+    </div>
+</div>
+</div>
 <script src="https://code.angularjs.org/1.6.5/angular.min.js"></script>
 <script src="https://code.angularjs.org/1.6.5/angular-route.min.js"></script>
 <script src="{% static 'loginSystem/login-systen.js' %}"></script>
