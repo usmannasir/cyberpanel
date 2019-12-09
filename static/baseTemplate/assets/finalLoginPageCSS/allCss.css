@@ -55,7 +55,7 @@ pre,pre code{white-space:pre-wrap}.clear,.form-row:after,.row:after{clear:both}.
 .search-choice-close:before,
 .ui-icon-closethick:before,
 .ui-dialog-titlebar-close:before,
-.icon-clock-os:before, 
+.icon-clock-os:before,
 .icon-close:before {
     content: "\f00d";
 }
@@ -1532,4 +1532,114 @@ pre,pre code{white-space:pre-wrap}.clear,.form-row:after,.row:after{clear:both}.
 }
 .icon-meanpath:before {
     content: "\f20c";
+}
+
+/*customized mzou*/
+.text-white {
+    color: #FFFFFF;
+}
+.mt-5 {
+    margin-top: 5px;
+}
+.mt-10 {
+    margin-top: 10px;
+}
+.mt-20 {
+    margin-top: 20px;
+}
+.mt-30 {
+    margin-top: 30px;
+}
+.mr-10 {
+    margin-right: 10px;
+}
+.mb-10 {
+    margin-bottom: 10px;
+}
+.mb-20 {
+    margin-bottom: 20px;
+}
+.mb-30 {
+    margin-bottom: 30px;
+}
+.ml-10 {
+    margin-left: 10px;
+}
+.my-10 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.my-20 {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+.my-30 {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
+.mx-5 {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+.mx-10 {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+.mx-20 {
+    margin-left: 20px;
+    margin-right: 20px;
+}
+.mx-30 {
+    margin-left: 30px;
+    margin-right: 30px;
+}
+.text-bold {
+    font-weight: 600;
+}
+.rounded {
+    border-radius: 3px;
+}
+
+.btn-outline-light {
+    color: #f8f9fa;
+    background-color: transparent;
+    background-image: none;
+    border-color: #f8f9fa;
+}
+.btn-outline-light:hover {
+    color: #212529;
+    background-color: #f8f9fa;
+    border-color: #f8f9fa;
+    text-decoration: none;
+}
+
+.flex {
+    display: flex;
+}
+.flex-wrap {
+    flex-wrap: wrap;
+}
+@media (max-width: 992px) {
+.hidden-md {
+    display: none;
+}
+}
+.img-thumbnail {
+    padding: .25rem;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: .25rem;
+    max-width: 100%;
+    height: auto;
+}
+
+img {
+vertical-align: middle;
+border-style: none;
+}
+
+@media (max-width: 720px) {
+    .text-center-sm {
+        text-align: center;
 }
