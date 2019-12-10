@@ -9,8 +9,6 @@ certbot==0.21.1
 certifi==2018.4.16
 cffi==1.11.5
 chardet==3.0.4
-ConfigArgParse==0.13.0
-configobj==4.7.2
 cryptography==2.8
 decorator==3.4.0
 docker==3.6.0
@@ -19,10 +17,7 @@ Django==1.11
 docutils==0.14
 enum34==1.1.6
 funcsigs==1.0.2
-future==0.16.0
-futures==3.2.0
 idna==2.6
-iniparse==0.4
 ipaddress==1.0.16
 IPy==0.75
 Jinja2==2.7.2
@@ -30,7 +25,6 @@ jmespath==0.9.3
 josepy==1.1.0
 jsonpatch==1.2
 jsonpointer==1.9
-kitchen==1.1.1
 MarkupSafe==0.11
 mysqlclient==1.4.6
 mock==2.0.0
@@ -41,10 +35,7 @@ prettytable==0.7.2
 psutil==5.4.3
 ptyprocess==0.6.0
 pycparser==2.18
-pycurl==7.19.0
-pydns==2.3.6
 pygpgme==0.3
-pyliblzma==0.5.3
 pyOpenSSL==17.5.0
 pyRFC3339==1.1
 pyserial==2.6
