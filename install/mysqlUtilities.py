@@ -1,5 +1,3 @@
-import pexpect
-import installLog as logging
 import subprocess, shlex
 
 class mysqlUtilities:
