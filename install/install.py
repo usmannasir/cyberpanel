@@ -13,8 +13,6 @@ import socket
 from os.path import *
 from stat import *
 import stat
-from os import urandom
-from random import choice
 
 char_set = {'small': 'abcdefghijklmnopqrstuvwxyz',
             'nums': '0123456789',
@@ -1893,7 +1891,7 @@ milter_default_action = accept
 
         return res  # Though probably not used
 
-    def setupVirtualEnv(distro):
+    def setupVirtualEnv(self, distro):
         try:
 
             ##
