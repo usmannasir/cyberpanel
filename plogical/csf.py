@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import CyberCPLogFileWriter as logging
 import subprocess
 import shlex

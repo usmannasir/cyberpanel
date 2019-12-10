@@ -124,7 +124,7 @@ class ContainerManager(multi.Thread):
                                                           1)
                 return 0
 
-            execPath = "/usr/local/CyberCP/bin/python2 /usr/local/CyberCP/containerization/container.py"
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/containerization/container.py"
             execPath = execPath + " --function submitContainerInstall"
             ProcessUtilities.outputExecutioner(execPath)
 

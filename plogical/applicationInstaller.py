@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os, sys
 
 sys.path.append('/usr/local/CyberCP')

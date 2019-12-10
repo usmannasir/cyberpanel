@@ -73,7 +73,7 @@ class CLManagerMain(multi.Thread):
                                                           1)
                 return 0
 
-            execPath = "/usr/local/CyberCP/bin/python2 /usr/local/CyberCP/CLManager/CageFS.py"
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py"
             execPath = execPath + " --function submitCageFSInstall"
             ProcessUtilities.outputExecutioner(execPath)
 

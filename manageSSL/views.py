@@ -80,7 +80,7 @@ def issueSSL(request):
 
                 ## ssl issue
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
                 execPath = execPath + " issueSSL --virtualHostName " + virtualHost + " --administratorEmail " + adminEmail + " --path " + path
                 output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -163,7 +163,7 @@ def obtainHostNameSSL(request):
 
                 ## ssl issue
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
                 execPath = execPath + " issueSSLForHostName --virtualHostName " + virtualHost + " --path " + path
                 output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -240,7 +240,7 @@ def obtainMailServerSSL(request):
 
                 ## ssl issue
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
                 execPath = execPath + " issueSSLForMailServer --virtualHostName " + virtualHost + " --path " + path
                 output = ProcessUtilities.outputExecutioner(execPath)
 

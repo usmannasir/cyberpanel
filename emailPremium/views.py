@@ -101,7 +101,7 @@ def savePolicyServerStatus(request):
 
                 ## save configuration data
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                 execPath = execPath + " savePolicyServerStatus --install " + install
                 output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -801,7 +801,7 @@ def installSpamAssassin(request):
             return ACLManager.loadErrorJson()
         try:
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
             execPath = execPath + " installSpamAssassin"
             ProcessUtilities.popenExecutioner(execPath)
 
@@ -827,7 +827,7 @@ def installStatusSpamAssassin(request):
 
                 if installStatus.find("[200]")>-1:
 
-                    execPath = "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin  && /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                    execPath = "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin  && /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                     execPath = execPath + " configureSpamAssassin"
                     output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -997,7 +997,7 @@ def saveSpamAssassinConfigurations(request):
 
                 ## save configuration data
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                 execPath = execPath + " saveSpamAssassinConfigs --tempConfigPath " + tempConfigPath
                 output = ProcessUtilities.outputExecutioner(execPath)
 

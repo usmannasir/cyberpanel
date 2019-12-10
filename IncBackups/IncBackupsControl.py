@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os
 import os.path
 import sys
@@ -318,7 +318,7 @@ class IncJobs(multi.Thread):
                     self.awsFunction('restore', '', self.jobid.snapshotid)
 
             metaPathNew = '/home/%s/meta.xml' % (self.website)
-            execPath = "nice -n 10 /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/IncBackups/restoreMeta.py"
+            execPath = "nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/IncBackups/restoreMeta.py"
             execPath = execPath + " submitRestore --metaPath %s --statusFile %s" % (metaPathNew, self.statusPath)
             result = ProcessUtilities.outputExecutioner(execPath)
             logging.statusWriter(self.statusPath, result, 1)

@@ -93,7 +93,7 @@ class pluginInstaller:
 
         os.chdir('/usr/local/CyberCP')
 
-        command = "/usr/local/CyberCP/bin/python2 manage.py collectstatic --noinput"
+        command = "/usr/local/CyberCP/bin/python manage.py collectstatic --noinput"
         subprocess.call(shlex.split(command))
 
         command = "mv /usr/local/CyberCP/static /usr/local/lscp/cyberpanel"

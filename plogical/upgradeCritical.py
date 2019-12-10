@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import sys
 sys.path.append('/usr/local/CyberCP')
 import subprocess, shlex

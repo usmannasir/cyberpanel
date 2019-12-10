@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os
 import os.path
 import sys
@@ -252,7 +252,7 @@ class BackupManager:
             backupCancellationDomain = data['backupCancellationDomain']
             fileName = data['fileName']
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " cancelBackupCreation --backupCancellationDomain " + backupCancellationDomain + " --fileName " + fileName
             subprocess.call(shlex.split(execPath))
 
@@ -313,7 +313,7 @@ class BackupManager:
             else:
                 return ACLManager.loadErrorJson()
 
-            execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
             ProcessUtilities.popenExecutioner(execPath)
             time.sleep(4)
@@ -427,7 +427,7 @@ class BackupManager:
                 except:
                     port = "22"
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
                 execPath = execPath + " submitDestinationCreation --ipAddress " + ipAddress + " --password " \
                            + password + " --port " + port
 
@@ -506,7 +506,7 @@ class BackupManager:
 
             ipAddress = data['IPAddress']
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " getConnectionStatus --ipAddress " + ipAddress
 
             output = ProcessUtilities.executioner(execPath)
@@ -658,13 +658,13 @@ class BackupManager:
                     return HttpResponse(final_json)
                 else:
                     if backupDest == "Home" and backupFreq == "Daily":
-                        cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupScheduleLocal.py"
+                        cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
                     elif backupDest == "Home" and backupFreq == "Weekly":
-                        cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupScheduleLocal.py "
+                        cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupScheduleLocal.py "
                     elif backupDest != "Home" and backupFreq == "Daily":
-                        cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupSchedule.py"
+                        cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupSchedule.py"
                     elif backupDest != "Home" and backupFreq == "Weekly":
-                        cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupSchedule.py "
+                        cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupSchedule.py "
 
                     command = "cat " + path
                     output = ProcessUtilities.outputExecutioner(command)
@@ -700,13 +700,13 @@ class BackupManager:
                     return HttpResponse(final_json)
             except:
                 if backupDest == "Home" and backupFreq == "Daily":
-                    cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupScheduleLocal.py"
+                    cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
                 elif backupDest == "Home" and backupFreq == "Weekly":
-                    cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupScheduleLocal.py "
+                    cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupScheduleLocal.py "
                 elif backupDest != "Home" and backupFreq == "Daily":
-                    cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupSchedule.py"
+                    cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupSchedule.py"
                 elif backupDest != "Home" and backupFreq == "Weekly":
-                    cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/backupSchedule.py "
+                    cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupSchedule.py "
 
                 command = "cat " + path
                 output = ProcessUtilities.outputExecutioner(command)
@@ -897,7 +897,7 @@ class BackupManager:
 
             ##
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
             execPath = execPath + " writeAuthKey --pathToKey " + pathToKey
             output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1063,7 +1063,7 @@ class BackupManager:
 
             ##
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
             execPath = execPath + " remoteBackupRestore --backupDirComplete " + backupDirComplete + " --backupDir " + str(
                 backupDir)
 

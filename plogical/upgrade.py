@@ -1941,19 +1941,19 @@ failovermethod=priority
         data = open(cronTab, 'r').read()
 
         if data.find('IncScheduler') == -1:
-            cronJob = '0 12 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
+            cronJob = '0 12 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
 
             writeToFile = open(cronTab, 'a')
             writeToFile.writelines(cronJob)
 
-            cronJob = '0 0 * * 0 root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
+            cronJob = '0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
             writeToFile.writelines(cronJob)
             writeToFile.close()
 
 
         if data.find('renew.py') == -1:
             writeToFile = open(cronTab, 'a')
-            writeToFile.writelines("0 2 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/renew.py\n")
+            writeToFile.writelines("0 2 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py\n")
             writeToFile.close()
 
 

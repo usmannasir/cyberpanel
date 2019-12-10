@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 # coding=utf-8
 import os.path
 import sys
@@ -650,7 +650,7 @@ class MailServerManager:
             else:
                 return ACLManager.loadErrorJson()
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
             execPath = execPath + " generateKeys --domain " + domainName
             output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -720,7 +720,7 @@ class MailServerManager:
 
             if installStatus.find("[200]") > -1:
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                 execPath = execPath + " configureOpenDKIM"
 
                 output = ProcessUtilities.outputExecutioner(execPath)

@@ -20,7 +20,7 @@ class servCTRL:
         if os.path.exists(servCTRL.pidfile):
             self.stop()
 
-        command = '/usr/local/CyberCP/bin/python2 /usr/local/CyberCP/WebTerminal/CPWebSocket.py'
+        command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/WebTerminal/CPWebSocket.py'
         subprocess.Popen(shlex.split(command))
 
     def stop(self):

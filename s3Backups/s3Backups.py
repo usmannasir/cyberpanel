@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 try:
     import os
     import os.path
@@ -117,7 +117,7 @@ class S3Backups(multi.Thread):
                 writeToFile.writelines(items + "\n")
 
             if cronCheck:
-                writeToFile.writelines("0 0 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/s3Backups/s3Backups.py > /home/cyberpanel/error-logs.txt 2>&1\n")
+                writeToFile.writelines("0 0 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/s3Backups/s3Backups.py > /home/cyberpanel/error-logs.txt 2>&1\n")
 
             writeToFile.close()
 

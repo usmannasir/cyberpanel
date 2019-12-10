@@ -262,7 +262,7 @@ class remoteTransferUtilities:
                     writeToFile.close()
 
                     backupFile = backup
-                    execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+                    execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
                     execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
                     subprocess.Popen(shlex.split(execPath))
                     time.sleep(4)

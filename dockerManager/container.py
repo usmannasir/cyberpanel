@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 
 import os
 import os.path
@@ -82,7 +82,7 @@ class ContainerManager(multi.Thread):
             writeToFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
             writeToFile.close()
 
-            execPath = "/usr/local/CyberCP/bin/python2 /usr/local/CyberCP/dockerManager/dockerInstall.py"
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/dockerManager/dockerInstall.py"
             ProcessUtilities.executioner(execPath)
 
             time.sleep(2)

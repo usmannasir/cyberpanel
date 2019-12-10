@@ -99,7 +99,7 @@ def addDestination(request):
                 pass
 
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " submitDestinationCreation --ipAddress " + ipAddress + " --password " \
                        + password + " --port " + port
 

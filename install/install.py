@@ -526,12 +526,12 @@ class preFlightsChecks:
 
         os.chdir("CyberCP")
 
-        command = "/usr/local/CyberCP/bin/python2 manage.py makemigrations"
+        command = "/usr/local/CyberCP/bin/python manage.py makemigrations"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         ##
 
-        command = "/usr/local/CyberCP/bin/python2 manage.py migrate"
+        command = "/usr/local/CyberCP/bin/python manage.py migrate"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         if not os.path.exists("/usr/local/CyberCP/public"):
@@ -1666,7 +1666,7 @@ imap_folder_list_limit = 0
             cronFile.writelines("0 * * * * root /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup" + "\n")
             cronFile.writelines("0 0 1 * * root /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup" + "\n")
             cronFile.writelines("0 2 * * * root /usr/local/CyberCP/plogical/upgradeCritical.py" + "\n")
-            cronFile.writelines("0 2 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/renew.py\n")
+            cronFile.writelines("0 2 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py\n")
             cronFile.close()
 
             command = 'chmod +x /usr/local/CyberCP/plogical/findBWUsage.py'
@@ -1970,7 +1970,7 @@ milter_default_action = accept
             command = "python3.6 -m venv /usr/local/CyberCP"
             preFlightsChecks.call(command, distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = "ln -s /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/bin/python"
+            command = "ln -s /usr/local/CyberCP/bin/python /usr/local/CyberCP/bin/python"
             preFlightsChecks.call(command, distro, command, command, 1, 0, os.EX_OSERR)
 
         except OSError as msg:
@@ -2146,12 +2146,12 @@ milter_default_action = accept
             data = open(cronTab, 'r').read()
 
             if data.find('IncScheduler') == -1:
-                cronJob = '0 12 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
+                cronJob = '0 12 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
 
                 writeToFile = open(cronTab, 'a')
                 writeToFile.writelines(cronJob)
 
-                cronJob = '0 0 * * 0 root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
+                cronJob = '0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
                 writeToFile.writelines(cronJob)
                 writeToFile.close()
         except:

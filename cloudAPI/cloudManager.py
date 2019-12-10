@@ -128,7 +128,7 @@ class CloudManager:
             ## bw usage calculation
 
             try:
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
                 execPath = execPath + " findDomainBW --virtualHostName " + self.data[
                     'domainName'] + " --bandwidth " + str(
                     website.package.bandwidth)
