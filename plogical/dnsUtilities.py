@@ -380,7 +380,7 @@ class DNS:
                 command = 'sudo systemctl restart pdns'
                 ProcessUtilities.executioner(command)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 "We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
 
@@ -416,7 +416,7 @@ class DNS:
                 command = 'sudo systemctl restart pdns'
                 ProcessUtilities.executioner(command)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 "We had errors while creating DKIM record for: " + domain + ". Error message: " + str(msg))
 
@@ -509,7 +509,7 @@ class DNS:
                 if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
                     command = 'sudo systemctl restart pdns'
                     ProcessUtilities.executioner(command)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDNSRecord]")
 
     @staticmethod

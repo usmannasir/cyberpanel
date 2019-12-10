@@ -1,5 +1,5 @@
 #!/usr/local/CyberCP/bin/python2
-from __future__ import division
+
 import os
 import os.path
 import sys
@@ -57,7 +57,7 @@ class ContainerManager(multi.Thread):
             elif self.function == 'restartGunicorn':
                 command = 'sudo systemctl restart gunicorn.socket'
                 ProcessUtilities.executioner(command)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile( str(msg) + ' [ContainerManager.run]')
 
     @staticmethod
@@ -68,7 +68,7 @@ class ContainerManager(multi.Thread):
                 return 0
             else:
                 return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0
 
@@ -87,7 +87,7 @@ class ContainerManager(multi.Thread):
 
             time.sleep(2)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
 
     def createContainer(self, request=None, userID=None, data=None):
@@ -123,7 +123,7 @@ class ContainerManager(multi.Thread):
                 for item in inspectImage['Config']['Env']:
                     if '=' in item:
                         splitedItem = item.split('=', 1)
-                        print splitedItem
+                        print(splitedItem)
                         envList[splitedItem[0]] = splitedItem[1]
                     else:
                         envList[item] = ""
@@ -142,7 +142,7 @@ class ContainerManager(multi.Thread):
 
             return render(request, 'dockerManager/runContainer.html', Data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def loadContainerHome(self, request=None, userID=None, data=None):
@@ -239,7 +239,7 @@ class ContainerManager(multi.Thread):
                                                                          "unlistedContainers": unlistedContainers,
                                                                          "adminNames": adminNames,
                                                                          "showUnlistedContainer": showUnlistedContainer})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def getContainerLogs(self, userID=None, data=None):
@@ -262,7 +262,7 @@ class ContainerManager(multi.Thread):
             return HttpResponse(json_data)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'containerLogStatus': 0, 'containerLog': 'Error', 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -290,7 +290,7 @@ class ContainerManager(multi.Thread):
 
             # Formatting envList for usage
             envDict = {}
-            for key, value in envList.iteritems():
+            for key, value in envList.items():
                 if (value['name'] != '') or (value['value'] != ''):
                     envDict[value['name']] = value['value']
 
@@ -304,7 +304,7 @@ class ContainerManager(multi.Thread):
                     portConfig[item] = data[item]
 
             volumes = {}
-            for index, volume in volList.iteritems():
+            for index, volume in volList.items():
                 volumes[volume['src']] = {'bind': volume['dest'],
                                              'mode': 'rw'}
 
@@ -325,7 +325,7 @@ class ContainerManager(multi.Thread):
                 container = client.containers.create(**containerArgs)
             except Exception as err:
                 if "port is already allocated" in err:  # We need to delete container if port is not available
-                    print "Deleting container"
+                    print("Deleting container")
                     container.remove(force=True)
                 data_ret = {'createContainerStatus': 0, 'error_message': str(err)}
                 json_data = json.dumps(data_ret)
@@ -348,7 +348,7 @@ class ContainerManager(multi.Thread):
             return HttpResponse(json_data)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'createContainerStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -376,7 +376,7 @@ class ContainerManager(multi.Thread):
 
             try:
                 image = client.images.pull(image, tag=tag)
-                print image.id
+                print(image.id)
             except docker.errors.APIError as msg:
                 data_ret = {'installImageStatus': 0, 'error_message': str(msg)}
                 json_data = json.dumps(data_ret)
@@ -387,7 +387,7 @@ class ContainerManager(multi.Thread):
             return HttpResponse(json_data)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'installImageStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -457,7 +457,7 @@ class ContainerManager(multi.Thread):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             if called:
                 return str(msg)
             else:
@@ -477,7 +477,7 @@ class ContainerManager(multi.Thread):
             final_dic = {'listContainerStatus': 1, 'error_message': "None", "data": json_data}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-        except BaseException, msg:
+        except BaseException as msg:
             dic = {'listContainerStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
@@ -551,7 +551,7 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'containerActionStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -581,7 +581,7 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'containerStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -611,7 +611,7 @@ class ContainerManager(multi.Thread):
             response['Content-Disposition'] = 'attachment; filename="' + name + '.tar"'
             return response
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'containerStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -647,7 +647,7 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'containerTopStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -688,7 +688,7 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'assignContainerStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -714,7 +714,7 @@ class ContainerManager(multi.Thread):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            print json.dumps(matches)
+            print(json.dumps(matches))
 
             for image in matches:
                 if "/" in image['name']:
@@ -726,7 +726,7 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'searchImageStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -763,7 +763,7 @@ class ContainerManager(multi.Thread):
                         getTag = tag.split(":")
                         if len(getTag) == 2:
                             tags.append(getTag[1])
-                    print tags
+                    print(tags)
                     if name in names:
                         images[name]['tags'].extend(tags)
                     else:
@@ -776,7 +776,7 @@ class ContainerManager(multi.Thread):
 
             return render(request, 'dockerManager/images.html', {"images": images, "test": ''})
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def manageImages(self, request=None, userID=None, data=None):
@@ -810,7 +810,7 @@ class ContainerManager(multi.Thread):
 
             return render(request, 'dockerManager/manageImages.html', {"images": images})
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def getImageHistory(self, userID=None, data=None):
@@ -836,7 +836,7 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'imageHistoryStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -857,7 +857,7 @@ class ContainerManager(multi.Thread):
                     action = client.images.prune()
                 else:
                     action = client.images.remove(name)
-                print action
+                print(action)
             except docker.errors.APIError as err:
                 data_ret = {'removeImageStatus': 0, 'error_message': str(err)}
                 json_data = json.dumps(data_ret)
@@ -871,7 +871,7 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -917,7 +917,7 @@ class ContainerManager(multi.Thread):
             con.save()
 
             return 0
-        except BaseException, msg:
+        except BaseException as msg:
             return str(msg)
 
     def saveContainerSettings(self, userID=None, data=None):
@@ -967,12 +967,12 @@ class ContainerManager(multi.Thread):
             if 'envConfirmation' in data and data['envConfirmation']:
                 # Formatting envList for usage
                 envDict = {}
-                for key, value in envList.iteritems():
+                for key, value in envList.items():
                     if (value['name'] != '') or (value['value'] != ''):
                         envDict[value['name']] = value['value']
 
                 volumes = {}
-                for index, volume in volList.iteritems():
+                for index, volume in volList.items():
                     if volume['src'] == '' or volume['dest'] == '':
                         continue
                     volumes[volume['src']] = {'bind': volume['dest'],
@@ -1003,7 +1003,7 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'saveSettingsStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1053,7 +1053,7 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'recreateContainerStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1073,7 +1073,7 @@ class ContainerManager(multi.Thread):
             else:
                 image2 = "library/" + image
 
-            print image
+            print(image)
             registryData = requests.get('https://registry.hub.docker.com/v2/repositories/' + image2 + '/tags',
                                         {'page': page}).json()
 
@@ -1084,7 +1084,7 @@ class ContainerManager(multi.Thread):
             data_ret = {'getTagsStatus': 1, 'list': tagList, 'next': registryData['next'], 'error_message': None}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'getTagsStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)

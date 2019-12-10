@@ -34,7 +34,7 @@ class policyCTRL:
             pid = open(path, "r").readlines()[0]
             try:
                 os.kill(int(pid), signal.SIGTERM)
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.writeToFile(str(msg))
 
 

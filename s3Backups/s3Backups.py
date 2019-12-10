@@ -50,7 +50,7 @@ class S3Backups(multi.Thread):
                 self.runAWSBackups()
             elif self.function == 'forceRunAWSBackupMINIO':
                 self.forceRunAWSBackupMINIO()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [S3Backups.run]')
 
     @staticmethod
@@ -131,7 +131,7 @@ class S3Backups(multi.Thread):
                 os.remove(tempPath)
             except:
                 pass
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [S3Backups.setupCron]")
 
     def connectAccount(self):
@@ -164,7 +164,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -215,7 +215,7 @@ class S3Backups(multi.Thread):
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -242,7 +242,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [createPlan]')
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
@@ -281,7 +281,7 @@ class S3Backups(multi.Thread):
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -301,7 +301,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -336,7 +336,7 @@ class S3Backups(multi.Thread):
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -357,7 +357,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -382,7 +382,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -412,7 +412,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None, data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajaxPre(0, str(msg))
 
@@ -516,7 +516,7 @@ class S3Backups(multi.Thread):
                         ]
                     }
                 )
-            except BaseException, msg:
+            except BaseException as msg:
                 BackupLogs(owner=plan, timeStamp=time.strftime("%b %d %Y, %H:%M:%S"), level='ERROR',
                            msg=str(msg)).save()
 
@@ -558,7 +558,7 @@ class S3Backups(multi.Thread):
 
             BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
                        msg='Backup Process Finished.').save()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [S3Backups.runBackupPlan]')
             plan = BackupPlan.objects.get(name=self.data['planName'])
             BackupLogs(owner=plan, timeStamp=time.strftime("%b %d %Y, %H:%M:%S"), level='ERROR', msg=str(msg)).save()
@@ -593,7 +593,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -641,7 +641,7 @@ class S3Backups(multi.Thread):
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg))
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
@@ -672,7 +672,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [createPlanDO]')
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
@@ -711,7 +711,7 @@ class S3Backups(multi.Thread):
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -731,7 +731,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -766,7 +766,7 @@ class S3Backups(multi.Thread):
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -796,7 +796,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None, data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajaxPre(0, str(msg))
 
@@ -817,7 +817,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -843,7 +843,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -898,7 +898,7 @@ class S3Backups(multi.Thread):
                         ]
                     }
                 )
-            except BaseException, msg:
+            except BaseException as msg:
                 BackupLogsDO(owner=plan, timeStamp=time.strftime("%b %d %Y, %H:%M:%S"), level='ERROR',
                              msg=str(msg)).save()
 
@@ -939,7 +939,7 @@ class S3Backups(multi.Thread):
 
             BackupLogsDO(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
                          msg='Backup Process Finished.').save()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [S3Backups.forceRunAWSBackupDO]')
             plan = BackupPlanDO.objects.get(name=self.data['planName'])
             BackupLogsDO(owner=plan, timeStamp=time.strftime("%b %d %Y, %H:%M:%S"), level='ERROR', msg=str(msg)).save()
@@ -965,7 +965,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [addMINIONode]')
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
@@ -1001,7 +1001,7 @@ class S3Backups(multi.Thread):
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -1021,7 +1021,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -1051,7 +1051,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [createPlanDO]')
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
@@ -1090,7 +1090,7 @@ class S3Backups(multi.Thread):
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -1110,7 +1110,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -1136,7 +1136,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -1166,7 +1166,7 @@ class S3Backups(multi.Thread):
 
             try:
                 client.create_bucket(Bucket=plan.name.lower())
-            except BaseException, msg:
+            except BaseException as msg:
                 BackupLogsMINIO(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
                                 msg=str(msg)).save()
                 return 0
@@ -1208,7 +1208,7 @@ class S3Backups(multi.Thread):
 
             BackupLogsMINIO(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
                             msg='Backup Process Finished.').save()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [S3Backups.forceRunAWSBackupMINIO]')
             plan = BackupPlanMINIO.objects.get(name=self.data['planName'])
             BackupLogsMINIO(owner=plan, timeStamp=time.strftime("%b %d %Y, %H:%M:%S"), level='ERROR',
@@ -1245,7 +1245,7 @@ class S3Backups(multi.Thread):
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -1275,7 +1275,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None, data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajaxPre(0, str(msg))
 
@@ -1296,7 +1296,7 @@ class S3Backups(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
 
@@ -1374,7 +1374,7 @@ class S3Backups(multi.Thread):
                             self.data['planName'] = plan.name
                             self.forceRunAWSBackupMINIO()
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [S3Backups.runAWSBackups]')
 
 

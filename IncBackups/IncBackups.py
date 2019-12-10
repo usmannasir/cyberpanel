@@ -155,7 +155,7 @@ class IncJobs(multi.Thread):
 
                 metaFileXML.append(dnsRecordsXML)
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.statusWriter(self.statusPath, '%s. [158:prepMeta]' % (str(msg)), 1)
 
             ## Email accounts XML
@@ -176,7 +176,7 @@ class IncJobs(multi.Thread):
                     emailRecordsXML.append(emailRecordXML)
 
                 metaFileXML.append(emailRecordsXML)
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.writeToFile(self.statusPath, '%s. [warning:179:prepMeta]' % (str(msg)), 1)
 
             ## Email meta generated!
@@ -196,7 +196,7 @@ class IncJobs(multi.Thread):
             metaFile = open(metaPath, 'w')
             metaFile.write(xmlpretty)
             metaFile.close()
-            os.chmod(metaPath, 0640)
+            os.chmod(metaPath, 0o640)
 
             ## meta generated
 
@@ -211,7 +211,7 @@ class IncJobs(multi.Thread):
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [207][5009]" % (str(msg)), 1)
             return 0
 
@@ -239,7 +239,7 @@ class IncJobs(multi.Thread):
 
             logging.statusWriter(self.statusPath, 'Data for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath,'%s. [IncJobs.backupData.223][5009]' % str(msg), 1)
             return 0
 
@@ -271,7 +271,7 @@ class IncJobs(multi.Thread):
                                                destination=self.backupDestinations)
                     newSnapshot.save()
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath,'%s. [IncJobs.backupDatabases.269][5009]' % str(msg), 1)
             return 0
 
@@ -304,7 +304,7 @@ class IncJobs(multi.Thread):
 
             logging.statusWriter(self.statusPath, 'Emails for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath,'%s. [IncJobs.backupDatabases.269][5009]' % str(msg), 1)
             return 0
 
@@ -323,7 +323,7 @@ class IncJobs(multi.Thread):
 
             logging.statusWriter(self.statusPath, 'Repo %s initiated for %s.' % (self.backupDestinations, self.website.domain), 1)
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath,'%s. [IncJobs.initiateRepo.47][5009]' % str(msg), 1)
             return 0
 

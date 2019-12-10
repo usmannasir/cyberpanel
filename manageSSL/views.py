@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render, redirect
 from loginSystem.views import loadLoginPage
@@ -102,7 +102,7 @@ def issueSSL(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, "SSL": 0,
                         'error_message': str(msg)}
             json_data = json.dumps(data_ret)
@@ -180,7 +180,7 @@ def obtainHostNameSSL(request):
 
                     ## ssl issue ends
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {"status": 0, "SSL": 0,
                         'error_message': str(msg)}
             json_data = json.dumps(data_ret)
@@ -258,12 +258,12 @@ def obtainMailServerSSL(request):
                     ## ssl issue ends
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {"status": 0, "SSL": 0,
                         'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-    except KeyError, msg:
+    except KeyError as msg:
         data_ret = {"status": 0, "SSL": 0,
                     'error_message': str(msg)}
         json_data = json.dumps(data_ret)

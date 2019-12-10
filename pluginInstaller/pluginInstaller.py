@@ -16,11 +16,11 @@ class pluginInstaller:
     @staticmethod
     def stdOut(message):
         print("\n\n")
-        print ("[" + time.strftime(
-            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n")
-        print("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n")
-        print ("[" + time.strftime(
-            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n")
+        print(("[" + time.strftime(
+            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
+        print(("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n"))
+        print(("[" + time.strftime(
+            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
 
     ### Functions Related to plugin installation.
 
@@ -186,7 +186,7 @@ class pluginInstaller:
 
             pluginInstaller.stdOut('Plugin successfully installed.')
 
-        except BaseException, msg:
+        except BaseException as msg:
             pluginInstaller.stdOut(str(msg))
 
     ### Functions Related to plugin installation.
@@ -280,7 +280,7 @@ class pluginInstaller:
 
             pluginInstaller.stdOut('Plugin successfully removed.')
 
-        except BaseException, msg:
+        except BaseException as msg:
             pluginInstaller.stdOut(str(msg))
 
     ####

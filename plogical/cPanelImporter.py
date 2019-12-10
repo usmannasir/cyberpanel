@@ -139,7 +139,7 @@ class cPanelImporter:
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             message = 'Failed to extract backup for file %s, error message: %s. [ExtractBackup]' % (
             self.backupFile, str(msg))
             logging.statusWriter(self.logFile, message, 1)
@@ -219,8 +219,8 @@ class cPanelImporter:
                     tWeb = Websites.objects.get(externalApp=self.externalApp)
                     self.externalApp = '%s%s' % (tWeb.externalApp, str(counter))
                     counter = counter + 1
-                    print self.externalApp
-            except BaseException, msg:
+                    print(self.externalApp)
+            except BaseException as msg:
                 logging.statusWriter(self.logFile, str(msg), 1)
                 time.sleep(2)
 
@@ -291,7 +291,7 @@ class cPanelImporter:
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             message = 'Failed to create main website from backup file %s, error message: %s.' % (
             self.backupFile, str(msg))
             logging.statusWriter(self.logFile, message, 1)
@@ -354,7 +354,7 @@ class cPanelImporter:
             logging.statusWriter(self.logFile, message, 1)
 
             for items in Domains:
-                print items.domain
+                print(items.domain)
 
             ## Starting Child-domains creation
 
@@ -469,13 +469,13 @@ class cPanelImporter:
 
                     message = 'Successfully created child domain.'
                     logging.statusWriter(self.logFile, message, 1)
-                except BaseException, msg:
+                except BaseException as msg:
                     message = 'Failed to create child domain from backup file %s, error message: %s. Moving on..' % (
                         self.backupFile, str(msg))
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             message = 'Failed to create child domain from backup file %s, error message: %s.' % (
             self.backupFile, str(msg))
             logging.statusWriter(self.logFile, message, 1)
@@ -578,7 +578,7 @@ class cPanelImporter:
                                     else:
                                         DNS.createDNSRecord(zone, RecordsData[0] + '.' + topLevelDomain , RecordsData[3], RecordsData[4].rstrip('.').rstrip('.\n'), 0,
                                                             RecordsData[1])
-                    except BaseException, msg:
+                    except BaseException as msg:
                         message = 'Failed while creating DNS entry for %s, error message: %s.' % (topLevelDomain, str(msg))
                         logging.statusWriter(self.logFile, message, 1)
 
@@ -587,7 +587,7 @@ class cPanelImporter:
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             message = 'Failed to create DNS records from file %s, error message: %s.' % (
             self.backupFile, str(msg))
             logging.statusWriter(self.logFile, message, 1)
@@ -607,7 +607,7 @@ class cPanelImporter:
 
             return conn, cursor
 
-        except BaseException, msg:
+        except BaseException as msg:
             message = 'Failed to connect to database, error message: %s. [ExtractBackup]' % (str(msg))
             logging.statusWriter(self.logFile, message, 1)
             return 0, 0
@@ -642,7 +642,7 @@ class cPanelImporter:
 
                     try:
                         cursor.execute("CREATE DATABASE `%s`" % (items.replace('.sql', '')))
-                    except BaseException, msg:
+                    except BaseException as msg:
                         message = 'Failed while restoring database %s from backup file %s, error message: %s' % (items.replace('.sql', ''), self.backupFile, str(msg))
                         logging.statusWriter(self.logFile, message, 1)
 
@@ -694,7 +694,7 @@ class cPanelImporter:
                     continue
                 try:
                     cursor.execute(items)
-                except BaseException, msg:
+                except BaseException as msg:
                     message = 'Failed while restoring database %s from backup file %s, error message: %s' % (
                     items.replace('.sql', ''), self.backupFile, str(msg))
                     logging.statusWriter(self.logFile, message, 1)
@@ -706,7 +706,7 @@ class cPanelImporter:
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             message = 'Failed to retore databases from file %s, error message: %s.' % (
             self.backupFile, str(msg))
             logging.statusWriter(self.logFile, message, 1)
@@ -869,7 +869,7 @@ class cPanelImporter:
 
                                 message = 'Restore completed for %s.' % (finalEmailUsername)
                                 logging.statusWriter(self.logFile, message, 1)
-                            except BaseException, msg:
+                            except BaseException as msg:
                                 message = 'Failed to restore emails from archive file %s, For domain: %s. error message: %s. [ExtractBackup]' % (
                                     self.backupFile, items, str(msg))
                                 logging.statusWriter(self.logFile, message, 1)
@@ -883,7 +883,7 @@ class cPanelImporter:
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             message = 'Failed to restore emails from archive file %s, error message: %s. [ExtractBackup]' % (
             self.backupFile, str(msg))
             logging.statusWriter(self.logFile, message, 1)

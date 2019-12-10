@@ -13,10 +13,10 @@ class FirewallUtilities:
                 inst.preFlightsChecks.stdOut("Failed to apply rule: " + command + " Error #" + str(res), 1)
                 return 0
 
-        except OSError, msg:
+        except OSError as msg:
             inst.preFlightsChecks.stdOut("Failed to apply rule: " + command + " Error: " + str(msg), 1)
             return 0
-        except ValueError, msg:
+        except ValueError as msg:
             inst.preFlightsChecks.stdOut("Failed to apply rule: " + command + " Error: " + str(msg), 1)
             return 0
 

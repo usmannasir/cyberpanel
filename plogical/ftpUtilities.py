@@ -34,15 +34,15 @@ class FTPUtilities:
 
             res = subprocess.call(cmd)
             if res == 1:
-                print "Permissions not changed."
+                print("Permissions not changed.")
             else:
-                print "User permissions setted."
+                print("User permissions setted.")
 
             query = "INSERT INTO ftp_ftpuser (userid,passwd,homedir) VALUES ('" + username + "'" +","+"'"+password+"'"+","+"'"+path+"'"+");"
-            print query
+            print(query)
             sql.mysqlUtilities.SendQuery(udb,upass, "ftp", query)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + " [createNewFTPAccount]")
             return 0
@@ -61,10 +61,10 @@ class FTPUtilities:
             res = subprocess.call(cmd)
 
             if res == 1:
-                print "Permissions not changed."
+                print("Permissions not changed.")
                 return 0
             else:
-                print "User permissions setted."
+                print("User permissions setted.")
 
 
 
@@ -79,7 +79,7 @@ class FTPUtilities:
             else:
                 return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + " [createNewFTPAccount]")
             return 0
@@ -95,7 +95,7 @@ class FTPUtilities:
 
             return 1,'None'
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [ftpFunctions]")
             return 0, str(msg)
@@ -140,7 +140,7 @@ class FTPUtilities:
                 path = "/home/" + domainName
 
             if os.path.islink(path):
-                print "0, %s file is symlinked." % (path)
+                print("0, %s file is symlinked." % (path))
                 return 0
 
             hash = hashlib.md5()
@@ -175,12 +175,12 @@ class FTPUtilities:
             else:
                 raise BaseException("Exceeded maximum amount of FTP accounts allowed for the package.")
 
-            print "1,None"
+            print("1,None")
             return 1,'None'
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [submitFTPCreation]")
-            print "0,"+str(msg)
+            print("0,"+str(msg))
             return 0, str(msg)
 
     @staticmethod
@@ -189,7 +189,7 @@ class FTPUtilities:
             ftp = Users.objects.get(user=ftpUsername)
             ftp.delete()
             return 1,'None'
-        except BaseException, msg:
+        except BaseException as msg:
             return 0, str(msg)
 
     @staticmethod
@@ -203,7 +203,7 @@ class FTPUtilities:
             ftp.save()
 
             return 1, None
-        except BaseException, msg:
+        except BaseException as msg:
             return 0,str(msg)
 
     @staticmethod

@@ -20,7 +20,7 @@ class CLinuxPackages:
             try:
                 clPackage = CLPackages.objects.get(owner=itemPackage)
                 statement = '%s %s' % (pwd.getpwnam(items.externalApp).pw_uid, clPackage.name)
-                print statement
+                print(statement)
             except:
                 pass
 
@@ -28,7 +28,7 @@ class CLinuxPackages:
     @staticmethod
     def listPackages():
         for items in CLPackages.objects.all():
-            print items.name
+            print(items.name)
 
     @staticmethod
     def userIDPackage(user):
@@ -36,7 +36,7 @@ class CLinuxPackages:
         itemPackage = website.package
         try:
             clPackage = CLPackages.objects.get(owner=itemPackage)
-            print clPackage
+            print(clPackage)
         except:
             pass
 
@@ -48,7 +48,7 @@ class CLinuxPackages:
             try:
                 clPackage = CLPackages.objects.get(owner=itemPackage)
                 if clPackage.name == package:
-                    print pwd.getpwnam(items.externalApp).pw_uid
+                    print(pwd.getpwnam(items.externalApp).pw_uid)
             except:
                 pass
 

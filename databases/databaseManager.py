@@ -22,13 +22,13 @@ class DatabaseManager:
     def loadDatabaseHome(self, request = None, userID = None):
         try:
             return render(request, 'databases/index.html')
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def phpMyAdmin(self, request = None, userID = None):
         try:
             return render(request, 'databases/phpMyAdmin.html')
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def createDatabase(self, request = None, userID = None):
@@ -40,7 +40,7 @@ class DatabaseManager:
             websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'databases/createDatabase.html', {'websitesList': websitesName})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def submitDBCreation(self, userID = None, data = None, rAPI = None):
@@ -76,7 +76,7 @@ class DatabaseManager:
                 data_ret = {'status': 0, 'createDBStatus': 0, 'error_message': result[1]}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'createDBStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -91,7 +91,7 @@ class DatabaseManager:
             websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'databases/deleteDatabase.html', {'websitesList': websitesName})
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
 
@@ -132,7 +132,7 @@ class DatabaseManager:
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
 
             return HttpResponse(final_json)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': str(msg)})
             return HttpResponse(final_json)
@@ -163,7 +163,7 @@ class DatabaseManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -177,7 +177,7 @@ class DatabaseManager:
             websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'databases/listDataBases.html', {'websiteList': websitesName})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def changePassword(self, userID = None, data = None):
@@ -210,7 +210,7 @@ class DatabaseManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'changePasswordStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -238,10 +238,10 @@ class DatabaseManager:
                 for db in webs.databases_set.all():
                     mysqlUtilities.allowGlobalUserAccess(admin.userName, db.dbName)
 
-            print "1," + finalUserPassword
+            print("1," + finalUserPassword)
 
-        except BaseException, msg:
-            print "0," + str(msg)
+        except BaseException as msg:
+            print("0," + str(msg))
 
 def main():
 

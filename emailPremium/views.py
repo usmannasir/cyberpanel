@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
@@ -13,7 +13,7 @@ import json
 from .models import DomainLimits, EmailLimits
 from math import ceil
 from postfixSenderPolicy.client import cacheClient
-import thread
+import _thread
 from plogical.mailUtilities import mailUtilities
 from plogical.virtualHostUtilities import virtualHostUtilities
 from random import randint
@@ -67,12 +67,12 @@ def fetchPolicyServerStatus(request):
                 return HttpResponse(json_data)
 
 
-        except BaseException,msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    except KeyError,msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
@@ -115,12 +115,12 @@ def savePolicyServerStatus(request):
                     return HttpResponse(json_data)
 
 
-        except BaseException,msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    except KeyError,msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
@@ -174,7 +174,7 @@ def listDomains(request):
 
             return render(request,'emailPremium/listDomains.html',{"pagination":pagination, "installCheck": installCheck})
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse("See CyberCP main log file.")
 
@@ -200,7 +200,7 @@ def getFurtherDomains(request):
                     status = data['page']
                     pageNumber = int(status)
 
-                except BaseException, msg:
+                except BaseException as msg:
                     status = str(msg)
 
             finalPageNumber = ((pageNumber * 10)) - 10
@@ -224,7 +224,7 @@ def getFurtherDomains(request):
                         checker = 1
                     else:
                         json_data = json_data +',' + json.dumps(dic)
-                except BaseException, msg:
+                except BaseException as msg:
                     try:
                         domain = Domains.objects.get(domainOwner=items)
                     except:
@@ -249,13 +249,13 @@ def getFurtherDomains(request):
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-        except BaseException,msg:
+        except BaseException as msg:
             dic = {'listWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
 
-    except KeyError,msg:
+    except KeyError as msg:
         dic = {'listWebSiteStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
@@ -292,13 +292,13 @@ def enableDisableEmailLimits(request):
                 json_data = json.dumps(dic)
                 return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             dic = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
 
-    except KeyError,msg:
+    except KeyError as msg:
         dic = {'statusa': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
@@ -385,13 +385,13 @@ def changeDomainLimit(request):
                 json_data = json.dumps(dic)
                 return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             dic = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
 
-    except KeyError,msg:
+    except KeyError as msg:
         dic = {'statusa': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
@@ -435,7 +435,7 @@ def getFurtherEmail(request):
                             checker = 1
                         else:
                             json_data = json_data +',' + json.dumps(dic)
-                    except BaseException, msg:
+                    except BaseException as msg:
                         logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
                 json_data = json_data + ']'
@@ -445,13 +445,13 @@ def getFurtherEmail(request):
 
                 return HttpResponse(final_json)
 
-        except BaseException,msg:
+        except BaseException as msg:
             dic = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
 
-    except KeyError,msg:
+    except KeyError as msg:
         dic = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
@@ -484,12 +484,12 @@ def enableDisableIndividualEmailLimits(request):
                 json_data = json.dumps(dic)
                 return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             dic = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
-    except KeyError,msg:
+    except KeyError as msg:
         dic = {'statusa': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
@@ -558,13 +558,13 @@ def getEmailStats(request):
 
                 return HttpResponse(final_json)
 
-        except BaseException,msg:
+        except BaseException as msg:
             dic = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
 
-    except KeyError,msg:
+    except KeyError as msg:
         dic = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
@@ -597,12 +597,12 @@ def enableDisableIndividualEmailLogs(request):
                 json_data = json.dumps(dic)
                 return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             dic = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
-    except KeyError,msg:
+    except KeyError as msg:
         dic = {'statusa': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
@@ -668,13 +668,13 @@ def changeDomainEmailLimitsIndividual(request):
                 json_data = json.dumps(dic)
                 return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             dic = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
 
-    except KeyError,msg:
+    except KeyError as msg:
         dic = {'statusa': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
@@ -722,13 +722,13 @@ def getEmailLogs(request):
 
                 return HttpResponse(final_json)
 
-        except BaseException,msg:
+        except BaseException as msg:
             dic = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
 
-    except KeyError,msg:
+    except KeyError as msg:
         dic = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
@@ -757,12 +757,12 @@ def flushEmailLogs(request):
                 json_data = json.dumps(dic)
                 return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             dic = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
-    except KeyError,msg:
+    except KeyError as msg:
         dic = {'statusa': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
@@ -807,7 +807,7 @@ def installSpamAssassin(request):
 
             final_json = json.dumps({'status': 1, 'error_message': "None"})
             return HttpResponse(final_json)
-        except BaseException,msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -865,7 +865,7 @@ def installStatusSpamAssassin(request):
                                              'requestStatus': installStatus,
                                              })
                     return HttpResponse(final_json)
-        except BaseException,msg:
+        except BaseException as msg:
             final_dic = {'abort':1,'installed':0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -942,7 +942,7 @@ def fetchSpamAssassinSettings(request):
                 return HttpResponse(final_json)
 
 
-        except BaseException,msg:
+        except BaseException as msg:
             final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1011,12 +1011,12 @@ def saveSpamAssassinConfigurations(request):
                     return HttpResponse(json_data)
 
 
-        except BaseException,msg:
+        except BaseException as msg:
             data_ret = {'saveStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    except KeyError,msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         data_ret = {'saveStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)

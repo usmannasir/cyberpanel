@@ -47,7 +47,7 @@ class FTPManager:
 
             return render(self.request, 'ftp/createFTPAccount.html',
                           {'websiteList': websitesName, 'admin': admin.userName, "status": 1})
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
 
@@ -100,7 +100,7 @@ class FTPManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'creatFTPStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -120,7 +120,7 @@ class FTPManager:
             websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(self.request, 'ftp/deleteFTPAccount.html', {'websiteList': websitesName, "status": 1})
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
 
@@ -161,7 +161,7 @@ class FTPManager:
             final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -188,7 +188,7 @@ class FTPManager:
             final_json = json.dumps({'status': 1, 'deleteStatus': 1, 'error_message': "None"})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -207,7 +207,7 @@ class FTPManager:
             websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(self.request, 'ftp/listFTPAccounts.html', {'websiteList': websitesName, "status": 1})
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
 
@@ -252,7 +252,7 @@ class FTPManager:
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -282,7 +282,7 @@ class FTPManager:
             data_ret = {'status': 1, 'changePasswordStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'changePasswordStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)

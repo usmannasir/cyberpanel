@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render,redirect
 from loginSystem.views import loadLoginPage
@@ -43,7 +43,7 @@ def accessLogs(request):
 
         return render(request,'serverLogs/accessLogs.html')
 
-    except KeyError,msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[accessLogs]")
         return redirect(loadLoginPage)
 
@@ -60,7 +60,7 @@ def errorLogs(request):
 
         return render(request,'serverLogs/errorLogs.html')
 
-    except KeyError,msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[accessLogs]")
         return redirect(loadLoginPage)
 
@@ -76,7 +76,7 @@ def ftplogs(request):
 
         return render(request,'serverLogs/ftplogs.html')
 
-    except KeyError,msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[accessLogs]")
         return redirect(loadLoginPage)
 
@@ -93,7 +93,7 @@ def emailLogs(request):
 
         return render(request,'serverLogs/emailLogs.html')
 
-    except KeyError,msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[accessLogs]")
         return redirect(loadLoginPage)
 
@@ -109,7 +109,7 @@ def modSecAuditLogs(request):
 
         return render(request,'serverLogs/modSecAuditLog.html')
 
-    except KeyError,msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[accessLogs]")
         return redirect(loadLoginPage)
 
@@ -156,7 +156,7 @@ def getLogsFromFile(request):
             final_json = json.dumps(status)
             return HttpResponse(final_json)
 
-    except KeyError, msg:
+    except KeyError as msg:
         status = {"status": 0, "logstatus":0,"error":"Could not fetch data from log file, please see CyberCP main log file through command line."}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[getLogsFromFile]")
         final_json = json.dumps(status)
@@ -193,12 +193,12 @@ def clearLogFile(request):
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             data_ret = {'cleanStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    except KeyError,msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         data_ret = {'cleanStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)

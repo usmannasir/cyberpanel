@@ -13,7 +13,7 @@ class CyberCPLogFileWriter:
                     "%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n")
             file.close()
 
-        except IOError,msg:
+        except IOError as msg:
             return "Can not write to error file."
 
     @staticmethod
@@ -35,7 +35,7 @@ class CyberCPLogFileWriter:
 
             return lastFewLines
 
-        except subprocess.CalledProcessError,msg:
+        except subprocess.CalledProcessError as msg:
             return "File was empty"
 
     @staticmethod
@@ -47,8 +47,8 @@ class CyberCPLogFileWriter:
                 statusFile = open(tempStatusPath, 'a')
             statusFile.writelines(mesg + '\n')
             statusFile.close()
-            print(mesg + '\n')
-        except BaseException, msg:
+            print((mesg + '\n'))
+        except BaseException as msg:
             CyberCPLogFileWriter.writeToFile(str(msg) + ' [statusWriter]')
             #print str(msg)
 

@@ -26,11 +26,11 @@ class Upgrade:
     @staticmethod
     def stdOut(message, do_exit=0):
         print("\n\n")
-        print ("[" + time.strftime(
-            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n")
-        print("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n")
-        print ("[" + time.strftime(
-            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n")
+        print(("[" + time.strftime(
+            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
+        print(("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n"))
+        print(("[" + time.strftime(
+            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
 
         if do_exit:
             os._exit(0)
@@ -123,7 +123,7 @@ class Upgrade:
             writeToFile.writelines(varTmp)
             writeToFile.close()
 
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [mountTemp]", 0)
 
     @staticmethod
@@ -232,7 +232,7 @@ class Upgrade:
 
             ## Write secret phrase
 
-            rString = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])
+            rString = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)])
 
             data = open('phpmyadmin/config.sample.inc.php', 'r').readlines()
 
@@ -253,7 +253,7 @@ class Upgrade:
 
             os.chdir(cwd)
 
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [download_install_phpmyadmin]", 0)
 
     @staticmethod
@@ -401,7 +401,7 @@ class Upgrade:
 
             os.chdir(cwd)
 
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [downoad_and_install_raindloop]", 0)
 
         return 1
@@ -425,7 +425,7 @@ class Upgrade:
                 pass
 
             return (version_number + "." + version_build + ".tar.gz")
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg) + ' [downloadLink]')
             os._exit(0)
 
@@ -456,7 +456,7 @@ class Upgrade:
             env_path = '/usr/local/CyberCP'
             subprocess.call(['virtualenv', env_path])
             activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
-            execfile(activate_this, dict(__file__=activate_this))
+            exec(compile(open(activate_this, "rb").read(), activate_this, 'exec'), dict(__file__=activate_this))
 
             ##
 
@@ -467,7 +467,7 @@ class Upgrade:
             Upgrade.executioner(command, 'Setting up VirtualEnv [Two]', 0)
 
             Upgrade.stdOut('Virtual enviroment for CyberPanel successfully installed.')
-        except OSError, msg:
+        except OSError as msg:
             Upgrade.stdOut(str(msg) + " [setupVirtualEnv]", 0)
 
     @staticmethod
@@ -499,7 +499,7 @@ class Upgrade:
             command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
             Upgrade.executioner(command, 'CLI Permissions', 0)
 
-        except OSError, msg:
+        except OSError as msg:
             Upgrade.stdOut(str(msg) + " [setupCLI]")
             return 0
 
@@ -559,7 +559,7 @@ class Upgrade:
             cursor = conn.cursor()
             return conn, cursor
 
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg))
             return 0, 0
 
@@ -661,7 +661,7 @@ class Upgrade:
             except:
                 pass
 
-        except OSError, msg:
+        except OSError as msg:
             Upgrade.stdOut(str(msg) + " [applyLoginSystemMigrations]")
 
     @staticmethod
@@ -847,7 +847,7 @@ class Upgrade:
             except:
                 pass
 
-        except OSError, msg:
+        except OSError as msg:
             Upgrade.stdOut(str(msg) + " [applyLoginSystemMigrations]")
 
     @staticmethod
@@ -1315,7 +1315,7 @@ class Upgrade:
                 command = 'sudo yum install git -y'
                 Upgrade.executioner(command, 'installGit', 0)
 
-        except BaseException, msg:
+        except BaseException as msg:
             pass
 
     @staticmethod
@@ -1497,7 +1497,7 @@ CSRF_COOKIE_SECURE = True
         try:
             command = "pip install pydns"
             Upgrade.executioner(command, 'Install PyDNS', 1)
-        except OSError, msg:
+        except OSError as msg:
             Upgrade.stdOut(str(msg) + " [installPYDNS]")
             return 0
 
@@ -1508,7 +1508,7 @@ CSRF_COOKIE_SECURE = True
             Upgrade.executioner(command, 'Install tldextract', 1)
             command = "pip install bcrypt"
             Upgrade.executioner(command, 'Install tldextract', 1)
-        except OSError, msg:
+        except OSError as msg:
             Upgrade.stdOut(str(msg) + " [installTLDExtract]")
             return 0
 
@@ -1563,7 +1563,7 @@ CSRF_COOKIE_SECURE = True
 
             Upgrade.stdOut("LSCPD successfully installed!")
 
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [installLSCPD]")
 
     @staticmethod
@@ -1692,7 +1692,7 @@ CSRF_COOKIE_SECURE = True
 
             Upgrade.stdOut("Permissions updated.")
 
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [installLSCPD]")
 
     @staticmethod
@@ -1916,7 +1916,7 @@ failovermethod=priority
 
             Upgrade.stdOut("Dovecot upgraded.")
 
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [upgradeDovecot]")
 
     @staticmethod
@@ -1974,7 +1974,7 @@ failovermethod=priority
             env_path = '/usr/local/CyberPanel/p3'
             subprocess.call(['virtualenv', env_path])
             activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
-            execfile(activate_this, dict(__file__=activate_this))
+            exec(compile(open(activate_this, "rb").read(), activate_this, 'exec'), dict(__file__=activate_this))
 
             command = "pip3 install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
             Upgrade.executioner(command, 0)
@@ -1995,7 +1995,7 @@ failovermethod=priority
             env_path = '/usr/local/CyberPanel/p3'
             subprocess.call(['virtualenv', env_path])
             activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
-            execfile(activate_this, dict(__file__=activate_this))
+            exec(compile(open(activate_this, "rb").read(), activate_this, 'exec'), dict(__file__=activate_this))
 
             command = "pip3 install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
             Upgrade.executioner(command, 0)

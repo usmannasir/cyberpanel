@@ -57,7 +57,7 @@ class vhost:
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [addingUsers]")
 
     @staticmethod
@@ -83,7 +83,7 @@ class vhost:
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-            except OSError, msg:
+            except OSError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [27 Not able create to directories for virtual host [createDirectories]]")
                 return [0, "[27 Not able to directories for virtual host [createDirectories]]"]
@@ -95,7 +95,7 @@ class vhost:
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-            except OSError, msg:
+            except OSError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [33 Not able to directories for virtual host [createDirectories]]")
                 return [0, "[33 Not able to directories for virtual host [createDirectories]]"]
@@ -121,7 +121,7 @@ class vhost:
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-            except OSError, msg:
+            except OSError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [39 Not able to directories for virtual host [createDirectories]]")
                 return [0, "[39 Not able to directories for virtual host [createDirectories]]"]
@@ -129,7 +129,7 @@ class vhost:
             try:
                 ## For configuration files permissions will be changed later globally.
                 os.makedirs(confPath)
-            except OSError, msg:
+            except OSError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [45 Not able to directories for virtual host [createDirectories]]")
                 return [0, "[45 Not able to directories for virtual host [createDirectories]]"]
@@ -146,13 +146,13 @@ class vhost:
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-            except IOError, msg:
+            except IOError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectories]]")
                 return [0, "[45 Not able to directories for virtual host [createDirectories]]"]
 
             return [1, 'None']
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectories]")
             return [0, str(msg)]
 
@@ -174,7 +174,7 @@ class vhost:
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [finalizeVhostCreation]")
 
     @staticmethod
@@ -232,7 +232,7 @@ class vhost:
                 confFile.write(currentConf)
                 confFile.close()
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [IO Error with per host config file [perHostVirtualConf]]")
                 return 0
@@ -252,7 +252,7 @@ class vhost:
                 confFile.write(currentConf)
 
                 confFile.close()
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [IO Error with per host config file [perHostVirtualConf]]")
                 return 0
@@ -277,7 +277,7 @@ class vhost:
                     writeDataToFile.writelines(items)
 
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0
 
@@ -298,7 +298,7 @@ class vhost:
                 writeDataToFile.close()
 
                 return [1,"None"]
-            except BaseException,msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + "223 [IO Error with main config file [createConfigInMainVirtualHostFile]]")
                 return [0,"223 [IO Error with main config file [createConfigInMainVirtualHostFile]]"]
         else:
@@ -310,7 +310,7 @@ class vhost:
 
                 writeDataToFile.close()
                 return [1, "None"]
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + "223 [IO Error with main config file [createConfigInMainVirtualHostFile]]")
                 return [0, "223 [IO Error with main config file [createConfigInMainVirtualHostFile]]"]
@@ -356,7 +356,7 @@ class vhost:
 
                 command = "sudo rm -rf /home/vmail/" + virtualHostName
                 subprocess.call(shlex.split(command))
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
                 return 0
             return 1
@@ -398,7 +398,7 @@ class vhost:
 
                 command = "sudo rm -rf /home/vmail/" + virtualHostName
                 subprocess.call(shlex.split(command))
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
                 return 0
@@ -451,7 +451,7 @@ class vhost:
 
                 ApacheVhost.DeleteApacheVhost(virtualHostName)
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
                 return 0
@@ -460,14 +460,14 @@ class vhost:
             virtualHostPath = "/home/" + virtualHostName
             try:
                 shutil.rmtree(virtualHostPath)
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [Not able to remove virtual host directory from /home continuing..]")
 
             try:
                 confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
                 shutil.rmtree(confPath)
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [Not able to remove virtual host configuration directory from /conf ]")
 
@@ -484,7 +484,7 @@ class vhost:
 
                 writeDataToFile.close()
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
                 return 0
@@ -507,7 +507,7 @@ class vhost:
                     php = PHPManager.getPHPString(phpVersion)
 
                     if not os.path.exists("/usr/local/lsws/lsphp" + str(php) + "/bin/lsphp"):
-                        print 0, 'This PHP version is not available on your CyberPanel.'
+                        print(0, 'This PHP version is not available on your CyberPanel.')
                         return [0, "[This PHP version is not available on your CyberPanel. [changePHP]"]
 
                     writeDataToFile = open(vhFile, "w")
@@ -535,12 +535,12 @@ class vhost:
                     command = "systemctl restart php%s-php-fpm" % (php)
                     ProcessUtilities.normalExecutioner(command)
 
-                print "1,None"
+                print("1,None")
                 return 1,'None'
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [IO Error with per host config file [changePHP]")
-                print 0,str(msg)
+                print(0,str(msg))
                 return [0, str(msg) + " [IO Error with per host config file [changePHP]"]
         else:
             try:
@@ -549,7 +549,7 @@ class vhost:
                 php = PHPManager.getPHPString(phpVersion)
 
                 if not os.path.exists("/usr/local/lsws/lsphp" + str(php) + "/bin/lsphp"):
-                    print 0, 'This PHP version is not available on your CyberPanel.'
+                    print(0, 'This PHP version is not available on your CyberPanel.')
                     return [0, "[This PHP version is not available on your CyberPanel. [changePHP]"]
 
                 writeDataToFile = open(vhFile, "w")
@@ -573,19 +573,19 @@ class vhost:
                 except:
                     pass
 
-                print "1,None"
+                print("1,None")
                 return 1, 'None'
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [IO Error with per host config file [changePHP]]")
-                print 0, str(msg)
+                print(0, str(msg))
                 return [0, str(msg) + " [IO Error with per host config file [changePHP]]"]
 
     @staticmethod
     def addRewriteRules(virtualHostName, fileName=None):
         try:
             pass
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [IO Error with per host config file [changePHP]]")
             return 0
 
@@ -599,7 +599,7 @@ class vhost:
                     return 1
             return 0
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + " [IO Error with per host config file [checkIfRewriteEnabled]]")
             return 0
@@ -610,12 +610,12 @@ class vhost:
             path = "/home/" + domainName + "/logs/" + domainName + ".access_log"
 
             if not os.path.exists("/home/" + domainName + "/logs"):
-                print "0,0"
+                print("0,0")
 
             bwmeta = "/home/" + domainName + "/logs/bwmeta"
 
             if not os.path.exists(path):
-                print "0,0"
+                print("0,0")
 
             if os.path.exists(bwmeta):
                 try:
@@ -630,20 +630,20 @@ class vhost:
                     percentage = float(100) / float(totalAllowed)
                     percentage = float(percentage) * float(inMB)
                 except:
-                    print "0,0"
+                    print("0,0")
 
                 if percentage > 100.0:
                     percentage = 100
 
-                print str(inMB) + "," + str(percentage)
+                print(str(inMB) + "," + str(percentage))
             else:
-                print "0,0"
-        except OSError, msg:
+                print("0,0")
+        except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [findDomainBW]")
-            print "0,0"
-        except ValueError, msg:
+            print("0,0")
+        except ValueError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [findDomainBW]")
-            print "0,0"
+            print("0,0")
 
     @staticmethod
     def permissionControl(path):
@@ -651,7 +651,7 @@ class vhost:
             command = 'sudo chown -R  cyberpanel:cyberpanel ' + path
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
     @staticmethod
@@ -663,7 +663,7 @@ class vhost:
 
             res = subprocess.call(cmd)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
     @staticmethod
@@ -671,7 +671,7 @@ class vhost:
         try:
             alias = aliasDomains.objects.get(aliasDomain=aliasDomain)
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             return 0
 
     @staticmethod
@@ -682,7 +682,7 @@ class vhost:
                     return 1
             return 0
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [checkIfSSLAliasExists]")
             return 1
 
@@ -699,7 +699,7 @@ class vhost:
                 if (items.find("listener SSL") > -1):
                     sslCheck = 1
                 if items.find(masterDomain) > -1 and items.find('map') > -1 and sslCheck == 1:
-                    data = filter(None, items.split(" "))
+                    data = [_f for _f in items.split(" ") if _f]
                     if data[1] == masterDomain:
                         if vhost.checkIfSSLAliasExists(data, aliasDomain) == 0:
                             writeToFile.writelines(items.rstrip('\n') + ", " + aliasDomain + "\n")
@@ -712,7 +712,7 @@ class vhost:
             writeToFile.close()
             installUtilities.installUtilities.reStartLiteSpeed()
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createAliasSSLMap]")
 
     ## Child Domain Functions
@@ -734,7 +734,7 @@ class vhost:
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [finalizeDomainCreation]")
 
     @staticmethod
@@ -751,14 +751,14 @@ class vhost:
             command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + path
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-        except OSError, msg:
+        except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "329 [Not able to create directories for virtual host [createDirectoryForDomain]]")
 
         try:
             ## For configuration files permissions will be changed later globally.
             os.makedirs(confPath)
-        except OSError, msg:
+        except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "335 [Not able to create directories for virtual host [createDirectoryForDomain]]")
             return [0, "[344 Not able to directories for virtual host [createDirectoryForDomain]]"]
@@ -766,7 +766,7 @@ class vhost:
         try:
             ## For configuration files permissions will be changed later globally.
             file = open(completePathToConfigFile, "w+")
-        except IOError, msg:
+        except IOError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForDomain]]")
             return [0, "[351 Not able to directories for virtual host [createDirectoryForDomain]]"]
 
@@ -803,7 +803,7 @@ class vhost:
                 confFile.write(currentConf)
                 confFile.close()
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [IO Error with per host config file [perHostDomainConf]]")
                 return 0
@@ -826,7 +826,7 @@ class vhost:
                 confFile.write(currentConf)
 
                 confFile.close()
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [IO Error with per host config file [perHostDomainConf]]")
                 return 0
@@ -852,7 +852,7 @@ class vhost:
 
                 return [1, "None"]
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + "223 [IO Error with main config file [createConfigInMainDomainHostFile]]")
                 return [0, "223 [IO Error with main config file [createConfigInMainDomainHostFile]]"]
@@ -863,7 +863,7 @@ class vhost:
                 writeDataToFile.writelines(configFile)
                 writeDataToFile.close()
                 return [1, "None"]
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + "223 [IO Error with main config file [createConfigInMainDomainHostFile]]")
                 return [0, "223 [IO Error with main config file [createConfigInMainDomainHostFile]]"]

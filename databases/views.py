@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import redirect, HttpResponse
 from loginSystem.views import loadLoginPage
@@ -151,7 +151,7 @@ def setupPHPMYAdminSession(request):
             return HttpResponse(json_data)
 
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'createDBStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

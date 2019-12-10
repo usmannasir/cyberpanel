@@ -13,7 +13,7 @@ def generate_pass(length=14):
     password = []
 
     while len(password) < length:
-        key = choice(char_set.keys())
+        key = choice(list(char_set.keys()))
         a_char = urandom(1)
         if a_char in char_set[key]:
             if check_prev_char(password, char_set[key]):

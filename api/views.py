@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import json
 from django.shortcuts import redirect
 from django.http import HttpResponse
@@ -46,7 +46,7 @@ def verifyConn(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'verifyConn': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -107,7 +107,7 @@ def getUserInfo(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -150,7 +150,7 @@ def changeUserPassAPI(request):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'changeStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -195,7 +195,7 @@ def changePackageAPI(request):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'changePackage': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -240,7 +240,7 @@ def deleteWebsite(request):
             wm = WebsiteManager()
             return wm.submitWebsiteDeletion(admin.pk, data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'websiteDeleteStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -271,7 +271,7 @@ def submitWebsiteStatus(request):
             wm = WebsiteManager()
             return wm.submitWebsiteStatus(admin.pk, json.loads(request.body))
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'websiteStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -295,7 +295,7 @@ def loginAPI(request):
         else:
             return HttpResponse("Invalid Credentials.")
 
-    except BaseException, msg:
+    except BaseException as msg:
         data = {'userID': 0, 'loginStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
@@ -338,7 +338,7 @@ def fetchSSHkey(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data = {'status' : 0, 'pubKeyStatus': 0,'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
@@ -390,7 +390,7 @@ def remoteTransfer(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data = {'transferStatus': 0,'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
@@ -440,7 +440,7 @@ def fetchAccountsFromRemoteServer(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data = {'fetchStatus': 0,'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
@@ -481,7 +481,7 @@ def FetchRemoteTransferStatus(request):
 
 
 
-    except BaseException, msg:
+    except BaseException as msg:
         data = {'fetchStatus': 0,'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
@@ -528,7 +528,7 @@ def cancelRemoteTransfer(request):
                 return HttpResponse(json_data)
 
 
-    except BaseException, msg:
+    except BaseException as msg:
         data = {'cancelStatus': 1, 'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
@@ -572,7 +572,7 @@ def cyberPanelVersion(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {
                     "getVersion": 0,
                     'error_message': str(msg)
@@ -590,7 +590,7 @@ def runAWSBackups(request):
         if os.path.exists(randomFile):
             s3 = S3Backups(request, None, 'runAWSBackups')
             s3.start()
-    except BaseException, msg:
+    except BaseException as msg:
         logging.writeToFile(str(msg) + ' [API.runAWSBackups]')
 
 
@@ -620,7 +620,7 @@ def submitUserCreation(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'changeStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

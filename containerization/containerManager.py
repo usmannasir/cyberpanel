@@ -43,7 +43,7 @@ class ContainerManager(multi.Thread):
                 self.addTrafficController()
             elif self.function == 'removeLimits':
                 self.removeLimits()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.run]')
 
     @staticmethod
@@ -78,7 +78,7 @@ class ContainerManager(multi.Thread):
             ioConf = ioConf.replace('{net_cls}', str(net_cls))
 
             return ioConf
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0
 
@@ -128,7 +128,7 @@ class ContainerManager(multi.Thread):
             execPath = execPath + " --function submitContainerInstall"
             ProcessUtilities.outputExecutioner(execPath)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
 
     def restartServices(self):

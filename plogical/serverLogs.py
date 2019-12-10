@@ -8,8 +8,8 @@ class serverLogs:
         try:
             logFile = open(fileName,'w')
             logFile.close()
-            print "1,None"
-        except BaseException,msg:
+            print("1,None")
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[cleanLogFile]")
 
 def main():

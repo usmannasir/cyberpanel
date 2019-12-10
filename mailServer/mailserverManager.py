@@ -16,7 +16,7 @@ import shlex
 import subprocess
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.mailUtilities import mailUtilities
-import thread
+import _thread
 from dns.models import Domains as dnsDomains
 from dns.models import Records as dnsRecords
 from mailServer.models import Forwardings, Pipeprograms
@@ -56,7 +56,7 @@ class MailServerManager:
 
             return render(self.request, 'mailServer/createEmailAccount.html',
                           {'websiteList': websitesName, "status": 1})
-        except BaseException, msg:
+        except BaseException as msg:
             return redirect(loadLoginPage)
 
 
@@ -76,7 +76,7 @@ class MailServerManager:
 
             return render(self.request, 'mailServer/listEmails.html',
                           {'websiteList': websitesName, "status": 1})
-        except BaseException, msg:
+        except BaseException as msg:
             return redirect(loadLoginPage)
 
     def submitEmailCreation(self):
@@ -115,7 +115,7 @@ class MailServerManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'createEmailStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -137,7 +137,7 @@ class MailServerManager:
 
             return render(self.request, 'mailServer/deleteEmailAccount.html',
                           {'websiteList': websitesName, "status": 1})
-        except BaseException, msg:
+        except BaseException as msg:
             return redirect(loadLoginPage)
 
     def getEmailsForDomain(self):
@@ -190,7 +190,7 @@ class MailServerManager:
 
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -221,7 +221,7 @@ class MailServerManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'deleteEmailStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -241,7 +241,7 @@ class MailServerManager:
             websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
             return render(self.request, 'mailServer/emailForwarding.html', {'websiteList': websitesName, "status": 1})
-        except BaseException, msg:
+        except BaseException as msg:
             return redirect(loadLoginPage)
 
     def fetchCurrentForwardings(self):
@@ -320,7 +320,7 @@ class MailServerManager:
                 return HttpResponse(final_json)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -373,7 +373,7 @@ class MailServerManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'deleteForwardingStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -449,7 +449,7 @@ class MailServerManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'createStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -495,7 +495,7 @@ class MailServerManager:
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -518,7 +518,7 @@ class MailServerManager:
 
             return render(self.request, 'mailServer/changeEmailPassword.html',
                           {'websiteList': websitesName, "status": 1})
-        except BaseException, msg:
+        except BaseException as msg:
             return redirect(loadLoginPage)
 
     def submitPasswordChange(self):
@@ -563,7 +563,7 @@ class MailServerManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'passChangeStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -586,7 +586,7 @@ class MailServerManager:
             return render(self.request, 'mailServer/dkimManager.html',
                           {'websiteList': websitesName, 'openDKIMInstalled': openDKIMInstalled})
 
-        except BaseException, msg:
+        except BaseException as msg:
             return redirect(loadLoginPage)
 
     def fetchDKIMKeys(self):
@@ -623,12 +623,12 @@ class MailServerManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            except BaseException, msg:
+            except BaseException as msg:
                 data_ret = {'status': 1, 'fetchStatus': 1, 'keysAvailable': 0, 'error_message': str(msg)}
                 json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -694,7 +694,7 @@ class MailServerManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'generateStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -705,10 +705,10 @@ class MailServerManager:
             currentACL = ACLManager.loadedACL(userID)
             if ACLManager.currentContextPermission(currentACL, 'dkimManager') == 0:
                 return ACLManager.loadErrorJson('installOpenDKIM', 0)
-            thread.start_new_thread(mailUtilities.installOpenDKIM, ('Install', 'openDKIM'))
+            _thread.start_new_thread(mailUtilities.installOpenDKIM, ('Install', 'openDKIM'))
             final_json = json.dumps({'installOpenDKIM': 1, 'error_message': "None"})
             return HttpResponse(final_json)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'installOpenDKIM': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -760,7 +760,7 @@ class MailServerManager:
                 })
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'abort': 1, 'installed': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)

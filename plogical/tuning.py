@@ -49,7 +49,7 @@ class tuning:
                         dataToReturn['enableGzipCompress'] = data[1]
 
                 return dataToReturn
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [fetchTuningDetails]")
                 return 0
@@ -71,7 +71,7 @@ class tuning:
 
                 return dataToReturn
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [fetchTuningDetails]")
                 return 0
@@ -125,11 +125,11 @@ class tuning:
 
                 writeDataToFile.close()
 
-                print "1,None"
-            except BaseException, msg:
+                print("1,None")
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [saveTuningDetails]")
-                print "0," + str(msg)
+                print("0," + str(msg))
         else:
             try:
                 datas = open("/usr/local/lsws/conf/httpd_config.xml").readlines()
@@ -173,11 +173,11 @@ class tuning:
                     else:
                         writeDataToFile.writelines(items)
                 writeDataToFile.close()
-                print "1,None"
-            except BaseException, msg:
+                print("1,None")
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [saveTuningDetails]")
-                print "0," + str(msg)
+                print("0," + str(msg))
 
 
     @staticmethod
@@ -223,7 +223,7 @@ class tuning:
                         dataToReturn['procHardLimit'] = data[1]
 
                 return dataToReturn
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [fetchPHPDetails]")
                 return 0
@@ -248,7 +248,7 @@ class tuning:
                         break
 
                 return dataToReturn
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [fetchPHPDetails]")
                 return 0
@@ -308,11 +308,11 @@ class tuning:
 
                 writeDataToFile.close()
 
-                print "1,None"
-            except BaseException, msg:
+                print("1,None")
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [saveTuningDetails]")
-                print "0,"+str(msg)
+                print("0,"+str(msg))
         else:
             try:
                 path = "/usr/local/lsws/conf/httpd_config.xml"
@@ -377,12 +377,12 @@ class tuning:
 
                 writeDataToFile.close()
 
-                print "1,None"
+                print("1,None")
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [saveTuningDetails]")
-                print "0," + str(msg)
+                print("0," + str(msg))
 
 def main():
 

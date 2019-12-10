@@ -82,14 +82,14 @@ class SSHServer(multi.Thread):
                                 pass
                 else:
                     return 0
-            except BaseException, msg:
+            except BaseException as msg:
                 time.sleep(0.1)
 
     def run(self):
         try:
             self.recvData()
-        except BaseException, msg:
-            print(str(msg))
+        except BaseException as msg:
+            print((str(msg)))
 
 
 class WebTerminalServer(WebSocket):

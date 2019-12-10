@@ -28,7 +28,7 @@ def generate_pass(length=14):
     password = []
 
     while len(password) < length:
-        key = choice(char_set.keys())
+        key = choice(list(char_set.keys()))
         a_char = urandom(1)
         if a_char in char_set[key]:
             if check_prev_char(password, char_set[key]):
@@ -123,11 +123,11 @@ class preFlightsChecks:
     @staticmethod
     def stdOut(message, log=0, do_exit=0, code=os.EX_OK):
         print("\n\n")
-        print ("[" + time.strftime(
-            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n")
-        print("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n")
-        print ("[" + time.strftime(
-            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n")
+        print(("[" + time.strftime(
+            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
+        print(("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n"))
+        print(("[" + time.strftime(
+            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
 
         if log:
             logging.InstallLog.writeToFile(message)
@@ -200,7 +200,7 @@ class preFlightsChecks:
                 writeToFile.writelines(varTmp)
                 writeToFile.close()
 
-        except BaseException, msg:
+        except BaseException as msg:
             preFlightsChecks.stdOut('[ERROR] ' + str(msg))
             return 0
 
@@ -259,7 +259,7 @@ class preFlightsChecks:
                 preFlightsChecks.stdOut("Installation failed, consult: /var/log/installLogs.txt")
                 os._exit(0)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + "[checkIfSeLinuxDisabled]")
             logging.InstallLog.writeToFile('[ERROR] ' + "SELinux Check OK. [checkIfSeLinuxDisabled]")
             preFlightsChecks.stdOut('[ERROR] ' + "SELinux Check OK.")
@@ -355,7 +355,7 @@ class preFlightsChecks:
             command = "mkdir -p /etc/letsencrypt/live/"
             preFlightsChecks.call(command, self.distro, command,command,1, 0, os.EX_OSERR)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile("[ERROR] setup_account_cyberpanel. " + str(msg))
 
     def yum_update(self):
@@ -705,7 +705,7 @@ class preFlightsChecks:
                 command = 'apt-get -y install unzip'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] '+ str(msg) + " [install_unzip]")
 
     def install_zip(self):
@@ -717,7 +717,7 @@ class preFlightsChecks:
                 command = 'apt-get -y install zip'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_zip]")
 
     def download_install_phpmyadmin(self):
@@ -734,7 +734,7 @@ class preFlightsChecks:
 
             ## Write secret phrase
 
-            rString = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])
+            rString = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)])
 
             data = open('phpmyadmin/config.sample.inc.php', 'r').readlines()
 
@@ -757,7 +757,7 @@ class preFlightsChecks:
             preFlightsChecks.call(command, self.distro, '[chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin]',
                                   'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin', 1, 0, os.EX_OSERR)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [download_install_phpmyadmin]")
             return 0
 
@@ -859,7 +859,7 @@ enabled=1"""
                 except:
                     pass
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_postfix_davecot]")
             return 0
 
@@ -985,7 +985,7 @@ enabled=1"""
 
             logging.InstallLog.writeToFile("Authentication for Postfix and Dovecot set.")
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR]' + str(msg) + " [setup_email_Passwords]")
             return 0
 
@@ -1239,7 +1239,7 @@ enabled=1"""
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             logging.InstallLog.writeToFile("Postfix and Dovecot configured")
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_postfix_davecot_config]")
             return 0
 
@@ -1315,7 +1315,7 @@ imap_folder_list_limit = 0
 
             writeToFile.close()
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [downoad_and_install_rainloop]")
             return 0
 
@@ -1332,7 +1332,7 @@ imap_folder_list_limit = 0
             preFlightsChecks.stdOut("Checking to see if ufw firewall is installed (will be removed)", 1)
             status = subprocess.check_output(shlex.split('ufw status'))
             preFlightsChecks.stdOut("ufw current status: " + status + "...will be removed")
-        except BaseException, msg:
+        except BaseException as msg:
             preFlightsChecks.stdOut("[ERROR] Expected access to ufw not available, do not need to remove it", 1)
             return True
         try:
@@ -1392,10 +1392,10 @@ imap_folder_list_limit = 0
             preFlightsChecks.stdOut("FirewallD installed and configured!")
 
 
-        except OSError, msg:
+        except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installFirewalld]")
             return 0
-        except ValueError, msg:
+        except ValueError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installFirewalld]")
             return 0
 
@@ -1470,7 +1470,7 @@ imap_folder_list_limit = 0
 
             logging.InstallLog.writeToFile("LSCPD successfully installed!")
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installLSCPD]")
 
     def setupComodoRules(self):
@@ -1556,7 +1556,7 @@ imap_folder_list_limit = 0
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile("[ERROR]" + str(msg))
             return 0
 
@@ -1654,7 +1654,7 @@ imap_folder_list_limit = 0
             logging.InstallLog.writeToFile("LSCPD Daemon Set!")
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setupLSCPDDaemon]")
             return 0
 
@@ -1712,7 +1712,7 @@ imap_folder_list_limit = 0
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_cron]")
             return 0
 
@@ -1726,7 +1726,7 @@ imap_folder_list_limit = 0
             command = "ssh-keygen -f /root/.ssh/cyberpanel -t rsa -N ''"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_default_keys]")
             return 0
 
@@ -1739,7 +1739,7 @@ imap_folder_list_limit = 0
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_rsync]")
             return 0
 
@@ -1748,7 +1748,7 @@ imap_folder_list_limit = 0
             import requests
             getVersion = requests.get('https://cyberpanel.net/version.txt')
             latest = getVersion.json()
-        except BaseException, msg:
+        except BaseException as msg:
 
             command = "pip uninstall --yes urllib3"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -1770,7 +1770,7 @@ imap_folder_list_limit = 0
         print("                                                                   ")
         print("                                                                   ")
 
-        print("                Visit: https://" + self.ipAddr + ":8090                ")
+        print(("                Visit: https://" + self.ipAddr + ":8090                "))
         print("                Username: admin                                    ")
         print("                Password: 1234567                                  ")
 
@@ -1782,7 +1782,7 @@ imap_folder_list_limit = 0
             pathToRemoveGarbageFile = os.path.join(self.server_root_path, "modules/mod_security.so")
             os.remove(pathToRemoveGarbageFile)
 
-        except OSError, msg:
+        except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [modSecPreReqs]")
             return 0
 
@@ -1802,7 +1802,7 @@ imap_folder_list_limit = 0
                 command = 'mkdir -p /etc/opendkim/keys/'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installOpenDKIM]")
             return 0
 
@@ -1866,7 +1866,7 @@ milter_default_action = accept
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [configureOpenDKIM]")
             return 0
 
@@ -1904,7 +1904,7 @@ milter_default_action = accept
             command = "./composer.sh"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        except OSError, msg:
+        except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setupPHPAndComposer]")
             return 0
 
@@ -1974,7 +1974,7 @@ milter_default_action = accept
             env_path = '/usr/local/CyberCP'
             subprocess.call(['virtualenv', env_path])
             activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
-            execfile(activate_this, dict(__file__=activate_this))
+            exec(compile(open(activate_this, "rb").read(), activate_this, 'exec'), dict(__file__=activate_this))
 
             ##
 
@@ -1998,7 +1998,7 @@ milter_default_action = accept
             command = "virtualenv --system-site-packages /usr/local/CyberCP"
             preFlightsChecks.call(command, distro, command, command, 1, 0, os.EX_OSERR)
 
-        except OSError, msg:
+        except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setupVirtualEnv]")
             return 0
 
@@ -2024,7 +2024,7 @@ milter_default_action = accept
                 writeToFile = open(servicePath, 'w+')
                 writeToFile.close()
 
-        except OSError, msg:
+        except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [enableDisableDNS]")
             return 0
 
@@ -2050,7 +2050,7 @@ milter_default_action = accept
                 writeToFile = open(servicePath, 'w+')
                 writeToFile.close()
 
-        except OSError, msg:
+        except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [enableDisableEmail]")
             return 0
 
@@ -2076,7 +2076,7 @@ milter_default_action = accept
                 writeToFile = open(servicePath, 'w+')
                 writeToFile.close()
 
-        except OSError, msg:
+        except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [enableDisableEmail]")
             return 0
 
@@ -2106,7 +2106,7 @@ milter_default_action = accept
             env_path = '/usr/local/CyberPanel/p3'
             subprocess.call(['virtualenv', env_path])
             activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
-            execfile(activate_this, dict(__file__=activate_this))
+            exec(compile(open(activate_this, "rb").read(), activate_this, 'exec'), dict(__file__=activate_this))
 
             command = "pip3 install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
             preFlightsChecks.call(command, distro, '[install python36]',
@@ -2137,7 +2137,7 @@ milter_default_action = accept
             env_path = '/usr/local/CyberPanel/p3'
             subprocess.call(['virtualenv', env_path])
             activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
-            execfile(activate_this, dict(__file__=activate_this))
+            exec(compile(open(activate_this, "rb").read(), activate_this, 'exec'), dict(__file__=activate_this))
 
             command = "pip3 install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
             preFlightsChecks.call(command, distro, '[install python36]',

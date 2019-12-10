@@ -81,7 +81,7 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
                 return 1
             else:
                 return 0
-        except BaseException, msg:
+        except BaseException as msg:
             message = "%s. [%s]" % (str(msg), '[ApacheController.checkIfApacheInstalled]')
             logging.CyberCPLogFileWriter.writeToFile(message)
 
@@ -94,7 +94,7 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
                 return 0
             else:
                 return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0
 
@@ -157,7 +157,7 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             return str(msg)
 
     @staticmethod
@@ -302,5 +302,5 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
                 return [0,result]
 
             return [1, 'None']
-        except BaseException, msg:
+        except BaseException as msg:
             return [0, str(msg)]

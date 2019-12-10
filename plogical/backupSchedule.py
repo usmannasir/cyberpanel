@@ -25,9 +25,9 @@ class backupSchedule:
         try:
             file = open(fileName,'a')
             file.writelines("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n")
-            print ("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n")
+            print(("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n"))
             file.close()
-        except IOError,msg:
+        except IOError as msg:
             return "Can not write to error file."
 
     @staticmethod
@@ -66,7 +66,7 @@ class backupSchedule:
 
                 if os.path.exists(status):
                     status = open(status, 'r').read()
-                    print status
+                    print(status)
                     time.sleep(2)
 
                     if status.find("Completed") > -1:
@@ -114,7 +114,7 @@ class backupSchedule:
                         except:
                             pass
                         return 0, tempStoragePath
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [119:startBackup]")
             return 0, str(msg)
 
@@ -160,7 +160,7 @@ class backupSchedule:
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupSchedule.createBackup]")
 
     @staticmethod
@@ -184,7 +184,7 @@ class backupSchedule:
 
             os.remove(backupPath)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [189:startBackup]")
 
     @staticmethod
@@ -241,7 +241,7 @@ class backupSchedule:
 
 
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [prepare]")
 
 def main():

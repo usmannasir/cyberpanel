@@ -24,7 +24,7 @@ class DNSManager:
         try:
             admin = Administrator.objects.get(pk=userID)
             return render(request, 'dns/index.html', {"type": admin.type})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def createNameserver(self, request = None, userID = None):
@@ -40,7 +40,7 @@ class DNSManager:
             else:
                 return render(request, "dns/createNameServer.html", {"status": 0})
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def NSCreation(self, userID = None, data = None):
@@ -94,7 +94,7 @@ class DNSManager:
             return HttpResponse(final_json)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'NSCreation': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -109,7 +109,7 @@ class DNSManager:
                 return render(request, 'dns/createDNSZone.html', {"status": 1})
             else:
                 return render(request, 'dns/createDNSZone.html', {"status": 0})
-        except BaseException, msg:
+        except BaseException as msg:
                 return HttpResponse(str(msg))
 
     def zoneCreation(self, userID = None, data = None):
@@ -142,7 +142,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'zoneCreation': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -161,7 +161,7 @@ class DNSManager:
 
             return render(request, 'dns/addDeleteDNSRecords.html', {"domainsList": domainsList, "status": 1})
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def getCurrentRecordsForDomain(self, userID = None, data = None):
@@ -233,7 +233,7 @@ class DNSManager:
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -406,7 +406,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'add_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -436,7 +436,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'delete_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -456,7 +456,7 @@ class DNSManager:
 
             return render(request, 'dns/deleteDNSZone.html', {"domainsList": domainsList, "status": 1})
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def submitZoneDeletion(self, userID = None, data = None):
@@ -486,7 +486,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'delete_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -529,7 +529,7 @@ class DNSManager:
 
             return render(request, 'dns/configureDefaultNameServers.html', data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
 
@@ -568,7 +568,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)

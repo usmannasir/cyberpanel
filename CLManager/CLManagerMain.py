@@ -28,7 +28,7 @@ class CLManagerMain(multi.Thread):
             elif self.function == 'enableOrDisable':
                 self.enableOrDisable()
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.run]')
 
     def renderC(self):
@@ -77,7 +77,7 @@ class CLManagerMain(multi.Thread):
             execPath = execPath + " --function submitCageFSInstall"
             ProcessUtilities.outputExecutioner(execPath)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
 
     def findWebsitesJson(self, currentACL, userID, pageNumber):
@@ -144,7 +144,7 @@ class CLManagerMain(multi.Thread):
                          'pagination': pagination, 'default': default}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-        except BaseException, msg:
+        except BaseException as msg:
             dic = {'status': 1, 'listWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
@@ -160,7 +160,7 @@ class CLManagerMain(multi.Thread):
                 for items in websites:
                     command = '/usr/sbin/cagefsctl --disable %s' % (items.externalApp)
                     ProcessUtilities.executioner(command)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
     def fetchPackages(self, currentACL):

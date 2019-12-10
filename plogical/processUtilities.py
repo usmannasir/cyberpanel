@@ -25,7 +25,7 @@ class ProcessUtilities(multi.Thread):
         try:
             if self.function == 'popen':
                 self.customPoen()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.run]')
 
     @staticmethod
@@ -38,7 +38,7 @@ class ProcessUtilities(multi.Thread):
                 if proc.name().find(ProcessUtilities.litespeedProcess) > -1:
                     finalListOfProcesses.append(proc.pid)
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.writeToFile(
                 str(msg) + " [getLitespeedProcessNumber]")
             return 0
@@ -64,7 +64,7 @@ class ProcessUtilities(multi.Thread):
             else:
                 return 0
 
-        except subprocess.CalledProcessError,msg:
+        except subprocess.CalledProcessError as msg:
             logging.writeToFile(str(msg) + "[restartLitespeed]")
 
     @staticmethod
@@ -83,7 +83,7 @@ class ProcessUtilities(multi.Thread):
             else:
                 return 0
 
-        except subprocess.CalledProcessError, msg:
+        except subprocess.CalledProcessError as msg:
             logging.writeToFile(str(msg) + "[stopLitespeed]")
 
     @staticmethod
@@ -94,10 +94,10 @@ class ProcessUtilities(multi.Thread):
                 return 1
             else:
                 return 0
-        except subprocess.CalledProcessError, msg:
+        except subprocess.CalledProcessError as msg:
             logging.writeToFile('%s. [ProcessUtilities.normalExecutioner]' % (str(msg)))
             return 0
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile('%s. [ProcessUtilities.normalExecutioner.Base]' % (str(msg)))
             return 0
 
@@ -156,7 +156,7 @@ class ProcessUtilities(multi.Thread):
                 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 sock.connect(ProcessUtilities.server_address)
                 return [sock, "None"]
-            except BaseException, msg:
+            except BaseException as msg:
                 if count == 3:
                     logging.writeToFile("Failed to connect to LSCPD socket, run 'systemctl restart lscpd' on command line to fix this issue.")
                     return [-1, str(msg)]
@@ -212,7 +212,7 @@ class ProcessUtilities(multi.Thread):
             #     ProcessUtilities.executioner(cmd)
 
             return data
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [sendCommand]")
             return "0" + str(msg)
 
@@ -233,7 +233,7 @@ class ProcessUtilities(multi.Thread):
             else:
                 return 0
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [executioner]")
             return 0
 
@@ -249,7 +249,7 @@ class ProcessUtilities(multi.Thread):
                 command = " ".join(command)
 
             return ProcessUtilities.sendCommand(command, user)[:-1]
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + "[outputExecutioner:188]")
 
     def customPoen(self):
@@ -262,7 +262,7 @@ class ProcessUtilities(multi.Thread):
             ProcessUtilities.sendCommand(command, self.extraArgs['user'])
 
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [customPoen]")
 
     @staticmethod
@@ -273,13 +273,13 @@ class ProcessUtilities(multi.Thread):
             extraArgs['user'] = user
             pu = ProcessUtilities("popen", extraArgs)
             pu.start()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [popenExecutioner]")
 
     @staticmethod
     def BuildCommand(path, functionName, parameters):
         execPath = "/usr/local/CyberCP/bin/python2 %s %s " % (path, functionName)
-        for key, value in parameters.iteritems():
+        for key, value in parameters.items():
             execPath = execPath + ' --%s %s' % (key, value)
 
         return execPath

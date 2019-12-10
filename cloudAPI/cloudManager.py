@@ -40,14 +40,14 @@ class CloudManager:
             else:
                 return 0, self.ajaxPre(0, 'Invalid login information.')
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchWebsites(self):
         try:
             wm = WebsiteManager()
             return wm.getFurtherAccounts(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitWebsiteDeletion(self, request):
@@ -55,7 +55,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             wm = WebsiteManager()
             return wm.submitWebsiteDeletion(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitWebsiteCreation(self):
@@ -82,25 +82,25 @@ class CloudManager:
                                              token=token
                                              )
                     newAdmin.save()
-                except BaseException, msg:
+                except BaseException as msg:
                     logging.writeToFile(str(msg))
                     admin = Administrator.objects.get(userName=UserAccountName)
                     admin.token = token
                     admin.password = password
                     admin.save()
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.writeToFile(str(msg))
 
             wm = WebsiteManager()
             return wm.submitWebsiteCreation(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchWebsiteDataJSON(self):
         try:
             wm = WebsiteManager()
             return wm.fetchWebsiteDataJSON(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchWebsiteData(self):
@@ -160,70 +160,70 @@ class CloudManager:
             final_json = json.dumps(Data)
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchModifyData(self):
         try:
             wm = WebsiteManager()
             return wm.submitWebsiteModify(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def saveModifications(self):
         try:
             wm = WebsiteManager()
             return wm.saveWebsiteChanges(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitDBCreation(self):
         try:
             dm = DatabaseManager()
             return dm.submitDBCreation(self.admin.pk, self.data, 1)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchDatabases(self):
         try:
             dm = DatabaseManager()
             return dm.fetchDatabases(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitDatabaseDeletion(self):
         try:
             dm = DatabaseManager()
             return dm.submitDatabaseDeletion(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def changePassword(self):
         try:
             dm = DatabaseManager()
             return dm.changePassword(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def getCurrentRecordsForDomain(self):
         try:
             dm = DNSManager()
             return dm.getCurrentRecordsForDomain(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def deleteDNSRecord(self):
         try:
             dm = DNSManager()
             return dm.deleteDNSRecord(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def addDNSRecord(self):
         try:
             dm = DNSManager()
             return dm.addDNSRecord(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitEmailCreation(self, request):
@@ -231,7 +231,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             msm = MailServerManager(request)
             return msm.submitEmailCreation()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def getEmailsForDomain(self, request):
@@ -239,7 +239,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             msm = MailServerManager(request)
             return msm.getEmailsForDomain()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitEmailDeletion(self, request):
@@ -247,7 +247,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             msm = MailServerManager(request)
             return msm.submitEmailDeletion()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitPasswordChange(self, request):
@@ -255,7 +255,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             msm = MailServerManager(request)
             return msm.submitPasswordChange()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchCurrentForwardings(self, request):
@@ -263,7 +263,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             msm = MailServerManager(request)
             return msm.fetchCurrentForwardings()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitForwardDeletion(self, request):
@@ -271,7 +271,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             msm = MailServerManager(request)
             return msm.submitForwardDeletion()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitEmailForwardingCreation(self, request):
@@ -279,7 +279,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             msm = MailServerManager(request)
             return msm.submitEmailForwardingCreation()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchDKIMKeys(self, request):
@@ -287,7 +287,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             msm = MailServerManager(request)
             return msm.fetchDKIMKeys()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def generateDKIMKeys(self, request):
@@ -295,7 +295,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             msm = MailServerManager(request)
             return msm.generateDKIMKeys()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitFTPCreation(self, request):
@@ -303,7 +303,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             fm = FTPManager(request)
             return fm.submitFTPCreation()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def getAllFTPAccounts(self, request):
@@ -311,7 +311,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             fm = FTPManager(request)
             return fm.getAllFTPAccounts()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitFTPDelete(self, request):
@@ -319,7 +319,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             fm = FTPManager(request)
             return fm.submitFTPDelete()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def changeFTPPassword(self, request):
@@ -327,14 +327,14 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             fm = FTPManager(request)
             return fm.changePassword()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def issueSSL(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return issueSSL(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def statusFunc(self):
@@ -365,7 +365,7 @@ class CloudManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'abort': 0, 'installationProgress': "0", 'errorMessage': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -374,35 +374,35 @@ class CloudManager:
         try:
             wm = WebsiteManager()
             return wm.submitDomainCreation(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchDomains(self):
         try:
             wm = WebsiteManager()
             return wm.fetchDomains(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitDomainDeletion(self):
         try:
             wm = WebsiteManager()
             return wm.submitDomainDeletion(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def changeOpenBasedir(self):
         try:
             wm = WebsiteManager()
             return wm.changeOpenBasedir(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def changePHP(self):
         try:
             wm = WebsiteManager()
             return wm.changePHP(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def backupStatusFunc(self):
@@ -410,7 +410,7 @@ class CloudManager:
             bm = BackupManager()
             return bm.backupStatus(self.admin.pk, self.data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'abort': 0, 'installationProgress': "0", 'errorMessage': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -419,21 +419,21 @@ class CloudManager:
         try:
             bm = BackupManager()
             return bm.submitBackupCreation(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def getCurrentBackups(self):
         try:
             bm = BackupManager()
             return bm.getCurrentBackups(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def deleteBackup(self):
         try:
             bm = BackupManager()
             return bm.deleteBackup(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchACLs(self):
@@ -466,14 +466,14 @@ class CloudManager:
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitUserCreation(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return um.submitUserCreation(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchUsers(self):
@@ -505,21 +505,21 @@ class CloudManager:
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitUserDeletion(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return um.submitUserDeletion(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def saveModificationsUser(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return um.saveModifications(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def userWithResellerPriv(self):
@@ -544,28 +544,28 @@ class CloudManager:
             json_data = json_data + ']'
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def saveResellerChanges(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return um.saveResellerChanges(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def changeACLFunc(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return um.changeACLFunc(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def createACLFunc(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return um.createACLFunc(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def findAllACLs(self, request):
@@ -593,28 +593,28 @@ class CloudManager:
             json_data = json_data + ']'
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def deleteACLFunc(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return um.deleteACLFunc(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchACLDetails(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return um.fetchACLDetails(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitACLModifications(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return um.submitACLModifications(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitPackage(self, request):
@@ -622,7 +622,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             pm = PackagesManager(request)
             return pm.submitPackage()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchPackages(self, request):
@@ -658,7 +658,7 @@ class CloudManager:
             json_data = json_data + ']'
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitPackageDelete(self, request):
@@ -666,7 +666,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             pm = PackagesManager(request)
             return pm.submitDelete()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitPackageModify(self, request):
@@ -674,21 +674,21 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             pm = PackagesManager(request)
             return pm.saveChanges()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def getDataFromLogFile(self, request):
         try:
             wm = WebsiteManager()
             return wm.getDataFromLogFile(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchErrorLogs(self, request):
         try:
             wm = WebsiteManager()
             return wm.fetchErrorLogs(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitApplicationInstall(self, request):
@@ -703,7 +703,7 @@ class CloudManager:
             elif self.data['selectedApplication'] == 'Joomla':
                 return wm.installJoomla(self.admin.pk, self.data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def obtainServer(self, request):
@@ -712,63 +712,63 @@ class CloudManager:
             data_ret = {'status': 1, 'serverStatus': ProcessUtilities.decideServer()}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def getSSHConfigs(self):
         try:
             fm = FirewallManager()
             return fm.getSSHConfigs(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def saveSSHConfigs(self):
         try:
             fm = FirewallManager()
             return fm.saveSSHConfigs(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def deleteSSHKey(self):
         try:
             fm = FirewallManager()
             return fm.deleteSSHKey(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def addSSHKey(self):
         try:
             fm = FirewallManager()
             return fm.addSSHKey(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def getCurrentRules(self):
         try:
             fm = FirewallManager()
             return fm.getCurrentRules(self.admin.pk)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def addRule(self):
         try:
             fm = FirewallManager()
             return fm.addRule(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def deleteRule(self):
         try:
             fm = FirewallManager()
             return fm.deleteRule(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def getLogsFromFile(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return getLogsFromFile(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def serverSSL(self, request):
@@ -778,7 +778,7 @@ class CloudManager:
                 return obtainHostNameSSL(request)
             else:
                 return obtainMailServerSSL(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def setupManager(self, request):
@@ -796,7 +796,7 @@ class CloudManager:
             proc = httpProc(request, None)
             return proc.ajax(1, None, data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchManagerTokens(self, request):
@@ -805,7 +805,7 @@ class CloudManager:
             ham = HAManager(request, self.data, 'fetchManagerTokens')
             return ham.fetchManagerTokens()
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def addWorker(self, request):
@@ -814,7 +814,7 @@ class CloudManager:
             ham = HAManager(request, self.data, 'fetchManagerTokens')
             return ham.addWorker()
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchSSHKey(self, request):
@@ -830,14 +830,14 @@ class CloudManager:
             }
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def putSSHkeyFunc(self, request):
         try:
             fm = FirewallManager(request)
             return fm.addSSHKey(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def leaveSwarm(self, request):
@@ -845,7 +845,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             ham = HAManager(request, self.data, 'leaveSwarm')
             return ham.leaveSwarm()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def setUpDataNode(self, request):
@@ -853,7 +853,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             ham = HAManager(request, self.data, 'setUpDataNode')
             return ham.setUpDataNode()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitEditCluster(self, request):
@@ -861,7 +861,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             ham = HAManager(request, self.data, 'submitEditCluster')
             return ham.submitEditCluster()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def connectAccount(self, request):
@@ -869,7 +869,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'connectAccount')
             return s3.connectAccount()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchBuckets(self, request):
@@ -877,7 +877,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'fetchBuckets')
             return s3.fetchBuckets()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def createPlan(self, request):
@@ -885,7 +885,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'createPlan')
             return s3.createPlan()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchBackupPlans(self, request):
@@ -893,7 +893,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'fetchBackupPlans')
             return s3.fetchBackupPlans()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def deletePlan(self, request):
@@ -901,7 +901,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'deletePlan')
             return s3.deletePlan()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchWebsitesInPlan(self, request):
@@ -909,7 +909,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'fetchWebsitesInPlan')
             return s3.fetchWebsitesInPlan()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def deleteDomainFromPlan(self, request):
@@ -917,7 +917,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'deleteDomainFromPlan')
             return s3.deleteDomainFromPlan()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def savePlanChanges(self, request):
@@ -925,7 +925,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'savePlanChanges')
             return s3.savePlanChanges()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchBackupLogs(self, request):
@@ -933,7 +933,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'fetchBackupLogs')
             return s3.fetchBackupLogs()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def forceRunAWSBackup(self, request):
@@ -942,14 +942,14 @@ class CloudManager:
             s3 = S3Backups(request, self.data, 'forceRunAWSBackup')
             s3.start()
             return self.ajaxPre(1, None)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
 
     def systemStatus(self, request):
         try:
             return topProcessesStatus(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
 
@@ -957,7 +957,7 @@ class CloudManager:
         try:
             request.session['userID'] = self.admin.pk
             return killProcess(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
 
@@ -966,7 +966,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'connectAccountDO')
             return s3.connectAccountDO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchBucketsDO(self, request):
@@ -974,7 +974,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'fetchBucketsDO')
             return s3.fetchBucketsDO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
 
@@ -983,7 +983,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'createPlanDO')
             return s3.createPlanDO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchBackupPlansDO(self, request):
@@ -991,7 +991,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'fetchBackupPlansDO')
             return s3.fetchBackupPlansDO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def deletePlanDO(self, request):
@@ -999,7 +999,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'deletePlanDO')
             return s3.deletePlanDO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchWebsitesInPlanDO(self, request):
@@ -1007,7 +1007,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'fetchWebsitesInPlanDO')
             return s3.fetchWebsitesInPlanDO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchBackupLogsDO(self, request):
@@ -1015,7 +1015,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'fetchBackupLogsDO')
             return s3.fetchBackupLogsDO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def deleteDomainFromPlanDO(self, request):
@@ -1023,7 +1023,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'deleteDomainFromPlanDO')
             return s3.deleteDomainFromPlanDO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def savePlanChangesDO(self, request):
@@ -1031,7 +1031,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'savePlanChangesDO')
             return s3.savePlanChangesDO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def forceRunAWSBackupDO(self, request):
@@ -1040,7 +1040,7 @@ class CloudManager:
             s3 = S3Backups(request, self.data, 'forceRunAWSBackupDO')
             s3.start()
             return self.ajaxPre(1, None)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def showStatus(self, request):
@@ -1055,7 +1055,7 @@ class CloudManager:
 
             finalData = json.dumps(finalData)
             return HttpResponse(finalData)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchRam(self, request):
@@ -1088,7 +1088,7 @@ class CloudManager:
 
             finalData = json.dumps(finalData)
             return HttpResponse(finalData)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def applyMySQLChanges(self, request):
@@ -1106,7 +1106,7 @@ class CloudManager:
             else:
                 return self.ajaxPre(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def restartMySQL(self, request):
@@ -1121,7 +1121,7 @@ class CloudManager:
 
             finalData = json.dumps(finalData)
             return HttpResponse(finalData)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchDatabasesMYSQL(self, request):
@@ -1136,7 +1136,7 @@ class CloudManager:
 
             finalData = json.dumps(finalData)
             return HttpResponse(finalData)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchTables(self, request):
@@ -1151,7 +1151,7 @@ class CloudManager:
 
             finalData = json.dumps(finalData)
             return HttpResponse(finalData)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def deleteTable(self, request):
@@ -1166,7 +1166,7 @@ class CloudManager:
 
             finalData = json.dumps(finalData)
             return HttpResponse(finalData)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchTableData(self, request):
@@ -1181,7 +1181,7 @@ class CloudManager:
 
             finalData = json.dumps(finalData)
             return HttpResponse(finalData)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchStructure(self, request):
@@ -1196,7 +1196,7 @@ class CloudManager:
 
             finalData = json.dumps(finalData)
             return HttpResponse(finalData)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def addMINIONode(self, request):
@@ -1204,7 +1204,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'addMINIONode')
             return s3.addMINIONode()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchMINIONodes(self, request):
@@ -1212,7 +1212,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'fetchMINIONodes')
             return s3.fetchMINIONodes()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def deleteMINIONode(self, request):
@@ -1220,7 +1220,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'deleteMINIONode')
             return s3.deleteMINIONode()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def createPlanMINIO(self, request):
@@ -1228,7 +1228,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'createPlanMINIO')
             return s3.createPlanMINIO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchBackupPlansMINIO(self, request):
@@ -1236,7 +1236,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'fetchBackupPlansMINIO')
             return s3.fetchBackupPlansMINIO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
 
@@ -1245,7 +1245,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'deletePlanMINIO')
             return s3.deletePlanMINIO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def savePlanChangesMINIO(self, request):
@@ -1253,7 +1253,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'savePlanChangesMINIO')
             return s3.savePlanChangesMINIO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def forceRunAWSBackupMINIO(self, request):
@@ -1262,7 +1262,7 @@ class CloudManager:
             s3 = S3Backups(request, self.data, 'forceRunAWSBackupMINIO')
             s3.start()
             return self.ajaxPre(1, None)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchWebsitesInPlanMINIO(self, request):
@@ -1270,7 +1270,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'fetchWebsitesInPlanMINIO')
             return s3.fetchWebsitesInPlanMINIO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchBackupLogsMINIO(self, request):
@@ -1278,7 +1278,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'fetchBackupLogsMINIO')
             return s3.fetchBackupLogsMINIO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def deleteDomainFromPlanMINIO(self, request):
@@ -1286,7 +1286,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             s3 = S3Backups(request, self.data, 'deleteDomainFromPlanMINIO')
             return s3.deleteDomainFromPlanMINIO()
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitWebsiteStatus(self, request):
@@ -1294,7 +1294,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             wm = WebsiteManager()
             return wm.submitWebsiteStatus(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitChangePHP(self, request):
@@ -1302,7 +1302,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             wm = WebsiteManager()
             return wm.changePHP(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def getSwitchStatus(self, request):
@@ -1310,7 +1310,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             wm = WebsiteManager()
             return wm.getSwitchStatus(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
 
@@ -1319,7 +1319,7 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             wm = WebsiteManager()
             return wm.switchServer(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def tuneSettings(self, request):
@@ -1327,42 +1327,42 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             wm = WebsiteManager()
             return wm.tuneSettings(self.admin.pk, self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def getCurrentPHPConfig(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return PHPManager.getCurrentPHPConfig(self.data['phpSelection'])
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def savePHPConfigBasic(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return PHPManager.savePHPConfigBasic(self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchPHPSettingsAdvance(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return PHPManager.fetchPHPSettingsAdvance(self.data['phpSelection'])
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def savePHPConfigAdvance(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return PHPManager.savePHPConfigAdvance(self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchPHPExtensions(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return PHPManager.fetchPHPExtensions(self.data)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitExtensionRequest(self, request):
@@ -1370,14 +1370,14 @@ class CloudManager:
             request.session['userID'] = self.admin.pk
             submitExtensionRequest(request)
             return self.ajaxPre(1, 'None')
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def getRequestStatus(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return getRequestStatusApache(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def getContainerizationStatus(self, request):
@@ -1394,7 +1394,7 @@ class CloudManager:
 
             finalData = json.dumps(finalData)
             return HttpResponse(finalData)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def submitContainerInstall(self, request):
@@ -1414,33 +1414,33 @@ class CloudManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def switchTOLSWSStatus(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return switchTOLSWSStatus(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def fetchWebsiteLimits(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return fetchWebsiteLimits(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def saveWebsiteLimits(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return saveWebsiteLimits(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def getUsageData(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return getUsageData(request)
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))

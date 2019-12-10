@@ -49,7 +49,7 @@ class restoreMeta():
 
                     virtualHostUtilities.createDomain(masterDomain, domain, phpSelection, path, 0, 0, 0,
                                                                   'admin', 0)
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.writeToFile(str(msg) + " [startRestore]")
                 return 0
 
@@ -92,7 +92,7 @@ class restoreMeta():
                                              'Email created: %s' % (
                                                  email))
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.writeToFile(str(msg) + " [startRestore]")
                 return 0
 
@@ -148,7 +148,7 @@ class restoreMeta():
             except:
                 pass
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [startRestore]")
 
 def main():

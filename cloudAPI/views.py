@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from cloudManager import CloudManager
 import json
@@ -307,6 +307,6 @@ def router(request):
         else:
             return cm.ajaxPre(0, 'This function is not available in your version of CyberPanel.')
 
-    except BaseException, msg:
+    except BaseException as msg:
         cm = CloudManager(None)
         return cm.ajaxPre(0, str(msg))

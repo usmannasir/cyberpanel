@@ -48,7 +48,7 @@ class secMiddleware:
             try:
                 #logging.writeToFile(request.body)
                 data = json.loads(request.body)
-                for key, value in data.iteritems():
+                for key, value in data.items():
                     if request.path.find('gitNotify') > -1:
                         break
 
@@ -93,7 +93,7 @@ class secMiddleware:
                         final_dic = {'error_message': "Data supplied is not accepted.", "errorMessage": "Data supplied is not accepted."}
                         final_json = json.dumps(final_dic)
                         return HttpResponse(final_json)
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.writeToFile(str(msg))
                 response = self.get_response(request)
                 return response

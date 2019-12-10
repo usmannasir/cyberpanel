@@ -23,7 +23,7 @@ class HandleRequest(multi.Thread):
     def __del__(self):
         try:
             self.connection.close()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [HandleRequest.__del__]')
 
     def run(self):
@@ -62,7 +62,7 @@ class HandleRequest(multi.Thread):
                     self.connection.close()
                     break
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile( str(msg) + ' [HandleRequest.run]')
         finally:
             limitThreads.release()
@@ -136,6 +136,6 @@ class HandleRequest(multi.Thread):
                 self.connection.sendall('action=dunno\n\n')
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [HandleRequest.manageRequest]")
             self.connection.sendall('action=defer_if_permit Service temporarily unavailable\n\n')

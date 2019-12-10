@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import HttpResponse, redirect
 from loginSystem.views import loadLoginPage
@@ -42,7 +42,7 @@ def submitContainerInstall(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -117,7 +117,7 @@ def fetchWebsiteLimits(request):
         json_data = json.dumps(finalData)
         return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -264,7 +264,7 @@ def saveWebsiteLimits(request):
         json_data = json.dumps(finalData)
         return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -345,7 +345,7 @@ def getUsageData(request):
         final_json = json.dumps(finalData)
         return HttpResponse(final_json)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'error_message': str(msg), 'cpu': 0, 'memory':0}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

@@ -21,7 +21,7 @@ class PackagesManager:
         try:
             val = self.request.session['userID']
             return render(self.request, 'packages/index.html', {})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def createPacakge(self):
@@ -49,7 +49,7 @@ class PackagesManager:
             packageList = ACLManager.loadPackages(userID, currentACL)
             return render(self.request, 'packages/deletePackage.html', {"packageList": packageList})
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def submitPackage(self):
@@ -101,7 +101,7 @@ class PackagesManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -125,7 +125,7 @@ class PackagesManager:
             return HttpResponse(json_data)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -141,7 +141,7 @@ class PackagesManager:
             packageList = ACLManager.loadPackages(userID, currentACL)
             return render(self.request, 'packages/modifyPackage.html', {"packList": packageList})
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def submitModify(self):
@@ -170,7 +170,7 @@ class PackagesManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'modifyStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -215,7 +215,7 @@ class PackagesManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -232,7 +232,7 @@ class PackagesManager:
             packageList = ACLManager.loadPackages(userID, currentACL)
             return render(self.request, 'packages/listPackages.html', {"packList": packageList})
 
-        except BaseException, msg:
+        except BaseException as msg:
             return redirect(loadLoginPage)
 
     def fetchPackagesTable(self):

@@ -24,5 +24,5 @@ class cliLogger:
 
             return lastFewLines
 
-        except subprocess.CalledProcessError,msg:
+        except subprocess.CalledProcessError as msg:
             return "File was empty"

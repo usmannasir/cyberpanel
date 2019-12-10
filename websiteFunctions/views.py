@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
@@ -31,7 +31,7 @@ def modifyWebsite(request):
         userID = request.session['userID']
         wm = WebsiteManager()
         return wm.modifyWebsite(request, userID)
-    except BaseException, msg:
+    except BaseException as msg:
         return HttpResponse(str(msg))
 
     except KeyError:

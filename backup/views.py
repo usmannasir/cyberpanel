@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 # Create your views here.
 import json
@@ -61,7 +61,7 @@ def submitBackupCreation(request):
 
         return coreResult
 
-    except BaseException, msg:
+    except BaseException as msg:
         logging.writeToFile(str(msg))
 
 
@@ -337,5 +337,5 @@ def localInitiate(request):
         if os.path.exists(randomFile):
             wm = BackupManager()
             return wm.submitBackupCreation(1, json.loads(request.body))
-    except BaseException, msg:
+    except BaseException as msg:
         logging.writeToFile(str(msg))

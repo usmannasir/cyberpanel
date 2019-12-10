@@ -29,7 +29,7 @@ class ServerStatusUtil:
                 return 0
             else:
                 return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0
 
@@ -124,7 +124,7 @@ class ServerStatusUtil:
 
 
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0
 
@@ -147,7 +147,7 @@ class ServerStatusUtil:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,"Filemanager files are set!\n")
 
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0
 
@@ -196,7 +196,7 @@ class ServerStatusUtil:
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0
 
@@ -233,7 +233,7 @@ class ServerStatusUtil:
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
         return 0
 
@@ -254,7 +254,7 @@ class ServerStatusUtil:
                         if ServerStatusUtil.createDomain(child) == 0:
                             logging.CyberCPLogFileWriter.writeToFile(
                                 'Error while creating child domain: ' + child.domain)
-                    except BaseException, msg:
+                    except BaseException as msg:
                         logging.CyberCPLogFileWriter.writeToFile(
                             'Error while creating child domain: ' + child.domain + ' . Exact message: ' + str(
                                 msg))
@@ -266,14 +266,14 @@ class ServerStatusUtil:
                         aliasDomain = alias.aliasDomain
                         alias.delete()
                         virtualHostUtilities.createAlias(website.domain, aliasDomain, 0, '/home', website.adminEmail, website.admin)
-                    except BaseException, msg:
+                    except BaseException as msg:
                         logging.CyberCPLogFileWriter.writeToFile(
                             'Error while creating alais domain: ' + aliasDomain + ' . Exact message: ' + str(
                                 msg))
 
                 logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                           "vhost conf successfully built for: " + website.domain + ".\n", 1)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0
 
@@ -351,7 +351,7 @@ class ServerStatusUtil:
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,"Successfully switched to LITESPEED ENTERPRISE WEB SERVER. [200]\n", 1)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "%s. [404]" % (str(msg)), 1)
             logging.CyberCPLogFileWriter.writeToFile(str(msg))

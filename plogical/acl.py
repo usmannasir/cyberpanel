@@ -30,7 +30,7 @@ class ACLManager:
             f = open(ipFile)
             ipData = f.read()
             serverIPAddress = ipData.split('\n', 1)[0]
-        except BaseException, msg:
+        except BaseException as msg:
             serverIPAddress = "192.168.100.1"
 
         finalResponse['serverIPAddress'] = serverIPAddress
@@ -534,7 +534,7 @@ class ACLManager:
                 return 0, 'Something bad happened'
             else:
                 return 1, 'None'
-        except CalledProcessError, msg:
+        except CalledProcessError as msg:
             logging.writeToFile(str(msg) + ' [ACLManager.executeCall]')
             return 0, str(msg)
 

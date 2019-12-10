@@ -115,7 +115,7 @@ class IncJobs(multi.Thread):
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg))
 
     ####
@@ -163,7 +163,7 @@ class IncJobs(multi.Thread):
                     logging.statusWriter(self.statusPath, result, 1)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [88][5009]" % (str(msg)), 1)
             return 0
 
@@ -240,7 +240,7 @@ class IncJobs(multi.Thread):
                 else:
                     self.awsFunction('restore', '', self.jobid.snapshotid)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [138][5009]" % (str(msg)), 1)
             return 0
 
@@ -274,10 +274,10 @@ class IncJobs(multi.Thread):
                     os.remove('/home/cyberpanel/%s' % (self.path.split('/')[-1]))
                 else:
                     os.remove('/home/cyberpanel/%s.sql' % (self.jobid.type.split(':')[1]))
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.writeToFile(str(msg))
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [160][5009]" % (str(msg)), 1)
             return 0
 
@@ -297,7 +297,7 @@ class IncJobs(multi.Thread):
                 else:
                     self.awsFunction('restore', '', self.jobid.snapshotid)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [46][5009]" % (str(msg)), 1)
             return 0
 
@@ -328,7 +328,7 @@ class IncJobs(multi.Thread):
             except:
                 pass
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [46][5009]" % (str(msg)), 1)
             return 0
 
@@ -400,7 +400,7 @@ class IncJobs(multi.Thread):
                     logging.statusWriter(self.statusPath, message, 1)
 
             logging.statusWriter(self.statusPath, 'Completed', 1)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.extraArgs['tempPath'], str(msg), 1)
 
     ### Backup functions
@@ -520,7 +520,7 @@ class IncJobs(multi.Thread):
 
                 metaFileXML.append(dnsRecordsXML)
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.statusWriter(self.statusPath, '%s. [158:prepMeta]' % (str(msg)), 1)
 
             ## Email accounts XML
@@ -541,7 +541,7 @@ class IncJobs(multi.Thread):
                     emailRecordsXML.append(emailRecordXML)
 
                 metaFileXML.append(emailRecordsXML)
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.statusWriter(self.statusPath, '%s. [warning:179:prepMeta]' % (str(msg)), 1)
 
             ## Email meta generated!
@@ -561,7 +561,7 @@ class IncJobs(multi.Thread):
             metaFile = open(metaPath, 'w')
             metaFile.write(xmlpretty)
             metaFile.close()
-            os.chmod(metaPath, 0640)
+            os.chmod(metaPath, 0o640)
 
             ## meta generated
 
@@ -573,7 +573,7 @@ class IncJobs(multi.Thread):
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [207][5009]" % (str(msg)), 1)
             return 0
 
@@ -592,7 +592,7 @@ class IncJobs(multi.Thread):
             logging.statusWriter(self.statusPath,
                                  'Data for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath, '%s. [IncJobs.backupData.223][5009]' % str(msg), 1)
             return 0
 
@@ -617,11 +617,11 @@ class IncJobs(multi.Thread):
 
                 try:
                     os.remove('/home/cyberpanel/%s.sql' % (items.dbName))
-                except BaseException, msg:
+                except BaseException as msg:
                     logging.statusWriter(self.statusPath,
                                          'Failed to delete database: %s. [IncJobs.backupDatabases.456]' % str(msg), 1)
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath, '%s. [IncJobs.backupDatabases.269][5009]' % str(msg), 1)
             return 0
 
@@ -641,7 +641,7 @@ class IncJobs(multi.Thread):
             logging.statusWriter(self.statusPath,
                                  'Emails for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath, '%s. [IncJobs.emailBackup.269][5009]' % str(msg), 1)
             return 0
 
@@ -661,7 +661,7 @@ class IncJobs(multi.Thread):
             logging.statusWriter(self.statusPath,
                                  'Meta for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath, '%s. [IncJobs.metaBackup.269][5009]' % str(msg), 1)
             return 0
 
@@ -691,7 +691,7 @@ class IncJobs(multi.Thread):
             logging.statusWriter(self.statusPath,
                                  'Repo %s initiated for %s.' % (self.backupDestinations, self.website.domain), 1)
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath, '%s. [IncJobs.initiateRepo.47][5009]' % str(msg), 1)
             return 0
 
@@ -763,7 +763,7 @@ Subject: %s
         try:
             command = 'rm -f %s' % (metaPathNew)
             ProcessUtilities.executioner(command)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.statusWriter(self.statusPath,
                                  'Failed to delete meta file: %s. [IncJobs.createBackup.591]' % str(msg), 1)
 

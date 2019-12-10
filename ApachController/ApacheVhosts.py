@@ -144,7 +144,7 @@ class ApacheVhost:
             ProcessUtilities.normalExecutioner(command)
 
             return [1, 'None']
-        except BaseException, msg:
+        except BaseException as msg:
             return [0, str(msg)]
 
     @staticmethod
@@ -172,7 +172,7 @@ class ApacheVhost:
                 confFile.close()
 
             return [1, 'None']
-        except BaseException, msg:
+        except BaseException as msg:
             return [0, str(msg)]
 
     @staticmethod
@@ -183,7 +183,7 @@ class ApacheVhost:
             confFile.write("REWRITERULE ^(.*)$ HTTP://apachebackend/$1 [P]")
             confFile.close()
             return [1, 'None']
-        except BaseException, msg:
+        except BaseException as msg:
             return [0, str(msg)]
 
     @staticmethod
@@ -256,7 +256,7 @@ class ApacheVhost:
             ProcessUtilities.normalExecutioner(command)
 
             return [1, 'None']
-        except BaseException, msg:
+        except BaseException as msg:
             return [0, str(msg)]
 
     @staticmethod
@@ -285,7 +285,7 @@ class ApacheVhost:
             command = "systemctl restart httpd"
             ProcessUtilities.normalExecutioner(command)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg))
 
     @staticmethod
@@ -300,7 +300,7 @@ class ApacheVhost:
             confFile.write(currentConf)
             confFile.close()
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(
                 str(msg) + " [IO Error with per host config file [ApacheVhosts.perHostVirtualConf]]")
 
@@ -383,6 +383,6 @@ class ApacheVhost:
             ProcessUtilities.normalExecutioner(command)
 
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg))
             return 1

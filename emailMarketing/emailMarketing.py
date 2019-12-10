@@ -1,5 +1,5 @@
 #!/usr/local/CyberCP/bin/python2
-from __future__ import absolute_import
+
 import os
 import time
 import csv
@@ -28,7 +28,7 @@ class emailMarketing(multi.Thread):
                 self.verificationJob()
             elif self.function == 'startEmailJob':
                 self.startEmailJob()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [emailMarketing.run]')
 
     def createEmailList(self):
@@ -58,7 +58,7 @@ class emailMarketing(multi.Thread):
                                         newEmail.save()
                                     logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], str(counter) + ' emails read.')
                                     counter = counter + 1
-                        except BaseException, msg:
+                        except BaseException as msg:
                             logging.CyberCPLogFileWriter.writeToFile(str(msg))
                             continue
             elif self.extraArgs['path'].endswith('.txt'):
@@ -69,7 +69,7 @@ class emailMarketing(multi.Thread):
                         if re.match('^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$', email) != None:
                             try:
                                 getEmail = EmailsInList.objects.get(owner=newList, email=email)
-                            except BaseException, msg:
+                            except BaseException as msg:
                                 newEmail = EmailsInList(owner=newList, email=email, verificationStatus='NOT CHECKED',
                                                         dateCreated=time.strftime("%I-%M-%S-%a-%b-%Y"))
                                 newEmail.save()
@@ -78,7 +78,7 @@ class emailMarketing(multi.Thread):
                         emails = emailsList.readline()
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], str(counter) + 'Successfully read all emails. [200]')
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], str(msg) +'. [404]')
             return 0
 
@@ -132,14 +132,14 @@ class emailMarketing(multi.Thread):
 
                         logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(counter) + ' emails verified so far..')
                         counter = counter + 1
-                    except BaseException, msg:
+                    except BaseException as msg:
                         items.verificationStatus = 'Verification Failed'
                         items.save()
                         counter = counter + 1
                         logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(counter) + ' emails successfully verified. [200]')
-        except BaseException, msg:
+        except BaseException as msg:
             verificationList = EmailLists.objects.get(listName=self.extraArgs['listName'])
             domain = verificationList.owner.domain
             tempStatusPath = '/home/cyberpanel/' + domain + "/" + self.extraArgs['listName']
@@ -235,7 +235,7 @@ class emailMarketing(multi.Thread):
                         logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                                   'Successfully sent: ' + str(sent) + ' Failed: ' + str(
                                                                       failed))
-                    except BaseException, msg:
+                    except BaseException as msg:
                         failed = failed + 1
                         logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                                   'Successfully sent: ' + str(
@@ -250,6 +250,6 @@ class emailMarketing(multi.Thread):
 
                     logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                               'Email job completed. [200]')
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], str(msg) + '. [404]')
             return 0

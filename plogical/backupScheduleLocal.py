@@ -50,7 +50,7 @@ class backupScheduleLocal:
 
             writeToFile.close()
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [214:startBackup]")
 
 def main():

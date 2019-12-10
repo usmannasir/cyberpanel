@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render
 from plogical.acl import ACLManager
@@ -48,7 +48,7 @@ def createBackup(request):
                 destinations.append('s3:s3.amazonaws.com/%s' % (items))
 
         return defRenderer(request, 'IncBackups/createBackup.html', {'websiteList': websitesName, 'destinations': destinations})
-    except BaseException, msg:
+    except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
 
@@ -61,7 +61,7 @@ def backupDestinations(request):
             return ACLManager.loadError()
 
         return defRenderer(request, 'IncBackups/incrementalDestinations.html', {})
-    except BaseException, msg:
+    except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
 
@@ -168,7 +168,7 @@ def addDestination(request):
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    except BaseException, msg:
+    except BaseException as msg:
         final_dic = {'status': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
@@ -235,7 +235,7 @@ def populateCurrentRecords(request):
         final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
         return HttpResponse(final_json)
 
-    except BaseException, msg:
+    except BaseException as msg:
         final_dic = {'status': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
@@ -264,7 +264,7 @@ def removeDestination(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-    except BaseException, msg:
+    except BaseException as msg:
         final_dic = {'destStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
@@ -337,7 +337,7 @@ def fetchCurrentBackups(request):
             return HttpResponse(final_json)
 
 
-    except BaseException, msg:
+    except BaseException as msg:
         final_dic = {'status': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
@@ -398,7 +398,7 @@ def submitBackupCreation(request):
         final_json = json.dumps({'status': 1,  'error_message': "None", 'tempPath': tempPath})
         return HttpResponse(final_json)
 
-    except BaseException, msg:
+    except BaseException as msg:
         logging.writeToFile(str(msg))
         final_dic = {'status': 0, 'metaStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
@@ -456,7 +456,7 @@ def getBackupStatus(request):
             final_json = json.dumps({'backupStatus': 1, 'error_message': "None", "status": 1, "abort": 0})
             return HttpResponse(final_json)
 
-    except BaseException, msg:
+    except BaseException as msg:
         final_dic = {'backupStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         logging.writeToFile(str(msg) + " [backupStatus]")
@@ -483,7 +483,7 @@ def deleteBackup(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-    except BaseException, msg:
+    except BaseException as msg:
         final_dic = {'destStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
@@ -528,7 +528,7 @@ def fetchRestorePoints(request):
         json_data = json_data + ']'
         final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
         return HttpResponse(final_json)
-    except BaseException, msg:
+    except BaseException as msg:
         final_dic = {'status': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
@@ -576,7 +576,7 @@ def restorePoint(request):
         final_json = json.dumps({'status': 1,  'error_message': "None", 'tempPath': tempPath})
         return HttpResponse(final_json)
 
-    except BaseException, msg:
+    except BaseException as msg:
         logging.writeToFile(str(msg))
         final_dic = {'status': 0, 'metaStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
@@ -607,7 +607,7 @@ def scheduleBackups(request):
                 destinations.append('s3:s3.amazonaws.com/%s' % (items))
 
         return defRenderer(request, 'IncBackups/backupSchedule.html', {'websiteList': websitesName, 'destinations': destinations})
-    except BaseException, msg:
+    except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
 
@@ -657,7 +657,7 @@ def submitBackupSchedule(request):
         return HttpResponse(final_json)
 
 
-    except BaseException, msg:
+    except BaseException as msg:
         final_json = json.dumps({'status': 0, 'error_message': str(msg)})
         return HttpResponse(final_json)
 
@@ -690,7 +690,7 @@ def getCurrentBackupSchedules(request):
         final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
         return HttpResponse(final_json)
 
-    except BaseException, msg:
+    except BaseException as msg:
         final_dic = {'status': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
@@ -713,7 +713,7 @@ def scheduleDelete(request):
         final_json = json.dumps({'status': 1, 'error_message': "None"})
         return HttpResponse(final_json)
 
-    except BaseException, msg:
+    except BaseException as msg:
         final_json = json.dumps({'status': 0, 'error_message': str(msg)})
         return HttpResponse(final_json)
 
@@ -741,6 +741,6 @@ def restoreRemoteBackups(request):
                 destinations.append('s3:s3.amazonaws.com/%s' % (items))
 
         return defRenderer(request, 'IncBackups/restoreRemoteBackups.html', {'websiteList': websitesName, 'destinations': destinations})
-    except BaseException, msg:
+    except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)

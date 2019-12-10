@@ -39,7 +39,7 @@ class DockerInstall:
 
             time.sleep(2)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
 
 DockerInstall.submitInstallDocker()

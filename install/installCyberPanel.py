@@ -86,7 +86,7 @@ class InstallCyberPanel:
                 command = 'chown -R lsadm:lsadm ' + confPath
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installLiteSpeed]")
                 return 0
 
@@ -116,7 +116,7 @@ class InstallCyberPanel:
             writeDataToFile.close()
 
             InstallCyberPanel.stdOut("OpenLiteSpeed Configurations fixed!", 1)
-        except IOError, msg:
+        except IOError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [fix_ols_configs]")
             return 0
 
@@ -140,7 +140,7 @@ class InstallCyberPanel:
 
             InstallCyberPanel.stdOut("Default port is now 80 for OpenLiteSpeed!", 1)
 
-        except IOError, msg:
+        except IOError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [changePortTo80]")
             return 0
 
@@ -208,7 +208,7 @@ class InstallCyberPanel:
             InstallCyberPanel.stdOut("MariaDB repo set!", 1)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_mariadb_repo]")
             return 0
 
@@ -426,7 +426,7 @@ class InstallCyberPanel:
 
             InstallCyberPanel.stdOut("PureFTPD configured!", 1)
 
-        except IOError, msg:
+        except IOError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installPureFTPDConfigurations]")
             return 0
 
@@ -480,7 +480,7 @@ class InstallCyberPanel:
 
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [powerDNS]")
 
     def installPowerDNSConfigurations(self, mysqlPassword, mysql):
@@ -525,7 +525,7 @@ class InstallCyberPanel:
 
             InstallCyberPanel.stdOut("PowerDNS configured!", 1)
 
-        except IOError, msg:
+        except IOError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installPowerDNSConfigurations]")
             return 0
         return 1

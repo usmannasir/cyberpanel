@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render
 from django.http import HttpResponse
@@ -141,7 +141,7 @@ def verifyLogin(request):
                 json_data = json.dumps(data)
                 return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             data = {'userID': 0, 'loginStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data)
             return HttpResponse(json_data)

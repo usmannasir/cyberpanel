@@ -137,7 +137,7 @@ class tuningManager:
                     final_json = json.dumps(data_ret)
                     return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'fetch_status': 0, 'error_message': str(msg), 'tuneStatus': 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -190,7 +190,7 @@ class tuningManager:
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'fetch_status': 0, 'error_message': str(msg), 'tuneStatus': 0}
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [tunePHP]]")
             json_data = json.dumps(data_ret)

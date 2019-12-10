@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 from django.shortcuts import render, HttpResponse
 import json
 
@@ -30,7 +30,7 @@ class httpProc:
             finalDic['status'] = status
             finalDic['error_message'] = errorMessage
 
-            for key, value in data.iteritems():
+            for key, value in data.items():
                 finalDic[key] = value
 
             finalJson = json.dumps(finalDic)

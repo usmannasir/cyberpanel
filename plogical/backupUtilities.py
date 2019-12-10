@@ -123,12 +123,12 @@ class backupUtilities:
                                 for it in dbusers:
                                     dbuser = it
                                     break
-                            except BaseException, msg:
+                            except BaseException as msg:
                                 logging.CyberCPLogFileWriter.writeToFile(
                                     'While creating backup for %s, we failed to backup database %s. Error message: %s' % (
                                         backupDomain, items.dbName, str(msg)))
                                 continue
-                    except BaseException, msg:
+                    except BaseException as msg:
                         logging.CyberCPLogFileWriter.writeToFile(
                             'While creating backup for %s, we failed to backup database %s. Error message: %s' % (
                             backupDomain, items.dbName, str(msg)))
@@ -163,7 +163,7 @@ class backupUtilities:
 
                 metaFileXML.append(aliasesXML)
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.statusWriter(status, '%s. [167:prepMeta]' % (str(msg)))
 
             ## Finish Alias
@@ -191,7 +191,7 @@ class backupUtilities:
 
                 metaFileXML.append(dnsRecordsXML)
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.statusWriter(status, '%s. [158:prepMeta]' % (str(msg)))
 
             ## Email accounts XML
@@ -212,7 +212,7 @@ class backupUtilities:
                     emailRecordsXML.append(emailRecordXML)
 
                 metaFileXML.append(emailRecordsXML)
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.statusWriter(status, '%s. [179:prepMeta]' % (str(msg)))
 
             ## Email meta generated!
@@ -235,7 +235,7 @@ class backupUtilities:
             metaFile = open(metaPath, 'w')
             metaFile.write(xmlpretty)
             metaFile.close()
-            os.chmod(metaPath, 0777)
+            os.chmod(metaPath, 0o777)
 
             ## meta generated
 
@@ -249,7 +249,7 @@ class backupUtilities:
             return 1,'None', metaPath
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)))
             return 0,str(msg)
 
@@ -304,9 +304,9 @@ class backupUtilities:
             make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
             logging.CyberCPLogFileWriter.statusWriter(status, "Backing up databases..")
-            print '1,None'
+            print('1,None')
 
-        except BaseException,msg:
+        except BaseException as msg:
             try:
                 os.remove(os.path.join(backupPath,backupName+".tar.gz"))
             except:
@@ -319,7 +319,7 @@ class backupUtilities:
 
             status = os.path.join(backupPath, 'status')
             logging.CyberCPLogFileWriter.statusWriter(status, "Aborted, "+ str(msg) + ".[365] [5009]")
-            print ("Aborted, "+ str(msg) + ".[365] [5009]")
+            print(("Aborted, "+ str(msg) + ".[365] [5009]"))
 
     @staticmethod
     def BackupRoot(tempStoragePath, backupName, backupPath, metaPath=None):
@@ -340,7 +340,7 @@ class backupUtilities:
                      os.path.join(tempStoragePath, domainName + ".fullchain.pem"))
                 copy(os.path.join(sslStoragePath, "privkey.pem"),
                      os.path.join(tempStoragePath, domainName + ".privkey.pem"))
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile('%s. [283:startBackup]' % (str(msg)))
 
         ## Child Domains SSL.
@@ -372,7 +372,7 @@ class backupUtilities:
                                      sslStoragePath)
                     except:
                         pass
-        except BaseException, msg:
+        except BaseException as msg:
             pass
 
         ## backup emails
@@ -390,7 +390,7 @@ class backupUtilities:
 
         try:
             make_archive(os.path.join(tempStoragePath, domainName), 'gztar', os.path.join("/home", "vmail", domainName))
-        except BaseException, msg:
+        except BaseException as msg:
             pass
 
 
@@ -431,7 +431,7 @@ class backupUtilities:
             pid = open(backupPath + 'pid', "w")
             pid.write(str(p.pid))
             pid.close()
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateBackup]")
 
     @staticmethod
@@ -518,7 +518,7 @@ class backupUtilities:
 
             return 1,'None'
 
-        except BaseException, msg:
+        except BaseException as msg:
             return 0, str(msg)
 
     @staticmethod
@@ -587,7 +587,7 @@ class backupUtilities:
                         copy(completPath + "/" + masterDomain + ".fullchain.pem", sslHome + "/fullchain.pem")
 
                         sslUtilities.installSSLForDomain(masterDomain)
-                    except BaseException, msg:
+                    except BaseException as msg:
                         logging.CyberCPLogFileWriter.writeToFile('%s. [555:startRestore]' % (str(msg)))
 
             else:
@@ -653,7 +653,7 @@ class backupUtilities:
                     else:
                         logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + retValues[1] + ". Not able to create child domains, aborting. [635][5009]")
                         return 0
-            except BaseException, msg:
+            except BaseException as msg:
                 status = open(os.path.join(completPath,'status'), "w")
                 status.write("Error Message: " + str(msg) +". Not able to create child domains, aborting. [638][5009]")
                 status.close()
@@ -686,7 +686,7 @@ class backupUtilities:
                     if result[0] == 0:
                         raise BaseException(result[1])
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + str(msg) +". Not able to create email accounts, aborting. [671][5009]")
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
                 return 0
@@ -750,7 +750,7 @@ class backupUtilities:
             cmd = shlex.split(command)
             subprocess.call(cmd)
 
-        except BaseException, msg:
+        except BaseException as msg:
             status = os.path.join(completPath, 'status')
             logging.CyberCPLogFileWriter.statusWriter(status, str(msg) + " [736][5009]")
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
@@ -760,7 +760,7 @@ class backupUtilities:
         try:
             p = Process(target=backupUtilities.startRestore, args=(backupName, dir,))
             p.start()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateRestore]")
 
     @staticmethod
@@ -797,13 +797,13 @@ class backupUtilities:
 
             return [1, "None"]
 
-        except pexpect.TIMEOUT, msg:
+        except pexpect.TIMEOUT as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendKey]")
             return [0, "TIMEOUT [sendKey]"]
-        except pexpect.EOF, msg:
+        except pexpect.EOF as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendKey]")
             return [0,  "EOF [sendKey]"]
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendKey]")
             return [0, str(msg) + " [sendKey]"]
 
@@ -868,9 +868,9 @@ class backupUtilities:
                     return [0,sendKey[1]]
 
 
-        except pexpect.TIMEOUT, msg:
+        except pexpect.TIMEOUT as msg:
             return [0, str(msg) + " [TIMEOUT setupSSHKeys]"]
-        except BaseException, msg:
+        except BaseException as msg:
             return [0, str(msg) + " [setupSSHKeys]"]
 
     @staticmethod
@@ -880,7 +880,7 @@ class backupUtilities:
                 return 1
             else:
                 return 0
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[checkIfHostIsUp]")
 
     @staticmethod
@@ -923,13 +923,13 @@ class backupUtilities:
                 subprocess.call(['kill', str(checkConn.pid)])
                 return [1, "None"]
 
-        except pexpect.TIMEOUT, msg:
+        except pexpect.TIMEOUT as msg:
             logging.CyberCPLogFileWriter.writeToFile("Timeout "+IPAddress+ " [checkConnection]")
             return [0, "371 Timeout while making connection to this server [checkConnection]"]
-        except pexpect.EOF, msg:
+        except pexpect.EOF as msg:
             logging.CyberCPLogFileWriter.writeToFile("EOF "+IPAddress+ "[checkConnection]")
             return [0, "374 Remote Server is not able to authenticate for transfer to initiate. [checkConnection]"]
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg)+" " +IPAddress+ " [checkConnection]")
             return [0, "377 Remote Server is not able to authenticate for transfer to initiate. [checkConnection]"]
 
@@ -990,13 +990,13 @@ class backupUtilities:
                     return [1, "None"]
 
 
-        except pexpect.TIMEOUT, msg:
+        except pexpect.TIMEOUT as msg:
             logging.CyberCPLogFileWriter.writeToFile("Timeout [verifyHostKey]")
             return [0,"Timeout [verifyHostKey]"]
-        except pexpect.EOF, msg:
+        except pexpect.EOF as msg:
             logging.CyberCPLogFileWriter.writeToFile("EOF [verifyHostKey]")
             return [0,"EOF [verifyHostKey]"]
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [verifyHostKey]")
             return [0,str(msg)+" [verifyHostKey]"]
 
@@ -1013,7 +1013,7 @@ class backupUtilities:
             command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel root@" + IPAddress + ' "cat /root/.ssh/authorized_temp > /root/.ssh/authorized_keys"'
             subprocess.call(shlex.split(command))
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createBackupDir]")
             return 0
 
@@ -1023,7 +1023,7 @@ class backupUtilities:
             command = 'sudo ssh-keygen -R ' + IPAddress
             subprocess.call(shlex.split(command))
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [host_key_verification]")
             return 0
 
@@ -1039,9 +1039,9 @@ class backupUtilities:
 
             return aliases
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [getAliases]")
-            print 0
+            print(0)
 
 
 def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
@@ -1150,7 +1150,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         command = 'rm -f %s' % (result[2])
         ProcessUtilities.executioner(command, 'cyberpanel')
 
-    except BaseException, msg:
+    except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(
             str(msg) + "  [submitBackupCreation]")
 
@@ -1163,7 +1163,7 @@ def cancelBackupCreation(backupCancellationDomain,fileName):
 
         try:
             os.kill(int(pid), signal.SIGKILL)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
 
         backupPath = "/home/" + backupCancellationDomain + "/backup/"
@@ -1172,21 +1172,21 @@ def cancelBackupCreation(backupCancellationDomain,fileName):
 
         try:
             os.remove(tempStoragePath + ".tar.gz")
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
 
         try:
             rmtree(tempStoragePath)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
 
         status = open(backupPath + 'status', "w")
         status.write("Aborted manually. [1165][5009]")
         status.close()
-    except BaseException,msg:
+    except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(
             str(msg) + "  [cancelBackupCreation]")
-        print "0,"+str(msg)
+        print("0,"+str(msg))
 
 def submitRestore(backupFile,dir):
     try:
@@ -1194,21 +1194,21 @@ def submitRestore(backupFile,dir):
         p = Process(target=backupUtilities.startRestore, args=(backupFile, dir,))
         p.start()
 
-        print "1,None"
+        print("1,None")
 
-    except BaseException,msg:
+    except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(
             str(msg) + "  [cancelBackupCreation]")
-        print "0,"+str(msg)
+        print("0,"+str(msg))
 
 def submitDestinationCreation(ipAddress, password, port):
     setupKeys = backupUtilities.setupSSHKeys(ipAddress, password, port)
 
     if setupKeys[0] == 1:
         backupUtilities.createBackupDir(ipAddress, port)
-        print "1,None"
+        print("1,None")
     else:
-        print setupKeys[1]
+        print(setupKeys[1])
 
 
 def getConnectionStatus(ipAddress):
@@ -1216,12 +1216,12 @@ def getConnectionStatus(ipAddress):
         checkCon = backupUtilities.checkConnection(ipAddress)
 
         if checkCon[0] == 1:
-            print "1,None"
+            print("1,None")
         else:
-            print checkCon[1]
+            print(checkCon[1])
 
-    except BaseException, msg:
-        print str(msg)
+    except BaseException as msg:
+        print(str(msg))
 
 def main():
 

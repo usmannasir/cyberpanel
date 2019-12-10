@@ -29,10 +29,10 @@ class FirewallUtilities:
                 logging.CyberCPLogFileWriter.writeToFile("Failed to apply rule: " + command + " Error #" + str(res))
                 return 0
 
-        except OSError, msg:
+        except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile("Failed to apply rule: " + command + " Error: " + str(msg))
             return 0
-        except ValueError, msg:
+        except ValueError as msg:
             logging.CyberCPLogFileWriter.writeToFile("Failed to apply rule: " + command + " Error: " + str(msg), 1)
             return 0
         return 1
@@ -130,10 +130,10 @@ class FirewallUtilities:
                 command = 'sudo systemctl restart sshd'
                 ProcessUtilities.normalExecutioner(command)
 
-                print "1,None"
+                print("1,None")
 
-        except BaseException, msg:
-            print "0," + str(msg)
+        except BaseException as msg:
+            print("0," + str(msg))
 
     @staticmethod
     def addSSHKey(tempPath):
@@ -176,10 +176,10 @@ class FirewallUtilities:
             if os.path.split(tempPath):
                 os.remove(tempPath)
 
-            print "1,None"
+            print("1,None")
 
-        except BaseException, msg:
-            print "0," + str(msg)
+        except BaseException as msg:
+            print("0," + str(msg))
 
     @staticmethod
     def deleteSSHKey(key):
@@ -199,10 +199,10 @@ class FirewallUtilities:
 
             writeToFile.close()
 
-            print "1,None"
+            print("1,None")
 
-        except BaseException, msg:
-            print "0," + str(msg)
+        except BaseException as msg:
+            print("0," + str(msg))
 
 
 def main():

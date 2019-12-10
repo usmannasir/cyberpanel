@@ -30,7 +30,7 @@ class BackupManager:
         try:
             currentACL = ACLManager.loadedACL(userID)
             return render(request, 'backup/index.html', currentACL)
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def backupSite(self, request = None, userID = None, data = None):
@@ -42,7 +42,7 @@ class BackupManager:
 
             websitesName = ACLManager.findAllSites(currentACL, userID)
             return render(request, 'backup/backup.html', {'websiteList': websitesName})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def restoreSite(self, request = None, userID = None, data = None):
@@ -70,7 +70,7 @@ class BackupManager:
 
                 return render(request, 'backup/restore.html', {'backups': all_files})
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def getCurrentBackups(self, userID = None, data = None):
@@ -112,7 +112,7 @@ class BackupManager:
             json_data = json_data + ']'
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -151,7 +151,7 @@ class BackupManager:
             final_json = json.dumps({'status': 1, 'metaStatus': 1, 'error_message': "None", 'tempStorage': tempStoragePath})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             final_dic = {'status': 0, 'metaStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -213,7 +213,7 @@ class BackupManager:
                         for items in backupObs:
                             items.delete()
 
-                    except BaseException, msg:
+                    except BaseException as msg:
                         logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupStatus]")
 
                     final_json = json.dumps(
@@ -229,7 +229,7 @@ class BackupManager:
                 final_json = json.dumps({'backupStatus': 0, 'error_message': "None", "status": 0, "abort": 0})
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'backupStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupStatus]")
@@ -250,13 +250,13 @@ class BackupManager:
             try:
                 backupOb = Backups.objects.get(fileName=fileName)
                 backupOb.delete()
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
 
             final_json = json.dumps({'abortStatus': 1, 'error_message': "None", "status": 0})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'abortStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -276,7 +276,7 @@ class BackupManager:
 
             final_json = json.dumps({'status': 1, 'deleteStatus': 1, 'error_message': "None"})
             return HttpResponse(final_json)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
 
@@ -300,7 +300,7 @@ class BackupManager:
             final_dic = {'restoreStatus': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'restoreStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -347,7 +347,7 @@ class BackupManager:
                              'running': 'Running..'})
                         return HttpResponse(final_json)
 
-                except BaseException, msg:
+                except BaseException as msg:
                     logging.CyberCPLogFileWriter.writeToFile(str(msg))
                     status = "Just Started"
                     final_json = json.dumps(
@@ -360,7 +360,7 @@ class BackupManager:
                      'abort': 1})
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'restoreStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -374,7 +374,7 @@ class BackupManager:
 
             return render(request, 'backup/backupDestinations.html', {})
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def submitDestinationCreation(self, userID = None, data = None):
@@ -436,7 +436,7 @@ class BackupManager:
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'destStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -471,7 +471,7 @@ class BackupManager:
             final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -499,7 +499,7 @@ class BackupManager:
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'connStatus': 1, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -552,7 +552,7 @@ class BackupManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'delStatus': 1, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -579,7 +579,7 @@ class BackupManager:
 
             return render(request, 'backup/backupSchedule.html', {'destinations': destinations})
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def getCurrentBackupSchedules(self, userID = None, data = None):
@@ -610,7 +610,7 @@ class BackupManager:
             final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -811,7 +811,7 @@ class BackupManager:
                     final_json = json.dumps({'scheduleStatus': 1, 'error_message': "None"})
                     return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_json = json.dumps({'scheduleStatus': 0, 'error_message': str(msg)})
             return HttpResponse(final_json)
 
@@ -939,7 +939,7 @@ class BackupManager:
                 final_json = json.dumps({'delStatus': 1, 'error_message': "None"})
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_json = json.dumps({'delStatus': 0, 'error_message': str(msg)})
             return HttpResponse(final_json)
 
@@ -952,7 +952,7 @@ class BackupManager:
 
             return render(request, 'backup/remoteBackups.html')
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def submitRemoteBackups(self, userID = None, data = None):
@@ -995,7 +995,7 @@ class BackupManager:
                     return HttpResponse(data_ret)
 
 
-            except BaseException, msg:
+            except BaseException as msg:
                 data_ret = {'status': 0,
                             'error_message': "Not able to fetch version of remote server. Error Message: " + str(
                                 msg),
@@ -1067,14 +1067,14 @@ class BackupManager:
                                                  data['error_message'], "dir": "Null"}
                     data_ret = json.dumps(data_ret)
                     return HttpResponse(data_ret)
-            except BaseException, msg:
+            except BaseException as msg:
                 data_ret = {'status': 0,
                             'error_message': "Not able to fetch accounts from remote server. Error Message: " + str(
                                 msg), "dir": "Null"}
                 data_ret = json.dumps(data_ret)
                 return HttpResponse(data_ret)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_json = json.dumps({'status': 0, 'error_message': str(msg)})
             return HttpResponse(final_json)
 
@@ -1132,13 +1132,13 @@ class BackupManager:
                                                               data['error_message']})
                     return HttpResponse(final_json)
 
-            except BaseException, msg:
+            except BaseException as msg:
                 final_json = json.dumps({'remoteTransferStatus': 0,
                                          'error_message': "Can not initiate remote transfer. Error message: " +
                                                           str(msg)})
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_json = json.dumps({'remoteTransferStatus': 0, 'error_message': str(msg)})
             return HttpResponse(final_json)
 
@@ -1182,7 +1182,7 @@ class BackupManager:
                         'backupsSent': 0}
                 json_data = json.dumps(data)
                 return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             data = {'remoteTransferStatus': 0, 'error_message': str(msg), 'backupsSent': 0}
             json_data = json.dumps(data)
             return HttpResponse(json_data)
@@ -1213,7 +1213,7 @@ class BackupManager:
             json_data = json.dumps(data)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data = {'remoteRestoreStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data)
             return HttpResponse(json_data)
@@ -1260,7 +1260,7 @@ class BackupManager:
                             "complete": 0}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             data = {'remoteTransferStatus': 0, 'error_message': str(msg), "status": "None", "complete": 0}
             json_data = json.dumps(data)
             return HttpResponse(json_data)
@@ -1306,7 +1306,7 @@ class BackupManager:
             json_data = json.dumps(data)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data = {'cancelStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data)
             return HttpResponse(json_data)

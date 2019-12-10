@@ -23,7 +23,7 @@ class StagingSetup(multi.Thread):
                 self.startCloning()
             elif self.function == 'startSyncing':
                 self.startSyncing()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [StagingSetup.run]')
 
     def startCloning(self):
@@ -160,7 +160,7 @@ class StagingSetup(multi.Thread):
             logging.statusWriter(tempStatusPath, 'Data copied..,[200]')
 
             return 0
-        except BaseException, msg:
+        except BaseException as msg:
             mesg = '%s. [404]' % (str(msg))
             logging.statusWriter(self.tempStatusPath, mesg)
 
@@ -239,6 +239,6 @@ class StagingSetup(multi.Thread):
             logging.statusWriter(tempStatusPath, 'Data copied..,[200]')
 
             return 0
-        except BaseException, msg:
+        except BaseException as msg:
             mesg = '%s. [404]' % (str(msg))
             logging.statusWriter(tempStatusPath, mesg)

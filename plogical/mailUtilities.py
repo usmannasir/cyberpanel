@@ -37,8 +37,8 @@ class mailUtilities:
         try:
             smtpObj = smtplib.SMTP('localhost')
             smtpObj.sendmail(sender, receivers, message)
-            print "Successfully sent email"
-        except BaseException, msg:
+            print("Successfully sent email")
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
     @staticmethod
     def AfterEffects(domain):
@@ -157,13 +157,13 @@ class mailUtilities:
             emailLimits = EmailLimits(email=emailAcct)
             emailLimits.save()
 
-            print "1,None"
+            print("1,None")
             return 1,"None"
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [createEmailAccount]")
-            print "0," + str(msg)
+            print("0," + str(msg))
             return 0, str(msg)
 
     @staticmethod
@@ -175,7 +175,7 @@ class mailUtilities:
 
             return 1, 'None'
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [deleteEmailAccount]")
             return 0, str(msg)
@@ -206,7 +206,7 @@ class mailUtilities:
                 changePass.password = newPassword
                 changePass.save()
             return 0,'None'
-        except BaseException, msg:
+        except BaseException as msg:
             return 0, str(msg)
 
     @staticmethod
@@ -280,7 +280,7 @@ class mailUtilities:
 
             return 1, "None"
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [setupDKIM:275]")
             return 0, str(msg)
@@ -294,7 +294,7 @@ class mailUtilities:
             command = "sudo cat " + path
             return ProcessUtilities.executioner(command)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [checkIfDKIMInstalled]")
             return 0
@@ -306,12 +306,12 @@ class mailUtilities:
             if result[0] == 0:
                 raise BaseException(result[1])
             else:
-                print "1,None"
+                print("1,None")
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [generateKeys]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
     @staticmethod
     def configureOpenDKIM():
@@ -361,18 +361,18 @@ milter_default_action = accept
                 command = "systemctl start postfix"
                 subprocess.call(shlex.split(command))
 
-                print "1,None"
+                print("1,None")
                 return
 
 
 
-            except OSError, msg:
+            except OSError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [configureOpenDKIM]")
-                print "0," + str(msg)
+                print("0," + str(msg))
                 return
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [configureOpenDKIM]")
-                print "0," + str(msg)
+                print("0," + str(msg))
             return
 
     @staticmethod
@@ -398,7 +398,7 @@ milter_default_action = accept
                 command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
                 subprocess.call(shlex.split(command), stdout=FNULL)
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [checkHome]")
 
     @staticmethod
@@ -426,7 +426,7 @@ milter_default_action = accept
                 writeToFile.close()
 
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             writeToFile = open(mailUtilities.installLogPath, 'a')
             writeToFile.writelines("Can not be installed.[404]\n")
             writeToFile.close()
@@ -440,7 +440,7 @@ milter_default_action = accept
 
             command = 'systemctl restart dovecot'
             subprocess.call(shlex.split(command))
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [restartServices]")
 
     @staticmethod
@@ -469,7 +469,7 @@ milter_default_action = accept
                 writeToFile.close()
 
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
             writeToFile.writelines("Can not be installed.[404]\n")
             writeToFile.close()
@@ -489,7 +489,7 @@ milter_default_action = accept
             else:
                 return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [checkIfSpamAssassinInstalled]")
             return 0
@@ -552,17 +552,17 @@ milter_default_action = accept
             ProcessUtilities.normalExecutioner(command)
 
 
-            print "1,None"
+            print("1,None")
             return
 
 
-        except OSError, msg:
+        except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [configureSpamAssassin]")
-            print "0," + str(msg)
+            print("0," + str(msg))
             return
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [configureSpamAssassin]")
-            print "0," + str(msg)
+            print("0," + str(msg))
         return
 
     @staticmethod
@@ -604,13 +604,13 @@ milter_default_action = accept
             command = 'systemctl restart spamassassin'
             subprocess.call(shlex.split(command))
 
-            print "1,None"
+            print("1,None")
             return
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [saveSpamAssassinConfigs]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
     @staticmethod
     def savePolicyServerStatus(install):
@@ -656,13 +656,13 @@ milter_default_action = accept
                 command = 'systemctl restart postfix'
                 subprocess.call(shlex.split(command))
 
-            print "1,None"
+            print("1,None")
             return
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [savePolicyServerStatus]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
 
 def main():

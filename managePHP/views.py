@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-import sys
 
-reload(sys)
+import sys
+import importlib
+
+importlib.reload(sys)
 sys.setdefaultencoding("utf-8")
 from django.shortcuts import render, redirect
 from loginSystem.views import loadLoginPage
@@ -1247,7 +1248,7 @@ def getExtensionsInformation(request):
                 final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
 
@@ -1286,7 +1287,7 @@ def submitExtensionRequest(request):
                 final_json = json.dumps({'extensionRequestStatus': 1, 'error_message': "None"})
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'extensionRequestStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
 
@@ -1413,7 +1414,7 @@ def getRequestStatus(request):
 
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'extensionRequestStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1535,12 +1536,12 @@ def getRequestStatusApache(request):
 
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [getRequestStatusApache]')
             final_dic = {'status': 0, 'extensionRequestStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-    except KeyError, msg:
+    except KeyError as msg:
         logging.writeToFile(str(msg) + ' [getRequestStatusApache]')
         final_dic = {'status': 0, 'extensionRequestStatus': 0,
                      'error_message': "Not Logged In, please refresh the page or login again."}
@@ -1639,7 +1640,7 @@ def getCurrentPHPConfig(request):
 
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
 
@@ -1712,7 +1713,7 @@ def savePHPConfigBasic(request):
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'saveStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1756,7 +1757,7 @@ def getCurrentAdvancedPHPConfig(request):
                 return HttpResponse(final_json)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1810,11 +1811,11 @@ def savePHPConfigAdvance(request):
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
-            except BaseException, msg:
+            except BaseException as msg:
                 data_ret = {'saveStatus': 0, 'error_message': str(msg)}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except KeyError, msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[saveConfigsToFile]")
         return HttpResponse("Not Logged in as admin")

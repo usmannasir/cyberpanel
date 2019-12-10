@@ -46,7 +46,7 @@ class ApplicationInstaller(multi.Thread):
             elif self.installApp == 'magento':
                 self.installMagento()
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.run]')
 
     def installWPCLI(self):
@@ -60,7 +60,7 @@ class ApplicationInstaller(multi.Thread):
             command = 'sudo mv wp-cli.phar /usr/bin/wp'
             ProcessUtilities.executioner(command)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.installWPCLI]')
 
     def dataLossCheck(self, finalPath, tempStatusPath):
@@ -106,7 +106,7 @@ class ApplicationInstaller(multi.Thread):
                 command = 'sudo yum install git -y'
                 ProcessUtilities.executioner(command)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.installGit]')
 
     def dbCreation(self, tempStatusPath, website):
@@ -141,7 +141,7 @@ class ApplicationInstaller(multi.Thread):
 
             return dbName, dbUser, dbPassword
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + '[ApplicationInstallerdbCreation]')
 
     def installWordPress(self):
@@ -298,7 +298,7 @@ class ApplicationInstaller(multi.Thread):
             return 0
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             # remove the downloaded files
             FNULL = open(os.devnull, 'w')
 
@@ -469,7 +469,7 @@ class ApplicationInstaller(multi.Thread):
             return 0
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             # remove the downloaded files
 
             homeDir = "/home/" + domainName + "/public_html"
@@ -568,7 +568,7 @@ class ApplicationInstaller(multi.Thread):
             try:
                 command = 'git clone --depth 1 --no-single-branch git@' + defaultProvider + '.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
                 ProcessUtilities.executioner(command, externalApp)
-            except subprocess.CalledProcessError, msg:
+            except subprocess.CalledProcessError as msg:
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines(
                     'Failed to clone repository, make sure you deployed your key to repository. [404]')
@@ -596,7 +596,7 @@ class ApplicationInstaller(multi.Thread):
             return 0
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             os.remove('/home/cyberpanel/' + domainName + '.git')
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
@@ -636,7 +636,7 @@ class ApplicationInstaller(multi.Thread):
             return 0
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [ApplicationInstaller.gitPull]")
             return 0
 
@@ -679,7 +679,7 @@ class ApplicationInstaller(multi.Thread):
             return 0
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [ApplicationInstaller.gitPull]")
             return 0
 
@@ -829,7 +829,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
             return 0
 
-        except BaseException, msg:
+        except BaseException as msg:
             # remove the downloaded files
 
             homeDir = "/home/" + domainName + "/public_html"
@@ -873,11 +873,11 @@ class ApplicationInstaller(multi.Thread):
                 try:
                     command = 'sudo git --git-dir=' + finalPath + '/.git  checkout ' + githubBranch
                     ProcessUtilities.executioner(command, externalApp)
-                except subprocess.CalledProcessError, msg:
+                except subprocess.CalledProcessError as msg:
                     logging.writeToFile('Failed to change branch: ' + str(msg))
                     return 0
             return 0
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile('Failed to change branch: ' + str(msg))
             return 0
 
@@ -1038,7 +1038,7 @@ class ApplicationInstaller(multi.Thread):
             return 0
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             # remove the downloaded files
 
             homeDir = "/home/" + domainName + "/public_html"

@@ -18,12 +18,12 @@ class Container:
             length = len(Container.users)
             for items in Container.users:
                 if (counter + 1) == length:
-                    print items + ' ' + Container.packages[counter]
+                    print(items + ' ' + Container.packages[counter])
                 else:
-                    print items + ' ' + Container.packages[counter] + ' '
+                    print(items + ' ' + Container.packages[counter] + ' ')
                 counter = counter + 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
     @staticmethod
@@ -33,12 +33,12 @@ class Container:
             length = len(Container.users)
             for items in Container.packages:
                 if (counter + 1) == length:
-                    print items
+                    print(items)
                 else:
-                    print items + '\n'
+                    print(items + '\n')
                 counter = counter + 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
     @staticmethod
@@ -47,10 +47,10 @@ class Container:
             counter = 0
             for items in Container.users:
                 if items == user:
-                    print Container.packages[counter]
+                    print(Container.packages[counter])
                     return
                 counter = counter + 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
     @staticmethod
@@ -59,10 +59,10 @@ class Container:
             counter = 0
             for items in Container.packages:
                 if items == package:
-                    print Container.users[counter]
+                    print(Container.users[counter])
                     return
                 counter = counter + 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
     @staticmethod
@@ -88,7 +88,7 @@ class Container:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "Packages successfully installed.[200]\n", 1)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
 
 def main():
