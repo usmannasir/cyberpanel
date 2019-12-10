@@ -266,7 +266,7 @@ class preFlightsChecks:
             return 1
 
     def checkPythonVersion(self):
-        if sys.version_info[0] == 2 and sys.version_info[1] == 7:
+        if sys.version_info[0] == 3:
             return 1
         else:
             preFlightsChecks.stdOut("You are running Unsupported python version, please install python 2.7")
@@ -1918,7 +1918,6 @@ milter_default_action = accept
 
         return res  # Though probably not used
 
-    @staticmethod
     def setupVirtualEnv(distro):
         try:
 
@@ -1961,12 +1960,12 @@ milter_default_action = accept
 
             ##
 
-            command = "pip install virtualenv"
-            preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
+            #command = "pip3.6 install virtualenv"
+            #preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
 
             ####
 
-            command = "virtualenv --system-site-packages /usr/local/CyberCP"
+            command = "python3.6 -m venv --system-site-packages /usr/local/CyberCP"
             preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
 
             ##
@@ -1992,10 +1991,13 @@ milter_default_action = accept
                 preFlightsChecks.stdOut("Install updated " + install_file_new, 1)
                 install_file = install_file_new
 
-            command = "pip install --ignore-installed -r " + install_file
+            command = "pip3.6 install --ignore-installed -r " + install_file
             preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
 
-            command = "virtualenv --system-site-packages /usr/local/CyberCP"
+            command = "python3.6 -m venv /usr/local/CyberCP"
+            preFlightsChecks.call(command, distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = "ln -s /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/bin/python"
             preFlightsChecks.call(command, distro, command, command, 1, 0, os.EX_OSERR)
 
         except OSError as msg:
