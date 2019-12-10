@@ -725,7 +725,7 @@ class IncJobs(multi.Thread):
             SUBJECT = "Backup Repository password for %s" % (self.website)
             text = """Password: %s
 This is password for your incremental backup repository, please save it in safe place as it will be required when you want to restore backup for this site on remote server.
-"""
+""" % (password)
 
             sender = 'cyberpanel@%s' % (self.website.domain)
             TO = [self.website.adminEmail]
