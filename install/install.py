@@ -425,7 +425,7 @@ class preFlightsChecks:
         self.stdOut("Install MySQL python library")
 
         if self.distro == centos:
-            command = "yum -y install MySQL-python"
+            command = "yum install mariadb-devel gcc python36u-devel -y"
         else:
             command = "apt-get -y install libmysqlclient-dev"
 
