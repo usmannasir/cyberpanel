@@ -1970,7 +1970,7 @@ milter_default_action = accept
             command = "python3.6 -m venv /usr/local/CyberCP"
             preFlightsChecks.call(command, distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = "ln -s /usr/local/CyberCP/bin/python /usr/local/CyberCP/bin/python"
+            command = "ln -s /usr/local/CyberCP/bin/python /usr/local/CyberCP/bin/python2"
             preFlightsChecks.call(command, distro, command, command, 1, 0, os.EX_OSERR)
 
         except OSError as msg:
