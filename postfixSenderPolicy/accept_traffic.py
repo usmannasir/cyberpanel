@@ -6,11 +6,11 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-from policyConstraint import policyConstraints
+from .policyConstraint import policyConstraints
 from emailPremium.models import DomainLimits, EmailLogs
 from mailServer.models import Domains, EUsers
 import time
-from cacheManager import cacheManager
+from .cacheManager import cacheManager
 
 limitThreads = multi.BoundedSemaphore(10)
 

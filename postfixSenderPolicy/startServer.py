@@ -6,10 +6,10 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import socket
 import os
-import accept_traffic as handle
+from . import accept_traffic as handle
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from signal import *
-from cacheManager import cacheManager
+from .cacheManager import cacheManager
 import pwd
 import grp
 

@@ -1,7 +1,7 @@
 import argparse
 import os
-import CyberCPLogFileWriter as logging
-import backupUtilities as backupUtil
+from . import CyberCPLogFileWriter as logging
+from . import backupUtilities as backupUtil
 import time
 from multiprocessing import Process
 import json
@@ -11,7 +11,7 @@ import shlex
 from shutil import move
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.processUtilities import ProcessUtilities
-from backupSchedule import backupSchedule
+from .backupSchedule import backupSchedule
 import shutil
 
 class remoteTransferUtilities:

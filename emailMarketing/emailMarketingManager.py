@@ -6,12 +6,12 @@ from random import randint
 import time
 from .models import EmailMarketing, EmailLists, EmailsInList, EmailJobs
 from websiteFunctions.models import Websites
-from emailMarketing import emailMarketing as EM
+from .emailMarketing import emailMarketing as EM
 from math import ceil
 import smtplib
 from .models import SMTPHosts, EmailTemplate
 from loginSystem.models import Administrator
-from emACL import emACL
+from .emACL import emACL
 
 class EmailMarketingManager:
 

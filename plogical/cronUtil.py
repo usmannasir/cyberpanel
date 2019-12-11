@@ -1,5 +1,5 @@
 import argparse
-from processUtilities import ProcessUtilities
+from .processUtilities import ProcessUtilities
 
 class CronUtil:
 

@@ -5,7 +5,7 @@ import time
 import csv
 import re
 import plogical.CyberCPLogFileWriter as logging
-from emailMarketing.models import EmailMarketing, EmailLists, EmailsInList, EmailTemplate, EmailJobs, SMTPHosts
+from .emailMarketing.models import EmailMarketing, EmailLists, EmailsInList, EmailTemplate, EmailJobs, SMTPHosts
 from websiteFunctions.models import Websites
 import threading as multi
 import socket, smtplib

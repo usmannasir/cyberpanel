@@ -5,8 +5,8 @@ from django.shortcuts import redirect
 from django.http import HttpResponse
 from loginSystem.views import loadLoginPage
 import json
-from mailserverManager import MailServerManager
-from pluginManager import pluginManager
+from .mailserverManager import MailServerManager
+from .pluginManager import pluginManager
 
 def loadEmailHome(request):
     try:

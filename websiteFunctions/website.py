@@ -38,7 +38,7 @@ from plogical.vhostConfs import vhostConfs
 from plogical.cronUtil import CronUtil
 from re import match,I,M
 from plogical import randomPassword
-from StagingSetup import StagingSetup
+from .StagingSetup import StagingSetup
 
 
 class WebsiteManager:

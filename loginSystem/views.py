@@ -3,7 +3,7 @@
 
 from django.shortcuts import render
 from django.http import HttpResponse
-from models import Administrator
+from .models import Administrator
 from plogical import hashPassword
 import json
 from packages.models import Package
@@ -12,7 +12,7 @@ from baseTemplate.models import version
 from plogical.getSystemInformation import SystemInformation
 from django.utils.translation import LANGUAGE_SESSION_KEY
 import CyberCP.settings as settings
-from models import ACL
+from .models import ACL
 from plogical.acl import ACLManager
 from django.views.decorators.csrf import ensure_csrf_cookie
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging

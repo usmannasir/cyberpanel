@@ -7,19 +7,19 @@ try:
 except:
     pass
 import pexpect
-import CyberCPLogFileWriter as logging
+from . import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 from shutil import make_archive,rmtree
-import mysqlUtilities
+from . import mysqlUtilities
 import tarfile
 from multiprocessing import Process
 import signal
-from installUtilities import installUtilities
+from .installUtilities import installUtilities
 import argparse
 try:
-    from virtualHostUtilities import virtualHostUtilities
-    from sslUtilities import sslUtilities
+    from .virtualHostUtilities import virtualHostUtilities
+    from .sslUtilities import sslUtilities
     from plogical.mailUtilities import mailUtilities
 except:
     pass
@@ -35,7 +35,7 @@ try:
     from websiteFunctions.models import Websites, ChildDomains, Backups
     from databases.models import Databases
     from loginSystem.models import Administrator
-    from dnsUtilities import DNS
+    from .dnsUtilities import DNS
     from mailServer.models import Domains as eDomains
     from backup.models import DBUsers
 except:

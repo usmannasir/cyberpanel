@@ -12,7 +12,7 @@ from dns.models import Domains
 import json
 from subprocess import call, CalledProcessError
 from shlex import split
-from CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from .CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from dockerManager.models import Containers
 
 class ACLManager:

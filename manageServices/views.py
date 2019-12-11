@@ -9,7 +9,7 @@ import os
 import json
 from plogical.mailUtilities import mailUtilities
 from plogical.acl import ACLManager
-from models import PDNSStatus, SlaveServers
+from .models import PDNSStatus, SlaveServers
 from .serviceManager import ServiceManager
 from plogical.processUtilities import ProcessUtilities
 # Create your views here.

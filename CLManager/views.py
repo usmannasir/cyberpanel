@@ -4,7 +4,7 @@
 from django.shortcuts import redirect, HttpResponse
 from loginSystem.views import loadLoginPage
 from plogical.acl import ACLManager
-from CLManagerMain import CLManagerMain
+from .CLManagerMain import CLManagerMain
 import json
 from websiteFunctions.models import Websites
 from plogical.processUtilities import ProcessUtilities

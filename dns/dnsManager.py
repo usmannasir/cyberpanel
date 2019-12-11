@@ -11,7 +11,7 @@ import json
 from plogical.dnsUtilities import DNS
 from loginSystem.models import Administrator
 import os
-from models import Domains,Records
+from .models import Domains,Records
 from re import match,I,M
 from plogical.mailUtilities import mailUtilities
 from plogical.acl import ACLManager

@@ -8,7 +8,7 @@ django.setup()
 import json
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
-from models import Users
+from .models import Users
 from loginSystem.models import Administrator
 import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage

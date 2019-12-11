@@ -4,7 +4,7 @@
 from django.shortcuts import redirect
 import json
 from loginSystem.views import loadLoginPage
-from tuning import tuningManager
+from .tuning import tuningManager
 # Create your views here.
 
 

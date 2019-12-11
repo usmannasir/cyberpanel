@@ -3,8 +3,8 @@
 
 from django.shortcuts import redirect, HttpResponse
 from loginSystem.views import loadLoginPage
-from databaseManager import DatabaseManager
-from pluginManager import pluginManager
+from .databaseManager import DatabaseManager
+from .pluginManager import pluginManager
 import json
 from plogical.processUtilities import ProcessUtilities
 from loginSystem.models import Administrator

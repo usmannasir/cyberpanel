@@ -20,7 +20,7 @@ from random import randint
 from xml.etree import ElementTree
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
-from phpManager import PHPManager
+from .phpManager import PHPManager
 
 
 # Create your views here.

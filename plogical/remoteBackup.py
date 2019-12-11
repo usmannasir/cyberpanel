@@ -1,9 +1,9 @@
-import CyberCPLogFileWriter as logging
+from . import CyberCPLogFileWriter as logging
 import os
 import requests
 import json
 import time
-import backupUtilities as backupUtil
+from . import backupUtilities as backupUtil
 import subprocess
 import shlex
 from multiprocessing import Process

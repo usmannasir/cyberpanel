@@ -10,8 +10,8 @@ try:
     django.setup()
 except:
     pass
-from IncBackupsControl import IncJobs
-from IncBackups.models import BackupJob
+from .IncBackupsControl import IncJobs
+from .IncBackups.models import BackupJob
 from random import randint
 import argparse
 try:

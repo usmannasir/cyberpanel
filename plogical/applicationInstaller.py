@@ -9,12 +9,12 @@ django.setup()
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
-from vhost import vhost
+from .vhost import vhost
 from websiteFunctions.models import ChildDomains, Websites
-import randomPassword
-from mysqlUtilities import mysqlUtilities
+from . import randomPassword
+from .mysqlUtilities import mysqlUtilities
 from databases.models import Databases
-from installUtilities import installUtilities
+from .installUtilities import installUtilities
 import shutil
 from plogical.mailUtilities import mailUtilities
 from plogical.processUtilities import ProcessUtilities

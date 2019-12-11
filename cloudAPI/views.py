@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from cloudManager import CloudManager
+from .cloudManager import CloudManager
 import json
 from loginSystem.models import Administrator
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging

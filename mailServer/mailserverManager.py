@@ -8,7 +8,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
-from models import Domains,EUsers
+from .models import Domains,EUsers
 from loginSystem.views import loadLoginPage
 import plogical.CyberCPLogFileWriter as logging
 import json

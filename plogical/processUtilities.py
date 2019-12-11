@@ -1,4 +1,4 @@
-from CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from .CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import os

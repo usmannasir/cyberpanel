@@ -13,7 +13,7 @@ from plogical.acl import ACLManager
 import os
 from plogical.virtualHostUtilities import virtualHostUtilities
 import time
-import serverStatusUtil
+from . import serverStatusUtil
 from plogical.processUtilities import ProcessUtilities
 from plogical.httpProc import httpProc
 from plogical.installUtilities import installUtilities

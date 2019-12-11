@@ -7,15 +7,15 @@ sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import json
-from acl import ACLManager
-import CyberCPLogFileWriter as logging
+from .acl import ACLManager
+from . import CyberCPLogFileWriter as logging
 from websiteFunctions.models import Websites, Backups, dest, backupSchedules
-from virtualHostUtilities import virtualHostUtilities
+from .virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
 from django.shortcuts import HttpResponse, render
 from loginSystem.models import Administrator
-from mailUtilities import mailUtilities
+from .mailUtilities import mailUtilities
 from random import randint
 import time
 import plogical.backupUtilities as backupUtil

@@ -2,7 +2,7 @@
 
 from django.shortcuts import redirect
 from loginSystem.views import loadLoginPage
-from emailMarketingManager import EmailMarketingManager
+from .emailMarketingManager import EmailMarketingManager
 # Create your views here.
 
 

@@ -2,8 +2,8 @@
 
 from django.shortcuts import redirect
 from loginSystem.views import loadLoginPage
-from dnsManager import DNSManager
-from pluginManager import pluginManager
+from .dnsManager import DNSManager
+from .pluginManager import pluginManager
 import json
 
 # Create your views here.

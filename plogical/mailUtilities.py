@@ -8,11 +8,11 @@ except:
     pass
 import os.path
 import shutil
-import CyberCPLogFileWriter as logging
+from . import CyberCPLogFileWriter as logging
 import subprocess
 import argparse
 import shlex
-from processUtilities import ProcessUtilities
+from .processUtilities import ProcessUtilities
 import os, getpass
 import hashlib
 import bcrypt

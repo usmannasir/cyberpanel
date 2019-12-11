@@ -1,11 +1,11 @@
 import subprocess
 import sys
-import CyberCPLogFileWriter as logging
+from . import CyberCPLogFileWriter as logging
 import shutil
 import pexpect
 import os
 import shlex
-from processUtilities import ProcessUtilities
+from .processUtilities import ProcessUtilities
 
 class installUtilities:
 

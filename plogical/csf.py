@@ -1,13 +1,13 @@
 #!/usr/local/CyberCP/bin/python
-import CyberCPLogFileWriter as logging
+from . import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import argparse
-from virtualHostUtilities import virtualHostUtilities
+from .virtualHostUtilities import virtualHostUtilities
 import os
 import tarfile
 import shutil
-from mailUtilities import mailUtilities
+from .mailUtilities import mailUtilities
 import threading as multi
 from plogical.processUtilities import ProcessUtilities
 

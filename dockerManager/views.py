@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect, HttpResponse
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
 from .container import ContainerManager
-from decorators import preDockerRun
+from .decorators import preDockerRun
 from plogical.acl import ACLManager
 import json
 

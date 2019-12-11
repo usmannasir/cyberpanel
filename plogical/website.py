@@ -8,31 +8,31 @@ sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import json
-from acl import ACLManager
-import CyberCPLogFileWriter as logging
+from .acl import ACLManager
+from . import CyberCPLogFileWriter as logging
 from websiteFunctions.models import Websites, ChildDomains
-from virtualHostUtilities import virtualHostUtilities
+from .virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
-from installUtilities import installUtilities
+from .installUtilities import installUtilities
 from django.shortcuts import HttpResponse, render
 from loginSystem.models import Administrator, ACL
 from packages.models import Package
-from mailUtilities import mailUtilities
+from .mailUtilities import mailUtilities
 from random import randint
 import time
 import re
-from childDomain import ChildDomainManager
+from .childDomain import ChildDomainManager
 from math import ceil
 from plogical.alias import AliasManager
 from plogical.applicationInstaller import ApplicationInstaller
 from databases.models import Databases
-import randomPassword as randomPassword
+from . import randomPassword as randomPassword
 import hashlib
-from mysqlUtilities import mysqlUtilities
+from .mysqlUtilities import mysqlUtilities
 from plogical import hashPassword
 from emailMarketing.emACL import emACL
-from processUtilities import ProcessUtilities
+from .processUtilities import ProcessUtilities
 from managePHP.phpManager import PHPManager
 from ApachController.ApacheVhosts import ApacheVhost
 from plogical.vhostConfs import vhostConfs
