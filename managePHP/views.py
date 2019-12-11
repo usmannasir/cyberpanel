@@ -4,7 +4,6 @@ import sys
 import importlib
 
 importlib.reload(sys)
-sys.setdefaultencoding("utf-8")
 from django.shortcuts import render, redirect
 from loginSystem.views import loadLoginPage
 from .models import PHP, installedPackages, ApachePHP, installedPackagesApache

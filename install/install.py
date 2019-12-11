@@ -1931,48 +1931,6 @@ milter_default_action = accept
                 command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
                 preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
 
-            ##
-
-            #command = "pip3.6 install virtualenv"
-            #preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
-
-            ####
-
-            command = "python3.6 -m venv --system-site-packages /usr/local/CyberCP"
-            preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
-
-            ##
-
-            env_path = '/usr/local/CyberCP'
-            subprocess.call(['virtualenv', env_path])
-            activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
-            exec(compile(open(activate_this, "rb").read(), activate_this, 'exec'), dict(__file__=activate_this))
-
-            ##
-
-            install_file = '/usr/local/CyberCP/requirments.txt'
-            if distro == ubuntu and get_Ubuntu_release() < 18.04:
-                install_file_new = '/usr/local/CyberCP/requirements.txt'
-                fd = open(install_file, 'r')
-                fd_new = open(install_file_new, 'w')
-                lines = fd.readlines()
-                for line in lines:
-                    if line[:6] != 'pycurl' and line[:7] != 'pygpgme':
-                        fd_new.write(line)
-                fd.close()
-                fd_new.close()
-                preFlightsChecks.stdOut("Install updated " + install_file_new, 1)
-                install_file = install_file_new
-
-            command = "pip3.6 install --ignore-installed -r " + install_file
-            preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
-
-            command = "python3.6 -m venv /usr/local/CyberCP"
-            preFlightsChecks.call(command, distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "ln -s /usr/local/CyberCP/bin/python /usr/local/CyberCP/bin/python2"
-            preFlightsChecks.call(command, distro, command, command, 1, 0, os.EX_OSERR)
-
         except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setupVirtualEnv]")
             return 0

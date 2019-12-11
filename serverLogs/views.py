@@ -136,7 +136,7 @@ def getLogsFromFile(request):
             else:
                 fileName = "/var/log/mail.log"
         elif type == "ftp":
-	    if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                 fileName = "/var/log/messages"
             else:
                 fileName = "/var/log/syslog"
