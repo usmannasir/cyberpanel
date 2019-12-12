@@ -456,16 +456,10 @@ class preFlightsChecks:
 
         os.chdir('/usr/local')
 
-        command = 'rm -rf cyberpanel'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
         command = "git clone https://github.com/usmannasir/cyberpanel"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         shutil.move('cyberpanel', 'CyberCP')
-
-        command = 'mv  -v cyberpanel/* CyberCP/'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         ##
 
@@ -526,7 +520,7 @@ class preFlightsChecks:
 
         logging.InstallLog.writeToFile("settings.py updated!")
 
-        ##self.setupVirtualEnv(self.distro)
+        #self.setupVirtualEnv(self.distro)
 
         ### Applying migrations
 
@@ -1626,7 +1620,7 @@ imap_folder_list_limit = 0
             ##
 
             command = 'systemctl start lscpd'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            #preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             preFlightsChecks.stdOut("LSCPD Daemon Set!")
 
