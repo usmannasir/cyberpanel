@@ -5,7 +5,7 @@ class FirewallUtilities:
 
     @staticmethod
     def doCommand(command):
-        from . import install as inst
+        import install as inst
         try:
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
