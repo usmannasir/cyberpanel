@@ -456,6 +456,9 @@ class preFlightsChecks:
 
         os.chdir('/usr/local')
 
+        command = 'rm -rf cyberpanel'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
         command = "git clone https://github.com/usmannasir/cyberpanel"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
