@@ -520,11 +520,11 @@ class preFlightsChecks:
 
         logging.InstallLog.writeToFile("settings.py updated!")
 
-        self.setupVirtualEnv(self.distro)
+        ##self.setupVirtualEnv(self.distro)
 
         ### Applying migrations
 
-        os.chdir("CyberCP")
+        os.chdir("/usr/local/CyberCP")
 
         command = "/usr/local/CyberPanel/bin/python manage.py makemigrations"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
