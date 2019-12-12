@@ -461,6 +461,9 @@ class preFlightsChecks:
 
         shutil.move('cyberpanel', 'CyberCP')
 
+        command = 'mv  -v cyberpanel/* CyberCP/'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
         ##
 
         ### update password:
