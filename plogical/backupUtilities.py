@@ -7,11 +7,11 @@ try:
 except:
     pass
 import pexpect
-from . import CyberCPLogFileWriter as logging
+import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 from shutil import make_archive,rmtree
-from . import mysqlUtilities
+import mysqlUtilities
 import tarfile
 from multiprocessing import Process
 import signal

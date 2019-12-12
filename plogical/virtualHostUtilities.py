@@ -14,8 +14,8 @@ except:
 
 import shutil
 import argparse
-from . import installUtilities
-from . import sslUtilities
+import installUtilities
+import sslUtilities
 from os.path import join
 from os import listdir, rmdir
 from shutil import move
@@ -23,7 +23,7 @@ from multiprocessing import Process
 import subprocess
 import shlex
 from plogical.mailUtilities import mailUtilities
-from . import CyberCPLogFileWriter as logging
+import CyberCPLogFileWriter as logging
 from .dnsUtilities import DNS
 from .vhost import vhost
 from .applicationInstaller import ApplicationInstaller

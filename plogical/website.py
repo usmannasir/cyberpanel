@@ -9,7 +9,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import json
 from .acl import ACLManager
-from . import CyberCPLogFileWriter as logging
+import CyberCPLogFileWriter as logging
 from websiteFunctions.models import Websites, ChildDomains
 from .virtualHostUtilities import virtualHostUtilities
 import subprocess
@@ -27,7 +27,7 @@ from math import ceil
 from plogical.alias import AliasManager
 from plogical.applicationInstaller import ApplicationInstaller
 from databases.models import Databases
-from . import randomPassword as randomPassword
+import randomPassword as randomPassword
 import hashlib
 from .mysqlUtilities import mysqlUtilities
 from plogical import hashPassword

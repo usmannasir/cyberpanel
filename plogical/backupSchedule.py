@@ -5,7 +5,7 @@ import django
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
-from . import CyberCPLogFileWriter as logging
+import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import os

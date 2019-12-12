@@ -1,5 +1,5 @@
 import os
-from . import CyberCPLogFileWriter as logging
+import CyberCPLogFileWriter as logging
 import shlex
 import subprocess
 class findBWUsage:

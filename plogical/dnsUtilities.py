@@ -7,7 +7,7 @@ try:
     django.setup()
 except:
     pass
-from . import CyberCPLogFileWriter as logging
+import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 try:

@@ -1,9 +1,7 @@
-from . import CyberCPLogFileWriter as logging
-from .installUtilities import installUtilities
+from CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from installUtilities import installUtilities
 import argparse
-import subprocess
-import shlex
-from .processUtilities import ProcessUtilities
+from processUtilities import ProcessUtilities
 from xml.etree import ElementTree
 
 class tuning:

@@ -1,6 +1,6 @@
 import subprocess
 import sys
-from . import CyberCPLogFileWriter as logging
+import CyberCPLogFileWriter as logging
 import shutil
 import pexpect
 import os

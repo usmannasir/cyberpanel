@@ -10,11 +10,11 @@ try:
 except:
     pass
 import shutil
-from . import installUtilities
+import installUtilities
 
 import subprocess
 import shlex
-from . import CyberCPLogFileWriter as logging
+import CyberCPLogFileWriter as logging
 
 from .mysqlUtilities import mysqlUtilities
 from .dnsUtilities import DNS

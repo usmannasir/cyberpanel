@@ -1,7 +1,7 @@
 import argparse
 import os
-from . import CyberCPLogFileWriter as logging
-from . import backupUtilities as backupUtil
+import CyberCPLogFileWriter as logging
+import backupUtilities as backupUtil
 import time
 from multiprocessing import Process
 import json

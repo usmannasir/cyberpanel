@@ -4,9 +4,9 @@ sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
-from . import mysqlUtilities as sql
+import mysqlUtilities as sql
 import subprocess
-from . import CyberCPLogFileWriter as logging
+import CyberCPLogFileWriter as logging
 import os
 import shlex
 import argparse

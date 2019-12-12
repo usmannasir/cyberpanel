@@ -1,8 +1,8 @@
-from . import CyberCPLogFileWriter as logging
+import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import _thread
-from . import installUtilities
+import installUtilities
 import argparse
 import os
 from .mailUtilities import mailUtilities

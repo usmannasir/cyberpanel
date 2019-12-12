@@ -1,5 +1,5 @@
 from django.conf.urls import url
-from . import views
+import views
 urlpatterns = [
     url(r'^$', views.emailMarketing, name='emailMarketing'),
     url(r'^fetchUsers$', views.fetchUsers, name='fetchUsers'),

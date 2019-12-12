@@ -8,4 +8,4 @@ class ExamplepluginConfig(AppConfig):
     name = 'examplePlugin'
 
     def ready(self):
-        from . import signals
+        import signals

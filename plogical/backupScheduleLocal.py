@@ -1,4 +1,4 @@
-from . import CyberCPLogFileWriter as logging
+import CyberCPLogFileWriter as logging
 import os
 import time
 from .backupSchedule import backupSchedule

@@ -1,5 +1,5 @@
 #!/usr/local/CyberCP/bin/python
-from . import CyberCPLogFileWriter as logging
+import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import argparse

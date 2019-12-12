@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from . import models
+import models
 from django.contrib import admin
 
 admin.site.register(models.Domains)
