@@ -1931,6 +1931,14 @@ milter_default_action = accept
                 command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
                 preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
 
+            ##
+
+            command = "chmod +x venvsetup.sh"
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = "./venvsetup.sh"
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
         except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setupVirtualEnv]")
             return 0
