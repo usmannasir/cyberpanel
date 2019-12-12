@@ -8,7 +8,7 @@ except:
     pass
 import os.path
 import shutil
-import CyberCPLogFileWriter as logging
+from . import CyberCPLogFileWriter as logging
 import subprocess
 import argparse
 import shlex

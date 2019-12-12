@@ -1,4 +1,4 @@
-import CyberCPLogFileWriter as logging
+from . import CyberCPLogFileWriter as logging
 import argparse
 from random import randint
 

@@ -1,11 +1,11 @@
 import sys
 import subprocess
 import shutil
-import installLog as logging
+from . import installLog as logging
 import argparse
 import os
 import shlex
-from firewallUtilities import FirewallUtilities
+from .firewallUtilities import FirewallUtilities
 import time
 import string
 import random
@@ -2212,7 +2212,7 @@ def main():
         checks.install_python_setup_tools()
     checks.install_python_mysql_library()
 
-    import installCyberPanel
+    from . import installCyberPanel
 
     if ent == 0:
         installCyberPanel.Main(cwd, mysql, distro, ent, None, port, args.ftp, args.powerdns)

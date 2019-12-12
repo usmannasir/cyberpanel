@@ -1,12 +1,12 @@
 import shutil
 import subprocess
 import os
-from mysqlUtilities import mysqlUtilities
-import installLog as logging
-import randomPassword
+from .mysqlUtilities import mysqlUtilities
+from . import installLog as logging
+from . import randomPassword
 import errno
 import MySQLdb as mariadb
-import install
+from . import install
 
 #distros
 centos=0

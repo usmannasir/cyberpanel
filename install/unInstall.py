@@ -1,7 +1,7 @@
 import sys
 import subprocess
 import shutil
-import installLog as logging
+from . import installLog as logging
 import argparse
 import os
 import shlex

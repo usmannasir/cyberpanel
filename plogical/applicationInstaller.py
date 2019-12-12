@@ -11,7 +11,7 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
 from .vhost import vhost
 from websiteFunctions.models import ChildDomains, Websites
-import randomPassword
+from . import randomPassword
 from .mysqlUtilities import mysqlUtilities
 from databases.models import Databases
 from .installUtilities import installUtilities

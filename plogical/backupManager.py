@@ -8,7 +8,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import json
 from .acl import ACLManager
-import CyberCPLogFileWriter as logging
+from . import CyberCPLogFileWriter as logging
 from websiteFunctions.models import Websites, Backups, dest, backupSchedules
 from .virtualHostUtilities import virtualHostUtilities
 import subprocess

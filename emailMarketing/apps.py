@@ -7,4 +7,4 @@ from django.apps import AppConfig
 class EmailmarketingConfig(AppConfig):
     name = 'emailMarketing'
     def ready(self):
-        import signals
+        from . import signals
