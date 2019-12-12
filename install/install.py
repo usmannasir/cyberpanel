@@ -1562,6 +1562,9 @@ imap_folder_list_limit = 0
             command = "make"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+            if not os.path.exists('/usr/local/CyberCP/bin/'):
+                os.mkdir('/usr/local/CyberCP/bin/')
+
             command = "cp lswsgi /usr/local/CyberCP/bin/"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
