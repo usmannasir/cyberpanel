@@ -1556,7 +1556,7 @@ imap_folder_list_limit = 0
 
             os.chdir("wsgi-lsapi-1.4")
 
-            command = "python ./configure.py"
+            command = "/usr/local/CyberPanel/bin/python ./configure.py"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = "make"
