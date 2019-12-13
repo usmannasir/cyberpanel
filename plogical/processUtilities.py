@@ -187,13 +187,13 @@ class ProcessUtilities(multi.Thread):
             sock = ret[0]
 
             if user == None:
-                #logging.writeToFile(ProcessUtilities.token + command)
-                sock.sendall(ProcessUtilities.token + command)
+                logging.writeToFile(ProcessUtilities.token + command)
+                sock.sendall((ProcessUtilities.token + command).encode('utf-8'))
             else:
                 command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
-                #logging.writeToFile(ProcessUtilities.token + command)
+                logging.writeToFile(ProcessUtilities.token + command)
                 command = command.replace('sudo', '')
-                sock.sendall(command)
+                sock.sendall(command.encode('utf-8'))
 
             data = ""
 
@@ -210,6 +210,8 @@ class ProcessUtilities(multi.Thread):
             # else:
             #     cmd = 'deluser %s cyberpanel' % (user)
             #     ProcessUtilities.executioner(cmd)
+
+            logging.writeToFile(data)
 
             return data
         except BaseException as msg:

@@ -895,6 +895,7 @@ fi
 if [[ $DEV == "ON" ]] ; then
 	#install dev branch
 	#wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+	pip3.6 install virtualenv
 	cd /usr/local/
 	virtualenv -p /usr/bin/python3 CyberPanel
 	source /usr/local/CyberPanel/bin/activate
