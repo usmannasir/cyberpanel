@@ -455,7 +455,7 @@ class InstallCyberPanel:
 
 
                 try:
-                    f = open('/etc/resolv.conf', 'w')
+                    f = open('/etc/resolv.conf', 'a')
                     f.write('nameserver 8.8.8.8')
                     f.close()
                 except IOError as e:

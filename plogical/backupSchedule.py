@@ -16,6 +16,7 @@ from websiteFunctions.models import Websites, Backups
 from plogical.processUtilities import ProcessUtilities
 from random import randint
 import json, requests
+from datetime import datetime
 
 class backupSchedule:
 
@@ -33,6 +34,8 @@ class backupSchedule:
     @staticmethod
     def createLocalBackup(virtualHost, backupLogPath):
         try:
+
+            startingTime = datetime.now()
 
             backupSchedule.remoteBackupLogging(backupLogPath, "Starting local backup for: " + virtualHost)
 
