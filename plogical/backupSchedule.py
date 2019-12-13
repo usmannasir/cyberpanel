@@ -52,8 +52,12 @@ class backupSchedule:
             tempStoragePath = data['tempStorage']
 
             backupSchedule.remoteBackupLogging(backupLogPath, "Waiting for backup to complete.. ")
+            time.sleep(5)
+            schedulerPath = '/home/cyberpanel/%s-backup.txt' % (virtualHost)
 
             while (1):
+                diff = datetime.now() - startingTime
+
                 backupDomain = virtualHost
                 status = os.path.join("/home", backupDomain, "backup/status")
                 backupFileNamePath = os.path.join("/home", backupDomain, "backup/backupFileName")
@@ -117,6 +121,14 @@ class backupSchedule:
                         except:
                             pass
                         return 0, tempStoragePath
+                    elif os.path.exists(schedulerPath):
+                        os.remove(schedulerPath)
+                        return 0, 'Backup process killed without reporting any error.'
+
+
+
+
+
         except BaseException, msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [119:startBackup]")
             return 0, str(msg)
