@@ -17,9 +17,11 @@ from plogical.processUtilities import ProcessUtilities
 from random import randint
 import json, requests
 from datetime import datetime
+import signal
+
 
 class backupSchedule:
-
+    now = datetime.now()
 
     @staticmethod
     def remoteBackupLogging(fileName, message):
@@ -262,6 +264,14 @@ class backupSchedule:
 def main():
     backupSchedule.prepare()
 
+def handler(signum, frame):
+    diff = datetime.now() - backupSchedule.now
+    logging.CyberCPLogFileWriter.writeToFile('Signal: %s, time spent: %s' % (str(signum), str(diff.total_seconds())))
+
 
 if __name__ == "__main__":
+    for i in range(1,32):
+        if i == 9 or i == 19 or i == 32:
+            continue
+        signal.signal(i, handler)
     main()
