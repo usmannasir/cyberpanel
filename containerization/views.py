@@ -333,7 +333,7 @@ def getUsageData(request):
                 finalData['writeRate'] = 0
         except:
             command = "top -b -n 1 -u " + website.externalApp + " | awk 'NR>7 { sum += $9; } END { print sum; }'"
-            output = str(subprocess.check_output(command, shell=True))
+            output = str(subprocess.check_output(command, shell=True).decode("utf-8"))
 
             finalData = {}
             finalData['status'] = 1

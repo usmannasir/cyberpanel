@@ -112,7 +112,7 @@ class preFlightsChecks:
         try:
             ## On OpenVZ there is an issue using .tempdisk for /tmp as it breaks network on container after reboot.
 
-            if subprocess.check_output('systemd-detect-virt').find("openvz") > -1:
+            if subprocess.check_output('systemd-detect-virt').decode("utf-8").find("openvz") > -1:
 
                 varTmp = "/var/tmp /tmp none bind 0 0\n"
 
@@ -220,7 +220,7 @@ class preFlightsChecks:
     def checkIfSeLinuxDisabled(self):
         try:
             command = "sestatus"
-            output = subprocess.check_output(shlex.split(command))
+            output = subprocess.check_output(shlex.split(command)).decode("utf-8")
 
             if output.find("disabled") > -1 or output.find("permissive") > -1:
                 logging.InstallLog.writeToFile("SELinux Check OK. [checkIfSeLinuxDisabled]")
@@ -1303,7 +1303,7 @@ imap_folder_list_limit = 0
     def removeUfw(self):
         try:
             preFlightsChecks.stdOut("Checking to see if ufw firewall is installed (will be removed)", 1)
-            status = subprocess.check_output(shlex.split('ufw status'))
+            status = subprocess.check_output(shlex.split('ufw status')).decode("utf-8")
             preFlightsChecks.stdOut("ufw current status: " + status + "...will be removed")
         except BaseException as msg:
             preFlightsChecks.stdOut("[ERROR] Expected access to ufw not available, do not need to remove it", 1)

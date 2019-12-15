@@ -1781,7 +1781,7 @@ enabled=1"""
                     if items.password.find('CRYPT') > -1:
                         continue
                     command = 'doveadm pw -p %s' % (items.password)
-                    items.password = subprocess.check_output(shlex.split(command)).strip('\n')
+                    items.password = subprocess.check_output(shlex.split(command)).decode("utf-8").strip('\n')
                     items.save()
 
                 command = "systemctl restart dovecot"
@@ -1907,7 +1907,7 @@ failovermethod=priority
                     if items.password.find('CRYPT') > -1:
                         continue
                     command = 'doveadm pw -p %s' % (items.password)
-                    items.password = subprocess.check_output(shlex.split(command)).strip('\n')
+                    items.password = subprocess.check_output(shlex.split(command)).decode("utf-8").strip('\n')
                     items.save()
 
 

@@ -5,7 +5,7 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 from inspect import stack
-from .cliLogger import cliLogger as logger
+from cli.cliLogger import cliLogger as logger
 import json
 from plogical.virtualHostUtilities import virtualHostUtilities
 import re
@@ -17,7 +17,7 @@ import requests
 from loginSystem.models import Administrator
 from packages.models import Package
 from plogical.mysqlUtilities import mysqlUtilities
-from .cliParser import cliParser
+from cli.cliParser import cliParser
 from plogical.vhost import vhost
 from plogical.mailUtilities import mailUtilities
 from plogical.ftpUtilities import FTPUtilities

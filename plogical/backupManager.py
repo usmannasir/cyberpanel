@@ -7,15 +7,15 @@ sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import json
-from .acl import ACLManager
-from . import CyberCPLogFileWriter as logging
+from plogical.acl import ACLManager
+from plogical import CyberCPLogFileWriter as logging
 from websiteFunctions.models import Websites, Backups, dest, backupSchedules
-from .virtualHostUtilities import virtualHostUtilities
+from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
 from django.shortcuts import HttpResponse, render
 from loginSystem.models import Administrator
-from .mailUtilities import mailUtilities
+from plogical.mailUtilities import mailUtilities
 from random import randint
 import time
 import plogical.backupUtilities as backupUtil
@@ -168,7 +168,7 @@ class BackupManager:
             try:
                 backupFileNamePath = os.path.join("/home", backupDomain, "backup/backupFileName")
                 command = "sudo cat " + backupFileNamePath
-                fileName = subprocess.check_output(shlex.split(command))
+                fileName = subprocess.check_output(shlex.split(command)).decode("utf-8")
             except:
                 fileName = "Fetching.."
 
@@ -176,7 +176,7 @@ class BackupManager:
 
             if os.path.exists(status):
                 command = "sudo cat " + status
-                status = subprocess.check_output(shlex.split(command))
+                status = subprocess.check_output(shlex.split(command)).decode("utf-8")
 
                 if status.find("Completed") > -1:
 
@@ -322,7 +322,7 @@ class BackupManager:
             if os.path.exists(path):
                 try:
                     execPath = "sudo cat " + path + "/status"
-                    status = subprocess.check_output(shlex.split(execPath))
+                    status = subprocess.check_output(shlex.split(execPath)).decode("utf-8")
 
                     if status.find("Done") > -1:
 
@@ -410,7 +410,7 @@ class BackupManager:
                 execPath = execPath + " submitDestinationCreation --ipAddress " + ipAddress + " --password " \
                            + password + " --port " + port
 
-                output = subprocess.check_output(shlex.split(execPath))
+                output = subprocess.check_output(shlex.split(execPath)).decode("utf-8")
 
                 if output.find('1,') > -1:
                     try:
@@ -488,7 +488,7 @@ class BackupManager:
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " getConnectionStatus --ipAddress " + ipAddress
 
-            output = subprocess.check_output(shlex.split(execPath))
+            output = subprocess.check_output(shlex.split(execPath)).decode("utf-8")
 
             if output.find('1,') > -1:
                 final_dic = {'connStatus': 1, 'error_message': "None"}
@@ -1036,7 +1036,7 @@ class BackupManager:
 
             execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
             execPath = execPath + " writeAuthKey --pathToKey " + pathToKey
-            output = subprocess.check_output(shlex.split(execPath))
+            output = subprocess.check_output(shlex.split(execPath)).decode("utf-8")
 
             if output.find("1,None") > -1:
                 pass
@@ -1236,7 +1236,7 @@ class BackupManager:
 
             if os.path.isfile(backupLogPath):
                 command = "sudo cat " + backupLogPath
-                status = subprocess.check_output(shlex.split(command))
+                status = subprocess.check_output(shlex.split(command)).decode("utf-8")
 
                 if status.find("completed[success]") > -1:
                     command = "sudo rm -rf " + removalPath
@@ -1294,7 +1294,7 @@ class BackupManager:
             pathpid = path + "/pid"
 
             command = "sudo cat " + pathpid
-            pid = subprocess.check_output(shlex.split(command))
+            pid = subprocess.check_output(shlex.split(command)).decode("utf-8")
 
             command = "sudo kill -KILL " + pid
             subprocess.call(shlex.split(command))

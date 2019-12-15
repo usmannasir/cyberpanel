@@ -9,7 +9,7 @@ import json
 from django.shortcuts import HttpResponse
 from math import ceil
 from websiteFunctions.models import Websites
-from .models import CLPackages
+from CLManager.models import CLPackages
 
 
 class CLManagerMain(multi.Thread):

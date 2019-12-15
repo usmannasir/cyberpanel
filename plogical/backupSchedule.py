@@ -10,7 +10,7 @@ import subprocess
 import shlex
 import os
 import time
-from .backupUtilities import backupUtilities
+from plogical.backupUtilities import backupUtilities
 from re import match,I,M
 from websiteFunctions.models import Websites, Backups
 from plogical.processUtilities import ProcessUtilities

@@ -7,19 +7,19 @@ try:
 except:
     pass
 import pexpect
-from . import CyberCPLogFileWriter as logging
+from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 from shutil import make_archive,rmtree
-from . import mysqlUtilities
+from plogical import mysqlUtilities
 import tarfile
 from multiprocessing import Process
 import signal
-from .installUtilities import installUtilities
+from plogical.installUtilities import installUtilities
 import argparse
 try:
-    from .virtualHostUtilities import virtualHostUtilities
-    from .sslUtilities import sslUtilities
+    from plogical.virtualHostUtilities import virtualHostUtilities
+    from plogical.sslUtilities import sslUtilities
     from plogical.mailUtilities import mailUtilities
 except:
     pass
@@ -35,7 +35,7 @@ try:
     from websiteFunctions.models import Websites, ChildDomains, Backups
     from databases.models import Databases
     from loginSystem.models import Administrator
-    from .dnsUtilities import DNS
+    from plogical.dnsUtilities import DNS
     from mailServer.models import Domains as eDomains
     from backup.models import DBUsers
 except:
@@ -876,7 +876,7 @@ class backupUtilities:
     @staticmethod
     def checkIfHostIsUp(IPAddress):
         try:
-            if subprocess.check_output(['ping', IPAddress, '-c 1']).find("0% packet loss") > -1:
+            if subprocess.check_output(['ping', IPAddress, '-c 1']).decode("utf-8").find("0% packet loss") > -1:
                 return 1
             else:
                 return 0

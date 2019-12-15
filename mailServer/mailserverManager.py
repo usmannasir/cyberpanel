@@ -716,7 +716,7 @@ class MailServerManager:
     def installStatusOpenDKIM(self):
         try:
             command = "sudo cat " + mailUtilities.installLogPath
-            installStatus = subprocess.check_output(shlex.split(command))
+            installStatus = subprocess.check_output(shlex.split(command)).decode("utf-8")
 
             if installStatus.find("[200]") > -1:
 

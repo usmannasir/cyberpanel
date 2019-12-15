@@ -10,18 +10,18 @@ try:
 except:
     pass
 import shutil
-from . import installUtilities
+from plogical import installUtilities
 
 import subprocess
 import shlex
-from . import CyberCPLogFileWriter as logging
+from plogical import CyberCPLogFileWriter as logging
 
-from .mysqlUtilities import mysqlUtilities
-from .dnsUtilities import DNS
+from plogical.mysqlUtilities import mysqlUtilities
+from plogical.dnsUtilities import DNS
 from random import randint
-from .processUtilities import ProcessUtilities
+from plogical.processUtilities import ProcessUtilities
 from managePHP.phpManager import PHPManager
-from .vhostConfs import vhostConfs
+from plogical.vhostConfs import vhostConfs
 from ApachController.ApacheVhosts import ApacheVhost
 try:
     from websiteFunctions.models import Websites, ChildDomains, aliasDomains

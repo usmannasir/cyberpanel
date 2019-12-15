@@ -7,12 +7,12 @@ try:
     django.setup()
 except:
     pass
-from . import CyberCPLogFileWriter as logging
+from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 try:
     from dns.models import Domains,Records
-    from .processUtilities import ProcessUtilities
+    from plogical.processUtilities import ProcessUtilities
     from manageServices.models import PDNSStatus, SlaveServers
 except:
     pass
@@ -397,7 +397,7 @@ class DNS:
 
             path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
             command = "sudo cat " + path
-            output = subprocess.check_output(shlex.split(command))
+            output = subprocess.check_output(shlex.split(command)).decode("utf-8")
             leftIndex = output.index('(') + 2
             rightIndex = output.rindex(')') - 1
 

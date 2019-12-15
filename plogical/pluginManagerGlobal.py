@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-from .CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 
 class pluginManagerGlobal:

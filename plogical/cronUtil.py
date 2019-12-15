@@ -1,5 +1,5 @@
 import argparse
-from .processUtilities import ProcessUtilities
+from plogical.processUtilities import ProcessUtilities
 
 class CronUtil:
 

@@ -1,12 +1,12 @@
-from . import CyberCPLogFileWriter as logging
+from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import _thread
-from . import installUtilities
+from plogical import installUtilities
 import argparse
 import os
-from .mailUtilities import mailUtilities
-from .processUtilities import ProcessUtilities
+from plogical.mailUtilities import mailUtilities
+from plogical.processUtilities import ProcessUtilities
 
 class phpUtilities:
 

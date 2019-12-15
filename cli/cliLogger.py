@@ -20,7 +20,7 @@ class cliLogger:
     def readLastNFiles(numberOfLines,fileName):
         try:
 
-            lastFewLines = subprocess.check_output(["tail", "-n",str(numberOfLines),fileName])
+            lastFewLines = subprocess.check_output(["tail", "-n",str(numberOfLines),fileName]).decode("utf-8")
 
             return lastFewLines
 

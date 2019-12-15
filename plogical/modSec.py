@@ -1,13 +1,13 @@
-from . import CyberCPLogFileWriter as logging
+from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import argparse
-from .virtualHostUtilities import virtualHostUtilities
+from plogical.virtualHostUtilities import virtualHostUtilities
 import os
 import tarfile
 import shutil
-from .mailUtilities import mailUtilities
-from .processUtilities import ProcessUtilities
+from plogical.mailUtilities import mailUtilities
+from plogical.processUtilities import ProcessUtilities
 from plogical.installUtilities import installUtilities
 
 class modSec:

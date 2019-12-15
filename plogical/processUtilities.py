@@ -1,4 +1,4 @@
-from .CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import os
@@ -52,9 +52,9 @@ class ProcessUtilities(multi.Thread):
     def restartLitespeed():
         try:
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                command = "sudo systemctl restart lsws"
+                command = "systemctl restart lsws"
             else:
-                command = "sudo /usr/local/lsws/bin/lswsctrl restart"
+                command = "/usr/local/lsws/bin/lswsctrl restart"
 
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
@@ -71,9 +71,9 @@ class ProcessUtilities(multi.Thread):
     def stopLitespeed():
         try:
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                command = "sudo systemctl stop lsws"
+                command = "systemctl stop lsws"
             else:
-                command = "sudo /usr/local/lsws/bin/lswsctrl stop"
+                command = "/usr/local/lsws/bin/lswsctrl stop"
 
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
@@ -104,7 +104,7 @@ class ProcessUtilities(multi.Thread):
     @staticmethod
     def killLiteSpeed():
         try:
-            command = 'sudo systemctl stop lsws'
+            command = 'systemctl stop lsws'
             ProcessUtilities.normalExecutioner(command)
         except:
             pass
@@ -120,8 +120,6 @@ class ProcessUtilities(multi.Thread):
 
     @staticmethod
     def decideServer():
-        entPath = '/usr/local/lsws/bin/lshttpd'
-
         if os.path.exists('/usr/local/lsws/bin/openlitespeed'):
             return ProcessUtilities.OLS
         else:
@@ -139,7 +137,7 @@ class ProcessUtilities(multi.Thread):
     @staticmethod
     def containerCheck():
         try:
-            command = 'sudo cat /etc/cgrules.conf'
+            command = 'cat /etc/cgrules.conf'
             output = ProcessUtilities.outputExecutioner(command)
             if output.find('No such') > -1:
                 return 0

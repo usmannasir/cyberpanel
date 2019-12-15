@@ -99,14 +99,14 @@ class HAManager(multi.Thread):
             workerToken = ''
 
             command = "sudo docker swarm join-token manager"
-            output = subprocess.check_output(shlex.split(command)).splitlines()
+            output = subprocess.check_output(shlex.split(command)).decode("utf-8").splitlines()
 
             for items in output:
                 if items.find('--token') > -1:
                     managerToken = items.split(' ')[-2]
 
             command = "sudo docker swarm join-token worker"
-            output = subprocess.check_output(shlex.split(command)).splitlines()
+            output = subprocess.check_output(shlex.split(command)).decode("utf-8").splitlines()
 
             for items in output:
                 if items.find('--token') > -1:
