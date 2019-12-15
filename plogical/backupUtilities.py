@@ -263,6 +263,10 @@ class backupUtilities:
             ##### Writing the name of backup file.
 
             ## /home/example.com/backup/backupFileName
+            pidFile = '%sstartBackup' % (backupPath)
+            writeToFile = open(pidFile, 'w')
+            writeToFile.writelines(str(os.getpid()))
+            writeToFile.close()
 
             backupFileNamePath = os.path.join(backupPath,"backupFileName")
             logging.CyberCPLogFileWriter.statusWriter(backupFileNamePath, backupName)
@@ -321,8 +325,16 @@ class backupUtilities:
             logging.CyberCPLogFileWriter.statusWriter(status, "Aborted, "+ str(msg) + ".[365] [5009]")
             print(("Aborted, "+ str(msg) + ".[365] [5009]"))
 
+        os.remove(pidFile)
+
     @staticmethod
     def BackupRoot(tempStoragePath, backupName, backupPath, metaPath=None):
+
+        pidFile = '%sBackupRoot' % (backupPath)
+
+        writeToFile = open(pidFile, 'w')
+        writeToFile.writelines(str(os.getpid()))
+        writeToFile.close()
 
         status = os.path.join(backupPath, 'status')
         metaPathInBackup = os.path.join(tempStoragePath, 'meta.xml')
@@ -422,6 +434,7 @@ class backupUtilities:
                 items.save()
 
         logging.CyberCPLogFileWriter.statusWriter(status, "Completed\n")
+        os.remove(pidFile)
 
     @staticmethod
     def initiateBackup(tempStoragePath,backupName,backupPath):
@@ -1056,16 +1069,24 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         ##
 
+        schedulerPath = '/home/cyberpanel/%s-backup.txt' % (backupDomain)
+
         if not os.path.exists(backupPath) or not os.path.islink(backupPath):
             command = 'mkdir -p %s' % (backupPath)
             ProcessUtilities.executioner(command)
         else:
+            writeToFile = open(schedulerPath, 'w')
+            writeToFile.writelines('error')
+            writeToFile.close()
             return 0
 
         if not os.path.exists(backupPath) or not os.path.islink(backupPath):
             command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
             ProcessUtilities.executioner(command)
         else:
+            writeToFile = open(schedulerPath, 'w')
+            writeToFile.writelines('error')
+            writeToFile.close()
             return 0
 
         ##
@@ -1074,12 +1095,18 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             command = 'mkdir -p %s' % (tempStoragePath)
             ProcessUtilities.executioner(command)
         else:
+            writeToFile = open(schedulerPath, 'w')
+            writeToFile.writelines('error')
+            writeToFile.close()
             return 0
 
         if not os.path.exists(tempStoragePath) or not os.path.islink(tempStoragePath):
             command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, tempStoragePath)
             ProcessUtilities.executioner(command)
         else:
+            writeToFile = open(schedulerPath, 'w')
+            writeToFile.writelines('error')
+            writeToFile.close()
             return 0
 
         ##
@@ -1087,12 +1114,18 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             command = 'touch %s' % (status)
             ProcessUtilities.executioner(command)
         else:
+            writeToFile = open(schedulerPath, 'w')
+            writeToFile.writelines('error')
+            writeToFile.close()
             return 0
 
         if not os.path.exists(status) or not os.path.islink(status):
             command = 'chown cyberpanel:cyberpanel %s' % (status)
             ProcessUtilities.executioner(command)
         else:
+            writeToFile = open(schedulerPath, 'w')
+            writeToFile.writelines('error')
+            writeToFile.close()
             return 0
 
 
@@ -1100,6 +1133,9 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
 
         if result[0] == 0:
+            writeToFile = open(schedulerPath, 'w')
+            writeToFile.writelines('error')
+            writeToFile.close()
             logging.CyberCPLogFileWriter.statusWriter(status, str(result[1]) + ' [1084][5009]')
             return 0
 
@@ -1113,6 +1149,9 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
         if output.find('[5009') > -1:
             logging.CyberCPLogFileWriter.writeToFile(output)
+            writeToFile = open(schedulerPath, 'w')
+            writeToFile.writelines('error')
+            writeToFile.close()
             return 0
 
         ## Backing up databases
@@ -1126,6 +1165,9 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             dbName = database.find('dbName').text
 
             if mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel') == 0:
+                writeToFile = open(schedulerPath, 'w')
+                writeToFile.writelines('error')
+                writeToFile.close()
                 return 0
 
             command = 'mv /home/cyberpanel/%s.sql %s/%s.sql' % (dbName, tempStoragePath, dbName)
@@ -1134,6 +1176,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         ##
 
         output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+
         if output.find('1,None') > -1:
             execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " BackupRoot --tempStoragePath " + tempStoragePath + " --backupName " \

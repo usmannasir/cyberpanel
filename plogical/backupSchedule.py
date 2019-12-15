@@ -16,9 +16,12 @@ from websiteFunctions.models import Websites, Backups
 from plogical.processUtilities import ProcessUtilities
 from random import randint
 import json, requests
+from datetime import datetime
+import signal
+
 
 class backupSchedule:
-
+    now = datetime.now()
 
     @staticmethod
     def remoteBackupLogging(fileName, message):
@@ -33,6 +36,8 @@ class backupSchedule:
     @staticmethod
     def createLocalBackup(virtualHost, backupLogPath):
         try:
+
+            startingTime = datetime.now()
 
             backupSchedule.remoteBackupLogging(backupLogPath, "Starting local backup for: " + virtualHost)
 
@@ -49,8 +54,12 @@ class backupSchedule:
             tempStoragePath = data['tempStorage']
 
             backupSchedule.remoteBackupLogging(backupLogPath, "Waiting for backup to complete.. ")
+            time.sleep(5)
+            schedulerPath = '/home/cyberpanel/%s-backup.txt' % (virtualHost)
 
             while (1):
+                diff = datetime.now() - startingTime
+
                 backupDomain = virtualHost
                 status = os.path.join("/home", backupDomain, "backup/status")
                 backupFileNamePath = os.path.join("/home", backupDomain, "backup/backupFileName")
@@ -114,6 +123,10 @@ class backupSchedule:
                         except:
                             pass
                         return 0, tempStoragePath
+                    elif os.path.exists(schedulerPath):
+                        os.remove(schedulerPath)
+                        return 0, 'Backup process killed without reporting any error.'
+
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [119:startBackup]")
             return 0, str(msg)
@@ -247,6 +260,14 @@ class backupSchedule:
 def main():
     backupSchedule.prepare()
 
+def handler(signum, frame):
+    diff = datetime.now() - backupSchedule.now
+    logging.CyberCPLogFileWriter.writeToFile('Signal: %s, time spent: %s' % (str(signum), str(diff.total_seconds())))
+
 
 if __name__ == "__main__":
+    for i in range(1,32):
+        if i == 9 or i == 19 or i == 32:
+            continue
+        signal.signal(i, handler)
     main()

@@ -454,14 +454,14 @@ class InstallCyberPanel:
 
 
 
-                try:
-                    f = open('/etc/resolv.conf', 'w')
-                    f.write('nameserver 8.8.8.8')
-                    f.close()
-                except IOError as e:
-                    InstallCyberPanel.stdOut("[ERROR] Unable to create /etc/resolv.conf: " + str(e) +
-                                             ".  This may need to be fixed manually as 'echo \"nameserver 8.8.8.8\"> "
-                                             "/etc/resolv.conf'", 1, 1, os.EX_OSERR)
+                # try:
+                #     f = open('/etc/resolv.conf', 'a')
+                #     f.write('nameserver 8.8.8.8')
+                #     f.close()
+                # except IOError as e:
+                #     InstallCyberPanel.stdOut("[ERROR] Unable to create /etc/resolv.conf: " + str(e) +
+                #                              ".  This may need to be fixed manually as 'echo \"nameserver 8.8.8.8\"> "
+                #                              "/etc/resolv.conf'", 1, 1, os.EX_OSERR)
 
             if self.distro == centos:
                 command = 'yum -y install epel-release'
