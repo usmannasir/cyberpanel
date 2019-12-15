@@ -1,7 +1,7 @@
-from .CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-from .installUtilities import installUtilities
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from plogical.installUtilities import installUtilities
 import argparse
-from .processUtilities import ProcessUtilities
+from plogical.processUtilities import ProcessUtilities
 from xml.etree import ElementTree
 
 class tuning:

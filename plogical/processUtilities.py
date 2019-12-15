@@ -192,7 +192,6 @@ class ProcessUtilities(multi.Thread):
             else:
                 command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
                 logging.writeToFile(ProcessUtilities.token + command)
-                command = command.replace('sudo', '')
                 sock.sendall(command.encode('utf-8'))
 
             data = ""
@@ -201,15 +200,9 @@ class ProcessUtilities(multi.Thread):
                 currentData = sock.recv(32)
                 if len(currentData) == 0 or currentData == None:
                     break
-                data = data + currentData
+                data = data + currentData.decode("utf-8")
 
             sock.close()
-
-            # if user == None:
-            #     pass
-            # else:
-            #     cmd = 'deluser %s cyberpanel' % (user)
-            #     ProcessUtilities.executioner(cmd)
 
             logging.writeToFile(data)
 
@@ -243,11 +236,9 @@ class ProcessUtilities(multi.Thread):
     def outputExecutioner(command, user=None):
         try:
             if getpass.getuser() == 'root':
-                return subprocess.check_output(shlex.split(command))
+                return subprocess.check_output(shlex.split(command).decode("utf-8"))
 
-            if type(command) == str or type(command) == unicode:
-                pass
-            else:
+            if type(command) == list:
                 command = " ".join(command)
 
             return ProcessUtilities.sendCommand(command, user)[:-1]
@@ -256,7 +247,7 @@ class ProcessUtilities(multi.Thread):
 
     def customPoen(self):
         try:
-            if type(self.extraArgs['command']) == str or type(self.extraArgs['command']) == unicode:
+            if type(self.extraArgs['command']) == str or type(self.extraArgs['command']) == bytes:
                 command = self.extraArgs['command']
             else:
                 command = " ".join(self.extraArgs['command'])

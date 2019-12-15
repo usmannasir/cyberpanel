@@ -3,21 +3,19 @@ import os
 import os.path
 import sys
 import django
-PACKAGE_PARENT = '..'
-SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
-sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
+#PACKAGE_PARENT = '..'
+#SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+#sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 
-try:
-    django.setup()
-except:
-    pass
+django.setup()
 
 import shutil
 import argparse
-from . import installUtilities
-from . import sslUtilities
+from plogical import installUtilities
+from plogical import sslUtilities
 from os.path import join
 from os import listdir, rmdir
 from shutil import move
@@ -25,12 +23,12 @@ from multiprocessing import Process
 import subprocess
 import shlex
 from plogical.mailUtilities import mailUtilities
-from . import CyberCPLogFileWriter as logging
-from .dnsUtilities import DNS
-from .vhost import vhost
-from .applicationInstaller import ApplicationInstaller
-from .acl import ACLManager
-from .processUtilities import ProcessUtilities
+from plogical import CyberCPLogFileWriter as logging
+from plogical.dnsUtilities import DNS
+from plogical.vhost import vhost
+from plogical.applicationInstaller import ApplicationInstaller
+from plogical.acl import ACLManager
+from plogical.processUtilities import ProcessUtilities
 from ApachController.ApacheController import ApacheController
 from ApachController.ApacheVhosts import ApacheVhost
 from managePHP.phpManager import PHPManager

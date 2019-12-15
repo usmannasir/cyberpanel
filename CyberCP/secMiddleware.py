@@ -59,7 +59,7 @@ class secMiddleware:
                     #     final_json = json.dumps(final_dic)
                     #     return HttpResponse(final_json)
 
-                    if type(value) == str or type(value) == unicode:
+                    if type(value) == str or type(value) == bytes:
                         pass
                     else:
                         continue
