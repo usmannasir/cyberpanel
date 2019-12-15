@@ -1,3 +1,4 @@
+# coding=utf-8
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import json
 from django.shortcuts import HttpResponse
@@ -81,8 +82,8 @@ class secMiddleware:
                             or value.find("'") > -1 or value.find("[") > -1 or value.find("]") > -1 or value.find("{") > -1 or value.find("}") > -1\
                             or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1:
                         logging.writeToFile(request.body)
-                        final_dic = {'error_message': "Data supplied is not accepted.",
-                                     "errorMessage": "Data supplied is not accepted."}
+                        final_dic = {'error_message': "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >.",
+                                     "errorMessage": "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >."}
                         final_json = json.dumps(final_dic)
                         return HttpResponse(final_json)
                     if key.find(';') > -1 or key.find('&&') > -1 or key.find('|') > -1 or key.find('...') > -1 \
@@ -90,7 +91,7 @@ class secMiddleware:
                             or key.find("'") > -1 or key.find("[") > -1 or key.find("]") > -1 or key.find("{") > -1 or key.find("}") > -1\
                             or key.find(":") > -1 or key.find("<") > -1 or key.find(">") > -1:
                         logging.writeToFile(request.body)
-                        final_dic = {'error_message': "Data supplied is not accepted.", "errorMessage": "Data supplied is not accepted."}
+                        final_dic = {'error_message': "Data supplied is not accepted.", "errorMessage": "Data supplied is not accepted following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >."}
                         final_json = json.dumps(final_dic)
                         return HttpResponse(final_json)
             except BaseException as msg:
