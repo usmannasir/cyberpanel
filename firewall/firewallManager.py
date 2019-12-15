@@ -242,7 +242,7 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson()
 
-            command = 'sudo systemctl status firewalld'
+            command = 'systemctl status firewalld'
             status = ProcessUtilities.outputExecutioner(command)
 
             if status.find("dead") > -1:

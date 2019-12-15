@@ -6,6 +6,7 @@ import socket
 import threading as multi
 import time
 import getpass
+import codecs
 
 class ProcessUtilities(multi.Thread):
     litespeedProcess = "litespeed"
@@ -167,12 +168,6 @@ class ProcessUtilities(multi.Thread):
     @staticmethod
     def sendCommand(command, user=None):
         try:
-            # if user == None:
-            #     pass
-            # else:
-            #     cmd = 'usermod -a -G %s %s' % ('cyberpanel', user)
-            #     ProcessUtilities.executioner(cmd)
-
             ret = ProcessUtilities.setupUDSConnection()
 
             if ret[0] == -1:
@@ -193,18 +188,23 @@ class ProcessUtilities(multi.Thread):
                 sock.sendall(command.encode('utf-8'))
 
             data = ""
+            dataSTR = ""
 
             while (1):
                 currentData = sock.recv(32)
                 if len(currentData) == 0 or currentData == None:
                     break
-                data = data + currentData.decode("utf-8")
+                try:
+                    data = data + currentData.decode(encoding = 'UTF-8',errors = 'ignore')
+                except BaseException as msg:
+                    logging.writeToFile('Some data could not be decoded to str, error message: %s' % str(msg))
+
+                dataSTR = dataSTR + str(currentData)
+
 
             sock.close()
-
-            logging.writeToFile(data)
-
-            return data
+            logging.writeToFile('Final data: %s.' % (dataSTR))
+            return data, dataSTR
         except BaseException as msg:
             logging.writeToFile(str(msg) + " [sendCommand]")
             return "0" + str(msg)
@@ -216,10 +216,10 @@ class ProcessUtilities(multi.Thread):
                 ProcessUtilities.normalExecutioner(command)
                 return 1
 
-            ret = ProcessUtilities.sendCommand(command, user)
+            ret, dataSTR = ProcessUtilities.sendCommand(command, user)
 
             exitCode = ret[len(ret) -1]
-            exitCode = int(exitCode.encode('hex'), 16)
+            exitCode = int(codecs.encode(exitCode.encode(), 'hex'))
 
             if exitCode == 0:
                 return 1
@@ -238,8 +238,8 @@ class ProcessUtilities(multi.Thread):
 
             if type(command) == list:
                 command = " ".join(command)
-
-            return ProcessUtilities.sendCommand(command, user)[:-1]
+            data, dataSTR = ProcessUtilities.sendCommand(command, user)
+            return dataSTR[:-1]
         except BaseException as msg:
             logging.writeToFile(str(msg) + "[outputExecutioner:188]")
 
