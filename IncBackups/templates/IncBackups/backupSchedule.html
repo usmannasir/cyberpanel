@@ -135,6 +135,25 @@
                                     </tr>
                                     </tbody>
                                 </table>
+                                <div class="row">
+
+                                    <div class="col-sm-4 col-sm-offset-8">
+
+                                        <nav aria-label="Page navigation">
+                                            <ul class="pagination">
+
+                                                <li ng-repeat="page in pagination"
+                                                    ng-click="getFurtherWebsitesFromDB($index+1)" id="webPages"><a
+                                                        href="">{$ $index + 1 $}</a></li>
+
+                                            </ul>
+                                        </nav>
+
+
+                                    </div>
+
+
+                                </div>
                             </div>
                         </div>
 
