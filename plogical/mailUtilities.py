@@ -140,13 +140,13 @@ class mailUtilities:
 
             if os.path.exists(CentOSPath):
                 password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-                password = '{CRYPT}%s' % (password)
+                password = '{CRYPT}%s' % (password.decode())
                 emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
                 emailAcct.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (domain, userName)
                 emailAcct.save()
             else:
                 password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-                password = '{CRYPT}%s' % (password)
+                password = '{CRYPT}%s' % (password.decode())
                 emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
                 emailAcct.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (domain, userName)
                 emailAcct.save()
@@ -192,8 +192,8 @@ class mailUtilities:
                 CentOSPath = '/etc/redhat-release'
                 changePass = EUsers.objects.get(email=email)
                 if os.path.exists(CentOSPath):
-                    password = bcrypt.hashpw(str(newPassword), bcrypt.gensalt())
-                    password = '{CRYPT}%s' % (password)
+                    password = bcrypt.hashpw(newPassword.encode('utf-8'), bcrypt.gensalt())
+                    password = '{CRYPT}%s' % (password.decode())
                     changePass.password = password
                 else:
                     changePass.password = newPassword

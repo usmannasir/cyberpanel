@@ -246,7 +246,7 @@ class virtualHostUtilities:
                         'Default', '100%', '1G', '1024', '50', '1024', '1G', '20')
                     ProcessUtilities.normalExecutioner(command)
 
-                    command = 'sudo lvectl apply all'
+                    command = 'lvectl apply all'
                     ProcessUtilities.normalExecutioner(command)
                 else:
                     try:

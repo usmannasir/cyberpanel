@@ -548,12 +548,12 @@ class MailServerManager:
 
             CentOSPath = '/etc/redhat-release'
             if os.path.exists(CentOSPath):
-                password = bcrypt.hashpw(str(password), bcrypt.gensalt())
-                password = '{CRYPT}%s' % (password)
+                password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+                password = '{CRYPT}%s' % (password.decode())
                 emailDB.password = password
             else:
-                password = bcrypt.hashpw(str(password), bcrypt.gensalt())
-                password = '{CRYPT}%s' % (password)
+                password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+                password = '{CRYPT}%s' % (password.decode())
                 emailDB.password = password
 
             emailDB.save()
