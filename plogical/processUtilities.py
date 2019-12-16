@@ -87,9 +87,13 @@ class ProcessUtilities(multi.Thread):
             logging.writeToFile(str(msg) + "[stopLitespeed]")
 
     @staticmethod
-    def normalExecutioner(command):
+    def normalExecutioner(command, shell=False):
         try:
-            res = subprocess.call(shlex.split(command))
+            if shell == False:
+                res = subprocess.call(shlex.split(command))
+            else:
+                res = subprocess.call(command, shell=shell)
+
             if res == 0:
                 return 1
             else:
@@ -217,10 +221,10 @@ class ProcessUtilities(multi.Thread):
             return "0" + str(msg)
 
     @staticmethod
-    def executioner(command, user=None):
+    def executioner(command, user=None, shell=False):
         try:
             if getpass.getuser() == 'root':
-                ProcessUtilities.normalExecutioner(command)
+                ProcessUtilities.normalExecutioner(command, shell)
                 return 1
 
             ret = ProcessUtilities.sendCommand(command, user)
@@ -241,7 +245,7 @@ class ProcessUtilities(multi.Thread):
     def outputExecutioner(command, user=None):
         try:
             if getpass.getuser() == 'root':
-                return subprocess.check_output(shlex.split(command))
+                return subprocess.check_output(command, shell=True)
 
             if type(command) == str or type(command) == unicode:
                 pass

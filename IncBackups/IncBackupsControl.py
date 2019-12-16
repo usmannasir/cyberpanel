@@ -718,7 +718,7 @@ class IncJobs(multi.Thread):
         if not os.path.exists(self.passwordFile):
             password = randomPassword.generate_pass()
             command = 'echo "%s" > %s' % (password, self.passwordFile)
-            ProcessUtilities.executioner(command, self.website.externalApp)
+            ProcessUtilities.executioner(command, self.website.externalApp, True)
 
             command = 'chmod 600 %s' % (self.passwordFile)
             ProcessUtilities.executioner(command)
