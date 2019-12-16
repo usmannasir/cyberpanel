@@ -56,7 +56,7 @@ class mailUtilities:
         ProcessUtilities.normalExecutioner(command)
 
     @staticmethod
-    def createEmailAccount(domain, userName, password):
+    def createEmailAccount(domain, userName, password, restore = None):
         try:
 
             ## Check if already exists
@@ -142,14 +142,16 @@ class mailUtilities:
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-                password = bcrypt.hashpw(str(password), bcrypt.gensalt())
-                password = '{CRYPT}%s' % (password)
+                if restore == None:
+                    password = bcrypt.hashpw(str(password), bcrypt.gensalt())
+                    password = '{CRYPT}%s' % (password)
                 emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
                 emailAcct.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (domain, userName)
                 emailAcct.save()
             else:
-                password = bcrypt.hashpw(str(password), bcrypt.gensalt())
-                password = '{CRYPT}%s' % (password)
+                if restore == None:
+                    password = bcrypt.hashpw(str(password), bcrypt.gensalt())
+                    password = '{CRYPT}%s' % (password)
                 emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
                 emailAcct.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (domain, userName)
                 emailAcct.save()
