@@ -13,7 +13,7 @@ class CyberCPLogFileWriter:
                     "%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n")
             file.close()
 
-        except IOError as msg:
+        except BaseException as msg:
             return "Can not write to error file."
 
     @staticmethod
@@ -24,7 +24,7 @@ class CyberCPLogFileWriter:
                 "%m.%d.%Y_%H-%M-%S") + "] [" + level + ":" + method + "] " + message + "\n")
             file.close()
             file.close()
-        except IOError:
+        except BaseException:
             return "Can not write to error file!"
 
     @staticmethod

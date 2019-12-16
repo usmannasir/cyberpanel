@@ -134,21 +134,18 @@ class mailUtilities:
 
             emailDomain = Domains.objects.get(domain=domain)
 
-            hash = hashlib.md5()
-            hash.update(password)
-
             #emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=hash.hexdigest())
 
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-                password = bcrypt.hashpw(str(password), bcrypt.gensalt())
+                password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
                 password = '{CRYPT}%s' % (password)
                 emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
                 emailAcct.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (domain, userName)
                 emailAcct.save()
             else:
-                password = bcrypt.hashpw(str(password), bcrypt.gensalt())
+                password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
                 password = '{CRYPT}%s' % (password)
                 emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=password)
                 emailAcct.mail = 'maildir:/home/vmail/%s/%s/Maildir' % (domain, userName)

@@ -188,25 +188,22 @@ class ProcessUtilities(multi.Thread):
                 sock.sendall(command.encode('utf-8'))
 
             data = ""
-            dataSTR = ""
 
             while (1):
                 currentData = sock.recv(32)
                 if len(currentData) == 0 or currentData == None:
                     break
                 try:
-                    data = data + currentData.decode(encoding = 'UTF-8',errors = 'ignore')
+                    data = data + currentData.decode(errors = 'ignore')
                 except BaseException as msg:
                     logging.writeToFile('Some data could not be decoded to str, error message: %s' % str(msg))
 
-                dataSTR = dataSTR + str(currentData)
-
-
             sock.close()
-            logging.writeToFile('Final data: %s.' % (dataSTR))
-            return data, dataSTR
+            logging.writeToFile('Final data: %s.' % (str(data)))
+
+            return data
         except BaseException as msg:
-            logging.writeToFile(str(msg) + " [sendCommand]")
+            logging.writeToFile(str(msg) + " [hey:sendCommand]")
             return "0" + str(msg)
 
     @staticmethod
@@ -216,7 +213,7 @@ class ProcessUtilities(multi.Thread):
                 ProcessUtilities.normalExecutioner(command)
                 return 1
 
-            ret, dataSTR = ProcessUtilities.sendCommand(command, user)
+            ret = ProcessUtilities.sendCommand(command, user)
 
             exitCode = ret[len(ret) -1]
             exitCode = int(codecs.encode(exitCode.encode(), 'hex'))
@@ -238,8 +235,8 @@ class ProcessUtilities(multi.Thread):
 
             if type(command) == list:
                 command = " ".join(command)
-            data, dataSTR = ProcessUtilities.sendCommand(command, user)
-            return dataSTR[:-1]
+
+            return ProcessUtilities.sendCommand(command, user)[:-1]
         except BaseException as msg:
             logging.writeToFile(str(msg) + "[outputExecutioner:188]")
 
