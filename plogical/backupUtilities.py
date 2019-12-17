@@ -233,7 +233,7 @@ class backupUtilities:
 
             xmlpretty = prettify(metaFileXML).encode('ascii', 'ignore')
             metaFile = open(metaPath, 'w')
-            metaFile.write(xmlpretty)
+            metaFile.write(xmlpretty.decode())
             metaFile.close()
             os.chmod(metaPath, 0o777)
 
