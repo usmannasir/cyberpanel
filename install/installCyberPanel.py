@@ -11,6 +11,7 @@ import install
 #distros
 centos=0
 ubuntu=1
+cent8=2
 
 class InstallCyberPanel:
 
@@ -35,10 +36,25 @@ class InstallCyberPanel:
         if self.ent == 0:
             if self.distro == ubuntu:
                 command = "apt-get -y install openlitespeed"
-            else:
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            elif self.distro == centos:
                 command = 'yum install -y openlitespeed'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            else:
+                command = 'wget https://openlitespeed.org/packages/openlitespeed-1.5.0.tgz'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                command = 'tar -zxvf openlitespeed-*.tgz'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                os.chdir('openlitespeed')
+
+                command = './install.sh'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                os.chdir(self.cwd)
+
+
         else:
             try:
                 try:

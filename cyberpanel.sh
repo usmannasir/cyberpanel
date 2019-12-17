@@ -343,6 +343,7 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 		yum -y install platform-python-devel
 		dnf --enablerepo=PowerTools install gpgme-devel -y
 		yum -y install python3-pip
+		yum install wget -y
 	fi
 
 	if [[ $DEV == "ON" ]] ; then
