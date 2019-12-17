@@ -493,8 +493,8 @@ elif echo $OUTPUT | grep -q "CloudLinux 7" ; then
 elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"
-elif echo $OUTPUT | grep -q "CentOS Linux 7" ; then
-	echo -e "\nDetecting Ubuntu 18.04...\n"
+elif echo $OUTPUT | grep -q "CentOS Linux 8" ; then
+	echo -e "\nDetecting Centos 8...\n"
 	SERVER_OS="Centos8"
 	CENT_8="True"
 else
