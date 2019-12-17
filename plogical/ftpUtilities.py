@@ -144,7 +144,7 @@ class FTPUtilities:
                 return 0
 
             hash = hashlib.md5()
-            hash.update(password)
+            hash.update(password.encode('utf-8'))
 
             admin = Administrator.objects.get(userName=owner)
 
@@ -196,7 +196,7 @@ class FTPUtilities:
     def changeFTPPassword(userName, password):
         try:
             hash = hashlib.md5()
-            hash.update(password)
+            hash.update(password.encode('utf-8'))
 
             ftp = Users.objects.get(user=userName)
             ftp.password = hash.hexdigest()
