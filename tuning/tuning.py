@@ -12,8 +12,6 @@ import plogical.CyberCPLogFileWriter as logging
 from plogical.tuning import tuning
 from loginSystem.views import loadLoginPage
 from plogical.virtualHostUtilities import virtualHostUtilities
-import subprocess
-import shlex
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 

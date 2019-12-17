@@ -32,6 +32,7 @@ def generate_pass(length=14):
 
 centos = 0
 ubuntu = 1
+cent8 = 2
 
 
 def get_distro():
@@ -47,6 +48,11 @@ def get_distro():
     elif exists("/etc/os-release"):
         distro_file = "/etc/os-release"
         distro = centos
+
+        data = open('/etc/redhat-release', 'r').read()
+
+        if data.find('CentOS Linux release 8') > -1:
+            return cent8
 
     else:
         logging.InstallLog.writeToFile("Can't find linux release file - fatal error")
@@ -365,10 +371,11 @@ class preFlightsChecks:
         self.stdOut("Install pip")
         if self.distro == ubuntu:
             command = "apt-get -y install python-pip"
-        else:
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        elif self.distro == centos:
             command = "yum -y install python-pip"
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
     def install_python_dev(self):
         self.stdOut("Install python development environment")

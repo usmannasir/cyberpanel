@@ -5,14 +5,14 @@ import django
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
-from . import CyberCPLogFileWriter as logging
+from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import os
 import time
 from plogical.backupUtilities import backupUtilities
 from re import match,I,M
-from websiteFunctions.models import Websites, Backups
+from websiteFunctions.models import Backups
 from plogical.processUtilities import ProcessUtilities
 from random import randint
 import json, requests

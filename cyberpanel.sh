@@ -338,11 +338,20 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	yum update -y
 	yum install epel-release -y
 	yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc python-devel libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel python-pip git
+
+	if [[ $CENT_8 == "True" ]] ; then
+		yum -y install platform-python-devel
+		dnf --enablerepo=PowerTools install gpgme-devel -y
+		yum -y install python3-pip
+	fi
+
 	if [[ $DEV == "ON" ]] ; then
-		yum -y install yum-utils
-		yum -y groupinstall development
-		yum -y install https://centos7.iuscommunity.org/ius-release.rpm
-		yum -y install python36u python36u-pip python36u-devel
+	  if [[ $CENT_8 == "False" ]] ; then
+      yum -y install yum-utils
+      yum -y groupinstall development
+      yum -y install https://centos7.iuscommunity.org/ius-release.rpm
+      yum -y install python36u python36u-pip python36u-devel
+    fi
 	fi
 fi
 
@@ -470,10 +479,11 @@ fi
 
 }
 
-
+CENT_8="False"
 check_OS() {
 echo -e "\nChecking OS..."
 OUTPUT=$(cat /etc/*release)
+
 if  echo $OUTPUT | grep -q "CentOS Linux 7" ; then
 	echo -e "\nDetecting CentOS 7.X...\n"
 	SERVER_OS="CentOS"
@@ -483,11 +493,15 @@ elif echo $OUTPUT | grep -q "CloudLinux 7" ; then
 elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "CentOS Linux 7" ; then
+	echo -e "\nDetecting Ubuntu 18.04...\n"
+	SERVER_OS="Centos8"
+	CENT_8="True"
 else
 	cat /etc/*release
 	echo -e "\nUnable to detect your OS...\n"
 	echo -e "\nCyberPanel is supported on Ubuntu 18.04, CentOS 7.x and CloudLinux 7.x...\n"
-	exit 1
+#	exit 1
 fi
 }
 
