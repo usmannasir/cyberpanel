@@ -1061,7 +1061,7 @@ else
 	systemctl start lsws
 fi
 
-clear
+#clear
 echo "###################################################################"
 echo "                CyberPanel Successfully Installed                  "
 echo "                                                                   "
