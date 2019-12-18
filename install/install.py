@@ -1413,8 +1413,7 @@ imap_folder_list_limit = 0
                 command = "apt-get -y install libpcre3 libpcre3-dev openssl libexpat1 libexpat1-dev libgeoip-dev" \
                           " zlib1g zlib1g-dev libudns-dev whichman curl"
             else:
-                command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel' \
-                          ' which curl'
+                command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
@@ -1457,8 +1456,6 @@ imap_folder_list_limit = 0
                 pass
 
             # self.setupComodoRules()
-            self.setupPort()
-            self.setupPythonWSGI()
 
             logging.InstallLog.writeToFile("LSCPD successfully installed!")
 
@@ -2285,6 +2282,8 @@ def main():
 
     checks.modSecPreReqs()
     checks.installLSCPD()
+    checks.setupPort()
+    checks.setupPythonWSGI()
     checks.setupLSCPDDaemon()
     checks.fixCyberPanelPermissions()
 
