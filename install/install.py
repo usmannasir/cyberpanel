@@ -382,10 +382,12 @@ class preFlightsChecks:
 
         if self.distro == centos:
             command = "yum -y install python-devel"
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
         elif self.distro == ubuntu:
             command = "apt-get -y install python-dev"
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
 
     def install_gcc(self):
         self.stdOut("Install gcc")
