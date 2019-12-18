@@ -20,6 +20,7 @@ ADMIN_PASS="1234567"
 MEMCACHED="ON"
 REDIS="ON"
 TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
+CENT_8="False"
 
 license_validation() {
 CURRENT_DIR=$(pwd)
@@ -337,13 +338,12 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	yum clean all
 	yum update -y
 	yum install epel-release -y
-	yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc python-devel libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel python-pip git
-
+	if [[ $CENT_8 == "False" ]] ; then
+	  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc python-devel libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel python-pip git
+  fi
 	if [[ $CENT_8 == "True" ]] ; then
-		yum -y install platform-python-devel
+		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel
 		dnf --enablerepo=PowerTools install gpgme-devel -y
-		yum -y install python3-pip
-		yum install wget -y
 	fi
 
 	if [[ $DEV == "ON" ]] ; then
@@ -479,8 +479,6 @@ if [ "$(cat /sys/devices/virtual/dmi/id/product_uuid | cut -c 1-3)" = 'EC2' ] &&
 fi
 
 }
-
-CENT_8="False"
 check_OS() {
 echo -e "\nChecking OS..."
 OUTPUT=$(cat /etc/*release)
@@ -496,7 +494,7 @@ elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 	SERVER_OS="Ubuntu"
 elif echo $OUTPUT | grep -q "CentOS Linux 8" ; then
 	echo -e "\nDetecting Centos 8...\n"
-	SERVER_OS="Centos8"
+	SERVER_OS="CentOS"
 	CENT_8="True"
 else
 	cat /etc/*release

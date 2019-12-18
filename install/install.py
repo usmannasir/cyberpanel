@@ -359,7 +359,7 @@ class preFlightsChecks:
                 preFlightsChecks.stdOut("[ERROR] Exception during CyberPanel install")
                 os._exit(os.EX_SOFTWARE)
 
-        else:
+        elif self.distro == cent8:
             command = 'rpm -ivh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
@@ -382,7 +382,7 @@ class preFlightsChecks:
 
         if self.distro == centos:
             command = "yum -y install python-devel"
-        else:
+        elif self.distro == ubuntu:
             command = "apt-get -y install python-dev"
 
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
