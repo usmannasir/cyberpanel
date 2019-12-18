@@ -1330,6 +1330,9 @@ imap_folder_list_limit = 0
         return True
 
     def installFirewalld(self):
+
+        if self.distro == cent8:
+            return 0
         if self.distro == ubuntu:
             self.removeUfw()
 
