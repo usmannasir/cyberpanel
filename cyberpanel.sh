@@ -853,7 +853,7 @@ echo -e "Installation will start in 10 seconds, if you wish to stop please press
 sleep 10
 debug="1"
 if [[ $debug == "0" ]] ; then
-	echo "/usr/local/CyberPanel/bin/python2 install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY"
+	echo "/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY"
 	exit
 fi
 
@@ -861,7 +861,7 @@ if [[ $debug == "1" ]] ; then
 	if [[ $DEV == "ON" ]] ; then
 	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY
 	else
-	/usr/local/CyberPanel/bin/python2 install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY
+	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY
 	fi
 
 	if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt > /dev/null; then
@@ -1026,10 +1026,11 @@ DISK2=$(df -h | awk '$NF=="/"{printf "%d/%dGB (%s)\n", $3,$2,$5}')
 ELAPSED="$(($SECONDS / 3600)) hrs $((($SECONDS / 60) % 60)) min $(($SECONDS % 60)) sec"
 MYSQLPASSWD=$(cat /etc/cyberpanel/mysqlPassword)
 echo "$ADMIN_PASS" > /etc/cyberpanel/adminPass
-/usr/local/CyberPanel/bin/python2 /usr/local/CyberCP/plogical/adminPass.py --password $ADMIN_PASS
+/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password $ADMIN_PASS
 systemctl restart lscpd
 systemctl restart lsws
-echo "/usr/local/CyberPanel/bin/python2 /usr/local/CyberCP/plogical/adminPass.py --password \$@" > /usr/bin/adminPass
+echo "/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password \$@" > /usr/bin/adminPass
+mkdir -p /etc/opendkim
 echo "systemctl restart lscpd" >> /usr/bin/adminPass
 chmod +x /usr/bin/adminPass
 if [[ $VERSION = "OLS" ]] ; then
