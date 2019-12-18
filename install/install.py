@@ -771,7 +771,7 @@ enabled=1"""
 
                 command = 'yum remove postfix -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            else:
+            elif self.distro == ubuntu:
                 command = 'apt-get -y remove postfix'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
@@ -808,7 +808,7 @@ enabled=1"""
 
             ##
 
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 command = 'yum -y install dovecot dovecot-mysql'
             else:
                 command = 'apt-get -y install dovecot-mysql'
