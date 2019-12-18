@@ -359,8 +359,11 @@ class preFlightsChecks:
                 preFlightsChecks.stdOut("[ERROR] Exception during CyberPanel install")
                 os._exit(os.EX_SOFTWARE)
 
-        elif self.distro == cent8:
+        elif self.distro == centos:
             command = 'rpm -ivh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        elif self.distro == cent8:
+            command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
     def enableEPELRepo(self):
@@ -2219,10 +2222,10 @@ def main():
         checks.enableEPELRepo()
     checks.install_pip()
     checks.install_python_dev()
-    checks.install_gcc()
+    #checks.install_gcc()
     if distro == centos:
         checks.install_python_setup_tools()
-    checks.install_python_mysql_library()
+    #checks.install_python_mysql_library()
 
     import installCyberPanel
 

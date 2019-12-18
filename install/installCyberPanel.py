@@ -41,18 +41,8 @@ class InstallCyberPanel:
                 command = 'yum install -y openlitespeed'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
             else:
-                command = 'wget https://openlitespeed.org/packages/openlitespeed-1.5.0.tgz'
+                command = 'yum install -y openlitespeed'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-                command = 'tar -zxvf openlitespeed-*.tgz'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-                os.chdir('openlitespeed')
-
-                command = './install.sh'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-                os.chdir(self.cwd)
 
 
         else:
@@ -182,7 +172,7 @@ class InstallCyberPanel:
         InstallCyberPanel.stdOut("LiteSpeed PHPs successfully installed!", 1)
 
         ## only php 71
-        if self.distro == centos:
+        if self.distro == centos or self.distro == cent8:
 
             command = 'yum install lsphp71 lsphp71-json lsphp71-xmlrpc lsphp71-xml lsphp71-tidy lsphp71-soap lsphp71-snmp ' \
                       'lsphp71-recode lsphp71-pspell lsphp71-process lsphp71-pgsql lsphp71-pear lsphp71-pdo lsphp71-opcache ' \
