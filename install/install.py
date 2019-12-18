@@ -782,7 +782,7 @@ enabled=1"""
             if self.distro == centos:
                 command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
             elif self.distro == cent8:
-                command = 'dnf install postfix postfix-ldap postfix-mysql postfix-pcre -y'
+                command = 'dnf install postfix postfix-mysql -y'
             else:
                 command = 'apt-get -y debconf-utils'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -799,7 +799,7 @@ enabled=1"""
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 pass
             else:
                 command = 'apt-get -y install dovecot-imapd dovecot-pop3d postfix-mysql'
@@ -1405,7 +1405,7 @@ imap_folder_list_limit = 0
             if self.distro == ubuntu:
                 command = "apt-get -y install gcc g++ make autoconf rcs"
             else:
-                command = 'yum -y install gcc gcc-c++ make autoconf glibc rcs'
+                command = 'yum -y install gcc gcc-c++ make autoconf glibc'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
