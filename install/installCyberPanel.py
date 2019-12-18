@@ -164,24 +164,25 @@ class InstallCyberPanel:
             if res != 0:
                 InstallCyberPanel.stdOut("Failed to install PHP on Ubuntu.", 1, 1)
 
-        else:
+        elif self.distro == cent8:
             command = 'yum -y groupinstall lsphp-all'
-
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+
 
         InstallCyberPanel.stdOut("LiteSpeed PHPs successfully installed!", 1)
 
         ## only php 71
         if self.distro == centos or self.distro == cent8:
 
-            command = 'yum install lsphp71 lsphp71-json lsphp71-xmlrpc lsphp71-xml lsphp71-tidy lsphp71-soap lsphp71-snmp ' \
+            command = 'yum install lsphp71 lsphp71-json lsphp71-xmlrpc lsphp71-xml lsphp71-soap lsphp71-snmp ' \
                       'lsphp71-recode lsphp71-pspell lsphp71-process lsphp71-pgsql lsphp71-pear lsphp71-pdo lsphp71-opcache ' \
                       'lsphp71-odbc lsphp71-mysqlnd lsphp71-mcrypt lsphp71-mbstring lsphp71-ldap lsphp71-intl lsphp71-imap ' \
                       'lsphp71-gmp lsphp71-gd lsphp71-enchant lsphp71-dba  lsphp71-common  lsphp71-bcmath -y'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ## only php 72
-            command = 'yum install -y lsphp72 lsphp72-json lsphp72-xmlrpc lsphp72-xml lsphp72-tidy lsphp72-soap lsphp72-snmp ' \
+            command = 'yum install -y lsphp72 lsphp72-json lsphp72-xmlrpc lsphp72-xml lsphp72-soap lsphp72-snmp ' \
                       'lsphp72-recode lsphp72-pspell lsphp72-process lsphp72-pgsql lsphp72-pear lsphp72-pdo lsphp72-opcache ' \
                       'lsphp72-odbc lsphp72-mysqlnd lsphp72-mcrypt lsphp72-mbstring lsphp72-ldap lsphp72-intl lsphp72-imap ' \
                       'lsphp72-gmp lsphp72-gd lsphp72-enchant lsphp72-dba  lsphp72-common  lsphp72-bcmath'
@@ -189,7 +190,7 @@ class InstallCyberPanel:
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ## only php 72
-            command = 'yum install -y lsphp73 lsphp73-json lsphp73-xmlrpc lsphp73-xml lsphp73-tidy lsphp73-soap lsphp73-snmp ' \
+            command = 'yum install -y lsphp73 lsphp73-json lsphp73-xmlrpc lsphp73-xml lsphp73-soap lsphp73-snmp ' \
                       'lsphp73-recode lsphp73-pspell lsphp73-process lsphp73-pgsql lsphp73-pear lsphp73-pdo lsphp73-opcache ' \
                       'lsphp73-odbc lsphp73-mysqlnd lsphp73-mcrypt lsphp73-mbstring lsphp73-ldap lsphp73-intl lsphp73-imap ' \
                       'lsphp73-gmp lsphp73-gd lsphp73-enchant lsphp73-dba  lsphp73-common  lsphp73-bcmath'
@@ -289,8 +290,10 @@ class InstallCyberPanel:
     def startMariaDB(self):
 
         ############## Start mariadb ######################
-
-        command = "systemctl start mysql"
+        if self.distro == cent8 or self.distro == ubuntu:
+            command = 'systemctl start mariadb'
+        else:
+            command = "systemctl start mysql"
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         ############## Enable mariadb at system startup ######################

@@ -770,10 +770,12 @@ enabled=1"""
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = 'yum remove postfix -y'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             else:
                 command = 'apt-get -y remove postfix'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
 
             self.stdOut("Install dovecot - do the install")
 

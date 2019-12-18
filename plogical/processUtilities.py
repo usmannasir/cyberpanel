@@ -13,6 +13,7 @@ class ProcessUtilities(multi.Thread):
     ent = 1
     OLS = 0
     centos = 1
+    cent8 = 2
     ubuntu = 0
     server_address = '/usr/local/lscpd/admin/comm.sock'
     token = "unset"
@@ -137,6 +138,8 @@ class ProcessUtilities(multi.Thread):
         if os.path.exists(distroPath):
             return ProcessUtilities.ubuntu
         else:
+            if open('/etc/redhat-release', 'r').read().find('CentOS Linux release 8') > -1:
+                return ProcessUtilities.cent8
             return ProcessUtilities.centos
 
     @staticmethod
