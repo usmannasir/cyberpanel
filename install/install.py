@@ -254,7 +254,7 @@ class preFlightsChecks:
     def setup_account_cyberpanel(self):
         try:
 
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 command = "yum install sudo -y"
                 preFlightsChecks.call(command, self.distro, command,
                                       command,
@@ -441,7 +441,7 @@ class preFlightsChecks:
     def install_psmisc(self):
         self.stdOut("Install psmisc")
 
-        if self.distro == centos:
+        if self.distro == centos or self.distro == cent8:
             command = "yum -y install psmisc"
         else:
             command = "apt-get -y install psmisc"
@@ -684,7 +684,7 @@ class preFlightsChecks:
     def install_unzip(self):
         self.stdOut("Install unzip")
         try:
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 command = 'yum -y install unzip'
             else:
                 command = 'apt-get -y install unzip'
@@ -696,7 +696,7 @@ class preFlightsChecks:
     def install_zip(self):
         self.stdOut("Install zip")
         try:
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 command = 'yum -y install zip'
             else:
                 command = 'apt-get -y install zip'
@@ -779,6 +779,8 @@ enabled=1"""
 
             if self.distro == centos:
                 command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
+            elif self.distro == cent8:
+                command = 'dnf install postfix postfix-ldap postfix-mysql postfix-pcre -y'
             else:
                 command = 'apt-get -y debconf-utils'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -1342,7 +1344,7 @@ imap_folder_list_limit = 0
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ######
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 # Not available in ubuntu
                 command = 'systemctl restart dbus'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -1423,14 +1425,14 @@ imap_folder_list_limit = 0
             except:
                 pass
 
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 command = 'adduser lscpd -M -d /usr/local/lscp'
             else:
                 command = 'useradd lscpd -M -d /usr/local/lscp'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 command = 'groupadd lscpd'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 # Added group in useradd for Ubuntu
@@ -1653,21 +1655,21 @@ imap_folder_list_limit = 0
         try:
             ## first install crontab
 
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 command = 'yum install cronie -y'
             else:
                 command = 'apt-get -y install cron'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 command = 'systemctl enable crond'
             else:
                 command = 'systemctl enable cron'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 command = 'systemctl start crond'
             else:
                 command = 'systemctl start cron'
@@ -1693,7 +1695,7 @@ imap_folder_list_limit = 0
             command = 'chmod +x /usr/local/CyberCP/postfixSenderPolicy/client.py'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 command = 'systemctl restart crond.service'
             else:
                 command = 'systemctl restart cron.service'
@@ -1720,7 +1722,7 @@ imap_folder_list_limit = 0
 
     def install_rsync(self):
         try:
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 command = 'yum -y install rsync'
             else:
                 command = 'apt-get -y install rsync'
@@ -1776,7 +1778,7 @@ imap_folder_list_limit = 0
 
     def installOpenDKIM(self):
         try:
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 command = 'yum -y install opendkim'
             else:
                 command = 'apt-get -y install opendkim'

@@ -470,11 +470,15 @@ class InstallCyberPanel:
                 #                              "/etc/resolv.conf'", 1, 1, os.EX_OSERR)
 
             if self.distro == centos:
-                command = 'yum -y install epel-release'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
                 command = 'curl -o /etc/yum.repos.d/powerdns-auth-42.repo ' \
                           'https://repo.powerdns.com/repo-files/centos-auth-42.repo'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+            if self.distro == cent8:
+                command = 'dnf config-manager --set-enabled PowerTools'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                command = 'curl -o /etc/yum.repos.d/powerdns-auth-master.repo https://repo.powerdns.com/repo-files/centos-auth-master.repo'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             if self.distro == ubuntu:
@@ -495,7 +499,7 @@ class InstallCyberPanel:
             InstallCyberPanel.stdOut("Configuring PowerDNS..", 1)
 
             os.chdir(self.cwd)
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 dnsPath = "/etc/pdns/pdns.conf"
             else:
                 dnsPath = "/etc/powerdns/pdns.conf"
