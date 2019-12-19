@@ -23,7 +23,6 @@ TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
 CENTOS_8="False"
 
 webadmin_passwd() {
-|
 if [[ $VERSION == "OLS" ]] ; then
 php_command="admin_php"
 else
@@ -390,10 +389,10 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	rm -f /etc/yum.repos.d/epel.repo.rpmsave
 	yum install epel-release -y
 
-	if [[ $CENT_8 == "False" ]] ; then
+	if [[ $CENTOS_8 == "False" ]] ; then
 	  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc python-devel libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel python-pip git
   fi
-	if [[ $CENT_8 == "True" ]] ; then
+	if [[ $CENTOS_8 == "True" ]] ; then
 		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar
 		dnf --enablerepo=PowerTools install gpgme-devel -y
 	fi
@@ -799,16 +798,13 @@ COMMENT
 #above comment for future use
 
 #if [[ $DEV_ARG == "ON" ]] ; then
-echo -e "Would you like to try CyberPanel with Python 3?"
-echo -e "\nNOTE: this feature is only for test , do \e[31mNOT\e[39m use on production server. "
-echo -e "\nCentOS 8.x installation will default proceed to Python 3 regardless the input"
-echo -e "\nPlease press \e[31mEnter key\e[39m or \e[31mn\e[39m to proceed as normal user"
-echo -e "\nPlease enter \e[31mconfirm\e[39m to confirm you want to use this version"
+echo -e "Press \e[31mEnter\e[39m to continue with stable version of CyberPanel, or"
+echo -e "\nPlease enter \e[31mbeta\e[39m and then press \e[31mEnter\e[39m to install CyberPanel with Python 3 (which also supports Centos 8)."
 printf "%s" ""
 read TMP_YN
 
-if [[ $TMP_YN == "confirm" ]] ; then
-	DEV="ON"
+if [[ $TMP_YN == "beta" ]] ; then
+  DEV="ON"
 #	echo -e "\nPlease specify branch name"
 #	printf "%s" ""
 #	read TMP_YN
@@ -820,7 +816,7 @@ else
 	if [[ $CENTOS_8 == "True" ]] ; then
 	DEV="ON"
 	BRANCH_NAME="p3"
-	fi
+		fi
 fi
 
 
