@@ -20,7 +20,32 @@ ADMIN_PASS="1234567"
 MEMCACHED="ON"
 REDIS="ON"
 TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
-CENT_8="False"
+CENTOS_8="False"
+
+webadmin_passwd() {
+|
+if [[ $VERSION == "OLS" ]] ; then
+php_command="admin_php"
+else
+php_command="admin_php5"
+fi
+
+WEBADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
+TEMP=`/usr/local/lsws/admin/fcgi-bin/${php_command} /usr/local/lsws/admin/misc/htpasswd.php ${WEBADMIN_PASS}`
+echo "" > /usr/local/lsws/admin/conf/htpasswd
+echo "admin:$TEMP" > /usr/local/lsws/admin/conf/htpasswd
+echo ${WEBADMIN_PASS} > /etc/cyberpanel/webadmin_passwd
+}
+
+check_virtualization() {
+echo -e "Checking virtualization type..."
+if hostnamectl | grep "Virtualization: lxc" ; then
+echo -e "\nLXC detected..."
+echo -e "CyberPanel does not support LXC"
+echo -e "Exiting..."
+exit
+fi
+}
 
 license_validation() {
 CURRENT_DIR=$(pwd)
@@ -72,11 +97,34 @@ sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' 
 #change to CDN first, regardless country
 sed -i 's|http://|https://|g' install.py
 
+if ! grep -q "1.1.1.1" /etc/resolv.conf ; then
+echo -e "\nnameserver 1.1.1.1" >> /etc/resolv.conf
+fi
+if ! grep -q "8.8.8.8" /etc/resolv.conf ; then
+echo -e "\nnameserver 8.8.8.8" >> /etc/resolv.conf
+fi
+cp /etc/resolv.conf /etc/resolv.conf-tmp
+
+line1="$(grep -n "f.write('nameserver 8.8.8.8')" installCyberPanel.py | head -n 1 | cut -d: -f1)"
+sed -i "${line1}i\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ subprocess.call(command, shell=True)" installCyberPanel.py
+sed -i "${line1}i\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ command = 'cat /etc/resolv.conf-tmp > /etc/resolv.conf'" installCyberPanel.py
+
 LATEST_URL="https://update.litespeedtech.com/ws/latest.php"
 #LATEST_URL="https://cyberpanel.sh/latest.php"
 curl --silent -o /tmp/lsws_latest $LATEST_URL 2>/dev/null
 LSWS_STABLE_LINE=`cat /tmp/lsws_latest | grep LSWS_STABLE`
 LSWS_STABLE_VER=`expr "$LSWS_STABLE_LINE" : '.*LSWS_STABLE=\(.*\) BUILD .*'`
+
+if [[ $PROVIDER == "Alibaba Cloud" ]] && [[ $SERVER_OS == "Ubuntu" ]] ; then
+		mkdir /root/.config
+		mkdir /root/.config/pip
+		cat << EOF > /root/.config/pip/pip.conf
+[global]
+index-url = https://mirrors.aliyun.com/pypi/simple/
+EOF
+		echo -e "\nSet to Aliyun pip repo..."
+fi
+#seems Alibaba cloud , other than CN , also requires change on ubuntu.
 
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
 #line1="$(grep -n "github.com/usmannasir/cyberpanel" install.py | head -n 1 | cut -d: -f1)"
@@ -113,8 +161,9 @@ gpgcheck = 1" > MariaDB.repo
 #above to set mariadb db to Tsinghua repo
 		cd $DIR
 		sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.3.5-ent-x86_64-linux.tar.gz|https://cyberpanel.sh/packages/5.0/lsws-5.3.5-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
-		mkdir /root/.pip
-		cat << EOF > /root/.pip/pip.conf
+		mkdir /root/.config
+		mkdir /root/.config/pip
+		cat << EOF > /root/.config/pip/pip.conf
 [global]
 index-url = https://mirrors.aliyun.com/pypi/simple/
 EOF
@@ -162,7 +211,9 @@ EOF
 		echo $'\n89.208.248.38 rpms.litespeedtech.com\n' >> /etc/hosts
 		echo -e "Mirror server set..."
 		pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
-		cat << EOF > /root/.pip/pip.conf
+		mkdir /root/.config
+		mkdir /root/.config/pip
+		cat << EOF > /root/.config/pip/pip.conf
 [global]
 index-url = https://mirrors.aliyun.com/pypi/simple/
 EOF
@@ -332,12 +383,13 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	rpm --import https://$DOWNLOAD_SERVER/gf-plus/RPM-GPG-KEY-gf.el7
 	rpm --import https://repo.dovecot.org/DOVECOT-REPO-GPG
 	rpm --import https://copr-be.cloud.fedoraproject.org/results/copart/restic/pubkey.gpg
+	yum clean all
+	yum update -y
 	yum autoremove epel-release -y
 	rm -f /etc/yum.repos.d/epel.repo
 	rm -f /etc/yum.repos.d/epel.repo.rpmsave
-	yum clean all
-	yum update -y
 	yum install epel-release -y
+
 	if [[ $CENT_8 == "False" ]] ; then
 	  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc python-devel libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel python-pip git
   fi
@@ -346,8 +398,8 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 		dnf --enablerepo=PowerTools install gpgme-devel -y
 	fi
 
-	if [[ $DEV == "ON" ]] ; then
-	  if [[ $CENT_8 == "False" ]] ; then
+if [[ $DEV == "ON" ]] ; then
+	  if [[ $CENTOS_8 == "False" ]] ; then
       yum -y install yum-utils
       yum -y groupinstall development
       yum -y install https://centos7.iuscommunity.org/ius-release.rpm
@@ -479,33 +531,34 @@ if [ "$(cat /sys/devices/virtual/dmi/id/product_uuid | cut -c 1-3)" = 'EC2' ] &&
 fi
 
 }
+
+
 check_OS() {
 echo -e "\nChecking OS..."
 OUTPUT=$(cat /etc/*release)
-
 if  echo $OUTPUT | grep -q "CentOS Linux 7" ; then
 	echo -e "\nDetecting CentOS 7.X...\n"
 	SERVER_OS="CentOS"
 elif echo $OUTPUT | grep -q "CloudLinux 7" ; then
 	echo -e "\nDetecting CloudLinux 7.X...\n"
 	SERVER_OS="CentOS"
+elif  echo $OUTPUT | grep -q "CentOS Linux 8" ; then
+	echo -e "\nDetecting CentOS 8.X...\n"
+	SERVER_OS="CentOS"
+	CENTOS_8="True"
 elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"
-elif echo $OUTPUT | grep -q "CentOS Linux 8" ; then
-	echo -e "\nDetecting Centos 8...\n"
-	SERVER_OS="CentOS"
-	CENT_8="True"
 else
 	cat /etc/*release
 	echo -e "\nUnable to detect your OS...\n"
-	echo -e "\nCyberPanel is supported on Ubuntu 18.04, CentOS 7.x and CloudLinux 7.x...\n"
-#	exit 1
+	echo -e "\nCyberPanel is supported on Ubuntu 18.04, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
+	exit 1
 fi
 }
 
 check_root() {
-echo -e "Checking root privileges...\n"
+echo -e "\nChecking root privileges...\n"
 if [[ $(id -u) != 0 ]]  > /dev/null; then
 	echo -e "You must use root account to do this"
 	echo -e "or run following command: (do NOT miss the quotes)"
@@ -745,26 +798,34 @@ fi
 COMMENT
 #above comment for future use
 
-if [[ $DEV_ARG == "ON" ]] ; then
-echo -e "\nDo you want to specify which branch you want to install?"
-echo -e "\nNOTE: this feature is only for developers "
-echo -e "\nonly use this feature if you are a \e[31mdeveloper\e[39m"
-#echo -e "\nPlease press Enter key or n to proceed as normal user"
-#echo -e "\nPlease enter \e[31mdeveloper\e[39m to confirm you want to use this feature"
-#printf "%s" ""
-#read TMP_YN
+#if [[ $DEV_ARG == "ON" ]] ; then
+echo -e "Would you like to try CyberPanel with Python 3?"
+echo -e "\nNOTE: this feature is only for test , do \e[31mNOT\e[39m use on production server. "
+echo -e "\nCentOS 8.x installation will default proceed to Python 3 regardless the input"
+echo -e "\nPlease press \e[31mEnter key\e[39m or \e[31mn\e[39m to proceed as normal user"
+echo -e "\nPlease enter \e[31mconfirm\e[39m to confirm you want to use this version"
+printf "%s" ""
+read TMP_YN
 
-#if [[ $TMP_YN == "developer" ]] ; then
+if [[ $TMP_YN == "confirm" ]] ; then
 	DEV="ON"
-	echo -e "\nPlease specify branch name"
-	printf "%s" ""
-	read TMP_YN
-	BRANCH_NAME=$TMP_YN
+#	echo -e "\nPlease specify branch name"
+#	printf "%s" ""
+#	read TMP_YN
+	BRANCH_NAME="p3"
 	echo -e "Branch name set to $BRANCH_NAME"
-#else
-#	DEV="OFF"
-#fi
+else
+	DEV="OFF"
+
+	if [[ $CENTOS_8 == "True" ]] ; then
+	DEV="ON"
+	BRANCH_NAME="p3"
+	fi
 fi
+
+
+
+#fi
 
 echo -e "\nPlease choose to use default admin password \e[31m1234567\e[39m, randomly generate one \e[31m(recommended)\e[39m or specify the admin password?"
 printf "%s" "Choose [d]fault, [r]andom or [s]et password: [d/r/s] "
@@ -858,11 +919,7 @@ if [[ $debug == "0" ]] ; then
 fi
 
 if [[ $debug == "1" ]] ; then
-	if [[ $DEV == "ON" ]] ; then
 	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY
-	else
-	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY
-	fi
 
 	if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt > /dev/null; then
 		echo -e "\nCyberPanel installation sucessfully completed..."
@@ -884,8 +941,9 @@ fi
 pip_virtualenv() {
 if [[ $DEV == "OFF" ]] ; then
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
-	mkdir /root/.pip
-cat << EOF > /root/.pip/pip.conf
+		mkdir /root/.config
+		mkdir /root/.config/pip
+		cat << EOF > /root/.config/pip/pip.conf
 [global]
 index-url = https://mirrors.aliyun.com/pypi/simple/
 EOF
@@ -908,12 +966,11 @@ fi
 if [[ $DEV == "ON" ]] ; then
 	#install dev branch
 	#wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-	pip3.6 install virtualenv
 	cd /usr/local/
-	virtualenv -p /usr/bin/python3 CyberPanel
+	python3.6 -m venv CyberPanel
 	source /usr/local/CyberPanel/bin/activate
 	wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-	pip install --ignore-installed -r requirements.txt
+	pip3.6 install --ignore-installed -r requirements.txt
 	cd -
 fi
 
@@ -1027,10 +1084,10 @@ ELAPSED="$(($SECONDS / 3600)) hrs $((($SECONDS / 60) % 60)) min $(($SECONDS % 60
 MYSQLPASSWD=$(cat /etc/cyberpanel/mysqlPassword)
 echo "$ADMIN_PASS" > /etc/cyberpanel/adminPass
 /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password $ADMIN_PASS
+mkdir -p /etc/opendkim
 systemctl restart lscpd
 systemctl restart lsws
 echo "/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password \$@" > /usr/bin/adminPass
-mkdir -p /etc/opendkim
 echo "systemctl restart lscpd" >> /usr/bin/adminPass
 chmod +x /usr/bin/adminPass
 if [[ $VERSION = "OLS" ]] ; then
@@ -1062,7 +1119,9 @@ else
 	systemctl start lsws
 fi
 
-#clear
+webadmin_passwd
+
+clear
 echo "###################################################################"
 echo "                CyberPanel Successfully Installed                  "
 echo "                                                                   "
@@ -1074,9 +1133,9 @@ echo "                Installation time  : $ELAPSED                      "
 echo "                                                                   "
 echo "                Visit: https://$SERVER_IP:8090                     "
 echo "                Panel username: admin                              "
-echo "                Panel password: $ADMIN_PASS                            "
-#echo "                Mysql username: root                               "
-#echo "                Mysql password: $MYSQLPASSWD                       "
+echo "                Panel password: $ADMIN_PASS                        "
+echo "                WebAdmin console username: admin                         "
+echo "                WebAdmin console password: $WEBADMIN_PASS                "
 echo "                                                                   "
 echo "            Please change your default admin password              "
 echo "          If you need to reset your panel password, please run:    "
@@ -1128,6 +1187,8 @@ fi
 sed -i 's|lsws-5.3.8|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 sed -i 's|lsws-5.4.2|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 sed -i 's|lsws-5.3.5|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+
+sed -i 's|NoAnonymous                 no|NoAnonymous                 yes|g' /etc/pure-ftpd/pure-ftpd.conf
 
 if [[ $SILENT != "ON" ]] ; then
 printf "%s" "Would you like to restart your server now? [y/N]: "
@@ -1283,6 +1344,7 @@ DOWNLOAD_SERVER="cdn.cyberpanel.sh"
 fi
 
 check_OS
+check_virtualization
 check_root
 check_panel
 check_process

@@ -255,7 +255,7 @@ class ContainerManager(multi.Thread):
             dockerAPI = docker.APIClient()
 
             container = client.containers.get(name)
-            logs = container.logs()
+            logs = container.logs().decode("utf-8")
 
             data_ret = {'containerLogStatus': 1, 'containerLog': logs, 'error_message': "None"}
             json_data = json.dumps(data_ret)

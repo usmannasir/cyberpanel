@@ -164,7 +164,7 @@ class InstallCyberPanel:
             if res != 0:
                 InstallCyberPanel.stdOut("Failed to install PHP on Ubuntu.", 1, 1)
 
-        elif self.distro == cent8:
+        elif self.distro == cent8 or self.distro == centos:
             command = 'yum -y groupinstall lsphp-all'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 

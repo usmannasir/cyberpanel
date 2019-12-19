@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-
 from django.test import TestCase
 import json
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
