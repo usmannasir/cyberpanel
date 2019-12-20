@@ -404,6 +404,9 @@ if [[ $DEV == "ON" ]] ; then
       yum -y install https://centos7.iuscommunity.org/ius-release.rpm
       yum -y install python36u python36u-pip python36u-devel
     fi
+    if [[ $CENTOS_8 == "True" ]] ; then
+      dnf install python3 -y
+    fi
 	fi
 fi
 
