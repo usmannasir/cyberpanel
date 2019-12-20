@@ -406,6 +406,7 @@ if [[ $DEV == "ON" ]] ; then
     fi
     if [[ $CENTOS_8 == "True" ]] ; then
       dnf install python3 -y
+      pip3.6 install virtualenv
     fi
 	fi
 fi
@@ -967,10 +968,11 @@ if [[ $DEV == "ON" ]] ; then
 	#install dev branch
 	#wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
 	cd /usr/local/
-	python3.6 -m venv CyberPanel
-	source /usr/local/CyberPanel/bin/activate
-	wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-	pip3.6 install --ignore-installed -r requirements.txt
+	virtualenv -p /usr/bin/python3 /usr/local/CyberCP
+  source /usr/local/CyberCP/bin/activate
+  wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+  pip install --ignore-installed -r requirements.txt
+  systemctl restart lscpd
 	cd -
 fi
 
