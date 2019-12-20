@@ -393,7 +393,7 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc python-devel libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel python-pip git
   fi
 	if [[ $CENTOS_8 == "True" ]] ; then
-		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar
+		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar python36
 		dnf --enablerepo=PowerTools install gpgme-devel -y
 	fi
 
@@ -802,7 +802,8 @@ COMMENT
 
 #if [[ $DEV_ARG == "ON" ]] ; then
 echo -e "Press \e[31mEnter\e[39m to continue with stable version of CyberPanel, or"
-echo -e "\nPlease enter \e[31mbeta\e[39m and then press \e[31mEnter\e[39m to install CyberPanel with Python 3 (which also supports Centos 8)."
+echo -e "\nPlease enter \e[31mbeta\e[39m and then press \e[31mEnter\e[39m to install CyberPanel with Python 3."
+echo -e "\nCentOS 8 will autoamtically proceed with Python 3 branch."
 printf "%s" ""
 read TMP_YN
 
