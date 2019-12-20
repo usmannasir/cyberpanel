@@ -393,7 +393,7 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc python-devel libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel python-pip git
   fi
 	if [[ $CENTOS_8 == "True" ]] ; then
-		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar python36
+		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar
 		dnf --enablerepo=PowerTools install gpgme-devel -y
 	fi
 
